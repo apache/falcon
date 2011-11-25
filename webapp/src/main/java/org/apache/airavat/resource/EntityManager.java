@@ -54,6 +54,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Post an entity XML with entity in form field.
+   * Validates the XML which can be Process, Feed or Dataendpoint 
+   * @param type
+   * @return APIResule -Succeeded or Failed
+   */
   @POST
   @Path ("validate/{type}")
   @Consumes(MediaType.TEXT_PLAIN)
@@ -62,6 +68,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Schedules an submitted entity immediately
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path ("schedule/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -70,6 +82,11 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Submits a new entity and schedules it immediately
+   * @param type
+   * @return
+   */
   @POST
   @Path ("submitAndSchedule/{type}")
   @Consumes(MediaType.TEXT_PLAIN)
@@ -78,6 +95,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Deletes an entity, a deleted entity is removed completely from execution pool.
+   * @param type
+   * @param entity
+   * @return
+   */
   @DELETE
   @Path("delete/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -86,6 +109,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Suspends a running entity
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path("suspend/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -94,6 +123,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Resumes a suspended entity
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path("resume/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -102,6 +137,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Returns the status of requested entity.
+   * @param type
+   * @param entity
+   * @return String
+   */
   @GET
   @Path("status/{type}/{entity}")
   @Produces(MediaType.TEXT_PLAIN)
@@ -110,6 +151,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Returns the entity definition as an XML based on name
+   * @param type
+   * @param entity
+   * @return String
+   */
   @GET
   @Path("definition/{type}/{entity}")
   @Produces(MediaType.TEXT_XML)
