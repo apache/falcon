@@ -18,6 +18,8 @@
 
 package org.apache.airavat.resource;
 
+import java.io.IOException;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,8 +34,6 @@ import org.apache.airavat.entity.EntityType;
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.airavat.entity.parser.EntityParserFactory;
 import org.apache.log4j.Logger;
-
-import com.sun.jersey.server.impl.model.method.dispatch.EntityParamDispatchProvider;
 
 @Path("entities")
 public class EntityManager {
@@ -76,6 +76,11 @@ public class EntityManager {
 	  
 	  //TODO VALIDATE type and then proceed use custom validator or throw exception? 
      EntityParser epf = EntityParserFactory.getParser(EntityType.valueOf(type));
+     try {
+		request.getInputStream().read();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
 	  
      return null;
   }
