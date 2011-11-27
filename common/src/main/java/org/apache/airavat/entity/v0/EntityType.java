@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.airavat.entity;
+package org.apache.airavat.entity.v0;
 
 public enum EntityType {
   FEED, PROCESS, DATAENDPOINT

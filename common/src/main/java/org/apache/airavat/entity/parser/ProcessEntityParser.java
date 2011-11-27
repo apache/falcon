@@ -18,21 +18,72 @@
 
 package org.apache.airavat.entity.parser;
 
-import org.apache.airavat.entity.EntityType;
-import org.apache.airavat.entity.ProcessDefinition;
+import java.io.InputStream;
 
-public class ProcessEntityParser extends EntityParser<ProcessDefinition> {
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
-  protected ProcessEntityParser(EntityType entityType) {
-    super(entityType);
-  }
+import org.apache.airavat.Util;
+import org.apache.airavat.entity.v0.EntityType;
+import org.apache.airavat.entity.v0.ProcessType;
+import org.apache.log4j.Logger;
 
-  @Override
-  protected ProcessDefinition doParse(String xml) {
-    return new ProcessDefinition();
-  }
+/**
+ *Concrete Parser which has  XML parsing and validation logic
+ *for Process XML.
+ *
+ */
+public class ProcessEntityParser extends EntityParser<ProcessType>{
 
-  @Override
-  protected void applyValidations(ProcessDefinition entity) {
-  }
+	private static Logger LOG = Logger.getLogger(EntityParser.class);
+
+	private static final  Class<ProcessType> ProcessDefinitionClazz = org.apache.airavat.entity.v0.ProcessType.class;
+
+	protected ProcessEntityParser(EntityType entityType) {
+		super(entityType);		
+	}
+
+	@Override
+	protected ProcessType doParse(String xmlString) {
+
+		ProcessType processDefinitionElement = null;
+		try {
+			Unmarshaller unmarshaller = SingletonUnmarshaller.getInstance();
+			InputStream xmlStream = Util.getStreamFromString(xmlString);
+			processDefinitionElement =  (ProcessType) unmarshaller.unmarshal(xmlStream);
+			//System.out.println(processDefinitionElement.getClass());
+		} catch (JAXBException e) {
+			LOG.fatal("Unable to Unmarshall XML file",e);
+			e.printStackTrace();
+		}
+		return processDefinitionElement;
+	}
+
+	@Override
+	protected void applyValidations(ProcessType entity) {
+	}
+
+	public static class SingletonUnmarshaller {
+
+		private static Unmarshaller instance = null;
+
+		private SingletonUnmarshaller() {
+		}
+
+		synchronized public static Unmarshaller getInstance() {
+			if (instance == null) {
+				try {
+					JAXBContext jaxbContext = JAXBContext
+							.newInstance(ProcessDefinitionClazz);
+					instance = jaxbContext.createUnmarshaller();
+				} catch (JAXBException e) {
+					LOG.fatal("Unable to get JAXBContext",e);
+				}
+			}
+			return instance;
+		}
+	}
+
 }

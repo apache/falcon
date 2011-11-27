@@ -18,10 +18,17 @@
 
 package org.apache.airavat.entity.parser;
 
-import org.apache.airavat.entity.Entity;
-import org.apache.airavat.entity.EntityType;
+import org.apache.airavat.entity.v0.Entity;
+import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
+/**
+ * 
+ *Generic Abstract Entity Parser, the concrete FEED, PROCESS and DATAENDPOINT 
+ *Should extend this parser to implement specific parsing.
+ *
+ * @param <T>
+ */
 public abstract class EntityParser<T extends Entity> {
 
   private static Logger LOG = Logger.getLogger(EntityParser.class);

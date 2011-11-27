@@ -15,13 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.airavat;
 
-package org.apache.airavat.entity;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
+import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.log4j.Logger;
 
-public class ProcessDefinition extends Entity {
-
-  private static Logger LOG = Logger.getLogger(ProcessDefinition.class);
+public class Util {
+	
+	  private static Logger LOG = Logger.getLogger(EntityParser.class);
+	
+	public static InputStream getStreamFromString(String text){
+		InputStream inputStream = null;
+		inputStream = new ByteArrayInputStream(text.getBytes());
+		return inputStream;
+	}
 
 }

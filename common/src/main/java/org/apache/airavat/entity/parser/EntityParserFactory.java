@@ -18,13 +18,19 @@
 
 package org.apache.airavat.entity.parser;
 
-import org.apache.airavat.entity.EntityType;
+import org.apache.airavat.entity.v0.EntityType;
 
+/**
+ * 
+ * Factory Class which returns the Parser based
+ * on the EntityType.
+ *
+ */
 public final class EntityParserFactory {
 
   private EntityParserFactory() {}
 
-  public static EntityParser getParser(EntityType entityType) {
+  public static EntityParser<?> getParser(EntityType entityType) {
 
     switch (entityType) {
       case PROCESS:
