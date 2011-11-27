@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.xml.ws.ServiceMode;
 
 @Path("entities")
 public class EntityManager {
@@ -31,8 +32,8 @@ public class EntityManager {
   private static Logger LOG = Logger.getLogger(EntityManager.class);
   private static Logger AUDIT = Logger.getLogger("AUDIT");
 
-  @Context
-  private HttpRequestContext requestContext;
+  //@context
+  //private HttpRequestContext requestContext;
 
   /**
    * Submit a new entity. Entities can be of type feed,

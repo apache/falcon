@@ -64,7 +64,7 @@ public class ProcessInstanceManager {
   }
 
   @POST
-  @Path("suspend/{process}")
+  @Path("resume/{process}")
   @Produces(MediaType.APPLICATION_JSON)
   public APIResult resumeProcessInstance(@PathParam("process") String process,
                                          @QueryParam("partition") String
