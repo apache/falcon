@@ -1,0 +1,18 @@
+<testng-results>
+  <reporter-output>
+  </reporter-output>
+  <suite name="Command line suite">
+    <groups>
+    </groups>
+    <test name="Command line test">
+      <class name="org.apache.airavat.entity.parser.ProcessEntityParserTest">
+        <test-method status="PASS" signature="applyValidations()" name="applyValidations" duration-ms="0" started-at="2011-11-28T01:19:46Z" finished-at="2011-11-28T01:19:46Z">
+        </test-method>
+        <test-method status="PASS" signature="notNullgetUnmarshaller()" name="notNullgetUnmarshaller" duration-ms="1" started-at="2011-11-28T01:19:46Z" finished-at="2011-11-28T01:19:46Z">
+        </test-method>
+        <test-method status="PASS" signature="doParse()" name="doParse" duration-ms="167" started-at="2011-11-28T01:19:46Z" finished-at="2011-11-28T01:19:46Z">
+        </test-method>
+      </class>
+    </test>
+  </suite>
+</testng-results>

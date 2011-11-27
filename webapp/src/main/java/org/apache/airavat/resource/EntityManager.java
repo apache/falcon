@@ -29,11 +29,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.xml.ws.ServiceMode;
 
-import org.apache.airavat.entity.EntityType;
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.airavat.entity.parser.EntityParserFactory;
+import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
 @Path("entities")
