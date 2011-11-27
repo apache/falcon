@@ -29,6 +29,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.xml.ws.ServiceMode;
 
 import org.apache.airavat.entity.EntityType;
 import org.apache.airavat.entity.parser.EntityParser;
@@ -40,6 +41,9 @@ public class EntityManager {
 
   private static Logger LOG = Logger.getLogger(EntityManager.class);
   private static Logger AUDIT = Logger.getLogger("AUDIT");
+
+  //@context
+  //private HttpRequestContext requestContext;
 
   /**
    * Submit a new entity. Entities can be of type feed,
