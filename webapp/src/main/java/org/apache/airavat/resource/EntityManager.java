@@ -79,6 +79,7 @@ public class EntityManager {
 	  
 	  //TODO VALIDATE type and then proceed use custom validator or throw exception? 
      EntityParser epf = EntityParserFactory.getParser(EntityType.valueOf(type));
+     
      try {
 		request.getInputStream().read();
 	} catch (IOException e) {
