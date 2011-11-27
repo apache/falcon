@@ -18,13 +18,23 @@
 
 package org.apache.airavat.resource;
 
-import com.sun.jersey.api.core.HttpRequestContext;
-import org.apache.log4j.Logger;
+import java.io.IOException;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.ws.ServiceMode;
+
+import org.apache.airavat.entity.EntityType;
+import org.apache.airavat.entity.parser.EntityParser;
+import org.apache.airavat.entity.parser.EntityParserFactory;
+import org.apache.log4j.Logger;
 
 @Path("entities")
 public class EntityManager {
@@ -49,20 +59,43 @@ public class EntityManager {
    */
   @POST
   @Path ("submit/{type}")
-  @Consumes(MediaType.TEXT_PLAIN)
+  @Consumes(MediaType.TEXT_XML)
   @Produces(MediaType.APPLICATION_JSON)
   public APIResult submit(@PathParam("type") String type) {
     return null;
   }
 
+  /**
+   * Post an entity XML with entity in form field.
+   * Validates the XML which can be Process, Feed or Dataendpoint 
+   * 
+   * @param type
+   * @return APIResule -Succeeded or Failed
+   */
   @POST
   @Path ("validate/{type}")
-  @Consumes(MediaType.TEXT_PLAIN)
+  @Consumes(MediaType.TEXT_XML)
   @Produces(MediaType.APPLICATION_JSON)
-  public APIResult validate(@PathParam("type") String type) {
-    return null;
+  public APIResult validate(@Context javax.servlet.http.HttpServletRequest request, @PathParam("type") String type) {
+	  
+	  //TODO VALIDATE type and then proceed use custom validator or throw exception? 
+     EntityParser epf = EntityParserFactory.getParser(EntityType.valueOf(type));
+     try {
+		request.getInputStream().read();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+	  
+     return null;
   }
 
+  /**
+   * Schedules an submitted entity immediately
+   * 
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path ("schedule/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -71,6 +104,12 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Submits a new entity and schedules it immediately
+   * 
+   * @param type
+   * @return
+   */
   @POST
   @Path ("submitAndSchedule/{type}")
   @Consumes(MediaType.TEXT_PLAIN)
@@ -79,6 +118,13 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Deletes a scheduled entity, a deleted entity is removed completely from execution pool.
+   * 
+   * @param type
+   * @param entity
+   * @return
+   */
   @DELETE
   @Path("delete/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -87,6 +133,13 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Suspends a running entity
+   * 
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path("suspend/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -95,6 +148,13 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Resumes a suspended entity
+   * 
+   * @param type
+   * @param entity
+   * @return APIResult
+   */
   @POST
   @Path("resume/{type}/{entity}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -103,6 +163,13 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Returns the status of requested entity.
+   * 
+   * @param type
+   * @param entity
+   * @return String
+   */
   @GET
   @Path("status/{type}/{entity}")
   @Produces(MediaType.TEXT_PLAIN)
@@ -111,6 +178,13 @@ public class EntityManager {
     return null;
   }
 
+  /**
+   * Returns the entity definition as an XML based on name
+   * 
+   * @param type
+   * @param entity
+   * @return String
+   */
   @GET
   @Path("definition/{type}/{entity}")
   @Produces(MediaType.TEXT_XML)
