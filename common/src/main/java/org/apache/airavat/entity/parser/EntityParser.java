@@ -18,9 +18,12 @@
 
 package org.apache.airavat.entity.parser;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.airavat.entity.v0.Entity;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
 /**
  * 
@@ -45,7 +48,16 @@ public abstract class EntityParser<T extends Entity> {
 
   public Entity parse(String xml) {
     if (validateSchema(xml)) {
-      T entity = doParse(xml);
+      T entity = null;
+	try {
+		entity = doParse(xml);
+	} catch (SAXException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (JAXBException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
       applyValidations(entity);
     }
     return null;
@@ -56,7 +68,7 @@ public abstract class EntityParser<T extends Entity> {
     return true;
   }
 
-  protected abstract T doParse(String xml);
+  protected abstract T doParse(String xml) throws SAXException, JAXBException;
 
   protected abstract void applyValidations(T entity);
 

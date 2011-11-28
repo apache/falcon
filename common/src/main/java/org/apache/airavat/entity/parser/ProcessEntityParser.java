@@ -18,17 +18,20 @@
 
 package org.apache.airavat.entity.parser;
 
+import java.io.File;
 import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
 /**
  *Concrete Parser which has  XML parsing and validation logic
@@ -37,7 +40,9 @@ import org.apache.log4j.Logger;
  */
 public class ProcessEntityParser extends EntityParser<ProcessType>{
 
-	private static Logger LOG = Logger.getLogger(EntityParser.class);
+	private static Logger LOG = Logger.getLogger(ProcessEntityParser.class);
+
+	private static final String SCHEMA_FILE = "src/main/resources/process.xsd";
 
 	private static final  Class<ProcessType> ProcessDefinitionClazz = org.apache.airavat.entity.v0.ProcessType.class;
 
@@ -46,23 +51,27 @@ public class ProcessEntityParser extends EntityParser<ProcessType>{
 	}
 
 	@Override
-	protected ProcessType doParse(String xmlString) {
+	protected ProcessType doParse(String xmlString) throws SAXException, JAXBException {
 
 		ProcessType processDefinitionElement = null;
-		try {
-			Unmarshaller unmarshaller = SingletonUnmarshaller.getInstance();
-			InputStream xmlStream = Util.getStreamFromString(xmlString);
-			processDefinitionElement =  (ProcessType) unmarshaller.unmarshal(xmlStream);
-			//System.out.println(processDefinitionElement.getClass());
-		} catch (JAXBException e) {
-			LOG.fatal("Unable to Unmarshall XML file",e);
-			e.printStackTrace();
-		}
+
+		Unmarshaller unmarshaller = SingletonUnmarshaller.getInstance();
+		//Validate against schema
+		SchemaFactory schemaFactory=SchemaFactory.newInstance
+				("http://www.w3.org/2001/XMLSchema");
+		Schema schema = null;
+		schema = schemaFactory.newSchema(new File(SCHEMA_FILE));
+		unmarshaller.setSchema(schema);
+		InputStream xmlStream = Util.getStreamFromString(xmlString);
+		processDefinitionElement =  (ProcessType) unmarshaller.unmarshal(xmlStream);
+		//System.out.println(processDefinitionElement.getClass());
+
 		return processDefinitionElement;
 	}
 
 	@Override
 	protected void applyValidations(ProcessType entity) {
+
 	}
 
 	public static class SingletonUnmarshaller {
@@ -72,7 +81,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType>{
 		private SingletonUnmarshaller() {
 		}
 
-		synchronized public static Unmarshaller getInstance() {
+		synchronized public static Unmarshaller getInstance() throws JAXBException {
 			if (instance == null) {
 				try {
 					JAXBContext jaxbContext = JAXBContext
@@ -80,6 +89,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType>{
 					instance = jaxbContext.createUnmarshaller();
 				} catch (JAXBException e) {
 					LOG.fatal("Unable to get JAXBContext",e);
+					throw new JAXBException(e);
 				}
 			}
 			return instance;
