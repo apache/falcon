@@ -26,7 +26,7 @@ public class Main {
   public static void main(String[] args) throws Exception {
 
     EmbeddedServer server = new EmbeddedServer(15000,
-        "src/main/webapp");
+        "webapp/src/main/webapp");
     server.start();
   }
 }
