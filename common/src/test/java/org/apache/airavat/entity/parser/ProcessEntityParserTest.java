@@ -37,19 +37,31 @@ import org.xml.sax.SAXException;
 
 public class ProcessEntityParserTest {
 
-	private final ProcessEntityParser parser = new ProcessEntityParser(
-			EntityType.PROCESS);
+	private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
+			.getParser(EntityType.PROCESS);
 
 	private static final String SAMPLE_PROCESS_XML = "src/test/resources/process-version-0.xml";
 
 	private static final String SAMPLE_INVALID_PROCESS_XML = "src/test/resources/process-invalid.xml";
 
 	@Test
-	public void notNullgetUnmarshaller() throws JAXBException {
-		Unmarshaller unmarshaller = ProcessEntityParser.SingletonUnmarshaller
-				.getInstance();
-		unmarshaller = ProcessEntityParser.SingletonUnmarshaller.getInstance();
+	public void testNotNullgetUnmarshaller() throws JAXBException {
+		Unmarshaller unmarshaller = EntityParser.EntityUnmarshaller
+				.getInstance(parser.getEntityType(), parser.getClazz());
+
 		Assert.assertNotNull(unmarshaller);
+	}
+	
+	@Test
+	public void testIsSingletonUnmarshaller() throws JAXBException{
+		Unmarshaller unmarshaller1 = EntityParser.EntityUnmarshaller
+				.getInstance(parser.getEntityType(), parser.getClazz());
+		
+		Unmarshaller unmarshaller2 = EntityParser.EntityUnmarshaller
+				.getInstance(parser.getEntityType(), parser.getClazz());
+
+		Assert.assertEquals(unmarshaller1,unmarshaller2);
+
 	}
 
 	@Test
@@ -68,7 +80,9 @@ public class ProcessEntityParserTest {
 		}
 
 		Assert.assertNotNull(def);
+
 		Assert.assertEquals(def.getName(), "sample");
+
 		Assert.assertEquals(def.getValidity().getStart(), "2011-11-01 00:00:00");
 
 	}

@@ -22,21 +22,30 @@ import org.apache.airavat.entity.v0.EntityType;
 
 /**
  * 
- * Factory Class which returns the Parser based
- * on the EntityType.
- *
+ * Factory Class which returns the Parser based on the EntityType.
+ * 
  */
 public final class EntityParserFactory {
 
-  private EntityParserFactory() {}
+	private EntityParserFactory() {
+	}
 
-  public static EntityParser<?> getParser(EntityType entityType) {
+	/**
+	 * Tie EnityType with the Entity Class in one place so that 
+	 * it can be unmarshalled easily by concrete classes
+	 * based on the class type using JAXB.
+	 * @param entityType
+	 * @return
+	 */
+	public static EntityParser<?> getParser(EntityType entityType) {
 
-    switch (entityType) {
-      case PROCESS:
-        return new ProcessEntityParser(entityType);
-      default:
-        return null;
-    }
-  }
+		switch (entityType) {
+		case PROCESS:
+			return new ProcessEntityParser(entityType,
+					org.apache.airavat.entity.v0.ProcessType.class);
+		default:
+			return null;
+		}
+	}
+
 }
