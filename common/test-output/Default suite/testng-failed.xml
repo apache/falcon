@@ -5,7 +5,7 @@
     <classes>
       <class name="org.apache.airavat.entity.parser.ProcessEntityParserTest">
         <methods>
-          <include name="doParse"/>
+          <include name="doParseInvalidXML"/>
         </methods>
       </class>
     </classes>

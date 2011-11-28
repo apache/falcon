@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Command line test" failures="0" tests="3" time="0.178" errors="0">
-  <properties/>
-  <testcase name="doParse" time="0.167" classname="org.apache.airavat.entity.parser.ProcessEntityParserTest"/>
-  <testcase name="notNullgetUnmarshaller" time="0.0010" classname="org.apache.airavat.entity.parser.ProcessEntityParserTest"/>
-  <testcase name="applyValidations" time="0.0" classname="org.apache.airavat.entity.parser.ProcessEntityParserTest"/>
-</testsuite>

@@ -78,6 +78,7 @@ public class EntityManager {
   public APIResult validate(@Context javax.servlet.http.HttpServletRequest request, @PathParam("type") String type) {
 	  
 	  //TODO VALIDATE type and then proceed use custom validator or throw exception? 
+	 
      EntityParser epf = EntityParserFactory.getParser(EntityType.valueOf(type));
      
      try {
