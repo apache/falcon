@@ -119,23 +119,29 @@ public abstract class EntityParser<T extends Entity> {
 	 */
 	public static class EntityUnmarshaller {
 
+		/**
+		 * Map which holds Unmarshaller as value for each entity type key.
+		 */
 		private static final Map<EntityType, Unmarshaller> unmarshallers = new HashMap<EntityType, Unmarshaller>();
 
 		private EntityUnmarshaller() {
 		}
 
-		synchronized public static Unmarshaller getInstance(
-				EntityType entityType, Class<? extends Entity> clazz)
-				throws JAXBException {
+		public static Unmarshaller getInstance(EntityType entityType,
+				Class<? extends Entity> clazz) throws JAXBException {
 			if (unmarshallers.get(entityType) == null) {
-				try {
-					JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
-					Unmarshaller unmarshaller = jaxbContext
-							.createUnmarshaller();
-					unmarshallers.put(entityType, unmarshaller);
-				} catch (JAXBException e) {
-					LOG.fatal("Unable to get JAXBContext", e);
-					throw new JAXBException(e);
+				synchronized (Unmarshaller.class) {
+					if (unmarshallers.get(entityType) == null)
+						try {
+							JAXBContext jaxbContext = JAXBContext
+									.newInstance(clazz);
+							Unmarshaller unmarshaller = jaxbContext
+									.createUnmarshaller();
+							unmarshallers.put(entityType, unmarshaller);
+						} catch (JAXBException e) {
+							LOG.fatal("Unable to get JAXBContext", e);
+							throw new JAXBException(e);
+						}
 				}
 			}
 			return unmarshallers.get(entityType);
