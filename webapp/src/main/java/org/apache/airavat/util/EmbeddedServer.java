@@ -26,7 +26,7 @@ import org.mortbay.jetty.webapp.WebAppContext;
 
 public class EmbeddedServer {
 
-  private static Logger LOG = Logger.getLogger(EmbeddedServer.class);
+  private static final Logger LOG = Logger.getLogger(EmbeddedServer.class);
 
   private Server server = new Server();
   private Connector connector = new SocketConnector();

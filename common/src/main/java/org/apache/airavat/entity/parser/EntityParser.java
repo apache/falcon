@@ -41,7 +41,7 @@ import org.xml.sax.SAXException;
  */
 public abstract class EntityParser<T extends Entity> {
 
-	private static Logger LOG = Logger.getLogger(EntityParser.class);
+	private static final Logger LOG = Logger.getLogger(EntityParser.class);
 
 	private EntityType entityType;
 
@@ -122,29 +122,29 @@ public abstract class EntityParser<T extends Entity> {
 		/**
 		 * Map which holds Unmarshaller as value for each entity type key.
 		 */
-		private static final Map<EntityType, Unmarshaller> unmarshallers = new HashMap<EntityType, Unmarshaller>();
+		private static final Map<EntityType, Unmarshaller> UNMARSHALLER = new HashMap<EntityType, Unmarshaller>();
 
 		private EntityUnmarshaller() {
 		}
 
 		public static Unmarshaller getInstance(EntityType entityType,
 				Class<? extends Entity> clazz) throws JAXBException {
-			if (unmarshallers.get(entityType) == null) {
+			if (UNMARSHALLER.get(entityType) == null) {
 				synchronized (Unmarshaller.class) {
-					if (unmarshallers.get(entityType) == null)
+					if (UNMARSHALLER.get(entityType) == null)
 						try {
 							JAXBContext jaxbContext = JAXBContext
 									.newInstance(clazz);
 							Unmarshaller unmarshaller = jaxbContext
 									.createUnmarshaller();
-							unmarshallers.put(entityType, unmarshaller);
+							UNMARSHALLER.put(entityType, unmarshaller);
 						} catch (JAXBException e) {
 							LOG.fatal("Unable to get JAXBContext", e);
 							throw new JAXBException(e);
 						}
 				}
 			}
-			return unmarshallers.get(entityType);
+			return UNMARSHALLER.get(entityType);
 		}
 	}
 

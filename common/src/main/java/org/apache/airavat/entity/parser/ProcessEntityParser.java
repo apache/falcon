@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  */
 public class ProcessEntityParser extends EntityParser<ProcessType> {
 
-	private static Logger LOG = Logger.getLogger(ProcessEntityParser.class);
+	private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
 	private static final String SCHEMA_FILE_NAME = "/process.xsd";
 

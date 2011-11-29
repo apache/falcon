@@ -24,11 +24,15 @@ import java.io.UnsupportedEncodingException;
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.log4j.Logger;
 
-public class Util {
+public final class Util {
+
+	private static final Logger LOG = Logger.getLogger(EntityParser.class);
+
+	private Util(){
+		
+	}
 	
-	  private static Logger LOG = Logger.getLogger(EntityParser.class);
-	
-	public static InputStream getStreamFromString(String text){
+	public static InputStream getStreamFromString(String text) {
 		InputStream inputStream = null;
 		inputStream = new ByteArrayInputStream(text.getBytes());
 		return inputStream;

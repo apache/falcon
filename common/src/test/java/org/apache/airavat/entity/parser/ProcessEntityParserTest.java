@@ -44,7 +44,7 @@ public class ProcessEntityParserTest {
 
 	@Test
 	public void testNotNullgetUnmarshaller() throws JAXBException {
-		Unmarshaller unmarshaller = EntityParser.EntityUnmarshaller
+		final Unmarshaller unmarshaller = EntityParser.EntityUnmarshaller
 				.getInstance(parser.getEntityType(), parser.getClazz());
 
 		Assert.assertNotNull(unmarshaller);
@@ -52,10 +52,10 @@ public class ProcessEntityParserTest {
 
 	@Test
 	public void testIsSingletonUnmarshaller() throws JAXBException {
-		Unmarshaller unmarshaller1 = EntityParser.EntityUnmarshaller
+		final Unmarshaller unmarshaller1 = EntityParser.EntityUnmarshaller
 				.getInstance(parser.getEntityType(), parser.getClazz());
 
-		Unmarshaller unmarshaller2 = EntityParser.EntityUnmarshaller
+		final Unmarshaller unmarshaller2 = EntityParser.EntityUnmarshaller
 				.getInstance(parser.getEntityType(), parser.getClazz());
 
 		Assert.assertEquals(unmarshaller1, unmarshaller2);

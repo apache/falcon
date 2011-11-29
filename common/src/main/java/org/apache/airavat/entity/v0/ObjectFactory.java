@@ -31,7 +31,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _Process_QNAME = new QName("", "Process");
+    private final static QName _Process_QNAME = new QName("", "Process"); 
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: org.apache.airavat.entity.v0

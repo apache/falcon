@@ -31,18 +31,23 @@ public final class EntityParserFactory {
 	}
 
 	/**
-	 * Tie EnityType with the Entity Class in one place so that 
-	 * it can be unmarshalled easily by concrete classes
-	 * based on the class type using JAXB.
+	 * Tie EnityType with the Entity Class in one place so that it can be
+	 * unmarshalled easily by concrete classes based on the class type using
+	 * JAXB.
+	 * 
 	 * @param entityType
-	 * @return
+	 * @return concrete parser based on entity type
 	 */
-	public static EntityParser<?> getParser(EntityType entityType) {
+	public static EntityParser<?> getParser(final EntityType entityType) {
 
 		switch (entityType) {
 		case PROCESS:
 			return new ProcessEntityParser(entityType,
 					org.apache.airavat.entity.v0.ProcessType.class);
+		case FEED:
+			return null;
+		case DATAENDPOINT:
+			return null;
 		default:
 			return null;
 		}

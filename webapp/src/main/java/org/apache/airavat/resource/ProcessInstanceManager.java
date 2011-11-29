@@ -24,10 +24,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("processinstance")
-public class ProcessInstanceManager {
-
-  private static Logger LOG = Logger.getLogger(ProcessInstanceManager.class);
-  private static Logger AUDIT = Logger.getLogger("AUDIT");
+public class ProcessInstanceManager { 
+  private static final Logger LOG = Logger.getLogger(ProcessInstanceManager.class);
+  private static final Logger AUDIT = Logger.getLogger("AUDIT");
 
   @GET
   @Path ("running/{process}")

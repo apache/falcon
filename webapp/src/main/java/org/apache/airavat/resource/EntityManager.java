@@ -37,10 +37,10 @@ import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
 @Path("entities")
-public class EntityManager {
+public class EntityManager { 
 
-	private static Logger LOG = Logger.getLogger(EntityManager.class);
-	private static Logger AUDIT = Logger.getLogger("AUDIT");
+	private static final Logger LOG = Logger.getLogger(EntityManager.class);
+	private static final Logger AUDIT = Logger.getLogger("AUDIT");
 
 	// @context
 	// private HttpRequestContext requestContext;
