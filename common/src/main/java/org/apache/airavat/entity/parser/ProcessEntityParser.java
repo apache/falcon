@@ -18,7 +18,6 @@
 
 package org.apache.airavat.entity.parser;
 
-import java.io.File;
 import java.io.InputStream;
 
 import javax.xml.bind.JAXBException;
@@ -26,7 +25,6 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.apache.log4j.Logger;
@@ -40,36 +38,55 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 
 	private static Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-	private static final String SCHEMA_FILE = "src/main/resources/process.xsd";
+	private static final String SCHEMA_FILE_NAME = "/process.xsd";
 
 	protected ProcessEntityParser(EntityType entityType,
 			Class<ProcessType> clazz) {
 		super(entityType, clazz);
 	}
 
+	/**
+	 * Applying Schema Validation during Unmarshalling Instead of using
+	 * Validator class JAXB 2.0 supports this out-of-the-box
+	 */
 	@Override
-	protected ProcessType doParse(String xmlString) throws SAXException,
+	public ProcessType doParse(InputStream xmlStream) throws SAXException,
 			JAXBException {
 
 		ProcessType processDefinitionElement = null;
-
 		Unmarshaller unmarshaller = EntityUnmarshaller.getInstance(
 				this.getEntityType(), this.getClazz());
 		// Validate against schema
 		SchemaFactory schemaFactory = SchemaFactory
 				.newInstance("http://www.w3.org/2001/XMLSchema");
 		Schema schema = null;
-		schema = schemaFactory.newSchema(new File(SCHEMA_FILE));
+		schema = schemaFactory.newSchema(this.getClass().getResource(
+				SCHEMA_FILE_NAME));
 		unmarshaller.setSchema(schema);
-		InputStream xmlStream = Util.getStreamFromString(xmlString);
 		processDefinitionElement = (ProcessType) unmarshaller
 				.unmarshal(xmlStream);
 
 		return processDefinitionElement;
 	}
 
+	/**
+	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
+	 * success.
+	 */
 	@Override
-	protected void applyValidations(ProcessType entity) {
+	public boolean validateSchema(InputStream xmlStream) {
+		try {
+			doParse(xmlStream);
+		} catch (SAXException e) {
+			return false;
+		} catch (JAXBException e) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public void applyValidations(ProcessType entity) {
 
 	}
 

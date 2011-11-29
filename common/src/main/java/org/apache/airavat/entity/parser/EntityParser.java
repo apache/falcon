@@ -18,6 +18,7 @@
 
 package org.apache.airavat.entity.parser;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.Entity;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
@@ -69,14 +71,23 @@ public abstract class EntityParser<T extends Entity> {
 	/**
 	 * Parses a sent XML and validates it using JAXB.
 	 * 
-	 * @param xml
-	 * @return Entity
+	 * @param xmlString
+	 *            - Entity XML
+	 * @return Entity - JAVA Object
 	 */
-	public Entity parse(String xml) {
-		if (validateSchema(xml)) {
-			T entity = null;
+	public Entity parse(String xmlString) {
+
+		InputStream inputStream = Util.getStreamFromString(xmlString);
+		Entity entity = parse(inputStream);
+		return entity;
+
+	}
+
+	public Entity parse(InputStream xmlStream) {
+		T entity = null;
+		if (validateSchema(xmlStream)) {
 			try {
-				entity = doParse(xml);
+				entity = doParse(xmlStream);
 			} catch (SAXException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -86,21 +97,24 @@ public abstract class EntityParser<T extends Entity> {
 			}
 			applyValidations(entity);
 		}
-		return null;
+		return entity;
 	}
 
-	private boolean validateSchema(String xml) {
-		// TODO use getEntityType to fetch xsd for validation
-		return true;
+	public boolean validateSchema(String xmlString) {
+		InputStream xmlStream = Util.getStreamFromString(xmlString);
+		return validateSchema(xmlStream);
 	}
 
-	protected abstract T doParse(String xml) throws SAXException, JAXBException;
+	public abstract boolean validateSchema(InputStream xmlStream);
+
+	protected abstract T doParse(InputStream xml) throws SAXException,
+			JAXBException;
 
 	protected abstract void applyValidations(T entity);
 
 	/**
 	 * Static Inner class that will be used by the concrete Entity to get
-	 * Unmarshallers
+	 * Unmarshallers based on the Entity Type
 	 * 
 	 */
 	public static class EntityUnmarshaller {
@@ -116,7 +130,8 @@ public abstract class EntityParser<T extends Entity> {
 			if (unmarshallers.get(entityType) == null) {
 				try {
 					JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
-					Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+					Unmarshaller unmarshaller = jaxbContext
+							.createUnmarshaller();
 					unmarshallers.put(entityType, unmarshaller);
 				} catch (JAXBException e) {
 					LOG.fatal("Unable to get JAXBContext", e);

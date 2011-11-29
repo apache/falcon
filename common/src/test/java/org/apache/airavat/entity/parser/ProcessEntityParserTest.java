@@ -21,8 +21,6 @@ package org.apache.airavat.entity.parser;
 /**
  * Test Cases for ProcessEntityParser
  */
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
@@ -40,9 +38,9 @@ public class ProcessEntityParserTest {
 	private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 			.getParser(EntityType.PROCESS);
 
-	private static final String SAMPLE_PROCESS_XML = "src/test/resources/process-version-0.xml";
+	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
-	private static final String SAMPLE_INVALID_PROCESS_XML = "src/test/resources/process-invalid.xml";
+	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
 
 	@Test
 	public void testNotNullgetUnmarshaller() throws JAXBException {
@@ -51,26 +49,26 @@ public class ProcessEntityParserTest {
 
 		Assert.assertNotNull(unmarshaller);
 	}
-	
+
 	@Test
-	public void testIsSingletonUnmarshaller() throws JAXBException{
+	public void testIsSingletonUnmarshaller() throws JAXBException {
 		Unmarshaller unmarshaller1 = EntityParser.EntityUnmarshaller
 				.getInstance(parser.getEntityType(), parser.getClazz());
-		
+
 		Unmarshaller unmarshaller2 = EntityParser.EntityUnmarshaller
 				.getInstance(parser.getEntityType(), parser.getClazz());
 
-		Assert.assertEquals(unmarshaller1,unmarshaller2);
+		Assert.assertEquals(unmarshaller1, unmarshaller2);
 
 	}
 
 	@Test
 	public void doParse() throws IOException {
-		String processXML = readFileAsString(SAMPLE_PROCESS_XML);
-		// System.out.println(processXML);
+
 		ProcessType def = null;
 		try {
-			def = parser.doParse(processXML);
+			def = parser.doParse(this.getClass().getResourceAsStream(
+					SAMPLE_PROCESS_XML));
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -90,9 +88,9 @@ public class ProcessEntityParserTest {
 	@Test(expectedExceptions = UnmarshalException.class)
 	public void doParseInvalidXML() throws IOException, SAXException,
 			JAXBException {
-		String processXML = readFileAsString(SAMPLE_INVALID_PROCESS_XML);
-		// System.out.println(processXML);
-		ProcessType def = parser.doParse(processXML);
+
+		parser.doParse(this.getClass().getResourceAsStream(
+				SAMPLE_INVALID_PROCESS_XML));
 	}
 
 	@Test
@@ -100,18 +98,4 @@ public class ProcessEntityParserTest {
 		// throw new RuntimeException("Test not implemented");
 	}
 
-	private static String readFileAsString(String filePath)
-			throws java.io.IOException {
-		StringBuffer fileData = new StringBuffer(1000);
-		BufferedReader reader = new BufferedReader(new FileReader(filePath));
-		char[] buf = new char[1024];
-		int numRead = 0;
-		while ((numRead = reader.read(buf)) != -1) {
-			String readData = String.valueOf(buf, 0, numRead);
-			fileData.append(readData);
-			buf = new char[1024];
-		}
-		reader.close();
-		return fileData.toString();
-	}
 }
