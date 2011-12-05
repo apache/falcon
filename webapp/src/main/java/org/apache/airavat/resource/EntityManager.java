@@ -37,7 +37,7 @@ import org.apache.airavat.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
 @Path("entities")
-public class EntityManager { 
+public class EntityManager {
 
 	private static final Logger LOG = Logger.getLogger(EntityManager.class);
 	private static final Logger AUDIT = Logger.getLogger("AUDIT");
@@ -74,7 +74,7 @@ public class EntityManager {
 	 */
 	@POST
 	@Path("validate/{type}")
-	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	@Produces(MediaType.APPLICATION_JSON)
 	public APIResult validate(
 			@Context javax.servlet.http.HttpServletRequest request,
@@ -82,7 +82,6 @@ public class EntityManager {
 
 		EntityParser<?> entityParser = EntityParserFactory.getParser(EntityType
 				.valueOf(type.toUpperCase()));
-		APIResult result = new APIResult();
 
 		// TODO Exception Handling
 		try {
@@ -90,14 +89,10 @@ public class EntityManager {
 			entityParser.validateSchema(xmlStream);
 
 		} catch (IOException e) {
-			result.setStatus(APIResult.Status.SUCCEEDED);
-			result.setMessage(e.getMessage());
 			e.printStackTrace();
-			return result;
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
-		result.setStatus(APIResult.Status.SUCCEEDED);
-		result.setMessage("Success");
-		return result;
+		return new APIResult(APIResult.Status.SUCCEEDED, "Validate successful");
 	}
 
 	/**

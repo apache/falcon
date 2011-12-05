@@ -35,21 +35,21 @@ public class APIResult {
 	private Status status;
 
 	private String message;
+	
 
 	public Status getStatus() {
 		return status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
 	}
 
 	public String getMessage() {
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public APIResult(Status status, String message) {
+		super();
+		this.status = status;
 		this.message = message;
 	}
+
 
 }
