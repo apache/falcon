@@ -19,7 +19,6 @@ package org.apache.airavat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.log4j.Logger;
@@ -28,10 +27,10 @@ public final class Util {
 
 	private static final Logger LOG = Logger.getLogger(EntityParser.class);
 
-	private Util(){
-		
+	private Util() {
+
 	}
-	
+
 	public static InputStream getStreamFromString(String text) {
 		InputStream inputStream = null;
 		inputStream = new ByteArrayInputStream(text.getBytes());

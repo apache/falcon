@@ -26,6 +26,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.airavat.AiravatException;
 import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.Entity;
 import org.apache.airavat.entity.v0.EntityType;
@@ -74,8 +75,9 @@ public abstract class EntityParser<T extends Entity> {
 	 * @param xmlString
 	 *            - Entity XML
 	 * @return Entity - JAVA Object
+	 * @throws AiravatException
 	 */
-	public Entity parse(String xmlString) {
+	public Entity parse(String xmlString) throws AiravatException {
 
 		InputStream inputStream = Util.getStreamFromString(xmlString);
 		Entity entity = parse(inputStream);
@@ -83,32 +85,32 @@ public abstract class EntityParser<T extends Entity> {
 
 	}
 
-	public Entity parse(InputStream xmlStream) {
+	public Entity parse(InputStream xmlStream) throws AiravatException {
 		T entity = null;
-		if (validateSchema(xmlStream)) {
-			try {
-				entity = doParse(xmlStream);
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JAXBException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			applyValidations(entity);
+
+		try {
+			entity = doParse(xmlStream);
+		} catch (JAXBException e) {
+			throw new AiravatException(e);
+		} catch (SAXException e) {
+			throw new AiravatException(e);
 		}
+
+		applyValidations(entity);
+
 		return entity;
 	}
 
-	public boolean validateSchema(String xmlString) {
+	public boolean validateSchema(String xmlString) throws AiravatException {
 		InputStream xmlStream = Util.getStreamFromString(xmlString);
 		return validateSchema(xmlStream);
 	}
 
-	public abstract boolean validateSchema(InputStream xmlStream);
+	public abstract boolean validateSchema(InputStream xmlStream)
+			throws AiravatException;
 
-	protected abstract T doParse(InputStream xml) throws SAXException,
-			JAXBException;
+	protected abstract T doParse(InputStream xml) throws JAXBException,
+			SAXException;
 
 	protected abstract void applyValidations(T entity);
 
@@ -131,7 +133,7 @@ public abstract class EntityParser<T extends Entity> {
 				Class<? extends Entity> clazz) throws JAXBException {
 			if (UNMARSHALLER.get(entityType) == null) {
 				synchronized (Unmarshaller.class) {
-					if (UNMARSHALLER.get(entityType) == null)
+					if (UNMARSHALLER.get(entityType) == null) {
 						try {
 							JAXBContext jaxbContext = JAXBContext
 									.newInstance(clazz);
@@ -142,6 +144,7 @@ public abstract class EntityParser<T extends Entity> {
 							LOG.fatal("Unable to get JAXBContext", e);
 							throw new JAXBException(e);
 						}
+					}
 				}
 			}
 			return UNMARSHALLER.get(entityType);

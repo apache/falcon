@@ -25,6 +25,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.apache.airavat.AiravatException;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.apache.log4j.Logger;
@@ -36,7 +37,8 @@ import org.xml.sax.SAXException;
  */
 public class ProcessEntityParser extends EntityParser<ProcessType> {
 
-	private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
+	private static final Logger LOG = Logger
+			.getLogger(ProcessEntityParser.class);
 
 	private static final String SCHEMA_FILE_NAME = "/process.xsd";
 
@@ -48,14 +50,19 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 	/**
 	 * Applying Schema Validation during Unmarshalling Instead of using
 	 * Validator class JAXB 2.0 supports this out-of-the-box
+	 * 
+	 * @throws JAXBException
+	 * @throws SAXException
 	 */
 	@Override
-	public ProcessType doParse(InputStream xmlStream) throws SAXException,
-			JAXBException {
+	public ProcessType doParse(InputStream xmlStream) throws JAXBException,
+			SAXException {
 
 		ProcessType processDefinitionElement = null;
-		Unmarshaller unmarshaller = EntityUnmarshaller.getInstance(
-				this.getEntityType(), this.getClazz());
+		Unmarshaller unmarshaller;
+
+		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
+				this.getClazz());
 		// Validate against schema
 		SchemaFactory schemaFactory = SchemaFactory
 				.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -72,15 +79,18 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 	/**
 	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
 	 * success.
+	 * 
+	 * @throws AiravatException
 	 */
 	@Override
-	public boolean validateSchema(InputStream xmlStream) {
+	public boolean validateSchema(InputStream xmlStream)
+			throws AiravatException {
 		try {
 			doParse(xmlStream);
-		} catch (SAXException e) {
-			return false;
 		} catch (JAXBException e) {
-			return false;
+			throw new AiravatException(e);
+		} catch (SAXException e) {
+			throw new AiravatException(e);
 		}
 		return true;
 	}

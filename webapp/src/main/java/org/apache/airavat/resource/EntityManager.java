@@ -31,6 +31,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.airavat.AiravatException;
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.airavat.entity.parser.EntityParserFactory;
 import org.apache.airavat.entity.v0.EntityType;
@@ -41,9 +42,6 @@ public class EntityManager {
 
 	private static final Logger LOG = Logger.getLogger(EntityManager.class);
 	private static final Logger AUDIT = Logger.getLogger("AUDIT");
-
-	// @context
-	// private HttpRequestContext requestContext;
 
 	/**
 	 * Submit a new entity. Entities can be of type feed, process or data end
@@ -80,18 +78,20 @@ public class EntityManager {
 			@Context javax.servlet.http.HttpServletRequest request,
 			@PathParam("type") String type) {
 
-		EntityParser<?> entityParser = EntityParserFactory.getParser(EntityType
-				.valueOf(type.toUpperCase()));
-
-		// TODO Exception Handling
 		try {
+			EntityParser<?> entityParser = EntityParserFactory
+					.getParser(EntityType.valueOf(type.toUpperCase()));
 			InputStream xmlStream = request.getInputStream();
 			entityParser.validateSchema(xmlStream);
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (IllegalArgumentException e){
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (AiravatException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
+		
 		return new APIResult(APIResult.Status.SUCCEEDED, "Validate successful");
 	}
 

@@ -35,7 +35,6 @@ public class APIResult {
 	private Status status;
 
 	private String message;
-	
 
 	public Status getStatus() {
 		return status;

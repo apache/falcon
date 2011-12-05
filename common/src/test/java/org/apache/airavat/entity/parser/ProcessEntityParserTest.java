@@ -27,6 +27,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.airavat.AiravatException;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.testng.Assert;
@@ -63,19 +64,11 @@ public class ProcessEntityParserTest {
 	}
 
 	@Test
-	public void doParse() throws IOException {
+	public void testParse() throws IOException, AiravatException {
 
 		ProcessType def = null;
-		try {
-			def = parser.doParse(this.getClass().getResourceAsStream(
-					SAMPLE_PROCESS_XML));
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+				SAMPLE_PROCESS_XML));
 
 		Assert.assertNotNull(def);
 
@@ -85,14 +78,14 @@ public class ProcessEntityParserTest {
 
 	}
 
-	@Test(expectedExceptions = UnmarshalException.class)
-	public void doParseInvalidXML() throws IOException, SAXException,
-			JAXBException {
+	@Test(expectedExceptions = AiravatException.class)
+	public void doParseInvalidXML() throws IOException, AiravatException {
 
-		parser.doParse(this.getClass().getResourceAsStream(
+		parser.parse(this.getClass().getResourceAsStream(
 				SAMPLE_INVALID_PROCESS_XML));
 	}
 
+	//TODO
 	@Test
 	public void applyValidations() {
 		// throw new RuntimeException("Test not implemented");
