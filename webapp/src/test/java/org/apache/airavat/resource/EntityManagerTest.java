@@ -83,6 +83,7 @@ public class EntityManagerTest {
 				entityType.name());
 
 		Assert.assertNotNull(apiResult);
+		
 		Assert.assertEquals(APIResult.Status.SUCCEEDED, apiResult.getStatus());
 
 		// verify(mockHttpServletRequest, times(1)).getInputStream();
