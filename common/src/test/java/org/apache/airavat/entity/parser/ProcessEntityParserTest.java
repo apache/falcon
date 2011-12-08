@@ -24,7 +24,6 @@ package org.apache.airavat.entity.parser;
 import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.airavat.AiravatException;
@@ -32,7 +31,6 @@ import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 public class ProcessEntityParserTest {
 

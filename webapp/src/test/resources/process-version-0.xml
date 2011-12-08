@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Process name="sample" >
+<process name="sample" >
     <!-- where -->
     <clusters>
       <cluster name="prod-red" />
@@ -12,8 +12,8 @@
 
     <!-- what -->
     <inputs>
-        <input feed="impression" start-instance="$ptime-6" end-instance="$ptime" />
-        <input feed="clicks" start-instance="$ptime" end-instance="$ptime" />
+        <input id="impression" feed="impression" start-instance="$ptime-6" end-instance="$ptime" />
+        <input id="clicks" feed="clicks" start-instance="$ptime" end-instance="$ptime" />
     </inputs>
 
     <outputs>
@@ -22,7 +22,10 @@
     </outputs>
 
     <!-- how -->
-    <workflow engine="oozie" path="hdfs:///path/to/workflow" />
+    <workflow engine="oozie" path="hdfs:///path/to/workflow" >
+    	<input name="clickinputData" input="clicks" />
+    	<input name="impressionData" input="impression" />
+	</workflow>
 
     <retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
 
@@ -30,4 +33,4 @@
         <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
         <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
     </late-process>
-</Process>
+</process>

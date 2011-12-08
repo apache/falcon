@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coordinator:coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns:coordinator="uri:oozie:coordinator:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.1 coordinator.xsd ">
+  <coordinator:controls>
+    <coordinator:timeout>coordinator:timeout</coordinator:timeout>
+    <coordinator:concurrency>coordinator:concurrency</coordinator:concurrency>
+    <coordinator:execution>coordinator:execution</coordinator:execution>
+  </coordinator:controls>
+  <coordinator:datasets>
+    <coordinator:include>coordinator:include</coordinator:include>
+    <coordinator:dataset frequency="" initial-instance="" name="input" timezone="">
+      <coordinator:uri-template>coordinator:uri-template</coordinator:uri-template>
+    </coordinator:dataset>
+  </coordinator:datasets>
+  <coordinator:input-events>
+    <coordinator:data-in dataset="input" name="input-event">
+      <coordinator:instance>coordinator:instance</coordinator:instance>
+    </coordinator:data-in>
+  </coordinator:input-events>
+  <coordinator:output-events>
+    <coordinator:data-out dataset="input" name="output-event">
+      <coordinator:instance>coordinator:instance</coordinator:instance>
+    </coordinator:data-out>
+  </coordinator:output-events>
+  <coordinator:action>
+    <coordinator:workflow>
+      <coordinator:app-path>coordinator:app-path</coordinator:app-path>
+    </coordinator:workflow>
+  </coordinator:action>
+</coordinator:coordinator-app>
