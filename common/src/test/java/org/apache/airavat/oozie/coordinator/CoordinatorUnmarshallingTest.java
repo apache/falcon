@@ -48,7 +48,7 @@ public class CoordinatorUnmarshallingTest {
 		COORDINATORAPP app = coordinatorApp.getValue();
 		Assert.assertEquals(app.getName(), "test");
 		Assert.assertEquals(app.getInputEvents().getDataIn().get(0).getName(),
-				"input-event");
+				"data-in");
 	}
 
 }

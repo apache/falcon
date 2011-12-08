@@ -118,7 +118,7 @@ public abstract class EntityParser<T extends Entity> {
 	 * Unmarshallers based on the Entity Type
 	 * 
 	 */
-	public static class EntityUnmarshaller {
+	public static final class EntityUnmarshaller {
 
 		/**
 		 * Map which holds Unmarshaller as value for each entity type key.
