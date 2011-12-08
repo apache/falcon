@@ -135,10 +135,7 @@ public abstract class EntityParser<T extends Entity> {
 				synchronized (Unmarshaller.class) {
 					if (UNMARSHALLER.get(entityType) == null) {
 						try {
-							JAXBContext jaxbContext = JAXBContext
-									.newInstance(clazz);
-							Unmarshaller unmarshaller = jaxbContext
-									.createUnmarshaller();
+							Unmarshaller unmarshaller = Util.getUnmarshaller(clazz);
 							UNMARSHALLER.put(entityType, unmarshaller);
 						} catch (JAXBException e) {
 							LOG.fatal("Unable to get JAXBContext", e);

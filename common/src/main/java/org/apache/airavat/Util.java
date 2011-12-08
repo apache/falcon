@@ -19,22 +19,70 @@ package org.apache.airavat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URL;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.apache.airavat.entity.parser.EntityParser;
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 
+/**
+ * 
+ * Util classes containing helper methods
+ * required by other classes.
+ *
+ */
 public final class Util {
 
 	private static final Logger LOG = Logger.getLogger(EntityParser.class);
+
+	private static final 		SchemaFactory schemaFactory = SchemaFactory
+			.newInstance("http://www.w3.org/2001/XMLSchema");
 
 	private Util() {
 
 	}
 
+	/**
+	 * Returns inputstream from a given text
+	 * @param text
+	 * @return
+	 */
 	public static InputStream getStreamFromString(String text) {
 		InputStream inputStream = null;
 		inputStream = new ByteArrayInputStream(text.getBytes());
 		return inputStream;
+	}
+
+	/**
+	 * Retruns JAXB unmarshaller for a given class type
+	 * @param clazz
+	 * @return
+	 * @throws JAXBException
+	 */
+	public static Unmarshaller getUnmarshaller(Class<?>  clazz) throws JAXBException{
+		JAXBContext jaxbContext = JAXBContext
+				.newInstance(clazz);
+		Unmarshaller unmarshaller = jaxbContext
+				.createUnmarshaller();
+		return unmarshaller;
+	}
+
+	/**
+	 * Returns Schema for a given Schema URL
+	 * @param xmlSchemaURL
+	 * @return
+	 * @throws SAXException
+	 */
+	public static Schema getSchema(URL xmlSchemaURL) throws SAXException{
+		Schema schema = null;
+		schema = schemaFactory.newSchema(xmlSchemaURL);
+		return schema;
 	}
 
 }

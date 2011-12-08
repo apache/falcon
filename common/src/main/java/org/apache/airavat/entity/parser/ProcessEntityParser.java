@@ -26,6 +26,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.airavat.AiravatException;
+import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
 import org.apache.log4j.Logger;
@@ -64,11 +65,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
 				this.getClazz());
 		// Validate against schema
-		SchemaFactory schemaFactory = SchemaFactory
-				.newInstance("http://www.w3.org/2001/XMLSchema");
-		Schema schema = null;
-		schema = schemaFactory.newSchema(this.getClass().getResource(
-				SCHEMA_FILE_NAME));
+		Schema schema = Util.getSchema(this.getClass().getResource(SCHEMA_FILE_NAME));
 		unmarshaller.setSchema(schema);
 		processDefinitionElement = (ProcessType) unmarshaller
 				.unmarshal(xmlStream);
