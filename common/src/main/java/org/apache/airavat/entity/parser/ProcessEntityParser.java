@@ -23,7 +23,6 @@ import java.io.InputStream;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
 import org.apache.airavat.AiravatException;
 import org.apache.airavat.Util;

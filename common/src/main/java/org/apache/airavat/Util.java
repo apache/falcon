@@ -33,15 +33,14 @@ import org.xml.sax.SAXException;
 
 /**
  * 
- * Util classes containing helper methods
- * required by other classes.
- *
+ * Util classes containing helper methods required by other classes.
+ * 
  */
 public final class Util {
 
 	private static final Logger LOG = Logger.getLogger(EntityParser.class);
 
-	private static final 		SchemaFactory schemaFactory = SchemaFactory
+	private static final SchemaFactory schemaFactory = SchemaFactory
 			.newInstance("http://www.w3.org/2001/XMLSchema");
 
 	private Util() {
@@ -50,6 +49,7 @@ public final class Util {
 
 	/**
 	 * Returns inputstream from a given text
+	 * 
 	 * @param text
 	 * @return
 	 */
@@ -61,25 +61,26 @@ public final class Util {
 
 	/**
 	 * Retruns JAXB unmarshaller for a given class type
+	 * 
 	 * @param clazz
 	 * @return
 	 * @throws JAXBException
 	 */
-	public static Unmarshaller getUnmarshaller(Class<?>  clazz) throws JAXBException{
-		JAXBContext jaxbContext = JAXBContext
-				.newInstance(clazz);
-		Unmarshaller unmarshaller = jaxbContext
-				.createUnmarshaller();
+	public static Unmarshaller getUnmarshaller(Class<?> clazz)
+			throws JAXBException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 		return unmarshaller;
 	}
 
 	/**
 	 * Returns Schema for a given Schema URL
+	 * 
 	 * @param xmlSchemaURL
 	 * @return
 	 * @throws SAXException
 	 */
-	public static Schema getSchema(URL xmlSchemaURL) throws SAXException{
+	public static Schema getSchema(URL xmlSchemaURL) throws SAXException {
 		Schema schema = null;
 		schema = schemaFactory.newSchema(xmlSchemaURL);
 		return schema;
