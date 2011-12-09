@@ -18,23 +18,14 @@
  * limitations under the License.
  */
  -->
-<Process name="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <clusters>
-    <cluster name="">cluster</cluster>
-  </clusters>
-  <frequency>frequency</frequency>
-  <periodicity>periodicity</periodicity>
-  <validity end="" start="">validity</validity>
-  <inputs>
-    <somenode>somenode</somenode>
-    <input end-instance="" feed="" start-instance="">input</input>
-  </inputs>
-  <outputs>
-    <output feed="" instance="">output</output>
-  </outputs>
-  <workflow engine="" path="">workflow</workflow>
-  <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
-  <late-process delay="" delayUnit="" policy="">
-    <late-input feed="" workflow-path="">late-input</late-input>
-  </late-process>
-</Process>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net
+
+http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+<configuration >
+  <date-format>YYYY/MM/DD HH:mm</date-format>
+  <wildcard>false</wildcard>
+  <trim-strings>false</trim-strings> 
+</configuration>
+</mappings>   

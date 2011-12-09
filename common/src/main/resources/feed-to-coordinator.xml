@@ -18,23 +18,18 @@
  * limitations under the License.
  */
  -->
-<Process name="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <clusters>
-    <cluster name="">cluster</cluster>
-  </clusters>
-  <frequency>frequency</frequency>
-  <periodicity>periodicity</periodicity>
-  <validity end="" start="">validity</validity>
-  <inputs>
-    <somenode>somenode</somenode>
-    <input end-instance="" feed="" start-instance="">input</input>
-  </inputs>
-  <outputs>
-    <output feed="" instance="">output</output>
-  </outputs>
-  <workflow engine="" path="">workflow</workflow>
-  <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
-  <late-process delay="" delayUnit="" policy="">
-    <late-input feed="" workflow-path="">late-input</late-input>
-  </late-process>
-</Process>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net
+
+http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+	<mapping wildcard="true" map-id="feed-to-coordinatorApp">
+		<class-a>org.apache.airavat.entity.v0.DummyFeed</class-a>
+		<class-b>org.apache.airavat.oozie.coordinator.COORDINATORAPP</class-b>
+		<field>
+			<a>inputEvents</a>
+			<b>inputEvents</b>
+		</field>
+	</mapping>
+
+</mappings>

@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,24 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- -->
-<Process name="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <clusters>
-    <cluster name="">cluster</cluster>
-  </clusters>
-  <frequency>frequency</frequency>
-  <periodicity>periodicity</periodicity>
-  <validity end="" start="">validity</validity>
-  <inputs>
-    <somenode>somenode</somenode>
-    <input end-instance="" feed="" start-instance="">input</input>
-  </inputs>
-  <outputs>
-    <output feed="" instance="">output</output>
-  </outputs>
-  <workflow engine="" path="">workflow</workflow>
-  <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
-  <late-process delay="" delayUnit="" policy="">
-    <late-input feed="" workflow-path="">late-input</late-input>
-  </late-process>
-</Process>
+package org.apache.airavat.mappers;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.dozer.DozerBeanMapper;
+import org.dozer.Mapper;
+
+/**
+ * Dozer Bean Mapping class, which creates a singleton mapper, which should be
+ * used across the application
+ */
+public final class DozerManager {
+
+	private static final DozerBeanMapper MAPPER = new DozerBeanMapper();
+	private static final List<String> MAPPING_FILES = new ArrayList<String>();
+
+	static {
+
+		/**
+		 * Global configuration files
+		 */
+		MAPPING_FILES.add("dozer-config.xml");
+
+		/**
+		 * Other mapping files
+		 */
+		MAPPING_FILES.add("process-to-coordinator.xml");
+		// MAPPING_FILES.add("feed-to-coordinator.xml");
+
+		MAPPER.setMappingFiles(MAPPING_FILES);
+	}
+
+	public static Mapper getMapper() {
+		return MAPPER;
+	}
+
+}

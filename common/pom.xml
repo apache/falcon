@@ -19,11 +19,19 @@
 		<groupId>org.apache.airavat</groupId>
 		<artifactId>airavat-main</artifactId>
 		<version>0.1-SNAPSHOT</version>
+
 	</parent>
 	<artifactId>airavat-common</artifactId>
 	<description>Airavat Common Module</description>
 	<name>Airavat Commons</name>
 	<packaging>jar</packaging>
+	<repositories>
+	<repository>
+	<id>mvnrepository</id>
+	<name>mvnrepository</name>
+	<url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
+	</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
@@ -36,6 +44,16 @@
 			<artifactId>testng</artifactId>
 			<version>6.1.1</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.dozer</groupId>
+			<artifactId>dozer</artifactId>
+			<version>5.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.2</version>
 		</dependency>
 	</dependencies>
 
@@ -57,16 +75,16 @@
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<configuration>
-						<source>1.6</source>
-						<target>1.6</target>
-					</configuration>
-				</plugin>
-			</plugins>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 </project>

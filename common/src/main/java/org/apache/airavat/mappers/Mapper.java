@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,24 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- -->
-<Process name="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <clusters>
-    <cluster name="">cluster</cluster>
-  </clusters>
-  <frequency>frequency</frequency>
-  <periodicity>periodicity</periodicity>
-  <validity end="" start="">validity</validity>
-  <inputs>
-    <somenode>somenode</somenode>
-    <input end-instance="" feed="" start-instance="">input</input>
-  </inputs>
-  <outputs>
-    <output feed="" instance="">output</output>
-  </outputs>
-  <workflow engine="" path="">workflow</workflow>
-  <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
-  <late-process delay="" delayUnit="" policy="">
-    <late-input feed="" workflow-path="">late-input</late-input>
-  </late-process>
-</Process>
+package org.apache.airavat.mappers;
+
+import org.apache.airavat.entity.v0.Entity;
+import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
+
+/**
+ * 
+ * All Mappers should extend 
+ * this interface
+ *
+ */
+public interface Mapper {
+	
+	Class<COORDINATORAPP> COORDINATORAPP_CLASS = COORDINATORAPP.class;
+
+	void map();
+	
+	Entity getEntity();
+	
+	COORDINATORAPP getCoordinatorapp();
+
+}
