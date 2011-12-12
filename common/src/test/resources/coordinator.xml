@@ -1,49 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
- -->
-<coordinator:coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns:coordinator="uri:oozie:coordinator:0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.3 ../../main/resources/coordinator.xsd ">
-  <coordinator:controls>
-    <coordinator:timeout>coordinator:timeout</coordinator:timeout>
-    <coordinator:concurrency>coordinator:concurrency</coordinator:concurrency>
-    <coordinator:execution>coordinator:execution</coordinator:execution>
-    <coordinator:throttle>coordinator:throttle</coordinator:throttle>
-  </coordinator:controls>
-  <coordinator:datasets>
-    <coordinator:include>coordinator:include</coordinator:include>
-    <coordinator:dataset frequency="" initial-instance="" name="dataset-test" timezone="">
-      <coordinator:uri-template>coordinator:uri-template</coordinator:uri-template>
-    </coordinator:dataset>
-  </coordinator:datasets>
-  <coordinator:input-events>
-    <coordinator:data-in dataset="dataset-test" name="data-in">
-      <coordinator:instance>coordinator:instance</coordinator:instance>
-    </coordinator:data-in>
-  </coordinator:input-events>
-  <coordinator:output-events>
-    <coordinator:data-out dataset="dataset-test" name="data-out">
-      <coordinator:instance>coordinator:instance</coordinator:instance>
-    </coordinator:data-out>
-  </coordinator:output-events>
-  <coordinator:action>
-    <coordinator:workflow>
-      <coordinator:app-path>coordinator:app-path</coordinator:app-path>
-    </coordinator:workflow>
-  </coordinator:action>
-</coordinator:coordinator-app>
+<coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns="uri:oozie:coordinator:0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.3 ../../main/resources/coordinator.xsd ">
+  <controls>
+    <timeout>timeout</timeout>
+    <concurrency>concurrency</concurrency>
+    <execution>execution</execution>
+    <throttle>throttle</throttle>
+  </controls>
+  <datasets>
+    <include>include</include>
+    <dataset frequency="" initial-instance="" name="dataset1" timezone="">
+      <uri-template>uri-template</uri-template>
+      <done-flag>done-flag</done-flag>
+    </dataset>
+  </datasets>
+  <input-events>
+    <data-in dataset="dataset1" name="data-in">
+      <instance>instance</instance>
+    </data-in>
+  </input-events>
+  <output-events>
+    <data-out dataset="dataset1" name="data-out1">
+      <instance>instance</instance>
+    </data-out>
+  </output-events>
+  <action>
+    <workflow>
+      <app-path>app-path</app-path>
+      <configuration>
+        <property>
+          <name>name</name>
+          <value>value</value>
+          <description>description</description>
+        </property>
+      </configuration>
+    </workflow>
+  </action>
+</coordinator-app>
