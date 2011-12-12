@@ -27,10 +27,14 @@ import org.dozer.Mapper;
  * Dozer Bean Mapping class, which creates a singleton mapper, which should be
  * used across the application
  */
-public final class DozerManager {
+public final class DozerProvider {
 
 	private static final DozerBeanMapper MAPPER = new DozerBeanMapper();
 	private static final List<String> MAPPING_FILES = new ArrayList<String>();
+
+	private DozerProvider() {
+
+	}
 
 	static {
 

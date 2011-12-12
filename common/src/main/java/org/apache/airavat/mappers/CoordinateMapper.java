@@ -43,7 +43,7 @@ public class CoordinateMapper implements Mapper {
 
 	@Override
 	public void map() {
-		DozerManager.getMapper().map(entity, coordinatorapp);
+		DozerProvider.getMapper().map(entity, coordinatorapp);
 	}
 
 	@Override
