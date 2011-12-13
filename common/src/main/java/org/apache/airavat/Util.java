@@ -23,6 +23,7 @@ import java.net.URL;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -71,6 +72,19 @@ public final class Util {
 		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 		return unmarshaller;
+	}
+
+	/**
+	 * Retruns JAXB Marshaller for a given class type
+	 * 
+	 * @param clazz
+	 * @return
+	 * @throws JAXBException
+	 */
+	public static Marshaller getMarshaller(Class<?> clazz) throws JAXBException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+		Marshaller marshaller = jaxbContext.createMarshaller();
+		return marshaller;
 	}
 
 	/**

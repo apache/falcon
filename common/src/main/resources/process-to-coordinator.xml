@@ -1,23 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
- -->
+<!-- /* * Licensed to the Apache Software Foundation (ASF) under one * or 
+	more contributor license agreements. See the NOTICE file * distributed with 
+	this work for additional information * regarding copyright ownership. The 
+	ASF licenses this file * to you under the Apache License, Version 2.0 (the 
+	* "License"); you may not use this file except in compliance * with the License. 
+	You may obtain a copy of the License at * * http://www.apache.org/licenses/LICENSE-2.0 
+	* * Unless required by applicable law or agreed to in writing, software * 
+	distributed under the License is distributed on an "AS IS" BASIS, * WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. * See the 
+	License for the specific language governing permissions and * limitations 
+	under the License. */ -->
 <mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://dozer.sourceforge.net
 
@@ -31,24 +23,68 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 			<b>name</b>
 		</field>
 		<field>
-			<a>frequency</a>
-			<b>frequency</b>
+			<a>concurrency</a>
+			<b>controls.concurrency</b>
 		</field>
 		<field>
-			<a>validity</a>
-			<b>controls</b>
+			<a>execution</a>
+			<b>controls.execution</b>
+		</field>
+		<field>
+			<a>validity.start</a>
+			<b>start</b>
+		</field>
+		<field>
+			<a>validity.end</a>
+			<b>end</b>
+		</field>
+		<field>
+			<a>validity.timezone</a>
+			<b>timezone</b>
+		</field>
+		<field>
+			<a>workflow.path</a>
+			<b>action.workflow.appPath</b>
+		</field>
+		<field>
+			<a>properties.property</a>
+			<b is-accessible="true">action.workflow.configuration.property</b>
+		</field>
+		<field>
+			<a>workflow.path</a>
+			<b>action.workflow.appPath</b>
+		</field>
+
+		<field>
+			<a>inputs.input</a>
+			<b is-accessible="true">inputEvents.dataIn</b>
+		</field>
+		<field>
+			<a>outputs.output</a>
+			<b is-accessible="true">outputEvents.dataOut</b>
 		</field>
 	</mapping>
-
-	<mapping>
-		<class-a>org.apache.airavat.entity.v0.ValidityType</class-a>
-		<class-b>org.apache.airavat.oozie.coordinator.CONTROLS</class-b>
+	<mapping wildcard="true">
+		<class-a>org.apache.airavat.entity.v0.PropertyType</class-a>
+		<class-b>org.apache.airavat.oozie.coordinator.CONFIGURATION$Property
+		</class-b>
+	</mapping>
+	<mapping wildcard="true">
+		<class-a>org.apache.airavat.entity.v0.InputType</class-a>
+		<class-b>org.apache.airavat.oozie.coordinator.DATAIN</class-b>
 		<field>
-			<a>value</a>
-			<b>timeout</b>
+			<a>feed</a>
+			<b>dataset</b>
+		</field>
+	</mapping>
+	<mapping wildcard="true">
+		<class-a>org.apache.airavat.entity.v0.OutputType</class-a>
+		<class-b>org.apache.airavat.oozie.coordinator.DATAOUT</class-b>
+		<field>
+			<a>feed</a>
+			<b>dataset</b>
 		</field>
 
-		<!-- <field> <a>periodicity</a> <b>name</b> </field> -->
 	</mapping>
 
 </mappings>

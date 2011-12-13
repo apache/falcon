@@ -1,10 +1,20 @@
 package org.apache.airavat.mappers;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
+import org.apache.airavat.AiravatException;
+import org.apache.airavat.Util;
+import org.apache.airavat.entity.parser.EntityParserFactory;
+import org.apache.airavat.entity.parser.ProcessEntityParser;
+import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
-import org.apache.airavat.entity.v0.ValidityType;
 import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
+import org.apache.airavat.oozie.coordinator.ObjectFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,38 +36,50 @@ import org.testng.annotations.Test;
 
 public class ProcessToCoordinatorTest {
 
-	COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+	private COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+	private ProcessType processType;
+	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+
+	@BeforeClass
+	public void populateProcessType() throws AiravatException {
+		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
+				.getParser(EntityType.PROCESS);
+
+		processType = (ProcessType) parser.parse(this.getClass()
+				.getResourceAsStream(SAMPLE_PROCESS_XML));
+
+	}
 
 	@Test
-	public void testMap() {
+	public void testMap() throws JAXBException, SAXException {
 
-		ProcessType processType = new ProcessType();
-		processType.setFrequency("frequency");
-		processType.setName("ProcessName");
-
-		ValidityType validityType = new ValidityType();
-		validityType.setValue("validityValue");
-
-		processType.setValidity(validityType);
-		
-		coordinatorapp.setStart("StartTime");
-		coordinatorapp.setEnd("EndTime");
-
-		//Map
+		// Map
 		new CoordinateMapper(processType, coordinatorapp).map();
-		
-		Assert.assertEquals(coordinatorapp.getName(),
-				processType.getName());
-		
-		Assert.assertEquals(coordinatorapp.getFrequency(),
-				processType.getFrequency());
 
-		Assert.assertEquals(coordinatorapp.getControls().getTimeout(),
-				processType.getValidity().getValue());
-		
-		Assert.assertEquals(coordinatorapp.getStart(), "StartTime");
-		
-		Assert.assertEquals(coordinatorapp.getEnd(), "EndTime");
+		Assert.assertEquals(coordinatorapp.getName(), processType.getName());
+
+		Assert.assertEquals(coordinatorapp.getControls().getConcurrency(),
+				processType.getConcurrency());
+
+		Assert.assertEquals(coordinatorapp.getControls().getExecution(),
+				processType.getExecution());
+
+		Assert.assertEquals(coordinatorapp.getStart(), processType
+				.getValidity().getStart());
+
+		Assert.assertEquals(coordinatorapp.getEnd(), processType.getValidity()
+				.getEnd());
+
+		Marshaller marshaller = Util.getMarshaller(COORDINATORAPP.class);
+
+		coordinatorapp.setFrequency("5");
+
+		marshaller.setSchema(Util.getSchema(ProcessToCoordinatorTest.class
+				.getResource("/coordinator.xsd")));
+		marshaller.marshal(
+				new ObjectFactory().createCoordinatorApp(coordinatorapp),
+				System.out);
+
 	}
 
 }
