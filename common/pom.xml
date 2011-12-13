@@ -26,12 +26,19 @@
 	<name>Airavat Commons</name>
 	<packaging>jar</packaging>
 	<repositories>
-	<repository>
-	<id>mvnrepository</id>
-	<name>mvnrepository</name>
-	<url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
-	</repository>
+		<repository>
+			<id>mvnrepository</id>
+			<name>mvnrepository</name>
+			<url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
+		</repository>
+		<repository>
+			<id>java.net</id>
+			<name>java.net Maven Repository</name>
+			<url>https://maven-repository.dev.java.net/nonav/repository</url>
+			<layout>legacy</layout>
+		</repository>
 	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
@@ -58,24 +65,35 @@
 	</dependencies>
 
 	<build>
-		<directory>target</directory>
-		<outputDirectory>target/classes</outputDirectory>
-		<finalName>${project.artifactId}-${project.version}</finalName>
-		<testOutputDirectory>target/test-classes</testOutputDirectory>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
-		<testSourceDirectory>src/test/java</testSourceDirectory>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-		</resources>
-		<testResources>
-			<testResource>
-				<directory>src/test/resources</directory>
-			</testResource>
-		</testResources>
+		<!-- <directory>target</directory> <outputDirectory>target/classes</outputDirectory> 
+			<finalName>${project.artifactId}-${project.version}</finalName> <testOutputDirectory>target/test-classes</testOutputDirectory> 
+			<sourceDirectory>src/main/java</sourceDirectory> <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory> 
+			<testSourceDirectory>src/test/java</testSourceDirectory> <resources> <resource> 
+			<directory>src/main/resources</directory> </resource> </resources> <testResources> 
+			<testResource> <directory>src/test/resources</directory> </testResource> 
+			</testResources> -->
 		<plugins>
+			<plugin>
+				<groupId>com.sun.tools.xjc.maven2</groupId>
+				<artifactId>maven-jaxb-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<generatePackage>org.apache.airavat.oozie.coordinator</generatePackage>
+					<includeSchemas>
+						<includeSchema>coordinator.xsd</includeSchema>
+					</includeSchemas>
+					<excludeBindings>
+						<exluceBinding>jaxb-binding.xjb</exluceBinding>
+					</excludeBindings>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

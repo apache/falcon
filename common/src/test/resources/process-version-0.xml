@@ -25,26 +25,30 @@
     </clusters>
 
     <!-- when -->
+    <concurrency>1</concurrency>
+    <execution>LIFO</execution>
     <frequency>hourly</frequency>
     <periodicity>1</periodicity>
-    <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00"/>
+    <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00" timezone="UTC"/>
 
     <!-- what -->
     <inputs>
-        <input id="impression" feed="impression" start-instance="$ptime-6" end-instance="$ptime" />
-        <input id="clicks" feed="clicks" start-instance="$ptime" end-instance="$ptime" />
+        <input name="impression" feed="impression" start-instance="$ptime-6" end-instance="$ptime" /> 
+        <input name="clicks" feed="clicks" start-instance="$ptime" end-instance="$ptime" />
     </inputs>
 
     <outputs>
-        <output feed="imp-click-join" instance="$ptime" />
-        <output feed="imp-click-join1" instance="$ptime" />
+        <output name="impOutput" feed="imp-click-join" instance="$ptime" />
+        <output name="clicksOutput" feed="imp-click-join1" instance="$ptime" />
     </outputs>
 
     <!-- how -->
-    <workflow engine="oozie" path="hdfs:///path/to/workflow" >
-    	<input name="clickinputData" input="clicks" />
-    	<input name="impressionData" input="impression" />
-	</workflow>
+    <properties>
+    	<property name="name" value="value"/>
+    	<property name="name" value="value"/>
+    </properties>
+    
+    <workflow engine="oozie" path="hdfs://path/to/workflow" libpath="hdfs://path/to/workflow/lib"/>
 
     <retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
 
