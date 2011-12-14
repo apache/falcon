@@ -44,9 +44,9 @@ public final class EntityParserFactory {
 		case PROCESS:
 			return new ProcessEntityParser(entityType,
 					org.apache.airavat.entity.v0.ProcessType.class);
-		case FEED:
+		case FEED://TODO
 			return null;
-		case DATAENDPOINT:
+		case DATAENDPOINT://TODO
 			return null;
 		default:
 			return null;

@@ -3,6 +3,7 @@ package org.apache.airavat;
 import java.io.InputStream;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
@@ -29,5 +30,11 @@ public class UtilTest {
 	public void getUnmarshaller() throws JAXBException {
 		Unmarshaller unmarshaller = Util.getUnmarshaller(UtilTest.class);
 		Assert.assertNotNull(unmarshaller);
+	}
+
+	@Test
+	public void getMarshaller() throws JAXBException {
+		Marshaller marshaller = Util.getMarshaller(UtilTest.class);
+		Assert.assertNotNull(marshaller);
 	}
 }

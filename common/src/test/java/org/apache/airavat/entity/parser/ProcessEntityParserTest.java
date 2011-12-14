@@ -82,7 +82,17 @@ public class ProcessEntityParserTest {
 		parser.parse(this.getClass().getResourceAsStream(
 				SAMPLE_INVALID_PROCESS_XML));
 	}
+	
+	@Test(expectedExceptions=AiravatException.class)
+	public void testValidate() throws AiravatException{
+		parser.validateSchema("<process></process>");
+	}
 
+	@Test(expectedExceptions=AiravatException.class)
+	public void testParseString() throws AiravatException{
+		parser.parse("<process></process>");
+	}
+	
 	//TODO
 	@Test
 	public void applyValidations() {
