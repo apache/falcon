@@ -23,7 +23,7 @@ import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
 /**
  * Pass a partially filled coordinatorapp object project with the entity
  */
-public class CoordinateMapper implements Mapper {
+public class CoordinatorMapper implements Mapper {
 
 	private COORDINATORAPP coordinatorapp;
 
@@ -35,7 +35,7 @@ public class CoordinateMapper implements Mapper {
 	 * @param coordinatorapp
 	 * @param entity
 	 */
-	public CoordinateMapper(final Entity entity, final COORDINATORAPP coordinatorapp) {
+	public CoordinatorMapper(final Entity entity, final COORDINATORAPP coordinatorapp) {
 		super();
 		this.coordinatorapp = coordinatorapp;
 		this.entity = entity;

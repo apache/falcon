@@ -54,7 +54,7 @@ public class ProcessToCoordinatorTest {
 	public void testMap() throws JAXBException, SAXException {
 
 		// Map
-		CoordinateMapper coordinateMapper = new CoordinateMapper(processType,
+		CoordinatorMapper coordinateMapper = new CoordinatorMapper(processType,
 				coordinatorapp);
 		coordinateMapper.map();
 

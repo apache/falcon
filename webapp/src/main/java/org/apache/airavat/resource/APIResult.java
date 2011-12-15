@@ -18,6 +18,8 @@
 
 package org.apache.airavat.resource;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -25,8 +27,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
  * message- detailed message
  */
-@XmlRootElement
+@XmlRootElement(name="result")
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class APIResult {
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
 	public static enum Status {
 		SUCCEEDED, FAILED
