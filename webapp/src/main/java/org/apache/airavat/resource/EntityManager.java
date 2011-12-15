@@ -73,7 +73,7 @@ public class EntityManager {
 	@POST
 	@Path("validate/{type}")
 	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public APIResult validate(
 			@Context javax.servlet.http.HttpServletRequest request,
 			@PathParam("type") String type) {
