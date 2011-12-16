@@ -27,32 +27,16 @@ import javax.xml.bind.annotation.XmlRootElement;
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
  * message- detailed message
  */
-@XmlRootElement(name="result")
-@XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlRootElement(name = "result")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public static enum Status {
-		SUCCEEDED, FAILED
-	}
 
 	private Status status;
 
 	private String message;
 
-	public Status getStatus() {
-		return status;
-	}
-
-	public String getMessage() {
-		return message;
+	public static enum Status {
+		SUCCEEDED, FAILED
 	}
 
 	public APIResult(Status status, String message) {
@@ -61,5 +45,16 @@ public class APIResult {
 		this.message = message;
 	}
 
+	private APIResult() {
+		// private default constructor for JAXB
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public String getMessage() {
+		return message;
+	}
 
 }

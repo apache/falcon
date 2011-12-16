@@ -73,7 +73,7 @@ public class EntityManager {
 	@POST
 	@Path("validate/{type}")
 	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult validate(
 			@Context javax.servlet.http.HttpServletRequest request,
 			@PathParam("type") String type) {
@@ -86,7 +86,7 @@ public class EntityManager {
 
 		} catch (IOException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		} catch (AiravatException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());

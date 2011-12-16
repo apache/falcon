@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.net.URI;
 
 import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
@@ -30,6 +29,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -47,6 +47,10 @@ public class EntityManagerJerseyTest {
 		service = client.resource(getBaseURI());
 	}
 
+	/**
+	 * Tests should be enabled only in local environments as they need running
+	 * instance of webserver
+	 */
 	@Test(enabled = false)
 	public void testStatus() {
 		// http://localhost:15000/api/entities/status/hello/1
@@ -59,16 +63,19 @@ public class EntityManagerJerseyTest {
 
 		ServletInputStream stream = getServletInputStream(SAMPLE_PROCESS_XML);
 
-		System.out.println(service.path("api/entities/validate/process").accept(MediaType.APPLICATION_JSON).type(MediaType.TEXT_XML).post(APIResult.class, stream));
-		
-		
-		
+		ClientResponse clientRepsonse = service
+				.path("api/entities/validate/process")
+				.accept(MediaType.APPLICATION_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, stream);
+
+		System.out.println(clientRepsonse.getEntity(String.class));
+
 	}
 
 	private static URI getBaseURI() {
 		return UriBuilder.fromUri("http://localhost:15000/").build();
 	}
-	
+
 	/**
 	 * Converts a InputStream into ServletInputStream
 	 * 
