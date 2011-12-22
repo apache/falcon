@@ -15,25 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.airavat.mappers;
 
-import org.apache.airavat.entity.v0.Entity;
+package org.apache.airavat.converter;
+
+import org.apache.airavat.entity.v0.ProcessType;
 import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
+import org.dozer.DozerConverter;
 
-/**
- * 
- * All Mappers should extend 
- * this interface
- *
- */
-public interface Mapper {
-	
-	Class<COORDINATORAPP> COORDINATORAPP_CLASS = COORDINATORAPP.class;
+public class CustomFrequencyConverter extends
+		DozerConverter<ProcessType, COORDINATORAPP> {
 
-	void map();
-	
-	Entity getEntity();
-	
-	COORDINATORAPP getCoordinatorapp();
+	public CustomFrequencyConverter() {
+		super(ProcessType.class, COORDINATORAPP.class);
+	}
+
+	@Override
+	public COORDINATORAPP convertTo(ProcessType processType,
+			COORDINATORAPP coordinatorapp) {
+
+		coordinatorapp.setFrequency("${coord:" + processType.getFrequency()
+				+ "(" + processType.getPeriodicity() + ")}");
+
+		return coordinatorapp;
+	}
+
+	@Override
+	public ProcessType convertFrom(COORDINATORAPP arg0, ProcessType arg1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

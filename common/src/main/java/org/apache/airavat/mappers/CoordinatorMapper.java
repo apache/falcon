@@ -23,11 +23,11 @@ import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
 /**
  * Pass a partially filled coordinatorapp object project with the entity
  */
-public class CoordinatorMapper implements Mapper {
+public class CoordinatorMapper implements CustomMapper {
 
-	private COORDINATORAPP coordinatorapp;
+	private final COORDINATORAPP coordinatorapp;
 
-	private Entity entity;
+	private final Entity entity;
 
 	/**
 	 * Pass a ProcessType Object and partially filled coordinator Object
@@ -35,7 +35,8 @@ public class CoordinatorMapper implements Mapper {
 	 * @param coordinatorapp
 	 * @param entity
 	 */
-	public CoordinatorMapper(final Entity entity, final COORDINATORAPP coordinatorapp) {
+	public CoordinatorMapper(final Entity entity,
+			final COORDINATORAPP coordinatorapp) {
 		super();
 		this.coordinatorapp = coordinatorapp;
 		this.entity = entity;
@@ -43,7 +44,14 @@ public class CoordinatorMapper implements Mapper {
 
 	@Override
 	public void map() {
-		DozerProvider.getMapper().map(entity, coordinatorapp);
+		DozerProvider.map(new String[] { "process-to-coordinator.xml" },
+				this.entity,
+				this.coordinatorapp);
+
+		// Map custom fields
+		DozerProvider.map(new String[] { "custom-coordinator.xml" },
+				this.entity, this.coordinatorapp);
+
 	}
 
 	@Override

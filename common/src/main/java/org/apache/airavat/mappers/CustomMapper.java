@@ -15,32 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.airavat.converter;
+package org.apache.airavat.mappers;
 
 import org.apache.airavat.entity.v0.Entity;
-import org.apache.airavat.entity.v0.ProcessType;
-import org.apache.airavat.mappers.CoordinatorMapper;
 import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
 
 /**
- * It accepts Feed, Cluster and Process object and then converts it to a valid
- * Coordinator object
+ * 
+ * All Mappers should extend this interface
  * 
  */
-public class CoordinatorConverter {
+public interface CustomMapper {
 
-	public static COORDINATORAPP convert(final ProcessType processType,
-			final Entity feed, final Entity cluster) {
+	Class<COORDINATORAPP> COORDINATORAPP_CLASS = COORDINATORAPP.class;
 
-		COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+	void map();
 
-		CoordinatorMapper mapper = new CoordinatorMapper(processType,
-				coordinatorapp);
-		mapper.map();
+	Entity getEntity();
 
-		return coordinatorapp;
-
-	}
-
+	COORDINATORAPP getCoordinatorapp();
 
 }

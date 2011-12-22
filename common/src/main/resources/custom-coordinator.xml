@@ -14,10 +14,18 @@
 	xsi:schemaLocation="http://dozer.sourceforge.net
 
 http://dozer.sourceforge.net/schema/beanmapping.xsd">
-
 	<configuration>
 		<date-format>YYYY/MM/DD HH:mm</date-format>
 		<wildcard>false</wildcard>
 		<trim-strings>false</trim-strings>
+
+		<custom-converters>
+			<converter type="org.apache.airavat.converter.CustomFrequencyConverter">
+				<class-a>org.apache.airavat.entity.v0.ProcessType</class-a>
+				<class-b>org.apache.airavat.oozie.coordinator.COORDINATORAPP
+				</class-b>
+			</converter>
+		</custom-converters>
+
 	</configuration>
-</mappings>   
+</mappings>

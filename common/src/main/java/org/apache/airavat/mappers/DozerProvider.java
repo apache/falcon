@@ -17,11 +17,10 @@
  */
 package org.apache.airavat.mappers;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.dozer.DozerBeanMapper;
-import org.dozer.Mapper;
 
 /**
  * Dozer Bean Mapping class, which creates a singleton mapper, which should be
@@ -29,31 +28,15 @@ import org.dozer.Mapper;
  */
 public final class DozerProvider {
 
-	private static final DozerBeanMapper MAPPER = new DozerBeanMapper();
-	private static final List<String> MAPPING_FILES = new ArrayList<String>();
-
 	private DozerProvider() {
-
+		// let clients not create this.
 	}
 
-	static {
-
-		/**
-		 * Global configuration files
-		 */
-		MAPPING_FILES.add("dozer-config.xml");
-
-		/**
-		 * Other mapping files
-		 */
-		MAPPING_FILES.add("process-to-coordinator.xml");
-		// MAPPING_FILES.add("feed-to-coordinator.xml");
-
-		MAPPER.setMappingFiles(MAPPING_FILES);
-	}
-
-	public static Mapper getMapper() {
-		return MAPPER;
+	public static void map(String[] filenames, Object source, Object destination) {
+		DozerBeanMapper mapper = new DozerBeanMapper();
+		List<String> mapperFiles = Arrays.asList(filenames);
+		mapper.setMappingFiles(mapperFiles);
+		mapper.map(source, destination);
 	}
 
 }

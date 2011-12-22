@@ -1,21 +1,3 @@
-package org.apache.airavat.mappers;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
-import org.apache.airavat.AiravatException;
-import org.apache.airavat.Util;
-import org.apache.airavat.entity.parser.EntityParserFactory;
-import org.apache.airavat.entity.parser.ProcessEntityParser;
-import org.apache.airavat.entity.v0.EntityType;
-import org.apache.airavat.entity.v0.ProcessType;
-import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
-import org.apache.airavat.oozie.coordinator.ObjectFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -34,9 +16,27 @@ import org.xml.sax.SAXException;
  * limitations under the License.
  */
 
+package org.apache.airavat.mappers;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
+import org.apache.airavat.AiravatException;
+import org.apache.airavat.Util;
+import org.apache.airavat.entity.parser.EntityParserFactory;
+import org.apache.airavat.entity.parser.ProcessEntityParser;
+import org.apache.airavat.entity.v0.EntityType;
+import org.apache.airavat.entity.v0.ProcessType;
+import org.apache.airavat.oozie.coordinator.COORDINATORAPP;
+import org.apache.airavat.oozie.coordinator.ObjectFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
+
 public class ProcessToCoordinatorTest {
 
-	private COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+	private final COORDINATORAPP coordinatorapp = new COORDINATORAPP();
 	private ProcessType processType;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
@@ -45,7 +45,7 @@ public class ProcessToCoordinatorTest {
 		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 				.getParser(EntityType.PROCESS);
 
-		processType = (ProcessType) parser.parse(this.getClass()
+		this.processType = (ProcessType) parser.parse(this.getClass()
 				.getResourceAsStream(SAMPLE_PROCESS_XML));
 
 	}
@@ -54,36 +54,37 @@ public class ProcessToCoordinatorTest {
 	public void testMap() throws JAXBException, SAXException {
 
 		// Map
-		CoordinatorMapper coordinateMapper = new CoordinatorMapper(processType,
-				coordinatorapp);
+		CoordinatorMapper coordinateMapper = new CoordinatorMapper(
+				this.processType, this.coordinatorapp);
 		coordinateMapper.map();
 
 		Assert.assertNotNull(coordinateMapper.getEntity());
 
 		Assert.assertNotNull(coordinateMapper.getCoordinatorapp());
 
-		Assert.assertEquals(coordinatorapp.getName(), processType.getName());
+		Assert.assertEquals(this.coordinatorapp.getName(),
+				this.processType.getName());
 
-		Assert.assertEquals(coordinatorapp.getControls().getConcurrency(),
-				processType.getConcurrency());
+		Assert.assertEquals(this.coordinatorapp.getControls().getConcurrency(),
+				this.processType.getConcurrency());
 
-		Assert.assertEquals(coordinatorapp.getControls().getExecution(),
-				processType.getExecution());
+		Assert.assertEquals(this.coordinatorapp.getControls().getExecution(),
+				this.processType.getExecution());
 
-		Assert.assertEquals(coordinatorapp.getStart(), processType
+		Assert.assertEquals(this.coordinatorapp.getStart(), this.processType
 				.getValidity().getStart());
 
-		Assert.assertEquals(coordinatorapp.getEnd(), processType.getValidity()
-				.getEnd());
+		Assert.assertEquals(this.coordinatorapp.getEnd(), this.processType
+				.getValidity().getEnd());
 
 		Marshaller marshaller = Util.getMarshaller(COORDINATORAPP.class);
 
-		coordinatorapp.setFrequency("5");
+		this.coordinatorapp.setFrequency("5");
 
 		marshaller.setSchema(Util.getSchema(ProcessToCoordinatorTest.class
 				.getResource("/coordinator.xsd")));
 		marshaller.marshal(
-				new ObjectFactory().createCoordinatorApp(coordinatorapp),
+				new ObjectFactory().createCoordinatorApp(this.coordinatorapp),
 				System.out);
 
 	}
