@@ -22,13 +22,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.airavat</groupId>
-        <artifactId>airavat-main</artifactId>
+        <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-main</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>airavat-repository</artifactId>
-    <description>Airavat Repository Module</description>
-    <name>Airavat Repository</name>
+    <artifactId>ivory-repository</artifactId>
+    <description>Ivory Repository Module</description>
+    <name>Ivory Repository</name>
     <packaging>jar</packaging>
 
 </project>

@@ -16,14 +16,14 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.apache.airavat</groupId>
-		<artifactId>airavat-main</artifactId>
+		<groupId>org.apache.ivory</groupId>
+		<artifactId>ivory-main</artifactId>
 		<version>0.1-SNAPSHOT</version>
 
 	</parent>
-	<artifactId>airavat-common</artifactId>
-	<description>Airavat Common Module</description>
-	<name>Airavat Commons</name>
+	<artifactId>ivory-common</artifactId>
+	<description>Ivory Common Module</description>
+	<name>Ivory Commons</name>
 	<packaging>jar</packaging>
 	<repositories>
 		<repository>
@@ -85,7 +85,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<generatePackage>org.apache.airavat.oozie.coordinator</generatePackage>
+					<generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
 					<includeSchemas>
 						<includeSchema>coordinator.xsd</includeSchema>
 					</includeSchemas>

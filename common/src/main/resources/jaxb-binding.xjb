@@ -23,7 +23,7 @@
     <bindings schemaLocation="process.xsd" version="1.0">
         <!-- Customise the package name -->
         <schemaBindings>
-            <package name="com.apache.airavat.entity.v0"/>
+            <package name="com.apache.ivory.entity.v0"/>
         </schemaBindings>
 
         <!-- rename the value element -->

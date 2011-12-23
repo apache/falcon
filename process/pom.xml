@@ -22,13 +22,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.airavat</groupId>
-        <artifactId>airavat-main</artifactId>
+        <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-main</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>airavat-process</artifactId>
-    <description>Airavat Process Module</description>
-    <name>Airavat Process</name>
+    <artifactId>ivory-process</artifactId>
+    <description>Ivory Process Module</description>
+    <name>Ivory Process</name>
     <packaging>jar</packaging>
 
 </project>

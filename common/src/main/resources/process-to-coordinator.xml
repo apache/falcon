@@ -27,8 +27,8 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		<trim-strings>false</trim-strings>
 	</configuration>
 	<mapping>
-		<class-a>org.apache.airavat.entity.v0.ProcessType</class-a>
-		<class-b>org.apache.airavat.oozie.coordinator.COORDINATORAPP</class-b>
+		<class-a>org.apache.ivory.entity.v0.ProcessType</class-a>
+		<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP</class-b>
 		<field>
 			<a>name</a>
 			<b>name</b>
@@ -76,21 +76,21 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		</field>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.airavat.entity.v0.PropertyType</class-a>
-		<class-b>org.apache.airavat.oozie.coordinator.CONFIGURATION$Property
+		<class-a>org.apache.ivory.entity.v0.PropertyType</class-a>
+		<class-b>org.apache.ivory.oozie.coordinator.CONFIGURATION$Property
 		</class-b>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.airavat.entity.v0.InputType</class-a>
-		<class-b>org.apache.airavat.oozie.coordinator.DATAIN</class-b>
+		<class-a>org.apache.ivory.entity.v0.InputType</class-a>
+		<class-b>org.apache.ivory.oozie.coordinator.DATAIN</class-b>
 		<field>
 			<a>feed</a>
 			<b>dataset</b>
 		</field>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.airavat.entity.v0.OutputType</class-a>
-		<class-b>org.apache.airavat.oozie.coordinator.DATAOUT</class-b>
+		<class-a>org.apache.ivory.entity.v0.OutputType</class-a>
+		<class-b>org.apache.ivory.oozie.coordinator.DATAOUT</class-b>
 		<field>
 			<a>feed</a>
 			<b>dataset</b>

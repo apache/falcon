@@ -26,9 +26,9 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		<trim-strings>false</trim-strings>
 
 		<custom-converters>
-			<converter type="org.apache.airavat.converter.CustomFrequencyConverter">
-				<class-a>org.apache.airavat.entity.v0.ProcessType</class-a>
-				<class-b>org.apache.airavat.oozie.coordinator.COORDINATORAPP
+			<converter type="org.apache.ivory.converter.CustomFrequencyConverter">
+				<class-a>org.apache.ivory.entity.v0.ProcessType</class-a>
+				<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP
 				</class-b>
 			</converter>
 		</custom-converters>
