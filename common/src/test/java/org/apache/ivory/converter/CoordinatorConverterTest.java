@@ -20,7 +20,7 @@ package org.apache.ivory.converter;
 
 import junit.framework.Assert;
 
-import org.apache.ivory.AiravatException;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
@@ -35,7 +35,7 @@ public class CoordinatorConverterTest {
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
 	@BeforeClass
-	public void populateProcessType() throws AiravatException {
+	public void populateProcessType() throws IvoryException {
 		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 				.getParser(EntityType.PROCESS);
 

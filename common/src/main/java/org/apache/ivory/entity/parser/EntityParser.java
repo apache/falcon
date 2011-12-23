@@ -18,19 +18,18 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
-import org.apache.ivory.AiravatException;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -74,9 +73,9 @@ public abstract class EntityParser<T extends Entity> {
 	 * @param xmlString
 	 *            - Entity XML
 	 * @return Entity - JAVA Object
-	 * @throws AiravatException
+	 * @throws IvoryException
 	 */
-	public Entity parse(String xmlString) throws AiravatException {
+	public Entity parse(String xmlString) throws IvoryException {
 
 		InputStream inputStream = Util.getStreamFromString(xmlString);
 		Entity entity = parse(inputStream);
@@ -89,17 +88,17 @@ public abstract class EntityParser<T extends Entity> {
 	 * 
 	 * @param xmlStream
 	 * @return entity
-	 * @throws AiravatException
+	 * @throws IvoryException
 	 */
-	public Entity parse(InputStream xmlStream) throws AiravatException {
+	public Entity parse(InputStream xmlStream) throws IvoryException {
 		T entity = null;
 
 		try {
 			entity = doParse(xmlStream);
 		} catch (JAXBException e) {
-			throw new AiravatException(e);
+			throw new IvoryException(e);
 		} catch (SAXException e) {
-			throw new AiravatException(e);
+			throw new IvoryException(e);
 		}
 
 		applyValidations(entity);
@@ -112,9 +111,9 @@ public abstract class EntityParser<T extends Entity> {
 	 * 
 	 * @param xmlString
 	 * @return
-	 * @throws AiravatException
+	 * @throws IvoryException
 	 */
-	public boolean validateSchema(String xmlString) throws AiravatException {
+	public boolean validateSchema(String xmlString) throws IvoryException {
 		InputStream xmlStream = Util.getStreamFromString(xmlString);
 		return validateSchema(xmlStream);
 	}
@@ -123,16 +122,16 @@ public abstract class EntityParser<T extends Entity> {
 	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
 	 * success.
 	 * 
-	 * @throws AiravatException
+	 * @throws IvoryException
 	 */
 	public boolean validateSchema(InputStream xmlStream)
-			throws AiravatException {
+			throws IvoryException {
 		try {
 			doParse(xmlStream);
 		} catch (JAXBException e) {
-			throw new AiravatException(e);
+			throw new IvoryException(e);
 		} catch (SAXException e) {
-			throw new AiravatException(e);
+			throw new IvoryException(e);
 		}
 		return true;
 	}

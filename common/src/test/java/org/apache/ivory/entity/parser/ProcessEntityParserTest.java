@@ -26,7 +26,7 @@ import java.io.IOException;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.ivory.AiravatException;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.ProcessType;
 import org.testng.Assert;
@@ -62,7 +62,7 @@ public class ProcessEntityParserTest {
 	}
 
 	@Test
-	public void testParse() throws IOException, AiravatException {
+	public void testParse() throws IOException, IvoryException {
 
 		ProcessType def = null;
 		def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
@@ -76,20 +76,20 @@ public class ProcessEntityParserTest {
 
 	}
 
-	@Test(expectedExceptions = AiravatException.class)
-	public void doParseInvalidXML() throws IOException, AiravatException {
+	@Test(expectedExceptions = IvoryException.class)
+	public void doParseInvalidXML() throws IOException, IvoryException {
 
 		parser.parse(this.getClass().getResourceAsStream(
 				SAMPLE_INVALID_PROCESS_XML));
 	}
 	
-	@Test(expectedExceptions=AiravatException.class)
-	public void testValidate() throws AiravatException{
+	@Test(expectedExceptions=IvoryException.class)
+	public void testValidate() throws IvoryException{
 		parser.validateSchema("<process></process>");
 	}
 
-	@Test(expectedExceptions=AiravatException.class)
-	public void testParseString() throws AiravatException{
+	@Test(expectedExceptions=IvoryException.class)
+	public void testParseString() throws IvoryException{
 		parser.parse("<process></process>");
 	}
 	

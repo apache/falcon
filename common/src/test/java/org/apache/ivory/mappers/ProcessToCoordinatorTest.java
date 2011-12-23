@@ -21,7 +21,7 @@ package org.apache.ivory.mappers;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.ivory.AiravatException;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
@@ -41,7 +41,7 @@ public class ProcessToCoordinatorTest {
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
 	@BeforeClass
-	public void populateProcessType() throws AiravatException {
+	public void populateProcessType() throws IvoryException {
 		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 				.getParser(EntityType.PROCESS);
 

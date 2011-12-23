@@ -31,7 +31,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.ivory.AiravatException;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.v0.EntityType;
@@ -88,7 +88,7 @@ public class EntityManager {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		} catch (IllegalArgumentException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
-		} catch (AiravatException e) {
+		} catch (IvoryException e) {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
 		

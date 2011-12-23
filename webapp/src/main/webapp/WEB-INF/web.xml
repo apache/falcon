@@ -24,8 +24,12 @@
     <display-name>Ivory Server</display-name>
     <description>Ivory Server</description>
 
+  <listener>
+    <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
+  </listener>
+
   <servlet>
-      <servlet-name>AiravatRESTApi</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
       <init-param>
           <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
@@ -43,7 +47,7 @@
   </servlet>
 
   <servlet-mapping>
-      <servlet-name>AiravatRESTApi</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <url-pattern>/api/*</url-pattern>
   </servlet-mapping>
 

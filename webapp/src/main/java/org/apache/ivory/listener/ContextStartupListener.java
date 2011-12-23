@@ -16,14 +16,29 @@
  * limitations under the License.
  */
 
-package org.apache.airavat.entity.store;
+package org.apache.ivory.listener;
 
+import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
-public class ConfigurationStore {
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
-  private static Logger LOG = Logger.getLogger(ConfigurationStore.class);
+public class ContextStartupListener implements ServletContextListener {
 
+  private static Logger LOG = Logger.getLogger(ContextStartupListener.class);
 
+  @Override
+  public void contextInitialized(ServletContextEvent sce) {
+    //Initialize Startup and runtime properties instance for use
+    LOG.info("Initializing startup properties ...");
+    StartupProperties.get();
+    LOG.info("Initializing runtime properties ...");
+    RuntimeProperties.get();
+  }
 
+  @Override
+  public void contextDestroyed(ServletContextEvent sce) {
+  }
 }
