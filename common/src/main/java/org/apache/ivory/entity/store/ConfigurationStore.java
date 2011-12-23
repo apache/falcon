@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.airavat.entity.store;
+package org.apache.ivory.entity.store;
 
 import org.apache.log4j.Logger;
 
