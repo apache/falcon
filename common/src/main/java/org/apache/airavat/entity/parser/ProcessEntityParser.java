@@ -24,7 +24,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
-import org.apache.airavat.AiravatException;
 import org.apache.airavat.Util;
 import org.apache.airavat.entity.v0.EntityType;
 import org.apache.airavat.entity.v0.ProcessType;
@@ -72,24 +71,6 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 		return processDefinitionElement;
 	}
 
-	/**
-	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
-	 * success.
-	 * 
-	 * @throws AiravatException
-	 */
-	@Override
-	public boolean validateSchema(InputStream xmlStream)
-			throws AiravatException {
-		try {
-			doParse(xmlStream);
-		} catch (JAXBException e) {
-			throw new AiravatException(e);
-		} catch (SAXException e) {
-			throw new AiravatException(e);
-		}
-		return true;
-	}
 
 	@Override
 	public void applyValidations(ProcessType entity) {

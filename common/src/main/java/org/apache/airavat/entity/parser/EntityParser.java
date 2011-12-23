@@ -43,9 +43,9 @@ public abstract class EntityParser<T extends Entity> {
 
 	private static final Logger LOG = Logger.getLogger(EntityParser.class);
 
-	private EntityType entityType;
+	private final EntityType entityType;
 
-	private Class<? extends Entity> clazz;
+	private final Class<? extends Entity> clazz;
 
 	/**
 	 * Constructor
@@ -61,11 +61,11 @@ public abstract class EntityParser<T extends Entity> {
 	}
 
 	public Class<? extends Entity> getClazz() {
-		return clazz;
+		return this.clazz;
 	}
 
 	public EntityType getEntityType() {
-		return entityType;
+		return this.entityType;
 	}
 
 	/**
@@ -84,6 +84,13 @@ public abstract class EntityParser<T extends Entity> {
 
 	}
 
+	/**
+	 * Parses xml stream
+	 * 
+	 * @param xmlStream
+	 * @return entity
+	 * @throws AiravatException
+	 */
 	public Entity parse(InputStream xmlStream) throws AiravatException {
 		T entity = null;
 
@@ -100,13 +107,35 @@ public abstract class EntityParser<T extends Entity> {
 		return entity;
 	}
 
+	/**
+	 * Validates a entity xmlString
+	 * 
+	 * @param xmlString
+	 * @return
+	 * @throws AiravatException
+	 */
 	public boolean validateSchema(String xmlString) throws AiravatException {
 		InputStream xmlStream = Util.getStreamFromString(xmlString);
 		return validateSchema(xmlStream);
 	}
 
-	public abstract boolean validateSchema(InputStream xmlStream)
-			throws AiravatException;
+	/**
+	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
+	 * success.
+	 * 
+	 * @throws AiravatException
+	 */
+	public boolean validateSchema(InputStream xmlStream)
+			throws AiravatException {
+		try {
+			doParse(xmlStream);
+		} catch (JAXBException e) {
+			throw new AiravatException(e);
+		} catch (SAXException e) {
+			throw new AiravatException(e);
+		}
+		return true;
+	}
 
 	protected abstract T doParse(InputStream xml) throws JAXBException,
 			SAXException;
@@ -131,16 +160,12 @@ public abstract class EntityParser<T extends Entity> {
 		public static Unmarshaller getInstance(EntityType entityType,
 				Class<? extends Entity> clazz) throws JAXBException {
 			if (UNMARSHALLER.get(entityType) == null) {
-				synchronized (Unmarshaller.class) {
-					if (UNMARSHALLER.get(entityType) == null) {
-						try {
-							Unmarshaller unmarshaller = Util.getUnmarshaller(clazz);
-							UNMARSHALLER.put(entityType, unmarshaller);
-						} catch (JAXBException e) {
-							LOG.fatal("Unable to get JAXBContext", e);
-							throw new JAXBException(e);
-						}
-					}
+				try {
+					Unmarshaller unmarshaller = Util.getUnmarshaller(clazz);
+					UNMARSHALLER.put(entityType, unmarshaller);
+				} catch (JAXBException e) {
+					LOG.fatal("Unable to get JAXBContext", e);
+					throw new JAXBException(e);
 				}
 			}
 			return UNMARSHALLER.get(entityType);
