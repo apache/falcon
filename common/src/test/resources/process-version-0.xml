@@ -22,6 +22,7 @@
     <!-- where -->
     <clusters>
       <cluster name="prod-red" />
+      <cluster name="prod-red2" />
     </clusters>
 
     <!-- when -->
