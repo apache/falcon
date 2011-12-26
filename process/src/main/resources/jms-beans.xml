@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	You under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:amq="http://activemq.apache.org/schema/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+	<!--Bean to load properties file -->
+	<bean id="placeholderConfig"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:jms-config.properties">  <!--reads config.properties file -->
+		</property>
+	</bean>
+
+	<!-- Active MQ JMS engine -->
+	<bean id="jmsFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL">
+			<value>${ivory.broker.url}</value>
+		</property>
+	</bean>
+
+	<!-- a pooling based JMS provider on Active MQ -->
+	<bean id="pooledJmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory"
+		destroy-method="stop">
+		<property name="connectionFactory">
+			<ref local="jmsFactory" />
+		</property>
+	</bean>
+
+	<!-- Active MQ topic name -->
+	<bean id="messageDestination" class="org.apache.activemq.command.ActiveMQTopic"
+		autowire="constructor">
+		<constructor-arg value="IVORY.TOPIC" />
+	</bean>
+
+	<!-- JMS template used by producers and consumers -->
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory">
+			<ref local="pooledJmsFactory" />
+		</property>
+	</bean>
+
+	<bean id="ivoryProducer" class="org.apache.ivory.messaging.MessageProducer">
+		<property name="template">
+			<ref local="jmsTemplate" />
+		</property>
+		<property name="destinations">
+			<list>
+				<ref local="messageDestination" />
+			</list>
+		</property>
+	</bean>
+
+</beans>
