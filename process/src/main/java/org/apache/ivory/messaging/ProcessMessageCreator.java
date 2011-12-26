@@ -19,10 +19,12 @@
 package org.apache.ivory.messaging;
 
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
+import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.log4j.Logger;
 import org.springframework.jms.core.MessageCreator;
 
 /**
@@ -30,16 +32,31 @@ import org.springframework.jms.core.MessageCreator;
  */
 public class ProcessMessageCreator implements MessageCreator {
 
+	private static final Logger LOG = Logger
+			.getLogger(ProcessMessageCreator.class);
+
+	private final String entityName;
+	private final String feedName;
 	private final String message;
 
-	public ProcessMessageCreator(String message) {
+	public ProcessMessageCreator(String entityName, String feedName,
+			String message) {
+		this.entityName = entityName;
+		this.feedName = feedName;
 		this.message = message;
 	}
 
+	@Override
 	public Message createMessage(Session session) throws JMSException {
-		TextMessage textMessage = session.createTextMessage();
-		textMessage.setText(this.message);
-		return textMessage;
+		MapMessage mapMessage = session.createMapMessage();
+		mapMessage.setString("entityName", this.entityName);
+		mapMessage.setString("feedName", this.feedName);
+		mapMessage.setString("message", this.message);
+		
+		LOG.debug("Sending "
+				+ ((ActiveMQMapMessage) mapMessage).getContentMap());
+
+		return mapMessage;
 	}
 
 }

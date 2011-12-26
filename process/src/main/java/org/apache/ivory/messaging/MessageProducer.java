@@ -68,11 +68,12 @@ public class MessageProducer {
 		this.destinations = destinations;
 	}
 
-	protected void sendMessage(String message) {
+	protected void sendMessage(String processName, String feedName,
+			String message) {
 
 		for (Destination destination : this.destinations) {
-			LOG.debug("Sending Message: " + message + " To " + destination);
-			this.template.send(destination, new ProcessMessageCreator(message));
+			this.template.send(destination, new ProcessMessageCreator(
+					processName, feedName, message));
 		}
 	}
 
@@ -83,14 +84,15 @@ public class MessageProducer {
 	 */
 	public static void main(String[] args) {
 
-		if (args.length != 1) {
-			LOG.error("Argument lenth is not equal to 1");
+		if (args.length != 3) {
+			LOG.error("Argument lenth is not equal to 3");
 			throw new IllegalArgumentException();
 		}
 
-		LOG.debug("Got main argument: " + args[0]);
+		LOG.debug("Got main argument: " + args[0] + " " + args[1] + " "
+				+ args[2]);
 
-		producer.sendMessage(args[0]);
+		producer.sendMessage(args[0], args[1], args[2]);
 
 	}
 
