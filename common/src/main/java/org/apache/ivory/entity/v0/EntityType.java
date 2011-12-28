@@ -19,5 +19,15 @@
 package org.apache.ivory.entity.v0;
 
 public enum EntityType {
-  FEED, PROCESS, DATAENDPOINT
+  FEED(null), PROCESS(ProcessType.class), DATASTORE(null);
+
+  private final Class<? extends Entity> clazz;
+
+  EntityType(Class<? extends Entity> typeClass) {
+    clazz = typeClass;
+  }
+
+  public Class<? extends Entity> getEntityClass() {
+    return clazz;
+  }
 }

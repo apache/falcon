@@ -46,7 +46,7 @@ public final class EntityParserFactory {
 					org.apache.ivory.entity.v0.ProcessType.class);
 		case FEED://TODO
 			return null;
-		case DATAENDPOINT://TODO
+		case DATASTORE://TODO
 			return null;
 		default:
 			return null;
