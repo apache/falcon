@@ -31,6 +31,10 @@ public class IvoryException extends Exception {
 		super(e);
 	}
 
+	public IvoryException(String message, Exception e) {
+		super(message, e);
+	}
+
 	/**
 	 * 
 	 */
