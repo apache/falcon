@@ -18,9 +18,8 @@
 
 package org.apache.ivory.messaging;
 
-import javax.jms.Destination;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
@@ -33,67 +32,72 @@ public class MessageProducer {
 
 	private JmsTemplate template;
 
-	private Destination[] destinations;
-
-	private static final MessageProducer producer;
+	private ActiveMQConnectionFactory connectionFactory;
 
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
-
-	static {
-
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
-				new String[] { "jms-beans.xml" });
-
-		ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) context
-				.getBean("jmsFactory");
-
-		LOG.debug("Broker URL: " + factory.getBrokerURL());
-
-		producer = (MessageProducer) context.getBean("ivoryProducer");
-	}
 
 	public JmsTemplate getTemplate() {
 		return this.template;
 	}
 
+	/**
+	 * 
+	 * @param template
+	 *            - injected by spring JMS template
+	 */
 	public void setTemplate(JmsTemplate template) {
 		this.template = template;
 	}
 
-	public Destination[] getDestinations() {
-		return this.destinations;
-	}
-
-	public void setDestinations(Destination[] destinations) {
-		this.destinations = destinations;
-	}
-
-	protected void sendMessage(String processName, String feedName,
-			String message) {
-
-		for (Destination destination : this.destinations) {
-			this.template.send(destination, new ProcessMessageCreator(
-					processName, feedName, message));
-		}
+	public ActiveMQConnectionFactory getConnectionFactory() {
+		return this.connectionFactory;
 	}
 
 	/**
-	 * The only argument to be passed is a String as message from Oozie.
+	 * 
+	 * @param connectionFactory
+	 *            - Injected by Spring DI
+	 */
+	public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+		this.connectionFactory = connectionFactory;
+	}
+
+	/**
+	 * 
+	 * @param arguments
+	 *            - Accepts a Message to be send to JMS topic, creates a new
+	 *            Topic based on topic name if it does not exist or else
+	 *            existing topic with the same name is used to send the message.
+	 */
+	protected void sendMessage(ProcessMessage arguments) {
+
+		ActiveMQTopic feedTopic = new ActiveMQTopic(arguments.getFeedTopicName());
+
+		LOG.debug("Sending message to broker: "
+				+ this.connectionFactory.getBrokerURL());
+
+		this.template.send(feedTopic, new ProcessMessageCreator(arguments));
+
+	}
+
+	/**
 	 * 
 	 * @param args
+	 *            - array of Strings, which will be used to create TextMessage
 	 */
 	public static void main(String[] args) {
 
-		if (args.length != 3) {
-			LOG.error("Argument lenth is not equal to 3");
-			throw new IllegalArgumentException();
-		}
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
+				new String[] { "jms-beans.xml" });
 
-		LOG.debug("Got main argument: " + args[0] + " " + args[1] + " "
-				+ args[2]);
+		MessageProducer messageProducer = (MessageProducer) context
+				.getBean("ivoryProducer");
 
-		producer.sendMessage(args[0], args[1], args[2]);
+		ProcessMessage msgArgs = ArgumentsResolver.resolveToMessage(args);
+
+		messageProducer.sendMessage(msgArgs);
 
 	}
+	
 
 }

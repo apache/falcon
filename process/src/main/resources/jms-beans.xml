@@ -23,30 +23,24 @@
 	</bean>
 
 	<!-- Active MQ JMS engine -->
-	<bean id="jmsFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+	<bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
 		<property name="brokerURL">
 			<value>${ivory.broker.url}</value>
 		</property>
 	</bean>
 
 	<!-- a pooling based JMS provider on Active MQ -->
-	<bean id="pooledJmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory"
+	<bean id="pooledactiveMQConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory"
 		destroy-method="stop">
 		<property name="connectionFactory">
-			<ref local="jmsFactory" />
+			<ref local="activeMQConnectionFactory" />
 		</property>
-	</bean>
-
-	<!-- Active MQ topic name -->
-	<bean id="messageDestination" class="org.apache.activemq.command.ActiveMQTopic"
-		autowire="constructor">
-		<constructor-arg value="IVORY.TOPIC" />
 	</bean>
 
 	<!-- JMS template used by producers and consumers -->
 	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
 		<property name="connectionFactory">
-			<ref local="pooledJmsFactory" />
+			<ref local="pooledactiveMQConnectionFactory" />
 		</property>
 	</bean>
 
@@ -54,11 +48,7 @@
 		<property name="template">
 			<ref local="jmsTemplate" />
 		</property>
-		<property name="destinations">
-			<list>
-				<ref local="messageDestination" />
-			</list>
-		</property>
+		<property name="connectionFactory" ref="activeMQConnectionFactory"/>
 	</bean>
 
 </beans>

@@ -19,44 +19,45 @@
 package org.apache.ivory.messaging;
 
 import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 
-import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.log4j.Logger;
 import org.springframework.jms.core.MessageCreator;
 
 /**
- * Ivory JMS message creator It just wraps a TextMessage
+ * Ivory JMS message creator- creates JMS TextMessage
  */
 public class ProcessMessageCreator implements MessageCreator {
 
 	private static final Logger LOG = Logger
 			.getLogger(ProcessMessageCreator.class);
 
-	private final String entityName;
-	private final String feedName;
-	private final String message;
+	private TextMessage textMessage;
 
-	public ProcessMessageCreator(String entityName, String feedName,
-			String message) {
-		this.entityName = entityName;
-		this.feedName = feedName;
-		this.message = message;
+	private final ProcessMessage args;
+
+	public ProcessMessageCreator(ProcessMessage args) {
+		this.args = args;
 	}
 
 	@Override
-	public Message createMessage(Session session) throws JMSException {
-		MapMessage mapMessage = session.createMapMessage();
-		mapMessage.setString("entityName", this.entityName);
-		mapMessage.setString("feedName", this.feedName);
-		mapMessage.setString("message", this.message);
-		
-		LOG.debug("Sending "
-				+ ((ActiveMQMapMessage) mapMessage).getContentMap());
+	public TextMessage createMessage(Session session) throws JMSException {
+		this.textMessage = session.createTextMessage();
+		this.textMessage.setText(this.args.toString());
+		LOG.debug("Sending Message: " + this.textMessage);
+		// System.out.println("Sending Message: " + this.textMessage);
+		return this.textMessage;
+	}
 
-		return mapMessage;
+	@Override
+	public String toString() {
+		try {
+			return this.textMessage.getText();
+		} catch (JMSException e) {
+			return e.getMessage();
+		}
+
 	}
 
 }
