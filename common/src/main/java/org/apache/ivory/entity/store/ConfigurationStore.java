@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.ProcessType;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
@@ -91,7 +90,7 @@ public class ConfigurationStore {
   private void bootstrap() throws IOException {
     for (EntityType type : EntityType.values()) {
       ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-      FileStatus[] files = fs.globStatus(new Path(storePath, type.name()));
+      FileStatus[] files = fs.globStatus(new Path(storePath, type.name()+Path.SEPARATOR+"*"));
       if (files != null) {
         for (FileStatus file : files) {
           String fileName = file.getPath().getName();
@@ -112,9 +111,9 @@ public class ConfigurationStore {
    */
   public synchronized void publish(EntityType type, Entity entity)
       throws StoreAccessException {
-    dictionary.get(type).put(entity.getName(), entity);
     try {
       persist(type, entity);
+      dictionary.get(type).put(entity.getName(), entity);
     } catch (IOException e) {
       throw new StoreAccessException(e);
     }
@@ -167,9 +166,9 @@ public class ConfigurationStore {
       throws StoreAccessException {
     Map<String, Entity> entityMap = dictionary.get(type);
     if (entityMap.containsKey(name)) {
-      entityMap.remove(name);
       try {
         archive(type, name);
+        entityMap.remove(name);
       } catch (IOException e) {
         throw new StoreAccessException(e);
       }
@@ -202,16 +201,16 @@ public class ConfigurationStore {
    */
   private void persist(EntityType type, Entity entity)
       throws StoreAccessException, IOException {
-    try {
-
       OutputStream out = fs.create(new Path(storePath, type +
-          Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
+              Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
+	  try {
       marshaller.marshal(entity, out);
-      out.close();
       LOG.info("Persisted configuration " + type + "/" + entity.getName());
     } catch (JAXBException e) {
       throw new StoreAccessException("Unable to serialize the entity object "
           + type + "/" + entity.getName(), e);
+    }finally{
+        out.close();
     }
   }
 
