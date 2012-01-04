@@ -20,16 +20,19 @@ package org.apache.ivory.entity.parser;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
+import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 
 /**
  * 
@@ -139,7 +142,8 @@ public abstract class EntityParser<T extends Entity> {
 	protected abstract T doParse(InputStream xml) throws JAXBException,
 			SAXException;
 
-	protected abstract void applyValidations(T entity);
+	protected abstract void applyValidations(T entity)
+			throws StoreAccessException, ValidationException;
 
 	/**
 	 * Static Inner class that will be used by the concrete Entity to get

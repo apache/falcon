@@ -50,11 +50,15 @@ public class APIResult {
 	}
 
 	public Status getStatus() {
-		return status;
+		return this.status;
 	}
 
 	public String getMessage() {
-		return message;
+		return this.message;
 	}
 
+	@Override
+	public String toString() {
+		return "{ Status: " + this.status + ", Message: " + this.message + " }";
+	}
 }

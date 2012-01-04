@@ -25,6 +25,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
 import org.apache.ivory.Util;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.ProcessType;
 import org.apache.log4j.Logger;
@@ -71,9 +73,23 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 		return processDefinitionElement;
 	}
 
-
 	@Override
-	public void applyValidations(ProcessType entity) {
+	public void applyValidations(ProcessType entity)
+			throws StoreAccessException, ValidationException {
+		ConfigurationStore store = ConfigurationStore.get();
+		ProcessType existingEntity = store.get(EntityType.PROCESS,
+				entity.getName());
+		// if (existingEntity != null) {
+		// throw new ValidationException("Entity: " + entity.getName()
+		// + " already submitted");
+		// }
+		// TODO check if dependent Feed and Datastore exists
+		fieldValidations(entity);
+	}
+
+	private void fieldValidations(ProcessType entity)
+			throws ValidationException {
+		// TODO
 
 	}
 

@@ -18,6 +18,13 @@
 
 package org.apache.ivory.entity.v0;
 
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
+import org.apache.ivory.Util;
+
 public abstract class Entity {
 
   private String name;
@@ -51,4 +58,16 @@ public abstract class Entity {
     result = 31 * result + clazz.hashCode();
     return result;
   }
+
+	@Override
+	public String toString() {
+		try {
+			StringWriter stringWriter = new StringWriter();
+			Marshaller marshaller = Util.getMarshaller(this.getClass());
+			marshaller.marshal(this, stringWriter);
+			return stringWriter.toString();
+		} catch (JAXBException e) {
+			return e.getMessage();
+		}
+	}
 }

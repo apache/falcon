@@ -17,6 +17,7 @@
  */
 package org.apache.ivory.resource;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -25,6 +26,9 @@ import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.ivory.util.EmbeddedServer;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -39,41 +43,92 @@ public class EntityManagerJerseyTest {
 	private WebResource service = null;
 
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+	private static final String BASE_URL = "http://localhost:15000/";
+
+	EmbeddedServer server;
 
 	@BeforeClass
-	public void configure() {
+	public void configure() throws Exception {
+		if (new File("webapp/src/main/webapp").exists()) {
+			this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
+		} else if (new File("src/main/webapp").exists()) {
+			this.server = new EmbeddedServer(15000, "src/main/webapp");
+		} else{
+			throw new RuntimeException("Cannot run jersey tests");
+		}
 		ClientConfig config = new DefaultClientConfig();
 		Client client = Client.create(config);
-		service = client.resource(getBaseURI());
+		this.service = client.resource(getBaseURI());
+		this.server.start();
 	}
 
 	/**
 	 * Tests should be enabled only in local environments as they need running
 	 * instance of webserver
 	 */
-	@Test(enabled = false)
+	@Test
 	public void testStatus() {
 		// http://localhost:15000/api/entities/status/hello/1
-		System.out.println(service.path("api/entities/status/hello/1")
+		System.out.println(this.service.path("api/entities/status/hello/1")
 				.accept(MediaType.TEXT_PLAIN).get(String.class));
 	}
 
-	@Test(enabled = false)
+	@Test
 	public void testValidate() {
 
 		ServletInputStream stream = getServletInputStream(SAMPLE_PROCESS_XML);
 
-		ClientResponse clientRepsonse = service
+		ClientResponse clientRepsonse = this.service
 				.path("api/entities/validate/process")
-				.accept(MediaType.APPLICATION_XML).type(MediaType.TEXT_XML)
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class, stream);
 
-		System.out.println(clientRepsonse.getEntity(String.class));
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Validate successful</message></result>");
 
 	}
+	
+	@Test(dependsOnMethods = { "testValidate" })
+	public void testSubmit() {
+		ServletInputStream stream = getServletInputStream(SAMPLE_PROCESS_XML);
+
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/submit/process")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, stream);
+
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Submit successful</message></result>");
+	}
+
+	@Test(dependsOnMethods = { "testSubmit" })
+	public void testGetEntityDefinition() {
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/definition/process/sample")
+				.accept(MediaType.TEXT_XML).get(ClientResponse.class);
+
+		Assert.assertEquals(clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><process name=\"sample\"><name>sample</name><clusters><cluster name=\"prod-red\"></cluster></clusters><concurrency>1</concurrency><execution>LIFO</execution><frequency>hourly</frequency><periodicity>1</periodicity><validity start=\"2011-11-01 00:00:00\" end=\"9999-12-31 23:59:00\" timezone=\"UTC\"></validity><inputs><input name=\"impression\" feed=\"impression\" start-instance=\"$ptime-6\" end-instance=\"$ptime\"></input><input name=\"clicks\" feed=\"clicks\" start-instance=\"$ptime\" end-instance=\"$ptime\"></input></inputs><outputs><output name=\"impOutput\" feed=\"imp-click-join\" instance=\"$ptime\"></output><output name=\"clicksOutput\" feed=\"imp-click-join1\" instance=\"$ptime\"></output></outputs><properties><property name=\"name\" value=\"value\"></property><property name=\"name\" value=\"value\"></property></properties><workflow engine=\"oozie\" path=\"hdfs://path/to/workflow\" libpath=\"hdfs://path/to/workflow/lib\"></workflow><retry policy=\"backoff\" delay=\"10\" delayUnit=\"min\" attempts=\"3\"></retry><late-process policy=\"exp-backoff\" delay=\"1\" delayUnit=\"hour\"><late-input feed=\"impression\" workflow-path=\"hdfs://impression/late/workflow\"></late-input><late-input feed=\"clicks\" workflow-path=\"hdfs://clicks/late/workflow\"></late-input></late-process></process>");
+
+
+	}
+	
+	@Test(dependsOnMethods = { "testGetEntityDefinition" })
+	public void testDelete() {
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/delete/process/sample")
+				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Delete successful</message></result>");
+	}
+
 
 	private static URI getBaseURI() {
-		return UriBuilder.fromUri("http://localhost:15000/").build();
+		return UriBuilder.fromUri(BASE_URL).build();
 	}
 
 	/**
@@ -95,4 +150,8 @@ public class EntityManagerJerseyTest {
 		};
 	}
 
+	@AfterClass
+	public void cleanup() throws Exception {
+		this.server.stop();
+	}
 }

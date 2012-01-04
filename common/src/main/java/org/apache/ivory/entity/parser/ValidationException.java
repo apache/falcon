@@ -15,38 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory;
+
+package org.apache.ivory.entity.parser;
+
+import org.apache.ivory.IvoryException;
 
 /**
- * Common Exception thrown from Parsers. To the Ivory API class
+ * 
+ * ValidationException during parsing
  * 
  */
-public class IvoryException extends Exception {
+public class ValidationException extends IvoryException {
 
-	/**
-	 * 
-	 * @param e Exception
-	 */
-	public IvoryException(Exception e) {
-		super(e);
-	}
-
-	public IvoryException(String message, Exception e) {
-		super(message, e);
-	}
-
-	/**
-	 * 
-	 * @param message
-	 *            - custom exception message
-	 */
-	public IvoryException(String message) {
+	public ValidationException(String message) {
 		super(message);
 	}
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -1475818869309247014L;
+	private static final long serialVersionUID = -4502166408759507355L;
 
 }

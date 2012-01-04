@@ -34,6 +34,9 @@ import javax.ws.rs.core.MediaType;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.StoreAccessException;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
@@ -57,10 +60,38 @@ public class EntityManager {
 	 */
 	@POST
 	@Path("submit/{type}")
-	@Consumes(MediaType.TEXT_XML)
-	@Produces(MediaType.APPLICATION_JSON)
-	public APIResult submit(@PathParam("type") String type) {
-		return null;
+	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	public APIResult submit(
+			@Context javax.servlet.http.HttpServletRequest request,
+			@PathParam("type") String type) {
+
+		try {
+			EntityType entityType = EntityType.valueOf(type.toUpperCase());
+			EntityParser<?> entityParser = EntityParserFactory
+					.getParser(entityType);
+			InputStream xmlStream = request.getInputStream();
+			Entity entity = entityParser.parse(xmlStream);
+			ConfigurationStore configStore = ConfigurationStore.get();
+			Entity existingEntity = configStore.get(entityType, entity.getName());
+			if(existingEntity!=null){
+				LOG.error(entity.getName()+" already exists");
+				return new APIResult(APIResult.Status.FAILED, entity.getName()+" already exists");	
+			}
+			configStore.publish(entityType, entity);
+			LOG.info("Submit successful: " + entity.getName());
+		} catch (IvoryException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (IOException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		}
+		return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful");
+
 	}
 
 	/**
@@ -73,25 +104,29 @@ public class EntityManager {
 	@POST
 	@Path("validate/{type}")
 	@Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Produces({ MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult validate(
 			@Context javax.servlet.http.HttpServletRequest request,
 			@PathParam("type") String type) {
 
 		try {
+			EntityType entityType = EntityType.valueOf(type.toUpperCase());
 			EntityParser<?> entityParser = EntityParserFactory
-					.getParser(EntityType.valueOf(type.toUpperCase()));
+					.getParser(entityType);
 			InputStream xmlStream = request.getInputStream();
 			entityParser.validateSchema(xmlStream);
-
+			LOG.info("Validate successful");
 		} catch (IOException e) {
+			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		} catch (IllegalArgumentException e) {
+			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		} catch (IvoryException e) {
+			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
-		
+
 		return new APIResult(APIResult.Status.SUCCEEDED, "Validate successful");
 	}
 
@@ -134,10 +169,25 @@ public class EntityManager {
 	 */
 	@DELETE
 	@Path("delete/{type}/{entity}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult delete(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-		return null;
+		try {
+			EntityType entityType = EntityType.valueOf(type.toUpperCase());
+			ConfigurationStore configStore = ConfigurationStore.get();
+			boolean isRemoved = configStore.remove(entityType, entity);
+			if (isRemoved == false) {
+				return new APIResult(APIResult.Status.FAILED, "Entity: "
+						+ entity + " does not exists");
+			}
+		} catch (IllegalArgumentException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (StoreAccessException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		}
+		return new APIResult(APIResult.Status.SUCCEEDED, "Delete successful");
 	}
 
 	/**
@@ -194,11 +244,21 @@ public class EntityManager {
 	 */
 	@GET
 	@Path("definition/{type}/{entity}")
-	@Produces(MediaType.TEXT_XML)
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public String getEntityDefinition(@PathParam("type") String type,
-			@PathParam("entity") String entity) {
-		return null;
+			@PathParam("entity") String entityName) {
+		try {
+			EntityType entityType = EntityType.valueOf(type.toUpperCase());
+			ConfigurationStore configStore = ConfigurationStore.get();
+			Entity entity= configStore.get(entityType, entityName);
+			LOG.info("Returned entity: " + entity);
+			return entity.toString();
+		} catch (IllegalArgumentException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage()).toString();
+		} catch (StoreAccessException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage()).toString();
+		}
 	}
-
-	// TODO: Entity information method ?
 }
