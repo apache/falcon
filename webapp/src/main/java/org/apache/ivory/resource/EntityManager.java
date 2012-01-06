@@ -251,6 +251,10 @@ public class EntityManager {
 			EntityType entityType = EntityType.valueOf(type.toUpperCase());
 			ConfigurationStore configStore = ConfigurationStore.get();
 			Entity entity= configStore.get(entityType, entityName);
+			if(entity==null){
+				LOG.error(entityName+" does not exists");
+				return new APIResult(APIResult.Status.FAILED, entityName+" does not exists").toString();	
+			}
 			LOG.info("Returned entity: " + entity);
 			return entity.toString();
 		} catch (IllegalArgumentException e) {
