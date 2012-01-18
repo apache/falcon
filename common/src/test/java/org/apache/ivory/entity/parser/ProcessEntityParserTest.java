@@ -28,7 +28,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.ProcessType;
+import org.apache.ivory.entity.v0.process.ProcessType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,16 +16,17 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for propertyType complex type.
+ * <p>Java class for outputType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="propertyType">
+ * &lt;complexType name="outputType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="value" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="name" type="{}IDENTIFIER" />
+ *       &lt;attribute name="feed" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="instance" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -34,17 +35,19 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "propertyType", propOrder = {
+@XmlType(name = "outputType", propOrder = {
     "value"
 })
-public class PropertyType {
+public class OutputType {
 
-	@XmlValue
+    @XmlValue
     protected String value;
     @XmlAttribute
     protected String name;
-    @XmlAttribute(name = "value")
-    protected String valueAttribute;
+    @XmlAttribute
+    protected String feed;
+    @XmlAttribute
+    protected String instance;
 
     /**
      * Gets the value of the value property.
@@ -55,7 +58,7 @@ public class PropertyType {
      *     
      */
     public String getValue() {
-        return getValueAttribute();
+        return value;
     }
 
     /**
@@ -67,7 +70,7 @@ public class PropertyType {
      *     
      */
     public void setValue(String value) {
-       setValueAttribute(value);
+        this.value = value;
     }
 
     /**
@@ -95,27 +98,51 @@ public class PropertyType {
     }
 
     /**
-     * Gets the value of the valueAttribute property.
+     * Gets the value of the feed property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getValueAttribute() {
-        return valueAttribute;
+    public String getFeed() {
+        return feed;
     }
 
     /**
-     * Sets the value of the valueAttribute property.
+     * Sets the value of the feed property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setValueAttribute(String value) {
-        this.valueAttribute = value;
+    public void setFeed(String value) {
+        this.feed = value;
+    }
+
+    /**
+     * Gets the value of the instance property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getInstance() {
+        return instance;
+    }
+
+    /**
+     * Sets the value of the instance property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setInstance(String value) {
+        this.instance = value;
     }
 
 }

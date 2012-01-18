@@ -18,7 +18,7 @@
 
 package org.apache.ivory.converter;
 
-import org.apache.ivory.entity.v0.ProcessType;
+import org.apache.ivory.entity.v0.process.ProcessType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.dozer.DozerConverter;
 

@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;

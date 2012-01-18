@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,16 +16,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for outputsType complex type.
+ * <p>Java class for inputsType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="outputsType">
+ * &lt;complexType name="inputsType">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="output" type="{}outputType" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="input" type="{}inputType" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -35,40 +35,40 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "outputsType", propOrder = {
-    "output"
+@XmlType(name = "inputsType", propOrder = {
+    "input"
 })
-public class OutputsType {
+public class InputsType {
 
-    protected List<OutputType> output;
+    protected List<InputType> input;
 
     /**
-     * Gets the value of the output property.
+     * Gets the value of the input property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the output property.
+     * This is why there is not a <CODE>set</CODE> method for the input property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getOutput().add(newItem);
+     *    getInput().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link OutputType }
+     * {@link InputType }
      * 
      * 
      */
-    public List<OutputType> getOutput() {
-        if (output == null) {
-            output = new ArrayList<OutputType>();
+    public List<InputType> getInput() {
+        if (input == null) {
+            input = new ArrayList<InputType>();
         }
-        return this.output;
+        return this.input;
     }
 
 }

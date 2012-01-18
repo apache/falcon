@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,17 +16,18 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for outputType complex type.
+ * <p>Java class for inputType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="outputType">
+ * &lt;complexType name="inputType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
  *       &lt;attribute name="name" type="{}IDENTIFIER" />
  *       &lt;attribute name="feed" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="instance" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="start-instance" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="end-instance" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -35,10 +36,10 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "outputType", propOrder = {
+@XmlType(name = "inputType", propOrder = {
     "value"
 })
-public class OutputType {
+public class InputType {
 
     @XmlValue
     protected String value;
@@ -46,8 +47,10 @@ public class OutputType {
     protected String name;
     @XmlAttribute
     protected String feed;
-    @XmlAttribute
-    protected String instance;
+    @XmlAttribute(name = "start-instance")
+    protected String startInstance;
+    @XmlAttribute(name = "end-instance")
+    protected String endInstance;
 
     /**
      * Gets the value of the value property.
@@ -122,27 +125,51 @@ public class OutputType {
     }
 
     /**
-     * Gets the value of the instance property.
+     * Gets the value of the startInstance property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getInstance() {
-        return instance;
+    public String getStartInstance() {
+        return startInstance;
     }
 
     /**
-     * Sets the value of the instance property.
+     * Sets the value of the startInstance property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setInstance(String value) {
-        this.instance = value;
+    public void setStartInstance(String value) {
+        this.startInstance = value;
+    }
+
+    /**
+     * Gets the value of the endInstance property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getEndInstance() {
+        return endInstance;
+    }
+
+    /**
+     * Sets the value of the endInstance property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setEndInstance(String value) {
+        this.endInstance = value;
     }
 
 }

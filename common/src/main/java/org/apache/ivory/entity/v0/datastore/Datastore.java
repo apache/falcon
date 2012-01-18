@@ -24,10 +24,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.ivory.entity.v0.Entity;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = { "comments", "source", "sink" })
 @XmlRootElement(name = "Datastore")
-public class Datastore {
+public class Datastore extends Entity{
 
   @XmlElement(name = "Comments")
   protected String comments;

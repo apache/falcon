@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,17 +16,18 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for workflowType complex type.
+ * <p>Java class for retryType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="workflowType">
+ * &lt;complexType name="retryType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="engine" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="path" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="libpath" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="policy" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="delay" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="delayUnit" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="attempts" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -35,19 +36,21 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "workflowType", propOrder = {
+@XmlType(name = "retryType", propOrder = {
     "value"
 })
-public class WorkflowType {
+public class RetryType {
 
     @XmlValue
     protected String value;
     @XmlAttribute
-    protected String engine;
+    protected String policy;
     @XmlAttribute
-    protected String path;
+    protected String delay;
     @XmlAttribute
-    protected String libpath;
+    protected String delayUnit;
+    @XmlAttribute
+    protected String attempts;
 
     /**
      * Gets the value of the value property.
@@ -74,75 +77,99 @@ public class WorkflowType {
     }
 
     /**
-     * Gets the value of the engine property.
+     * Gets the value of the policy property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getEngine() {
-        return engine;
+    public String getPolicy() {
+        return policy;
     }
 
     /**
-     * Sets the value of the engine property.
+     * Sets the value of the policy property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setEngine(String value) {
-        this.engine = value;
+    public void setPolicy(String value) {
+        this.policy = value;
     }
 
     /**
-     * Gets the value of the path property.
+     * Gets the value of the delay property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getPath() {
-        return path;
+    public String getDelay() {
+        return delay;
     }
 
     /**
-     * Sets the value of the path property.
+     * Sets the value of the delay property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setPath(String value) {
-        this.path = value;
+    public void setDelay(String value) {
+        this.delay = value;
     }
 
     /**
-     * Gets the value of the libpath property.
+     * Gets the value of the delayUnit property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getLibpath() {
-        return libpath;
+    public String getDelayUnit() {
+        return delayUnit;
     }
 
     /**
-     * Sets the value of the libpath property.
+     * Sets the value of the delayUnit property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setLibpath(String value) {
-        this.libpath = value;
+    public void setDelayUnit(String value) {
+        this.delayUnit = value;
+    }
+
+    /**
+     * Gets the value of the attempts property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAttempts() {
+        return attempts;
+    }
+
+    /**
+     * Sets the value of the attempts property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAttempts(String value) {
+        this.attempts = value;
     }
 
 }

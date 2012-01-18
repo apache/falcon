@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,18 +16,17 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for retryType complex type.
+ * <p>Java class for validityType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="retryType">
+ * &lt;complexType name="validityType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="policy" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="delay" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="delayUnit" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="attempts" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="start" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="end" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="timezone" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -36,21 +35,19 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "retryType", propOrder = {
+@XmlType(name = "validityType", propOrder = {
     "value"
 })
-public class RetryType {
+public class ValidityType {
 
     @XmlValue
     protected String value;
     @XmlAttribute
-    protected String policy;
+    protected String start;
     @XmlAttribute
-    protected String delay;
+    protected String end;
     @XmlAttribute
-    protected String delayUnit;
-    @XmlAttribute
-    protected String attempts;
+    protected String timezone;
 
     /**
      * Gets the value of the value property.
@@ -77,99 +74,75 @@ public class RetryType {
     }
 
     /**
-     * Gets the value of the policy property.
+     * Gets the value of the start property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getPolicy() {
-        return policy;
+    public String getStart() {
+        return start;
     }
 
     /**
-     * Sets the value of the policy property.
+     * Sets the value of the start property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setPolicy(String value) {
-        this.policy = value;
+    public void setStart(String value) {
+        this.start = value;
     }
 
     /**
-     * Gets the value of the delay property.
+     * Gets the value of the end property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getDelay() {
-        return delay;
+    public String getEnd() {
+        return end;
     }
 
     /**
-     * Sets the value of the delay property.
+     * Sets the value of the end property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setDelay(String value) {
-        this.delay = value;
+    public void setEnd(String value) {
+        this.end = value;
     }
 
     /**
-     * Gets the value of the delayUnit property.
+     * Gets the value of the timezone property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getDelayUnit() {
-        return delayUnit;
+    public String getTimezone() {
+        return timezone;
     }
 
     /**
-     * Sets the value of the delayUnit property.
+     * Sets the value of the timezone property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setDelayUnit(String value) {
-        this.delayUnit = value;
-    }
-
-    /**
-     * Gets the value of the attempts property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getAttempts() {
-        return attempts;
-    }
-
-    /**
-     * Sets the value of the attempts property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setAttempts(String value) {
-        this.attempts = value;
+    public void setTimezone(String value) {
+        this.timezone = value;
     }
 
 }

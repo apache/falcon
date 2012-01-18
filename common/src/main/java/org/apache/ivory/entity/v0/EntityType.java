@@ -18,8 +18,12 @@
 
 package org.apache.ivory.entity.v0;
 
+import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.datastore.Datastore;
+import org.apache.ivory.entity.v0.process.ProcessType;
+
 public enum EntityType {
-  FEED(null), PROCESS(ProcessType.class), DATASTORE(null);
+  DATASET(Dataset.class), PROCESS(ProcessType.class), DATASTORE(Datastore.class);
 
   private final Class<? extends Entity> clazz;
 

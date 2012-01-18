@@ -43,9 +43,10 @@ public final class EntityParserFactory {
 		switch (entityType) {
 		case PROCESS:
 			return new ProcessEntityParser(entityType,
-					org.apache.ivory.entity.v0.ProcessType.class);
-		case FEED://TODO
-			return null;
+					org.apache.ivory.entity.v0.process.ProcessType.class);
+		case DATASET://TODO
+			return new DatasetEntityParser(entityType,
+					org.apache.ivory.entity.v0.dataset.Dataset.class);
 		case DATASTORE://TODO
 			return null;
 		default:

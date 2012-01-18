@@ -24,7 +24,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.ProcessType;
+import org.apache.ivory.entity.v0.process.ProcessType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.dozer.DozerConverter;
 import org.testng.annotations.BeforeClass;

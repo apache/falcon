@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.ProcessType;
+import org.apache.ivory.entity.v0.process.ProcessType;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.testng.Assert;

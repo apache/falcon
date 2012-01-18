@@ -27,13 +27,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.dataset.adapter.DatastoresMapAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = { "comments", "status", "priority", "type", "metaInfo", "partition",
     "sourceDataDefinition", "defaults", "datastores", "dataFlow", "customCode" })
 @XmlRootElement(name = "Dataset")
-public class Dataset {
+public class Dataset extends Entity{
 
   @XmlElement(name = "Comments")
   protected String comments;

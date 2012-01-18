@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,15 +16,16 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for clusterType complex type.
+ * <p>Java class for late-inputType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="clusterType">
+ * &lt;complexType name="late-inputType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="feed" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="workflow-path" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -33,15 +34,17 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "clusterType", propOrder = {
+@XmlType(name = "late-inputType", propOrder = {
     "value"
 })
-public class ClusterType {
+public class LateInputType {
 
     @XmlValue
     protected String value;
     @XmlAttribute
-    protected String name;
+    protected String feed;
+    @XmlAttribute(name = "workflow-path")
+    protected String workflowPath;
 
     /**
      * Gets the value of the value property.
@@ -68,27 +71,51 @@ public class ClusterType {
     }
 
     /**
-     * Gets the value of the name property.
+     * Gets the value of the feed property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getName() {
-        return name;
+    public String getFeed() {
+        return feed;
     }
 
     /**
-     * Sets the value of the name property.
+     * Sets the value of the feed property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setName(String value) {
-        this.name = value;
+    public void setFeed(String value) {
+        this.feed = value;
+    }
+
+    /**
+     * Gets the value of the workflowPath property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    /**
+     * Sets the value of the workflowPath property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setWorkflowPath(String value) {
+        this.workflowPath = value;
     }
 
 }

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<xs:schema attributeFormDefault="unqualified"
+	elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="process" type="processType">
+		<xs:annotation>
+			<xs:documentation>/*
+				* Licensed to the Apache Software Foundation (ASF) under one
+				* or more contributor license agreements. See the NOTICE file
+				* distributed with this work for additional information
+				* regarding copyright ownership. The ASF licenses this file
+				* to you under the Apache License, Version 2.0 (the
+				* "License"); you may not use this file except in compliance
+				* with the License. You may obtain a copy of the License at
+				*
+				* http://www.apache.org/licenses/LICENSE-2.0
+				*
+				* Unless required by applicable law or agreed to in writing, software
+				* distributed under the License is distributed on an "AS IS" BASIS,
+				* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+				implied.
+				* See the License for the specific language governing permissions and
+				* limitations under the License.
+				*/
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:simpleType name="IDENTIFIER">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([a-zA-Z]([\-_a-zA-Z0-9])*){1,39})" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="clusterType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="name" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="late-processType">
+		<xs:sequence>
+			<xs:element type="late-inputType" name="late-input"
+				maxOccurs="unbounded" minOccurs="0" />
+		</xs:sequence>
+		<xs:attribute type="xs:string" name="policy" />
+		<xs:attribute type="xs:string" name="delay" />
+		<xs:attribute type="xs:string" name="delayUnit" />
+	</xs:complexType>
+	<xs:complexType name="propertiesType">
+		<xs:sequence>
+			<xs:element type="propertyType" name="property" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="late-inputType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="feed" use="optional" />
+				<xs:attribute type="xs:string" name="workflow-path"
+					use="optional" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="validityType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="start" />
+				<xs:attribute type="xs:string" name="end" />
+				<xs:attribute type="xs:string" name="timezone" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="retryType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="policy" />
+				<xs:attribute type="xs:string" name="delay" />
+				<xs:attribute type="xs:string" name="delayUnit" />
+				<xs:attribute type="xs:string" name="attempts" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="processType">
+		<xs:sequence>
+			<xs:element type="clustersType" name="clusters">
+				<xs:annotation>
+					<xs:documentation>where</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element type="xs:string" name="concurrency">
+				<xs:annotation>
+					<xs:documentation>when</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element type="xs:string" name="execution" />
+			<xs:element type="xs:string" name="frequency" />
+			<xs:element type="xs:string" name="periodicity" />
+			<xs:element type="validityType" name="validity" />
+			<xs:element type="inputsType" name="inputs">
+			</xs:element>
+			<xs:element type="outputsType" name="outputs" />
+			<xs:element type="propertiesType" name="properties">
+				<xs:annotation>
+					<xs:documentation>how</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element type="workflowType" name="workflow" />
+			<xs:element type="retryType" name="retry" />
+			<xs:element type="late-processType" name="late-process" />
+		</xs:sequence>
+		<xs:attribute type="IDENTIFIER" name="name" />
+	</xs:complexType>
+	<xs:complexType name="inputsType">
+		<xs:sequence>
+			<xs:element type="inputType" name="input" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="propertyType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="name" use="optional" />
+				<xs:attribute type="xs:string" name="value" use="optional" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="clustersType">
+		<xs:sequence>
+			<xs:element type="clusterType" name="cluster" maxOccurs="unbounded"
+				minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="inputType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
+				<xs:attribute type="xs:string" name="feed" use="optional" />
+				<xs:attribute type="xs:string" name="start-instance"
+					use="optional" />
+				<xs:attribute type="xs:string" name="end-instance" use="optional" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="outputType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
+				<xs:attribute type="xs:string" name="feed" use="optional" />
+				<xs:attribute type="xs:string" name="instance" use="optional" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="workflowType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute type="xs:string" name="engine" />
+				<xs:attribute type="xs:string" name="path" />
+				<xs:attribute type="xs:string" name="libpath" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="outputsType">
+		<xs:sequence>
+			<xs:element type="outputType" name="output" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

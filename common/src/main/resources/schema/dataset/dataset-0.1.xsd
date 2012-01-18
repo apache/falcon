@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="uri:ivory:dataset:0.1" xmlns="uri:airavat:dataset:0.1">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="uri:ivory:dataset:0.1" xmlns="uri:ivory:dataset:0.1">
   <xs:element name="Dataset">
     <xs:complexType>
       <xs:sequence>
@@ -108,8 +108,10 @@
       <xs:sequence>
         <xs:element ref="ACL" minOccurs="0"/>
         <xs:element ref="Authentication" minOccurs="0"/>
-        <xs:element ref="DateRange" minOccurs="0"/>
-        <xs:element ref="Paths"/>
+		<xs:element ref="DateRange" minOccurs="0" />
+		<xs:element type="xs:string" name="frequency" />
+		<xs:element type="xs:string" name="periodicity" />
+		<xs:element ref="Paths" />
         <xs:element ref="Policies" minOccurs="0"/>
         <xs:element ref="Configuration" minOccurs="0"/>
       </xs:sequence>

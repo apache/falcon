@@ -6,7 +6,7 @@
 //
 
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity.v0.process;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,17 +16,17 @@ import javax.xml.bind.annotation.XmlValue;
 
 
 /**
- * <p>Java class for validityType complex type.
+ * <p>Java class for workflowType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="validityType">
+ * &lt;complexType name="workflowType">
  *   &lt;simpleContent>
  *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="start" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="end" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="timezone" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="engine" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="path" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="libpath" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -35,19 +35,19 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "validityType", propOrder = {
+@XmlType(name = "workflowType", propOrder = {
     "value"
 })
-public class ValidityType {
+public class WorkflowType {
 
     @XmlValue
     protected String value;
     @XmlAttribute
-    protected String start;
+    protected String engine;
     @XmlAttribute
-    protected String end;
+    protected String path;
     @XmlAttribute
-    protected String timezone;
+    protected String libpath;
 
     /**
      * Gets the value of the value property.
@@ -74,75 +74,75 @@ public class ValidityType {
     }
 
     /**
-     * Gets the value of the start property.
+     * Gets the value of the engine property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getStart() {
-        return start;
+    public String getEngine() {
+        return engine;
     }
 
     /**
-     * Sets the value of the start property.
+     * Sets the value of the engine property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setStart(String value) {
-        this.start = value;
+    public void setEngine(String value) {
+        this.engine = value;
     }
 
     /**
-     * Gets the value of the end property.
+     * Gets the value of the path property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getEnd() {
-        return end;
+    public String getPath() {
+        return path;
     }
 
     /**
-     * Sets the value of the end property.
+     * Sets the value of the path property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setEnd(String value) {
-        this.end = value;
+    public void setPath(String value) {
+        this.path = value;
     }
 
     /**
-     * Gets the value of the timezone property.
+     * Gets the value of the libpath property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getTimezone() {
-        return timezone;
+    public String getLibpath() {
+        return libpath;
     }
 
     /**
-     * Sets the value of the timezone property.
+     * Sets the value of the libpath property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setTimezone(String value) {
-        this.timezone = value;
+    public void setLibpath(String value) {
+        this.libpath = value;
     }
 
 }
