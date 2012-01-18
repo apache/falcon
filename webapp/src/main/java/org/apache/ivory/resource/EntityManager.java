@@ -20,6 +20,8 @@ package org.apache.ivory.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -38,6 +40,12 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.process.InputType;
+import org.apache.ivory.entity.v0.process.OutputType;
+import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.mappers.CoordinatorMapper;
+import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.log4j.Logger;
 
 @Path("entities")
@@ -78,6 +86,45 @@ public class EntityManager {
 				LOG.error(entity.getName()+" already exists");
 				return new APIResult(APIResult.Status.FAILED, entity.getName()+" already exists");	
 			}
+			
+			Map<Entity,EntityType> entityMap = new LinkedHashMap<Entity,EntityType>();
+			
+			// TODO Move this code to seperate class
+			if (entityType.equals(EntityType.PROCESS)) {
+				ProcessType process = (ProcessType) entity;
+				entityMap.put(process, EntityType.PROCESS);
+				for (InputType input : process.getInputs().getInput()) {
+					String feedName = input.getFeed();
+					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
+					if (dataset == null) {
+						LOG.error("Referenced input feed: " + feedName
+								+ " does not exist in config Store");
+						return new APIResult(APIResult.Status.FAILED,
+								"Referenced input feed: " + feedName
+										+ " does not exist in config Store");
+					}
+					entityMap.put(dataset, EntityType.DATASET);
+				}
+				for (OutputType output : process.getOutputs().getOutput()) {
+					String feedName = output.getFeed();
+					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
+					if (dataset == null) {
+						LOG.error("Referenced output feed: " + feedName
+								+ " does not exist in config Store");
+						return new APIResult(APIResult.Status.FAILED,
+								"Referenced output feed: " + feedName
+										+ " does not exist in config Store");
+					}
+					entityMap.put(dataset, EntityType.DATASET);
+				}
+					//Finally get the coordinator based on submited entities
+					COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+					CoordinatorMapper coordinateMapper = new CoordinatorMapper(
+							entityMap, coordinatorapp);
+					coordinateMapper.mapToDefaultCoordinator();
+					//THE coordinator will be populated now
+			}
+			
 			configStore.publish(entityType, entity);
 			LOG.info("Submit successful: " + entity.getName());
 		} catch (IvoryException e) {

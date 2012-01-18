@@ -49,9 +49,11 @@ public class PathsMapAdapter extends XmlAdapter<Paths, Map<String, String>> {
   @Override
   public Paths marshal(Map<String, String> v) throws Exception {
     Paths paths = new Paths();
-    List<Path> pathsList = paths.getPath();
-    for (Map.Entry<String, String> entry : v.entrySet()) {
-      pathsList.add(new Path(entry.getKey(), entry.getValue()));
+    if (v != null) {
+    	List<Path> pathsList = paths.getPath();
+    	for (Map.Entry<String, String> entry : v.entrySet()) {
+    		pathsList.add(new Path(entry.getKey(), entry.getValue()));
+    	}
     }
     return paths;
   }

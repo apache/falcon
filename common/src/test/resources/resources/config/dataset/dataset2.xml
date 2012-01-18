@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Dataset catalog="" description="" gdmversion="" name="sample" xmlns="uri:ivory:dataset:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+<Dataset catalog="" description="" gdmversion="" name="sample2" xmlns="uri:ivory:dataset:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
     <Comments>Search dataset for xyz123 purpose. Modified on Dec 12 to copy to target f and g</Comments>
     <Status>INACTIVE</Status><!-- ACTIVE default. ACTIVE|INACTIVE| -->
     <Priority>HIGH</Priority><!-- NORMAL default. LOWES|LOW|NORMAL|HIGH|HIGHEST -->
@@ -34,7 +34,7 @@
         </Authentication>
 	<DateRange start="20110101" end="20110101" />
 	<Frequency>hourly</Frequency>
-	<Periodicity>1</Periodicity>
+	<Periodicity>2</Periodicity>
         <Paths>
             <Path location='/data/SDS/data/${feed}/%{date}/%{locale}' type="data"  />
             <Path location='/data/SDS/schema/${feed}/%{date}/%{locale}' type="schema"  />

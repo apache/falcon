@@ -53,9 +53,11 @@ public class ConfigurationTypeAdapter extends
   public org.apache.ivory.entity.common.Configuration unmarshal(Configuration v)
       throws Exception {
     Map<String, String> properties = new ConcurrentHashMap<String, String>();
+    if(v!=null){
     List<Property> propertiesList = v.getProperty();
     for (Property property : propertiesList) {
       properties.put(property.getName(), property.getValue());
+    }
     }
     return new org.apache.ivory.entity.common.Configuration(properties);
   }
@@ -64,9 +66,11 @@ public class ConfigurationTypeAdapter extends
   public Configuration marshal(org.apache.ivory.entity.common.Configuration v)
       throws Exception {
     List<Property> propertiesList = new ArrayList<Property>();
+    if(v!=null){
     for (Entry<String, String> entry : v) {
       propertiesList.add(new Property(entry.getKey(), entry.getValue()));
     }
+  }
     return new Configuration(propertiesList);
   }
 

@@ -20,14 +20,18 @@
 	xsi:schemaLocation="http://dozer.sourceforge.net
 
 http://dozer.sourceforge.net/schema/beanmapping.xsd">
+	<configuration>
+		<date-format>YYYY/MM/DD HH:mm</date-format>
+		<wildcard>false</wildcard>
+		<trim-strings>false</trim-strings>
 
-	<mapping wildcard="true" map-id="feed-to-coordinatorApp">
-		<class-a>org.apache.ivory.entity.v0.DummyFeed</class-a>
-		<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP</class-b>
-		<field>
-			<a>inputEvents</a>
-			<b>inputEvents</b>
-		</field>
-	</mapping>
+		<custom-converters>
+			<converter type="org.apache.ivory.converter.CustomDefaultDatasetToCoordinatorConverter">
+				<class-a>org.apache.ivory.entity.v0.dataset.Dataset</class-a>
+				<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP
+				</class-b>
+			</converter>
+		</custom-converters>
 
+	</configuration>
 </mappings>

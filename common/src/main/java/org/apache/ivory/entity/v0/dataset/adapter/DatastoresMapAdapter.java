@@ -32,19 +32,23 @@ public class DatastoresMapAdapter extends XmlAdapter<Datastores, Map<String, Dat
 
   @Override
   public Map<String, Datastore> unmarshal(Datastores v) throws Exception {
-    List<Datastore> datastoreList = v.getDatastore();
-    Map<String, Datastore> datastores = new ConcurrentHashMap<String, Datastore>();
-    for (Datastore datastore : datastoreList) {
-      datastores.put(datastore.getName(), datastore);
-    }
-    return datastores;
+	  Map<String, Datastore> datastores = new ConcurrentHashMap<String, Datastore>();
+	  if(v!=null){
+		  List<Datastore> datastoreList = v.getDatastore();
+		  for (Datastore datastore : datastoreList) {
+			  datastores.put(datastore.getName(), datastore);
+		  }
+	  }
+	  return datastores;
   }
 
   @Override
   public Datastores marshal(Map<String, Datastore> v) throws Exception {
     List<Datastore> datastoreList = new ArrayList<Datastore>();
-    for (Datastore datastore : v.values()) {
-      datastoreList.add(datastore);
+    if(v!=null){
+    	for (Datastore datastore : v.values()) {
+    		datastoreList.add(datastore);
+    	}
     }
     return new Datastores(datastoreList);
   }

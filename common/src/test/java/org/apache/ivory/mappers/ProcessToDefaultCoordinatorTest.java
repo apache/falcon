@@ -18,6 +18,9 @@
 
 package org.apache.ivory.mappers;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
@@ -25,6 +28,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.ProcessType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
@@ -53,12 +57,14 @@ public class ProcessToDefaultCoordinatorTest {
 	@Test
 	public void testMap() throws JAXBException, SAXException {
 
+		Map<Entity,EntityType> entityMap = new LinkedHashMap<Entity,EntityType>();
+		entityMap.put(this.processType,EntityType.PROCESS);
 		// Map
 		CoordinatorMapper coordinateMapper = new CoordinatorMapper(
-				this.processType, this.coordinatorapp);
+				entityMap, this.coordinatorapp);
 		coordinateMapper.mapToDefaultCoordinator();
 
-		Assert.assertNotNull(coordinateMapper.getEntity());
+		Assert.assertNotNull(coordinateMapper.getEntityMap());
 
 		Assert.assertNotNull(coordinateMapper.getCoordinatorapp());
 

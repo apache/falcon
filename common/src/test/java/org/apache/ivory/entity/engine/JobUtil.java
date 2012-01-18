@@ -15,29 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.mappers;
 
-import java.util.Map;
+package org.apache.ivory.entity.engine;
 
-import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-
-/**
- * 
- * All Mappers should extend this interface
- * 
- */
-public interface CustomMapper {
-
-	Class<COORDINATORAPP> COORDINATORAPP_CLASS = COORDINATORAPP.class;
-
-	void mapToDefaultCoordinator();
+public class JobUtil {
 	
-	void mapToFinalCoordinator();
-
-	Map<Entity, EntityType> getEntityMap();
-
-	COORDINATORAPP getCoordinatorapp();
+	
 
 }

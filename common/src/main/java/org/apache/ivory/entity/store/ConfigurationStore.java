@@ -26,6 +26,7 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
+import org.mortbay.log.Log;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -61,15 +62,13 @@ public class ConfigurationStore {
   private static final Entity NULL = new Entity() {};
 
   private ConfigurationStore() {
-    Class[] entityClasses = new Class[1]; //TODO EntityType.values().length
+    Class[] entityClasses = new Class[3]; //TODO EntityType.values().length
     int index = 0;
 
-//    for (EntityType type : EntityType.values()) {
-//      dictionary.put(type, new ConcurrentHashMap<String, Entity>());
-//      entityClasses[index++] = type.getEntityClass();
-//    }
-    dictionary.put(EntityType.PROCESS, new ConcurrentHashMap<String, Entity>());
-    entityClasses[0] = EntityType.PROCESS.getEntityClass();
+    for (EntityType type : EntityType.values()) {
+      dictionary.put(type, new ConcurrentHashMap<String, Entity>());
+      entityClasses[index++] = type.getEntityClass();
+    }
 
     String uri = StartupProperties.get().getProperty("config.store.uri");
     storePath = new Path(uri);
@@ -207,6 +206,7 @@ public class ConfigurationStore {
       marshaller.marshal(entity, out);
       LOG.info("Persisted configuration " + type + "/" + entity.getName());
     } catch (JAXBException e) {
+    	  LOG.error(e);
       throw new StoreAccessException("Unable to serialize the entity object "
           + type + "/" + entity.getName(), e);
     }finally{

@@ -49,9 +49,11 @@ public class ConsumersMapAdapter extends XmlAdapter<Consumers, Map<String, Consu
   @Override
   public Consumers marshal(Map<String, Consumer> v) throws Exception {
     Consumers consumers = new Consumers();
-    List<Consumer> consumersList = consumers.getConsumer();
-    for (Map.Entry<String, Consumer> entry : v.entrySet()) {
-      consumersList.add(entry.getValue());
+    if (v != null) {
+	    List<Consumer> consumersList = consumers.getConsumer();
+	    for (Map.Entry<String, Consumer> entry : v.entrySet()) {
+	      consumersList.add(entry.getValue());
+	    }
     }
     return consumers;
   }

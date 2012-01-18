@@ -42,7 +42,13 @@ public class EntityManagerJerseyTest {
 
 	private WebResource service = null;
 
+	private static final String IMP_DATASET_XML = "/impression-dataset.xml";
+	private static final String CLICKS_DATASET_XML = "/clicks-dataset.xml";
+	private static final String IMP_CLICKS_JOIN_DATASET_XML = "/imp-click-join-dataset.xml";
+	private static final String IMP_CLICKS_JOIN1_DATASET_XML = "/imp-click-join1-dataset.xml";
+	
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+	private static final String SAMPLE_DATASET_XML = "/dataset.xml";
 	private static final String BASE_URL = "http://localhost:15000/";
 
 	EmbeddedServer server;
@@ -91,6 +97,35 @@ public class EntityManagerJerseyTest {
 	
 	@Test(dependsOnMethods = { "testValidate" })
 	public void testSubmit() {
+		
+		ServletInputStream impStream = getServletInputStream(IMP_DATASET_XML);
+
+		ClientResponse impClientResponse = this.service
+				.path("api/entities/submit/dataset")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, impStream);
+		
+		ServletInputStream clicksStream = getServletInputStream(CLICKS_DATASET_XML);
+
+		ClientResponse clicksClientResponse = this.service
+				.path("api/entities/submit/dataset")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, clicksStream);
+		
+		ServletInputStream impClicksJoinStream = getServletInputStream(IMP_CLICKS_JOIN_DATASET_XML);
+
+		ClientResponse impClicksJoinClientResponse = this.service
+				.path("api/entities/submit/dataset")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, impClicksJoinStream);
+		
+		ServletInputStream impClicksJoin1Stream = getServletInputStream(IMP_CLICKS_JOIN1_DATASET_XML);
+
+		ClientResponse impClicksJoin1ClientResponse = this.service
+				.path("api/entities/submit/dataset")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, impClicksJoin1Stream);
+		
 		ServletInputStream stream = getServletInputStream(SAMPLE_PROCESS_XML);
 
 		ClientResponse clientRepsonse = this.service
@@ -101,6 +136,8 @@ public class EntityManagerJerseyTest {
 		Assert.assertEquals(
 				clientRepsonse.getEntity(String.class),
 				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Submit successful</message></result>");
+		
+	
 	}
 
 	@Test(dependsOnMethods = { "testSubmit" })
@@ -111,7 +148,6 @@ public class EntityManagerJerseyTest {
 
 		Assert.assertEquals(clientRepsonse.getEntity(String.class),
 				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><process name=\"sample\"><name>sample</name><clusters><cluster name=\"prod-red\"></cluster></clusters><concurrency>1</concurrency><execution>LIFO</execution><frequency>hourly</frequency><periodicity>1</periodicity><validity start=\"2011-11-01 00:00:00\" end=\"9999-12-31 23:59:00\" timezone=\"UTC\"></validity><inputs><input name=\"impression\" feed=\"impression\" start-instance=\"$ptime-6\" end-instance=\"$ptime\"></input><input name=\"clicks\" feed=\"clicks\" start-instance=\"$ptime\" end-instance=\"$ptime\"></input></inputs><outputs><output name=\"impOutput\" feed=\"imp-click-join\" instance=\"$ptime\"></output><output name=\"clicksOutput\" feed=\"imp-click-join1\" instance=\"$ptime\"></output></outputs><properties><property name=\"name\" value=\"value\"></property><property name=\"name\" value=\"value\"></property></properties><workflow engine=\"oozie\" path=\"hdfs://path/to/workflow\" libpath=\"hdfs://path/to/workflow/lib\"></workflow><retry policy=\"backoff\" delay=\"10\" delayUnit=\"min\" attempts=\"3\"></retry><late-process policy=\"exp-backoff\" delay=\"1\" delayUnit=\"hour\"><late-input feed=\"impression\" workflow-path=\"hdfs://impression/late/workflow\"></late-input><late-input feed=\"clicks\" workflow-path=\"hdfs://clicks/late/workflow\"></late-input></late-process></process>");
-
 
 	}
 	
@@ -133,6 +169,24 @@ public class EntityManagerJerseyTest {
 		Assert.assertEquals(
 				clientRepsonse.getEntity(String.class),
 				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Delete successful</message></result>");
+		
+		ClientResponse clicksReponse = this.service
+				.path("api/entities/delete/dataset/impression")
+				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+		
+		this.service
+		.path("api/entities/delete/dataset/clicks")
+		.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+		
+		this.service
+		.path("api/entities/delete/dataset/imp-click-join")
+		.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+		
+		this.service
+		.path("api/entities/delete/dataset/imp-click-join1")
+		.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+
+		
 	}
 
 

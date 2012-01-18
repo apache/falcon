@@ -404,6 +404,7 @@ public class ProcessType extends Entity{
      */
     public void setName(String value) {
         this.name = value;
+        super.setName(value);
     }
 
 }

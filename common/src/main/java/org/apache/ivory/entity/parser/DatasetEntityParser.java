@@ -55,7 +55,7 @@ public class DatasetEntityParser extends EntityParser<Dataset>{
 	public Dataset doParse(InputStream xmlStream) throws JAXBException,
 			SAXException {
 
-		Dataset processDefinitionElement = null;
+		Dataset datasetDefinitionElement = null;
 		Unmarshaller unmarshaller;
 
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
@@ -65,17 +65,17 @@ public class DatasetEntityParser extends EntityParser<Dataset>{
 			Schema schema = Util.getSchema(DatasetEntityParser.class
 					.getResource(SCHEMA_FILE_NAME));
 			unmarshaller.setSchema(schema);
-			processDefinitionElement = (Dataset) unmarshaller
+			datasetDefinitionElement = (Dataset) unmarshaller
 					.unmarshal(xmlStream);
 		}
 
-		return processDefinitionElement;
+		return datasetDefinitionElement;
 	}
 
 	@Override
 	public void applyValidations(Dataset entity)
 			throws StoreAccessException, ValidationException {
-		ConfigurationStore store = ConfigurationStore.get();
+//		ConfigurationStore store = ConfigurationStore.get();
 //		Dataset existingEntity = store.get(EntityType.DATASET,
 //				entity.getName());
 		// if (existingEntity != null) {

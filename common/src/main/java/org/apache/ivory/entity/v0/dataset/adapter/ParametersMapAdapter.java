@@ -50,8 +50,10 @@ public class ParametersMapAdapter extends XmlAdapter<Parameters, Map<String, Str
   public Parameters marshal(Map<String, String> v) throws Exception {
     Parameters parameters = new Parameters();
     List<Attribute> attributes = parameters.getAttribute();
-    for (Map.Entry<String, String> entry : v.entrySet()) {
-      attributes.add(new Attribute(entry.getKey(), entry.getValue()));
+    if(v!=null){
+    	for (Map.Entry<String, String> entry : v.entrySet()) {
+    		attributes.add(new Attribute(entry.getKey(), entry.getValue()));
+    	}
     }
     return parameters;
   }

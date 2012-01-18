@@ -22,8 +22,15 @@ package org.apache.ivory.entity.parser;
  * Test Cases for ProcessEntityParser
  */
 import java.io.IOException;
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Util;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.dataset.Dataset;
 import org.testng.Assert;
@@ -39,19 +46,25 @@ public class DatasetEntityParserTest {
 	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
 
 	@Test
-	public void testParse() throws IOException, IvoryException {
+	public void testParse() throws IOException, IvoryException, JAXBException {
 
-		Dataset def = null;
-		def = (Dataset) parser.parse(this.getClass().getResourceAsStream(
+		Dataset dataset = null;
+		
+		dataset = (Dataset) parser.parse(this.getClass().getResourceAsStream(
 				SAMPLE_DATASET_XML));
 
-		Assert.assertNotNull(def);
+		Assert.assertNotNull(dataset);
 
-		Assert.assertEquals(def.getName(), "sample");
+		Assert.assertEquals(dataset.getName(), "sample");
 		
-		Assert.assertEquals(def.getDefaults().getFrequency(), "hourly");
+		Assert.assertEquals(dataset.getDefaults().getFrequency(), "hourly");
 		
-		Assert.assertEquals(def.getDefaults().getPeriodicity(), "1");
+		Assert.assertEquals(dataset.getDefaults().getPeriodicity(), "1");
+		
+		StringWriter stringWriter = new StringWriter();
+		Marshaller marshaller = Util.getMarshaller(Dataset.class);
+		marshaller.marshal(dataset, stringWriter);
+		System.out.println(stringWriter.toString());
 
 		//Assert.assertEquals(def.getValidity().getStart(), "2011-11-01 00:00:00");
 
