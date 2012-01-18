@@ -97,10 +97,13 @@ public abstract class EntityParser<T extends Entity> {
 		T entity = null;
 
 		try {
+			LOG.info("Parsing Entity: "+entity.getName());
 			entity = doParse(xmlStream);
 		} catch (JAXBException e) {
+			LOG.error(e);
 			throw new IvoryException(e);
 		} catch (SAXException e) {
+			LOG.error(e);
 			throw new IvoryException(e);
 		}
 

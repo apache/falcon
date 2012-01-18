@@ -18,9 +18,15 @@
 
 package org.apache.ivory.resource;
 
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.ivory.Util;
 
 /**
  * 
@@ -59,6 +65,13 @@ public class APIResult {
 
 	@Override
 	public String toString() {
-		return "{ Status: " + this.status + ", Message: " + this.message + " }";
+		try {
+			StringWriter stringWriter = new StringWriter();
+			Marshaller marshaller = Util.getMarshaller(this.getClass());
+			marshaller.marshal(this, stringWriter);
+			return stringWriter.toString();
+		} catch (JAXBException e) {
+			return e.getMessage();
+		}
 	}
 }

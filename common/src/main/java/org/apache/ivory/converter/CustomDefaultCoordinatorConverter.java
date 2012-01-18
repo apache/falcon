@@ -22,10 +22,10 @@ import org.apache.ivory.entity.v0.ProcessType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.dozer.DozerConverter;
 
-public class CustomFrequencyConverter extends
+public class CustomDefaultCoordinatorConverter extends
 		DozerConverter<ProcessType, COORDINATORAPP> {
 
-	public CustomFrequencyConverter() {
+	public CustomDefaultCoordinatorConverter() {
 		super(ProcessType.class, COORDINATORAPP.class);
 	}
 

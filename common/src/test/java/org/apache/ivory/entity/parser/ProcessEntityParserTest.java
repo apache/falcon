@@ -93,6 +93,53 @@ public class ProcessEntityParserTest {
 		parser.parse("<process></process>");
 	}
 	
+	@Test
+	public void testConcurrentParsing() throws IvoryException, InterruptedException{
+		
+		Thread thread = new Thread(){
+			public void run() {
+				ProcessType def = null;
+				try {
+					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+							SAMPLE_PROCESS_XML));
+				} catch (IvoryException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		Thread thread1 = new Thread(){
+			public void run() {
+				ProcessType def = null;
+				try {
+					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+							SAMPLE_PROCESS_XML));
+				} catch (IvoryException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		Thread thread2 = new Thread(){
+			public void run() {
+				ProcessType def = null;
+				try {
+					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+							SAMPLE_PROCESS_XML));
+				} catch (IvoryException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		thread1.start();
+		thread2.start();
+		thread.start();
+		
+		Thread.sleep(5000);
+		
+	}
+	
 	//TODO
 	@Test
 	public void applyValidations() {

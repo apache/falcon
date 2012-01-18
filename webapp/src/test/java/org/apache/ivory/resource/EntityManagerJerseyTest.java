@@ -115,6 +115,15 @@ public class EntityManagerJerseyTest {
 
 	}
 	
+	@Test(dependsOnMethods = { "testSubmit" })
+	public void testInvalidGetEntityDefinition() {
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/definition/process/sample1")
+				.accept(MediaType.TEXT_XML).get(ClientResponse.class);
+		Assert.assertEquals(clientRepsonse.getEntity(String.class), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>FAILED</status><message>sample1 does not exists</message></result>");
+		
+	}
+	
 	@Test(dependsOnMethods = { "testGetEntityDefinition" })
 	public void testDelete() {
 		ClientResponse clientRepsonse = this.service
