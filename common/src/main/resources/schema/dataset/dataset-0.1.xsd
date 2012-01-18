@@ -109,8 +109,8 @@
         <xs:element ref="ACL" minOccurs="0"/>
         <xs:element ref="Authentication" minOccurs="0"/>
 		<xs:element ref="DateRange" minOccurs="0" />
-		<xs:element type="xs:string" name="frequency" />
-		<xs:element type="xs:string" name="periodicity" />
+		<xs:element type="xs:string" name="Frequency" />
+		<xs:element type="xs:int" name="Periodicity" />
 		<xs:element ref="Paths" />
         <xs:element ref="Policies" minOccurs="0"/>
         <xs:element ref="Configuration" minOccurs="0"/>

@@ -32,7 +32,7 @@ import org.apache.ivory.entity.v0.dataset.adapter.PathsMapAdapter;
 import org.apache.ivory.entity.v0.dataset.adapter.PoliciesMapAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "acl", "authentication", "dateRange", "paths", "policies", "configuration" })
+@XmlType(propOrder = { "acl", "authentication", "dateRange", "frequency","periodicity","paths", "policies", "configuration" })
 @XmlRootElement(name = "Defaults")
 public class Defaults {
 
@@ -44,6 +44,12 @@ public class Defaults {
 
   @XmlElement(name = "DateRange")
   protected DateRange dateRange;
+  
+  @XmlElement(name = "Frequency")
+  protected String frequency;
+  
+  @XmlElement(name = "Periodicity")
+  protected String periodicity;
 
   @XmlJavaTypeAdapter(PathsMapAdapter.class)
   @XmlElement(name = "Path", required = true)
@@ -104,5 +110,54 @@ public class Defaults {
   public void setConfiguration(Configuration value) {
     configuration = value;
   }
+  
+  /**
+   * Gets the value of the frequency property.
+   * 
+   * @return
+   *     possible object is
+   *     {@link String }
+   *     
+   */
+  public String getFrequency() {
+      return frequency;
+  }
+
+  /**
+   * Sets the value of the frequency property.
+   * 
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *     
+   */
+  public void setFrequency(String value) {
+      this.frequency = value;
+  }
+
+  /**
+   * Gets the value of the periodicity property.
+   * 
+   * @return
+   *     possible object is
+   *     {@link String }
+   *     
+   */
+  public String getPeriodicity() {
+      return periodicity;
+  }
+
+  /**
+   * Sets the value of the periodicity property.
+   * 
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *     
+   */
+  public void setPeriodicity(String value) {
+      this.periodicity = value;
+  }
+
 
 }

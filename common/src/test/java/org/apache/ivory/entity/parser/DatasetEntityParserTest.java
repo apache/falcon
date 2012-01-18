@@ -48,6 +48,10 @@ public class DatasetEntityParserTest {
 		Assert.assertNotNull(def);
 
 		Assert.assertEquals(def.getName(), "sample");
+		
+		Assert.assertEquals(def.getDefaults().getFrequency(), "hourly");
+		
+		Assert.assertEquals(def.getDefaults().getPeriodicity(), "1");
 
 		//Assert.assertEquals(def.getValidity().getStart(), "2011-11-01 00:00:00");
 
