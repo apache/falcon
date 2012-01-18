@@ -97,8 +97,8 @@ public abstract class EntityParser<T extends Entity> {
 		T entity = null;
 
 		try {
-			LOG.info("Parsing Entity: "+entity.getName());
 			entity = doParse(xmlStream);
+			LOG.info("Parsed Entity: "+entity.getName());
 		} catch (JAXBException e) {
 			LOG.error(e);
 			throw new IvoryException(e);

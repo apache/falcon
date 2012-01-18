@@ -29,7 +29,9 @@ public interface CustomMapper {
 
 	Class<COORDINATORAPP> COORDINATORAPP_CLASS = COORDINATORAPP.class;
 
-	void map();
+	void mapToDefaultCoordinator();
+	
+	void mapToFinalCoordinator();
 
 	Entity getEntity();
 

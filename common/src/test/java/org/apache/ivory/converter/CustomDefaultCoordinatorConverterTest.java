@@ -26,10 +26,11 @@ import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.ProcessType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
+import org.dozer.DozerConverter;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class CoordinatorConverterTest {
+public class CustomDefaultCoordinatorConverterTest {
 
 	private ProcessType processType;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
@@ -46,8 +47,11 @@ public class CoordinatorConverterTest {
 
 	@Test
 	public void testConvert() {
-		COORDINATORAPP coordinatorapp = CoordinatorConverter.convert(
-				this.processType, null, null);
-		Assert.assertNotNull(coordinatorapp);
+		COORDINATORAPP coordinatorapp = new COORDINATORAPP();
+		DozerConverter<ProcessType, COORDINATORAPP> converter = new CustomDefaultCoordinatorConverter();
+		converter.convertTo(
+				this.processType, coordinatorapp);
+		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + processType.getFrequency()
+				+ "(" + processType.getPeriodicity() + ")}");
 	}
 }

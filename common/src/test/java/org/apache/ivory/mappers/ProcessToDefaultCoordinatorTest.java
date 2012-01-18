@@ -34,7 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
-public class ProcessToCoordinatorTest {
+public class ProcessToDefaultCoordinatorTest {
 
 	private final COORDINATORAPP coordinatorapp = new COORDINATORAPP();
 	private ProcessType processType;
@@ -56,7 +56,7 @@ public class ProcessToCoordinatorTest {
 		// Map
 		CoordinatorMapper coordinateMapper = new CoordinatorMapper(
 				this.processType, this.coordinatorapp);
-		coordinateMapper.map();
+		coordinateMapper.mapToDefaultCoordinator();
 
 		Assert.assertNotNull(coordinateMapper.getEntity());
 
@@ -76,12 +76,16 @@ public class ProcessToCoordinatorTest {
 
 		Assert.assertEquals(this.coordinatorapp.getEnd(), this.processType
 				.getValidity().getEnd());
+		
+		//custom mapping
+		Assert.assertEquals(this.coordinatorapp.getFrequency(), "${coord:" + processType.getFrequency()
+				+ "(" + this.processType.getPeriodicity() + ")}");
 
 		Marshaller marshaller = Util.getMarshaller(COORDINATORAPP.class);
 
 		this.coordinatorapp.setFrequency("5");
 
-		marshaller.setSchema(Util.getSchema(ProcessToCoordinatorTest.class
+		marshaller.setSchema(Util.getSchema(ProcessToDefaultCoordinatorTest.class
 				.getResource("/coordinator.xsd")));
 		marshaller.marshal(
 				new ObjectFactory().createCoordinatorApp(this.coordinatorapp),

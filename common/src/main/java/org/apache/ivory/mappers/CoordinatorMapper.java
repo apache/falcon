@@ -43,14 +43,19 @@ public class CoordinatorMapper implements CustomMapper {
 	}
 
 	@Override
-	public void map() {
-		DozerProvider.map(new String[] { "process-to-coordinator.xml" },
-				this.entity,
-				this.coordinatorapp);
+	public void mapToDefaultCoordinator() {
+		DozerProvider.map(new String[] { "process-to-coordinator.xml"},
+				this.entity, this.coordinatorapp);
 
 		// Map custom fields
 		DozerProvider.map(new String[] { "custom-coordinator.xml" },
 				this.entity, this.coordinatorapp);
+
+	}
+
+	@Override
+	public void mapToFinalCoordinator() {
+		// TODO Auto-generated method stub
 
 	}
 
