@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<Dataset name="dataset1" catalog="search" description="Search dataset for xyz purpose" gdmversion="1.0" xmlns="uri:ivory:dataset:0.1">  <!-- version can also be latest -->
+    <Comments>Search dataset for xyz purpose. Modified on Dec 12 to copy to target f and g</Comments>
+    <Status>INACTIVE</Status><!-- ACTIVE default. ACTIVE|INACTIVE| -->
+    <Priority>HIGH</Priority><!-- NORMAL default. LOWES|LOW|NORMAL|HIGH|HIGHEST -->
+    <Type>DEFAULT</Type> <!-- DEFAULT|FULL|DELTA|INCREMENTAL -->
+    <MetaInfo>
+        <Owner name="" admin-email="" user-email="" BU=""/>
+        <Consumers>
+            <Consumer name="" email="" BU=""/>
+            <Consumer name="" email="" BU=""/>
+        </Consumers>
+        <Tags>SEARCH,UDA</Tags>
+        <Parameters>
+            <attribute name="type" value="REVENUE_CRITICAL"/>
+            <attribute name="pipeline" value="xyz"/>
+        </Parameters>
+    </MetaInfo>
+    
+    <Partition name="date" type="date" format="yyyyMMddHHmm">
+        <SubPartition name="locale" type="string" values="us,en,fr"/>
+    </Partition>
+    
+    <SourceDataDefinition>
+        <DataInputFormat>ULTText</DataInputFormat>
+        <Schema provider="url" location="http://host:port/path"/> <!-- Provider could be url(http|ftp)|hdfs|customcode -->
+    </SourceDataDefinition>
+   
+    <Defaults>
+        <ACL group="users" permission="755"/>  <!--Defaults users, 755 -->
+        <Authentication authscheme="Password"> <!--Kerberos, Password, BASIC, DIGEST, PublicKey, x509Certificate -->
+            <Credential type="UserPassword" provider=""/>  <!--Keytab, UserPassword, PublicPrivateKey, PrivateKey -->
+            <Configuration>
+                <property name="a" value="c"/>
+                <property name="b" value="2"/>
+            </Configuration>
+        </Authentication>
+        <DateRange start="20110101" end="20110101" />
+        <Paths>
+            <Path location='/data/SDS/data/${feed}/%{date}/%{locale}' type="data"  />
+            <Path location='/data/SDS/schema/${feed}/%{date}/%{locale}' type="schema"  />
+            <Path location='/data/SDS/meta/${feed}/%{date}/%{locale}' type="meta"  />
+        </Paths>
+        <Policies>
+                <Policy type="eviction" frequency="160" condition="numberOfInstances(instanceList, instance) > 90"/>
+                <Policy type="XOR" frequency="160" condition="replication() >= 3 &amp;&amp;&amp; instanceCreationTime(instance) > 30">
+                    <Configuration>
+                        <property name="targetReplication" value="2"/>
+                        <property name="metaReplication" value="2"/>
+                    </Configuration>
+                </Policy>
+                <Policy type="REED_SOLOMON" frequency="160" condition="replication() = 2 &amp;&amp;&amp; instanceCreationTime(instance) > 60">
+                    <Configuration>
+                        <property name="targetReplication" value="1"/>
+                        <property name="metaReplication" value="2"/>
+                    </Configuration>
+                </Policy>
+        </Policies>
+        <Configuration>
+            <property value='dim_com_market' name='feed'/>
+            <property value='daily' name='frequency'/>
+            <property value='0-998' name='bucket'/>
+            <property value='mapred.queue.name' name='queue1'/>
+            <property value='httpproxy-host' name='colo1.proxy'/>
+        </Configuration>
+    </Defaults>
+    
+    <Datastores>
+        <Datastore name="a"/>
+        <Datastore name="b"/>
+        <Datastore name="c">
+            <Configuration>
+                <property value='mapred.queue.name' name='queue3'/>
+                <property value='httpproxy-host' name='colo2.proxy'/>
+            </Configuration>
+        </Datastore>
+        <Datastore name="d">
+            <ACL group="users" permission="750"/>
+            <DateRange start="20110101" end="20110202" />
+            <Paths>
+                    <Path location='/projects/xyz/data/${feed}/%{date}/%{mrkt_id}' type="data"  />
+                    <Path location='/projects/xyz/schema/${feed}/%{date}/%{mrkt_id}' type="schema"  />
+                    <Path location='/projects/xyz/count/${feed}/%{date}/%{mrkt_id}' type="count"  />
+            </Paths>
+            <Policies>
+                    <Policy type="eviction" frequency="160" condition="instanceCreationTime(instanceList, instance) > 10"/>
+            </Policies>
+            <IgnorePolicies>XOR,REED_SOLOMON</IgnorePolicies>
+            <Configuration>
+                <property value='mapred.queue.name' name='queue4'/>
+            </Configuration>
+        </Datastore>
+        <Datastore name="e"/>
+        <Datastore name="f" active="true"/>
+        <Datastore name="g" active="false"/>
+    </Datastores>
+    
+    <DataFlow>
+        <Import>
+            <Discovery interface="JDBC" start="" frequency="JSP EL"/>
+            <Source name="a" bcp="b" use-bcp="false" sla="120"/>
+            <Target name="c" sla="140" />
+            <Target name="d" sla="140" />
+            <Load strategy="coalesce" numMaps="20"/>
+            <Transform numMaps="" numReduce="">
+                <DataOutputFormat>Sequence</DataOutputFormat> <!--Default is RCFile for HCat -->
+                <SortKey>a</SortKey>
+                <PartitionKey>b</PartitionKey>
+            </Transform>
+        </Import>
+        <Import/>
+        <Copy>
+            <Discovery interface="HCAT" start="2009-01-01T08:00Z" frequency="JSP EL"/>
+            <Source name="c" bcp="x" use-bcp="false" sla="180" />
+            <Target name="d" sla="140" />   
+            <Replicate strategy="distcp-static" numMaps=""/>      
+        </Copy>
+        <Copy>
+            <Discovery interface="HCAT" start="2009-01-01T08:00Z" frequency="JSP EL"/>
+            <Source name="e" sla="120" />
+            <Target name="f" sla="140" /> 
+            <Target name="g" sla="140" />   
+            <Replicate strategy="distcp-dynamic" numMaps="10"/>       
+        </Copy>
+        <Export/>
+    </DataFlow>
+    
+    <CustomCode>
+        <Configuration>
+            <property value='classpath' name='hdfs://nn1:port/user/xyz/lib/:hdfs://nn1:port/user/xyz/lib/'/>
+            <property value='javaopts' name='-Djava.library.path xyz'/>
+        </Configuration>
+    </CustomCode>
+</Dataset>

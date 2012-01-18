@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="uri:ivory:datastore:0.1" xmlns="uri:airavat:datastore:0.1">
+  <xs:element name="Datastore">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Comments" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Source" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Sink" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="type" use="required" type="xs:string"/>
+      <xs:attribute name="colo" use="required" type="xs:string"/>
+      <xs:attribute name="description" use="required" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Comments" type="xs:string"/>
+  <xs:element name="Source">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Configuration" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Interfaces"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Sink">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Configuration" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Interfaces"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Configuration">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="property"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="property">
+    <xs:complexType>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="value" use="required" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Interfaces">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="Interface"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Interface">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="Proxy"/>
+        <xs:element maxOccurs="unbounded" ref="Command"/>
+      </xs:sequence>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="type" use="required" type="xs:string"/>
+      <xs:attribute name="version" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Proxy">
+    <xs:complexType>
+      <xs:attribute name="host" use="required" type="xs:string"/>
+      <xs:attribute name="port" use="required" type="xs:int"/>
+      <xs:attribute name="type" use="required" type="xs:string">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="HTTP"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Command">
+    <xs:complexType>
+      <xs:sequence minOccurs="0">
+        <xs:element ref="Arguments"/>
+        <xs:element ref="Options"/>
+      </xs:sequence>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="url" use="required" type="xs:anyURI"/>
+      <xs:attribute name="command" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Arguments">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="Argument"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Argument" type="xs:string"/>
+  <xs:element name="Options">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="Option"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Option">
+    <xs:complexType>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="value" use="required" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
