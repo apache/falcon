@@ -200,19 +200,6 @@ public class Dataset extends Entity{
 
   public void setGdmversion(String value) {
     gdmversion = value;
-  }
-  
-  @Override
-	public int hashCode() {
-		return this.getName().hashCode();
-	}
-  
-  @Override
-	public boolean equals(Object o) {
-	  if(o!=null && o instanceof Dataset){
-		return this.getName().equals(((Dataset)o).getName());
-	  }
-	  return false;
-	}
+  }  
 
 }
