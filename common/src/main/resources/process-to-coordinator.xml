@@ -27,7 +27,7 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		<trim-strings>false</trim-strings>
 	</configuration>
 	<mapping>
-		<class-a>org.apache.ivory.entity.v0.process.ProcessType</class-a>
+		<class-a>org.apache.ivory.entity.v0.process.Process</class-a>
 		<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP</class-b>
 		<field>
 			<a>name</a>
@@ -76,12 +76,12 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		</field>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.ivory.entity.v0.process.PropertyType</class-a>
+		<class-a>org.apache.ivory.entity.v0.process.Property</class-a>
 		<class-b>org.apache.ivory.oozie.coordinator.CONFIGURATION$Property
 		</class-b>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.ivory.entity.v0.process.InputType</class-a>
+		<class-a>org.apache.ivory.entity.v0.process.Input</class-a>
 		<class-b>org.apache.ivory.oozie.coordinator.DATAIN</class-b>
 		<field>
 			<a>feed</a>
@@ -89,7 +89,7 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		</field>
 	</mapping>
 	<mapping wildcard="true">
-		<class-a>org.apache.ivory.entity.v0.process.OutputType</class-a>
+		<class-a>org.apache.ivory.entity.v0.process.Output</class-a>
 		<class-b>org.apache.ivory.oozie.coordinator.DATAOUT</class-b>
 		<field>
 			<a>feed</a>

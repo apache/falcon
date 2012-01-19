@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<coordinator-app name="sample" frequency="${coord:hourly(1)}"
+	start="2011-11-01 00:00:00" end="9999-12-31 23:59:00" timezone="UTC"
+	xmlns="uri:oozie:coordinator:0.3">
+	<controls>
+		<concurrency>1</concurrency>
+		<execution>LIFO</execution>
+	</controls>
+	<datasets>
+		<dataset name="impression" frequency="${coord:hourly(1)}"
+			initial-instance="20110101">
+			<uri-template>/feed/input/1</uri-template>
+		</dataset>
+		<dataset name="clicks" frequency="${coord:hourly(1)}"
+			initial-instance="20110101">
+			<uri-template>/feed/input/1</uri-template>
+		</dataset>
+		<dataset name="imp-click-join" frequency="${coord:hourly(1)}"
+			initial-instance="20110101">
+			<uri-template>/feed/input/1</uri-template>
+		</dataset>
+		<dataset name="imp-click-join1" frequency="${coord:hourly(1)}"
+			initial-instance="20110101">
+			<uri-template>/feed/input/1</uri-template>
+		</dataset>
+	</datasets>
+	<input-events>
+		<data-in name="impression" dataset="impression">
+			<start-instance>$ptime-6</start-instance>
+			<end-instance>$ptime</end-instance>
+		</data-in>
+		<data-in name="clicks" dataset="clicks">
+			<start-instance>$ptime</start-instance>
+			<end-instance>$ptime</end-instance>
+		</data-in>
+	</input-events>
+	<output-events>
+		<data-out name="impOutput" dataset="imp-click-join">
+			<instance>$ptime</instance>
+		</data-out>
+		<data-out name="clicksOutput" dataset="imp-click-join1">
+			<instance>$ptime</instance>
+		</data-out>
+	</output-events>
+	<action>
+		<workflow>
+			<app-path>hdfs://path/to/workflow</app-path>
+			<configuration>
+				<property>
+					<name>name</name>
+					<value>value</value>
+				</property>
+				<property>
+					<name>name</name>
+					<value>value</value>
+				</property>
+			</configuration>
+		</workflow>
+	</action>
+</coordinator-app>

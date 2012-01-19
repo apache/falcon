@@ -25,7 +25,6 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
 import org.apache.ivory.Util;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.dataset.Dataset;

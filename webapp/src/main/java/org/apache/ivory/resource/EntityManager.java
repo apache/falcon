@@ -20,6 +20,7 @@ package org.apache.ivory.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,8 +33,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Util;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -41,11 +46,12 @@ import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.dataset.Dataset;
-import org.apache.ivory.entity.v0.process.InputType;
-import org.apache.ivory.entity.v0.process.OutputType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Output;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.mappers.CoordinatorMapper;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
+import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.log4j.Logger;
 
 @Path("entities")
@@ -91,9 +97,9 @@ public class EntityManager {
 			
 			// TODO Move this code to seperate class
 			if (entityType.equals(EntityType.PROCESS)) {
-				ProcessType process = (ProcessType) entity;
+				Process process = (Process) entity;
 				entityMap.put(process, EntityType.PROCESS);
-				for (InputType input : process.getInputs().getInput()) {
+				for (Input input : process.getInputs().getInput()) {
 					String feedName = input.getFeed();
 					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
 					if (dataset == null) {
@@ -105,7 +111,7 @@ public class EntityManager {
 					}
 					entityMap.put(dataset, EntityType.DATASET);
 				}
-				for (OutputType output : process.getOutputs().getOutput()) {
+				for (Output output : process.getOutputs().getOutput()) {
 					String feedName = output.getFeed();
 					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
 					if (dataset == null) {
@@ -122,6 +128,20 @@ public class EntityManager {
 					CoordinatorMapper coordinateMapper = new CoordinatorMapper(
 							entityMap, coordinatorapp);
 					coordinateMapper.mapToDefaultCoordinator();
+					ObjectFactory objectFactory = new ObjectFactory();
+					JAXBElement<COORDINATORAPP> app = objectFactory.createCoordinatorApp(coordinatorapp);
+					StringWriter stringWriter = new StringWriter();
+					Marshaller marshaller;
+					
+					try {
+						marshaller = Util.getMarshaller(COORDINATORAPP.class);
+						marshaller.marshal(app, stringWriter);
+						System.out.println(stringWriter.toString());
+					} catch (JAXBException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 					//THE coordinator will be populated now
 			}
 			

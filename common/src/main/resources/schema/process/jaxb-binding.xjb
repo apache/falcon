@@ -20,14 +20,14 @@
           xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance"
           xmlns:xs="http://www.w3.org/2001/XMLSchema"
           version="2.1">
-    <bindings schemaLocation="process.xsd" version="1.0">
+    <bindings schemaLocation="process-0.1.xsd" version="1.0">
         <!-- Customise the package name -->
         <schemaBindings>
-            <package name="com.apache.ivory.entity.v0"/>
+            <package name="com.apache.ivory.entity.v0.process"/>
         </schemaBindings>
 
         <!-- rename the value element -->
-        <bindings node="//xs:complexType[@name='propertyType']">
+        <bindings node="//xs:complexType[@name='property']">
             <bindings node=".//xs:attribute[@name='value']">
                 <property name="valueAttribute"/>
             </bindings>

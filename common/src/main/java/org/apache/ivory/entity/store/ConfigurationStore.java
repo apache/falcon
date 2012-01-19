@@ -59,10 +59,15 @@ public class ConfigurationStore {
   private final Unmarshaller unmarshaller;
   private final Path storePath;
 
-  private static final Entity NULL = new Entity() {};
+  private static final Entity NULL = new Entity(){
+	@Override
+	public String getName() {
+		return "NULL";
+	}	  
+  };
 
   private ConfigurationStore() {
-    Class[] entityClasses = new Class[3]; //TODO EntityType.values().length
+    Class<? extends Entity>[] entityClasses = new Class[3]; //TODO EntityType.values().length
     int index = 0;
 
     for (EntityType type : EntityType.values()) {

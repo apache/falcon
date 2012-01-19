@@ -28,7 +28,7 @@ import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
  * Concrete Parser which has XML parsing and validation logic for Process XML.
  * 
  */
-public class ProcessEntityParser extends EntityParser<ProcessType> {
+public class ProcessEntityParser extends EntityParser<Process> {
 
 	private static final Logger LOG = Logger
 			.getLogger(ProcessEntityParser.class);
@@ -44,7 +44,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 	private static final String SCHEMA_FILE_NAME = "/schema/process/process-0.1.xsd";
 
 	protected ProcessEntityParser(EntityType entityType,
-			Class<ProcessType> clazz) {
+			Class<Process> clazz) {
 		super(entityType, clazz);
 	}
 
@@ -56,10 +56,10 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 	 * @throws SAXException
 	 */
 	@Override
-	public ProcessType doParse(InputStream xmlStream) throws JAXBException,
+	public Process doParse(InputStream xmlStream) throws JAXBException,
 			SAXException {
 
-		ProcessType processDefinitionElement = null;
+		Process processDefinitionElement = null;
 		Unmarshaller unmarshaller;
 
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
@@ -69,7 +69,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 			Schema schema = Util.getSchema(ProcessEntityParser.class
 					.getResource(SCHEMA_FILE_NAME));
 			unmarshaller.setSchema(schema);
-			processDefinitionElement = (ProcessType) unmarshaller
+			processDefinitionElement = (Process) unmarshaller
 					.unmarshal(xmlStream);
 		}
 
@@ -77,10 +77,10 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 	}
 
 	@Override
-	public void applyValidations(ProcessType entity)
+	public void applyValidations(Process entity)
 			throws StoreAccessException, ValidationException {
 		ConfigurationStore store = ConfigurationStore.get();
-		ProcessType existingEntity = store.get(EntityType.PROCESS,
+		Process existingEntity = store.get(EntityType.PROCESS,
 				entity.getName());
 		// if (existingEntity != null) {
 		// throw new ValidationException("Entity: " + entity.getName()
@@ -90,7 +90,7 @@ public class ProcessEntityParser extends EntityParser<ProcessType> {
 		fieldValidations(entity);
 	}
 
-	private void fieldValidations(ProcessType entity)
+	private void fieldValidations(Process entity)
 			throws ValidationException {
 		// TODO
 

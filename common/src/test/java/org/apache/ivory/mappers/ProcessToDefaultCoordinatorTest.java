@@ -30,7 +30,7 @@ import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.testng.Assert;
@@ -41,15 +41,15 @@ import org.xml.sax.SAXException;
 public class ProcessToDefaultCoordinatorTest {
 
 	private final COORDINATORAPP coordinatorapp = new COORDINATORAPP();
-	private ProcessType processType;
+	private Process Process;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
 	@BeforeClass
-	public void populateProcessType() throws IvoryException {
+	public void populateProcess() throws IvoryException {
 		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 				.getParser(EntityType.PROCESS);
 
-		this.processType = (ProcessType) parser.parse(this.getClass()
+		this.Process = (Process) parser.parse(this.getClass()
 				.getResourceAsStream(SAMPLE_PROCESS_XML));
 
 	}
@@ -58,7 +58,7 @@ public class ProcessToDefaultCoordinatorTest {
 	public void testMap() throws JAXBException, SAXException {
 
 		Map<Entity,EntityType> entityMap = new LinkedHashMap<Entity,EntityType>();
-		entityMap.put(this.processType,EntityType.PROCESS);
+		entityMap.put(this.Process,EntityType.PROCESS);
 		// Map
 		CoordinatorMapper coordinateMapper = new CoordinatorMapper(
 				entityMap, this.coordinatorapp);
@@ -69,23 +69,23 @@ public class ProcessToDefaultCoordinatorTest {
 		Assert.assertNotNull(coordinateMapper.getCoordinatorapp());
 
 		Assert.assertEquals(this.coordinatorapp.getName(),
-				this.processType.getName());
+				this.Process.getName());
 
 		Assert.assertEquals(this.coordinatorapp.getControls().getConcurrency(),
-				this.processType.getConcurrency());
+				this.Process.getConcurrency());
 
 		Assert.assertEquals(this.coordinatorapp.getControls().getExecution(),
-				this.processType.getExecution());
+				this.Process.getExecution());
 
-		Assert.assertEquals(this.coordinatorapp.getStart(), this.processType
+		Assert.assertEquals(this.coordinatorapp.getStart(), this.Process
 				.getValidity().getStart());
 
-		Assert.assertEquals(this.coordinatorapp.getEnd(), this.processType
+		Assert.assertEquals(this.coordinatorapp.getEnd(), this.Process
 				.getValidity().getEnd());
 		
 		//custom mapping
-		Assert.assertEquals(this.coordinatorapp.getFrequency(), "${coord:" + processType.getFrequency()
-				+ "(" + this.processType.getPeriodicity() + ")}");
+		Assert.assertEquals(this.coordinatorapp.getFrequency(), "${coord:" + Process.getFrequency()
+				+ "(" + this.Process.getPeriodicity() + ")}");
 
 		Marshaller marshaller = Util.getMarshaller(COORDINATORAPP.class);
 

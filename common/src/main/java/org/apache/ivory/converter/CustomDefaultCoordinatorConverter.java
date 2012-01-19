@@ -18,29 +18,29 @@
 
 package org.apache.ivory.converter;
 
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.dozer.DozerConverter;
 
 public class CustomDefaultCoordinatorConverter extends
-		DozerConverter<ProcessType, COORDINATORAPP> {
+		DozerConverter<Process, COORDINATORAPP> {
 
 	public CustomDefaultCoordinatorConverter() {
-		super(ProcessType.class, COORDINATORAPP.class);
+		super(Process.class, COORDINATORAPP.class);
 	}
 
 	@Override
-	public COORDINATORAPP convertTo(ProcessType processType,
+	public COORDINATORAPP convertTo(Process Process,
 			COORDINATORAPP coordinatorapp) {
 
-		coordinatorapp.setFrequency("${coord:" + processType.getFrequency()
-				+ "(" + processType.getPeriodicity() + ")}");
+		coordinatorapp.setFrequency("${coord:" + Process.getFrequency()
+				+ "(" + Process.getPeriodicity() + ")}");
 
 		return coordinatorapp;
 	}
 
 	@Override
-	public ProcessType convertFrom(COORDINATORAPP arg0, ProcessType arg1) {
+	public Process convertFrom(COORDINATORAPP arg0, Process arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}

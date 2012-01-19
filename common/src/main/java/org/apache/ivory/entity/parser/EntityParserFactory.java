@@ -43,7 +43,7 @@ public final class EntityParserFactory {
 		switch (entityType) {
 		case PROCESS:
 			return new ProcessEntityParser(entityType,
-					org.apache.ivory.entity.v0.process.ProcessType.class);
+					org.apache.ivory.entity.v0.process.Process.class);
 		case DATASET://TODO
 			return new DatasetEntityParser(entityType,
 					org.apache.ivory.entity.v0.dataset.Dataset.class);

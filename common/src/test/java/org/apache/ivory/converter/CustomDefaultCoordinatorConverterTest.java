@@ -24,7 +24,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.dozer.DozerConverter;
 import org.testng.annotations.BeforeClass;
@@ -32,15 +32,15 @@ import org.testng.annotations.Test;
 
 public class CustomDefaultCoordinatorConverterTest {
 
-	private ProcessType processType;
+	private Process Process;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
 	@BeforeClass
-	public void populateProcessType() throws IvoryException {
+	public void populateProcess() throws IvoryException {
 		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 				.getParser(EntityType.PROCESS);
 
-		this.processType = (ProcessType) parser.parse(this.getClass()
+		this.Process = (Process) parser.parse(this.getClass()
 				.getResourceAsStream(SAMPLE_PROCESS_XML));
 
 	}
@@ -48,10 +48,10 @@ public class CustomDefaultCoordinatorConverterTest {
 	@Test
 	public void testConvert() {
 		COORDINATORAPP coordinatorapp = new COORDINATORAPP();
-		DozerConverter<ProcessType, COORDINATORAPP> converter = new CustomDefaultCoordinatorConverter();
+		DozerConverter<Process, COORDINATORAPP> converter = new CustomDefaultCoordinatorConverter();
 		converter.convertTo(
-				this.processType, coordinatorapp);
-		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + processType.getFrequency()
-				+ "(" + processType.getPeriodicity() + ")}");
+				this.Process, coordinatorapp);
+		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + Process.getFrequency()
+				+ "(" + Process.getPeriodicity() + ")}");
 	}
 }

@@ -28,7 +28,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -64,8 +64,8 @@ public class ProcessEntityParserTest {
 	@Test
 	public void testParse() throws IOException, IvoryException {
 
-		ProcessType def = null;
-		def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+		Process def = null;
+		def = (Process) parser.parse(this.getClass().getResourceAsStream(
 				SAMPLE_PROCESS_XML));
 
 		Assert.assertNotNull(def);
@@ -98,9 +98,9 @@ public class ProcessEntityParserTest {
 		
 		Thread thread = new Thread(){
 			public void run() {
-				ProcessType def = null;
+				Process def = null;
 				try {
-					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+					def = (Process) parser.parse(this.getClass().getResourceAsStream(
 							SAMPLE_PROCESS_XML));
 				} catch (IvoryException e) {
 					e.printStackTrace();
@@ -110,9 +110,9 @@ public class ProcessEntityParserTest {
 		
 		Thread thread1 = new Thread(){
 			public void run() {
-				ProcessType def = null;
+				Process def = null;
 				try {
-					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+					def = (Process) parser.parse(this.getClass().getResourceAsStream(
 							SAMPLE_PROCESS_XML));
 				} catch (IvoryException e) {
 					e.printStackTrace();
@@ -122,9 +122,9 @@ public class ProcessEntityParserTest {
 		
 		Thread thread2 = new Thread(){
 			public void run() {
-				ProcessType def = null;
+				Process def = null;
 				try {
-					def = (ProcessType) parser.parse(this.getClass().getResourceAsStream(
+					def = (Process) parser.parse(this.getClass().getResourceAsStream(
 							SAMPLE_PROCESS_XML));
 				} catch (IvoryException e) {
 					e.printStackTrace();

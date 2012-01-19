@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.ProcessType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
@@ -22,25 +22,25 @@ public class ConfigurationStoreTest {
 
   @Test
   public void testPublish() throws Exception {
-    ProcessType process = new ProcessType();
+    Process process = new Process();
     process.setName("hello");
     store.publish(EntityType.PROCESS, process);
-    ProcessType p = store.get(EntityType.PROCESS, "hello");
+    Process p = store.get(EntityType.PROCESS, "hello");
     Assert.assertEquals(p, process);
   }
 
   @Test
   public void testGet() throws Exception {
-    ProcessType p = store.get(EntityType.PROCESS, "notfound");
+    Process p = store.get(EntityType.PROCESS, "notfound");
     Assert.assertNull(p);
   }
 
   @Test
   public void testRemove() throws Exception {
-    ProcessType process = new ProcessType();
+    Process process = new Process();
     process.setName("remove");
     store.publish(EntityType.PROCESS, process);
-    ProcessType p = store.get(EntityType.PROCESS, "remove");
+    Process p = store.get(EntityType.PROCESS, "remove");
     Assert.assertEquals(p, process);
     store.remove(EntityType.PROCESS, "remove");
     p = store.get(EntityType.PROCESS, "remove");
