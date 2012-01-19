@@ -27,15 +27,7 @@ import org.apache.ivory.Util;
 
 public abstract class Entity {
 
-  private String name;
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
+  public abstract String getName();
 
   @Override
   public boolean equals(Object o) {
@@ -44,7 +36,8 @@ public abstract class Entity {
 
     Entity entity = (Entity) o;
 
-    if (name != null ? !name.equals(entity.name) : entity.name != null)
+    String name = getName();
+    if (name != null ? !name.equals(entity.getName()) : entity.getName() != null)
       return false;
 
     return true;
@@ -54,6 +47,7 @@ public abstract class Entity {
   public int hashCode() {
     String clazz = this.getClass().getName();
 
+    String name = getName();
     int result = name != null ? name.hashCode() : 0;
     result = 31 * result + clazz.hashCode();
     return result;

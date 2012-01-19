@@ -19,7 +19,7 @@
 
 <xs:schema attributeFormDefault="unqualified"
 	elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="process" type="processType">
+	<xs:element name="process" type="process">
 		<xs:annotation>
 			<xs:documentation>/*
 				* Licensed to the Apache Software Foundation (ASF) under one
@@ -47,29 +47,29 @@
 			<xs:pattern value="([a-zA-Z]([\-_a-zA-Z0-9])*){1,39})" />
 		</xs:restriction>
 	</xs:simpleType>
-	<xs:complexType name="clusterType">
+	<xs:complexType name="cluster">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="name" />
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="late-processType">
+	<xs:complexType name="late-process">
 		<xs:sequence>
-			<xs:element type="late-inputType" name="late-input"
+			<xs:element type="late-input" name="late-input"
 				maxOccurs="unbounded" minOccurs="0" />
 		</xs:sequence>
 		<xs:attribute type="xs:string" name="policy" />
 		<xs:attribute type="xs:string" name="delay" />
 		<xs:attribute type="xs:string" name="delayUnit" />
 	</xs:complexType>
-	<xs:complexType name="propertiesType">
+	<xs:complexType name="properties">
 		<xs:sequence>
-			<xs:element type="propertyType" name="property" maxOccurs="unbounded"
+			<xs:element type="property" name="property" maxOccurs="unbounded"
 				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
-	<xs:complexType name="late-inputType">
+	<xs:complexType name="late-input">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="feed" use="optional" />
@@ -78,7 +78,7 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="validityType">
+	<xs:complexType name="validity">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="start" />
@@ -87,7 +87,7 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="retryType">
+	<xs:complexType name="retry">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="policy" />
@@ -97,9 +97,9 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="processType">
+	<xs:complexType name="process">
 		<xs:sequence>
-			<xs:element type="clustersType" name="clusters">
+			<xs:element type="clusters" name="clusters">
 				<xs:annotation>
 					<xs:documentation>where</xs:documentation>
 				</xs:annotation>
@@ -112,28 +112,28 @@
 			<xs:element type="xs:string" name="execution" />
 			<xs:element type="xs:string" name="frequency" />
 			<xs:element type="xs:string" name="periodicity" />
-			<xs:element type="validityType" name="validity" />
-			<xs:element type="inputsType" name="inputs">
+			<xs:element type="validity" name="validity" />
+			<xs:element type="inputs" name="inputs">
 			</xs:element>
-			<xs:element type="outputsType" name="outputs" />
-			<xs:element type="propertiesType" name="properties">
+			<xs:element type="outputs" name="outputs" />
+			<xs:element type="properties" name="properties">
 				<xs:annotation>
 					<xs:documentation>how</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element type="workflowType" name="workflow" />
-			<xs:element type="retryType" name="retry" />
-			<xs:element type="late-processType" name="late-process" />
+			<xs:element type="workflow" name="workflow" />
+			<xs:element type="retry" name="retry" />
+			<xs:element type="late-process" name="late-process" />
 		</xs:sequence>
 		<xs:attribute type="IDENTIFIER" name="name" />
 	</xs:complexType>
-	<xs:complexType name="inputsType">
+	<xs:complexType name="inputs">
 		<xs:sequence>
-			<xs:element type="inputType" name="input" maxOccurs="unbounded"
+			<xs:element type="input" name="input" maxOccurs="unbounded"
 				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
-	<xs:complexType name="propertyType">
+	<xs:complexType name="property">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="name" use="optional" />
@@ -141,13 +141,13 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="clustersType">
+	<xs:complexType name="clusters">
 		<xs:sequence>
-			<xs:element type="clusterType" name="cluster" maxOccurs="unbounded"
+			<xs:element type="cluster" name="cluster" maxOccurs="unbounded"
 				minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
-	<xs:complexType name="inputType">
+	<xs:complexType name="input">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
@@ -158,7 +158,7 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="outputType">
+	<xs:complexType name="output">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
@@ -167,7 +167,7 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="workflowType">
+	<xs:complexType name="workflow">
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
 				<xs:attribute type="xs:string" name="engine" />
@@ -176,9 +176,9 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<xs:complexType name="outputsType">
+	<xs:complexType name="outputs">
 		<xs:sequence>
-			<xs:element type="outputType" name="output" maxOccurs="unbounded"
+			<xs:element type="output" name="output" maxOccurs="unbounded"
 				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
