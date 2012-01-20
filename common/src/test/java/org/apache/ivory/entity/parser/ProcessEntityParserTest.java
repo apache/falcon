@@ -65,7 +65,7 @@ public class ProcessEntityParserTest {
 	public void testParse() throws IOException, IvoryException {
 
 		Process def = null;
-		def = (Process) parser.parse(this.getClass().getResourceAsStream(
+		def = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
 				SAMPLE_PROCESS_XML));
 
 		Assert.assertNotNull(def);
@@ -112,7 +112,7 @@ public class ProcessEntityParserTest {
 			public void run() {
 				Process def = null;
 				try {
-					def = (Process) parser.parse(this.getClass().getResourceAsStream(
+					def = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
 							SAMPLE_PROCESS_XML));
 				} catch (IvoryException e) {
 					e.printStackTrace();
