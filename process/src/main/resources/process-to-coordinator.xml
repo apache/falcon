@@ -58,7 +58,7 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 			<b>action.workflow.appPath</b>
 		</field>
 		<field>
-			<a>properties.property</a>
+			<a is-accessible="true">properties.property</a>
 			<b is-accessible="true">action.workflow.configuration.property</b>
 		</field>
 		<field>
@@ -67,11 +67,11 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		</field>
 
 		<field>
-			<a>inputs.input</a>
+			<a is-accessible="true">inputs.input</a>
 			<b is-accessible="true">inputEvents.dataIn</b>
 		</field>
 		<field>
-			<a>outputs.output</a>
+			<a is-accessible="true">outputs.output</a>
 			<b is-accessible="true">outputEvents.dataOut</b>
 		</field>
 	</mapping>

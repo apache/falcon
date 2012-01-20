@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<process name="aggregator-coord">
+	<clusters>
+      <cluster name="prod-red" />
+    </clusters>
+	
+	<concurrency>2</concurrency>
+	<execution>LIFO</execution>
+    <frequency>minutes</frequency>
+    <periodicity>5</periodicity>
+	
+	<validity timezone="UTC" end="${end}" start="${start}" />
+	<inputs>
+		<input end-instance="${coord:current(0)}" start-instance="${coord:current(-2)}"
+			feed="raw-logs" name="input" />
+	</inputs>
+	<outputs>
+		<output instance="${coord:current(0)}" feed="aggregated-logs"
+			name="output" />
+	</outputs>
+	<properties>
+		<property name="jobTracker">${jobTracker}</property>
+		<property name="nameNode">${nameNode}</property>
+		<property name="queueName">${queueName}</property>
+		<property name="inputData">${coord:dataIn('input')}</property>
+		<property name="outputData">${coord:dataOut('output')}</property>
+	</properties>
+	<workflow path="${nameNode}/user/${coord:user()}/examples/apps/aggregator" />
+	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
+
+    <late-process policy="exp-backoff" delay="1" delayUnit="hour">
+        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
+        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+    </late-process>
+</process>
