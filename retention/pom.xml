@@ -22,13 +22,21 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
-        <version>0.1-SNAPSHOT</version>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-main</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </parent>
     <artifactId>ivory-retention</artifactId>
     <description>Ivory Retention Module</description>
     <name>Ivory Retention</name>
     <packaging>jar</packaging>
 
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-common</artifactId>
+        <scope>compile</scope>
+        <version>0.1-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
 </project>

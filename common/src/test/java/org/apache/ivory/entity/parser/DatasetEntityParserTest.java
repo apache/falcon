@@ -41,7 +41,7 @@ public class DatasetEntityParserTest {
 	private final DatasetEntityParser parser = (DatasetEntityParser) EntityParserFactory
 			.getParser(EntityType.DATASET);
 
-	private static final String SAMPLE_DATASET_XML = "/resources/config/dataset/dataset.xml";
+	private static final String SAMPLE_DATASET_XML = "/config/dataset/dataset.xml";
 
 	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
 

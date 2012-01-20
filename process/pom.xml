@@ -31,6 +31,17 @@
 	<name>Ivory Process</name>
 	<packaging>jar</packaging>
 	<dependencies>
+    <dependency>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-common</artifactId>
+      <scope>compile</scope>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>0.20.2-cdh3u0</version>
+    </dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jms</artifactId>

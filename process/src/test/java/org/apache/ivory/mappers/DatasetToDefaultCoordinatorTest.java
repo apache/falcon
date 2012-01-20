@@ -39,8 +39,8 @@ public class DatasetToDefaultCoordinatorTest {
 	private final COORDINATORAPP coordinatorapp = new COORDINATORAPP();
 	private Dataset datasetA;
 	private Dataset datasetB;
-	private static final String SAMPLE_DATASET_A_XML = "/resources/config/dataset/dataset.xml";
-	private static final String SAMPLE_DATASET_B_XML = "/resources/config/dataset/dataset2.xml";
+	private static final String SAMPLE_DATASET_A_XML = "/config/dataset/dataset.xml";
+	private static final String SAMPLE_DATASET_B_XML = "/config/dataset/dataset2.xml";
 
 	@BeforeClass
 	public void populateDataset() throws IvoryException {

@@ -35,9 +35,9 @@ public class CoordinatorMapper implements CustomMapper {
 
 	/**
 	 * Pass a ProcessType Object and partially filled coordinator Object
-	 * 
-	 * @param coordinatorapp
-	 * @param entity
+	 *
+   * @param entityMap
+   * @param coordinatorapp
 	 */
 	public CoordinatorMapper(final Map<Entity, EntityType> entityMap,
 			final COORDINATORAPP coordinatorapp) {

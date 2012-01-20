@@ -18,41 +18,20 @@
 
 package org.apache.ivory.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.dataset.Dataset;
-import org.apache.ivory.entity.v0.process.Input;
-import org.apache.ivory.entity.v0.process.Output;
-import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.mappers.CoordinatorMapper;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.log4j.Logger;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Path("entities")
 public class EntityManager {
@@ -91,58 +70,6 @@ public class EntityManager {
 			if(existingEntity!=null){
 				LOG.error(entity.getName()+" already exists");
 				return new APIResult(APIResult.Status.FAILED, entity.getName()+" already exists");	
-			}
-			
-			Map<Entity,EntityType> entityMap = new LinkedHashMap<Entity,EntityType>();
-			
-			// TODO Move this code to seperate class
-			if (entityType.equals(EntityType.PROCESS)) {
-				Process process = (Process) entity;
-				entityMap.put(process, EntityType.PROCESS);
-				for (Input input : process.getInputs().getInput()) {
-					String feedName = input.getFeed();
-					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
-					if (dataset == null) {
-						LOG.error("Referenced input feed: " + feedName
-								+ " does not exist in config Store");
-						return new APIResult(APIResult.Status.FAILED,
-								"Referenced input feed: " + feedName
-										+ " does not exist in config Store");
-					}
-					entityMap.put(dataset, EntityType.DATASET);
-				}
-				for (Output output : process.getOutputs().getOutput()) {
-					String feedName = output.getFeed();
-					Dataset dataset = configStore.get(EntityType.DATASET, feedName);
-					if (dataset == null) {
-						LOG.error("Referenced output feed: " + feedName
-								+ " does not exist in config Store");
-						return new APIResult(APIResult.Status.FAILED,
-								"Referenced output feed: " + feedName
-										+ " does not exist in config Store");
-					}
-					entityMap.put(dataset, EntityType.DATASET);
-				}
-					//Finally get the coordinator based on submited entities
-					COORDINATORAPP coordinatorapp = new COORDINATORAPP();
-					CoordinatorMapper coordinateMapper = new CoordinatorMapper(
-							entityMap, coordinatorapp);
-					coordinateMapper.mapToDefaultCoordinator();
-					ObjectFactory objectFactory = new ObjectFactory();
-					JAXBElement<COORDINATORAPP> app = objectFactory.createCoordinatorApp(coordinatorapp);
-					StringWriter stringWriter = new StringWriter();
-					Marshaller marshaller;
-					
-					try {
-						marshaller = Util.getMarshaller(COORDINATORAPP.class);
-						marshaller.marshal(app, stringWriter);
-						System.out.println(stringWriter.toString());
-					} catch (JAXBException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-					//THE coordinator will be populated now
 			}
 			
 			configStore.publish(entityType, entity);
@@ -306,7 +233,7 @@ public class EntityManager {
 	 * Returns the entity definition as an XML based on name
 	 * 
 	 * @param type
-	 * @param entity
+	 * @param entityName
 	 * @return String
 	 */
 	@GET

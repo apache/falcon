@@ -25,27 +25,6 @@
 	<description>Ivory Common Module</description>
 	<name>Ivory Commons</name>
 	<packaging>jar</packaging>
-	<repositories>
-		<repository>
-			<id>mvnrepository</id>
-			<name>mvnrepository</name>
-			<url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
-		</repository>
-		<repository>
-			<id>java.net</id>
-			<name>java.net Maven Repository</name>
-			<url>https://maven-repository.dev.java.net/nonav/repository</url>
-			<layout>legacy</layout>
-		</repository>
-    <repository>
-        <id>cdh.repo</id>
-        <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
-        <name>Cloudera Repository</name>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-    </repository>
-	</repositories>
 
 	<dependencies>
 		<dependency>
