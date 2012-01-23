@@ -23,8 +23,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "attribute")
-public class Attribute {
+@XmlRootElement(name = "parameter")
+public class Parameter {
 
   @XmlAttribute(required = true)
   protected String name;
@@ -32,24 +32,24 @@ public class Attribute {
   @XmlAttribute(required = true)
   protected String value;
 
-  public Attribute() {
+  public Parameter() {
   }
 
-  public Attribute(String name, String value) {
+  public Parameter(String name, String value) {
     this.name = name;
     this.value = value;
   }
 
   public String getName() {
-    return this.name;
+    return name;
   }
 
   public void setName(String value) {
-    this.name = value;
+    name = value;
   }
 
   public String getValue() {
-    return this.value;
+    return value;
   }
 
   public void setValue(String value) {

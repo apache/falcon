@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ ******************************************************************************/
 
 package org.apache.ivory.entity.v0.dataset.adapter;
 
@@ -32,23 +32,21 @@ public class DatastoresMapAdapter extends XmlAdapter<Datastores, Map<String, Dat
 
   @Override
   public Map<String, Datastore> unmarshal(Datastores v) throws Exception {
-	  Map<String, Datastore> datastores = new ConcurrentHashMap<String, Datastore>();
-	  if(v!=null){
-		  List<Datastore> datastoreList = v.getDatastore();
-		  for (Datastore datastore : datastoreList) {
-			  datastores.put(datastore.getName(), datastore);
-		  }
-	  }
-	  return datastores;
+    if (v == null) return null;
+    List<Datastore> datastoreList = v.getDatastore();
+    Map<String, Datastore> datastores = new ConcurrentHashMap<String, Datastore>();
+    for (Datastore datastore : datastoreList) {
+      datastores.put(datastore.getName(), datastore);
+    }
+    return datastores;
   }
 
   @Override
   public Datastores marshal(Map<String, Datastore> v) throws Exception {
+    if (v == null) return null;
     List<Datastore> datastoreList = new ArrayList<Datastore>();
-    if(v!=null){
-    	for (Datastore datastore : v.values()) {
-    		datastoreList.add(datastore);
-    	}
+    for (Datastore datastore : v.values()) {
+      datastoreList.add(datastore);
     }
     return new Datastores(datastoreList);
   }

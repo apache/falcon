@@ -27,18 +27,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "attribute" })
+@XmlType(propOrder = { "parameter" })
 @XmlRootElement(name = "Parameters")
 public class Parameters {
 
   @XmlElement(required = true)
-  protected List<Attribute> attribute;
+  protected List<Parameter> parameter;
 
-  public List<Attribute> getAttribute() {
-    if (attribute == null) {
-      attribute = new ArrayList<Attribute>();
+  public List<Parameter> getParameter() {
+    if (parameter == null) {
+      parameter = new ArrayList<Parameter>();
     }
-    return attribute;
+    return parameter;
   }
 
 }

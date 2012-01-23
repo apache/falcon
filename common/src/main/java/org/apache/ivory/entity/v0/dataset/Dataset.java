@@ -34,7 +34,7 @@ import org.apache.ivory.entity.v0.dataset.adapter.DatastoresMapAdapter;
 @XmlType(propOrder = { "comments", "status", "priority", "type", "metaInfo", "partition",
     "sourceDataDefinition", "defaults", "datastores", "dataFlow", "customCode" })
 @XmlRootElement(name = "Dataset")
-public class Dataset extends Entity{
+public class Dataset extends Entity {
 
   @XmlElement(name = "Comments")
   protected String comments;
@@ -61,7 +61,7 @@ public class Dataset extends Entity{
   protected Defaults defaults;
 
   @XmlJavaTypeAdapter(DatastoresMapAdapter.class)
-  @XmlElement(name = "Datastore", required = true)
+  @XmlElement(name = "Datastores", required = true)
   protected Map<String, Datastore> datastores;
 
   @XmlElement(name = "DataFlow", required = true)
@@ -170,6 +170,7 @@ public class Dataset extends Entity{
     customCode = value;
   }
 
+  @Override
   public String getName() {
     return name;
   }
@@ -200,6 +201,6 @@ public class Dataset extends Entity{
 
   public void setGdmversion(String value) {
     gdmversion = value;
-  }  
+  }
 
 }

@@ -40,7 +40,7 @@ public class Sink {
   protected Configuration configuration;
 
   @XmlJavaTypeAdapter(InterfacesMapAdapter.class)
-  @XmlElement(name = "Interface", required = true)
+  @XmlElement(name = "Interfaces", required = true)
   protected Map<String, Interface> interfaces;
 
   public Configuration getConfiguration() {

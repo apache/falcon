@@ -32,7 +32,8 @@ import org.apache.ivory.entity.v0.dataset.adapter.PathsMapAdapter;
 import org.apache.ivory.entity.v0.dataset.adapter.PoliciesMapAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "acl", "authentication", "dateRange", "frequency","periodicity","paths", "policies", "configuration" })
+@XmlType(propOrder = { "acl", "authentication", "dateRange", "frequency", "periodicity", "paths",
+    "policies", "configuration" })
 @XmlRootElement(name = "Defaults")
 public class Defaults {
 
@@ -44,19 +45,19 @@ public class Defaults {
 
   @XmlElement(name = "DateRange")
   protected DateRange dateRange;
-  
+
   @XmlElement(name = "Frequency")
   protected String frequency;
-  
+
   @XmlElement(name = "Periodicity")
   protected String periodicity;
 
   @XmlJavaTypeAdapter(PathsMapAdapter.class)
-  @XmlElement(name = "Path", required = true)
-  protected Map<String, String> paths;
+  @XmlElement(name = "Paths", required = true)
+  protected Map<String, Path> paths;
 
   @XmlJavaTypeAdapter(PoliciesMapAdapter.class)
-  @XmlElement(name = "Policy")
+  @XmlElement(name = "Policies")
   protected Map<String, Policy> policies;
 
   @XmlJavaTypeAdapter(ConfigurationTypeAdapter.class)
@@ -87,11 +88,11 @@ public class Defaults {
     dateRange = value;
   }
 
-  public Map<String, String> getPaths() {
+  public Map<String, Path> getPaths() {
     return paths;
   }
 
-  public void setPaths(Map<String, String> paths) {
+  public void setPaths(Map<String, Path> paths) {
     this.paths = paths;
   }
 
@@ -110,54 +111,47 @@ public class Defaults {
   public void setConfiguration(Configuration value) {
     configuration = value;
   }
-  
+
   /**
    * Gets the value of the frequency property.
    * 
-   * @return
-   *     possible object is
-   *     {@link String }
-   *     
+   * @return possible object is {@link String }
+   * 
    */
   public String getFrequency() {
-      return frequency;
+    return frequency;
   }
 
   /**
    * Sets the value of the frequency property.
    * 
    * @param value
-   *     allowed object is
-   *     {@link String }
-   *     
+   *          allowed object is {@link String }
+   * 
    */
   public void setFrequency(String value) {
-      this.frequency = value;
+    frequency = value;
   }
 
   /**
    * Gets the value of the periodicity property.
    * 
-   * @return
-   *     possible object is
-   *     {@link String }
-   *     
+   * @return possible object is {@link String }
+   * 
    */
   public String getPeriodicity() {
-      return periodicity;
+    return periodicity;
   }
 
   /**
    * Sets the value of the periodicity property.
    * 
    * @param value
-   *     allowed object is
-   *     {@link String }
-   *     
+   *          allowed object is {@link String }
+   * 
    */
   public void setPeriodicity(String value) {
-      this.periodicity = value;
+    periodicity = value;
   }
-
 
 }

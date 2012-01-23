@@ -38,7 +38,7 @@ public class MetaInfo {
   protected Owner owner;
 
   @XmlJavaTypeAdapter(ConsumersMapAdapter.class)
-  @XmlElement(name = "Consumer", required = true)
+  @XmlElement(name = "Consumers", required = true)
   protected Map<String, Consumer> consumers;
 
   @XmlElement(name = "Tags")

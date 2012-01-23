@@ -48,11 +48,11 @@ public class Datastore {
   protected DateRange dateRange;
 
   @XmlJavaTypeAdapter(PathsMapAdapter.class)
-  @XmlElement(name = "Path", required = true)
-  protected Map<String, String> paths;
+  @XmlElement(name = "Paths", required = true)
+  protected Map<String, Path> paths;
 
   @XmlJavaTypeAdapter(PoliciesMapAdapter.class)
-  @XmlElement(name = "Policy")
+  @XmlElement(name = "Policies")
   protected Map<String, Policy> policies;
 
   @XmlElement(name = "IgnorePolicies")
@@ -92,11 +92,11 @@ public class Datastore {
     dateRange = value;
   }
 
-  public Map<String, String> getPaths() {
+  public Map<String, Path> getPaths() {
     return paths;
   }
 
-  public void setPaths(Map<String, String> paths) {
+  public void setPaths(Map<String, Path> paths) {
     this.paths = paths;
   }
 

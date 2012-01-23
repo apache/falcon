@@ -61,11 +61,11 @@
   <xs:element name="Parameters">
     <xs:complexType>
       <xs:sequence>
-        <xs:element maxOccurs="unbounded" ref="attribute"/>
+        <xs:element maxOccurs="unbounded" ref="parameter"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="attribute">
+  <xs:element name="parameter">
     <xs:complexType>
       <xs:attribute name="name" use="required" type="xs:string"/>
       <xs:attribute name="value" use="required" type="xs:string"/>
@@ -91,12 +91,12 @@
   <xs:element name="SourceDataDefinition">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="InputFormat"/>
+        <xs:element ref="DataInputFormat"/>
         <xs:element ref="Schema" minOccurs="0"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="InputFormat" type="xs:string"/>
+  <xs:element name="DataInputFormat" type="xs:string"/>
   <xs:element name="Schema">
     <xs:complexType>
       <xs:attribute name="location" use="required" type="xs:anyURI"/>
@@ -180,7 +180,7 @@
   <xs:element name="Transform">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="OutputFormat" minOccurs="0"/>
+        <xs:element ref="DataOutputFormat" minOccurs="0"/>
         <xs:element ref="SortKey" minOccurs="0"/>
         <xs:element ref="PartitionKey" minOccurs="0"/>
       </xs:sequence>
@@ -188,7 +188,7 @@
       <xs:attribute name="numReduce" use="optional" type="xs:int"/>
     </xs:complexType>
   </xs:element>
-  <xs:element name="OutputFormat" type="xs:string"/>
+  <xs:element name="DataOutputFormat" type="xs:string"/>
   <xs:element name="SortKey" type="xs:string"/>
   <xs:element name="PartitionKey" type="xs:string"/>
   <xs:element name="Copy">

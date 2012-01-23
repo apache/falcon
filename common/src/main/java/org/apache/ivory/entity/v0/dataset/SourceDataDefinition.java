@@ -24,22 +24,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "inputFormat", "schema" })
+@XmlType(propOrder = { "dataInputFormat", "schema" })
 @XmlRootElement(name = "SourceDataDefinition")
 public class SourceDataDefinition {
 
-  @XmlElement(name = "InputFormat", required = true)
-  protected String inputFormat;
+  @XmlElement(name = "DataInputFormat", required = true)
+  protected String dataInputFormat;
 
   @XmlElement(name = "Schema")
   protected Schema schema;
 
-  public String getInputFormat() {
-    return inputFormat;
+  public String getDataInputFormat() {
+    return dataInputFormat;
   }
 
-  public void setInputFormat(String value) {
-    inputFormat = value;
+  public void setDataInputFormat(String value) {
+    dataInputFormat = value;
   }
 
   public Schema getSchema() {

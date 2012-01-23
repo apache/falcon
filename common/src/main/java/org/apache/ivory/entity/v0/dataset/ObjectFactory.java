@@ -48,8 +48,8 @@ public class ObjectFactory {
 
   private final static QName _Type_QNAME = new QName("uri:ivory:dataset:0.1", "Type");
 
-  private final static QName _OutputFormat_QNAME = new QName("uri:ivory:dataset:0.1",
-      "OutputFormat");
+  private final static QName _DataOutputFormat_QNAME = new QName("uri:ivory:dataset:0.1",
+      "DataOutputFormat");
 
   private final static QName _CredentialProvider_QNAME = new QName("uri:ivory:dataset:0.1",
       "CredentialProvider");
@@ -61,7 +61,8 @@ public class ObjectFactory {
 
   private final static QName _Priority_QNAME = new QName("uri:ivory:dataset:0.1", "Priority");
 
-  private final static QName _InputFormat_QNAME = new QName("uri:ivory:dataset:0.1", "InputFormat");
+  private final static QName _DataInputFormat_QNAME = new QName("uri:ivory:dataset:0.1",
+      "DataInputFormat");
 
   /**
    * Create a new ObjectFactory that can be used to create new instances of schema derived classes
@@ -200,11 +201,11 @@ public class ObjectFactory {
   }
 
   /**
-   * Create an instance of {@link Attribute }
+   * Create an instance of {@link Parameter }
    * 
    */
-  public Attribute createAttribute() {
-    return new Attribute();
+  public Parameter createAttribute() {
+    return new Parameter();
   }
 
   /**
@@ -393,9 +394,9 @@ public class ObjectFactory {
    * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}
    * 
    */
-  @XmlElementDecl(namespace = "uri:ivory:dataset:0.1", name = "OutputFormat")
-  public JAXBElement<String> createOutputFormat(String value) {
-    return new JAXBElement<String>(_OutputFormat_QNAME, String.class, null, value);
+  @XmlElementDecl(namespace = "uri:ivory:dataset:0.1", name = "DataOutputFormat")
+  public JAXBElement<String> createDataOutputFormat(String value) {
+    return new JAXBElement<String>(_DataOutputFormat_QNAME, String.class, null, value);
   }
 
   /**
@@ -438,9 +439,9 @@ public class ObjectFactory {
    * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}
    * 
    */
-  @XmlElementDecl(namespace = "uri:ivory:dataset:0.1", name = "InputFormat")
-  public JAXBElement<String> createInputFormat(String value) {
-    return new JAXBElement<String>(_InputFormat_QNAME, String.class, null, value);
+  @XmlElementDecl(namespace = "uri:ivory:dataset:0.1", name = "DataInputFormat")
+  public JAXBElement<String> createDataInputFormat(String value) {
+    return new JAXBElement<String>(_DataInputFormat_QNAME, String.class, null, value);
   }
 
 }

@@ -25,12 +25,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "outputFormat", "sortKey", "partitionKey" })
+@XmlType(propOrder = { "dataOutputFormat", "sortKey", "partitionKey" })
 @XmlRootElement(name = "Transform")
 public class Transform {
 
-  @XmlElement(name = "OutputFormat")
-  protected String outputFormat;
+  @XmlElement(name = "DataOutputFormat")
+  protected String dataOutputFormat;
 
   @XmlElement(name = "SortKey")
   protected String sortKey;
@@ -44,44 +44,44 @@ public class Transform {
   @XmlAttribute
   protected Integer numReduce;
 
-  public String getOutputFormat() {
-    return this.outputFormat;
+  public String getDataOutputFormat() {
+    return dataOutputFormat;
   }
 
-  public void setOutputFormat(String value) {
-    this.outputFormat = value;
+  public void setDataOutputFormat(String value) {
+    dataOutputFormat = value;
   }
 
   public String getSortKey() {
-    return this.sortKey;
+    return sortKey;
   }
 
   public void setSortKey(String value) {
-    this.sortKey = value;
+    sortKey = value;
   }
 
   public String getPartitionKey() {
-    return this.partitionKey;
+    return partitionKey;
   }
 
   public void setPartitionKey(String value) {
-    this.partitionKey = value;
+    partitionKey = value;
   }
 
   public Integer getNumMaps() {
-    return this.numMaps;
+    return numMaps;
   }
 
   public void setNumMaps(Integer value) {
-    this.numMaps = value;
+    numMaps = value;
   }
 
   public Integer getNumReduce() {
-    return this.numReduce;
+    return numReduce;
   }
 
   public void setNumReduce(Integer value) {
-    this.numReduce = value;
+    numReduce = value;
   }
 
 }
