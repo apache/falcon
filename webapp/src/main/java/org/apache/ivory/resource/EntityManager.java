@@ -25,6 +25,8 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.workflow.EntityScheduler;
+import org.apache.ivory.workflow.EntitySchedulerFactory;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.*;
@@ -136,7 +138,17 @@ public class EntityManager {
 	@Produces(MediaType.APPLICATION_JSON)
 	public APIResult schedule(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-		return null;
+    EntityType entityType = EntityType.valueOf(type.toUpperCase());
+    try {
+      Entity entityObj = ConfigurationStore.get().get(entityType, entity);
+      EntityScheduler scheduler = EntitySchedulerFactory.
+          getScheduler(entityObj);
+      String message = scheduler.schedule(entityObj);
+      return new APIResult(APIResult.Status.SUCCEEDED, message);
+    } catch (IvoryException e) {
+      LOG.error("Exception, encountered", e);
+      return new APIResult(APIResult.Status.FAILED, "failed");
+    }
 	}
 
 	/**
