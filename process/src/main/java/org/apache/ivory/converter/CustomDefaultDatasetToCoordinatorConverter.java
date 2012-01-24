@@ -59,7 +59,7 @@ public class CustomDefaultDatasetToCoordinatorConverter extends
 		SYNCDATASET syncdataset = new SYNCDATASET();
 		syncdataset.setName(dataset.getName());
 		//TODO Hack path
-		syncdataset.setUriTemplate("/feed/input/1");
+		syncdataset.setUriTemplate(dataset.getDefaults().getPaths().get(PATH_TYPE).getLocation());
 		syncdataset.setFrequency("${coord:" + dataset.getDefaults().getFrequency()
 				+ "(" + dataset.getDefaults().getPeriodicity() + ")}");
 		syncdataset.setInitialInstance( dataset.getDefaults().getDateRange().getStart());

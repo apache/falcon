@@ -12,8 +12,8 @@
         </Consumers>
         <Tags>SEARCH,UDA</Tags>
         <Parameters>
-            <attribute name="type" value="REVENUE_CRITICAL"/>
-            <attribute name="pipeline" value="xyz"/>
+            <parameter name="type" value="REVENUE_CRITICAL"/>
+            <parameter name="pipeline" value="xyz"/>
         </Parameters>
     </MetaInfo>
     
@@ -22,7 +22,7 @@
     </Partition>
     
     <SourceDataDefinition>
-        <InputFormat>ULTText</InputFormat>
+        <DataInputFormat>ULTText</DataInputFormat>
         <Schema provider="url" location="http://host:port/path"/> <!-- Provider could be url(http|ftp)|hdfs|customcode -->
     </SourceDataDefinition>
    
