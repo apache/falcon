@@ -41,6 +41,7 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.EntityScheduler;
 import org.apache.log4j.Logger;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -59,15 +60,17 @@ public class OozieProcessScheduler implements EntityScheduler<Process> {
 
   private final Marshaller marshaller;
 
-  public OozieProcessScheduler() {
-    marshaller = null;
+  public OozieProcessScheduler() throws Exception {
+    JAXBContext jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
+    marshaller = jaxbContext.createMarshaller();
   }
 
   @Override
   public String schedule(Process process) throws IvoryException {
 
     COORDINATORAPP coordinatorApp = mapToCoordinator(process);
-    Path path = new Path("");
+    Path path = new Path(StartupProperties.get().
+        get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
     try {
       marshallCoordinator(coordinatorApp, path);
       return submitToOozie(path, false);
@@ -80,7 +83,8 @@ public class OozieProcessScheduler implements EntityScheduler<Process> {
   public String dryRun(Process process) throws IvoryException {
 
     COORDINATORAPP coordinatorApp = mapToCoordinator(process);
-    Path path = new Path("");
+    Path path = new Path(StartupProperties.get().
+        get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
     try {
       marshallCoordinator(coordinatorApp, path);
       return submitToOozie(path, true);

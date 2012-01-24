@@ -135,7 +135,7 @@ public class EntityManager {
 	 */
 	@POST
 	@Path("schedule/{type}/{entity}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_XML)
 	public APIResult schedule(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
     EntityType entityType = EntityType.valueOf(type.toUpperCase());
