@@ -142,6 +142,14 @@ public class OozieProcessScheduler implements EntityScheduler<Process> {
 
     Configuration configuration = new Configuration(false);
     configuration.set("oozie.coord.application.path", path.toString());
+    configuration.set("user.name", StartupProperties.get().
+            get("user.name").toString());
+    configuration.set("nameNode", StartupProperties.get().
+            get("nameNode").toString());
+    configuration.set("jobTracker", StartupProperties.get().
+            get("jobTracker").toString());
+    configuration.set("queueName", StartupProperties.get().
+            get("queueName").toString());
     ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
     configuration.writeXml(out);
     out.close();

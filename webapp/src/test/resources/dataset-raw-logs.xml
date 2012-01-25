@@ -35,8 +35,9 @@
 	<DateRange start="2010-01-01T00:00Z" end="20110101" />
 	<Frequency>minutes</Frequency>
 	<Periodicity>20</Periodicity>
+	<Timezone>UTC</Timezone>
         <Paths>
-            <Path location='${nameNode}/user/${coord:user()}/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}' type="data"  />
+            <Path location='/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}' type="data"  />
             <Path location='/data/SDS/schema/${feed}/%{date}/%{locale}' type="schema"  />
             <Path location='/data/SDS/meta/${feed}/%{date}/%{locale}' type="meta"  />
         </Paths>

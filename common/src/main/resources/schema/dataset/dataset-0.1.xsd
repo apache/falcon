@@ -111,6 +111,7 @@
 		<xs:element ref="DateRange" minOccurs="0" />
 		<xs:element type="xs:string" name="Frequency" />
 		<xs:element type="xs:int" name="Periodicity" />
+		<xs:element type="xs:string" name="Timezone" />
 		<xs:element ref="Paths" />
         <xs:element ref="Policies" minOccurs="0"/>
         <xs:element ref="Configuration" minOccurs="0"/>

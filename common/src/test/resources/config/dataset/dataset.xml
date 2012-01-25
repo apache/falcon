@@ -53,6 +53,7 @@
 	<DateRange start="20110101" end="20110101" />
 	<Frequency>hourly</Frequency>
 	<Periodicity>1</Periodicity>
+	<Timezone>UTC</Timezone>
         <Paths>
             <Path location='/data/SDS/data/${feed}/%{date}/%{locale}' type="data"  />
             <Path location='/data/SDS/schema/${feed}/%{date}/%{locale}' type="schema"  />

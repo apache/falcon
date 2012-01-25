@@ -32,7 +32,7 @@ import org.apache.ivory.entity.v0.dataset.adapter.PathsMapAdapter;
 import org.apache.ivory.entity.v0.dataset.adapter.PoliciesMapAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = { "acl", "authentication", "dateRange", "frequency", "periodicity", "paths",
+@XmlType(propOrder = { "acl", "authentication", "dateRange", "frequency", "periodicity", "timezone","paths",
     "policies", "configuration" })
 @XmlRootElement(name = "Defaults")
 public class Defaults {
@@ -51,6 +51,9 @@ public class Defaults {
 
   @XmlElement(name = "Periodicity")
   protected String periodicity;
+  
+  @XmlElement(name = "Timezone")
+  protected String timezone;
 
   @XmlJavaTypeAdapter(PathsMapAdapter.class)
   @XmlElement(name = "Paths", required = true)
@@ -152,6 +155,27 @@ public class Defaults {
    */
   public void setPeriodicity(String value) {
     periodicity = value;
+  }
+  
+  /**
+   * Gets the value of the Timezone property.
+   * 
+   * @return possible object is {@link String }
+   * 
+   */
+  public String getTimezone() {
+    return timezone;
+  }
+
+  /**
+   * Sets the value of the Timezone property.
+   * 
+   * @param value
+   *          allowed object is {@link String }
+   * 
+   */
+  public void setTimezone(String value) {
+    timezone = value;
   }
 
 }
