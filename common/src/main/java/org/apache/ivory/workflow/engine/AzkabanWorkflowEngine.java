@@ -16,15 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.workflow;
+package org.apache.ivory.workflow.engine;
 
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
 
-public interface EntityScheduler<T extends Entity> {
+public abstract class AzkabanWorkflowEngine implements WorkflowEngine<Entity>{
 
-  String schedule(T entity) throws IvoryException;
-
-  String dryRun(T entity) throws IvoryException;
+	
 
 }

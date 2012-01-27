@@ -18,6 +18,19 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
@@ -25,15 +38,10 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.workflow.EntityScheduler;
-import org.apache.ivory.workflow.EntitySchedulerFactory;
+import org.apache.ivory.workflow.EntityWorkflowManager;
+import org.apache.ivory.workflow.EntityWorkflowManagerFactory;
+import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Path("entities")
 public class EntityManager {
@@ -141,9 +149,9 @@ public class EntityManager {
     EntityType entityType = EntityType.valueOf(type.toUpperCase());
     try {
       Entity entityObj = ConfigurationStore.get().get(entityType, entity);
-      EntityScheduler scheduler = EntitySchedulerFactory.
-          getScheduler(entityObj);
-      String message = scheduler.schedule(entityObj);
+      EntityWorkflowManager<Entity> entityWorkflowManager = EntityWorkflowManagerFactory.getWorkflowManager(entityObj);
+      entityWorkflowManager.setWorkflowEngine(new OozieWorkflowEngine());
+      String message = entityWorkflowManager.schedule(entityObj);
       return new APIResult(APIResult.Status.SUCCEEDED, message);
     } catch (IvoryException e) {
       LOG.error("Exception, encountered", e);

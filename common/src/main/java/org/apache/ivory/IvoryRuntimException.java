@@ -16,23 +16,21 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.workflow;
+package org.apache.ivory;
 
-public class EntitySchedulerFactory {
+/**
+ *Runtime Execption class for Ivory application 
+ *
+ */
+public class IvoryRuntimException extends RuntimeException{
 
-  private EntitySchedulerFactory() {}
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1105135528999858955L;
 
-  //TODO
-  public static <T> EntityScheduler getScheduler(T entity) {
-    try {
-      Class<EntityScheduler> clazz = (Class<EntityScheduler>)
-          EntitySchedulerFactory.class.getClassLoader().
-          loadClass("org.apache.ivory.workflow.scheduler.OozieProcessScheduler");
-      return clazz.newInstance();
-    } catch (ClassNotFoundException e) {
-    } catch (InstantiationException e) {
-    } catch (IllegalAccessException e) {
-    }
-    return null;
-  }
+	public IvoryRuntimException(Exception e) {
+		super(e);
+	}
+	
 }
