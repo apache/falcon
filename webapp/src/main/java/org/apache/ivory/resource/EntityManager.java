@@ -48,6 +48,7 @@ public class EntityManager {
 
 	private static final Logger LOG = Logger.getLogger(EntityManager.class);
 	private static final Logger AUDIT = Logger.getLogger("AUDIT");
+	private enum WorkflowAction{SCHEDULE, DELETE, SUSPEND, RESUME};
 
 	/**
 	 * Submit a new entity. Entities can be of type feed, process or data end
@@ -81,9 +82,9 @@ public class EntityManager {
 				LOG.error(entity.getName()+" already exists");
 				return new APIResult(APIResult.Status.FAILED, entity.getName()+" already exists");	
 			}
-			
+
 			configStore.publish(entityType, entity);
-			LOG.info("Submit successful: " + entity.getName());
+			LOG.info("submit successful: " + entity.getName());
 		} catch (IvoryException e) {
 			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
@@ -94,7 +95,7 @@ public class EntityManager {
 			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
-		return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful");
+		return new APIResult(APIResult.Status.SUCCEEDED, "submit successful");
 
 	}
 
@@ -131,7 +132,7 @@ public class EntityManager {
 			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
 
-		return new APIResult(APIResult.Status.SUCCEEDED, "Validate successful");
+		return new APIResult(APIResult.Status.SUCCEEDED, "validate successful");
 	}
 
 	/**
@@ -146,17 +147,7 @@ public class EntityManager {
 	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult schedule(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-    EntityType entityType = EntityType.valueOf(type.toUpperCase());
-    try {
-      Entity entityObj = ConfigurationStore.get().get(entityType, entity);
-      EntityWorkflowManager<Entity> entityWorkflowManager = EntityWorkflowManagerFactory.getWorkflowManager(entityObj);
-      entityWorkflowManager.setWorkflowEngine(new OozieWorkflowEngine());
-      String message = entityWorkflowManager.schedule(entityObj);
-      return new APIResult(APIResult.Status.SUCCEEDED, message);
-    } catch (IvoryException e) {
-      LOG.error("Exception, encountered", e);
-      return new APIResult(APIResult.Status.FAILED, "failed");
-    }
+		return entityWorkflowAction(entity, type, WorkflowAction.SCHEDULE);	
 	}
 
 	/**
@@ -179,29 +170,26 @@ public class EntityManager {
 	 * 
 	 * @param type
 	 * @param entity
-	 * @return
+	 * @return APIResult
 	 */
 	@DELETE
 	@Path("delete/{type}/{entity}")
 	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult delete(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-		try {
-			EntityType entityType = EntityType.valueOf(type.toUpperCase());
-			ConfigurationStore configStore = ConfigurationStore.get();
-			boolean isRemoved = configStore.remove(entityType, entity);
-			if (isRemoved == false) {
-				return new APIResult(APIResult.Status.FAILED, "Entity: "
-						+ entity + " does not exists");
+
+		APIResult apiResult = entityWorkflowAction(entity, type, WorkflowAction.DELETE);
+
+		if(apiResult.getStatus().equals(APIResult.Status.SUCCEEDED)){
+			ConfigurationStore configStore = ConfigurationStore.get();		
+			try {
+				configStore.remove(EntityType.valueOf(type.toUpperCase()), entity);
+			} catch (StoreAccessException e) {
+				return new APIResult(APIResult.Status.FAILED, e.getMessage());
 			}
-		} catch (IllegalArgumentException e) {
-			LOG.error(e.getMessage());
-			return new APIResult(APIResult.Status.FAILED, e.getMessage());
-		} catch (StoreAccessException e) {
-			LOG.error(e.getMessage());
-			return new APIResult(APIResult.Status.FAILED, e.getMessage());
 		}
-		return new APIResult(APIResult.Status.SUCCEEDED, "Delete successful");
+
+		return apiResult;
 	}
 
 	/**
@@ -213,10 +201,10 @@ public class EntityManager {
 	 */
 	@POST
 	@Path("suspend/{type}/{entity}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult suspend(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-		return null;
+		return entityWorkflowAction(entity, type, WorkflowAction.SUSPEND);	
 	}
 
 	/**
@@ -228,10 +216,11 @@ public class EntityManager {
 	 */
 	@POST
 	@Path("resume/{type}/{entity}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult resume(@PathParam("type") String type,
 			@PathParam("entity") String entity) {
-		return null;
+		
+		return entityWorkflowAction(entity, type, WorkflowAction.RESUME);	
 	}
 
 	/**
@@ -278,5 +267,54 @@ public class EntityManager {
 			LOG.error(e.getMessage());
 			return new APIResult(APIResult.Status.FAILED, e.getMessage()).toString();
 		}
+	}
+
+	private APIResult entityWorkflowAction(String entity, String type,
+			WorkflowAction workflowAction) {
+		try {
+			EntityType entityType = EntityType.valueOf(type.toUpperCase());
+			ConfigurationStore configStore = ConfigurationStore.get();
+			Entity entityObj = configStore.get(entityType, entity);
+			// Currently only process/coordinator is removed
+			if (entityObj == null) {
+				return new APIResult(APIResult.Status.FAILED, "Entity: "
+						+ entity + " does not exists");
+			}
+			//TODO currently these operation are supported only for PROCESS
+			if (entityType.equals(EntityType.PROCESS)) {
+				EntityWorkflowManager<Entity> entityWorkflowManager = EntityWorkflowManagerFactory
+						.getWorkflowManager(entityObj);
+				entityWorkflowManager
+						.setWorkflowEngine(new OozieWorkflowEngine());
+
+				switch (workflowAction) {
+				case SCHEDULE:
+					entityWorkflowManager.schedule(entityObj);
+					break;
+				case DELETE:
+					entityWorkflowManager.delete(entityObj);
+					break;
+				case SUSPEND:
+					entityWorkflowManager.suspend(entityObj);
+					break;
+				case RESUME:
+					entityWorkflowManager.resume(entityObj);
+					break;
+				}
+			}
+
+		} catch (IllegalArgumentException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (StoreAccessException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		} catch (IvoryException e) {
+			LOG.error(e.getMessage());
+			return new APIResult(APIResult.Status.FAILED, e.getMessage());
+		}
+		LOG.info(workflowAction.name().toLowerCase()+" successful");
+		return new APIResult(APIResult.Status.SUCCEEDED,
+				workflowAction.name().toLowerCase()+" successful");
 	}
 }

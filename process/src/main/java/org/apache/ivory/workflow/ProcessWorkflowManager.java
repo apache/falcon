@@ -141,21 +141,18 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
 	}
 
 	@Override
-	public String suspend(String entityName) throws IvoryException {
-		// TODO Auto-generated method stub
-		return null;
+	public String suspend(Entity process) throws IvoryException {
+		return super.getWorkflowEngine().suspend(process.getName());
 	}
 
 	@Override
-	public String resume(String entityName) throws IvoryException {
-		// TODO Auto-generated method stub
-		return null;
+	public String resume(Entity process) throws IvoryException {
+		return super.getWorkflowEngine().resume(process.getName());
 	}
 
 	@Override
-	public String delete(String entityName) throws IvoryException {
-		// TODO Auto-generated method stub
-		return null;
+	public String delete(Entity process) throws IvoryException {
+		return super.getWorkflowEngine().delete(process.getName());
 	}
 
 }

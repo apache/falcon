@@ -90,7 +90,7 @@ public class EntityManagerJerseyTest {
 
 		Assert.assertEquals(
 				clientRepsonse.getEntity(String.class),
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Validate successful</message></result>");
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>validate successful</message></result>");
 
 	}
 
@@ -120,7 +120,7 @@ public class EntityManagerJerseyTest {
 
 		Assert.assertEquals(
 				clientRepsonse.getEntity(String.class),
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Submit successful</message></result>");
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>submit successful</message></result>");
 
 
 	}
@@ -154,9 +154,30 @@ public class EntityManagerJerseyTest {
 				.post(ClientResponse.class);
 		
 	}
-
-
+	
 	@Test(dependsOnMethods = { "testSchedule" })
+	public void testSuspend(){
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/suspend/process/aggregator-coord")
+				.accept(MediaType.TEXT_XML).post(ClientResponse.class);
+
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>suspend successful</message></result>");	
+	}
+
+	@Test(dependsOnMethods = { "testSuspend" })
+	public void testResume(){
+		ClientResponse clientRepsonse = this.service
+				.path("api/entities/resume/process/aggregator-coord")
+				.accept(MediaType.TEXT_XML).post(ClientResponse.class);
+
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>resume successful</message></result>");	
+	}
+
+	@Test(dependsOnMethods = { "testResume" })
 	public void testDelete() {
 
 		this.service
@@ -173,7 +194,7 @@ public class EntityManagerJerseyTest {
 
 		Assert.assertEquals(
 				clientRepsonse.getEntity(String.class),
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>Delete successful</message></result>");	
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>delete successful</message></result>");	
 
 	}
 
