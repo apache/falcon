@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+     <property>
+        <name>oozie.service.ELService.ext.functions.coord-job-submit-instances</name>
+        <value>
+           ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph1_now_echo,
+           ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph1_today_echo,
+           ivory:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph1_yesterday_echo,
+           ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_currentMonth_echo,
+           ivory:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_lastMonth_echo,
+           ivory:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph1_currentYear_echo,
+           ivory:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph1_lastYear_echo
+        </value>
+        <description>
+            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
+            This property is a convenience property to add extensions to the built in executors without having to
+            include all the built in ones.
+        </description>
+    </property>
+    <property>
+        <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
+        <value>
+           ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_currentMonth,
+           ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph2_now,
+           ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph2_today,
+           ivory:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph2_yesterday,
+           ivory:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_lastMonth,
+           ivory:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph2_currentYear,
+           ivory:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph2_lastYear
+        </value>
+        <description>
+            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
+            This property is a convenience property to add extensions to the built in executors without having to
+            include all the built in ones.
+        </description>
+    </property>
+</configuration>
