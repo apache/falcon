@@ -59,11 +59,11 @@ public class TestOozieELExtensions {
     public void testCurrentMonth() throws Exception {
         init();
 
-        String expr = "${gdm:currentMonth(0,0,0)}";
+        String expr = "${ivory:currentMonth(0,0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-01T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:currentMonth(2,-1,0)}";
+        expr = "${ivory:currentMonth(2,-1,0)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-02T23:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -79,11 +79,11 @@ public class TestOozieELExtensions {
     public void testToday() throws Exception {
         init();
 
-        String expr = "${gdm:today(0,0)}";
+        String expr = "${ivory:today(0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-02T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:today(1,-20)}";
+        expr = "${ivory:today(1,-20)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-02T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -92,11 +92,11 @@ public class TestOozieELExtensions {
     public void testNow() throws Exception {
         init();
 
-        String expr = "${gdm:now(0,0)}";
+        String expr = "${ivory:now(0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-02T10:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:now(2,-10)}";
+        expr = "${ivory:now(2,-10)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-02T12:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -105,11 +105,11 @@ public class TestOozieELExtensions {
     public void testYesterday() throws Exception {
         init();
 
-        String expr = "${gdm:yesterday(0,0)}";
+        String expr = "${ivory:yesterday(0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-01T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:yesterday(1,10)}";
+        expr = "${ivory:yesterday(1,10)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-09-01T01:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -118,11 +118,11 @@ public class TestOozieELExtensions {
     public void testLastMonth() throws Exception {
         init();
 
-        String expr = "${gdm:lastMonth(0,0,0)}";
+        String expr = "${ivory:lastMonth(0,0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-08-01T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:lastMonth(1,1,10)}";
+        expr = "${ivory:lastMonth(1,1,10)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-08-02T01:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -131,11 +131,11 @@ public class TestOozieELExtensions {
     public void testCurrentYear() throws Exception {
         init();
 
-        String expr = "${gdm:currentYear(0,0,0,0)}";
+        String expr = "${ivory:currentYear(0,0,0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-01-01T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:currentYear(1,0,1,0)}";
+        expr = "${ivory:currentYear(1,0,1,0)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2009-02-01T01:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -144,11 +144,11 @@ public class TestOozieELExtensions {
     public void testLastYear() throws Exception {
         init();
 
-        String expr = "${gdm:lastYear(0,0,0,0)}";
+        String expr = "${ivory:lastYear(0,0,0,0)}";
         String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2008-01-01T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
 
-        expr = "${gdm:lastYear(1,0,1,0)}";
+        expr = "${ivory:lastYear(1,0,1,0)}";
         instResult = CoordELFunctions.evalAndWrap(instEval, expr);
         assertEquals("2008-02-01T01:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
@@ -158,7 +158,7 @@ public class TestOozieELExtensions {
         init();
         ds.setInitInstance(DateUtils.parseDateUTC("2009-08-30T010:00Z"));
 
-        String expr = "${gdm:currentYear(0,0,0,0)}";
+        String expr = "${ivory:currentYear(0,0,0,0)}";
         assertEquals("", CoordELFunctions.evalAndWrap(instEval, expr));
     }
 

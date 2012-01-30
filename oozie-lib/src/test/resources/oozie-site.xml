@@ -21,13 +21,13 @@
      <property>
         <name>oozie.service.ELService.ext.functions.coord-job-submit-instances</name>
         <value>
-           gdm:now=org.apache.ivory.oozie.OozieELExtensions#ph1_now_echo,
-           gdm:today=org.apache.ivory.oozie.OozieELExtensions#ph1_today_echo,
-           gdm:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph1_yesterday_echo,
-           gdm:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_currentMonth_echo,
-           gdm:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_lastMonth_echo,
-           gdm:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph1_currentYear_echo,
-           gdm:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph1_lastYear_echo
+           ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph1_now_echo,
+           ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph1_today_echo,
+           ivory:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph1_yesterday_echo,
+           ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_currentMonth_echo,
+           ivory:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph1_lastMonth_echo,
+           ivory:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph1_currentYear_echo,
+           ivory:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph1_lastYear_echo
         </value>
         <description>
             EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
@@ -38,13 +38,13 @@
     <property>
         <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
         <value>
-           gdm:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_currentMonth,
-           gdm:now=org.apache.ivory.oozie.OozieELExtensions#ph2_now,
-           gdm:today=org.apache.ivory.oozie.OozieELExtensions#ph2_today,
-           gdm:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph2_yesterday,
-           gdm:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_lastMonth,
-           gdm:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph2_currentYear,
-           gdm:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph2_lastYear
+           ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_currentMonth,
+           ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph2_now,
+           ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph2_today,
+           ivory:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph2_yesterday,
+           ivory:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_lastMonth,
+           ivory:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph2_currentYear,
+           ivory:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph2_lastYear
         </value>
         <description>
             EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
