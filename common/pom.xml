@@ -49,7 +49,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.2</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+			<groupId>org.codehaus.jettison</groupId>
+			<artifactId>jettison</artifactId>
+			<version>1.3</version>
+			</dependency>
+		</dependencies>
 
 	<build>
 		<!-- <directory>target</directory> <outputDirectory>target/classes</outputDirectory> 

@@ -50,9 +50,9 @@ public abstract class EntityWorkflowManager<T extends Entity> {
 
 	public abstract String dryRun(T entity) throws IvoryException;
 
-	public abstract String suspend(String entityName) throws IvoryException;
+	public abstract String suspend(T entity) throws IvoryException;
 
-	public abstract String resume(String entityName) throws IvoryException;
+	public abstract String resume(T entity) throws IvoryException;
 
-	public abstract String delete(String entityName) throws IvoryException;
+	public abstract String delete(T entity) throws IvoryException;
 }

@@ -36,6 +36,8 @@ public interface WorkflowEngine<T extends Entity> {
 	String NAME_NODE = "nameNode";
 	String JOB_TRACKER = "jobTracker";
 	String QUEUE_NAME = "queueName";
+	
+	String URI_SEPERATOR="/";
 
 	Configuration getDefaultConfiguration();
 
