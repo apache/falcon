@@ -49,18 +49,18 @@ public class CoordinatorMapper implements CustomMapper {
 	@Override
 	public void mapToDefaultCoordinator() {
 
-		for(Entry<Entity, EntityType> entityMap: this.entityMap.entrySet()){
-			if(entityMap.getValue().equals(EntityType.PROCESS)){
+		for(Entry<Entity, EntityType> entityEntrySet: this.entityMap.entrySet()){
+			if(entityEntrySet.getValue().equals(EntityType.PROCESS)){
 				DozerProvider.map(new String[] { "process-to-coordinator.xml"},
-						entityMap.getKey(), this.coordinatorapp);
+						entityEntrySet.getKey(), this.coordinatorapp);
 
 				// Map custom fields
 				DozerProvider.map(new String[] { "custom-process-to-coordinator.xml" },
-						entityMap.getKey(), this.coordinatorapp);
+						entityEntrySet.getKey(), this.coordinatorapp);
 			}
-			if(entityMap.getValue().equals(EntityType.DATASET)){				
+			if(entityEntrySet.getValue().equals(EntityType.DATASET)){				
 				DozerProvider.map(new String[] { "custom-default-dataset-to-coordinator.xml"},
-						entityMap.getKey(), this.coordinatorapp);
+						entityEntrySet.getKey(), this.coordinatorapp);
 			}
 		}
 

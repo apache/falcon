@@ -65,7 +65,7 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
         Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
-            return super.getWorkflowEngine().schedule(path);
+            return super.getWorkflowEngine().schedule(process.getName(), path);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             throw new IvoryException(e);
@@ -79,7 +79,7 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
         Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
-            return super.getWorkflowEngine().schedule(path);
+            return super.getWorkflowEngine().schedule(process.getName(), path);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             throw new IvoryException(e);

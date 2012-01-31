@@ -21,10 +21,14 @@ package org.apache.ivory.workflow.engine;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 
+/**
+ * Workflow engine should minimally support the 
+ * following operations
+ */
 public interface WorkflowEngine {
-    String schedule(Path path) throws IvoryException;
+    String schedule(String entityName, Path path) throws IvoryException;
 
-    String dryRun(Path path) throws IvoryException;
+    String dryRun(String entityName, Path path) throws IvoryException;
 
     String suspend(String entityName) throws IvoryException;
 

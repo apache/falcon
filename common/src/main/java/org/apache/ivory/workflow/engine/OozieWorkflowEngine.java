@@ -61,15 +61,43 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
 
     @Override
-    public String schedule(Path path) throws IvoryException {
+    public String schedule(String entityName, Path path) throws IvoryException {
+    	
+        // GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
+
+        String oozieUrl = StartupProperties.get().getProperty("oozie.url");
+        OozieJobFilter oozieJobFilter = new OozieJobFilter(OozieJobFilter.JobTypes.coord);
+
+        oozieJobFilter.names.add(entityName);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPPAUSED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
+
+        GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR + JOBS_RESOURCE + "?" + oozieJobFilter);
+        String jobsResponse = executeHTTPmethod(getMethod);
+
+		LOG.info(jobsResponse);
+
+		// coordinatorId = null if no coordiantor with entityName is scheduled
+		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+
+		if (coordinatorId != null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is already scheduled");
+		}
+		
         OozieClient client = new OozieClient();
         Properties conf = client.createConfiguration();
         conf.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
         return client.schedule(conf);
+
     }
 
     @Override
-    public String dryRun(Path path) throws IvoryException {
+    public String dryRun(String entityName, Path path) throws IvoryException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -91,8 +119,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         String jobsResponse = executeHTTPmethod(getMethod);
 
         LOG.info(jobsResponse);
-
+        
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is not scheduled");
+		}
         // PUT /oozie/v1/job/job-3?action=suspend
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
                 + "?action=suspend");
@@ -120,6 +152,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         LOG.info(jobsResponse);
 
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is not suspended");
+		}
         // PUT /oozie/v1/job/job-3?action=resume
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
                 + "?action=resume");
@@ -151,6 +187,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         LOG.info(jobsResponse);
 
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is not scheduled");
+		}
+		
         // PUT /oozie/v1/job/job-3?action=kill
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=kill");
 
@@ -165,8 +206,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             JSONObject jobsResponse = new JSONObject(response);
             Integer total = (Integer) jobsResponse.get("total");
             if (total.intValue() == 0) {
-                LOG.error("No live process found with name: " + entityName);
-                throw new IvoryRuntimException("No live process found with name: " + entityName);
+                LOG.warn("No scheduled process found with name: " + entityName);
+                return null;
             }
             if (total.intValue() > 1) {
                 LOG.warn("Found " + total + " running coordinators with name: " + entityName);
