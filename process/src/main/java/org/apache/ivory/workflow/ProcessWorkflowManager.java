@@ -47,112 +47,97 @@ import org.apache.log4j.Logger;
 
 public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
 
-	private static Logger LOG = Logger.getLogger(ProcessWorkflowManager.class);
+    private static Logger LOG = Logger.getLogger(ProcessWorkflowManager.class);
 
-	private final Marshaller marshaller;
+    private final Marshaller marshaller;
 
-	private static final ConfigurationStore configStore = ConfigurationStore
-			.get();
+    private static final ConfigurationStore configStore = ConfigurationStore.get();
 
-	public ProcessWorkflowManager() throws JAXBException {
-		JAXBContext jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
-		this.marshaller = jaxbContext.createMarshaller();
-	}
+    public ProcessWorkflowManager() throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
+        this.marshaller = jaxbContext.createMarshaller();
+    }
 
-	@Override
-	public String schedule(Entity process) throws IvoryException {
+    @Override
+    public String schedule(Entity process) throws IvoryException {
 
-		COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
-		Path path = new Path(StartupProperties.get()
-				.get("oozie.workflow.hdfs.path").toString(), process.getName()
-				+ ".xml");
-		try {
-			marshallToHDFS(coordinatorApp, path);
-			return super.getWorkflowEngine().schedule(path);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			throw new IvoryException(e);
-		}
-	}
+        COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
+        Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
+        try {
+            marshallToHDFS(coordinatorApp, path);
+            return super.getWorkflowEngine().schedule(path);
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+            throw new IvoryException(e);
+        }
+    }
 
-	@Override
-	public String dryRun(Entity process) throws IvoryException {
+    @Override
+    public String dryRun(Entity process) throws IvoryException {
 
-		COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
-		Path path = new Path(StartupProperties.get()
-				.get("oozie.workflow.hdfs.path").toString(), process.getName()
-				+ ".xml");
-		try {
-			marshallToHDFS(coordinatorApp, path);
-			return super.getWorkflowEngine().schedule(path);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			throw new IvoryException(e);
-		}
-	}
+        COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
+        Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
+        try {
+            marshallToHDFS(coordinatorApp, path);
+            return super.getWorkflowEngine().schedule(path);
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+            throw new IvoryException(e);
+        }
+    }
 
-	private COORDINATORAPP mapToCoordinator(Process process)
-			throws IvoryException {
-		Map<Entity, EntityType> entityMap = new LinkedHashMap<Entity, EntityType>();
+    private COORDINATORAPP mapToCoordinator(Process process) throws IvoryException {
+        Map<Entity, EntityType> entityMap = new LinkedHashMap<Entity, EntityType>();
 
-		entityMap.put(process, EntityType.PROCESS);
+        entityMap.put(process, EntityType.PROCESS);
 
-		for (Input input : process.getInputs().getInput()) {
-			Dataset dataset = configStore.get(EntityType.DATASET,
-					input.getFeed());
-			assert dataset != null : "No valid dataset found for "
-					+ input.getFeed();
-			entityMap.put(dataset, EntityType.DATASET);
-		}
+        for (Input input : process.getInputs().getInput()) {
+            Dataset dataset = configStore.get(EntityType.DATASET, input.getFeed());
+            assert dataset != null : "No valid dataset found for " + input.getFeed();
+            entityMap.put(dataset, EntityType.DATASET);
+        }
 
-		for (Output output : process.getOutputs().getOutput()) {
-			Dataset dataset = configStore.get(EntityType.DATASET,
-					output.getFeed());
-			assert dataset != null : "No valid dataset found for "
-					+ output.getFeed();
-			entityMap.put(dataset, EntityType.DATASET);
-		}
+        for (Output output : process.getOutputs().getOutput()) {
+            Dataset dataset = configStore.get(EntityType.DATASET, output.getFeed());
+            assert dataset != null : "No valid dataset found for " + output.getFeed();
+            entityMap.put(dataset, EntityType.DATASET);
+        }
 
-		COORDINATORAPP coordinatorApp = new COORDINATORAPP();
-		CoordinatorMapper coordinatorMapper = new CoordinatorMapper(entityMap,
-				coordinatorApp);
-		coordinatorMapper.mapToDefaultCoordinator();
-		LOG.info("Mapped to default coordinator");
-		return coordinatorApp;
-	}
+        COORDINATORAPP coordinatorApp = new COORDINATORAPP();
+        CoordinatorMapper coordinatorMapper = new CoordinatorMapper(entityMap, coordinatorApp);
+        coordinatorMapper.mapToDefaultCoordinator();
+        LOG.info("Mapped to default coordinator");
+        return coordinatorApp;
+    }
 
-	private void marshallToHDFS(COORDINATORAPP coordinatorApp, Path path)
-			throws IOException, IvoryException {
-		ObjectFactory coordinatorObjectFactory = new ObjectFactory();
-		JAXBElement<COORDINATORAPP> jaxbCoordinatorApp = coordinatorObjectFactory
-				.createCoordinatorApp(coordinatorApp);
+    private void marshallToHDFS(COORDINATORAPP coordinatorApp, Path path) throws IOException, IvoryException {
+        ObjectFactory coordinatorObjectFactory = new ObjectFactory();
+        JAXBElement<COORDINATORAPP> jaxbCoordinatorApp = coordinatorObjectFactory.createCoordinatorApp(coordinatorApp);
 
-		FileSystem fs = path.getFileSystem(new Configuration());
-		OutputStream outStream = fs.create(path);
-		try {
-			marshaller.marshal(jaxbCoordinatorApp, outStream);
-		} catch (JAXBException e) {
-			LOG.error(e.getMessage());
-			throw new IvoryException("Unable to create oozie coordinator app",
-					e);
-		} finally {
-			outStream.close();
-		}
-	}
+        FileSystem fs = path.getFileSystem(new Configuration());
+        OutputStream outStream = fs.create(path);
+        try {
+            marshaller.marshal(jaxbCoordinatorApp, outStream);
+        } catch (JAXBException e) {
+            LOG.error(e.getMessage());
+            throw new IvoryException("Unable to create oozie coordinator app", e);
+        } finally {
+            outStream.close();
+        }
+    }
 
-	@Override
-	public String suspend(Entity process) throws IvoryException {
-		return super.getWorkflowEngine().suspend(process.getName());
-	}
+    @Override
+    public String suspend(Entity process) throws IvoryException {
+        return super.getWorkflowEngine().suspend(process.getName());
+    }
 
-	@Override
-	public String resume(Entity process) throws IvoryException {
-		return super.getWorkflowEngine().resume(process.getName());
-	}
+    @Override
+    public String resume(Entity process) throws IvoryException {
+        return super.getWorkflowEngine().resume(process.getName());
+    }
 
-	@Override
-	public String delete(Entity process) throws IvoryException {
-		return super.getWorkflowEngine().delete(process.getName());
-	}
-
+    @Override
+    public String delete(Entity process) throws IvoryException {
+        return super.getWorkflowEngine().delete(process.getName());
+    }
 }

@@ -18,37 +18,18 @@
 
 package org.apache.ivory.workflow.engine;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.Entity;
 
-/**
- * 
- * @param <T> -
- *            Process, Dataset or Datastore which extends entity Interface which
- *            all the workflow engine like oozie or azkaban should extend
- */
-public interface WorkflowEngine<T extends Entity> {
+public interface WorkflowEngine {
+    String schedule(Path path) throws IvoryException;
 
-	String USER_NAME = "user.name";
-	String GROUP_NAME = "group.name";
-	String NAME_NODE = "nameNode";
-	String JOB_TRACKER = "jobTracker";
-	String QUEUE_NAME = "queueName";
-	
-	String URI_SEPERATOR="/";
+    String dryRun(Path path) throws IvoryException;
 
-	Configuration getDefaultConfiguration();
+    String suspend(String entityName) throws IvoryException;
 
-	String schedule(Path path) throws IvoryException;
+    String resume(String entityName) throws IvoryException;
 
-	String dryRun(Path path) throws IvoryException;
-
-	String suspend(String entityName) throws IvoryException;
-
-	String resume(String entityName) throws IvoryException;
-
-	String delete(String entityName) throws IvoryException;
+    String delete(String entityName) throws IvoryException;
 
 }

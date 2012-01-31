@@ -20,6 +20,7 @@ package org.apache.ivory.workflow;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 
@@ -31,28 +32,23 @@ import org.apache.ivory.workflow.engine.WorkflowEngine;
  */
 public abstract class EntityWorkflowManager<T extends Entity> {
 
-	private WorkflowEngine<Entity> workflowEngine = new OozieWorkflowEngine();
+    private static final String OOZIE = "OOZIE";
+    private static final String WORKFLOW_ENGINE = StartupProperties.get().getProperty("workflow.engine", OOZIE);
 
-	/**
-	 * Default workflow engine is set to oozie, clients may override this.
-	 * 
-	 * @param workflowEngine
-	 */
-	public final void setWorkflowEngine(WorkflowEngine<Entity> workflowEngine) {
-		this.workflowEngine = workflowEngine;
-	}
+    public final WorkflowEngine getWorkflowEngine() {
+        if(WORKFLOW_ENGINE.equals(OOZIE)) {
+            return new OozieWorkflowEngine();
+        }
+        return null;
+    }
 
-	public final WorkflowEngine<Entity> getWorkflowEngine() {
-		return this.workflowEngine;
-	}
+    public abstract String schedule(T entity) throws IvoryException;
 
-	public abstract String schedule(T entity) throws IvoryException;
+    public abstract String dryRun(T entity) throws IvoryException;
 
-	public abstract String dryRun(T entity) throws IvoryException;
+    public abstract String suspend(T entity) throws IvoryException;
 
-	public abstract String suspend(T entity) throws IvoryException;
+    public abstract String resume(T entity) throws IvoryException;
 
-	public abstract String resume(T entity) throws IvoryException;
-
-	public abstract String delete(T entity) throws IvoryException;
+    public abstract String delete(T entity) throws IvoryException;
 }

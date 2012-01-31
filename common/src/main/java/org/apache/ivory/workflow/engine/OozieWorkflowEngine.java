@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,271 +33,234 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.mortbay.log.Log;
 
 /**
  * Workflow engine which uses oozies APIs
  * 
  */
-public class OozieWorkflowEngine implements WorkflowEngine<Entity> {
+public class OozieWorkflowEngine implements WorkflowEngine {
 
-	private static final Logger LOG = Logger
-			.getLogger(OozieWorkflowEngine.class);
+    private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
 
-	private static final String OOZIE_MIME_TYPE = "application/xml;charset=UTF-8";
-	private static final String JOBS_RESOURCE = "jobs";
-	private static final String JOB_RESOURCE = "job";
+    private static final String OOZIE_MIME_TYPE = "application/xml;charset=UTF-8";
+    private static final String JOBS_RESOURCE = "jobs";
+    private static final String JOB_RESOURCE = "job";
 
-	public Configuration getDefaultConfiguration() {
-		Configuration configuration = new Configuration(false);
-		configuration.set(USER_NAME, StartupProperties.get().get(USER_NAME)
-				.toString());
-		configuration.set(NAME_NODE, StartupProperties.get().get(NAME_NODE)
-				.toString());
-		configuration.set(JOB_TRACKER, StartupProperties.get().get(JOB_TRACKER)
-				.toString());
-		configuration.set(QUEUE_NAME, StartupProperties.get().get(QUEUE_NAME)
-				.toString());
+    private static final String URI_SEPERATOR = "/";
 
-		return configuration;
-	}
 
-	public String schedule(Path path) throws IvoryException {
-		// POST /oozie/v1/jobs
-		String oozieUrl = StartupProperties.get().getProperty("oozie.url");
-		PostMethod postMethod = new PostMethod(oozieUrl + URI_SEPERATOR
-				+ JOBS_RESOURCE);
+    @Override
+    public String schedule(Path path) throws IvoryException {
+        OozieClient client = new OozieClient();
+        Properties conf = client.createConfiguration();
+        conf.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
+        return client.schedule(conf);
+    }
 
-		Configuration configuration = getDefaultConfiguration();
-		configuration.set("oozie.coord.application.path", path.toString());
-		postMethod
-				.setRequestEntity(getConfigurationRequestEntity(configuration));
+    @Override
+    public String dryRun(Path path) throws IvoryException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-		String response = executeHTTPmethod(postMethod);
-		Log.info(response);
-		return response;
-	}
+    @Override
+    public String suspend(String entityName) throws IvoryException {
+        //TODO migrate to oozie client
+        // GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
 
-	@Override
-	public String dryRun(Path path) throws IvoryException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        String oozieUrl = StartupProperties.get().getProperty("oozie.url");
+        OozieJobFilter oozieJobFilter = new OozieJobFilter(OozieJobFilter.JobTypes.coord);
 
-	@Override
-	public String suspend(String entityName) throws IvoryException {
-		// GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
+        oozieJobFilter.names.add(entityName);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
 
-		String oozieUrl = StartupProperties.get().getProperty("oozie.url");
-		OozieJobFilter oozieJobFilter = new OozieJobFilter(
-				OozieJobFilter.JobTypes.coord);
+        GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR + JOBS_RESOURCE + "?" + oozieJobFilter);
+        String jobsResponse = executeHTTPmethod(getMethod);
 
-		oozieJobFilter.names.add(entityName);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
+        LOG.info(jobsResponse);
 
-		GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR
-				+ JOBS_RESOURCE + "?" + oozieJobFilter);
-		String jobsResponse = executeHTTPmethod(getMethod);
+        String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+        // PUT /oozie/v1/job/job-3?action=suspend
+        PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
+                + "?action=suspend");
 
-		LOG.info(jobsResponse);
+        String suspendResponse = executeHTTPmethod(putMethod);
 
-		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
-		// PUT /oozie/v1/job/job-3?action=suspend
-		PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR
-				+ JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=suspend");
+        return suspendResponse;
+    }
 
-		String suspendResponse = executeHTTPmethod(putMethod);
+    @Override
+    public String resume(String entityName) throws IvoryException {
+        //TODO migrate to oozie client
+        // GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
 
-		return suspendResponse;
-	}
+        String oozieUrl = StartupProperties.get().getProperty("oozie.url");
+        OozieJobFilter oozieJobFilter = new OozieJobFilter(OozieJobFilter.JobTypes.coord);
 
-	@Override
-	public String resume(String entityName) throws IvoryException {
-		// GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
+        oozieJobFilter.names.add(entityName);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
 
-		String oozieUrl = StartupProperties.get().getProperty("oozie.url");
-		OozieJobFilter oozieJobFilter = new OozieJobFilter(
-				OozieJobFilter.JobTypes.coord);
+        GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR + JOBS_RESOURCE + "?" + oozieJobFilter);
+        String jobsResponse = executeHTTPmethod(getMethod);
 
-		oozieJobFilter.names.add(entityName);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
+        LOG.info(jobsResponse);
 
-		GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR
-				+ JOBS_RESOURCE + "?" + oozieJobFilter);
-		String jobsResponse = executeHTTPmethod(getMethod);
+        String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+        // PUT /oozie/v1/job/job-3?action=resume
+        PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
+                + "?action=resume");
 
-		LOG.info(jobsResponse);
+        String suspendResponse = executeHTTPmethod(putMethod);
 
-		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
-		// PUT /oozie/v1/job/job-3?action=resume
-		PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR
-				+ JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=resume");
+        return suspendResponse;
+    }
 
-		String suspendResponse = executeHTTPmethod(putMethod);
+    @Override
+    public String delete(String entityName) throws IvoryException {
+        //TODO migrate to oozie client
+        // GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
 
-		return suspendResponse;
-	}
+        String oozieUrl = StartupProperties.get().getProperty("oozie.url");
+        OozieJobFilter oozieJobFilter = new OozieJobFilter(OozieJobFilter.JobTypes.coord);
 
-	@Override
-	public String delete(String entityName) throws IvoryException {
+        oozieJobFilter.names.add(entityName);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPPAUSED);
+        oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
 
-		// GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
+        GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR + JOBS_RESOURCE + "?" + oozieJobFilter);
+        String jobsResponse = executeHTTPmethod(getMethod);
 
-		String oozieUrl = StartupProperties.get().getProperty("oozie.url");
-		OozieJobFilter oozieJobFilter = new OozieJobFilter(
-				OozieJobFilter.JobTypes.coord);
+        LOG.info(jobsResponse);
 
-		oozieJobFilter.names.add(entityName);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPPAUSED);
-		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
+        String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+        // PUT /oozie/v1/job/job-3?action=kill
+        PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=kill");
 
-		GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR
-				+ JOBS_RESOURCE + "?" + oozieJobFilter);
-		String jobsResponse = executeHTTPmethod(getMethod);
+        String killReponse = executeHTTPmethod(putMethod);
 
-		LOG.info(jobsResponse);
+        return killReponse;
 
-		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
-		// PUT /oozie/v1/job/job-3?action=kill
-		PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR
-				+ JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=kill");
+    }
 
-		String killReponse = executeHTTPmethod(putMethod);
+    private String getCoordinatorId(String response, String entityName) {
+        try {
+            JSONObject jobsResponse = new JSONObject(response);
+            Integer total = (Integer) jobsResponse.get("total");
+            if (total.intValue() == 0) {
+                LOG.error("No live process found with name: " + entityName);
+                throw new IvoryRuntimException("No live process found with name: " + entityName);
+            }
+            if (total.intValue() > 1) {
+                LOG.warn("Found " + total + " running coordinators with name: " + entityName);
+            }
+            JSONArray coordinators = jobsResponse.getJSONArray("coordinatorjobs");
+            return (String) coordinators.getJSONObject(0).get("coordJobId");
+        } catch (JSONException e) {
+            LOG.error(e);
+            throw new IvoryRuntimException(e);
+        }
 
-		return killReponse;
+    }
 
-	}
+    private RequestEntity getConfigurationRequestEntity(Configuration configuration) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
+        try {
+            configuration.writeXml(out);
+            out.close();
+        } catch (IOException e) {
+            LOG.error(e);
+            throw new IvoryRuntimException(e);
+        }
 
-	private String getCoordinatorId(String response, String entityName) {
-		try {
-			JSONObject jobsResponse = new JSONObject(response);
-			Integer total = (Integer) jobsResponse.get("total");
-			if (total.intValue() == 0) {
-				LOG.error("No live process found with name: " + entityName);
-				throw new IvoryRuntimException(
-						"No live process found with name: " + entityName);
-			}
-			if (total.intValue() > 1) {
-				LOG.warn("Found " + total + " running coordinators with name: "
-						+ entityName);
-			}
-			JSONArray coordinators = jobsResponse
-					.getJSONArray("coordinatorjobs");
-			return (String) coordinators.getJSONObject(0).get("coordJobId");
-		} catch (JSONException e) {
-			LOG.error(e);
-			throw new IvoryRuntimException(e);
-		}
+        RequestEntity reqEntity = new ByteArrayRequestEntity(out.toByteArray(), OOZIE_MIME_TYPE);
+        return reqEntity;
 
-	}
+    }
 
-	private RequestEntity getConfigurationRequestEntity(
-			Configuration configuration) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
-		try {
-			configuration.writeXml(out);
-			out.close();
-		} catch (IOException e) {
-			LOG.error(e);
-			throw new IvoryRuntimException(e);
-		}
+    private static class OozieJobFilter {
+        enum JobTypes {
+            wf, coord, bundle
+        };
 
-		RequestEntity reqEntity = new ByteArrayRequestEntity(out.toByteArray(),
-				OOZIE_MIME_TYPE);
-		return reqEntity;
+        enum JobStatus {
+            PREP, RUNNING, PREPSUSPENDED, SUSPENDED, PREPPAUSED, PAUSED, SUCCEEDED, DONWITHERROR, KILLED, FAILED
+        }
 
-	}
+        OozieJobFilter(JobTypes jobType) {
+            this.jobType = jobType;
+        }
 
-	private static class OozieJobFilter {
-		enum JobTypes {
-			wf, coord, bundle
-		};
+        JobTypes jobType;
+        List<String> names = new ArrayList<String>();
+        List<String> users = new ArrayList<String>();
+        List<String> groups = new ArrayList<String>();
+        List<JobStatus> statuss = new ArrayList<JobStatus>();
 
-		enum JobStatus {
-			PREP, RUNNING, PREPSUSPENDED, SUSPENDED, PREPPAUSED, PAUSED, SUCCEEDED, DONWITHERROR, KILLED, FAILED
-		}
+        @Override
+        public String toString() {
+            StringBuffer urlFilter = new StringBuffer();
+            for (String name : names) {
+                urlFilter.append("name=");
+                urlFilter.append(name + ";");
+            }
+            for (String user : users) {
+                urlFilter.append("user=");
+                urlFilter.append(user + ";");
+            }
+            for (String group : groups) {
+                urlFilter.append("group=");
+                urlFilter.append(group + ";");
+            }
+            for (JobStatus status : statuss) {
+                urlFilter.append("status=");
+                urlFilter.append(status.name() + ";");
+            }
 
-		OozieJobFilter(JobTypes jobType) {
-			this.jobType = jobType;
-		}
+            try {
+                return "jobtype=" + this.jobType.name() + "&filter=" + URLEncoder.encode(urlFilter.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                return e.getMessage();
+            }
 
-		JobTypes jobType;
-		List<String> names = new ArrayList<String>();
-		List<String> users = new ArrayList<String>();
-		List<String> groups = new ArrayList<String>();
-		List<JobStatus> statuss = new ArrayList<JobStatus>();
+        }
+    }
 
-		@Override
-		public String toString() {
-			StringBuffer urlFilter = new StringBuffer();
-			for (String name : names) {
-				urlFilter.append("name=");
-				urlFilter.append(name + ";");
-			}
-			for (String user : users) {
-				urlFilter.append("user=");
-				urlFilter.append(user + ";");
-			}
-			for (String group : groups) {
-				urlFilter.append("group=");
-				urlFilter.append(group + ";");
-			}
-			for (JobStatus status : statuss) {
-				urlFilter.append("status=");
-				urlFilter.append(status.name()+";");
-			}
+    private String executeHTTPmethod(HttpMethodBase method) throws IvoryException {
+        HttpClient client = new HttpClient();
+        try {
+            client.executeMethod(method);
+            int statusCode = method.getStatusCode();
+            if ((statusCode == HttpServletResponse.SC_OK) || (statusCode == HttpServletResponse.SC_CREATED)) {
+                return method.getResponseBodyAsString();
+            } else {
+                throw new IvoryException(method.getResponseHeader("oozie-error-message").getValue());
+            }
+        } catch (HttpException e) {
+            LOG.error(e.getMessage());
+            throw new IvoryRuntimException(e);
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+            throw new IvoryRuntimException(e);
+        }
 
-			try {
-				return "jobtype=" + this.jobType.name() + "&filter="
-						+ URLEncoder.encode(urlFilter.toString(), "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				return e.getMessage();
-			}
-
-		}
-	}
-
-	private String executeHTTPmethod(HttpMethodBase method)
-			throws IvoryException {
-		HttpClient client = new HttpClient();
-		try {
-			client.executeMethod(method);
-			int statusCode = method.getStatusCode();
-			if (statusCode == HttpServletResponse.SC_OK
-					|| statusCode == HttpServletResponse.SC_CREATED) {
-				return method.getResponseBodyAsString();
-			} else {
-				throw new IvoryException(method.getResponseHeader(
-						"oozie-error-message").getValue());
-			}
-		} catch (HttpException e) {
-			LOG.error(e.getMessage());
-			throw new IvoryRuntimException(e);
-		} catch (IOException e) {
-			LOG.error(e.getMessage());
-			throw new IvoryRuntimException(e);
-		}
-
-	}
+    }
 
 }
