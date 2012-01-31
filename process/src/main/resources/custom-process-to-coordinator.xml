@@ -26,7 +26,7 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 		<trim-strings>false</trim-strings>
 
 		<custom-converters>
-			<converter type="org.apache.ivory.converter.CustomDefaultCoordinatorConverter">
+			<converter type="org.apache.ivory.converter.ProcessConverter">
 				<class-a>org.apache.ivory.entity.v0.process.Process</class-a>
 				<class-b>org.apache.ivory.oozie.coordinator.COORDINATORAPP
 				</class-b>

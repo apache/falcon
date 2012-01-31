@@ -52,6 +52,7 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
     private final Marshaller marshaller;
 
     private static final ConfigurationStore configStore = ConfigurationStore.get();
+    private static final String WORKFLOW_PATH = (String) StartupProperties.get().get("process.workflow.hdfs.path");
 
     public ProcessWorkflowManager() throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
@@ -62,7 +63,7 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
     public String schedule(Entity process) throws IvoryException {
 
         COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
-        Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
+        Path path = new Path(WORKFLOW_PATH, process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
             return super.getWorkflowEngine().schedule(path);
@@ -76,7 +77,7 @@ public class ProcessWorkflowManager extends EntityWorkflowManager<Entity> {
     public String dryRun(Entity process) throws IvoryException {
 
         COORDINATORAPP coordinatorApp = mapToCoordinator((Process) process);
-        Path path = new Path(StartupProperties.get().get("oozie.workflow.hdfs.path").toString(), process.getName() + ".xml");
+        Path path = new Path(WORKFLOW_PATH, process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
             return super.getWorkflowEngine().schedule(path);

@@ -30,7 +30,7 @@ import org.dozer.DozerConverter;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class CustomDefaultCoordinatorConverterTest {
+public class ProcessConverterTest {
 
 	private Process Process;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
@@ -48,7 +48,7 @@ public class CustomDefaultCoordinatorConverterTest {
 	@Test
 	public void testConvert() {
 		COORDINATORAPP coordinatorapp = new COORDINATORAPP();
-		DozerConverter<Process, COORDINATORAPP> converter = new CustomDefaultCoordinatorConverter();
+		DozerConverter<Process, COORDINATORAPP> converter = new ProcessConverter();
 		converter.convertTo(
 				this.Process, coordinatorapp);
 		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + Process.getFrequency()

@@ -32,6 +32,11 @@
 	<packaging>jar</packaging>
 	<dependencies>
     <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.ivory</groupId>
       <artifactId>ivory-common</artifactId>
       <version>0.1-SNAPSHOT</version>
@@ -67,16 +72,4 @@
 			<version>5.3.1</version>
 		</dependency>
 	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

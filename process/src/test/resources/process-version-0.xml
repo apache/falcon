@@ -32,13 +32,13 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressionFeed" start-instance="$ptime-6" end-instance="$ptime" /> 
-        <input name="clicks" feed="clicksFeed" start-instance="$ptime" end-instance="$ptime" />
+        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(0,2)" /> 
+        <input name="clicks" feed="clicksFeed" start-instance="yesterday(0,0)" end-instance="today(0,0)" />
     </inputs>
 
     <outputs>
-        <output name="impOutput" feed="imp-click-join" instance="$ptime" />
-        <output name="clicksOutput" feed="imp-click-join2" instance="$ptime" />
+        <output name="impOutput" feed="imp-click-join" instance="today(0,0)" />
+        <output name="clicksOutput" feed="imp-click-join2" instance="today(0,0)" />
     </outputs>
 
     <!-- how -->
