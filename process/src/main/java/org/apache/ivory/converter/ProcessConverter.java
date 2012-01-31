@@ -37,12 +37,16 @@ public class ProcessConverter extends DozerConverter<Process, COORDINATORAPP> {
         coordinatorapp.setFrequency("${coord:" + Process.getFrequency() + "(" + Process.getPeriodicity() + ")}");
 
         //Format into oozie EL
-        for(DATAIN input:coordinatorapp.getInputEvents().getDataIn()) {
-            input.setStartInstance(getELExpression(input.getStartInstance()));
-            input.setEndInstance(getELExpression(input.getEndInstance()));
+        if((coordinatorapp.getInputEvents() != null) && (coordinatorapp.getInputEvents().getDataIn() != null)) {
+            for(DATAIN input:coordinatorapp.getInputEvents().getDataIn()) {
+                input.setStartInstance(getELExpression(input.getStartInstance()));
+                input.setEndInstance(getELExpression(input.getEndInstance()));
+            }
         }
-        for(DATAOUT output:coordinatorapp.getOutputEvents().getDataOut()) {
-            output.setInstance(getELExpression(output.getInstance()));
+        if((coordinatorapp.getOutputEvents() != null) && (coordinatorapp.getOutputEvents().getDataOut() != null)) {
+            for(DATAOUT output:coordinatorapp.getOutputEvents().getDataOut()) {
+                output.setInstance(getELExpression(output.getInstance()));
+            }
         }
 
         return coordinatorapp;
