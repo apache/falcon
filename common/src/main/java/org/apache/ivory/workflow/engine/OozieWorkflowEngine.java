@@ -33,6 +33,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.hadoop.conf.Configuration;
@@ -44,6 +45,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.apache.ivory.workflow.engine.OozieClient;
 
 /**
  * Workflow engine which uses oozies APIs
@@ -59,17 +61,63 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private static final String URI_SEPERATOR = "/";
 
+    public Configuration createConfiguration() {
+    	Configuration conf = new Configuration();
+    	//TODO read from cluster definition?
+    	conf.set(OozieClient.USER_NAME, StartupProperties.get().get(OozieClient.PROPERTY_PREFIX + OozieClient.USER_NAME).toString());
+    	conf.set(OozieClient.NAME_NODE, StartupProperties.get().get(OozieClient.PROPERTY_PREFIX + OozieClient.NAME_NODE).toString());
+    	conf.set(OozieClient.JOB_TRACKER, StartupProperties.get().get(OozieClient.PROPERTY_PREFIX + OozieClient.JOB_TRACKER).toString());
+    	conf.set(OozieClient.QUEUE_NAME, StartupProperties.get().get(OozieClient.PROPERTY_PREFIX + OozieClient.QUEUE_NAME).toString());
+    	return conf;
+    }    
+
+	@Override
+	public String schedule(String entityName, Path path) throws IvoryException {
+
+		// GET /oozie/v1/jobs?filter=user%3Dbansalm&offset=1&len=50
+
+		String oozieUrl = StartupProperties.get().getProperty("oozie.url");
+		OozieJobFilter oozieJobFilter = new OozieJobFilter(
+				OozieJobFilter.JobTypes.coord);
+
+		oozieJobFilter.names.add(entityName);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREP);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.RUNNING);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPSUSPENDED);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.SUSPENDED);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PREPPAUSED);
+		oozieJobFilter.statuss.add(OozieJobFilter.JobStatus.PAUSED);
+
+		GetMethod getMethod = new GetMethod(oozieUrl + URI_SEPERATOR
+				+ JOBS_RESOURCE + "?" + oozieJobFilter);
+		String jobsResponse = executeHTTPmethod(getMethod);
+
+		LOG.info(jobsResponse);
+
+		// coordinatorId = null if no coordiantor with entityName is scheduled
+		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+
+		if (coordinatorId != null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is already scheduled");
+		}
+
+		PostMethod postMethod = new PostMethod(oozieUrl + URI_SEPERATOR
+				+ JOBS_RESOURCE);
+
+		Configuration configuration = createConfiguration();
+		configuration.set("oozie.coord.application.path", path.toString());
+		postMethod
+				.setRequestEntity(getConfigurationRequestEntity(configuration));
+
+		String response = executeHTTPmethod(postMethod);
+
+		LOG.info(response);
+		return response;
+	}
 
     @Override
-    public String schedule(Path path) throws IvoryException {
-        OozieClient client = new OozieClient();
-        Properties conf = client.createConfiguration();
-        conf.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
-        return client.schedule(conf);
-    }
-
-    @Override
-    public String dryRun(Path path) throws IvoryException {
+    public String dryRun(String entityName, Path path) throws IvoryException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -91,8 +139,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         String jobsResponse = executeHTTPmethod(getMethod);
 
         LOG.info(jobsResponse);
-
+        
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is not scheduled");
+		}
         // PUT /oozie/v1/job/job-3?action=suspend
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
                 + "?action=suspend");
@@ -120,6 +172,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         LOG.info(jobsResponse);
 
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			throw new IvoryException("Entity: " + entityName
+					+ " is not in suspend mode");
+		}
         // PUT /oozie/v1/job/job-3?action=resume
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
                 + "?action=resume");
@@ -150,7 +206,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         LOG.info(jobsResponse);
 
-        String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		if (coordinatorId == null) {
+			LOG.warn("Entity: " + entityName + " is not scheduled");
+			return "Entity: " + entityName + " is not scheduled";
+		}
+
         // PUT /oozie/v1/job/job-3?action=kill
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=kill");
 
@@ -165,8 +226,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             JSONObject jobsResponse = new JSONObject(response);
             Integer total = (Integer) jobsResponse.get("total");
             if (total.intValue() == 0) {
-                LOG.error("No live process found with name: " + entityName);
-                throw new IvoryRuntimException("No live process found with name: " + entityName);
+                LOG.warn("No scheduled process found with name: " + entityName);
+                return null;
             }
             if (total.intValue() > 1) {
                 LOG.warn("Found " + total + " running coordinators with name: " + entityName);

@@ -25,13 +25,13 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.oozie.client.OozieClientException;
 
 public class OozieClient extends org.apache.oozie.client.OozieClient{
-    private static final String PROPERTY_PREFIX = "oozie.";
+    public static final String PROPERTY_PREFIX = "oozie.";
 
     private static final String URL = "url";
-    private static final String NAME_NODE = "nameNode";
-    private static final String JOB_TRACKER = "jobTracker";
-    private static final String QUEUE_NAME = "queueName";
-    private static String oozieUrl = StartupProperties.get().getProperty(PROPERTY_PREFIX + URL);
+    public static final String NAME_NODE = "nameNode";
+    public static final String JOB_TRACKER = "jobTracker";
+    public static final String QUEUE_NAME = "queueName";
+    public static String oozieUrl = StartupProperties.get().getProperty(PROPERTY_PREFIX + URL);
 
     @Override
     public Properties createConfiguration() {

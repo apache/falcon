@@ -153,6 +153,10 @@ public class EntityManagerJerseyTest {
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		
+		Assert.assertEquals(
+				clientRepsonse.getEntity(String.class),
+				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>schedule successful</message></result>");	
+		
 	}
 	
 	@Test(dependsOnMethods = { "testSchedule" })
