@@ -174,7 +174,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         String coordinatorId = getCoordinatorId(jobsResponse, entityName);
 		if (coordinatorId == null) {
 			throw new IvoryException("Entity: " + entityName
-					+ " is not suspended");
+					+ " is not in suspend mode");
 		}
         // PUT /oozie/v1/job/job-3?action=resume
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId
@@ -206,12 +206,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         LOG.info(jobsResponse);
 
-        String coordinatorId = getCoordinatorId(jobsResponse, entityName);
+		String coordinatorId = getCoordinatorId(jobsResponse, entityName);
 		if (coordinatorId == null) {
-			throw new IvoryException("Entity: " + entityName
-					+ " is not scheduled");
+			LOG.warn("Entity: " + entityName + " is not scheduled");
+			return "Entity: " + entityName + " is not scheduled";
 		}
-		
+
         // PUT /oozie/v1/job/job-3?action=kill
         PutMethod putMethod = new PutMethod(oozieUrl + URI_SEPERATOR + JOB_RESOURCE + URI_SEPERATOR + coordinatorId + "?action=kill");
 
