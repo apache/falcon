@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.apache.oozie.coord.CoordELFunctions;
 import org.apache.oozie.coord.SyncCoordAction;
 import org.apache.oozie.coord.SyncCoordDataset;
 import org.apache.oozie.coord.TimeUnit;
@@ -80,32 +81,76 @@ public class OozieELExtensions {
         return PREFIX + "lastYear(" + month + ", " + day + ", " + hr + ", " + min + ")"; // Unresolved
     }
 
+    public static String ph2_now_inst(int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.NONE, 0, 0, 0, hr, min);
+    }
+
+    public static String ph2_today_inst(int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.DAY, 0, 0, 0, hr, min);
+    }
+
+    public static String ph2_yesterday_inst(int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.DAY, 0, 0, -1, hr, min);
+    }
+
+    public static String ph2_currentMonth_inst(int day, int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.MONTH, 0, 0, day, hr, min);
+    }
+
+    public static String ph2_lastMonth_inst(int day, int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.MONTH, 0, -1, day, hr, min);
+    }
+
+    public static String ph2_currentYear_inst(int month, int day, int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.YEAR, 0, month, day, hr, min);
+    }
+
+    public static String ph2_lastYear_inst(int month, int day, int hr, int min) throws Exception {
+        return mapToCurrentInstance(TruncateBoundary.YEAR, -1, month, day, hr, min);
+    }
+
+    private static String evaluateCurrent(String curExpr) throws Exception {
+        if(curExpr.equals("")) {
+            return curExpr;
+        }
+
+        int inst = parseOneArg(curExpr);
+        return CoordELFunctions.ph2_coord_current(inst);
+    }
+
     public static String ph2_now(int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.NONE, 0, 0, 0, hr, min);
+        String inst = ph2_now_inst(hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_today(int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.DAY, 0, 0, 0, hr, min);
+        String inst = ph2_today_inst(hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_yesterday(int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.DAY, 0, 0, -1, hr, min);
+        String inst = ph2_yesterday_inst(hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_currentMonth(int day, int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.MONTH, 0, 0, day, hr, min);
+        String inst = ph2_currentMonth_inst(day, hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_lastMonth(int day, int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.MONTH, 0, -1, day, hr, min);
+        String inst = ph2_lastMonth_inst(day, hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_currentYear(int month, int day, int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.YEAR, 0, month, day, hr, min);
+        String inst = ph2_currentYear_inst(month, day, hr, min);
+        return evaluateCurrent(inst);
     }
 
     public static String ph2_lastYear(int month, int day, int hr, int min) throws Exception {
-        return mapToCurrent(TruncateBoundary.YEAR, -1, month, day, hr, min);
+        String inst = ph2_lastYear_inst(month, day, hr, min);
+        return evaluateCurrent(inst);
     }
 
     /**
@@ -121,7 +166,7 @@ public class OozieELExtensions {
      * @throws Exception
      */
     //TODO handle the case where action_Creation_time or the n-th instance is earlier than the Initial_Instance of dataset.
-    private static String mapToCurrent(TruncateBoundary trunc, int yr, int month, int day, int hr, int min) throws Exception {
+    private static String mapToCurrentInstance(TruncateBoundary trunc, int yr, int month, int day, int hr, int min) throws Exception {
         Calendar nominalInstanceCal = getEffectiveNominalTime();
         if (nominalInstanceCal == null) {
             XLog.getLog(OozieELExtensions.class).warn(
@@ -182,6 +227,18 @@ public class OozieELExtensions {
      */
     final private static String DATASET = "oozie.coord.el.dataset.bean";
     final private static String COORD_ACTION = "oozie.coord.el.app.bean";
+
+    private static int parseOneArg(String funcName) throws Exception {
+        int firstPos = funcName.indexOf("(");
+        int lastPos = funcName.lastIndexOf(")");
+        if ((firstPos >= 0) && (lastPos > firstPos)) {
+            String tmp = funcName.substring(firstPos + 1, lastPos).trim();
+            if (tmp.length() > 0) {
+                return (int) Double.parseDouble(tmp);
+            }
+        }
+        throw new RuntimeException("Unformatted function :" + funcName);
+    }
 
     private static Calendar getEffectiveNominalTime() {
         Date datasetInitialInstance = getInitialInstance();

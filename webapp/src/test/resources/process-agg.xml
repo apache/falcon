@@ -11,11 +11,11 @@
 	
 	<validity timezone="UTC" end="2010-01-01T03:00Z" start="2010-01-01T01:00Z" />
 	<inputs>
-		<input end-instance="today(2,0)" start-instance="today(0,0)"
+		<input end-instance="currentMonth(0,0,40)" start-instance="currentMonth(0,0,20)"
 			feed="raw-logs" name="input" />
 	</inputs>
 	<outputs>
-		<output instance="today(0,0)" feed="aggregated-logs"
+		<output instance="currentMonth(0,0,0)" feed="aggregated-logs"
 			name="output" />
 	</outputs>
 	<properties>

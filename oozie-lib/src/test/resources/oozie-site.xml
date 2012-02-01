@@ -38,6 +38,23 @@
     <property>
         <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
         <value>
+           ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_currentMonth_inst,
+           ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph2_now_inst,
+           ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph2_today_inst,
+           ivory:yesterday=org.apache.ivory.oozie.OozieELExtensions#ph2_yesterday_inst,
+           ivory:lastMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_lastMonth_inst,
+           ivory:currentYear=org.apache.ivory.oozie.OozieELExtensions#ph2_currentYear_inst,
+           ivory:lastYear=org.apache.ivory.oozie.OozieELExtensions#ph2_lastYear_inst
+        </value>
+        <description>
+            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
+            This property is a convenience property to add extensions to the built in executors without having to
+            include all the built in ones.
+        </description>
+    </property>
+    <property>
+        <name>oozie.service.ELService.ext.functions.coord-action-create</name>
+        <value>
            ivory:currentMonth=org.apache.ivory.oozie.OozieELExtensions#ph2_currentMonth,
            ivory:now=org.apache.ivory.oozie.OozieELExtensions#ph2_now,
            ivory:today=org.apache.ivory.oozie.OozieELExtensions#ph2_today,
