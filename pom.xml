@@ -53,6 +53,10 @@
 
   <repositories>
     <repository>
+      <id>internalRepo</id>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/bi/</url>
+    </repository>
+    <repository>
       <id>default</id>
       <url>https://repository.apache.org/content/groups/public/</url>
     </repository>
@@ -62,10 +66,9 @@
       <url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
     </repository>
     <repository>
-      <id>java.net</id>
-      <name>java.net Maven Repository</name>
-      <url>https://maven-repository.dev.java.net/nonav/repository</url>
-      <layout>legacy</layout>
+        <id>java.net-Public</id>
+        <name>Maven Java Net Snapshots and Releases</name>
+        <url>https://maven.java.net/content/groups/public/</url>
     </repository>
     <repository>
         <id>cdh.repo</id>
