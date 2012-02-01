@@ -70,7 +70,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     @Override
-    public String schedule(String entityName, Path path) throws IvoryException {
+    public String schedule(Path path) throws IvoryException {
         OozieClient client = new OozieClient();
         Properties conf = client.createConfiguration();
         conf.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
@@ -78,7 +78,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     @Override
-    public String dryRun(String entityName, Path path) throws IvoryException {
+    public String dryRun(Path path) throws IvoryException {
         // TODO Auto-generated method stub
         return null;
     }
