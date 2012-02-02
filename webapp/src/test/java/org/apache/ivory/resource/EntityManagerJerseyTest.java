@@ -17,17 +17,15 @@
  */
 package org.apache.ivory.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-
-import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.dataset.Dataset;
 import org.apache.ivory.util.EmbeddedServer;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -35,25 +33,47 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import javax.servlet.ServletInputStream;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import java.io.*;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EntityManagerJerseyTest {
 
     private WebResource service = null;
 
-    private static final String RAW_LOGS_DATASET_XML = "/dataset-raw-logs.xml";
-    private static final String AGG_LOGS_DATASET_XML = "/dataset-agg-logs.xml";
+    private static final String DATASET_TEMPLATE1 = "/dataset-template1.xml";
+    private static final String DATASET_TEMPLATE2 = "/dataset-template2.xml";
 
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
-    private static final String AGG_PROCESS_XML = "/process-agg.xml";
+    private static final String PROCESS_TEMPLATE = "/process-template.xml";
 
     private static final String BASE_URL = "http://localhost:15000/";
 
-    EmbeddedServer server;
+    private EmbeddedServer server;
+
+    private Unmarshaller unmarshaller;
+
+    public EntityManagerJerseyTest() {
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(
+                    APIResult.class, Dataset.class);
+            unmarshaller = jaxbContext.createUnmarshaller();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeClass
     public void configure() throws Exception {
@@ -87,123 +107,242 @@ public class EntityManagerJerseyTest {
     }
 
     @Test
-    public void testValidate() {
+    public void testValidate() throws IOException {
 
-        ServletInputStream stream = getServletInputStream(SAMPLE_PROCESS_XML);
+        ServletInputStream stream = getServletInputStream(getClass().
+                getResourceAsStream(SAMPLE_PROCESS_XML));
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/validate/process")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, stream);
 
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>validate successful</message></result>");
-
+        checkIfSuccessful(clientRepsonse);
     }
 
-    @Test(dependsOnMethods = { "testValidate" })
-    public void testSubmit() {
+    @Test
+    public void testSubmit() throws IOException {
 
-        ServletInputStream rawlogStream = getServletInputStream(RAW_LOGS_DATASET_XML);
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
 
-        this.service
-        .path("api/entities/submit/dataset")
-        .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-        .post(ClientResponse.class, rawlogStream);
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
 
-        ServletInputStream outputStream = getServletInputStream(AGG_LOGS_DATASET_XML);
+        String feed2 = "f2" + System.currentTimeMillis();
+        overlay.put("name", feed2);
+        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
 
-        this.service
-        .path("api/entities/submit/dataset")
-        .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-        .post(ClientResponse.class, outputStream);
-
-        ServletInputStream processStream = getServletInputStream(AGG_PROCESS_XML);
-
-        ClientResponse clientRepsonse = this.service
-                .path("api/entities/submit/process")
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, processStream);
-
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>submit successful</message></result>");
-
-
+        String process = "p1" + System.currentTimeMillis();
+        overlay.put("name", process);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        checkIfSuccessful(response);
     }
 
-    @Test(dependsOnMethods = { "testSubmit" })
-    public void testGetEntityDefinition() {
-        this.service
-        .path("api/entities/definition/process/aggregator-coord")
-        .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+    @Test
+    public void testGetEntityDefinition() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
 
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        response = this.service
+                .path("api/entities/definition/dataset/" + feed1)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+
+        String datasetXML = response.getEntity(String.class);
+        try {
+            Dataset result = (Dataset)unmarshaller.
+                    unmarshal(new StringReader(datasetXML));
+            Assert.assertEquals(result.getName(), feed1);
+        } catch (JAXBException e) {
+            Assert.fail("Reponse " + datasetXML + " is not valid", e);
+        }
     }
 
-    @Test(dependsOnMethods = { "testGetEntityDefinition" })
+    @Test
     public void testInvalidGetEntityDefinition() {
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/definition/process/sample1")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-        Assert.assertEquals(clientRepsonse.getEntity(String.class), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>FAILED</status><message>sample1 does not exists</message></result>");
-
+        checkIfBadRequest(clientRepsonse);
     }
 
-    @Test(dependsOnMethods = { "testInvalidGetEntityDefinition" })
-    public void testSchedule() {
+    private ClientResponse submitToIvory(String template,
+                                         Map<String, String> overlay,
+                                         EntityType entityType)
+            throws IOException {
+        String tmpFile = overlayParametersOverTemplate(template, overlay);
+        ServletInputStream rawlogStream = getServletInputStream(tmpFile);
+
+        return this.service
+                .path("api/entities/submit/" + entityType.name().toLowerCase())
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class, rawlogStream);
+    }
+
+    private static final Pattern varPattern = Pattern.
+            compile("##[A-Za-z0-9_]*##");
+
+    private String overlayParametersOverTemplate(String template,
+                                                 Map<String, String> overlay)
+            throws IOException {
+
+        File target = new File("webapp/target");
+        if (!target.exists()) {
+            target = new File("target");
+        }
+
+        File tmpFile = File.createTempFile("test", ".xml", target);
+        OutputStream out = new FileOutputStream(tmpFile);
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().
+                getResourceAsStream(template)));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            Matcher matcher = varPattern.matcher(line);
+            while (matcher.find()) {
+                String variable = line.substring(matcher.start(), matcher.end());
+                line = line.replace(variable,
+                        overlay.get(variable.substring(2, variable.length() - 2)));
+                matcher = varPattern.matcher(line);
+            }
+            out.write(line.getBytes());
+            out.write("\n".getBytes());
+        }
+        reader.close();
+        out.close();
+        return tmpFile.getAbsolutePath();
+    }
+
+    private void checkIfBadRequest(ClientResponse clientRepsonse) {
+        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
+                BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    public void testScheduleSuspendResume() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        String feed2 = "f2" + System.currentTimeMillis();
+        overlay.put("name", feed2);
+        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        String process = "p1" + System.currentTimeMillis();
+        overlay.put("name", process);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        checkIfSuccessful(response);
+
         ClientResponse clientRepsonse = this.service
-                .path("api/entities/schedule/process/aggregator-coord")
+                .path("api/entities/schedule/process/" + process)
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
+        checkIfSuccessful(clientRepsonse);
 
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>schedule successful</message></result>");
-
-    }
-
-    @Test(dependsOnMethods = { "testSchedule" })
-    public void testSuspend(){
-        ClientResponse clientRepsonse = this.service
-                .path("api/entities/suspend/process/aggregator-coord")
+        clientRepsonse = this.service
+                .path("api/entities/suspend/process/" + process)
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
+        checkIfSuccessful(clientRepsonse);
 
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>suspend successful</message></result>");
-    }
-
-    @Test(dependsOnMethods = { "testSuspend" })
-    public void testResume(){
-        ClientResponse clientRepsonse = this.service
-                .path("api/entities/resume/process/aggregator-coord")
+        clientRepsonse = this.service
+                .path("api/entities/resume/process/" + process)
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
-
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>resume successful</message></result>");
+        checkIfSuccessful(clientRepsonse);
     }
 
-    @Test(dependsOnMethods = { "testResume" })
-    public void testDelete() {
+    @Test
+    public void testDeleteDataSet() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
 
-        this.service
-        .path("api/entities/delete/dataset/raw-logs")
-        .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
 
-        this.service
-        .path("api/entities/delete/dataset/aggregated-logs")
-        .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-
-        ClientResponse clientRepsonse = this.service
-                .path("api/entities/delete/process/aggregator-coord")
+        response = this.service
+                .path("api/entities/delete/dataset/" + feed1)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        checkIfSuccessful(response);
+    }
 
-        Assert.assertEquals(
-                clientRepsonse.getEntity(String.class),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result><status>SUCCEEDED</status><message>delete successful</message></result>");
+    @Test
+    public void testDelete() throws Exception {
 
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        String feed2 = "f2" + System.currentTimeMillis();
+        overlay.put("name", feed2);
+        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        String process = "p1" + System.currentTimeMillis();
+        overlay.put("name", process);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        checkIfSuccessful(response);
+
+        //Delete a submitted process
+        response = this.service
+                .path("api/entities/delete/process/" + process)
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        checkIfSuccessful(response);
+
+/*
+        process = "p1" + System.currentTimeMillis();
+        overlay.put("name", process);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        checkIfSuccessful(response);
+
+        ClientResponse clientRepsonse = this.service
+                .path("api/entities/schedule/process/" + process)
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        checkIfSuccessful(clientRepsonse);
+
+        //Delete a scheduled process
+        response = this.service
+                .path("api/entities/delete/process/" + process)
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        checkIfSuccessful(response);
+*/
+    }
+
+    private void checkIfSuccessful(ClientResponse clientRepsonse) {
+        String response = clientRepsonse.getEntity(String.class);
+        try {
+            APIResult result = (APIResult)unmarshaller.
+                    unmarshal(new StringReader(response));
+            Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        } catch (JAXBException e) {
+            Assert.fail("Reponse " + response + " is not valid");
+        }
     }
 
 
@@ -213,14 +352,18 @@ public class EntityManagerJerseyTest {
 
     /**
      * Converts a InputStream into ServletInputStream
-     * 
-     * @param resourceName
+     *
+     * @param fileName
      * @return ServletInputStream
+     * @throws java.io.IOException
      */
-    private ServletInputStream getServletInputStream(String resourceName) {
-        final InputStream stream = this.getClass().getResourceAsStream(
-                resourceName);
+    private ServletInputStream getServletInputStream(String fileName)
+            throws IOException {
+        return getServletInputStream(new FileInputStream(fileName));
+    }
 
+    private ServletInputStream getServletInputStream(final InputStream stream)
+            throws IOException {
         return new ServletInputStream() {
 
             @Override

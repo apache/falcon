@@ -36,9 +36,9 @@
     <module>webapp</module>
     <module>oozie-lib</module>
   </modules>
-<!--Jenkins build picks up 1.5 for some reason. So, overriding-->
-<build>
- <plugins>
+  <!--Jenkins build picks up 1.5 for some reason. So, overriding-->
+  <build>
+    <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -49,7 +49,7 @@
         </configuration>
       </plugin>
     </plugins>
-</build>
+  </build>
 
   <repositories>
     <repository>
@@ -61,19 +61,19 @@
       <name>mvnrepository</name>
       <url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
     </repository>
-    <repository>
+    <!--repository>
       <id>java.net</id>
       <name>java.net Maven Repository</name>
       <url>https://maven-repository.dev.java.net/nonav/repository</url>
       <layout>legacy</layout>
-    </repository>
+    </repository-->
     <repository>
-        <id>cdh.repo</id>
-        <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
-        <name>Cloudera Repository</name>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
+      <id>cdh.repo</id>
+      <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+      <name>Cloudera Repository</name>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 

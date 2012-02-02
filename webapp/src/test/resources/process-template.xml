@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<process name="##name##">
+	<clusters>
+      <cluster name="prod-red" />
+    </clusters>
+	
+	<concurrency>2</concurrency>
+	<execution>LIFO</execution>
+    <frequency>minutes</frequency>
+    <periodicity>5</periodicity>
+	
+	<validity timezone="UTC" end="2010-01-01T03:00Z" start="2010-01-01T01:00Z" />
+	<inputs>
+		<input end-instance="today(2,0)" start-instance="today(0,0)"
+			feed="##f1##" name="input" />
+	</inputs>
+	<outputs>
+		<output instance="today(0,0)" feed="##f2##"
+			name="output" />
+	</outputs>
+	<properties>
+		<property name="jobTracker">localhost:8021</property>
+		<property name="nameNode">hdfs://localhost:8020</property>
+		<property name="queueName">default</property>
+		<property name="inputData">${coord:dataIn('input')}</property>
+		<property name="outputData">${coord:dataOut('output')}</property>
+	</properties>
+	<workflow path="${nameNode}/examples/apps/aggregator" />
+	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
+
+    <late-process policy="exp-backoff" delay="1" delayUnit="hour">
+        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
+        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+    </late-process>
+</process>

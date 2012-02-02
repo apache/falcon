@@ -25,6 +25,7 @@ import java.io.InputStream;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,110 +39,98 @@ import org.testng.annotations.Test;
  */
 public class EntityManagerTest {
 
-	@Mock
-	private HttpServletRequest mockHttpServletRequest;
+    @Mock
+    private HttpServletRequest mockHttpServletRequest;
 
-	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+    private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
-	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+    private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
 
-	private final EntityManager entityManager = new EntityManager();
+    private final EntityManager entityManager = new EntityManager();
 
-	@BeforeClass
-	public void init() {
-		MockitoAnnotations.initMocks(this);
-	}
+    @BeforeClass
+    public void init() {
+        MockitoAnnotations.initMocks(this);
+    }
 
-	@SuppressWarnings("unused")
-	@DataProvider(name = "validXMLServletStreamProvider")
-	private Object[][] servletStreamProvider() {
-		ServletInputStream validProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
+    @SuppressWarnings("unused")
+    @DataProvider(name = "validXMLServletStreamProvider")
+    private Object[][] servletStreamProvider() {
+        ServletInputStream validProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
 
-		// TODO change the xml for Feed and DataEndPoint
-		return new Object[][] { { EntityType.PROCESS, validProcessXML },
-		// { EntityType.FEED, validProcessXML },
-		// { EntityType.DATAENDPOINT, validProcessXML }
-		};
+        // TODO change the xml for Feed and DataEndPoint
+        return new Object[][] { { EntityType.PROCESS, validProcessXML },
+                // { EntityType.FEED, validProcessXML },
+                // { EntityType.DATAENDPOINT, validProcessXML }
+        };
 
-	}
+    }
 
-	/**
-	 * Run this testcase for different types of VALID entity xmls like process,
-	 * feed, dataEndPoint
-	 * 
-	 * @param testType
-	 * @param stream
-	 * @throws IOException
-	 */
-	@Test(dataProvider = "validXMLServletStreamProvider")
-	public void testValidateForValidEntityXML(EntityType entityType,
-			ServletInputStream stream) throws IOException {
+    /**
+     * Run this testcase for different types of VALID entity xmls like process,
+     * feed, dataEndPoint
+     *
+     * @param stream
+     * @throws IOException
+     */
+    @Test(dataProvider = "validXMLServletStreamProvider")
+    public void testValidateForValidEntityXML(EntityType entityType,
+                                              ServletInputStream stream) throws IOException {
 
-		when(mockHttpServletRequest.getInputStream()).thenReturn(stream);
+        when(mockHttpServletRequest.getInputStream()).thenReturn(stream);
 
-		APIResult apiResult = entityManager.validate(mockHttpServletRequest,
-				entityType.name());
+        APIResult apiResult = entityManager.validate(mockHttpServletRequest,
+                entityType.name());
 
-		Assert.assertNotNull(apiResult);
-		
-		Assert.assertEquals(apiResult.getStatus(),APIResult.Status.SUCCEEDED);
+        Assert.assertNotNull(apiResult);
 
-		// verify(mockHttpServletRequest, times(1)).getInputStream();
-	}
+        Assert.assertEquals(apiResult.getStatus(),APIResult.Status.SUCCEEDED);
+    }
 
-	@Test
-	public void testValidateForInvalidEntityXML() throws IOException {
-		ServletInputStream invalidProcessXML = getServletInputStream(SAMPLE_INVALID_PROCESS_XML);
-		when(mockHttpServletRequest.getInputStream()).thenReturn(
-				invalidProcessXML);
+    @Test
+    public void testValidateForInvalidEntityXML() throws IOException {
+        ServletInputStream invalidProcessXML = getServletInputStream(SAMPLE_INVALID_PROCESS_XML);
+        when(mockHttpServletRequest.getInputStream()).thenReturn(
+                invalidProcessXML);
 
-		APIResult apiResult = entityManager.validate(mockHttpServletRequest,
-				EntityType.PROCESS.name());
+        try {
+            entityManager.validate(mockHttpServletRequest,
+                    EntityType.PROCESS.name());
+            Assert.fail("Invalid entity type was accepted by the system");
+        } catch (IvoryWebException ignore) {
+        }
+    }
 
-		Assert.assertNotNull(apiResult);
+    @Test
+    public void testValidateForInvalidEntityType() throws IOException {
+        ServletInputStream invalidProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
+        when(mockHttpServletRequest.getInputStream()).thenReturn(
+                invalidProcessXML);
 
-		Assert.assertEquals(APIResult.Status.FAILED, apiResult.getStatus());
+        try {
+            entityManager.validate(mockHttpServletRequest,
+                    "InvalidEntityType");
+            Assert.fail("Invalid entity type was accepted by the system");
+        } catch (IvoryWebException ignore) {}
+    }
 
-		// Assert.assertEquals("[org.xml.sax.SAXParseException: cvc-complex-type.2.4.a: Invalid content was found starting with element 'somenode'. One of '{input}' is expected.]",apiResult.getMessage());
+    /**
+     * Converts a InputStream into ServletInputStream
+     *
+     * @param resourceName
+     * @return ServletInputStream
+     */
+    private ServletInputStream getServletInputStream(String resourceName) {
+        final InputStream stream = this.getClass().getResourceAsStream(
+                resourceName);
 
-	}
+        return new ServletInputStream() {
 
-	@Test
-	public void testValidateForInvalidEntityType() throws IOException {
-		ServletInputStream invalidProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
-		when(mockHttpServletRequest.getInputStream()).thenReturn(
-				invalidProcessXML);
-
-		APIResult apiResult = entityManager.validate(mockHttpServletRequest,
-				"InvalidEntityType");
-
-		Assert.assertNotNull(apiResult);
-
-		Assert.assertEquals(APIResult.Status.FAILED, apiResult.getStatus());
-
-		Assert.assertEquals(
-				"No enum const class org.apache.ivory.entity.v0.EntityType.INVALIDENTITYTYPE",
-				apiResult.getMessage());
-
-	}
-
-	/**
-	 * Converts a InputStream into ServletInputStream
-	 * 
-	 * @param resourceName
-	 * @return ServletInputStream
-	 */
-	private ServletInputStream getServletInputStream(String resourceName) {
-		final InputStream stream = this.getClass().getResourceAsStream(
-				resourceName);
-
-		return new ServletInputStream() {
-
-			@Override
-			public int read() throws IOException {
-				return stream.read();
-			}
-		};
-	}
+            @Override
+            public int read() throws IOException {
+                return stream.read();
+            }
+        };
+    }
 
 }

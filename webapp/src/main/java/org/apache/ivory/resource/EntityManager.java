@@ -20,18 +20,17 @@ package org.apache.ivory.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -47,6 +46,7 @@ public class EntityManager {
 
     private static final Logger LOG = Logger.getLogger(EntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
+    private static final int XML_DEBUG_LEN = 10 * 1024;
 
     private enum WorkflowAction {
         SCHEDULE, DELETE, SUSPEND, RESUME
@@ -56,10 +56,10 @@ public class EntityManager {
      * Submit a new entity. Entities can be of type feed, process or data end
      * points. Entity definitions are validated structurally against schema and
      * subsequently for other rules before they are admitted into the system
-     * 
+     *
      * Entity name acts as the key and an entity once added, can't be added
      * again unless deleted.
-     * 
+     *
      * @param type
      *            - feed, process or data end point
      * @return result of the operation
@@ -68,40 +68,22 @@ public class EntityManager {
     @Path("submit/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult submit(@Context javax.servlet.http.HttpServletRequest request, @PathParam("type") String type) {
+    public APIResult submit(@Context HttpServletRequest request,
+                            @PathParam("type") String type) {
 
         try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
-            InputStream xmlStream = request.getInputStream();
-            Entity entity = entityParser.parse(xmlStream);
-            ConfigurationStore configStore = ConfigurationStore.get();
-            Entity existingEntity = configStore.get(entityType, entity.getName());
-            if (existingEntity != null) {
-                LOG.error(entity.getName() + " already exists");
-                return new APIResult(APIResult.Status.FAILED, entity.getName() + " already exists");
-            }
-
-            configStore.publish(entityType, entity);
-            LOG.info("submit successful: " + entity.getName());
-        } catch (IvoryException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
-        } catch (IOException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
+            submitInternal(request, type);
+        } catch (Exception e) {
+            LOG.error("Unable to persist entity object", e);
+            throw new IvoryWebException(e, Response.Status.BAD_REQUEST);
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, "submit successful");
-
+        return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful");
     }
 
     /**
      * Post an entity XML with entity type. Validates the XML which can be
      * Process, Feed or Dataendpoint
-     * 
+     *
      * @param type
      * @return APIResule -Succeeded or Failed
      */
@@ -109,31 +91,22 @@ public class EntityManager {
     @Path("validate/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult validate(@Context javax.servlet.http.HttpServletRequest request, @PathParam("type") String type) {
+    public APIResult validate(@Context HttpServletRequest request,
+                              @PathParam("type") String type) {
 
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
-            InputStream xmlStream = request.getInputStream();
-            entityParser.validateSchema(xmlStream);
-            LOG.info("Validate successful");
-        } catch (IOException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
-        } catch (IllegalArgumentException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
-        } catch (IvoryException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage());
+            deserializeEntity(request, entityType);
+        } catch (Exception e) {
+            LOG.error("Validation failed for entity (" + type + ") ", e);
+            throw new IvoryWebException(e, Response.Status.BAD_REQUEST);
         }
-
         return new APIResult(APIResult.Status.SUCCEEDED, "validate successful");
     }
 
     /**
      * Schedules an submitted entity immediately
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
@@ -141,13 +114,15 @@ public class EntityManager {
     @POST
     @Path("schedule/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult schedule(@PathParam("type") String type, @PathParam("entity") String entity) {
+    public APIResult schedule(@PathParam("type") String type,
+                              @PathParam("entity") String entity) {
+
         return entityWorkflowAction(entity, type, WorkflowAction.SCHEDULE);
     }
 
     /**
      * Submits a new entity and schedules it immediately
-     * 
+     *
      * @param type
      * @return
      */
@@ -155,14 +130,62 @@ public class EntityManager {
     @Path("submitAndSchedule/{type}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
-    public APIResult submitAndSchedule(@PathParam("type") String type) {
-        return null;
+    public APIResult submitAndSchedule(@Context HttpServletRequest request,
+                                       @PathParam("type") String type) {
+        try {
+            Entity entity = submitInternal(request, type);
+            return schedule(type, entity.getName());
+        } catch (Exception e) {
+            LOG.error("Unable to submit and schedule ", e);
+            throw new IvoryWebException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private Entity submitInternal(HttpServletRequest request,
+                                  String type)
+            throws IOException, IvoryException {
+
+        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        Entity entity = deserializeEntity(request, entityType);
+        ConfigurationStore configStore = ConfigurationStore.get();
+        configStore.publish(entityType, entity);
+        LOG.info("Submit successful: (" + type + ")" + entity.getName());
+        return entity;
+    }
+
+    private Entity deserializeEntity(HttpServletRequest request,
+                                     EntityType entityType)
+            throws IOException, IvoryException {
+
+        EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
+        InputStream xmlStream = request.getInputStream();
+        if (xmlStream.markSupported()) {
+            xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
+        }
+        try {
+            return entityParser.parse(xmlStream);
+        } catch (IvoryException e) {
+            if (LOG.isDebugEnabled() && xmlStream.markSupported()) {
+                try {
+                    xmlStream.reset();
+                    String xmlData = getAsString(xmlStream);
+                    LOG.debug("XML DUMP for (" + entityType + "): " + xmlData, e);
+                } catch (IOException ignore) {}
+            }
+            throw e;
+        }
+    }
+
+    private String getAsString(InputStream xmlStream) throws IOException {
+        byte[] data = new byte[XML_DEBUG_LEN];
+        IOUtils.readFully(xmlStream, data, 0, XML_DEBUG_LEN);
+        return new String(data);
     }
 
     /**
      * Deletes a scheduled entity, a deleted entity is removed completely from
      * execution pool.
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
@@ -170,9 +193,11 @@ public class EntityManager {
     @DELETE
     @Path("delete/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult delete(@PathParam("type") String type, @PathParam("entity") String entity) {
+    public APIResult delete(@PathParam("type") String type,
+                            @PathParam("entity") String entity) {
 
-        APIResult apiResult = entityWorkflowAction(entity, type, WorkflowAction.DELETE);
+        APIResult apiResult = entityWorkflowAction(entity, type,
+                WorkflowAction.DELETE);
 
         if (apiResult.getStatus().equals(APIResult.Status.SUCCEEDED)) {
             ConfigurationStore configStore = ConfigurationStore.get();
@@ -188,7 +213,7 @@ public class EntityManager {
 
     /**
      * Suspends a running entity
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
@@ -196,13 +221,15 @@ public class EntityManager {
     @POST
     @Path("suspend/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult suspend(@PathParam("type") String type, @PathParam("entity") String entity) {
+    public APIResult suspend(@PathParam("type") String type,
+                             @PathParam("entity") String entity) {
+
         return entityWorkflowAction(entity, type, WorkflowAction.SUSPEND);
     }
 
     /**
      * Resumes a suspended entity
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
@@ -210,14 +237,15 @@ public class EntityManager {
     @POST
     @Path("resume/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult resume(@PathParam("type") String type, @PathParam("entity") String entity) {
+    public APIResult resume(@PathParam("type") String type,
+                            @PathParam("entity") String entity) {
 
         return entityWorkflowAction(entity, type, WorkflowAction.RESUME);
     }
 
     /**
      * Returns the status of requested entity.
-     * 
+     *
      * @param type
      * @param entity
      * @return String
@@ -231,7 +259,7 @@ public class EntityManager {
 
     /**
      * Returns the entity definition as an XML based on name
-     * 
+     *
      * @param type
      * @param entityName
      * @return String
@@ -239,38 +267,40 @@ public class EntityManager {
     @GET
     @Path("definition/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public String getEntityDefinition(@PathParam("type") String type, @PathParam("entity") String entityName) {
+    public String getEntityDefinition(@PathParam("type") String type,
+                                      @PathParam("entity") String entityName) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             ConfigurationStore configStore = ConfigurationStore.get();
             Entity entity = configStore.get(entityType, entityName);
             if (entity == null) {
-                LOG.error(entityName + " does not exists");
-                return new APIResult(APIResult.Status.FAILED, entityName + " does not exists").toString();
+                throw new NoSuchElementException(entityName + " (" + type + ") not found");
             }
-            LOG.info("Returned entity: " + entity);
             return entity.toString();
-        } catch (IllegalArgumentException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage()).toString();
-        } catch (StoreAccessException e) {
-            LOG.error(e.getMessage());
-            return new APIResult(APIResult.Status.FAILED, e.getMessage()).toString();
+        } catch (Exception e) {
+            LOG.error("Unable to get entity definition from config store for (" +
+                    type + ") " + entityName, e);
+            throw new IvoryWebException(e, Response.Status.BAD_REQUEST);
+
         }
     }
 
-    private APIResult entityWorkflowAction(String entity, String type, WorkflowAction workflowAction) {
+    private APIResult entityWorkflowAction(String entity, String type,
+                                           WorkflowAction workflowAction) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             ConfigurationStore configStore = ConfigurationStore.get();
             Entity entityObj = configStore.get(entityType, entity);
             // Currently only process/coordinator is removed
             if (entityObj == null) {
-                return new APIResult(APIResult.Status.FAILED, "Entity: " + entity + " does not exists");
+                throw new IvoryWebException(
+                        new NoSuchElementException("Requested entity (" + type + ") " +
+                                entity + " doesn't exist"), Response.Status.BAD_REQUEST);
             }
             // TODO currently these operation are supported only for PROCESS
             if (entityType.equals(EntityType.PROCESS)) {
-                EntityWorkflowManager<Entity> entityWorkflowManager = EntityWorkflowManagerFactory.getWorkflowManager(entityObj);
+                EntityWorkflowManager<Entity> entityWorkflowManager =
+                        EntityWorkflowManagerFactory.getWorkflowManager(entityObj);
 
                 switch (workflowAction) {
                     case SCHEDULE:
