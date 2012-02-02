@@ -14,7 +14,8 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
- --><project>
+ -->
+<project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.ivory</groupId>
   <artifactId>ivory-main</artifactId>
@@ -53,6 +54,10 @@
 
   <repositories>
     <repository>
+      <id>internalRepo</id>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/bi/</url>
+    </repository>
+    <repository>
       <id>default</id>
       <url>https://repository.apache.org/content/groups/public/</url>
     </repository>
@@ -61,12 +66,11 @@
       <name>mvnrepository</name>
       <url>http://mvnrepository.com/artifact/org.slf4j/slf4j-api/</url>
     </repository>
-    <!--repository>
-      <id>java.net</id>
-      <name>java.net Maven Repository</name>
-      <url>https://maven-repository.dev.java.net/nonav/repository</url>
-      <layout>legacy</layout>
-    </repository-->
+    <repository>
+        <id>java.net-Public</id>
+        <name>Maven Java Net Snapshots and Releases</name>
+        <url>https://maven.java.net/content/groups/public/</url>
+    </repository>
     <repository>
       <id>cdh.repo</id>
       <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
