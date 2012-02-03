@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import org.apache.ivory.entity.v0.dataset.Configuration;
-import org.apache.ivory.entity.v0.datastore.Property;
+import org.apache.ivory.entity.v0.dataset.Property;
 
 public class ConfigurationTypeAdapter extends
     XmlAdapter<Configuration, org.apache.ivory.entity.common.Configuration> {
