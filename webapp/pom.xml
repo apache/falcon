@@ -45,6 +45,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-oozie-adaptor</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
       <version>1.9</version>

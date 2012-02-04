@@ -33,6 +33,10 @@ public class OozieClient extends org.apache.oozie.client.OozieClient{
     public static final String QUEUE_NAME = "queueName";
     public static String oozieUrl = StartupProperties.get().getProperty(PROPERTY_PREFIX + URL);
 
+    public static OozieClient get() {
+        return new OozieClient();
+    }
+
     @Override
     public Properties createConfiguration() {
         Properties conf = new Properties();
@@ -44,7 +48,7 @@ public class OozieClient extends org.apache.oozie.client.OozieClient{
         return conf;
     }
 
-    public OozieClient() {
+    private OozieClient() {
         super(oozieUrl);
     }
 

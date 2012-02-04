@@ -19,36 +19,26 @@
 package org.apache.ivory.workflow;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-/**
- * 
- * 
- * @param <T>- Process, Dataset or Datastore, Implementations are provided by
- *        concrete entity workflow manager.
- */
-public abstract class EntityWorkflowManager<T extends Entity> {
+@SuppressWarnings("unchecked")
+public class WorkflowEngineFactory {
 
-    private static final String OOZIE = "OOZIE";
-    private static final String WORKFLOW_ENGINE = StartupProperties.get().getProperty("workflow.engine", OOZIE);
+    private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
 
-    public final WorkflowEngine getWorkflowEngine() {
-        if(WORKFLOW_ENGINE.equals(OOZIE)) {
-            return new OozieWorkflowEngine();
-        }
-        return null;
-    }
+    private WorkflowEngineFactory() { }
 
-    public abstract String schedule(T entity) throws IvoryException;
+	public static WorkflowEngine getWorkflowEngine()
+            throws IvoryException {
+        try {
+            String clazzName = StartupProperties.get().getProperty(WORKFLOW_ENGINE);
+            Class<WorkflowEngine> clazz = (Class<WorkflowEngine>)
+                    WorkflowEngineFactory.class.getClassLoader().loadClass(clazzName);
+            return clazz.newInstance();
+		} catch (Exception e) {
+			throw new IvoryException("Unable to get workflow engine", e);
+		}
+	}
 
-    public abstract String dryRun(T entity) throws IvoryException;
-
-    public abstract String suspend(T entity) throws IvoryException;
-
-    public abstract String resume(T entity) throws IvoryException;
-
-    public abstract String delete(T entity) throws IvoryException;
 }

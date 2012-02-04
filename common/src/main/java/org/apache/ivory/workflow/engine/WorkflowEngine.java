@@ -20,20 +20,27 @@ package org.apache.ivory.workflow.engine;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.Entity;
 
 /**
  * Workflow engine should minimally support the
  * following operations
  */
 public interface WorkflowEngine {
-    String schedule(Path path) throws IvoryException;
 
-    String dryRun(Path path) throws IvoryException;
+    String schedule(Entity entity) throws IvoryException;
 
-    String suspend(String entityName) throws IvoryException;
+    String dryRun(Entity entity) throws IvoryException;
 
-    String resume(String entityName) throws IvoryException;
+    String suspend(Entity entity) throws IvoryException;
 
-    String delete(String entityName) throws IvoryException;
+    String resume(Entity entity) throws IvoryException;
 
+    String delete(Entity entity) throws IvoryException;
+
+    boolean isActive(Entity entity) throws IvoryException;
+
+    boolean isSuspended(Entity entity) throws IvoryException;
+
+    boolean isRunning(Entity entity) throws IvoryException;
 }

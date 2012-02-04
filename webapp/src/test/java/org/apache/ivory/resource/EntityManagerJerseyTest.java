@@ -54,6 +54,7 @@ public class EntityManagerJerseyTest {
 
     private static final String DATASET_TEMPLATE1 = "/dataset-template1.xml";
     private static final String DATASET_TEMPLATE2 = "/dataset-template2.xml";
+    private static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
 
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     private static final String PROCESS_TEMPLATE = "/process-template.xml";
@@ -136,10 +137,16 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
         checkIfSuccessful(response);
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
+        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
     }
@@ -243,10 +250,16 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
         checkIfSuccessful(response);
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
+        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 
@@ -299,10 +312,16 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
         checkIfSuccessful(response);
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
+        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 

@@ -37,8 +37,8 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.workflow.EntityWorkflowManager;
-import org.apache.ivory.workflow.EntityWorkflowManagerFactory;
+import org.apache.ivory.workflow.WorkflowEngineFactory;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 @Path("entities")
@@ -299,21 +299,27 @@ public class EntityManager {
             }
             // TODO currently these operation are supported only for PROCESS
             if (entityType.equals(EntityType.PROCESS)) {
-                EntityWorkflowManager<Entity> entityWorkflowManager =
-                        EntityWorkflowManagerFactory.getWorkflowManager(entityObj);
+                WorkflowEngine workflowEngine =
+                        WorkflowEngineFactory.getWorkflowEngine();
 
                 switch (workflowAction) {
                     case SCHEDULE:
-                        entityWorkflowManager.schedule(entityObj);
+                        workflowEngine.schedule(entityObj);
                         break;
                     case DELETE:
-                        entityWorkflowManager.delete(entityObj);
+                        if (workflowEngine.isActive(entityObj)) {
+                            workflowEngine.delete(entityObj);
+                        }
                         break;
                     case SUSPEND:
-                        entityWorkflowManager.suspend(entityObj);
+                        if (workflowEngine.isRunning(entityObj)) {
+                            workflowEngine.suspend(entityObj);
+                        }
                         break;
                     case RESUME:
-                        entityWorkflowManager.resume(entityObj);
+                        if (workflowEngine.isSuspended(entityObj)) {
+                            workflowEngine.resume(entityObj);
+                        }
                         break;
                 }
             }

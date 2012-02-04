@@ -29,6 +29,15 @@ public abstract class Entity {
 
   public abstract String getName();
 
+  public EntityType getEntityType() {
+      for (EntityType type : EntityType.values()) {
+          if (type.getEntityClass().equals(getClass())) {
+            return type;
+          }
+      }
+      return null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
