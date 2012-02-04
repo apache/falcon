@@ -29,7 +29,7 @@
     <module>common</module>
     <module>repository</module>
     <module>process</module>
-    <module>discovery</module>
+    <module>oozie</module>
     <module>acquisition</module>
     <module>replication</module>
     <module>retention</module>
@@ -37,25 +37,16 @@
     <module>webapp</module>
     <module>oozie-lib</module>
   </modules>
-  <!--Jenkins build picks up 1.5 for some reason. So, overriding-->
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+
+    <scm>
+        <connection>scm:git:git://github.com/sriksun/Ivory.git</connection>
+        <url>https://github.com/sriksun/Ivory</url>
+    </scm>
 
   <repositories>
     <repository>
       <id>internalRepo</id>
-      <url>http://build.corp.inmobi.com/nexus/content/repositories/bi/</url>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
     </repository>
     <repository>
       <id>default</id>
@@ -174,4 +165,57 @@
 
   </dependencies>
 
+
+  <build>
+    <directory>target</directory>
+    <outputDirectory>target/classes</outputDirectory>
+    <finalName>${project.artifactId}-${project.version}-r${buildNumber}</finalName>
+    <testOutputDirectory>target/test-classes</testOutputDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
