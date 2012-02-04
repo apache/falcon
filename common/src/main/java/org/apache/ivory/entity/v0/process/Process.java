@@ -8,14 +8,18 @@
 
 package org.apache.ivory.entity.v0.process;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.process.adapter.PropertiesMapAdapter;
 
 
 /**
@@ -83,8 +87,9 @@ public class Process extends Entity{
     protected Inputs inputs;
     @XmlElement(required = true)
     protected Outputs outputs;
+	@XmlJavaTypeAdapter(PropertiesMapAdapter.class)
     @XmlElement(required = true)
-    protected Properties properties;
+    protected Map<String, Property> properties;
     @XmlElement(required = true)
     protected Workflow workflow;
     @XmlElement(required = true)
@@ -294,7 +299,7 @@ public class Process extends Entity{
      *     {@link Properties }
      *     
      */
-    public Properties getProperties() {
+    public Map<String, Property> getProperties() {
         return properties;
     }
 
@@ -306,7 +311,7 @@ public class Process extends Entity{
      *     {@link Properties }
      *     
      */
-    public void setProperties(Properties value) {
+    public void setProperties(Map<String, Property> value) {
         this.properties = value;
     }
 

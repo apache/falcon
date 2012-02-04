@@ -22,11 +22,14 @@ package org.apache.ivory.entity.parser;
  * Test Cases for ProcessEntityParser
  */
 import java.io.IOException;
+import java.io.StringWriter;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Util;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
@@ -62,18 +65,46 @@ public class ProcessEntityParserTest {
 	}
 
 	@Test
-	public void testParse() throws IOException, IvoryException {
-
-		Process def = null;
-		def = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
+	public void testParse() throws IOException, IvoryException, JAXBException {
+		
+		 Process process = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
 				SAMPLE_PROCESS_XML));
 
-		Assert.assertNotNull(def);
+		Assert.assertNotNull(process);
+		Assert.assertEquals(process.getName(), "sample");
 
-		Assert.assertEquals(def.getName(), "sample");
-
-		Assert.assertEquals(def.getValidity().getStart(), "2011-11-01 00:00:00");
-
+		Assert.assertEquals(process.getConcurrency(), "1");
+		Assert.assertEquals(process.getExecution(), "LIFO");
+		Assert.assertEquals(process.getFrequency(), "hourly");
+		Assert.assertEquals(process.getPeriodicity(), "1");
+		Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
+		
+		Assert.assertEquals(process.getInputs().getInput().get(0).getName(), "impression");
+		Assert.assertEquals(process.getInputs().getInput().get(0).getFeed(), "impressionFeed");
+		Assert.assertEquals(process.getInputs().getInput().get(0).getStartInstance(), "today(0,0)");
+		Assert.assertEquals(process.getInputs().getInput().get(0).getEndInstance(), "today(0,2)");
+		
+		Assert.assertEquals(process.getOutputs().getOutput().get(0).getName(),"impOutput");
+		Assert.assertEquals(process.getOutputs().getOutput().get(0).getFeed(),"imp-click-join");
+		Assert.assertEquals(process.getOutputs().getOutput().get(0).getInstance(),"today(0,0)");
+		
+		Assert.assertEquals(process.getProperties().get("name1").getName(),"name1");
+		Assert.assertEquals(process.getProperties().get("name1").getValue(),"value1");		
+		
+		Assert.assertEquals(process.getValidity().getStart(), "2011-11-01 00:00:00");
+		Assert.assertEquals(process.getValidity().getEnd(), "9999-12-31 23:59:00");	
+		Assert.assertEquals(process.getValidity().getTimezone(), "UTC");	
+		
+		Assert.assertEquals(process.getWorkflow().getEngine(),"oozie");
+		Assert.assertEquals(process.getWorkflow().getPath(),"hdfs://path/to/workflow");
+		Assert.assertEquals(process.getWorkflow().getLibpath(),"hdfs://path/to/workflow/lib");
+		
+		StringWriter stringWriter = new StringWriter();
+		Marshaller marshaller = Util.getMarshaller(Process.class);
+		marshaller.marshal(process, stringWriter);
+		System.out.println(stringWriter.toString());
+		
+		//TODO for retry and late policy
 	}
 
 	@Test(expectedExceptions = IvoryException.class)

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.ivory.entity.v0.cluster.adapter;
+package org.apache.ivory.entity.v0.process.adapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,35 +23,33 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import org.apache.ivory.entity.v0.cluster.Interface;
-import org.apache.ivory.entity.v0.cluster.Interfaces;
-import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.process.Property;
+import org.apache.ivory.entity.v0.process.Properties;
 
-public class InterfacesMapAdapter extends
-		XmlAdapter<Interfaces, Map<Interfacetype, Interface>> {
+public class PropertiesMapAdapter extends
+		XmlAdapter<Properties, Map<String, Property>> {
 
 	@Override
-	public Interfaces marshal(Map<Interfacetype, Interface> v) throws Exception {
+	public Properties marshal(Map<String, Property> v) throws Exception {
 		if (v == null)
 			return null;
-		Interfaces interfaces = new Interfaces();
-		List<Interface> interfacesList = interfaces.getInterface();
-		for (Interface _interface : v.values()) {
-			interfacesList.add(_interface);
+		Properties properties = new Properties();
+		List<Property> propteriesList = properties.getProperty();
+		for (Property property : v.values()) {
+			propteriesList.add(property);
 		}
-		return interfaces;
+		return properties;
 	}
 
 	@Override
-	public Map<Interfacetype, Interface> unmarshal(Interfaces interfaces)
+	public Map<String, Property> unmarshal(Properties properties)
 			throws Exception {
-		if (interfaces == null)
+		if (properties == null)
 			return null;
-		Map<Interfacetype, Interface> map = new HashMap<Interfacetype, Interface>();
-		for (Interface _interface : interfaces.getInterface()) {
-			map.put(_interface.getType(), _interface);
+		Map<String, Property> map = new HashMap<String, Property>();
+		for (Property property : properties.getProperty()) {
+			map.put(property.getName(), property);
 		}
 		return map;
 	}
-
 }

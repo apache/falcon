@@ -20,7 +20,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.adapter.InterfacesMapAdapter;
-import org.apache.ivory.entity.v0.dataset.adapter.DatastoresMapAdapter;
+import org.apache.ivory.entity.v0.cluster.adapter.LocationsMapAdapter;
+import org.apache.ivory.entity.v0.cluster.adapter.PropertiesMapAdapter;
 
 
 /**
@@ -59,10 +60,12 @@ public class Cluster extends Entity{
 	@XmlJavaTypeAdapter(InterfacesMapAdapter.class)
     @XmlElement(required = true)
     protected Map<Interfacetype,Interface> interfaces;
+	@XmlJavaTypeAdapter(LocationsMapAdapter.class)
     @XmlElement(required = true)
-    protected Locations locations;
+    protected Map<String,Location> locations;
+	@XmlJavaTypeAdapter(PropertiesMapAdapter.class)
     @XmlElement(required = true)
-    protected Properties properties;
+    protected Map<String,Property> properties;
     @XmlAttribute
     protected String name;
     @XmlAttribute
@@ -102,7 +105,7 @@ public class Cluster extends Entity{
      *     {@link Locations }
      *     
      */
-    public Locations getLocations() {
+    public Map<String,Location> getLocations() {
         return locations;
     }
 
@@ -114,7 +117,7 @@ public class Cluster extends Entity{
      *     {@link Locations }
      *     
      */
-    public void setLocations(Locations value) {
+    public void setLocations(Map<String,Location> value) {
         this.locations = value;
     }
 
@@ -126,7 +129,7 @@ public class Cluster extends Entity{
      *     {@link Properties }
      *     
      */
-    public Properties getProperties() {
+    public Map<String,Property> getProperties() {
         return properties;
     }
 
@@ -138,7 +141,7 @@ public class Cluster extends Entity{
      *     {@link Properties }
      *     
      */
-    public void setProperties(Properties value) {
+    public void setProperties(Map<String,Property> value) {
         this.properties = value;
     }
 
