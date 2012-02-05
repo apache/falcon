@@ -43,7 +43,7 @@ public class Property {
     protected String value;
     @XmlAttribute(required = true)
     protected String name;
-    @XmlAttribute(name = "value", required = true)
+    @XmlAttribute(name = "value")
     protected String valueAttribute;
 
     /**
@@ -55,7 +55,7 @@ public class Property {
      *     
      */
     public String getValue() {
-        return getValueAttribute();
+        return this.value;
     }
 
     /**
@@ -67,7 +67,7 @@ public class Property {
      *     
      */
     public void setValue(String value) {
-       setValueAttribute(value);
+       this.value=value;
     }
 
     /**
