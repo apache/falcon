@@ -75,10 +75,18 @@ http://dozer.sourceforge.net/schema/beanmapping.xsd">
 			<b is-accessible="true">outputEvents.dataOut</b>
 		</field>
 	</mapping>
-	<mapping wildcard="true">
+	<mapping>
 		<class-a>org.apache.ivory.entity.v0.process.Property</class-a>
 		<class-b>org.apache.ivory.oozie.coordinator.CONFIGURATION$Property
 		</class-b>
+	<field>
+		<a>name</a>
+		<b>name</b>
+	</field>
+		<field>
+		<a is-accessible="true">value</a>
+		<b>value</b>
+	</field>
 	</mapping>
 	<mapping wildcard="true">
 		<class-a>org.apache.ivory.entity.v0.process.Input</class-a>
