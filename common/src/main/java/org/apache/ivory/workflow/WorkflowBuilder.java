@@ -20,6 +20,7 @@ package org.apache.ivory.workflow;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.util.StartupProperties;
 
 import java.util.Map;
@@ -27,8 +28,8 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public abstract class WorkflowBuilder {
 
-
     public static final String PROPS = "PROPS";
+    public static final String CLUSTERS = "CLUSTERS";
 
     public static WorkflowBuilder getBuilder(String engine, Entity entity)
             throws IvoryException {
@@ -48,6 +49,7 @@ public abstract class WorkflowBuilder {
     public abstract Map<String, Object> newWorkflowSchedule(Entity entity)
             throws IvoryException;
 
+    public abstract Cluster[] getScheduledClustersFor(Entity entity) throws IvoryException;
     //TODO add methods for re-run, whenever additional work is required
     //beyond just firing an action in the actual workflow engine
 }

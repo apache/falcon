@@ -21,7 +21,9 @@ package org.apache.ivory.entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.cluster.Location;
 
+import java.util.List;
 import java.util.Map;
 
 public final class ClusterHelper {
@@ -55,4 +57,13 @@ public final class ClusterHelper {
         return interfaceRef.getEndpoint();
     }
 
+    public static String getLocation(Cluster cluster, String locationKey) {
+        List<Location> locations = cluster.getLocations().getLocation();
+        for (Location location : locations) {
+            if (location.getName().equals(locationKey)) {
+                return location.getPath();
+            }
+        }
+        return null;
+    }
 }

@@ -61,7 +61,7 @@ public class ClusterEntityParserTest {
 		Assert.assertEquals(_interface.getVersion(), "0.20.2");
 
 		Assert.assertEquals(cluster.getLocations().getLocation().get(0)
-				.getName(), "stagingdir");
+				.getName(), "staging");
 		Assert.assertEquals(cluster.getLocations().getLocation().get(0)
 				.getPath(), "/projects/ivory/staging");
 

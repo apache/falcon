@@ -20,12 +20,14 @@ package org.apache.ivory.workflow.engine;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClientException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -39,28 +41,26 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
 
-    private static final String OOZIE_MIME_TYPE = "application/xml;charset=UTF-8";
-    private static final String JOBS_RESOURCE = "jobs";
-    private static final String JOB_RESOURCE = "job";
-
-    private static final String URI_SEPERATOR = "/";
-
-    private static final OozieClient client = OozieClient.get();
+    private static final String ENGINE = "oozie";
+    private static final CoordinatorJob MISSING = new NullCoordJob();
 
     @Override
     public String schedule(Entity entity) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder("oozie", entity);
+        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
 
         //TODO actually be sending a bundle out.
         Map<String, Object> newFlows = builder.newWorkflowSchedule(entity);
 
         List<Properties> workflowProps = (List<Properties>)
-                newFlows.get("PROPS");
+                newFlows.get(WorkflowBuilder.PROPS);
+        List<Cluster> clusters = (List<Cluster>)
+                newFlows.get(WorkflowBuilder.CLUSTERS);
 
         StringBuilder buffer = new StringBuilder();
         try {
-            for (Properties props : workflowProps) {
-                String result = client.run(props);
+            for (int index = 0; index < workflowProps.size(); index++) {
+                OozieClient client = OozieClient.get(clusters.get(index));
+                String result = client.run(workflowProps.get(0));
                 buffer.append(result).append(',');
             }
         } catch (OozieClientException e) {
@@ -71,18 +71,21 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public String dryRun(Entity entity) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder("oozie", entity);
+        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
 
         //TODO actually be sending a bundle out.
         Map<String, Object> newFlows = builder.newWorkflowSchedule(entity);
 
         List<Properties> workflowProps = (List<Properties>)
                 newFlows.get(WorkflowBuilder.PROPS);
+        List<Cluster> clusters = (List<Cluster>)
+                newFlows.get(WorkflowBuilder.CLUSTERS);
 
         StringBuilder buffer = new StringBuilder();
         try {
-            for (Properties props : workflowProps) {
-                String result = client.dryrun(props);
+            for (int index = 0; index < workflowProps.size(); index++) {
+                OozieClient client = OozieClient.get(clusters.get(index));
+                String result = client.dryrun(workflowProps.get(0));
                 buffer.append(result).append(',');
             }
         } catch (OozieClientException e) {
@@ -117,17 +120,17 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     //To be replaced with bundle. We should actually be operating at bundle granularity
-    public CoordinatorJob findActiveCoordinator(Entity entity)
+    public Map<Cluster, CoordinatorJob> findActiveCoordinator(Entity entity)
             throws IvoryException{
         return findCoordinatorInternal(entity, ACTIVE_FILTER);
     }
 
-    public CoordinatorJob findSuspendedCoordinator(Entity entity)
+    public Map<Cluster, CoordinatorJob> findSuspendedCoordinator(Entity entity)
             throws IvoryException{
         return findCoordinatorInternal(entity, SUSPENDED_FILTER);
     }
 
-    public CoordinatorJob findRunningCoordinator(Entity entity)
+    public Map<Cluster, CoordinatorJob> findRunningCoordinator(Entity entity)
             throws IvoryException{
         return findCoordinatorInternal(entity, RUNNING_FILTER);
     }
@@ -144,20 +147,32 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return findRunningCoordinator(entity) != null;
     }
 
-    private CoordinatorJob findCoordinatorInternal(Entity entity, String filter)
+    private Map<Cluster, CoordinatorJob> findCoordinatorInternal(Entity entity,
+                                                                 String filter)
             throws IvoryException {
+
         try {
+            WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             String name = getBundleName(entity);
-            List<CoordinatorJob> jobs = client.getCoordJobsInfo(filter +
-                    OozieClient.FILTER_NAME + "=" + name + ";", 0, 10);
-            if (jobs.size() > 1) {
-                throw new IllegalStateException("Too many jobs qualified " +
-                        jobs);
-            } else if (jobs.isEmpty()) {
-                return null;
-            } else {
-                return jobs.get(0);
+
+            Cluster[] clusters = builder.getScheduledClustersFor(entity);
+            Map<Cluster, CoordinatorJob> jobArray = new
+                    HashMap<Cluster, CoordinatorJob>();
+
+            for (Cluster cluster : clusters) {
+                OozieClient client = OozieClient.get(cluster);
+                List<CoordinatorJob> jobs = client.getCoordJobsInfo(filter +
+                        OozieClient.FILTER_NAME + "=" + name + ";", 0, 10);
+                if (jobs.size() > 1) {
+                    throw new IllegalStateException("Too many jobs qualified " +
+                            jobs);
+                } else if (jobs.isEmpty()) {
+                    jobArray.put(cluster, MISSING);
+                } else {
+                    jobArray.put(cluster, jobs.get(0));
+                }
             }
+            return jobArray;
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
@@ -170,52 +185,64 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public String suspend(Entity entity) throws IvoryException {
-        CoordinatorJob job = findRunningCoordinator(entity);
-        if (job == null) {
-            throw new IvoryException("No active job found for " +
-                    entity.getName());
-        } else {
-            try {
-                client.suspend(job.getId());
-                return "SUCCESS";
-            } catch (OozieClientException e) {
-                throw new IvoryException("Unable to suspend workflow " +
-                        job.getId(), e);
+        boolean success = true;
+        Map<Cluster, CoordinatorJob> jobs = findRunningCoordinator(entity);
+        for (Cluster cluster : jobs.keySet()) {
+            CoordinatorJob job = jobs.get(cluster);
+            if (job == MISSING) {
+                LOG.warn("No active job found for " + entity.getName());
+            } else {
+                try {
+                    OozieClient client = OozieClient.get(cluster);
+                    client.suspend(job.getId());
+                } catch (OozieClientException e) {
+                    LOG.warn("Unable to suspend workflow " + job.getId(), e);
+                    success = false;
+                }
             }
         }
+        return success ? "SUCCESS" : "FAILED";
     }
 
     @Override
     public String resume(Entity entity) throws IvoryException {
-        CoordinatorJob job = findSuspendedCoordinator(entity);
-        if (job == null) {
-            throw new IvoryException("No active job found for " +
-                    entity.getName());
-        } else {
-            try {
-                client.resume(job.getId());
-                return "SUCCESS";
-            } catch (OozieClientException e) {
-                throw new IvoryException("Unable to suspend workflow " +
-                        job.getId(), e);
+        boolean success = true;
+        Map<Cluster, CoordinatorJob> jobs = findSuspendedCoordinator(entity);
+        for (Cluster cluster : jobs.keySet()) {
+            CoordinatorJob job = jobs.get(cluster);
+            if (job == MISSING) {
+                LOG.warn("No active job found for " + entity.getName());
+            } else {
+                try {
+                    OozieClient client = OozieClient.get(cluster);
+                    client.resume(job.getId());
+                } catch (OozieClientException e) {
+                    LOG.error("Unable to suspend workflow " + job.getId(), e);
+                    success = false;
+                }
             }
         }
+        return success ? "SUCCESS" : "FAILED";
     }
 
     @Override
     public String delete(Entity entity) throws IvoryException {
-        CoordinatorJob job = findActiveCoordinator(entity);
-        if (job == null) {
-            throw new IvoryException("No active job found for " +
-                    entity.getName());
-        } else {
-            try {
-                client.kill(job.getId());
-                return "SUCCESS";
-            } catch (OozieClientException e) {
-                throw new IvoryException("Unable to suspend workflow " +
-                        job.getId(), e);
+        boolean success = true;
+        Map<Cluster, CoordinatorJob> jobs = findActiveCoordinator(entity);
+        for (Cluster cluster : jobs.keySet()) {
+            CoordinatorJob job = jobs.get(cluster);
+            if (job == MISSING) {
+                LOG.warn("No active job found for " + entity.getName());
+            } else {
+                try {
+                    OozieClient client = OozieClient.get(cluster);
+                    client.kill(job.getId());
+                } catch (OozieClientException e) {
+                    LOG.error("Unable to suspend workflow " + job.getId(), e);
+                    success = false;
+                }
             }
         }
+        return success ? "SUCCESS" : "FAILED";
     }
 }

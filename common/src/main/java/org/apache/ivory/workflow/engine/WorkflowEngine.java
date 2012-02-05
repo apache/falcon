@@ -18,7 +18,6 @@
 
 package org.apache.ivory.workflow.engine;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
 

@@ -18,37 +18,24 @@
 
 package org.apache.ivory.workflow.engine;
 
-import java.util.Properties;
-
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.util.StartupProperties;
+import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.oozie.client.OozieClientException;
 
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class OozieClient extends org.apache.oozie.client.OozieClient{
-    public static final String PROPERTY_PREFIX = "oozie.";
 
-    private static final String URL = "url";
-    public static final String NAME_NODE = "nameNode";
-    public static final String JOB_TRACKER = "jobTracker";
-    public static final String QUEUE_NAME = "queueName";
-    public static String oozieUrl = StartupProperties.get().getProperty(PROPERTY_PREFIX + URL);
+    private static final ConcurrentHashMap<Cluster, OozieClient> ref =
+            new ConcurrentHashMap<Cluster, OozieClient>();
 
-    public static OozieClient get() {
-        return new OozieClient();
+    public static OozieClient get(Cluster cluster) throws IvoryException {
+        return new OozieClient(ClusterHelper.getOozieUrl(cluster));
     }
 
-    @Override
-    public Properties createConfiguration() {
-        Properties conf = new Properties();
-        //TODO read from cluster definition?
-        conf.setProperty(OozieClient.USER_NAME, StartupProperties.get().get(PROPERTY_PREFIX + OozieClient.USER_NAME).toString());
-        conf.setProperty(NAME_NODE, StartupProperties.get().get(PROPERTY_PREFIX + NAME_NODE).toString());
-        conf.setProperty(JOB_TRACKER, StartupProperties.get().get(PROPERTY_PREFIX + JOB_TRACKER).toString());
-        conf.setProperty(QUEUE_NAME, StartupProperties.get().get(PROPERTY_PREFIX + QUEUE_NAME).toString());
-        return conf;
-    }
-
-    private OozieClient() {
+    private OozieClient(String oozieUrl) {
         super(oozieUrl);
     }
 
