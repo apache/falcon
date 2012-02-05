@@ -23,33 +23,32 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import org.apache.ivory.entity.v0.cluster.Interface;
-import org.apache.ivory.entity.v0.cluster.Interfaces;
-import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.cluster.Location;
+import org.apache.ivory.entity.v0.cluster.Locations;
 
-public class InterfacesMapAdapter extends
-		XmlAdapter<Interfaces, Map<Interfacetype, Interface>> {
+public class LocationsMapAdapter extends
+		XmlAdapter<Locations, Map<String, Location>> {
 
 	@Override
-	public Interfaces marshal(Map<Interfacetype, Interface> v) throws Exception {
+	public Locations marshal(Map<String, Location> v) throws Exception {
 		if (v == null)
 			return null;
-		Interfaces interfaces = new Interfaces();
-		List<Interface> interfacesList = interfaces.getInterface();
-		for (Interface _interface : v.values()) {
-			interfacesList.add(_interface);
+		Locations locations = new Locations();
+		List<Location> locationsList = locations.getLocation();
+		for (Location location : v.values()) {
+			locationsList.add(location);
 		}
-		return interfaces;
+		return locations;
 	}
 
 	@Override
-	public Map<Interfacetype, Interface> unmarshal(Interfaces interfaces)
+	public Map<String, Location> unmarshal(Locations locations)
 			throws Exception {
-		if (interfaces == null)
+		if (locations == null)
 			return null;
-		Map<Interfacetype, Interface> map = new HashMap<Interfacetype, Interface>();
-		for (Interface _interface : interfaces.getInterface()) {
-			map.put(_interface.getType(), _interface);
+		Map<String, Location> map = new HashMap<String, Location>();
+		for (Location location : locations.getLocation()) {
+			map.put(location.getName(), location);
 		}
 		return map;
 	}

@@ -65,7 +65,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
 				this.getClazz());
 		// Validate against schema
-		synchronized (SCHEMA_FILE_NAME) {
+		synchronized (this) {
 			Schema schema = Util.getSchema(ProcessEntityParser.class
 					.getResource(SCHEMA_FILE_NAME));
 			unmarshaller.setSchema(schema);

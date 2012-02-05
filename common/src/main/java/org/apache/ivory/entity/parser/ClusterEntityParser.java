@@ -60,7 +60,7 @@ public class ClusterEntityParser extends EntityParser<Cluster>{
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
 				this.getClazz());
 		// Validate against schema
-		synchronized (SCHEMA_FILE) {
+		synchronized (this) {
 			Schema schema = Util.getSchema(ClusterEntityParser.class
 					.getResource(SCHEMA_FILE));
 			unmarshaller.setSchema(schema);

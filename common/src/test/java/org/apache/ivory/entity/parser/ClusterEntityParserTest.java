@@ -44,15 +44,12 @@ public class ClusterEntityParserTest {
 	@Test
 	public void testParse() throws IOException, IvoryException, JAXBException {
 
-		Cluster cluster = null;
-
 		InputStream stream = this.getClass().getResourceAsStream(
 				SAMPLE_DATASET_XML);
 
-		cluster = (Cluster) parser.parse(stream);
+		Cluster cluster = (Cluster) parser.parse(stream);
 
 		Assert.assertNotNull(cluster);
-
 		Assert.assertEquals(cluster.getName(), "corp");
 
 		Interface _interface = cluster.getInterfaces().get(
@@ -65,9 +62,9 @@ public class ClusterEntityParserTest {
 		Assert.assertEquals(cluster.getLocations().getLocation().get(0)
 				.getPath(), "/projects/ivory/staging");
 
-		Assert.assertEquals(cluster.getProperties().getProperty().get(0)
+		Assert.assertEquals(cluster.getProperties().get("field1")
 				.getName(), "field1");
-		Assert.assertEquals(cluster.getProperties().getProperty().get(0)
+		Assert.assertEquals(cluster.getProperties().get("field1")
 				.getValue(), "value1");
 
 		StringWriter stringWriter = new StringWriter();
