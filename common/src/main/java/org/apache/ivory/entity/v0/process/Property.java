@@ -55,7 +55,7 @@ public class Property {
      *     
      */
     public String getValue() {
-        return this.value;
+        return this.valueAttribute;
     }
 
     /**
@@ -67,7 +67,7 @@ public class Property {
      *     
      */
     public void setValue(String value) {
-       this.value=value;
+       this.valueAttribute=value;
     }
 
     /**
