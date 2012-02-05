@@ -87,9 +87,9 @@ public class Process extends Entity{
     protected Inputs inputs;
     @XmlElement(required = true)
     protected Outputs outputs;
-	@XmlJavaTypeAdapter(PropertiesMapAdapter.class)
+	//@XmlJavaTypeAdapter(PropertiesMapAdapter.class)
     @XmlElement(required = true)
-    protected Map<String, Property> properties;
+    protected Properties properties;
     @XmlElement(required = true)
     protected Workflow workflow;
     @XmlElement(required = true)
@@ -299,7 +299,7 @@ public class Process extends Entity{
      *     {@link Properties }
      *     
      */
-    public Map<String, Property> getProperties() {
+    public Properties getProperties() {
         return properties;
     }
 
@@ -308,10 +308,9 @@ public class Process extends Entity{
      * 
      * @param value
      *     allowed object is
-     *     {@link Properties }
      *     
      */
-    public void setProperties(Map<String, Property> value) {
+    public void setProperties(Properties value) {
         this.properties = value;
     }
 
