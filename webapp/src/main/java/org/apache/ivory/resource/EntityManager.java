@@ -228,8 +228,8 @@ public class EntityManager {
                             @PathParam("type") String type,
                             @PathParam("entity") String entity) {
 
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
         try {
+            EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             Entity entityObj = getEntityObject(entity, type);
