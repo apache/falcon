@@ -169,7 +169,7 @@
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
-    <finalName>${project.artifactId}-${project.version}-r${buildNumber}</finalName>
+    <finalName>${project.artifactId}-${project.version}</finalName>
     <testOutputDirectory>target/test-classes</testOutputDirectory>
     <sourceDirectory>src/main/java</sourceDirectory>
     <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
