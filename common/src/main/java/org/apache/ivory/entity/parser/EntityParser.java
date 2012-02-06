@@ -83,7 +83,6 @@ public abstract class EntityParser<T extends Entity> {
 		InputStream inputStream = Util.getStreamFromString(xmlString);
 		Entity entity = parse(inputStream);
 		return entity;
-
 	}
 
 	/**
@@ -106,9 +105,7 @@ public abstract class EntityParser<T extends Entity> {
 			LOG.error(e);
 			throw new IvoryException(e);
 		}
-
 		applyValidations(entity);
-
 		return entity;
 	}
 

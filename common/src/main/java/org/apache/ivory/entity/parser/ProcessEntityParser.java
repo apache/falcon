@@ -28,6 +28,10 @@ import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.process.Cluster;
+import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
@@ -56,12 +60,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
 	 * @throws SAXException
 	 */
 	@Override
-	public Process doParse(InputStream xmlStream) throws JAXBException,
+	protected Process doParse(InputStream xmlStream) throws JAXBException,
 			SAXException {
-
 		Process processDefinitionElement = null;
 		Unmarshaller unmarshaller;
-
 		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
 				this.getClazz());
 		// Validate against schema
@@ -77,17 +79,47 @@ public class ProcessEntityParser extends EntityParser<Process> {
 	}
 
 	@Override
-	public void applyValidations(Process entity)
-			throws StoreAccessException, ValidationException {
-		ConfigurationStore store = ConfigurationStore.get();
-		Process existingEntity = store.get(EntityType.PROCESS,
-				entity.getName());
-		// if (existingEntity != null) {
-		// throw new ValidationException("Entity: " + entity.getName()
-		// + " already submitted");
-		// }
-		// TODO check if dependent Feed and Datastore exists
-		fieldValidations(entity);
+	protected void applyValidations(Process process) throws StoreAccessException,
+			ValidationException {
+		// check if dependent entities exists
+		for (Cluster cluster : process.getClusters().getCluster()) {
+			org.apache.ivory.entity.v0.cluster.Cluster clusterEntity = ConfigurationStore
+					.get().get(EntityType.CLUSTER, cluster.getName());
+			if (clusterEntity == null) {
+				LOG.error("Dependent cluster "
+						+ cluster.getName() + " not found for process "
+						+ process.getName());
+				throw new ValidationException("Dependent cluster "
+						+ cluster.getName() + " not found for process "
+						+ process.getName());
+			}
+		}
+		for (Input input : process.getInputs().getInput()) {
+			Dataset dataset = ConfigurationStore.get().get(EntityType.DATASET,
+					input.getFeed());
+			if (dataset == null) {
+				LOG.error("Dependent dataset "
+						+ input.getFeed() + " not found for process "
+						+ process.getName());
+				throw new ValidationException("Dependent dataset "
+						+ input.getFeed() + " not found for process "
+						+ process.getName());
+			}
+		}
+		for (Output output : process.getOutputs().getOutput()) {
+			Dataset dataset = ConfigurationStore.get().get(EntityType.DATASET,
+					output.getFeed());
+			if (dataset == null) {
+				LOG.error("Dependent dataset "
+						+ output.getFeed() + " not found for process "
+						+ process.getName());
+				throw new ValidationException("Dependent dataset "
+						+ output.getFeed() + " not found for process "
+						+ process.getName());
+			}
+		}
+
+		fieldValidations(process);
 	}
 
 	private void fieldValidations(Process entity)
@@ -95,5 +127,4 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		// TODO
 
 	}
-
 }

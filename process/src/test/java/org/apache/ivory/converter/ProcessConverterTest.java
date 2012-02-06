@@ -18,9 +18,13 @@
 
 package org.apache.ivory.converter;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import junit.framework.Assert;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Util;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
@@ -32,17 +36,15 @@ import org.testng.annotations.Test;
 
 public class ProcessConverterTest {
 
-	private Process Process;
+	private Process process;
 	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
 	@BeforeClass
-	public void populateProcess() throws IvoryException {
-		ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
-				.getParser(EntityType.PROCESS);
-
-		this.Process = (Process) parser.parse(this.getClass()
-				.getResourceAsStream(SAMPLE_PROCESS_XML));
-
+	public void populateProcess() throws IvoryException, JAXBException {
+		Unmarshaller unmarshaller = Util.getUnmarshaller(Process.class);
+		process = (org.apache.ivory.entity.v0.process.Process) unmarshaller
+				.unmarshal(this.getClass().getResourceAsStream(
+						SAMPLE_PROCESS_XML));
 	}
 
 	@Test
@@ -50,8 +52,8 @@ public class ProcessConverterTest {
 		COORDINATORAPP coordinatorapp = new COORDINATORAPP();
 		DozerConverter<Process, COORDINATORAPP> converter = new ProcessConverter();
 		converter.convertTo(
-				this.Process, coordinatorapp);
-		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + Process.getFrequency()
-				+ "(" + Process.getPeriodicity() + ")}");
+				this.process, coordinatorapp);
+		Assert.assertEquals(coordinatorapp.getFrequency(), "${coord:" + process.getFrequency()
+				+ "(" + process.getPeriodicity() + ")}");
 	}
 }

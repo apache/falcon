@@ -19,7 +19,7 @@
 <process name="sample" >
     <!-- where -->
     <clusters>
-      <cluster name="prod-red" />
+      <cluster name="prod-red1" />
       <cluster name="prod-red2" />
     </clusters>
 
@@ -37,7 +37,7 @@
     </inputs>
 
     <outputs>
-        <output name="impOutput" feed="imp-click-join" instance="today(0,0)" />
+        <output name="impOutput" feed="imp-click-join1" instance="today(0,0)" />
         <output name="clicksOutput" feed="imp-click-join2" instance="today(0,0)" />
     </outputs>
 

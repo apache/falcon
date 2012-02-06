@@ -20,6 +20,7 @@ package org.apache.ivory.mappers;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.dozer.DozerBeanMapper;
 
 /**
@@ -28,8 +29,9 @@ import org.dozer.DozerBeanMapper;
  */
 public final class DozerProvider {
 
+	private static final Logger LOG = Logger.getLogger(DozerProvider.class);
 	private DozerProvider() {
-		// let clients not create this.
+		// let clients not create this.		
 	}
 
 	public static void map(String[] filenames, Object source, Object destination) {

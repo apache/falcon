@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
@@ -47,11 +48,11 @@ public class ProcessToDefaultCoordinatorTest {
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     @BeforeClass
-    public void populateProcess() throws IvoryException {
-        ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
-
-        this.process = (Process) parser.parse(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
-
+    public void populateProcess() throws IvoryException, JAXBException {
+		Unmarshaller unmarshaller = Util.getUnmarshaller(Process.class);
+		process = (org.apache.ivory.entity.v0.process.Process) unmarshaller
+				.unmarshal(this.getClass().getResourceAsStream(
+						SAMPLE_PROCESS_XML));
     }
 
     @Test

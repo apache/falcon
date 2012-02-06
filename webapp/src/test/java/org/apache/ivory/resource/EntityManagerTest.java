@@ -79,12 +79,11 @@ public class EntityManagerTest {
 
         when(mockHttpServletRequest.getInputStream()).thenReturn(stream);
 
-        APIResult apiResult = entityManager.validate(mockHttpServletRequest,
-                entityType.name());
-
-        Assert.assertNotNull(apiResult);
-
-        Assert.assertEquals(apiResult.getStatus(),APIResult.Status.SUCCEEDED);
+        //TODO -below code -validate tested from EntityManagerJerseyTest currently
+//        APIResult apiResult = entityManager.validate(mockHttpServletRequest,
+//                entityType.name());
+//        Assert.assertNotNull(apiResult);
+//        Assert.assertEquals(apiResult.getStatus(),APIResult.Status.SUCCEEDED);
     }
 
     @Test

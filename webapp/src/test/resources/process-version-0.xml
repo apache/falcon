@@ -21,7 +21,7 @@
 <process name="sample" >
     <!-- where -->
     <clusters>
-      <cluster name="prod-red" />
+      <cluster name="testCluster" />
     </clusters>
 
     <!-- when -->
@@ -33,13 +33,13 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impression" start-instance="$ptime-6" end-instance="$ptime" /> 
-        <input name="clicks" feed="clicks" start-instance="$ptime" end-instance="$ptime" />
+        <input name="input1" feed="inputFeed1" start-instance="$ptime-6" end-instance="$ptime" /> 
+        <input name="input2" feed="inputFeed2" start-instance="$ptime" end-instance="$ptime" />
     </inputs>
 
     <outputs>
-        <output name="impOutput" feed="imp-click-join" instance="$ptime" />
-        <output name="clicksOutput" feed="imp-click-join1" instance="$ptime" />
+        <output name="output1" feed="outputFeed1" instance="$ptime" />
+        <output name="output2" feed="outputFeed2" instance="$ptime" />
     </outputs>
 
     <!-- how -->
