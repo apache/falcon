@@ -19,6 +19,7 @@
 package org.apache.ivory.entity.parser;
 
 import java.io.IOException;
+import static org.testng.AssertJUnit.assertEquals;
 import java.io.InputStream;
 import java.io.StringWriter;
 
@@ -50,21 +51,37 @@ public class ClusterEntityParserTest {
 		Cluster cluster = (Cluster) parser.parse(stream);
 
 		Assert.assertNotNull(cluster);
-		Assert.assertEquals(cluster.getName(), "corp");
+		assertEquals(cluster.getName(), "corp");
 
-		Interface _interface = cluster.getInterfaces().get(
+		Interface execute = cluster.getInterfaces().get(
 				Interfacetype.EXECUTE);
-		Assert.assertEquals(_interface.getEndpoint(), "localhost:8021");
-		Assert.assertEquals(_interface.getVersion(), "0.20.2");
 
-		Assert.assertEquals(cluster.getLocations().get("staging").getName(),
-                "staging");
-		Assert.assertEquals(cluster.getLocations().get("staging").getPath(),
-                "/projects/ivory/staging");
+		assertEquals(execute.getEndpoint(), "localhost:8021");
+		assertEquals(execute.getVersion(), "0.20.2");
+		
+		Interface readonly = cluster.getInterfaces().get(
+				Interfacetype.READONLY);
+		assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
+		assertEquals(readonly.getVersion(), "0.20.2");
+		
+		Interface write = cluster.getInterfaces().get(
+				Interfacetype.WRITE);
+		assertEquals(write.getEndpoint(), "hdfs://localhost:8020");
+		assertEquals(write.getVersion(), "0.20.2");
+		
+		Interface workflow = cluster.getInterfaces().get(
+				Interfacetype.WORKFLOW);
+		assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
+		assertEquals(workflow.getVersion(), "3.1");
 
-		Assert.assertEquals(cluster.getProperties().get("field1")
+		assertEquals(cluster.getLocations().get("staging")
+				.getName(), "staging");
+		assertEquals(cluster.getLocations().get("staging")
+				.getPath(), "/projects/ivory/staging");
+
+		assertEquals(cluster.getProperties().get("field1")
 				.getName(), "field1");
-		Assert.assertEquals(cluster.getProperties().get("field1")
+		assertEquals(cluster.getProperties().get("field1")
 				.getValue(), "value1");
 
 		StringWriter stringWriter = new StringWriter();

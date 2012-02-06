@@ -40,9 +40,9 @@ public class ProcessEntityParserTest {
 	private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
 			.getParser(EntityType.PROCESS);
 
-	private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+	private static final String SAMPLE_PROCESS_XML = "/config/process/process-version-0.xml";
 
-	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+	private static final String SAMPLE_INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
 
 	@Test
 	public void testNotNullgetUnmarshaller() throws JAXBException {

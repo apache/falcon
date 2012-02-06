@@ -33,7 +33,7 @@
 	<locations>
 		<location name="staging" path="/projects/ivory/staging" />
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/project/ivory/working" />
+		<location name="working" path="/projects/ivory/working" />
 	</locations>
 	<properties>
 		<property name="field1" value="value1" />
