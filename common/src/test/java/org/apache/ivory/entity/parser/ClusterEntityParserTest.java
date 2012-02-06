@@ -71,7 +71,7 @@ public class ClusterEntityParserTest {
 		Interface workflow = cluster.getInterfaces().get(
 				Interfacetype.WORKFLOW);
 		assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
-		assertEquals(workflow.getVersion(), "0.20.2");
+		assertEquals(workflow.getVersion(), "3.1");
 
 		assertEquals(cluster.getLocations().get("stagingdir")
 				.getName(), "stagingdir");
