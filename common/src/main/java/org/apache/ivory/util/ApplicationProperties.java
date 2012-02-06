@@ -33,31 +33,34 @@ public abstract class ApplicationProperties extends Properties {
 
   protected abstract String getPropertyFile();
 
-  private final String propertyFile;
-  private final LocationType location;
+  private String propertyFile;
+  private LocationType location;
 
   private Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
   protected ApplicationProperties() throws IOException {
-    propertyFile = getPropertyFile();
-    location = getPropertyFileLocation();
+    initialize();
     loadProperties();
   }
 
-  protected LocationType getPropertyFileLocation() {
+  protected void initialize() {
+    String propFile = getPropertyFile();
     String userHome = System.getProperty("user.home");
     String confDir = System.getProperty("config.location");
-    if (confDir == null && new File(userHome, propertyFile).exists()) {
+    if (confDir == null && new File(userHome, propFile).exists()) {
       LOG.info("config.location is not set, and property file found in home dir" +
-              userHome + "/" + propertyFile);
-      return LocationType.HOME;
+              userHome + "/" + propFile);
+      location = LocationType.HOME;
+      propertyFile = new File(userHome, propFile).getAbsolutePath();
     } else if (confDir != null) {
-      LOG.info("config.location is set, using " + confDir + "/" + propertyFile);
-      return LocationType.FILE;
+      LOG.info("config.location is set, using " + confDir + "/" + propFile);
+      location = LocationType.FILE;
+        propertyFile = new File(confDir, propFile).getAbsolutePath();
     } else {
       LOG.info("config.location is not set, properties file not present in " +
-              "user home dir, falling back to classpath for " + propertyFile);
-      return LocationType.CLASSPATH;
+              "user home dir, falling back to classpath for " + propFile);
+      location = LocationType.CLASSPATH;
+      propertyFile = propFile;
     }
   }
 
