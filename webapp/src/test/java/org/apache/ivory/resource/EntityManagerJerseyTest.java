@@ -109,10 +109,21 @@ public class EntityManagerJerseyTest {
      * instance of webserver
      */
     @Test
-    public void testStatus() {
-        // http://localhost:15000/api/entities/status/hello/1
-        System.out.println(this.service.path("api/entities/status/hello/1")
-                .accept(MediaType.TEXT_PLAIN).get(String.class));
+    public void testStatus() throws IOException {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        checkIfSuccessful(response);
+
+        response = this.service
+                .path("api/entities/status/dataset/" + feed1)
+                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+
+        String status = response.getEntity(String.class);
+        Assert.assertEquals(status, "NOT_SCHEDULED");
     }
 
     @Test
@@ -339,7 +350,7 @@ public class EntityManagerJerseyTest {
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
 
-/*
+
         process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
@@ -358,7 +369,7 @@ public class EntityManagerJerseyTest {
                 .path("api/entities/delete/process/" + process)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
-*/
+
     }
 
     private void checkIfSuccessful(ClientResponse clientRepsonse) {

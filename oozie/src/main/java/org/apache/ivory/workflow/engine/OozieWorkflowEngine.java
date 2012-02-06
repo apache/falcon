@@ -42,8 +42,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
 
-    private static final String ENGINE = "oozie";
+    public static final String ENGINE = "oozie";
     private static final CoordinatorJob MISSING = new NullCoordJob();
+
+    private static final WorkflowEngineActionListener listener =
+            new OozieHouseKeepingService();
 
     @Override
     public String schedule(Entity entity) throws IvoryException {
@@ -61,7 +64,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             for (int index = 0; index < workflowProps.size(); index++) {
                 OozieClient client = OozieClientFactory.get(clusters.get(index));
+
+                listener.beforeSchedule(clusters.get(index), entity);
                 String result = client.run(workflowProps.get(0));
+                listener.afterSchedule(clusters.get(index), entity);
+
                 buffer.append(result).append(',');
             }
         } catch (OozieClientException e) {
@@ -138,15 +145,41 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     public boolean isActive(Entity entity) throws IvoryException {
-        return findActiveCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> activeCoordinators =
+                findActiveCoordinator(entity);
+        boolean active = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : activeCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                active = true;
+            }
+        }
+        return active;
     }
 
     public boolean isSuspended(Entity entity) throws IvoryException {
-        return findSuspendedCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> suspendedCoordinators =
+                findSuspendedCoordinator(entity);
+        boolean suspended = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : suspendedCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                suspended = true;
+            }
+        }
+        return suspended;
     }
 
     public boolean isRunning(Entity entity) throws IvoryException {
-        return findRunningCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> runningCoordinators = findRunningCoordinator(entity);
+        boolean running = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : runningCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                running = true;
+            }
+        }
+        return running;
     }
 
     private Map<Cluster, CoordinatorJob> findCoordinatorInternal(Entity entity,
@@ -196,7 +229,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             } else {
                 try {
                     OozieClient client = OozieClientFactory.get(cluster);
+
+                    listener.beforeSuspend(cluster, entity);
                     client.suspend(job.getId());
+                    listener.afterSuspend(cluster, entity);
+
                 } catch (OozieClientException e) {
                     LOG.warn("Unable to suspend workflow " + job.getId(), e);
                     success = false;
@@ -217,7 +254,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             } else {
                 try {
                     OozieClient client = OozieClientFactory.get(cluster);
+
+                    listener.beforeResume(cluster, entity);
                     client.resume(job.getId());
+                    listener.afterResume(cluster, entity);
+
                 } catch (OozieClientException e) {
                     LOG.error("Unable to suspend workflow " + job.getId(), e);
                     success = false;
@@ -238,7 +279,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             } else {
                 try {
                     OozieClient client = OozieClientFactory.get(cluster);
+
+                    listener.beforeDelete(cluster, entity);
                     client.kill(job.getId());
+                    listener.afterDelete(cluster, entity);
+
                 } catch (OozieClientException e) {
                     LOG.error("Unable to suspend workflow " + job.getId(), e);
                     success = false;

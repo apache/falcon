@@ -18,6 +18,10 @@
 
 package org.apache.ivory.entity;
 
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
@@ -27,7 +31,14 @@ import java.util.Map;
 
 public final class ClusterHelper {
 
+    private static final ConfigurationStore configStore = ConfigurationStore.get();
+
     private ClusterHelper() {}
+
+    public static Cluster getCluster(Process process) throws IvoryException {
+        String clusterName = process.getClusters().getCluster().get(0).getName();
+        return configStore.get(EntityType.CLUSTER, clusterName);
+    }
 
     public static String getOozieUrl(Cluster cluster) {
         return getInterfaceFor(cluster, Interfacetype.WORKFLOW);

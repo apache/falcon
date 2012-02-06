@@ -24,8 +24,22 @@ import javax.ws.rs.core.Response;
 
 public class IvoryWebException extends WebApplicationException {
 
-    public IvoryWebException(Throwable e, Response.Status status) {
-        super(Response.status(status).
-                entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build());
+    public static IvoryWebException newException(Throwable e,
+                                                 Response.Status status) {
+        return new IvoryWebException(Response.status(status).
+                entity(e.getMessage() + "\n" + getAddnInfo(e)).
+                type(MediaType.TEXT_PLAIN_TYPE).build());
     }
+
+    private static String getAddnInfo(Throwable e) {
+        String addnInfo = "";
+        if (e.getCause() != null) {
+            addnInfo = e.getCause().getMessage();
+        }
+        return addnInfo;
+    }
+    public IvoryWebException(Response response) {
+        super(response);
+    }
+
 }
