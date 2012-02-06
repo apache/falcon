@@ -25,6 +25,7 @@ import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 
 import java.util.HashMap;
@@ -59,11 +60,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         StringBuilder buffer = new StringBuilder();
         try {
             for (int index = 0; index < workflowProps.size(); index++) {
-                OozieClient client = OozieClient.get(clusters.get(index));
+                OozieClient client = OozieClientFactory.get(clusters.get(index));
                 String result = client.run(workflowProps.get(0));
                 buffer.append(result).append(',');
             }
         } catch (OozieClientException e) {
+            LOG.error("Unable to schedule workflows", e);
             throw new IvoryException("Unable to schedule workflows", e);
         }
         return buffer.toString();
@@ -84,7 +86,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         StringBuilder buffer = new StringBuilder();
         try {
             for (int index = 0; index < workflowProps.size(); index++) {
-                OozieClient client = OozieClient.get(clusters.get(index));
+                OozieClient client = OozieClientFactory.get(clusters.get(index));
                 String result = client.dryrun(workflowProps.get(0));
                 buffer.append(result).append(',');
             }
@@ -160,7 +162,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     HashMap<Cluster, CoordinatorJob>();
 
             for (Cluster cluster : clusters) {
-                OozieClient client = OozieClient.get(cluster);
+                OozieClient client = OozieClientFactory.get(cluster);
                 List<CoordinatorJob> jobs = client.getCoordJobsInfo(filter +
                         OozieClient.FILTER_NAME + "=" + name + ";", 0, 10);
                 if (jobs.size() > 1) {
@@ -193,7 +195,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 LOG.warn("No active job found for " + entity.getName());
             } else {
                 try {
-                    OozieClient client = OozieClient.get(cluster);
+                    OozieClient client = OozieClientFactory.get(cluster);
                     client.suspend(job.getId());
                 } catch (OozieClientException e) {
                     LOG.warn("Unable to suspend workflow " + job.getId(), e);
@@ -214,7 +216,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 LOG.warn("No active job found for " + entity.getName());
             } else {
                 try {
-                    OozieClient client = OozieClient.get(cluster);
+                    OozieClient client = OozieClientFactory.get(cluster);
                     client.resume(job.getId());
                 } catch (OozieClientException e) {
                     LOG.error("Unable to suspend workflow " + job.getId(), e);
@@ -235,7 +237,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 LOG.warn("No active job found for " + entity.getName());
             } else {
                 try {
-                    OozieClient client = OozieClient.get(cluster);
+                    OozieClient client = OozieClientFactory.get(cluster);
                     client.kill(job.getId());
                 } catch (OozieClientException e) {
                     LOG.error("Unable to suspend workflow " + job.getId(), e);

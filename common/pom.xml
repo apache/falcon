@@ -27,11 +27,6 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
-    <dependency>
-      <groupId>com.yahoo.oozie</groupId>
-      <artifactId>oozie-client</artifactId>
-      <version>3.0.2</version>
-    </dependency>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>

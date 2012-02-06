@@ -88,8 +88,6 @@ public class ProcessEntityParserTest {
 		Assert.assertEquals(process.getOutputs().getOutput().get(0).getFeed(),"imp-click-join");
 		Assert.assertEquals(process.getOutputs().getOutput().get(0).getInstance(),"today(0,0)");
 		
-//		Assert.assertEquals(process.getProperties().get("name1").getName(),"name1");
-//		Assert.assertEquals(process.getProperties().get("name1").getValue(),"value1");		
 		Assert.assertEquals(process.getProperties().getProperty().get(0).getName(), "name1");
 		Assert.assertEquals(process.getProperties().getProperty().get(0).getValue(), "value1");
 		

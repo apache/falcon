@@ -42,6 +42,16 @@
       <artifactId>hadoop-core</artifactId>
       <version>0.20.2-cdh3u0</version>
     </dependency>
+      <dependency>
+        <groupId>com.yahoo.oozie</groupId>
+        <artifactId>oozie-client</artifactId>
+        <version>3.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.yahoo.oozie</groupId>
+        <artifactId>oozie-core</artifactId>
+        <version>3.0.2</version>
+      </dependency>
     </dependencies>
 
 </project>
