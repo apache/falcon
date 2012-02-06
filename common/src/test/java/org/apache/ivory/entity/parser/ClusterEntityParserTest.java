@@ -55,6 +55,7 @@ public class ClusterEntityParserTest {
 
 		Interface execute = cluster.getInterfaces().get(
 				Interfacetype.EXECUTE);
+
 		assertEquals(execute.getEndpoint(), "localhost:8021");
 		assertEquals(execute.getVersion(), "0.20.2");
 		
@@ -73,9 +74,9 @@ public class ClusterEntityParserTest {
 		assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
 		assertEquals(workflow.getVersion(), "3.1");
 
-		assertEquals(cluster.getLocations().get("stagingdir")
-				.getName(), "stagingdir");
-		assertEquals(cluster.getLocations().get("stagingdir")
+		assertEquals(cluster.getLocations().get("staging")
+				.getName(), "staging");
+		assertEquals(cluster.getLocations().get("staging")
 				.getPath(), "/projects/ivory/staging");
 
 		assertEquals(cluster.getProperties().get("field1")

@@ -53,8 +53,6 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
     private final Marshaller marshaller;
 
     private static final ConfigurationStore configStore = ConfigurationStore.get();
-    private static final String WORKFLOW_PATH = StartupProperties.get().
-            getProperty("process.workflow.hdfs.path");
     public static final String NAME_NODE = "nameNode";
     public static final String JOB_TRACKER = "jobTracker";
 
@@ -71,24 +69,41 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
                     " is not of type Process");
 
         Process process = (Process) entity;
+        //TODO asserts
+        String clusterName = process.getClusters().getCluster().get(0).getName();
+        Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
+        Path workflowPath = new Path(ClusterHelper.
+                getLocation(cluster, "staging"), "workflows/process");
         COORDINATORAPP coordinatorApp = mapToCoordinator(process);
-        Path path = new Path(WORKFLOW_PATH, "IVORY_PROCESS_" +
+        Path path = new Path(workflowPath, "IVORY_PROCESS_" +
                 process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
-            return createAppProperties(process, path);
+            return createAppProperties(cluster, path);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             throw new IvoryException(e);
         }
     }
 
-    private Map<String, Object> createAppProperties(Process process, Path path)
-            throws IvoryException {
-        Properties properties = new Properties();
+    @Override
+    public Cluster[] getScheduledClustersFor(Entity entity)
+            throws IvoryException{
+
+        if (!(entity instanceof Process))
+            throw new IllegalArgumentException(entity.getName() +
+                    " is not of type Process");
+
+        Process process = (Process) entity;
         //TODO asserts
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
+        return new Cluster[] {cluster};
+    }
+
+    private Map<String, Object> createAppProperties(Cluster cluster, Path path)
+            throws IvoryException {
+        Properties properties = new Properties();
         properties.setProperty(NAME_NODE, ClusterHelper.getHdfsUrl(cluster));
         properties.setProperty(JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
@@ -97,8 +112,13 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
         //TODO User name is hacked for now.
         Map<String, Object> map = new HashMap<String, Object>();
         List<Properties> props = new ArrayList<Properties>();
+        List<Cluster> clusters = new ArrayList<Cluster>();
+
         props.add(properties);
+        clusters.add(cluster);
+
         map.put(PROPS, props);
+        map.put(CLUSTERS, clusters);
         return map;
     }
 

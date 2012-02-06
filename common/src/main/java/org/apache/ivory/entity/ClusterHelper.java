@@ -21,6 +21,7 @@ package org.apache.ivory.entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.cluster.Location;
 
 import java.util.Map;
 
@@ -55,4 +56,14 @@ public final class ClusterHelper {
         return interfaceRef.getEndpoint();
     }
 
+    public static String getLocation(Cluster cluster, String locationKey) {
+        assert cluster != null : "Cluster object can't be null";
+        Map<String, Location> locations = cluster.getLocations();
+        assert locations != null : "No locations configured for cluster " +
+                cluster.getName() ;
+        Location location = locations.get(locationKey);
+        assert location != null : "Location " + locationKey +
+                " not configured for cluster " + cluster.getName() ;
+        return getHdfsUrl(cluster) + "/" + location.getPath();
+    }
 }
