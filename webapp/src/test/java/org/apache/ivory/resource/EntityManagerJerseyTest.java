@@ -331,7 +331,7 @@ public class EntityManagerJerseyTest {
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
 
-/*
+
         process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
@@ -350,7 +350,7 @@ public class EntityManagerJerseyTest {
                 .path("api/entities/delete/process/" + process)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
-*/
+
     }
 
     private void checkIfSuccessful(ClientResponse clientRepsonse) {

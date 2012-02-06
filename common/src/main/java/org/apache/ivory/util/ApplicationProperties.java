@@ -20,9 +20,7 @@ package org.apache.ivory.util;
 
 import org.apache.log4j.Logger;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,29 +29,62 @@ public abstract class ApplicationProperties extends Properties {
 
   private static Logger LOG = Logger.getLogger(ApplicationProperties.class);
 
+  protected enum LocationType {FILE, HOME, CLASSPATH}
+
   protected abstract String getPropertyFile();
+
+  private final String propertyFile;
+  private final LocationType location;
+
   private Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
   protected ApplicationProperties() throws IOException {
+    propertyFile = getPropertyFile();
+    location = getPropertyFileLocation();
     loadProperties();
   }
 
-  protected void loadProperties() throws IOException {
-    String propertyFile = getPropertyFile();
+  protected LocationType getPropertyFileLocation() {
+    String userHome = System.getProperty("user.home");
+    String confDir = System.getProperty("config.location");
+    if (confDir == null && new File(userHome, propertyFile).exists()) {
+      LOG.info("config.location is not set, and property file found in home dir" +
+              userHome + "/" + propertyFile);
+      return LocationType.HOME;
+    } else if (confDir != null) {
+      LOG.info("config.location is set, using " + confDir + "/" + propertyFile);
+      return LocationType.FILE;
+    } else {
+      LOG.info("config.location is not set, properties file not present in " +
+              "user home dir, falling back to classpath for " + propertyFile);
+      return LocationType.CLASSPATH;
+    }
+  }
 
-    InputStream resource = getClass().getResourceAsStream("/" + propertyFile);
+  protected void loadProperties() throws IOException {
+    InputStream resource;
+
+    if (location == LocationType.CLASSPATH) {
+      resource = getClass().getResourceAsStream("/" + propertyFile);
+    } else {
+      resource = new FileInputStream(propertyFile);
+    }
 
     if (resource == null) {
       throw new FileNotFoundException(propertyFile +
-          " not found in class path");
+          " not found in " + location);
     } else {
-      //TODO:: Should we clear and reload? In which case we need to lock
-      //TODO:: down the object.
-      LOG.info("Loading properties from " + propertyFile);
-      load(resource);
-      for (Object key : keySet()) {
-        put(key, substitute(getProperty((String)key)));
-      }
+        try {
+          //TODO:: Should we clear and reload? In which case we need to lock
+          //TODO:: down the object.
+          LOG.info("Loading properties from " + propertyFile);
+          load(resource);
+          for (Object key : keySet()) {
+            put(key, substitute(getProperty((String)key)));
+          }
+        } finally {
+          resource.close();
+        }
     }
   }
 

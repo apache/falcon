@@ -8,6 +8,10 @@
 		<interface type="execute" endpoint="localhost:50300" version="0.20.2" />
 		<interface type="workflow" endpoint="http://localhost:11000/oozie/"
 			version="3.1" />
+<!--
+		<interface type="workflow" endpoint="local"
+			version="3.1" />
+-->
 		<interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
 			version="5.1.6" />
 		<interface type="registry" endpoint="Hcat" version="1" />

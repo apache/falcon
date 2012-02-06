@@ -38,6 +38,7 @@ public class OozieClientFactory {
 
     public synchronized static OozieClient get(Cluster cluster)
             throws IvoryException {
+        assert cluster != null : "Cluster cant be null";
         if (!cache.containsKey(cluster)) {
             String oozieUrl = ClusterHelper.getOozieUrl(cluster);
             OozieClient ref = getClientRef(oozieUrl);

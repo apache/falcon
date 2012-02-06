@@ -138,15 +138,41 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     public boolean isActive(Entity entity) throws IvoryException {
-        return findActiveCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> activeCoordinators =
+                findActiveCoordinator(entity);
+        boolean active = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : activeCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                active = true;
+            }
+        }
+        return active;
     }
 
     public boolean isSuspended(Entity entity) throws IvoryException {
-        return findSuspendedCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> suspendedCoordinators =
+                findSuspendedCoordinator(entity);
+        boolean suspended = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : suspendedCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                suspended = true;
+            }
+        }
+        return suspended;
     }
 
     public boolean isRunning(Entity entity) throws IvoryException {
-        return findRunningCoordinator(entity) != null;
+        Map<Cluster, CoordinatorJob> runningCoordinators = findRunningCoordinator(entity);
+        boolean running = false;
+        for (Map.Entry<Cluster, CoordinatorJob> entry : runningCoordinators.
+                entrySet()) {
+            if (entry.getValue() != MISSING) {
+                running = true;
+            }
+        }
+        return running;
     }
 
     private Map<Cluster, CoordinatorJob> findCoordinatorInternal(Entity entity,
