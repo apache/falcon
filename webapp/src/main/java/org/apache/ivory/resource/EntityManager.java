@@ -35,7 +35,6 @@ import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
@@ -43,16 +42,11 @@ import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-@Path("entities")
 public class EntityManager {
 
     private static final Logger LOG = Logger.getLogger(EntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     private static final int XML_DEBUG_LEN = 10 * 1024;
-
-    private enum WorkflowAction {
-        SCHEDULE, DELETE, SUSPEND, RESUME
-    }
 
     private WorkflowEngine workflowEngine;
     private ConfigurationStore configStore = ConfigurationStore.get();
@@ -116,63 +110,44 @@ public class EntityManager {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
         return new APIResult(APIResult.Status.SUCCEEDED, "validate successful");
-    }
-
-    /**
-     * Schedules an submitted entity immediately
+    }   
+    
+	 /**
+     * Deletes a scheduled entity, a deleted entity is removed completely from
+     * execution pool.
      *
      * @param type
      * @param entity
      * @return APIResult
      */
-    @POST
-    @Path("schedule/{type}/{entity}")
+    @DELETE
+    @Path("delete/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult schedule(@Context HttpServletRequest request,
-                              @PathParam("type") String type,
-                              @PathParam("entity") String entity) {
-
+    public APIResult delete(@Context HttpServletRequest request,
+                            @PathParam("type") String type,
+                            @PathParam("entity") String entity) {
         try {
-            audit(request, entity, type, "SCHDULED");
+            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            audit(request, entity, type, "DELETE");
+            String removedFromEngine = "";
             Entity entityObj = getEntityObject(entity, type);
-            if (!workflowEngine.isActive(entityObj)) {
-                workflowEngine.schedule(entityObj);
-                return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                        type + ") scheduled successfully");
-            } else {
-                throw new EntityAlreadyExistsException(entity +
-                        "(" + type + ") is already scheduled with " +
-                        "workflow engine");
+            if (entityType.isSchedulable() && entityType == EntityType.PROCESS) { //TODO REMOVE PROCESS CHECK WHEN DONE
+                if (getWorkflowEngine().isActive(entityObj)) {
+                    getWorkflowEngine().delete(entityObj);
+                    removedFromEngine = "(KILLED in ENGINE)";
+                }
             }
+            configStore.remove(entityType, entity);
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
+                    type + ") removed successfully " + removedFromEngine);
         } catch (Exception e) {
-            LOG.error("Unable to schedule workflow", e);
+            LOG.error("Unable to reach workflow engine for deletion or " +
+                    "deletion failed", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
-    /**
-     * Submits a new entity and schedules it immediately
-     *
-     * @param type
-     * @return
-     */
-    @POST
-    @Path("submitAndSchedule/{type}")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.APPLICATION_JSON)
-    public APIResult submitAndSchedule(@Context HttpServletRequest request,
-                                       @PathParam("type") String type) {
-        try {
-            audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
-            Entity entity = submitInternal(request, type);
-            return schedule(request, type, entity.getName());
-        } catch (Exception e) {
-            LOG.error("Unable to submit and schedule ", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    private Entity submitInternal(HttpServletRequest request,
+    protected Entity submitInternal(HttpServletRequest request,
                                   String type)
             throws IOException, IvoryException {
 
@@ -213,95 +188,9 @@ public class EntityManager {
         return new String(data);
     }
 
-    /**
-     * Deletes a scheduled entity, a deleted entity is removed completely from
-     * execution pool.
-     *
-     * @param type
-     * @param entity
-     * @return APIResult
-     */
-    @DELETE
-    @Path("delete/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult delete(@Context HttpServletRequest request,
-                            @PathParam("type") String type,
-                            @PathParam("entity") String entity) {
+   
 
-        try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            audit(request, entity, type, "DELETE");
-            String removedFromEngine = "";
-            Entity entityObj = getEntityObject(entity, type);
-            if (entityType == EntityType.PROCESS) { //TODO REMOVE CHECK WHEN DONE
-                if (workflowEngine.isActive(entityObj)) {
-                    workflowEngine.delete(entityObj);
-                    removedFromEngine = "(KILLED in ENGINE)";
-                }
-            }
-            configStore.remove(entityType, entity);
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                    type + ") removed successfully " + removedFromEngine);
-        } catch (Exception e) {
-            LOG.error("Unable to reach workflow engine for deletion or " +
-                    "deletion failed", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * Suspends a running entity
-     *
-     * @param type
-     * @param entity
-     * @return APIResult
-     */
-    @POST
-    @Path("suspend/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult suspend(@Context HttpServletRequest request,
-                             @PathParam("type") String type,
-                             @PathParam("entity") String entity) {
-
-        try {
-            audit(request, entity, type, "SUSPEND");
-            Entity entityObj = getEntityObject(entity, type);
-            workflowEngine.suspend(entityObj);
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                    type + ") suspended successfully");
-        } catch (Exception e) {
-            LOG.error("Unable to suspend entity", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * Resumes a suspended entity
-     *
-     * @param type
-     * @param entity
-     * @return APIResult
-     */
-    @POST
-    @Path("resume/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult resume(@Context HttpServletRequest request,
-                            @PathParam("type") String type,
-                            @PathParam("entity") String entity) {
-
-        try {
-            audit(request, entity, type, "RESUME");
-            Entity entityObj = getEntityObject(entity, type);
-            workflowEngine.resume(entityObj);
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                    type + ") resumed successfully");
-        } catch (Exception e) {
-            LOG.error("Unable to resume entity", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    private void audit(HttpServletRequest request, String entity,
+    protected void audit(HttpServletRequest request, String entity,
                        String type, String action) {
         AUDIT.info("Performed " + action + " on " + entity + "(" + type +
                 ") :: " + request.getRemoteHost() + "/" + request.getRemoteUser());
@@ -374,7 +263,7 @@ public class EntityManager {
         }
     }
 
-    private Entity getEntityObject(String entity, String type)
+    protected Entity getEntityObject(String entity, String type)
             throws StoreAccessException {
         Entity entityObj = getEntity(entity, type);
         if (entityObj == null) {
@@ -391,4 +280,8 @@ public class EntityManager {
         ConfigurationStore configStore = ConfigurationStore.get();
         return configStore.get(entityType, entity);
     }
+    
+	protected WorkflowEngine getWorkflowEngine() {
+		return this.workflowEngine;
+	}
 }

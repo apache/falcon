@@ -137,8 +137,51 @@ public class EntityManagerJerseyTest {
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, stream);
 
-        checkIfFailure(clientRepsonse);
+        checkIfBadRequest(clientRepsonse);
     }
+    
+	@Test
+	public void testClusterSubmitScheduleSuspendResumeDelete() throws IOException {
+		ClientResponse clientRepsonse;
+		Map<String, String> overlay = new HashMap<String, String>();
+
+		String cluster = "local" + System.currentTimeMillis();
+		overlay.put("name", cluster);
+		InputStream stream = getServletInputStream(overlayParametersOverTemplate(
+				CLUSTER_TEMPLATE, overlay));
+
+		clientRepsonse = this.service.path("api/entities/validate/cluster")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, stream);
+		checkIfSuccessful(clientRepsonse);
+
+		clientRepsonse = submitToIvory(CLUSTER_TEMPLATE, overlay,
+				EntityType.CLUSTER);
+		checkIfSuccessful(clientRepsonse);
+
+		clientRepsonse = this.service
+				.path("api/entities/schedule/cluster/" + cluster)
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class);
+		checkIfBadRequest(clientRepsonse);
+
+		clientRepsonse = this.service
+				.path("api/entities/suspend/cluster/" + cluster)
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class);
+		checkIfBadRequest(clientRepsonse);
+
+		clientRepsonse = this.service
+				.path("api/entities/resume/cluster/" + cluster)
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class);
+		checkIfBadRequest(clientRepsonse);
+
+		clientRepsonse = this.service
+				.path("api/entities/delete/cluster/" + cluster)
+				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+		checkIfSuccessful(clientRepsonse);
+	}
 
     @Test
     public void testSubmit() throws IOException {
@@ -283,9 +326,9 @@ public class EntityManagerJerseyTest {
         checkIfSuccessful(response);
 
         ClientResponse clientRepsonse = this.service
-                .path("api/entities/schedule/process/" + process)
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
+        		.path("api/entities/schedule/process/" + process)
+        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+        		.post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
 
         clientRepsonse = this.service
@@ -381,10 +424,6 @@ public class EntityManagerJerseyTest {
         } catch (JAXBException e) {
             Assert.fail("Reponse " + response + " is not valid");
         }
-    }
-    
-    private void checkIfFailure(ClientResponse clientRepsonse) {
-      	Assert.assertEquals(clientRepsonse.getStatus(), 400);
     }
 
     private static URI getBaseURI() {

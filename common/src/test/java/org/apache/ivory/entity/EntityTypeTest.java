@@ -16,30 +16,24 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.entity;
 
-import org.apache.ivory.entity.v0.dataset.Dataset;
-import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.EntityType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-/**
- * Enum for types of entities in Ivory
- * Process, Feed and Cluster
- */
-public enum EntityType {
-	DATASET(Dataset.class), PROCESS(Process.class), CLUSTER(Cluster.class);
+public class EntityTypeTest {
 
-	private final Class<? extends Entity> clazz;
-
-	EntityType(Class<? extends Entity> typeClass) {
-		clazz = typeClass;
+	@Test
+	public void testGetEntityClass() {
+		Assert.assertEquals(EntityType.PROCESS.getEntityClass().getName(),
+				"org.apache.ivory.entity.v0.process.Process");
 	}
 
-	public Class<? extends Entity> getEntityClass() {
-		return clazz;
-	}
-
-	public boolean isSchedulable() {
-		return this.equals(EntityType.CLUSTER) ? false : true;
+	@Test
+	public void testIsSchedulable() {
+		Assert.assertTrue(EntityType.PROCESS.isSchedulable());
+		Assert.assertTrue(EntityType.DATASET.isSchedulable());
+		Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
 	}
 }

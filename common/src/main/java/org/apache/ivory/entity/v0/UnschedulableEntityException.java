@@ -18,28 +18,25 @@
 
 package org.apache.ivory.entity.v0;
 
-import org.apache.ivory.entity.v0.dataset.Dataset;
-import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.IvoryException;
 
 /**
- * Enum for types of entities in Ivory
- * Process, Feed and Cluster
+ * This exception is thrown when Unschedulable entity
+ * like CLUSTER is tried with actions like Schedule, Suspend,
+ * Resume.
+ *
  */
-public enum EntityType {
-	DATASET(Dataset.class), PROCESS(Process.class), CLUSTER(Cluster.class);
+public class UnschedulableEntityException extends IvoryException {
 
-	private final Class<? extends Entity> clazz;
+    public UnschedulableEntityException(Exception e) {
+        super(e);
+    }
 
-	EntityType(Class<? extends Entity> typeClass) {
-		clazz = typeClass;
-	}
+    public UnschedulableEntityException(String message, Exception e) {
+        super(message, e);
+    }
 
-	public Class<? extends Entity> getEntityClass() {
-		return clazz;
-	}
-
-	public boolean isSchedulable() {
-		return this.equals(EntityType.CLUSTER) ? false : true;
-	}
+    public UnschedulableEntityException(String message) {
+        super(message);
+    }
 }
