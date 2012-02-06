@@ -57,10 +57,10 @@ public class ClusterEntityParserTest {
 		Assert.assertEquals(_interface.getEndpoint(), "localhost:8021");
 		Assert.assertEquals(_interface.getVersion(), "0.20.2");
 
-		Assert.assertEquals(cluster.getLocations().getLocation().get(0)
-				.getName(), "staging");
-		Assert.assertEquals(cluster.getLocations().getLocation().get(0)
-				.getPath(), "/projects/ivory/staging");
+		Assert.assertEquals(cluster.getLocations().get("staging").getName(),
+                "staging");
+		Assert.assertEquals(cluster.getLocations().get("staging").getPath(),
+                "/projects/ivory/staging");
 
 		Assert.assertEquals(cluster.getProperties().get("field1")
 				.getName(), "field1");

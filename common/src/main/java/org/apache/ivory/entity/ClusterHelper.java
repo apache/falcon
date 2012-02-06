@@ -23,7 +23,6 @@ import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.cluster.Location;
 
-import java.util.List;
 import java.util.Map;
 
 public final class ClusterHelper {
@@ -58,12 +57,13 @@ public final class ClusterHelper {
     }
 
     public static String getLocation(Cluster cluster, String locationKey) {
-        List<Location> locations = cluster.getLocations().getLocation();
-        for (Location location : locations) {
-            if (location.getName().equals(locationKey)) {
-                return location.getPath();
-            }
-        }
-        return null;
+        assert cluster != null : "Cluster object can't be null";
+        Map<String, Location> locations = cluster.getLocations();
+        assert locations != null : "No locations configured for cluster " +
+                cluster.getName() ;
+        Location location = locations.get(locationKey);
+        assert location != null : "Location " + locationKey +
+                " not configured for cluster " + cluster.getName() ;
+        return getHdfsUrl(cluster) + "/" + location.getPath();
     }
 }
