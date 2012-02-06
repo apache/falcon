@@ -65,24 +65,27 @@ public class ProcessToDefaultCoordinatorTest {
         coordinateMapper.mapToDefaultCoordinator();
 
         Assert.assertNotNull(coordinateMapper.getEntityMap());
-
         Assert.assertNotNull(coordinateMapper.getCoordinatorapp());
+        assertEquals(this.coordinatorapp.getName(), this.process.getName());
+        assertEquals(this.coordinatorapp.getStart(), this.process.getValidity().getStart());
+        assertEquals(this.coordinatorapp.getEnd(), this.process.getValidity().getEnd());
+        //custom mapping
+        assertEquals(this.coordinatorapp.getFrequency(), "${coord:"+this.process.getFrequency()+"("+this.process.getPeriodicity()+")}");
+        //assertEquals(this.coordinatorapp.getTimezone(), this.process.);
+        
+        assertEquals(this.coordinatorapp.getControls().getConcurrency(), this.process.getConcurrency());
+        assertEquals(this.coordinatorapp.getControls().getExecution(), this.process.getExecution());
+        //assertEquals(this.coordinatorapp.getControls().getThrottle(), this.process.);
+        //assertEquals(this.coordinatorapp.getControls().getTimeout(), "");
+        
+        assertEquals(this.coordinatorapp.getInputEvents().getDataIn().get(0).getName(), this.process.getInputs().getInput().get(0).getName());
+        assertEquals(this.coordinatorapp.getInputEvents().getDataIn().get(0).getDataset(), this.process.getInputs().getInput().get(0).getFeed());
+        assertEquals(this.coordinatorapp.getInputEvents().getDataIn().get(0).getStartInstance(), "${ivory:"+this.process.getInputs().getInput().get(0).getStartInstance()+"}");
+        assertEquals(this.coordinatorapp.getInputEvents().getDataIn().get(0).getEndInstance(),  "${ivory:"+this.process.getInputs().getInput().get(0).getEndInstance()+"}");
 
-        Assert.assertEquals(this.coordinatorapp.getName(), this.process.getName());
-
-        Assert.assertEquals(this.coordinatorapp.getControls().getConcurrency(), this.process.getConcurrency());
-
-        Assert.assertEquals(this.coordinatorapp.getControls().getExecution(), this.process.getExecution());
-
-        Assert.assertEquals(this.coordinatorapp.getStart(), this.process.getValidity().getStart());
-
-        Assert.assertEquals(this.coordinatorapp.getEnd(), this.process.getValidity().getEnd());
-
-        // custom mapping
-        Assert.assertEquals(this.coordinatorapp.getFrequency(),
-                "${coord:" + process.getFrequency() + "(" + this.process.getPeriodicity() + ")}");
-
-        assertEquals(coordinatorapp.getOutputEvents().getDataOut().get(0).getInstance(), "${ivory:today(0,0)}");
+        assertEquals(coordinatorapp.getOutputEvents().getDataOut().get(0).getName(),this.process.getOutputs().getOutput().get(0).getName());
+        assertEquals(coordinatorapp.getOutputEvents().getDataOut().get(0).getInstance(), "${ivory:"+this.process.getOutputs().getOutput().get(0).getInstance()+"}");
+        assertEquals(coordinatorapp.getOutputEvents().getDataOut().get(0).getDataset(),this.process.getOutputs().getOutput().get(0).getFeed());
 
         Marshaller marshaller = Util.getMarshaller(COORDINATORAPP.class);
 
