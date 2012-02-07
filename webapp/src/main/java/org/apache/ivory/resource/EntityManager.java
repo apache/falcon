@@ -158,7 +158,7 @@ public class EntityManager {
         Entity referencedBy = EntityIntegrityChecker.
                 referencedBy(entityType, entityObj);
         if (referencedBy != null) {
-            throw new IvoryException(entityObj + "(" + entityType + ") cant " +
+            throw new IvoryException(entityObj.getName() + "(" + entityType + ") cant " +
                     "be removed as it is referred by " + referencedBy.getName() +
                     "(" + referencedBy.getEntityType() + ")");
         }
