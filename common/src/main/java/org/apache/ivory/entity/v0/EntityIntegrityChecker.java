@@ -55,7 +55,7 @@ public class EntityIntegrityChecker {
                     get(0).getName();
             Cluster referredCluster = configStore.
                     get(EntityType.CLUSTER, clusterName);
-            if (referredCluster.equals(cluster)) {
+            if (referredCluster != null && referredCluster.equals(cluster)) {
                 return process;
             }
         }
@@ -71,7 +71,7 @@ public class EntityIntegrityChecker {
                 String datasetName = input.getFeed();
                 Dataset referredDataset = configStore.
                         get(EntityType.DATASET, datasetName);
-                if (referredDataset.equals(dataset)) {
+                if (referredDataset != null && referredDataset.equals(dataset)) {
                     return process;
                 }
             }
@@ -79,7 +79,7 @@ public class EntityIntegrityChecker {
                 String datasetName = output.getFeed();
                 Dataset referredDataset = configStore.
                         get(EntityType.DATASET, datasetName);
-                if (referredDataset.equals(dataset)) {
+                if (referredDataset != null && referredDataset.equals(dataset)) {
                     return process;
                 }
             }
