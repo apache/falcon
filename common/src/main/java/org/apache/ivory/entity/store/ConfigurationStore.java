@@ -69,7 +69,9 @@ public class ConfigurationStore {
     };
 
     private ConfigurationStore() {
-        Class<? extends Entity>[] entityClasses = new Class[3]; //TODO EntityType.values().length
+        Class<? extends Entity>[] entityClasses =
+                new Class[EntityType.values().length];
+
         int index = 0;
 
         for (EntityType type : EntityType.values()) {

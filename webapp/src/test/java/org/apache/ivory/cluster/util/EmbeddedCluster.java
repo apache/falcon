@@ -50,6 +50,8 @@ public class EmbeddedCluster {
         EmbeddedCluster cluster = new EmbeddedCluster();
         System.setProperty("test.build.data", "build/" + name + "/data");
         cluster.conf.set("hadoop.log.dir", "/tmp");
+        cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
+        cluster.conf.set("hadoop.proxyuser.oozie.hosts", "127.0.0.1");
         cluster.dfsCluster = new MiniDFSCluster(cluster.conf, 1, true, null);
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = " + hdfsUrl);
@@ -80,8 +82,8 @@ public class EmbeddedCluster {
 
         Map<Interfacetype, Interface> interfaces = new
                 HashMap<Interfacetype, Interface>();
-        interfaces.put(Interfacetype.WORKFLOW,
-                newInterface(Interfacetype.WORKFLOW, "local", "0.1"));
+        interfaces.put(Interfacetype.WORKFLOW, newInterface(Interfacetype.WORKFLOW,
+                "http://localhost:11000/oozie", "0.1"));
         String fsUrl = conf.get("fs.default.name");
         interfaces.put(Interfacetype.READONLY,
                 newInterface(Interfacetype.READONLY, fsUrl, "0.1"));

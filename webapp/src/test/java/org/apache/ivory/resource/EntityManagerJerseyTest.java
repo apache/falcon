@@ -17,15 +17,7 @@
  */
 package org.apache.ivory.resource;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +30,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -63,7 +57,7 @@ public class EntityManagerJerseyTest {
 
     private static final String DATASET_TEMPLATE1 = "/dataset-template1.xml";
     private static final String DATASET_TEMPLATE2 = "/dataset-template2.xml";
-    private static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
+    private static final String CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
 
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     private static final String PROCESS_TEMPLATE = "/process-template.xml";
@@ -73,6 +67,9 @@ public class EntityManagerJerseyTest {
     private EmbeddedServer server;
 
     private Unmarshaller unmarshaller;
+    private Marshaller marshaller;
+
+    private EmbeddedCluster cluster;
 
     public EntityManagerJerseyTest() {
         try {
@@ -80,6 +77,7 @@ public class EntityManagerJerseyTest {
                     APIResult.class, Dataset.class, Process.class,
                     Cluster.class);
             unmarshaller = jaxbContext.createUnmarshaller();
+            marshaller = jaxbContext.createMarshaller();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -99,6 +97,16 @@ public class EntityManagerJerseyTest {
         Client client = Client.create(config);
         this.service = client.resource(getBaseURI());
         this.server.start();
+        this.cluster = EmbeddedCluster.newCluster("##name##", false);
+        Cluster clusterEntity = this.cluster.getCluster();
+        FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
+        marshaller.marshal(clusterEntity, out);
+        out.close();
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        this.cluster.shutdown();
     }
 
     @BeforeTest
@@ -141,23 +149,31 @@ public class EntityManagerJerseyTest {
 
         checkIfBadRequest(clientRepsonse);
     }
-    
+
+    @Test
+    public void testClusterSubmit() throws IOException {
+        ClientResponse clientRepsonse;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        InputStream stream = getServletInputStream(overlayParametersOverTemplate(
+                CLUSTER_FILE_TEMPLATE, overlay));
+
+        clientRepsonse = this.service.path("api/entities/validate/cluster")
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class, stream);
+        checkIfSuccessful(clientRepsonse);
+    }
+
 	@Test
 	public void testClusterSubmitScheduleSuspendResumeDelete() throws IOException {
 		ClientResponse clientRepsonse;
 		Map<String, String> overlay = new HashMap<String, String>();
 
-		String cluster = "local" + System.currentTimeMillis();
-		overlay.put("name", cluster);
-		InputStream stream = getServletInputStream(overlayParametersOverTemplate(
-				CLUSTER_TEMPLATE, overlay));
-
-		clientRepsonse = this.service.path("api/entities/validate/cluster")
-				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-				.post(ClientResponse.class, stream);
-		checkIfSuccessful(clientRepsonse);
-
-		clientRepsonse = submitToIvory(CLUSTER_TEMPLATE, overlay,
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+		clientRepsonse = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay,
 				EntityType.CLUSTER);
 		checkIfSuccessful(clientRepsonse);
 
@@ -203,7 +219,7 @@ public class EntityManagerJerseyTest {
 
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         checkIfSuccessful(response);
 
         String process = "p1" + System.currentTimeMillis();
@@ -252,6 +268,13 @@ public class EntityManagerJerseyTest {
                                          EntityType entityType)
             throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
+        return submitFileToIvory(entityType, tmpFile);
+    }
+
+    private ClientResponse submitFileToIvory(EntityType entityType,
+                                             String tmpFile)
+            throws IOException {
+
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
         return this.service
@@ -275,8 +298,13 @@ public class EntityManagerJerseyTest {
         File tmpFile = File.createTempFile("test", ".xml", target);
         OutputStream out = new FileOutputStream(tmpFile);
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().
-                getResourceAsStream(template)));
+        InputStreamReader in;
+        if (getClass().getResourceAsStream(template) == null) {
+            in = new FileReader(template);
+        } else {
+            in = new InputStreamReader(getClass().getResourceAsStream(template));
+        }
+        BufferedReader reader = new BufferedReader(in);
         String line;
         while ((line = reader.readLine()) != null) {
             Matcher matcher = varPattern.matcher(line);
@@ -316,7 +344,7 @@ public class EntityManagerJerseyTest {
 
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         checkIfSuccessful(response);
 
         String process = "p1" + System.currentTimeMillis();
@@ -378,7 +406,7 @@ public class EntityManagerJerseyTest {
 
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         checkIfSuccessful(response);
 
         String process = "p1" + System.currentTimeMillis();
