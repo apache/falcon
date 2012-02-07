@@ -27,7 +27,7 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
@@ -128,15 +128,15 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
         entityMap.put(process, EntityType.PROCESS);
 
         for (Input input : process.getInputs().getInput()) {
-            Dataset dataset = configStore.get(EntityType.DATASET, input.getFeed());
+            Feed dataset = configStore.get(EntityType.FEED, input.getFeed());
             assert dataset != null : "No valid dataset found for " + input.getFeed();
-            entityMap.put(dataset, EntityType.DATASET);
+            entityMap.put(dataset, EntityType.FEED);
         }
 
         for (Output output : process.getOutputs().getOutput()) {
-            Dataset dataset = configStore.get(EntityType.DATASET, output.getFeed());
+            Feed dataset = configStore.get(EntityType.FEED, output.getFeed());
             assert dataset != null : "No valid dataset found for " + output.getFeed();
-            entityMap.put(dataset, EntityType.DATASET);
+            entityMap.put(dataset, EntityType.FEED);
         }
 
         COORDINATORAPP coordinatorApp = new COORDINATORAPP();

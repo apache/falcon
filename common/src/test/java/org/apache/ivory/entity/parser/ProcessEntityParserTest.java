@@ -35,7 +35,7 @@ import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -80,21 +80,21 @@ public class ProcessEntityParserTest {
 		prodCluster2.setName("prod-red2");
 		store.publish(EntityType.CLUSTER, prodCluster2);
 		
-		Dataset inputDataset1 = new Dataset();
-		inputDataset1.setName("impressionFeed");
-		store.publish(EntityType.DATASET, inputDataset1);
+		Feed inputFeed1 = new Feed();
+		inputFeed1.setName("impressionFeed");
+		store.publish(EntityType.FEED, inputFeed1);
 		
-		Dataset inputDataset2 = new Dataset();
-		inputDataset2.setName("clicksFeed");
-		store.publish(EntityType.DATASET, inputDataset2);
+		Feed inputFeed2 = new Feed();
+		inputFeed2.setName("clicksFeed");
+		store.publish(EntityType.FEED, inputFeed2);
 		
-		Dataset outputDataset1 = new Dataset();
-		outputDataset1.setName("imp-click-join1");
-		store.publish(EntityType.DATASET, outputDataset1);
+		Feed outputFeed1 = new Feed();
+		outputFeed1.setName("imp-click-join1");
+		store.publish(EntityType.FEED, outputFeed1);
 		
-		Dataset ouputDataset2 = new Dataset();
-		ouputDataset2.setName("imp-click-join2");
-		store.publish(EntityType.DATASET, ouputDataset2);
+		Feed ouputFeed2 = new Feed();
+		ouputFeed2.setName("imp-click-join2");
+		store.publish(EntityType.FEED, ouputFeed2);
 	}
 
 	@Test
@@ -216,10 +216,10 @@ public class ProcessEntityParserTest {
 	public void cleanup() throws StoreAccessException {
 		ConfigurationStore store = ConfigurationStore.get();
 		store.remove(EntityType.PROCESS, "sample");
-		store.remove(EntityType.DATASET, "impressionFeed");
-		store.remove(EntityType.DATASET, "clicksFeed");
-		store.remove(EntityType.DATASET, "imp-click-join1");
-		store.remove(EntityType.DATASET, "imp-click-join2");
+		store.remove(EntityType.FEED, "impressionFeed");
+		store.remove(EntityType.FEED, "clicksFeed");
+		store.remove(EntityType.FEED, "imp-click-join1");
+		store.remove(EntityType.FEED, "imp-click-join2");
 		store.remove(EntityType.CLUSTER, "prod-red1");
 		store.remove(EntityType.CLUSTER, "prod-red2");
 	}

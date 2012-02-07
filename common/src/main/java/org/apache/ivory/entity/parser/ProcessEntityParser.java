@@ -28,7 +28,7 @@ import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
@@ -95,25 +95,25 @@ public class ProcessEntityParser extends EntityParser<Process> {
 			}
 		}
 		for (Input input : process.getInputs().getInput()) {
-			Dataset dataset = ConfigurationStore.get().get(EntityType.DATASET,
+			Feed feed = ConfigurationStore.get().get(EntityType.FEED,
 					input.getFeed());
-			if (dataset == null) {
-				LOG.error("Dependent dataset "
+			if (feed == null) {
+				LOG.error("Dependent feed "
 						+ input.getFeed() + " not found for process "
 						+ process.getName());
-				throw new ValidationException("Dependent dataset "
+				throw new ValidationException("Dependent feed "
 						+ input.getFeed() + " not found for process "
 						+ process.getName());
 			}
 		}
 		for (Output output : process.getOutputs().getOutput()) {
-			Dataset dataset = ConfigurationStore.get().get(EntityType.DATASET,
+			Feed feed = ConfigurationStore.get().get(EntityType.FEED,
 					output.getFeed());
-			if (dataset == null) {
-				LOG.error("Dependent dataset "
+			if (feed == null) {
+				LOG.error("Dependent feed "
 						+ output.getFeed() + " not found for process "
 						+ process.getName());
-				throw new ValidationException("Dependent dataset "
+				throw new ValidationException("Dependent feed "
 						+ output.getFeed() + " not found for process "
 						+ process.getName());
 			}

@@ -26,7 +26,6 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
-import org.mortbay.log.Log;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

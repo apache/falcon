@@ -18,7 +18,7 @@
 
 package org.apache.ivory.entity.v0;
 
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 
@@ -27,7 +27,7 @@ import org.apache.ivory.entity.v0.process.Process;
  * Process, Feed and Cluster
  */
 public enum EntityType {
-	DATASET(Dataset.class), PROCESS(Process.class), CLUSTER(Cluster.class);
+	FEED(Feed.class), PROCESS(Process.class), CLUSTER(Cluster.class);
 
 	private final Class<? extends Entity> clazz;
 

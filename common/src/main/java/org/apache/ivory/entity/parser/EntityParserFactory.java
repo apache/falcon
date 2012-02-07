@@ -44,9 +44,9 @@ public final class EntityParserFactory {
 		case PROCESS:
 			return new ProcessEntityParser(entityType,
 					org.apache.ivory.entity.v0.process.Process.class);
-		case DATASET://TODO
-			return new DatasetEntityParser(entityType,
-					org.apache.ivory.entity.v0.dataset.Dataset.class);
+		case FEED://TODO
+			return new FeedEntityParser(entityType,
+					org.apache.ivory.entity.v0.feed.Feed.class);
 		case CLUSTER:
 			return new ClusterEntityParser(entityType,
 					org.apache.ivory.entity.v0.cluster.Cluster.class);

@@ -33,7 +33,7 @@ public class EntityTypeTest {
 	@Test
 	public void testIsSchedulable() {
 		Assert.assertTrue(EntityType.PROCESS.isSchedulable());
-		Assert.assertTrue(EntityType.DATASET.isSchedulable());
+		Assert.assertTrue(EntityType.FEED.isSchedulable());
 		Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
 	}
 }

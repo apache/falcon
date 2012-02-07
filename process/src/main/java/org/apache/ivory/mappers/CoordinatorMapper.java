@@ -55,8 +55,8 @@ public class CoordinatorMapper implements CustomMapper {
                 // Map custom fields
                 DozerProvider.map(new String[] { "custom-process-to-coordinator.xml" }, entityMap.getKey(), this.coordinatorapp);
             }
-            if (entityMap.getValue().equals(EntityType.DATASET)) {
-                DozerProvider.map(new String[] { "custom-default-dataset-to-coordinator.xml" }, entityMap.getKey(),
+            if (entityMap.getValue().equals(EntityType.FEED)) {
+                DozerProvider.map(new String[] { "custom-default-feed-to-coordinator.xml" }, entityMap.getKey(),
                         this.coordinatorapp);
             }
         }

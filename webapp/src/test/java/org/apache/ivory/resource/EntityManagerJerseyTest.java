@@ -37,7 +37,7 @@ import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.util.EmbeddedServer;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -55,8 +55,8 @@ public class EntityManagerJerseyTest {
 
     private WebResource service = null;
 
-    private static final String DATASET_TEMPLATE1 = "/dataset-template1.xml";
-    private static final String DATASET_TEMPLATE2 = "/dataset-template2.xml";
+    private static final String FEED_TEMPLATE1 = "/feed-template1.xml";
+    private static final String FEED_TEMPLATE2 = "/feed-template2.xml";
     private static final String CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
 
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
@@ -74,7 +74,7 @@ public class EntityManagerJerseyTest {
     public EntityManagerJerseyTest() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(
-                    APIResult.class, Dataset.class, Process.class,
+                    APIResult.class, Feed.class, Process.class,
                     Cluster.class);
             unmarshaller = jaxbContext.createUnmarshaller();
             marshaller = jaxbContext.createMarshaller();
@@ -125,11 +125,11 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         response = this.service
-                .path("api/entities/status/dataset/" + feed1)
+                .path("api/entities/status/feed/" + feed1)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
 
         String status = response.getEntity(String.class);
@@ -209,12 +209,12 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
-        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String cluster = "local" + System.currentTimeMillis();
@@ -238,20 +238,20 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         response = this.service
-                .path("api/entities/definition/dataset/" + feed1)
+                .path("api/entities/definition/feed/" + feed1)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
-        String datasetXML = response.getEntity(String.class);
+        String feedXML = response.getEntity(String.class);
         try {
-            Dataset result = (Dataset)unmarshaller.
-                    unmarshal(new StringReader(datasetXML));
+            Feed result = (Feed)unmarshaller.
+                    unmarshal(new StringReader(feedXML));
             Assert.assertEquals(result.getName(), feed1);
         } catch (JAXBException e) {
-            Assert.fail("Reponse " + datasetXML + " is not valid", e);
+            Assert.fail("Reponse " + feedXML + " is not valid", e);
         }
     }
 
@@ -334,12 +334,12 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
-        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String cluster = "local" + System.currentTimeMillis();
@@ -379,11 +379,11 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         response = this.service
-                .path("api/entities/delete/dataset/" + feed1)
+                .path("api/entities/delete/feed/" + feed1)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
     }
@@ -396,12 +396,12 @@ public class EntityManagerJerseyTest {
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
-        response = submitToIvory(DATASET_TEMPLATE1, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
-        response = submitToIvory(DATASET_TEMPLATE2, overlay, EntityType.DATASET);
+        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
         String cluster = "local" + System.currentTimeMillis();
@@ -417,9 +417,9 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 
-        //Delete a referred dataset
+        //Delete a referred feed
         response = this.service
-                .path("api/entities/delete/dataset/" + feed1)
+                .path("api/entities/delete/feed/" + feed1)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfBadRequest(response);
 

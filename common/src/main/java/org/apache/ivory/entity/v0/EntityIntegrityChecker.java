@@ -21,7 +21,7 @@ package org.apache.ivory.entity.v0;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.dataset.Dataset;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
@@ -39,8 +39,8 @@ public class EntityIntegrityChecker {
         switch (type) {
             default:
                 return null;
-            case DATASET:
-                return referencedBy((Dataset) entity);
+            case FEED:
+                return referencedBy((Feed) entity);
             case CLUSTER:
                 return referencedBy((Cluster) entity);
         }
@@ -63,22 +63,22 @@ public class EntityIntegrityChecker {
         //TODO check for dataset dependency
     }
 
-    public static Entity referencedBy(Dataset dataset) throws IvoryException {
+    public static Entity referencedBy(Feed dataset) throws IvoryException {
         Collection<String> entities = configStore.getEntities(EntityType.PROCESS);
         for (String entity : entities) {
             Process process = configStore.get(EntityType.PROCESS, entity);
             for (Input input : process.getInputs().getInput()) {
                 String datasetName = input.getFeed();
-                Dataset referredDataset = configStore.
-                        get(EntityType.DATASET, datasetName);
+                Feed referredDataset = configStore.
+                        get(EntityType.FEED, datasetName);
                 if (referredDataset != null && referredDataset.equals(dataset)) {
                     return process;
                 }
             }
             for (Output output : process.getOutputs().getOutput()) {
                 String datasetName = output.getFeed();
-                Dataset referredDataset = configStore.
-                        get(EntityType.DATASET, datasetName);
+                Feed referredDataset = configStore.
+                        get(EntityType.FEED, datasetName);
                 if (referredDataset != null && referredDataset.equals(dataset)) {
                     return process;
                 }
