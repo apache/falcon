@@ -37,6 +37,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -162,6 +164,11 @@ public class ConfigurationStore {
         } else {
             return null;
         }
+    }
+
+    public Collection<String> getEntities(EntityType type) {
+        return Collections.
+                unmodifiableCollection(dictionary.get(type).keySet());
     }
 
     /**

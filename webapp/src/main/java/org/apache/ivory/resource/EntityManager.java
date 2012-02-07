@@ -37,6 +37,7 @@ import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
@@ -131,7 +132,11 @@ public class EntityManager {
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             Entity entityObj = getEntityObject(entity, type);
-            if (entityType.isSchedulable() && entityType == EntityType.PROCESS) { //TODO REMOVE PROCESS CHECK WHEN DONE
+
+            canRemove(entityType, entityObj);
+
+            //TODO REMOVE PROCESS CHECK WHEN DONE
+            if (entityType.isSchedulable() && entityType == EntityType.PROCESS) {
                 if (getWorkflowEngine().isActive(entityObj)) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
@@ -144,6 +149,18 @@ public class EntityManager {
             LOG.error("Unable to reach workflow engine for deletion or " +
                     "deletion failed", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    private void canRemove(EntityType entityType, Entity entityObj)
+            throws IvoryException {
+
+        Entity referencedBy = EntityIntegrityChecker.
+                referencedBy(entityType, entityObj);
+        if (referencedBy != null) {
+            throw new IvoryException(entityObj + "(" + entityType + ") cant " +
+                    "be removed as it is referred by " + referencedBy.getName() +
+                    "(" + referencedBy.getEntityType() + ")");
         }
     }
 

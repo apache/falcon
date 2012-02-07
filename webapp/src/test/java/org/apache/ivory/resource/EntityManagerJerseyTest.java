@@ -387,12 +387,17 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 
+        //Delete a referred dataset
+        response = this.service
+                .path("api/entities/delete/dataset/" + feed1)
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        checkIfBadRequest(response);
+
         //Delete a submitted process
         response = this.service
                 .path("api/entities/delete/process/" + process)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
-
 
         process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
