@@ -281,12 +281,10 @@ public class EntityManager {
     }
 
     protected Entity getEntityObject(String entity, String type)
-            throws StoreAccessException {
+            throws IvoryException {
         Entity entityObj = getEntity(entity, type);
         if (entityObj == null) {
-            throw IvoryWebException.newException(
-                    new NoSuchElementException("Requested entity (" + type + ") " +
-                            entity + " doesn't exist"), Response.Status.BAD_REQUEST);
+            throw new NoSuchElementException(entity + " (" + type + ") not found");
         }
         return entityObj;
     }
