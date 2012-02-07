@@ -42,6 +42,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.dataset.Dataset;
 import org.apache.ivory.util.EmbeddedServer;
 import org.testng.Assert;
@@ -76,7 +77,8 @@ public class EntityManagerJerseyTest {
     public EntityManagerJerseyTest() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(
-                    APIResult.class, Dataset.class);
+                    APIResult.class, Dataset.class, Process.class,
+                    Cluster.class);
             unmarshaller = jaxbContext.createUnmarshaller();
 
         } catch (Exception e) {

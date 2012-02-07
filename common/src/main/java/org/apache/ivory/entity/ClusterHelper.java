@@ -18,16 +18,25 @@
 
 package org.apache.ivory.entity;
 
-import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.cluster.Interface;
-import org.apache.ivory.entity.v0.cluster.Interfacetype;
-import org.apache.ivory.entity.v0.cluster.Location;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ivory.entity.v0.cluster.*;
 
 import java.util.Map;
 
 public final class ClusterHelper {
 
     private ClusterHelper() {}
+
+    public static Configuration getConfiguration(Cluster cluster) {
+        Configuration conf = new Configuration();
+        conf.set("fs.default.name", getHdfsUrl(cluster));
+        conf.set("mapred.job.tracker", getMREndPoint(cluster));
+        for (Map.Entry<String, Property> property : cluster.
+                getProperties().entrySet()) {
+            conf.set(property.getKey(), property.getValue().getValue());
+        }
+        return conf;
+    }
 
     public static String getOozieUrl(Cluster cluster) {
         return getInterfaceFor(cluster, Interfacetype.WORKFLOW);
