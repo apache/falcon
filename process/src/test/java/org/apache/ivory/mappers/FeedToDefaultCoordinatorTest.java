@@ -26,13 +26,17 @@ import javax.xml.bind.JAXBException;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -48,7 +52,16 @@ public class FeedToDefaultCoordinatorTest {
 	public void populateFeed() throws IvoryException {
 		FeedEntityParser parser = (FeedEntityParser) EntityParserFactory
 				.getParser(EntityType.FEED);
-
+		ConfigurationStore store = ConfigurationStore.get();
+		
+		Cluster prodCluster1 = new Cluster();
+		prodCluster1.setName("testCluster");
+		store.publish(EntityType.CLUSTER, prodCluster1);
+		
+		Cluster prodCluster2 = new Cluster();
+		prodCluster2.setName("backupCluster");
+		store.publish(EntityType.CLUSTER, prodCluster2);
+		
 		this.feedA = (Feed) parser.parse(this.getClass()
 				.getResourceAsStream(SAMPLE_DATASET_A_XML));
 		
@@ -74,6 +87,13 @@ public class FeedToDefaultCoordinatorTest {
 		Assert.assertEquals(((SYNCDATASET)coordinatorapp.getDatasets().getDatasetOrAsyncDataset().get(0)).getInitialInstance(), "2011-11-01 00:00:00");
 	
 		Assert.assertEquals(((SYNCDATASET)coordinatorapp.getDatasets().getDatasetOrAsyncDataset().get(1)).getName(), feedB.getName());
+	}
+	
+	@AfterClass
+	public void cleanup() throws StoreAccessException{
+		ConfigurationStore store = ConfigurationStore.get();
+		store.remove(EntityType.CLUSTER, "testCluster");
+		store.remove(EntityType.CLUSTER, "backupCluster");
 	}
 
 }

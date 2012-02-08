@@ -29,8 +29,6 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
-import org.apache.ivory.entity.parser.EntityParserFactory;
-import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;

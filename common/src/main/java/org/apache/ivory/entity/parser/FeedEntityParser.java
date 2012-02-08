@@ -25,9 +25,11 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
 import org.apache.ivory.Util;
+import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
@@ -67,17 +69,21 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	}
 
 	@Override
-	public void applyValidations(Feed entity) throws StoreAccessException,
+	public void applyValidations(Feed feed) throws StoreAccessException,
 			ValidationException {
-		// ConfigurationStore store = ConfigurationStore.get();
-		// Dataset existingEntity = store.get(EntityType.DATASET,
-		// entity.getName());
-		// if (existingEntity != null) {
-		// throw new ValidationException("Entity: " + entity.getName()
-		// + " already submitted");
-		// }
-		// TODO check if dependent Feed and Datastore exists
-		fieldValidations(entity);
+		// check if dependent entities exists
+		for (Cluster cluster : feed.getClusters().getCluster()) {
+			org.apache.ivory.entity.v0.cluster.Cluster clusterEntity = ConfigurationStore
+					.get().get(EntityType.CLUSTER, cluster.getName());
+			if (clusterEntity == null) {
+				LOG.error("Dependent cluster: " + cluster.getName()
+						+ " not found for feed: " + feed.getName());
+				throw new ValidationException("Dependent cluster: "
+						+ cluster.getName() + " not found for feed: "
+						+ feed.getName());
+			}
+		}
+		fieldValidations(feed);
 	}
 
 	private void fieldValidations(Feed entity) throws ValidationException {

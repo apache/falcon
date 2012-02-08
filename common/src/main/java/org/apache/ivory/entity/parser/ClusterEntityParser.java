@@ -74,14 +74,7 @@ public class ClusterEntityParser extends EntityParser<Cluster>{
 	@Override
 	public void applyValidations(Cluster entity)
 			throws StoreAccessException, ValidationException {
-//		ConfigurationStore store = ConfigurationStore.get();
-//		Cluster existingEntity = store.get(EntityType.DATASET,
-//				entity.getName());
-		// if (existingEntity != null) {
-		// throw new ValidationException("Entity: " + entity.getName()
-		// + " already submitted");
-		// }
-		// TODO check if dependent Feed and Datastore exists
+		//TODO
 		fieldValidations(entity);
 	}
 

@@ -29,31 +29,32 @@ import javax.xml.bind.Marshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
+import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.ActionType;
 import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.process.Process;
 
 import static org.testng.AssertJUnit.assertEquals;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
 public class FeedEntityParserTest {
 
 	private final FeedEntityParser parser = (FeedEntityParser) EntityParserFactory
 			.getParser(EntityType.FEED);
 
-	private static final String SAMPLE_DATASET_XML = "/config/feed/feed-0.1.xml";
-
-	private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+	private static final String SAMPLE_FEED_XML = "/config/feed/feed-0.1.xml";
 
 	@Test
-	public void testParse() throws IOException, IvoryException, JAXBException {
+	public void testParse() throws IOException, IvoryException, JAXBException, SAXException {
 		
-		Feed feed = (Feed) parser.parse(this.getClass().getResourceAsStream(
-				SAMPLE_DATASET_XML));
+		Feed feed = (Feed) parser.doParse(this.getClass().getResourceAsStream(
+				SAMPLE_FEED_XML));
 		
 		Assert.assertNotNull(feed);
 		assertEquals(feed.getName(), "clicks");
@@ -108,10 +109,12 @@ public class FeedEntityParserTest {
 
 	}
 
-	//TODO
-	@Test
-	public void applyValidations() {
-		// throw new RuntimeException("Test not implemented");
+	@Test(expectedExceptions =  ValidationException.class)
+	public void applyValidationInvalidFeed() throws JAXBException, SAXException, StoreAccessException, ValidationException{
+		Feed feed = (Feed) parser.doParse(ProcessEntityParserTest.class.getResourceAsStream(
+				SAMPLE_FEED_XML));
+		feed.getClusters().getCluster().get(0).setName("invalid cluster");
+		parser.applyValidations(feed);
 	}
 
 }

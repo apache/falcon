@@ -35,6 +35,7 @@ import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Clusters;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
@@ -72,6 +73,7 @@ public class ProcessEntityParserTest {
 	@BeforeClass
 	public void setup() throws StoreAccessException, EntityAlreadyExistsException{
 		ConfigurationStore store = ConfigurationStore.get();
+
 		Cluster prodCluster1 = new Cluster();
 		prodCluster1.setName("prod-red1");
 		store.publish(EntityType.CLUSTER, prodCluster1);
@@ -80,20 +82,32 @@ public class ProcessEntityParserTest {
 		prodCluster2.setName("prod-red2");
 		store.publish(EntityType.CLUSTER, prodCluster2);
 		
+		org.apache.ivory.entity.v0.feed.Cluster cluster1 = new org.apache.ivory.entity.v0.feed.Cluster();
+		cluster1.setName("prod-red1");
+		org.apache.ivory.entity.v0.feed.Cluster cluster2 = new org.apache.ivory.entity.v0.feed.Cluster();
+		cluster2.setName("prod-red2");
+		Clusters clusters = new Clusters();
+		clusters.getCluster().add(cluster1);
+		clusters.getCluster().add(cluster2);
+		
 		Feed inputFeed1 = new Feed();
 		inputFeed1.setName("impressionFeed");
+		inputFeed1.setClusters(clusters);
 		store.publish(EntityType.FEED, inputFeed1);
 		
 		Feed inputFeed2 = new Feed();
 		inputFeed2.setName("clicksFeed");
+		inputFeed2.setClusters(clusters);	
 		store.publish(EntityType.FEED, inputFeed2);
 		
 		Feed outputFeed1 = new Feed();
 		outputFeed1.setName("imp-click-join1");
+		outputFeed1.setClusters(clusters);
 		store.publish(EntityType.FEED, outputFeed1);
 		
 		Feed ouputFeed2 = new Feed();
 		ouputFeed2.setName("imp-click-join2");
+		ouputFeed2.setClusters(clusters);
 		store.publish(EntityType.FEED, ouputFeed2);
 	}
 
