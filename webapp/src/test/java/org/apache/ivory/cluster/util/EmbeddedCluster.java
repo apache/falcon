@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.ivory.entity.v0.cluster.*;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +49,13 @@ public class EmbeddedCluster {
             throws IOException {
 
         EmbeddedCluster cluster = new EmbeddedCluster();
-        System.setProperty("test.build.data", "build/" + name + "/data");
+        File target = new File("webapp/target");
+        if (!target.exists()) {
+            target = new File("target");
+            System.setProperty("test.build.data", "target/" + name + "/data");
+        } else {
+            System.setProperty("test.build.data", "webapp/target/" + name + "/data");
+        }
         cluster.conf.set("hadoop.log.dir", "/tmp");
         cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
         cluster.conf.set("hadoop.proxyuser.oozie.hosts", "127.0.0.1");
