@@ -85,8 +85,8 @@ public class SchedulableEntityManager extends EntityManager {
 	 */
 	@POST
 	@Path("submitAndSchedule/{type}")
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
+    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	public APIResult submitAndSchedule(@Context HttpServletRequest request,
 			@PathParam("type") String type) {
 		try {
