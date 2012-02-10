@@ -18,6 +18,7 @@
 
 package org.apache.ivory.oozie.bundle;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -33,7 +34,7 @@ public class BundleUnmarshallingTest {
 	@Test
 	public void testValidBundleUnamrashalling() throws JAXBException,
 			SAXException {
-		Unmarshaller unmarshaller = Util.getUnmarshaller(BUNDLEAPP.class);
+		Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
 		Schema schema = Util.getSchema(BundleUnmarshallingTest.class
 				.getResource("/bundle.xsd"));
 		unmarshaller.setSchema(schema);

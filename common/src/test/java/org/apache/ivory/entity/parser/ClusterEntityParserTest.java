@@ -48,7 +48,7 @@ public class ClusterEntityParserTest {
 		InputStream stream = this.getClass().getResourceAsStream(
 				SAMPLE_DATASET_XML);
 
-		Cluster cluster = (Cluster) parser.parse(stream);
+		Cluster cluster = (Cluster) parser.parseAndValidate(stream);
 
 		Assert.assertNotNull(cluster);
 		assertEquals(cluster.getName(), "corp");

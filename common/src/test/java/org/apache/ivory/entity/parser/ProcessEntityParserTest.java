@@ -18,9 +18,8 @@
 
 package org.apache.ivory.entity.parser;
 
-/**
- * Test Cases for ProcessEntityParser
- */
+import static org.testng.AssertJUnit.assertEquals;
+
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -36,192 +35,190 @@ import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.Partition;
+import org.apache.ivory.entity.v0.feed.Partitions;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 public class ProcessEntityParserTest {
 
-	private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory
-			.getParser(EntityType.PROCESS);
-	private static final String SAMPLE_PROCESS_XML = "/config/process/process-version-0.xml";
-	private static final String SAMPLE_INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
+    private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+    private static final String SAMPLE_PROCESS_XML = "/config/process/process-version-0.xml";
+    private static final String SAMPLE_INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
 
-	@Test
-	public void testNotNullgetUnmarshaller() throws JAXBException {
-		final Unmarshaller unmarshaller = EntityParser.EntityUnmarshaller
-				.getInstance(parser.getEntityType(), parser.getClazz());
+    @Test
+    public void testNotNullgetUnmarshaller() throws JAXBException {
+        final Unmarshaller unmarshaller = Util.getUnmarshaller(parser.getEntityType().getEntityClass());
 
-		Assert.assertNotNull(unmarshaller);
-	}
+        Assert.assertNotNull(unmarshaller);
+    }
 
-	@Test
-	public void testIsSingletonUnmarshaller() throws JAXBException {
-		final Unmarshaller unmarshaller1 = EntityParser.EntityUnmarshaller
-				.getInstance(parser.getEntityType(), parser.getClazz());
+    @BeforeMethod
+    public void setup() throws StoreAccessException, EntityAlreadyExistsException {
+        cleanup();
+        
+        ConfigurationStore store = ConfigurationStore.get();
+        Cluster prodCluster1 = new Cluster();
+        prodCluster1.setName("prod-red1");
+        store.publish(EntityType.CLUSTER, prodCluster1);
 
-		final Unmarshaller unmarshaller2 = EntityParser.EntityUnmarshaller
-				.getInstance(parser.getEntityType(), parser.getClazz());
+        Cluster prodCluster2 = new Cluster();
+        prodCluster2.setName("prod-red2");
+        store.publish(EntityType.CLUSTER, prodCluster2);
 
-		Assert.assertEquals(unmarshaller1, unmarshaller2);
-	}
-	
-	@BeforeClass
-	public void setup() throws StoreAccessException, EntityAlreadyExistsException{
-		ConfigurationStore store = ConfigurationStore.get();
-		Cluster prodCluster1 = new Cluster();
-		prodCluster1.setName("prod-red1");
-		store.publish(EntityType.CLUSTER, prodCluster1);
-		
-		Cluster prodCluster2 = new Cluster();
-		prodCluster2.setName("prod-red2");
-		store.publish(EntityType.CLUSTER, prodCluster2);
-		
-		Feed inputFeed1 = new Feed();
-		inputFeed1.setName("impressionFeed");
-		store.publish(EntityType.FEED, inputFeed1);
-		
-		Feed inputFeed2 = new Feed();
-		inputFeed2.setName("clicksFeed");
-		store.publish(EntityType.FEED, inputFeed2);
-		
-		Feed outputFeed1 = new Feed();
-		outputFeed1.setName("imp-click-join1");
-		store.publish(EntityType.FEED, outputFeed1);
-		
-		Feed ouputFeed2 = new Feed();
-		ouputFeed2.setName("imp-click-join2");
-		store.publish(EntityType.FEED, ouputFeed2);
-	}
+        Feed inputFeed1 = new Feed();
+        Partitions parts = new Partitions();
+        parts.getPartition().add(new Partition("carrier"));
+        parts.getPartition().add(new Partition("country"));
+        inputFeed1.setPartitions(parts);
+        inputFeed1.setName("impressionFeed");
+        store.publish(EntityType.FEED, inputFeed1);
 
-	@Test
-	public void testParse() throws IOException, IvoryException, JAXBException {
-		
-		Process process = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
-				SAMPLE_PROCESS_XML));
+        Feed inputFeed2 = new Feed();
+        inputFeed2.setName("clicksFeed");
+        store.publish(EntityType.FEED, inputFeed2);
 
-		Assert.assertNotNull(process);
-		Assert.assertEquals(process.getName(), "sample");
+        Feed outputFeed1 = new Feed();
+        outputFeed1.setName("imp-click-join1");
+        store.publish(EntityType.FEED, outputFeed1);
 
-		Assert.assertEquals(process.getConcurrency(), "1");
-		Assert.assertEquals(process.getExecution(), "LIFO");
-		Assert.assertEquals(process.getFrequency(), "hourly");
-		Assert.assertEquals(process.getPeriodicity(), "1");
-		Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
+        Feed ouputFeed2 = new Feed();
+        ouputFeed2.setName("imp-click-join2");
+        store.publish(EntityType.FEED, ouputFeed2);
+    }
 
-		Assert.assertEquals(process.getInputs().getInput().get(0).getName(), "impression");
-		Assert.assertEquals(process.getInputs().getInput().get(0).getFeed(), "impressionFeed");
-		Assert.assertEquals(process.getInputs().getInput().get(0).getStartInstance(), "today(0,0)");
-		Assert.assertEquals(process.getInputs().getInput().get(0).getEndInstance(), "today(0,2)");
+    @Test
+    public void testParse() throws IOException, IvoryException, JAXBException {
 
-		Assert.assertEquals(process.getOutputs().getOutput().get(0).getName(),"impOutput");
-		Assert.assertEquals(process.getOutputs().getOutput().get(0).getFeed(),"imp-click-join1");
-		Assert.assertEquals(process.getOutputs().getOutput().get(0).getInstance(),"today(0,0)");
+        Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_PROCESS_XML));
 
-		Assert.assertEquals(process.getProperties().getProperty().get(0).getName(), "name1");
-		Assert.assertEquals(process.getProperties().getProperty().get(0).getValue(), "value1");
+        Assert.assertNotNull(process);
+        Assert.assertEquals(process.getName(), "sample");
 
-		Assert.assertEquals(process.getValidity().getStart(), "2011-11-01 00:00:00");
-		Assert.assertEquals(process.getValidity().getEnd(), "9999-12-31 23:59:00");	
-		Assert.assertEquals(process.getValidity().getTimezone(), "UTC");	
+        Assert.assertEquals(process.getConcurrency(), "1");
+        Assert.assertEquals(process.getExecution(), "LIFO");
+        Assert.assertEquals(process.getFrequency(), "hourly");
+        Assert.assertEquals(process.getPeriodicity(), "1");
+        Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
 
-		Assert.assertEquals(process.getWorkflow().getEngine(),"oozie");
-		Assert.assertEquals(process.getWorkflow().getPath(),"hdfs://path/to/workflow");
-		Assert.assertEquals(process.getWorkflow().getLibpath(),"hdfs://path/to/workflow/lib");
+        Assert.assertEquals(process.getInputs().getInput().get(0).getName(), "impression");
+        Assert.assertEquals(process.getInputs().getInput().get(0).getFeed(), "impressionFeed");
+        Assert.assertEquals(process.getInputs().getInput().get(0).getStartInstance(), "today(0,0)");
+        Assert.assertEquals(process.getInputs().getInput().get(0).getEndInstance(), "today(0,2)");
+        assertEquals(process.getInputs().getInput().get(0).getPartition(), "*/US");
+        
+        Assert.assertEquals(process.getOutputs().getOutput().get(0).getName(), "impOutput");
+        Assert.assertEquals(process.getOutputs().getOutput().get(0).getFeed(), "imp-click-join1");
+        Assert.assertEquals(process.getOutputs().getOutput().get(0).getInstance(), "today(0,0)");
 
-		StringWriter stringWriter = new StringWriter();
-		Marshaller marshaller = Util.getMarshaller(Process.class);
-		marshaller.marshal(process, stringWriter);
-		System.out.println(stringWriter.toString());
+        Assert.assertEquals(process.getProperties().getProperty().get(0).getName(), "name1");
+        Assert.assertEquals(process.getProperties().getProperty().get(0).getValue(), "value1");
 
-		//TODO for retry and late policy
-	}
+        Assert.assertEquals(process.getValidity().getStart(), "2011-11-01 00:00:00");
+        Assert.assertEquals(process.getValidity().getEnd(), "9999-12-31 23:59:00");
+        Assert.assertEquals(process.getValidity().getTimezone(), "UTC");
 
-	@Test(expectedExceptions = IvoryException.class)
-	public void doParseInvalidXML() throws IOException, IvoryException {
+        Assert.assertEquals(process.getWorkflow().getEngine(), "oozie");
+        Assert.assertEquals(process.getWorkflow().getPath(), "hdfs://path/to/workflow");
+        Assert.assertEquals(process.getWorkflow().getLibpath(), "hdfs://path/to/workflow/lib");
 
-		parser.parse(this.getClass().getResourceAsStream(
-				SAMPLE_INVALID_PROCESS_XML));
-	}
-	
-	@Test(expectedExceptions =  ValidationException.class)
-	public void applyValidationInvalidProcess() throws JAXBException, SAXException, StoreAccessException, ValidationException{
-		Process process = (Process) parser.doParse(ProcessEntityParserTest.class.getResourceAsStream(
-				SAMPLE_PROCESS_XML));
-		process.getClusters().getCluster().get(0).setName("invalid cluster");
-		parser.applyValidations(process);
-	}
+        StringWriter stringWriter = new StringWriter();
+        Marshaller marshaller = Util.getMarshaller(Process.class);
+        marshaller.marshal(process, stringWriter);
+        System.out.println(stringWriter.toString());
 
-	@Test(expectedExceptions=IvoryException.class)
-	public void testValidate() throws IvoryException{
-		parser.validateSchema("<process></process>");
-	}
+        // TODO for retry and late policy
+    }
 
-	@Test(expectedExceptions=IvoryException.class)
-	public void testParseString() throws IvoryException{
-		parser.parse("<process></process>");
-	}
+    @Test(expectedExceptions = IvoryException.class)
+    public void doParseInvalidXML() throws IOException, IvoryException {
 
-	@Test
-	public void testConcurrentParsing() throws IvoryException, InterruptedException{
+        parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_INVALID_PROCESS_XML));
+    }
 
-		Thread thread1 = new Thread(){
-			public void run() {
-				try {
-					Process process = (Process) parser.parse(this.getClass().getResourceAsStream(
-							SAMPLE_PROCESS_XML));
-				} catch (IvoryException e) {
-					e.printStackTrace();
-				}
-			}
-		};
+    @Test(expectedExceptions = ValidationException.class)
+    public void applyValidationInvalidProcess() throws JAXBException, SAXException, StoreAccessException, ValidationException {
+        Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_PROCESS_XML));
+        process.getClusters().getCluster().get(0).setName("invalid cluster");
+        parser.validate(process);
+    }
 
-		Thread thread2 = new Thread(){
-			public void run() {
-				try {
-					Process process = (Process) parser.parse(ProcessEntityParserTest.class.getResourceAsStream(
-							SAMPLE_PROCESS_XML));
-				} catch (IvoryException e) {
-					e.printStackTrace();
-				}
-			}
-		};
+    @Test(expectedExceptions = IvoryException.class)
+    public void testValidate() throws IvoryException {
+        parser.parse("<process></process>");
+    }
 
-		Thread thread3 = new Thread(){
-			public void run() {
-				try {
-					Process process = (Process) parser.parse(this.getClass().getResourceAsStream(
-							SAMPLE_PROCESS_XML));
-				} catch (IvoryException e) {
-					e.printStackTrace();
-				}
-			}
-		};		
-		thread1.start();
-		thread2.start();
-		thread3.start();
-		Thread.sleep(5000);
-	}
+    @Test
+    public void testConcurrentParsing() throws IvoryException, InterruptedException {
 
-	//TODO
-	@Test
-	public void applyValidations() {
-		// throw new RuntimeException("Test not implemented");
-	}
+        Thread thread1 = new Thread() {
+            public void run() {
+                try {
+                    parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
+                } catch (IvoryException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
 
-	@AfterClass
-	public void cleanup() throws StoreAccessException {
-		ConfigurationStore store = ConfigurationStore.get();
-		store.remove(EntityType.PROCESS, "sample");
-		store.remove(EntityType.FEED, "impressionFeed");
-		store.remove(EntityType.FEED, "clicksFeed");
-		store.remove(EntityType.FEED, "imp-click-join1");
-		store.remove(EntityType.FEED, "imp-click-join2");
-		store.remove(EntityType.CLUSTER, "prod-red1");
-		store.remove(EntityType.CLUSTER, "prod-red2");
-	}
+        Thread thread2 = new Thread() {
+            public void run() {
+                try {
+                    parser.parseAndValidate(ProcessEntityParserTest.class
+                            .getResourceAsStream(SAMPLE_PROCESS_XML));
+                } catch (IvoryException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
 
+        Thread thread3 = new Thread() {
+            public void run() {
+                try {
+                    parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
+                } catch (IvoryException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        Thread.sleep(5000);
+    }
+    
+    @Test(expectedExceptions=ValidationException.class)
+    public void testInvalidPartition() throws Exception {
+        ConfigurationStore store = ConfigurationStore.get();
+        store.remove(EntityType.FEED, "impressionFeed");
+        
+        Feed inputFeed1 = new Feed();
+        Partitions parts = new Partitions();
+        parts.getPartition().add(new Partition("carrier"));
+        inputFeed1.setPartitions(parts);
+        inputFeed1.setName("impressionFeed");
+        store.publish(EntityType.FEED, inputFeed1);
+
+        parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_PROCESS_XML));
+    }
+
+    // TODO
+    @Test
+    public void applyValidations() {
+        // throw new RuntimeException("Test not implemented");
+    }
+
+    public void cleanup() throws StoreAccessException {
+        ConfigurationStore store = ConfigurationStore.get();
+        store.remove(EntityType.PROCESS, "sample");
+        store.remove(EntityType.FEED, "impressionFeed");
+        store.remove(EntityType.FEED, "clicksFeed");
+        store.remove(EntityType.FEED, "imp-click-join1");
+        store.remove(EntityType.FEED, "imp-click-join2");
+        store.remove(EntityType.CLUSTER, "prod-red1");
+        store.remove(EntityType.CLUSTER, "prod-red2");
+    }
 }

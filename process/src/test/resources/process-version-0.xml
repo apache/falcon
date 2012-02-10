@@ -19,8 +19,7 @@
 <process name="sample" >
     <!-- where -->
     <clusters>
-      <cluster name="prod-red" />
-      <cluster name="prod-red2" />
+      <cluster name="testCluster" />
     </clusters>
 
     <!-- when -->
@@ -32,12 +31,12 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(0,2)" /> 
-        <input name="clicks" feed="clicksFeed" start-instance="yesterday(0,0)" end-instance="today(0,0)" />
+        <input name="impression" feed="impressions" start-instance="today(0,0)" end-instance="today(0,2)" /> 
+        <input name="clicks" feed="clicks" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
     </inputs>
 
     <outputs>
-        <output name="impOutput" feed="imp-click-join" instance="today(0,0)" />
+        <output name="impOutput" feed="imp-click-join1" instance="today(0,0)" />
         <output name="clicksOutput" feed="imp-click-join2" instance="today(0,0)" />
     </outputs>
 

@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.ivory.Util;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.util.StartupProperties;
@@ -81,9 +82,8 @@ public class ConfigurationStore {
         String uri = StartupProperties.get().getProperty("config.store.uri");
         storePath = new Path(uri);
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(entityClasses);
-            marshaller = jaxbContext.createMarshaller();
-            unmarshaller = jaxbContext.createUnmarshaller();
+            marshaller = Util.jaxbContext.createMarshaller();
+            unmarshaller = Util.jaxbContext.createUnmarshaller();
             fs = FileSystem.get(storePath.toUri(), new Configuration());
 
             bootstrap();

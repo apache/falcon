@@ -29,6 +29,9 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.ivory.entity.parser.EntityParser;
+import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
@@ -44,10 +47,16 @@ public final class Util {
 	private static final SchemaFactory schemaFactory = SchemaFactory
 			.newInstance("http://www.w3.org/2001/XMLSchema");
 
-	private Util() {
-
+	public static final JAXBContext jaxbContext;
+	
+	static {
+	    try {
+            jaxbContext = JAXBContext.newInstance(Feed.class, Process.class, Cluster.class);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
 	}
-
+	
 	/**
 	 * Returns inputstream from a given text
 	 * 
@@ -69,7 +78,6 @@ public final class Util {
 	 */
 	public static Unmarshaller getUnmarshaller(Class<?> clazz)
 			throws JAXBException {
-		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
 		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 		return unmarshaller;
 	}
@@ -82,7 +90,6 @@ public final class Util {
 	 * @throws JAXBException
 	 */
 	public static Marshaller getMarshaller(Class<?> clazz) throws JAXBException {
-		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
 		Marshaller marshaller = jaxbContext.createMarshaller();
 		return marshaller;
 	}

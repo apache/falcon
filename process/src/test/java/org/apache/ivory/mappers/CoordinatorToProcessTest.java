@@ -18,6 +18,7 @@
 
 package org.apache.ivory.mappers;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -40,8 +41,7 @@ public class CoordinatorToProcessTest {
 	
 	@BeforeClass
 	public void setup() throws JAXBException, SAXException{
-		Unmarshaller unmarshaller = Util
-				.getUnmarshaller(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class);
+		Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class).createUnmarshaller();
 		Schema schema = Util.getSchema(CoordinatorToProcessTest.class
 				.getResource("/coordinator.xsd"));
 		unmarshaller.setSchema(schema);

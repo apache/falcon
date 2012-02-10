@@ -18,6 +18,7 @@
 
 package org.apache.ivory.oozie.workflow;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -33,8 +34,7 @@ public class WorkflowUnmarshallingTest {
 	@Test
 	public void testValidWorkflowUnamrashalling() throws JAXBException,
 			SAXException {
-		Unmarshaller unmarshaller = Util
-				.getUnmarshaller(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class);
+	    Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
 		Schema schema = Util.getSchema(WorkflowUnmarshallingTest.class
 				.getResource("/workflow.xsd"));
 		unmarshaller.setSchema(schema);

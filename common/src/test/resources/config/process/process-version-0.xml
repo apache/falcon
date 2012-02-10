@@ -32,7 +32,7 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(0,2)" /> 
+        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(0,2)" partition="*/US"/> 
         <input name="clicks" feed="clicksFeed" start-instance="yesterday(0,0)" end-instance="yesterday(20,0)" />
     </inputs>
 

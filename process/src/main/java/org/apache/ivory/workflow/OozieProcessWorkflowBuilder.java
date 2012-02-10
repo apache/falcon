@@ -18,6 +18,19 @@
 
 package org.apache.ivory.workflow;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,9 +40,6 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.entity.v0.process.Input;
-import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.mappers.CoordinatorMapper;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
@@ -38,18 +48,18 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.*;
-
 public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
 
     private static Logger LOG = Logger.getLogger(OozieProcessWorkflowBuilder.class);
 
+    private static final JAXBContext jaxbContext;
+    static {
+        try {
+            jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private final Marshaller marshaller;
 
     private static final ConfigurationStore configStore = ConfigurationStore.get();
@@ -57,91 +67,64 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
     public static final String JOB_TRACKER = "jobTracker";
 
     public OozieProcessWorkflowBuilder() throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
         this.marshaller = jaxbContext.createMarshaller();
     }
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Entity entity)
-            throws IvoryException {
+    public Map<String, Object> newWorkflowSchedule(Entity entity) throws IvoryException {
         if (!(entity instanceof Process))
-            throw new IllegalArgumentException(entity.getName() +
-                    " is not of type Process");
+            throw new IllegalArgumentException(entity.getName() + " is not of type Process");
 
         Process process = (Process) entity;
-        //TODO asserts
+        COORDINATORAPP coordinatorApp = mapToCoordinator(process);
+
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        Path workflowPath = new Path(ClusterHelper.
-                getLocation(cluster, "staging"), "workflows/process");
-        COORDINATORAPP coordinatorApp = mapToCoordinator(process);
-        Path path = new Path(workflowPath, "IVORY_PROCESS_" +
-                process.getName() + ".xml");
+        Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging"), "workflows/process");
+        Path path = new Path(workflowPath, "IVORY_PROCESS_" + process.getName() + ".xml");
         try {
             marshallToHDFS(coordinatorApp, path);
-            return createAppProperties(cluster, path);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             throw new IvoryException(e);
         }
+        return createAppProperties(cluster, path);
+        // TODO asserts
     }
 
     @Override
-    public Cluster[] getScheduledClustersFor(Entity entity)
-            throws IvoryException{
+    public Cluster[] getScheduledClustersFor(Entity entity) throws IvoryException {
 
         if (!(entity instanceof Process))
-            throw new IllegalArgumentException(entity.getName() +
-                    " is not of type Process");
+            throw new IllegalArgumentException(entity.getName() + " is not of type Process");
 
         Process process = (Process) entity;
-        //TODO asserts
+        // TODO asserts
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        return new Cluster[] {cluster};
+        return new Cluster[] { cluster };
     }
 
-    private Map<String, Object> createAppProperties(Cluster cluster, Path path)
-            throws IvoryException {
+    private Map<String, Object> createAppProperties(Cluster cluster, Path path) throws IvoryException {
         Properties properties = new Properties();
         properties.setProperty(NAME_NODE, ClusterHelper.getHdfsUrl(cluster));
         properties.setProperty(JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty(OozieClient.COORDINATOR_APP_PATH, path.toString());
-        properties.setProperty(OozieClient.USER_NAME, StartupProperties.
-                get().getProperty("oozie.user.name"));
-        //TODO User name is hacked for now.
+        // TODO User name is hacked for now.
+        properties.setProperty(OozieClient.USER_NAME, StartupProperties.get().getProperty("oozie.user.name"));
+
         Map<String, Object> map = new HashMap<String, Object>();
         List<Properties> props = new ArrayList<Properties>();
         List<Cluster> clusters = new ArrayList<Cluster>();
-
         props.add(properties);
         clusters.add(cluster);
-
         map.put(PROPS, props);
         map.put(CLUSTERS, clusters);
         return map;
     }
 
     private COORDINATORAPP mapToCoordinator(Process process) throws IvoryException {
-        Map<Entity, EntityType> entityMap = new LinkedHashMap<Entity, EntityType>();
-
-        entityMap.put(process, EntityType.PROCESS);
-
-        for (Input input : process.getInputs().getInput()) {
-            Feed dataset = configStore.get(EntityType.FEED, input.getFeed());
-            assert dataset != null : "No valid dataset found for " + input.getFeed();
-            entityMap.put(dataset, EntityType.FEED);
-        }
-
-        for (Output output : process.getOutputs().getOutput()) {
-            Feed dataset = configStore.get(EntityType.FEED, output.getFeed());
-            assert dataset != null : "No valid dataset found for " + output.getFeed();
-            entityMap.put(dataset, EntityType.FEED);
-        }
-
-        COORDINATORAPP coordinatorApp = new COORDINATORAPP();
-        CoordinatorMapper coordinatorMapper = new CoordinatorMapper(entityMap, coordinatorApp);
-        coordinatorMapper.mapToDefaultCoordinator();
+        COORDINATORAPP coordinatorApp = CoordinatorMapper.mapToCoordinator(process);
         LOG.info("Mapped to default coordinator");
         coordinatorApp.setName("IVORY_PROCESS_" + process.getName());
         return coordinatorApp;

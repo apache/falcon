@@ -18,77 +18,23 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.io.InputStream;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
 
-public class ClusterEntityParser extends EntityParser<Cluster>{
-	
-	private static final Logger LOG = Logger
-			.getLogger(ProcessEntityParser.class);
+public class ClusterEntityParser extends EntityParser<Cluster> {
 
-	private static final String SCHEMA_FILE = "/schema/cluster/cluster-0.1.xsd";
+    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-	protected ClusterEntityParser(EntityType entityType,
-			Class<Cluster> clazz) {
-		super(entityType, clazz);
-	}
+    private static final String SCHEMA_FILE = "/schema/cluster/cluster-0.1.xsd";
 
-	/**
-	 * Applying Schema Validation during Unmarshalling Instead of using
-	 * Validator class JAXB 2.0 supports this out-of-the-box
-	 * 
-	 * @throws JAXBException
-	 * @throws SAXException
-	 */
-	@Override
-	public Cluster doParse(InputStream xmlStream) throws JAXBException,
-			SAXException {
+    protected ClusterEntityParser() {
+        super(EntityType.CLUSTER, SCHEMA_FILE);
+    }
 
-		Cluster clusterDefinitionElement = null;
-		Unmarshaller unmarshaller;
-
-		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
-				this.getClazz());
-		// Validate against schema
-		synchronized (this) {
-			Schema schema = Util.getSchema(ClusterEntityParser.class
-					.getResource(SCHEMA_FILE));
-			unmarshaller.setSchema(schema);
-			clusterDefinitionElement = (Cluster) unmarshaller
-					.unmarshal(xmlStream);
-		}
-
-		return clusterDefinitionElement;
-	}
-
-	@Override
-	public void applyValidations(Cluster entity)
-			throws StoreAccessException, ValidationException {
-//		ConfigurationStore store = ConfigurationStore.get();
-//		Cluster existingEntity = store.get(EntityType.DATASET,
-//				entity.getName());
-		// if (existingEntity != null) {
-		// throw new ValidationException("Entity: " + entity.getName()
-		// + " already submitted");
-		// }
-		// TODO check if dependent Feed and Datastore exists
-		fieldValidations(entity);
-	}
-
-	private void fieldValidations(Cluster entity)
-			throws ValidationException {
-		// TODO
-
-	}
-
+    @Override
+    public void validate(Cluster entity) throws StoreAccessException, ValidationException {
+        //TODO
+    }
 }

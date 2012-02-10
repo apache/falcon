@@ -43,6 +43,11 @@ public class Partition {
     @XmlAttribute(required = true)
     protected String name;
 
+    public Partition() { }
+    
+    public Partition(String name) {
+        this.name = name;
+    }
     /**
      * Gets the value of the value property.
      * 

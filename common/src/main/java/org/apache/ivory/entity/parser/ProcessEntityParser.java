@@ -18,13 +18,9 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
@@ -34,7 +30,8 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
+
+import com.sun.tools.javac.util.Pair;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -42,89 +39,49 @@ import org.xml.sax.SAXException;
  */
 public class ProcessEntityParser extends EntityParser<Process> {
 
-	private static final Logger LOG = Logger
-			.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-	private static final String SCHEMA_FILE_NAME = "/schema/process/process-0.1.xsd";
+    private static final String SCHEMA_FILE_NAME = "/schema/process/process-0.1.xsd";
 
-	protected ProcessEntityParser(EntityType entityType,
-			Class<Process> clazz) {
-		super(entityType, clazz);
-	}
+    protected ProcessEntityParser() {
+        super(EntityType.PROCESS, SCHEMA_FILE_NAME);
+    }
 
-	/**
-	 * Applying Schema Validation during Unmarshalling Instead of using
-	 * Validator class JAXB 2.0 supports this out-of-the-box
-	 * 
-	 * @throws JAXBException
-	 * @throws SAXException
-	 */
-	@Override
-	protected Process doParse(InputStream xmlStream) throws JAXBException,
-			SAXException {
-		Process processDefinitionElement = null;
-		Unmarshaller unmarshaller;
-		unmarshaller = EntityUnmarshaller.getInstance(this.getEntityType(),
-				this.getClazz());
-		// Validate against schema
-		synchronized (this) {
-			Schema schema = Util.getSchema(ProcessEntityParser.class
-					.getResource(SCHEMA_FILE_NAME));
-			unmarshaller.setSchema(schema);
-			processDefinitionElement = (Process) unmarshaller
-					.unmarshal(xmlStream);
-		}
-
-		return processDefinitionElement;
-	}
-
-	@Override
-	protected void applyValidations(Process process) throws StoreAccessException,
-			ValidationException {
-		// check if dependent entities exists
-		for (Cluster cluster : process.getClusters().getCluster()) {
-			org.apache.ivory.entity.v0.cluster.Cluster clusterEntity = ConfigurationStore
-					.get().get(EntityType.CLUSTER, cluster.getName());
-			if (clusterEntity == null) {
-				LOG.error("Dependent cluster "
-						+ cluster.getName() + " not found for process "
-						+ process.getName());
-				throw new ValidationException("Dependent cluster "
-						+ cluster.getName() + " not found for process "
-						+ process.getName());
-			}
-		}
-		for (Input input : process.getInputs().getInput()) {
-			Feed feed = ConfigurationStore.get().get(EntityType.FEED,
-					input.getFeed());
-			if (feed == null) {
-				LOG.error("Dependent feed "
-						+ input.getFeed() + " not found for process "
-						+ process.getName());
-				throw new ValidationException("Dependent feed "
-						+ input.getFeed() + " not found for process "
-						+ process.getName());
-			}
-		}
-		for (Output output : process.getOutputs().getOutput()) {
-			Feed feed = ConfigurationStore.get().get(EntityType.FEED,
-					output.getFeed());
-			if (feed == null) {
-				LOG.error("Dependent feed "
-						+ output.getFeed() + " not found for process "
-						+ process.getName());
-				throw new ValidationException("Dependent feed "
-						+ output.getFeed() + " not found for process "
-						+ process.getName());
-			}
-		}
-
-		fieldValidations(process);
-	}
-
-	private void fieldValidations(Process entity)
-			throws ValidationException {
-		// TODO
-
-	}
+    @Override
+    protected void validate(Process process) throws ValidationException, StoreAccessException {
+        // check if dependent entities exists
+        List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType,String>>();
+        
+        if(process.getClusters() == null || process.getClusters().getCluster() == null)
+            throw new ValidationException("Wrong cluster specification");
+        
+        for (Cluster cluster : process.getClusters().getCluster()) {
+            entities.add(new Pair<EntityType, String>(EntityType.CLUSTER, cluster.getName()));
+        }
+        
+        if(process.getInputs() != null && process.getInputs().getInput() != null)
+            for (Input input : process.getInputs().getInput()) {
+                entities.add(new Pair<EntityType, String>(EntityType.FEED, input.getFeed()));
+            }
+        
+        if(process.getOutputs() != null && process.getOutputs().getOutput() != null)
+            for (Output output : process.getOutputs().getOutput()) {
+                entities.add(new Pair<EntityType, String>(EntityType.FEED, output.getFeed()));
+            }        
+        validateEntitiesExist(entities);
+        
+        
+        //validate partitions
+        if(process.getInputs() != null && process.getInputs().getInput() != null)
+            for (Input input : process.getInputs().getInput()) {
+                if(input.getPartition() != null) {
+                    String partition = input.getPartition();
+                    String[] parts = partition.split("/");
+                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());          
+                    if(feed.getPartitions() == null || feed.getPartitions().getPartition() == null || 
+                            feed.getPartitions().getPartition().size() == 0 || feed.getPartitions().getPartition().size() < parts.length)
+                        throw new ValidationException("Partition specification in input " + input.getName() + " is wrong");
+                }
+            }
+    }
 }

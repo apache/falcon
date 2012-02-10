@@ -17,6 +17,7 @@
  */
 package org.apache.ivory.oozie.coordinator;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -37,8 +38,7 @@ public class CoordinatorUnmarshallingTest {
 	@Test
 	public void testValidCoordinatorUnamrashalling() throws JAXBException,
 			SAXException {
-		Unmarshaller unmarshaller = Util
-				.getUnmarshaller(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class);
+		Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class).createUnmarshaller();
 		Schema schema = Util.getSchema(CoordinatorUnmarshallingTest.class
 				.getResource("/coordinator.xsd"));
 		unmarshaller.setSchema(schema);

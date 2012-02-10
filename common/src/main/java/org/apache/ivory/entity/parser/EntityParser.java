@@ -18,21 +18,22 @@
 
 package org.apache.ivory.entity.parser;
 
+import java.io.InputStream;
+import java.util.List;
+
+import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
+import com.sun.tools.javac.util.Pair;
 
 /**
  * 
@@ -43,136 +44,74 @@ import javax.xml.bind.Unmarshaller;
  */
 public abstract class EntityParser<T extends Entity> {
 
-	private static final Logger LOG = Logger.getLogger(EntityParser.class);
+    private static final Logger LOG = Logger.getLogger(EntityParser.class);
 
-	private final EntityType entityType;
+    private final EntityType entityType;
 
-	private final Class<? extends Entity> clazz;
+    private String schemaFile;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param entityType
-	 *            - can be FEED or PROCESS
-	 * @param clazz
-	 *            - Class to be used for Unmarshaling.
-	 */
-	protected EntityParser(EntityType entityType, Class<? extends Entity> clazz) {
-		this.entityType = entityType;
-		this.clazz = clazz;
-	}
+    /**
+     * Constructor
+     * 
+     * @param entityType
+     *            - can be FEED or PROCESS
+     * @param schemaFile
+     */
+    protected EntityParser(EntityType entityType, String schemaFile) {
+        this.entityType = entityType;
+        this.schemaFile = schemaFile;
+    }
 
-	public Class<? extends Entity> getClazz() {
-		return this.clazz;
-	}
+    public EntityType getEntityType() {
+        return this.entityType;
+    }
 
-	public EntityType getEntityType() {
-		return this.entityType;
-	}
+    /**
+     * Parses a sent XML and validates it using JAXB.
+     * 
+     * @param xmlString
+     *            - Entity XML
+     * @return Entity - JAVA Object
+     * @throws IvoryException
+     */
+    public Entity parse(String xmlString) throws IvoryException {
+        InputStream inputStream = Util.getStreamFromString(xmlString);
+        Entity entity = parseAndValidate(inputStream);
+        return entity;
+    }
 
-	/**
-	 * Parses a sent XML and validates it using JAXB.
-	 * 
-	 * @param xmlString
-	 *            - Entity XML
-	 * @return Entity - JAVA Object
-	 * @throws IvoryException
-	 */
-	public Entity parse(String xmlString) throws IvoryException {
+    /**
+     * Parses xml stream
+     * 
+     * @param xmlStream
+     * @return entity
+     * @throws IvoryException
+     */
+    public T parseAndValidate(InputStream xmlStream) throws ValidationException {
+        try {
+            // parse against schema
+            Unmarshaller unmarshaller = Util.getUnmarshaller(entityType.getEntityClass());
+            Schema schema = Util.getSchema(ClusterEntityParser.class.getResource(schemaFile));
+            unmarshaller.setSchema(schema);
+            T entity = (T) unmarshaller.unmarshal(xmlStream);
+            LOG.info("Parsed Entity: " + entity.getName());
 
-		InputStream inputStream = Util.getStreamFromString(xmlString);
-		Entity entity = parse(inputStream);
-		return entity;
-	}
+            validate(entity);
+            return entity;
+        } catch (Exception e) {
+            throw new ValidationException(e);
+        }
+    }
 
-	/**
-	 * Parses xml stream
-	 * 
-	 * @param xmlStream
-	 * @return entity
-	 * @throws IvoryException
-	 */
-	public Entity parse(InputStream xmlStream) throws IvoryException {
-		T entity = null;
-
-		try {
-			entity = doParse(xmlStream);
-			LOG.info("Parsed Entity: "+entity.getName());
-		} catch (JAXBException e) {
-			LOG.error(e);
-			throw new IvoryException(e);
-		} catch (SAXException e) {
-			LOG.error(e);
-			throw new IvoryException(e);
-		}
-		applyValidations(entity);
-		return entity;
-	}
-
-	/**
-	 * Validates a entity xmlString
-	 * 
-	 * @param xmlString
-	 * @return
-	 * @throws IvoryException
-	 */
-	public boolean validateSchema(String xmlString) throws IvoryException {
-		InputStream xmlStream = Util.getStreamFromString(xmlString);
-		return validateSchema(xmlStream);
-	}
-
-	/**
-	 * Validate also uses JAXB 2.0 unmarshalling If No JAXB error than validate
-	 * success.
-	 * 
-	 * @throws IvoryException
-	 */
-	public boolean validateSchema(InputStream xmlStream)
-			throws IvoryException {
-		try {
-			doParse(xmlStream);
-		} catch (JAXBException e) {
-			throw new IvoryException(e);
-		} catch (SAXException e) {
-			throw new IvoryException(e);
-		}
-		return true;
-	}
-
-	protected abstract T doParse(InputStream xml) throws JAXBException,
-			SAXException;
-
-	protected abstract void applyValidations(T entity)
-			throws StoreAccessException, ValidationException;
-
-	/**
-	 * Static Inner class that will be used by the concrete Entity to get
-	 * Unmarshallers based on the Entity Type
-	 * 
-	 */
-	public static final class EntityUnmarshaller {
-
-		/**
-		 * Map which holds Unmarshaller as value for each entity type key.
-		 */
-		private static final Map<EntityType, Unmarshaller> UNMARSHALLER = new HashMap<EntityType, Unmarshaller>();
-
-		private EntityUnmarshaller() {
-		}
-
-		public static Unmarshaller getInstance(EntityType entityType,
-				Class<? extends Entity> clazz) throws JAXBException {
-			if (UNMARSHALLER.get(entityType) == null) {
-				try {
-					Unmarshaller unmarshaller = Util.getUnmarshaller(clazz);
-					UNMARSHALLER.put(entityType, unmarshaller);
-				} catch (JAXBException e) {
-					LOG.fatal("Unable to get JAXBContext", e);
-					throw new JAXBException(e);
-				}
-			}
-			return UNMARSHALLER.get(entityType);
-		}
-	}
-
+    protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws ValidationException, StoreAccessException {
+        if(entities != null) {
+            ConfigurationStore store = ConfigurationStore.get();
+            for(Pair<EntityType, String> entity:entities) {
+                if(store.get(entity.fst, entity.snd) == null)
+                    throw new ValidationException("Referenced " + entity.fst + " " + entity.snd + " is not registered");
+            }
+        }
+    }
+    
+    protected abstract void validate(T entity) throws ValidationException, StoreAccessException;
 }

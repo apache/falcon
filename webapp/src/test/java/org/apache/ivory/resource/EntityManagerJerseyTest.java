@@ -17,7 +17,16 @@
  */
 package org.apache.ivory.resource;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,6 +111,11 @@ public class EntityManagerJerseyTest {
         FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
         marshaller.marshal(clusterEntity, out);
         out.close();
+
+        Cluster cluster2 = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream("/cluster-template.xml"));
+        cluster2.setName("backupCluster");
+        ConfigurationStore.get().remove(EntityType.CLUSTER, "backupCluster");
+        ConfigurationStore.get().publish(EntityType.CLUSTER, cluster2);
     }
 
     @AfterClass
@@ -123,8 +137,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -207,8 +227,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -217,16 +243,10 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
-
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
-        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
     }
@@ -236,8 +256,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -332,8 +358,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -342,16 +374,10 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
-
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
-        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 
@@ -377,8 +403,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -394,8 +426,14 @@ public class EntityManagerJerseyTest {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
@@ -404,16 +442,10 @@ public class EntityManagerJerseyTest {
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         checkIfSuccessful(response);
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
-
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
-        overlay.put("cluster", cluster);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfSuccessful(response);
 

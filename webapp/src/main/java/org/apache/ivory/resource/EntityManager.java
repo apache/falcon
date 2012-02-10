@@ -186,7 +186,7 @@ public class EntityManager {
             xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
         }
         try {
-            return entityParser.parse(xmlStream);
+            return entityParser.parseAndValidate(xmlStream);
         } catch (IvoryException e) {
             if (LOG.isDebugEnabled() && xmlStream.markSupported()) {
                 try {

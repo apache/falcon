@@ -42,16 +42,13 @@ public final class EntityParserFactory {
 
 		switch (entityType) {
 		case PROCESS:
-			return new ProcessEntityParser(entityType,
-					org.apache.ivory.entity.v0.process.Process.class);
-		case FEED://TODO
-			return new FeedEntityParser(entityType,
-					org.apache.ivory.entity.v0.feed.Feed.class);
+			return new ProcessEntityParser();
+		case FEED:
+			return new FeedEntityParser();
 		case CLUSTER:
-			return new ClusterEntityParser(entityType,
-					org.apache.ivory.entity.v0.cluster.Cluster.class);
+			return new ClusterEntityParser();
 		default:
-			return null;
+			throw new IllegalArgumentException("Unhandled entity type: " + entityType);
 		}
 	}
 

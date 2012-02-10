@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlValue;
  *       &lt;attribute name="feed" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="start-instance" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="end-instance" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="partition" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/simpleContent>
  * &lt;/complexType>
@@ -51,6 +52,8 @@ public class Input {
     protected String startInstance;
     @XmlAttribute(name = "end-instance")
     protected String endInstance;
+    @XmlAttribute
+    protected String partition;
 
     /**
      * Gets the value of the value property.
@@ -62,6 +65,14 @@ public class Input {
      */
     public String getValue() {
         return value;
+    }
+
+    public String getPartition() {
+        return partition;
+    }
+
+    public void setPartition(String partition) {
+        this.partition = partition;
     }
 
     /**

@@ -18,71 +18,36 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
+
+import com.sun.tools.javac.util.Pair;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
-	private static final Logger LOG = Logger
-			.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-	private static final String SCHEMA_FILE = "/schema/feed/feed-0.1.xsd";
+    private static final String SCHEMA_FILE = "/schema/feed/feed-0.1.xsd";
 
-	protected FeedEntityParser(EntityType entityType, Class<Feed> clazz) {
-		super(entityType, clazz);
-	}
-
-	/**
-	 * Applying Schema Validation during Unmarshalling Instead of using
-	 * Validator class JAXB 2.0 supports this out-of-the-box
-	 * 
-	 * @throws JAXBException
-	 * @throws SAXException
-	 */
-	@Override
-	public Feed doParse(InputStream xmlStream) throws JAXBException,
-			SAXException {
-
-		Feed feed = null;
-		Unmarshaller unmarshaller = EntityUnmarshaller.getInstance(
-				this.getEntityType(), this.getClazz());
-		// Validate against schema
-		synchronized (this) {
-			Schema schema = Util.getSchema(FeedEntityParser.class
-					.getResource(SCHEMA_FILE));
-			unmarshaller.setSchema(schema);
-			feed = (Feed) unmarshaller.unmarshal(xmlStream);
-		}
-		return feed;
-	}
-
-	@Override
-	public void applyValidations(Feed entity) throws StoreAccessException,
-			ValidationException {
-		// ConfigurationStore store = ConfigurationStore.get();
-		// Dataset existingEntity = store.get(EntityType.DATASET,
-		// entity.getName());
-		// if (existingEntity != null) {
-		// throw new ValidationException("Entity: " + entity.getName()
-		// + " already submitted");
-		// }
-		// TODO check if dependent Feed and Datastore exists
-		fieldValidations(entity);
-	}
-
-	private void fieldValidations(Feed entity) throws ValidationException {
-		// TODO
-
-	}
-
+    protected FeedEntityParser() {
+        super(EntityType.FEED, SCHEMA_FILE);
+    }
+    
+    @Override
+    public void validate(Feed feed) throws StoreAccessException, ValidationException {
+        if(feed.getClusters() == null || feed.getClusters().getCluster() == null)
+            throw new ValidationException("Feed should have atleast one cluster");
+        
+        //validate on dependent clusters  
+        List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType,String>>();
+        for(Cluster cluster:feed.getClusters().getCluster())
+            entities.add(new Pair<EntityType, String>(EntityType.CLUSTER, cluster.getName()));
+        validateEntitiesExist(entities);
+    }
 }
