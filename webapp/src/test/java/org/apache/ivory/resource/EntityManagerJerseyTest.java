@@ -111,17 +111,33 @@ public class EntityManagerJerseyTest {
         FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
         marshaller.marshal(clusterEntity, out);
         out.close();
+        
+		ClientResponse clientRepsonse;
+		Map<String, String> overlay = new HashMap<String, String>();
 
-        Cluster cluster2 = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream("/cluster-template.xml"));
-        cluster2.setName("backupCluster");
-        ConfigurationStore.get().remove(EntityType.CLUSTER, "backupCluster");
-        ConfigurationStore.get().publish(EntityType.CLUSTER, cluster2);
-    }
+		String testCluster = "testCluster";
+		overlay.put("name", testCluster);
+		InputStream testClusterStream = getServletInputStream(overlayParametersOverTemplate(
+				CLUSTER_FILE_TEMPLATE, overlay));
+		clientRepsonse = this.service.path("api/entities/submit/cluster")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, testClusterStream);
+
+		String backupCluster = "backupCluster";
+		overlay.put("name", backupCluster);
+		InputStream backupClusterStream = getServletInputStream(overlayParametersOverTemplate(
+				CLUSTER_FILE_TEMPLATE, overlay));
+		clientRepsonse = this.service.path("api/entities/submit/cluster")
+				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+				.post(ClientResponse.class, backupClusterStream);
+	}
 
     @AfterClass
-    public void tearDown() throws Exception {
-        this.cluster.shutdown();
-    }
+	public void tearDown() throws Exception {
+		ConfigurationStore.get().remove(EntityType.PROCESS, "testCluster");
+		ConfigurationStore.get().remove(EntityType.PROCESS, "backupCluster");
+		this.cluster.shutdown();
+	}
 
     @BeforeTest
     public void cleanupStore() throws Exception {

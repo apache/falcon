@@ -33,6 +33,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
@@ -42,14 +43,13 @@ import org.apache.ivory.entity.v0.feed.LocationType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
 public class FeedEntityParserTest {
 
     private final FeedEntityParser parser = (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
 
-    private static final String SAMPLE_DATASET_XML = "/config/feed/feed-0.1.xml";
-
-    private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+    private static final String SAMPLE_FEED_XML = "/config/feed/feed-0.1.xml";
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -70,13 +70,13 @@ public class FeedEntityParserTest {
     @Test(expectedExceptions=ValidationException.class)
     public void testValidations() throws Exception {
         ConfigurationStore.get().remove(EntityType.CLUSTER, "backupCluster");
-        parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_DATASET_XML)); 
+        parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_FEED_XML)); 
     }
     
     @Test
     public void testParse() throws IOException, IvoryException, JAXBException {
 
-        Feed feed = (Feed) parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_DATASET_XML));
+        Feed feed = (Feed) parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_FEED_XML));
 
         Assert.assertNotNull(feed);
         assertEquals(feed.getName(), "clicks");
@@ -124,6 +124,12 @@ public class FeedEntityParserTest {
         Marshaller marshaller = Util.getMarshaller(Feed.class);
         marshaller.marshal(feed, stringWriter);
         System.out.println(stringWriter.toString());
+	}
 
+    @Test(expectedExceptions = ValidationException.class)
+    public void applyValidationInvalidFeed() throws JAXBException, SAXException, StoreAccessException, ValidationException {
+        Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_FEED_XML));
+        feed.getClusters().getCluster().get(0).setName("invalid cluster");
+        parser.validate(feed);
     }
 }

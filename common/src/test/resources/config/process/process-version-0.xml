@@ -19,8 +19,7 @@
 <process name="sample" >
     <!-- where -->
     <clusters>
-      <cluster name="prod-red1" />
-      <cluster name="prod-red2" />
+      <cluster name="testCluster" />
     </clusters>
 
     <!-- when -->

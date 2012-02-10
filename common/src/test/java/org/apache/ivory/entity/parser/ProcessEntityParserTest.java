@@ -30,7 +30,6 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -48,6 +47,7 @@ public class ProcessEntityParserTest {
     private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
     private static final String SAMPLE_PROCESS_XML = "/config/process/process-version-0.xml";
     private static final String SAMPLE_INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
+    private static final String SAMPLE_FEED = "/config/feed/feed-0.1.xml";
 
     @Test
     public void testNotNullgetUnmarshaller() throws JAXBException {
@@ -57,37 +57,30 @@ public class ProcessEntityParserTest {
     }
 
     @BeforeMethod
-    public void setup() throws StoreAccessException, EntityAlreadyExistsException {
+    public void setup() throws Exception {
         cleanup();
         
         ConfigurationStore store = ConfigurationStore.get();
         Cluster prodCluster1 = new Cluster();
-        prodCluster1.setName("prod-red1");
+        prodCluster1.setName("testCluster");
         store.publish(EntityType.CLUSTER, prodCluster1);
 
-        Cluster prodCluster2 = new Cluster();
-        prodCluster2.setName("prod-red2");
-        store.publish(EntityType.CLUSTER, prodCluster2);
+        Unmarshaller unmarshaller = Util.jaxbContext.createUnmarshaller();
+        Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResourceAsStream(SAMPLE_FEED));
+        feed.setName("impressionFeed");
+        store.publish(EntityType.FEED, feed);
 
-        Feed inputFeed1 = new Feed();
-        Partitions parts = new Partitions();
-        parts.getPartition().add(new Partition("carrier"));
-        parts.getPartition().add(new Partition("country"));
-        inputFeed1.setPartitions(parts);
-        inputFeed1.setName("impressionFeed");
-        store.publish(EntityType.FEED, inputFeed1);
+        feed = (Feed) unmarshaller.unmarshal(this.getClass().getResourceAsStream(SAMPLE_FEED));
+        feed.setName("clicksFeed");
+        store.publish(EntityType.FEED, feed);
 
-        Feed inputFeed2 = new Feed();
-        inputFeed2.setName("clicksFeed");
-        store.publish(EntityType.FEED, inputFeed2);
+        feed = (Feed) unmarshaller.unmarshal(this.getClass().getResourceAsStream(SAMPLE_FEED));
+        feed.setName("imp-click-join1");
+        store.publish(EntityType.FEED, feed);
 
-        Feed outputFeed1 = new Feed();
-        outputFeed1.setName("imp-click-join1");
-        store.publish(EntityType.FEED, outputFeed1);
-
-        Feed ouputFeed2 = new Feed();
-        ouputFeed2.setName("imp-click-join2");
-        store.publish(EntityType.FEED, ouputFeed2);
+        feed = (Feed) unmarshaller.unmarshal(this.getClass().getResourceAsStream(SAMPLE_FEED));
+        feed.setName("imp-click-join2");
+        store.publish(EntityType.FEED, feed);
     }
 
     @Test
@@ -205,12 +198,6 @@ public class ProcessEntityParserTest {
         parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_PROCESS_XML));
     }
 
-    // TODO
-    @Test
-    public void applyValidations() {
-        // throw new RuntimeException("Test not implemented");
-    }
-
     public void cleanup() throws StoreAccessException {
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(EntityType.PROCESS, "sample");
@@ -218,7 +205,6 @@ public class ProcessEntityParserTest {
         store.remove(EntityType.FEED, "clicksFeed");
         store.remove(EntityType.FEED, "imp-click-join1");
         store.remove(EntityType.FEED, "imp-click-join2");
-        store.remove(EntityType.CLUSTER, "prod-red1");
-        store.remove(EntityType.CLUSTER, "prod-red2");
+        store.remove(EntityType.CLUSTER, "testCluster");
     }
 }

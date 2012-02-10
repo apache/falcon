@@ -27,7 +27,6 @@ import javax.xml.validation.Schema;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
@@ -103,15 +102,18 @@ public abstract class EntityParser<T extends Entity> {
         }
     }
 
+    protected void validateEntityExists(EntityType type, String name) throws ValidationException, StoreAccessException {
+        if(ConfigurationStore.get().get(type, name) == null)
+            throw new ValidationException("Referenced " + type + " " + name + " is not registered");        
+    }
+    
     protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws ValidationException, StoreAccessException {
         if(entities != null) {
-            ConfigurationStore store = ConfigurationStore.get();
             for(Pair<EntityType, String> entity:entities) {
-                if(store.get(entity.fst, entity.snd) == null)
-                    throw new ValidationException("Referenced " + entity.fst + " " + entity.snd + " is not registered");
+                validateEntityExists(entity.fst, entity.snd);
             }
         }
     }
     
-    protected abstract void validate(T entity) throws ValidationException, StoreAccessException;
+    public abstract void validate(T entity) throws ValidationException, StoreAccessException;
 }
