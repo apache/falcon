@@ -176,8 +176,8 @@ public class OozieELExtensions {
             return "";
         }
 
-        Calendar dsInstanceCal = (Calendar) nominalInstanceCal.clone();
-        dsInstanceCal.setTimeZone(getDatasetTZ());
+        Calendar dsInstanceCal = Calendar.getInstance(getDatasetTZ());
+        dsInstanceCal.setTime(nominalInstanceCal.getTime());
 
         //truncate
         switch (trunc) {
