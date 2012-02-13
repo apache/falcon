@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
@@ -32,8 +33,6 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
-
-import com.sun.tools.javac.util.Pair;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -71,7 +70,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         
         Set<String> refClusters = new HashSet<String>();
         for (Cluster cluster : process.getClusters().getCluster()) {
-            entities.add(new Pair<EntityType, String>(EntityType.CLUSTER, cluster.getName()));
+            entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
             refClusters.add(cluster.getName());
         }
         validateEntitiesExist(entities);

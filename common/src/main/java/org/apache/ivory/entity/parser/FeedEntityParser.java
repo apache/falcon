@@ -21,13 +21,12 @@ package org.apache.ivory.entity.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.log4j.Logger;
-
-import com.sun.tools.javac.util.Pair;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
@@ -47,7 +46,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         //validate on dependent clusters  
         List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType,String>>();
         for(Cluster cluster:feed.getClusters().getCluster())
-            entities.add(new Pair<EntityType, String>(EntityType.CLUSTER, cluster.getName()));
+            entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
         validateEntitiesExist(entities);
     }
 }

@@ -25,14 +25,13 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Pair;
 import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
-
-import com.sun.tools.javac.util.Pair;
 
 /**
  * 
@@ -110,7 +109,7 @@ public abstract class EntityParser<T extends Entity> {
     protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws ValidationException, StoreAccessException {
         if(entities != null) {
             for(Pair<EntityType, String> entity:entities) {
-                validateEntityExists(entity.fst, entity.snd);
+                validateEntityExists(entity.first, entity.second);
             }
         }
     }
