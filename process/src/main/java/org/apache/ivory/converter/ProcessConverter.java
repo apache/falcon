@@ -104,6 +104,9 @@ public class ProcessConverter extends DozerConverter<Process, COORDINATORAPP> {
             
         syncdataset.setFrequency("${coord:" + feed.getFrequency() + "(" + feed.getPeriodicity() + ")}");
         
+        //We always gate on directory
+        syncdataset.setDoneFlag("");
+        
         Cluster cluster = getCluster(feed.getClusters().getCluster(), clusterName);
         syncdataset.setInitialInstance(cluster.getValidity().getStart());
         syncdataset.setTimezone(cluster.getValidity().getTimezone());
