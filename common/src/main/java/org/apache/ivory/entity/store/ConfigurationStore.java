@@ -18,20 +18,6 @@
 
 package org.apache.ivory.entity.store;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.ivory.Util;
-import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.log4j.Logger;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +28,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.xml.bind.JAXBException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.util.StartupProperties;
+import org.apache.log4j.Logger;
 
 public class ConfigurationStore {
 
@@ -57,8 +55,6 @@ public class ConfigurationStore {
             new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
 
     private final FileSystem fs;
-    private final Marshaller marshaller;
-    private final Unmarshaller unmarshaller;
     private final Path storePath;
 
     private static final Entity NULL = new Entity(){
@@ -82,8 +78,6 @@ public class ConfigurationStore {
         String uri = StartupProperties.get().getProperty("config.store.uri");
         storePath = new Path(uri);
         try {
-            marshaller = Util.jaxbContext.createMarshaller();
-            unmarshaller = Util.jaxbContext.createUnmarshaller();
             fs = FileSystem.get(storePath.toUri(), new Configuration());
 
             bootstrap();
@@ -114,10 +108,10 @@ public class ConfigurationStore {
      *
      * @param type - EntityType that need to be published
      * @param entity - Reference to the Entity Object
-     * @throws StoreAccessException If any error in accessing the storage
+     * @throws IvoryException 
      */
     public synchronized void publish(EntityType type, Entity entity)
-            throws StoreAccessException, EntityAlreadyExistsException {
+            throws IvoryException {
         try {
             if (get(type, entity.getName()) == null) {
                 persist(type, entity);
@@ -143,11 +137,11 @@ public class ConfigurationStore {
      *            loaded in memory yet, it will retrieve it from persistent
      *            store just in time. On startup all the entities will be added
      *            to the dictionary with null reference.
-     * @throws StoreAccessException If any error in accessing the storage
+     * @throws IvoryException 
      */
     @SuppressWarnings("unchecked")
     public <T extends Entity> T get(EntityType type, String name)
-            throws StoreAccessException {
+            throws IvoryException {
         ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             T entity = (T) entityMap.get(name);
@@ -214,15 +208,15 @@ public class ConfigurationStore {
      *                  to the persistent store. The convention used for storing
      *                  the object::
      *                  PROP(config.store.uri)/{entitytype}/{entityname}.xml
-     * @throws StoreAccessException If any error in marshalling the object
      * @throws java.io.IOException  If any error in accessing the storage
+     * @throws IvoryException 
      */
     private void persist(EntityType type, Entity entity)
-            throws StoreAccessException, IOException {
+            throws IOException, IvoryException {
         OutputStream out = fs.create(new Path(storePath, type +
                 Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
         try {
-            marshaller.marshal(entity, out);
+            type.getMarshaller().marshal(entity, out);
             LOG.info("Persisted configuration " + type + "/" + entity.getName());
         } catch (JAXBException e) {
             LOG.error(e);
@@ -255,17 +249,17 @@ public class ConfigurationStore {
      * @param <T>  - Actual entity object type
      * @return     - De-serialized entity object restored from persistent store
      * @throws IOException If any error in accessing the storage
-     * @throws StoreAccessException If any error unmarshalling
+     * @throws IvoryException 
      */
     @SuppressWarnings("unchecked")
     private synchronized <T extends Entity> T restore(EntityType type,
                                                       String name)
-            throws IOException, StoreAccessException {
+            throws IOException, IvoryException {
 
         InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR +
                 URLEncoder.encode(name, UTF_8) + ".xml"));
         try {
-            return (T) unmarshaller.unmarshal(in);
+            return (T) type.getUnmarshaller().unmarshal(in);
         } catch(JAXBException e) {
             throw new StoreAccessException("Unable to un-marshall xml definition for "
                     + type + "/" + name, e);

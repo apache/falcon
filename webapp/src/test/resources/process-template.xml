@@ -6,24 +6,20 @@
 	
 	<concurrency>2</concurrency>
 	<execution>LIFO</execution>
-    <frequency>minutes</frequency>
-    <periodicity>5</periodicity>
+    <frequency>hours</frequency>
+    <periodicity>1</periodicity>
 	
 	<validity timezone="UTC" end="2010-01-01T03:00Z" start="2010-01-01T01:00Z" />
 	<inputs>
-		<input end-instance="today(2,0)" start-instance="today(0,0)"
-			feed="##f1##" name="input" />
+		<input end-instance="today(0,40)" start-instance="today(0,20)"
+			feed="##f1##" name="inputData" partition="OK"/>
 	</inputs>
 	<outputs>
-		<output instance="today(0,0)" feed="##f2##"
-			name="output" />
+		<output instance="now(0,0)" feed="##f2##"
+			name="outputData" />
 	</outputs>
 	<properties>
-		<property name="jobTracker">localhost:8021</property>
-		<property name="nameNode">hdfs://localhost:8020</property>
-		<property name="queueName">default</property>
-		<property name="inputData">${coord:dataIn('input')}</property>
-		<property name="outputData">${coord:dataOut('output')}</property>
+		<property name="queueName" value="default"/>
 	</properties>
 	<workflow path="${nameNode}/examples/apps/aggregator" />
 	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />

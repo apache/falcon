@@ -18,17 +18,15 @@
 
 package org.apache.ivory.entity.parser;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
 import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
@@ -46,8 +44,6 @@ public abstract class EntityParser<T extends Entity> {
 
     private final EntityType entityType;
 
-    private String schemaFile;
-
     /**
      * Constructor
      * 
@@ -55,9 +51,8 @@ public abstract class EntityParser<T extends Entity> {
      *            - can be FEED or PROCESS
      * @param schemaFile
      */
-    protected EntityParser(EntityType entityType, String schemaFile) {
+    protected EntityParser(EntityType entityType) {
         this.entityType = entityType;
-        this.schemaFile = schemaFile;
     }
 
     public EntityType getEntityType() {
@@ -73,11 +68,11 @@ public abstract class EntityParser<T extends Entity> {
      * @throws IvoryException
      */
     public Entity parse(String xmlString) throws IvoryException {
-        InputStream inputStream = Util.getStreamFromString(xmlString);
+        InputStream inputStream = new ByteArrayInputStream(xmlString.getBytes());
         Entity entity = parseAndValidate(inputStream);
         return entity;
     }
-
+    
     /**
      * Parses xml stream
      * 
@@ -88,9 +83,7 @@ public abstract class EntityParser<T extends Entity> {
     public T parseAndValidate(InputStream xmlStream) throws ValidationException {
         try {
             // parse against schema
-            Unmarshaller unmarshaller = Util.getUnmarshaller(entityType.getEntityClass());
-            Schema schema = Util.getSchema(ClusterEntityParser.class.getResource(schemaFile));
-            unmarshaller.setSchema(schema);
+            Unmarshaller unmarshaller = entityType.getUnmarshaller();
             T entity = (T) unmarshaller.unmarshal(xmlStream);
             LOG.info("Parsed Entity: " + entity.getName());
 
@@ -101,12 +94,12 @@ public abstract class EntityParser<T extends Entity> {
         }
     }
 
-    protected void validateEntityExists(EntityType type, String name) throws ValidationException, StoreAccessException {
+    protected void validateEntityExists(EntityType type, String name) throws IvoryException {
         if(ConfigurationStore.get().get(type, name) == null)
             throw new ValidationException("Referenced " + type + " " + name + " is not registered");        
     }
     
-    protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws ValidationException, StoreAccessException {
+    protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws IvoryException {
         if(entities != null) {
             for(Pair<EntityType, String> entity:entities) {
                 validateEntityExists(entity.first, entity.second);
@@ -114,5 +107,5 @@ public abstract class EntityParser<T extends Entity> {
         }
     }
     
-    public abstract void validate(T entity) throws ValidationException, StoreAccessException;
+    public abstract void validate(T entity) throws IvoryException;
 }

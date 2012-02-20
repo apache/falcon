@@ -23,29 +23,25 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
-import org.apache.ivory.Util;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 public class WorkflowUnmarshallingTest {
 
-	@Test
-	public void testValidWorkflowUnamrashalling() throws JAXBException,
-			SAXException {
-	    Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
-		Schema schema = Util.getSchema(WorkflowUnmarshallingTest.class
-				.getResource("/workflow.xsd"));
-		unmarshaller.setSchema(schema);
-		JAXBElement<WORKFLOWAPP> workflowApp = (JAXBElement<WORKFLOWAPP>) unmarshaller
-				.unmarshal(WorkflowUnmarshallingTest.class
-						.getResourceAsStream("/workflow.xml"));
-		WORKFLOWAPP app = workflowApp.getValue();
-		Assert.assertEquals(app.getName(), "java-main-wf");
-		Assert.assertEquals(
-				((ACTION) app.getDecisionOrForkOrJoin().get(0)).getName(),
-				"java-node");
-	}
+    @Test
+    public void testValidWorkflowUnamrashalling() throws JAXBException, SAXException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
+        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/workflow.xsd"));
+        unmarshaller.setSchema(schema);
+        JAXBElement<WORKFLOWAPP> workflowApp = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(WorkflowUnmarshallingTest.class
+                .getResourceAsStream("/workflow.xml"));
+        WORKFLOWAPP app = workflowApp.getValue();
+        Assert.assertEquals(app.getName(), "java-main-wf");
+        Assert.assertEquals(((ACTION) app.getDecisionOrForkOrJoin().get(0)).getName(), "java-node");
+    }
 
 }

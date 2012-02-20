@@ -18,8 +18,9 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.io.IOException;
 import static org.testng.AssertJUnit.assertEquals;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 
@@ -27,7 +28,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
@@ -85,7 +85,7 @@ public class ClusterEntityParserTest {
 				.getValue(), "value1");
 
 		StringWriter stringWriter = new StringWriter();
-		Marshaller marshaller = Util.getMarshaller(Cluster.class);
+		Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
 		marshaller.marshal(cluster, stringWriter);
 		System.out.println(stringWriter.toString());
 

@@ -20,13 +20,12 @@ package org.apache.ivory.resource;
 
 import java.io.StringWriter;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.ivory.Util;
 
 /**
  * 
@@ -41,6 +40,16 @@ public class APIResult {
 
 	private String message;
 
+	private static final JAXBContext jc;
+	
+	static {
+	    try {
+            jc = JAXBContext.newInstance(APIResult.class);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+	}
+	
 	public static enum Status {
 		SUCCEEDED, FAILED
 	}
@@ -67,7 +76,7 @@ public class APIResult {
 	public String toString() {
 		try {
 			StringWriter stringWriter = new StringWriter();
-			Marshaller marshaller = Util.getMarshaller(this.getClass());
+			Marshaller marshaller = jc.createMarshaller();
 			marshaller.marshal(this, stringWriter);
 			return stringWriter.toString();
 		} catch (JAXBException e) {

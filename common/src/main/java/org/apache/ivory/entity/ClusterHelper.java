@@ -65,6 +65,10 @@ public final class ClusterHelper {
         return interfaceRef.getEndpoint();
     }
 
+    public static String getCompleteLocation(Cluster cluster, String locationKey) {
+        return getHdfsUrl(cluster) + "/" + getLocation(cluster, locationKey);
+    }
+    
     public static String getLocation(Cluster cluster, String locationKey) {
         assert cluster != null : "Cluster object can't be null";
         Map<String, Location> locations = cluster.getLocations();
@@ -73,6 +77,6 @@ public final class ClusterHelper {
         Location location = locations.get(locationKey);
         assert location != null : "Location " + locationKey +
                 " not configured for cluster " + cluster.getName() ;
-        return getHdfsUrl(cluster) + "/" + location.getPath();
+        return location.getPath();
     }
 }

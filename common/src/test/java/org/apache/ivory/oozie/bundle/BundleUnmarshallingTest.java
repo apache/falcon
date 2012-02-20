@@ -20,33 +20,27 @@ package org.apache.ivory.oozie.bundle;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
-import org.apache.ivory.Util;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 public class BundleUnmarshallingTest {
-	@Test
-	public void testValidBundleUnamrashalling() throws JAXBException,
-			SAXException {
-		Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
-		Schema schema = Util.getSchema(BundleUnmarshallingTest.class
-				.getResource("/bundle.xsd"));
-		unmarshaller.setSchema(schema);
-		Object bundle = unmarshaller.unmarshal(
-				new StreamSource(BundleUnmarshallingTest.class
-						.getResourceAsStream("/bundle.xml")),
-						BUNDLEAPP.class);
-		BUNDLEAPP bundleApp = ((JAXBElement<BUNDLEAPP>) bundle).getValue();
+    @Test
+    public void testValidBundleUnamrashalling() throws Exception {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
+        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/bundle.xsd"));
+        unmarshaller.setSchema(schema);
+        Object bundle = unmarshaller.unmarshal(new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/bundle.xml")),
+                BUNDLEAPP.class);
+        BUNDLEAPP bundleApp = ((JAXBElement<BUNDLEAPP>) bundle).getValue();
 
-		Assert.assertEquals(bundleApp.getName(), "bundle-app");
-		Assert.assertEquals(bundleApp.getCoordinator().get(0).getName(),
-				"coord-1");
+        Assert.assertEquals(bundleApp.getName(), "bundle-app");
+        Assert.assertEquals(bundleApp.getCoordinator().get(0).getName(), "coord-1");
 
-	}
+    }
 }

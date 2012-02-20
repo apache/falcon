@@ -23,7 +23,13 @@ import java.io.InputStream;
 import java.util.NoSuchElementException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -35,7 +41,6 @@ import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
@@ -290,7 +295,7 @@ public class EntityManager {
     }
 
     private Entity getEntity(String entity, String type)
-            throws StoreAccessException {
+            throws IvoryException {
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         ConfigurationStore configStore = ConfigurationStore.get();
         return configStore.get(entityType, entity);

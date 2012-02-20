@@ -20,10 +20,7 @@ package org.apache.ivory.entity.v0;
 
 import java.io.StringWriter;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-
-import org.apache.ivory.Util;
 
 public abstract class Entity {
 
@@ -66,11 +63,19 @@ public abstract class Entity {
 	public String toString() {
 		try {
 			StringWriter stringWriter = new StringWriter();
-			Marshaller marshaller = Util.getMarshaller(this.getClass());
+			Marshaller marshaller = getEntityType().getMarshaller();
 			marshaller.marshal(this, stringWriter);
 			return stringWriter.toString();
-		} catch (JAXBException e) {
-			return e.getMessage();
-		}
+		} catch (Exception e) {
+		    throw new RuntimeException(e);
+        }
+	}
+	
+	public String getStagingPath() {
+	    return "/ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName();
+	}
+	
+	public String getWorkflowName() {
+	    return "IVORY_" + getEntityType().name().toUpperCase() + "_" + getName();
 	}
 }

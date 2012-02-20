@@ -26,10 +26,9 @@ import org.apache.log4j.Logger;
 public class ClusterEntityParser extends EntityParser<Cluster> {
 
     private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
-    private static final String SCHEMA_FILE = "/schema/cluster/cluster-0.1.xsd";
 
-    protected ClusterEntityParser() {
-        super(EntityType.CLUSTER, SCHEMA_FILE);
+    public ClusterEntityParser() {
+        super(EntityType.CLUSTER);
     }
 
     @Override

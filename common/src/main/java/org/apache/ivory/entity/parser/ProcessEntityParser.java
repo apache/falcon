@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Cluster;
@@ -42,7 +42,9 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-    private static final String SCHEMA_FILE_NAME = "/schema/process/process-0.1.xsd";
+    public ProcessEntityParser() {
+        super(EntityType.PROCESS);
+    }
 
     private void validateReferencedClusters(Feed feed, Set<String> processRefClusters) throws ValidationException {
         Set<String> feedRefclusters = new HashSet<String>();
@@ -55,12 +57,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
     }
 
-    protected ProcessEntityParser() {
-        super(EntityType.PROCESS, SCHEMA_FILE_NAME);
-    }
-
     @Override
-    public void validate(Process process) throws ValidationException, StoreAccessException {
+    public void validate(Process process) throws IvoryException {
         // check if dependent entities exists
         ConfigurationStore store = ConfigurationStore.get();
         List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType,String>>();

@@ -31,9 +31,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
@@ -43,7 +41,6 @@ import org.apache.ivory.entity.v0.feed.LocationType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 public class FeedEntityParserTest {
 
@@ -57,7 +54,7 @@ public class FeedEntityParserTest {
         store.remove(EntityType.CLUSTER, "testCluster");
         store.remove(EntityType.CLUSTER, "backupCluster");
 
-        Unmarshaller unmarshaller = Util.getUnmarshaller(Cluster.class);
+        Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream("/config/cluster/cluster-0.1.xml"));
         cluster.setName("testCluster");
         store.publish(EntityType.CLUSTER, cluster);
@@ -121,13 +118,13 @@ public class FeedEntityParserTest {
         assertEquals(feed.getProperties().get("field2").getValue(), "value2");
 
         StringWriter stringWriter = new StringWriter();
-        Marshaller marshaller = Util.getMarshaller(Feed.class);
+        Marshaller marshaller = EntityType.FEED.getMarshaller();
         marshaller.marshal(feed, stringWriter);
         System.out.println(stringWriter.toString());
 	}
 
     @Test(expectedExceptions = ValidationException.class)
-    public void applyValidationInvalidFeed() throws JAXBException, SAXException, StoreAccessException, ValidationException {
+    public void applyValidationInvalidFeed() throws Exception {
         Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_FEED_XML));
         feed.getClusters().getCluster().get(0).setName("invalid cluster");
         parser.validate(feed);

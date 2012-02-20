@@ -21,6 +21,7 @@ package org.apache.ivory.entity.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
@@ -32,14 +33,12 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-    private static final String SCHEMA_FILE = "/schema/feed/feed-0.1.xsd";
-
-    protected FeedEntityParser() {
-        super(EntityType.FEED, SCHEMA_FILE);
+    public FeedEntityParser() {
+        super(EntityType.FEED);
     }
     
     @Override
-    public void validate(Feed feed) throws StoreAccessException, ValidationException {
+    public void validate(Feed feed) throws IvoryException {
         if(feed.getClusters() == null || feed.getClusters().getCluster() == null)
             throw new ValidationException("Feed should have atleast one cluster");
         

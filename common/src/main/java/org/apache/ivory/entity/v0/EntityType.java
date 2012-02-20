@@ -18,28 +18,67 @@
 
 package org.apache.ivory.entity.v0;
 
-import org.apache.ivory.entity.v0.feed.Feed;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 
 /**
- * Enum for types of entities in Ivory
- * Process, Feed and Cluster
+ * Enum for types of entities in Ivory Process, Feed and Cluster
  */
 public enum EntityType {
-	FEED(Feed.class), PROCESS(Process.class), CLUSTER(Cluster.class);
+    FEED(Feed.class, "/schema/feed/feed-0.1.xsd"), 
+    PROCESS(Process.class, "/schema/process/process-0.1.xsd"), 
+    CLUSTER(Cluster.class, "/schema/cluster/cluster-0.1.xsd");
 
-	private final Class<? extends Entity> clazz;
+    private final Class<? extends Entity> clazz;
+    private JAXBContext jaxbContext;
+    private Schema schema;
 
-	EntityType(Class<? extends Entity> typeClass) {
-		clazz = typeClass;
-	}
+    private EntityType(Class<? extends Entity> typeClass, String schemaFile) {
+        clazz = typeClass;
+        try {
+            jaxbContext = JAXBContext.newInstance(typeClass);
+            synchronized(this) {
+                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+                schema = schemaFactory.newSchema(this.getClass().getResource(schemaFile));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	public Class<? extends Entity> getEntityClass() {
-		return clazz;
-	}
+    public Class<? extends Entity> getEntityClass() {
+        return clazz;
+    }
 
-	public boolean isSchedulable() {
-		return this.equals(EntityType.CLUSTER) ? false : true;
-	}
+    public Marshaller getMarshaller() throws IvoryException {
+        try {
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            return marshaller;
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
+    
+    public Unmarshaller getUnmarshaller() throws IvoryException {
+        try{
+            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            unmarshaller.setSchema(schema);
+            return unmarshaller;
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
+    
+    public boolean isSchedulable() {
+        return this.equals(EntityType.CLUSTER) ? false : true;
+    }
 }

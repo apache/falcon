@@ -22,8 +22,8 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
-import org.apache.ivory.Util;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -35,20 +35,18 @@ import org.xml.sax.SAXException;
  */
 public class CoordinatorUnmarshallingTest {
 
-	@Test
-	public void testValidCoordinatorUnamrashalling() throws JAXBException,
-			SAXException {
-		Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class).createUnmarshaller();
-		Schema schema = Util.getSchema(CoordinatorUnmarshallingTest.class
-				.getResource("/coordinator.xsd"));
-		unmarshaller.setSchema(schema);
-		JAXBElement<COORDINATORAPP> coordinatorApp = (JAXBElement<COORDINATORAPP>) unmarshaller
-				.unmarshal(CoordinatorUnmarshallingTest.class
-						.getResourceAsStream("/coordinator.xml"));
-		COORDINATORAPP app = coordinatorApp.getValue();
-		Assert.assertEquals(app.getName(), "test");
-		Assert.assertEquals(app.getInputEvents().getDataIn().get(0).getName(),
-				"data-in");
-	}
+    @Test
+    public void testValidCoordinatorUnamrashalling() throws JAXBException, SAXException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class)
+                .createUnmarshaller();
+        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/coordinator.xsd"));
+        unmarshaller.setSchema(schema);
+        JAXBElement<COORDINATORAPP> coordinatorApp = (JAXBElement<COORDINATORAPP>) unmarshaller
+                .unmarshal(CoordinatorUnmarshallingTest.class.getResourceAsStream("/coordinator.xml"));
+        COORDINATORAPP app = coordinatorApp.getValue();
+        Assert.assertEquals(app.getName(), "test");
+        Assert.assertEquals(app.getInputEvents().getDataIn().get(0).getName(), "data-in");
+    }
 
 }

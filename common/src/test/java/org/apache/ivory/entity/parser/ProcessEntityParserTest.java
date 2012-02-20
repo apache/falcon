@@ -22,13 +22,14 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Util;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
@@ -40,7 +41,6 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 public class ProcessEntityParserTest {
 
@@ -50,8 +50,8 @@ public class ProcessEntityParserTest {
     private static final String SAMPLE_FEED = "/config/feed/feed-0.1.xml";
 
     @Test
-    public void testNotNullgetUnmarshaller() throws JAXBException {
-        final Unmarshaller unmarshaller = Util.getUnmarshaller(parser.getEntityType().getEntityClass());
+    public void testNotNullgetUnmarshaller() throws Exception {
+        final Unmarshaller unmarshaller = EntityType.PROCESS.getUnmarshaller();
 
         Assert.assertNotNull(unmarshaller);
     }
@@ -59,13 +59,13 @@ public class ProcessEntityParserTest {
     @BeforeMethod
     public void setup() throws Exception {
         cleanup();
-        
+
         ConfigurationStore store = ConfigurationStore.get();
         Cluster prodCluster1 = new Cluster();
         prodCluster1.setName("testCluster");
         store.publish(EntityType.CLUSTER, prodCluster1);
 
-        Unmarshaller unmarshaller = Util.jaxbContext.createUnmarshaller();
+        Unmarshaller unmarshaller = EntityType.FEED.getUnmarshaller();
         Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResourceAsStream(SAMPLE_FEED));
         feed.setName("impressionFeed");
         store.publish(EntityType.FEED, feed);
@@ -102,7 +102,7 @@ public class ProcessEntityParserTest {
         Assert.assertEquals(process.getInputs().getInput().get(0).getStartInstance(), "today(0,0)");
         Assert.assertEquals(process.getInputs().getInput().get(0).getEndInstance(), "today(0,2)");
         assertEquals(process.getInputs().getInput().get(0).getPartition(), "*/US");
-        
+
         Assert.assertEquals(process.getOutputs().getOutput().get(0).getName(), "impOutput");
         Assert.assertEquals(process.getOutputs().getOutput().get(0).getFeed(), "imp-click-join1");
         Assert.assertEquals(process.getOutputs().getOutput().get(0).getInstance(), "today(0,0)");
@@ -119,7 +119,7 @@ public class ProcessEntityParserTest {
         Assert.assertEquals(process.getWorkflow().getLibpath(), "hdfs://path/to/workflow/lib");
 
         StringWriter stringWriter = new StringWriter();
-        Marshaller marshaller = Util.getMarshaller(Process.class);
+        Marshaller marshaller = EntityType.PROCESS.getMarshaller();
         marshaller.marshal(process, stringWriter);
         System.out.println(stringWriter.toString());
 
@@ -133,7 +133,7 @@ public class ProcessEntityParserTest {
     }
 
     @Test(expectedExceptions = ValidationException.class)
-    public void applyValidationInvalidProcess() throws JAXBException, SAXException, StoreAccessException, ValidationException {
+    public void applyValidationInvalidProcess() throws Exception {
         Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_PROCESS_XML));
         process.getClusters().getCluster().get(0).setName("invalid cluster");
         parser.validate(process);
@@ -146,48 +146,33 @@ public class ProcessEntityParserTest {
 
     @Test
     public void testConcurrentParsing() throws IvoryException, InterruptedException {
-
-        Thread thread1 = new Thread() {
-            public void run() {
-                try {
-                    parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
-                } catch (IvoryException e) {
-                    e.printStackTrace();
+        List<Thread> threadList = new ArrayList<Thread>();
+        
+        for (int i = 0; i < 3; i++) {
+            threadList.add(new Thread() {
+                public void run() {
+                    try {
+                        ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+                        parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
+                    } catch (ValidationException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-        };
-
-        Thread thread2 = new Thread() {
-            public void run() {
-                try {
-                    parser.parseAndValidate(ProcessEntityParserTest.class
-                            .getResourceAsStream(SAMPLE_PROCESS_XML));
-                } catch (IvoryException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        Thread thread3 = new Thread() {
-            public void run() {
-                try {
-                    parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_PROCESS_XML));
-                } catch (IvoryException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        thread1.start();
-        thread2.start();
-        thread3.start();
-        Thread.sleep(5000);
+            });
+        }
+        for(Thread thread:threadList) {
+            thread.start();
+        }
+        for(Thread thread:threadList) {
+            thread.join();
+        }
     }
-    
-    @Test(expectedExceptions=ValidationException.class)
+
+    @Test(expectedExceptions = ValidationException.class)
     public void testInvalidPartition() throws Exception {
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(EntityType.FEED, "impressionFeed");
-        
+
         Feed inputFeed1 = new Feed();
         Partitions parts = new Partitions();
         parts.getPartition().add(new Partition("carrier"));

@@ -52,17 +52,13 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     public void afterDelete(Cluster cluster, Entity entity)
             throws IvoryException {
         Path workflowFolder = new Path(ClusterHelper.
-                getLocation(cluster, "staging"), "workflows/" +
-                entity.getEntityType().name().toLowerCase());
-        Path workflowPath = new Path(workflowFolder, "IVORY_" +
-                entity.getEntityType().name().toUpperCase() + "_" +
-                entity.getName() + ".xml");
+                getCompleteLocation(cluster, "staging"), entity.getStagingPath());
         try {
-            FileSystem fs = workflowPath.getFileSystem(new Configuration());
-            LOG.info("Deleting workflow xml: " + workflowPath);
-            if (!fs.delete(workflowPath, true)) {
+            FileSystem fs = workflowFolder.getFileSystem(new Configuration());
+            LOG.info("Deleting workflow " + workflowFolder);
+            if (!fs.delete(workflowFolder, true)) {
                 throw new IvoryException("Unable to cleanup workflow xml; " +
-                        "delete failed " + workflowPath);
+                        "delete failed " + workflowFolder);
             }
         } catch (IOException e) {
             throw new IvoryException("Unable to cleanup workflow xml", e);

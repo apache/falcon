@@ -19,7 +19,7 @@
 <process name="sample" >
     <!-- where -->
     <clusters>
-      <cluster name="testCluster" />
+      <cluster name="corp" />
     </clusters>
 
     <!-- when -->
@@ -36,14 +36,12 @@
     </inputs>
 
     <outputs>
-        <output name="impOutput" feed="imp-click-join1" instance="today(0,0)" />
-        <output name="clicksOutput" feed="imp-click-join2" instance="today(0,0)" />
+        <output name="clicksummary" feed="clicksummary" instance="today(0,0)" />
     </outputs>
 
     <!-- how -->
     <properties>
-    	<property name="name1" value="value1"/>
-    	<property name="name2" value="value2"/>
+    	<property name="procprop" value="procprop"/>
     </properties>
     
     <workflow engine="oozie" path="hdfs://path/to/workflow" libpath="hdfs://path/to/workflow/lib"/>
