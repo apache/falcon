@@ -121,6 +121,7 @@ public class EntityManagerJerseyTest {
 				CLUSTER_FILE_TEMPLATE, overlay));
 		clientRepsonse = this.service.path("api/entities/submit/cluster")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .header("Remote-User", "testuser")
 				.post(ClientResponse.class, testClusterStream);
 
 		String backupCluster = "backupCluster";
@@ -129,6 +130,7 @@ public class EntityManagerJerseyTest {
 				CLUSTER_FILE_TEMPLATE, overlay));
 		clientRepsonse = this.service.path("api/entities/submit/cluster")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .header("Remote-User", "testuser")
 				.post(ClientResponse.class, backupClusterStream);
 	}
 
@@ -166,6 +168,7 @@ public class EntityManagerJerseyTest {
 
         response = this.service
                 .path("api/entities/status/feed/" + feed1)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
 
         String status = response.getEntity(String.class);
@@ -180,6 +183,7 @@ public class EntityManagerJerseyTest {
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/validate/process")
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, stream);
 
@@ -198,6 +202,7 @@ public class EntityManagerJerseyTest {
 
         clientRepsonse = this.service.path("api/entities/validate/cluster")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .header("Remote-User", "testuser")
                 .post(ClientResponse.class, stream);
         checkIfSuccessful(clientRepsonse);
     }
@@ -215,24 +220,28 @@ public class EntityManagerJerseyTest {
 
 		clientRepsonse = this.service
 				.path("api/entities/schedule/cluster/" + cluster)
+                .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		checkIfBadRequest(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/suspend/cluster/" + cluster)
+                .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		checkIfBadRequest(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/resume/cluster/" + cluster)
+                .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		checkIfBadRequest(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/delete/cluster/" + cluster)
+                .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
 		checkIfSuccessful(clientRepsonse);
 	}
@@ -285,6 +294,7 @@ public class EntityManagerJerseyTest {
 
         response = this.service
                 .path("api/entities/definition/feed/" + feed1)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
         String feedXML = response.getEntity(String.class);
@@ -301,6 +311,7 @@ public class EntityManagerJerseyTest {
     public void testInvalidGetEntityDefinition() {
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/definition/process/sample1")
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         checkIfBadRequest(clientRepsonse);
     }
@@ -321,6 +332,7 @@ public class EntityManagerJerseyTest {
 
         return this.service
                 .path("api/entities/submit/" + entityType.name().toLowerCase())
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);
     }
@@ -399,17 +411,20 @@ public class EntityManagerJerseyTest {
 
         ClientResponse clientRepsonse = this.service
         		.path("api/entities/schedule/process/" + process)
+                .header("Remote-User", "testuser")
         		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
         		.post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
 
         clientRepsonse = this.service
                 .path("api/entities/suspend/process/" + process)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
 
         clientRepsonse = this.service
                 .path("api/entities/resume/process/" + process)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
     }
@@ -432,6 +447,7 @@ public class EntityManagerJerseyTest {
 
         response = this.service
                 .path("api/entities/delete/feed/" + feed1)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
     }
@@ -468,12 +484,14 @@ public class EntityManagerJerseyTest {
         //Delete a referred feed
         response = this.service
                 .path("api/entities/delete/feed/" + feed1)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfBadRequest(response);
 
         //Delete a submitted process
         response = this.service
                 .path("api/entities/delete/process/" + process)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
 
@@ -486,6 +504,7 @@ public class EntityManagerJerseyTest {
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/schedule/process/" + process)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
@@ -493,6 +512,7 @@ public class EntityManagerJerseyTest {
         //Delete a scheduled process
         response = this.service
                 .path("api/entities/delete/process/" + process)
+                .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         checkIfSuccessful(response);
 

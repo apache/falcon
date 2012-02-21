@@ -57,11 +57,7 @@ public class EntityManagerTest {
     @DataProvider(name = "validXMLServletStreamProvider")
     private Object[][] servletStreamProvider() {
         ServletInputStream validProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
-
-        // TODO change the xml for Feed and DataEndPoint
         return new Object[][] { { EntityType.PROCESS, validProcessXML },
-                // { EntityType.FEED, validProcessXML },
-                // { EntityType.DATAENDPOINT, validProcessXML }
         };
 
     }
@@ -78,12 +74,6 @@ public class EntityManagerTest {
                                               ServletInputStream stream) throws IOException {
 
         when(mockHttpServletRequest.getInputStream()).thenReturn(stream);
-
-        //TODO -below code -validate tested from EntityManagerJerseyTest currently
-//        APIResult apiResult = entityManager.validate(mockHttpServletRequest,
-//                entityType.name());
-//        Assert.assertNotNull(apiResult);
-//        Assert.assertEquals(apiResult.getStatus(),APIResult.Status.SUCCEEDED);
     }
 
     @Test
