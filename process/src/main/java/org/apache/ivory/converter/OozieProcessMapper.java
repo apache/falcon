@@ -60,6 +60,7 @@ import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.OozieClient;
 
 public class OozieProcessMapper {
 
@@ -209,6 +210,7 @@ public class OozieProcessMapper {
         // add default properties
         properties.put(NAME_NODE, "${" + NAME_NODE + "}");
         properties.put(JOB_TRACKER, "${" + JOB_TRACKER + "}");
+        properties.put(OozieClient.LIBPATH, process.getWorkflow().getPath() + "/lib");
 
         //configuration
         CONFIGURATION conf = new CONFIGURATION();
