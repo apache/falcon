@@ -31,6 +31,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -178,7 +179,10 @@ public class OozieProcessMapper {
                     coord.setInputEvents(new INPUTEVENTS());
                 coord.getInputEvents().getDataIn().add(datain);
 
-                properties.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
+                if(StringUtils.isNotEmpty(input.getPartition()))
+                    properties.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
+                else
+                    properties.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");                    
             }
         }
 
