@@ -24,6 +24,16 @@
     <display-name>Ivory Server</display-name>
     <description>Ivory Server</description>
 
+  <filter>
+    <filter-name>auth</filter-name>
+    <filter-class>org.apache.ivory.BasicAuthFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>auth</filter-name>
+    <servlet-name>IvoryRESTApi</servlet-name>
+  </filter-mapping>
+
   <listener>
     <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
   </listener>

@@ -33,7 +33,7 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.util.StartupProperties;
+import org.apache.ivory.security.CurrentUser;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -78,8 +78,7 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
         properties.setProperty(OozieProcessMapper.NAME_NODE, ClusterHelper.getHdfsUrl(cluster));
         properties.setProperty(OozieProcessMapper.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty(OozieClient.BUNDLE_APP_PATH, "${" + OozieProcessMapper.NAME_NODE + "}" + path.toString());
-        // TODO User name is hacked for now.
-        properties.setProperty(OozieClient.USER_NAME, StartupProperties.get().getProperty("oozie.user.name"));
+        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
 
         Map<String, Object> map = new HashMap<String, Object>();
         List<Properties> propList = new ArrayList<Properties>();
