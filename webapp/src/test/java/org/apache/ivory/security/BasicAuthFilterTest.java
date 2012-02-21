@@ -30,8 +30,11 @@ import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 public class BasicAuthFilterTest {
 
@@ -75,7 +78,7 @@ public class BasicAuthFilterTest {
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
         when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
         filter.doFilter(mockRequest, mockResponse, mockChain);
-        Assert.assertEquals(CurrentUser.getUser(), "testuser");
+        Assert.assertEquals(CurrentUser.getUser(), "guest");
     }
 
     @Test
@@ -92,5 +95,21 @@ public class BasicAuthFilterTest {
         when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
         filter.doFilter(mockRequest, mockResponse, mockChain);
         Assert.assertEquals(CurrentUser.getUser(), "testuser");
+    }
+
+    @Test
+    public void testEmptyUser() throws Exception {
+        Filter filter = new BasicAuthFilter();
+
+        synchronized (StartupProperties.get()) {
+            StartupProperties.get().setProperty("security.enabled", "true");
+            filter.init(mockConfig);
+        }
+
+        HttpServletResponse errorResponse = mock(HttpServletResponse.class);
+        when(mockRequest.getHeader("Remote-User")).thenReturn(null);
+        filter.doFilter(mockRequest, errorResponse, mockChain);
+        verify(errorResponse).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Remote user header can't be empty");
     }
 }

@@ -26,7 +26,7 @@
 
   <filter>
     <filter-name>auth</filter-name>
-    <filter-class>org.apache.ivory.BasicAuthFilter</filter-class>
+    <filter-class>org.apache.ivory.security.BasicAuthFilter</filter-class>
   </filter>
 
   <filter-mapping>

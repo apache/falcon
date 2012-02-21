@@ -36,7 +36,7 @@ public class BasicAuthFilter implements Filter {
     public void init(FilterConfig filterConfig)
             throws ServletException {
         String secure = StartupProperties.get().getProperty("security.enabled",
-                "true");
+                "false");
         this.secure = Boolean.parseBoolean(secure);
     }
 
@@ -46,11 +46,6 @@ public class BasicAuthFilter implements Filter {
                          FilterChain chain)
             throws IOException, ServletException {
 
-        if (!secure) {
-            CurrentUser.authenticate(GUEST);
-            return;
-        }
-
         if (!(request instanceof HttpServletRequest) ||
                 !(response instanceof HttpServletResponse)) {
             throw new IllegalStateException("Invalid request/response object");
@@ -58,14 +53,21 @@ public class BasicAuthFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String user = httpRequest.getHeader("Remote-User");
+        String user;
+
+        if (!secure) {
+            user = GUEST;
+        } else {
+            user = httpRequest.getHeader("Remote-User");
+        }
+
         if (user == null || user.isEmpty()) {
             httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Remote user header can't be empty");
+        } else {
+            CurrentUser.authenticate(user);
+            chain.doFilter(request, response);
         }
-
-        CurrentUser.authenticate(user);
-        chain.doFilter(request, response);
     }
 
     @Override
