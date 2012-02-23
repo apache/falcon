@@ -42,7 +42,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -111,6 +114,9 @@ public class EntityManagerJerseyTest {
         FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
         marshaller.marshal(clusterEntity, out);
         out.close();
+        
+        String hdfsUrl = ClusterHelper.getHdfsUrl(cluster.getCluster());
+        assert new Path(hdfsUrl).getFileSystem(new Configuration()).mkdirs(new Path("/examples/apps/aggregator"));
         
 		ClientResponse clientRepsonse;
 		Map<String, String> overlay = new HashMap<String, String>();

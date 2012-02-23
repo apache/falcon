@@ -96,6 +96,15 @@ public class Feed extends Entity{
     @XmlAttribute
     protected String description;
 
+    public Cluster getCluster(String clusterName) {
+        if(getClusters() != null) {
+            for(Cluster cluster:getClusters().getCluster())
+                if(cluster.getName().equals(clusterName))
+                    return cluster;
+        }
+        return null;
+    }
+    
     /**
      * Gets the value of the partitions property.
      * 

@@ -31,6 +31,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -42,11 +43,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class FeedEntityParserTest {
+public class FeedEntityParserTest extends AbstractTestBase{
 
     private final FeedEntityParser parser = (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
-
-    private static final String SAMPLE_FEED_XML = "/config/feed/feed-0.1.xml";
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -55,11 +54,11 @@ public class FeedEntityParserTest {
         store.remove(EntityType.CLUSTER, "backupCluster");
 
         Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
-        Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream("/config/cluster/cluster-0.1.xml"));
+        Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream(CLUSTER_XML));
         cluster.setName("testCluster");
         store.publish(EntityType.CLUSTER, cluster);
 
-        cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream("/config/cluster/cluster-0.1.xml"));
+        cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResourceAsStream(CLUSTER_XML));
         cluster.setName("backupCluster");
         store.publish(EntityType.CLUSTER, cluster);
     }
@@ -67,33 +66,33 @@ public class FeedEntityParserTest {
     @Test(expectedExceptions=ValidationException.class)
     public void testValidations() throws Exception {
         ConfigurationStore.get().remove(EntityType.CLUSTER, "backupCluster");
-        parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_FEED_XML)); 
+        parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML)); 
     }
     
     @Test
     public void testParse() throws IOException, IvoryException, JAXBException {
 
-        Feed feed = (Feed) parser.parseAndValidate(this.getClass().getResourceAsStream(SAMPLE_FEED_XML));
+        Feed feed = (Feed) parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
 
         Assert.assertNotNull(feed);
         assertEquals(feed.getName(), "clicks");
         assertEquals(feed.getDescription(), "clicks log");
-        assertEquals(feed.getFrequency(), "hourly");
+        assertEquals(feed.getFrequency(), "hours");
         assertEquals(feed.getPeriodicity(), "1");
         assertEquals(feed.getGroups(), "online,bi");
 
         assertEquals(feed.getClusters().getCluster().get(0).getName(), "testCluster");
         assertEquals(feed.getClusters().getCluster().get(0).getType(), ClusterType.SOURCE);
-        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getStart(), "2011-11-01 00:00:00");
-        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getEnd(), "9999-12-31 23:59:00");
+        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getStart(), "2011-11-01T00:00Z");
+        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getEnd(), "2011-12-31T00:00Z");
         assertEquals(feed.getClusters().getCluster().get(0).getValidity().getTimezone(), "UTC");
         assertEquals(feed.getClusters().getCluster().get(0).getRetention().getAction(), ActionType.DELETE);
         assertEquals(feed.getClusters().getCluster().get(0).getRetention().getLimit(), "hours(6)");
 
         assertEquals(feed.getClusters().getCluster().get(1).getName(), "backupCluster");
         assertEquals(feed.getClusters().getCluster().get(1).getType(), ClusterType.TARGET);
-        assertEquals(feed.getClusters().getCluster().get(1).getValidity().getStart(), "2011-11-01 00:00:00");
-        assertEquals(feed.getClusters().getCluster().get(1).getValidity().getEnd(), "9999-12-31 23:59:00");
+        assertEquals(feed.getClusters().getCluster().get(1).getValidity().getStart(), "2011-11-01T00:00Z");
+        assertEquals(feed.getClusters().getCluster().get(1).getValidity().getEnd(), "2011-12-31T00:00Z");
         assertEquals(feed.getClusters().getCluster().get(1).getValidity().getTimezone(), "UTC");
         assertEquals(feed.getClusters().getCluster().get(1).getRetention().getAction(), ActionType.ARCHIVE);
         assertEquals(feed.getClusters().getCluster().get(1).getRetention().getLimit(), "hours(6)");
@@ -125,7 +124,7 @@ public class FeedEntityParserTest {
 
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidFeed() throws Exception {
-        Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(SAMPLE_FEED_XML));
+        Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(FEED_XML));
         feed.getClusters().getCluster().get(0).setName("invalid cluster");
         parser.validate(feed);
     }

@@ -21,7 +21,7 @@
 	<properties>
 		<property name="queueName" value="default"/>
 	</properties>
-	<workflow path="${nameNode}/examples/apps/aggregator" />
+	<workflow path="/examples/apps/aggregator" />
 	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
 
     <late-process policy="exp-backoff" delay="1" delayUnit="hour">

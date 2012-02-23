@@ -33,9 +33,11 @@ import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
@@ -135,8 +137,9 @@ public class OozieProcessMapper {
      * Creates default oozie coordinator 
      * 
      * @return COORDINATORAPP
+     * @throws IvoryException 
      */
-    public COORDINATORAPP createDefaultCoordinator() {
+    public COORDINATORAPP createDefaultCoordinator() throws IvoryException {
         if (process == null)
             return null;
 
@@ -210,7 +213,9 @@ public class OozieProcessMapper {
         // add default properties
         properties.put(NAME_NODE, "${" + NAME_NODE + "}");
         properties.put(JOB_TRACKER, "${" + JOB_TRACKER + "}");
-        properties.put(OozieClient.LIBPATH, process.getWorkflow().getPath() + "/lib");
+        String libDir = getLibDirectory(process.getWorkflow().getPath(), clusterName);
+        if(libDir != null)
+            properties.put(OozieClient.LIBPATH, libDir);
 
         //configuration
         CONFIGURATION conf = new CONFIGURATION();
@@ -229,6 +234,26 @@ public class OozieProcessMapper {
         return coord;
     }
 
+    private String getLibDirectory(String wfpath, String clusterName) throws IvoryException {
+        Path path = new Path(wfpath);
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+        String libDir;
+        try {
+            FileSystem fs = new Path(ClusterHelper.getHdfsUrl(cluster)).getFileSystem(new Configuration());
+            FileStatus status = fs.getFileStatus(path);
+            if(status.isDir())
+                libDir = path.toString() + "/lib";
+            else
+                libDir = path.getParent().toString() + "/lib";
+            
+            if(fs.exists(new Path(libDir)))
+                return libDir;
+        } catch (IOException e) {
+            throw new IvoryException(e);
+        }
+        return null;
+    }
+
     private org.apache.ivory.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name, String value) {
         org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
         prop.setName(name);
@@ -243,15 +268,14 @@ public class OozieProcessMapper {
         return prop;
     }
 
-    private SYNCDATASET createDataSet(String feedName, String clusterName) {
+    private SYNCDATASET createDataSet(String feedName, String clusterName) throws IvoryException {
         Feed feed;
         try {
             feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IvoryException(e);
         }
-        if (feed == null) // This should never happen as its checked in process
-                          // validation
+        if (feed == null) // This should never happen as its checked in process validation
             throw new RuntimeException("Referenced feed " + feedName + " is not registered!");
 
         SYNCDATASET syncdataset = new SYNCDATASET();

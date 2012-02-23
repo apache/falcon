@@ -18,15 +18,17 @@
 
 package org.apache.ivory.listener;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.ivory.util.RuntimeProperties;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.parser.ProcessEntityParser;
+import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.util.StartupProperties;
+import org.apache.log4j.Logger;
 
 public class ContextStartupListener implements ServletContextListener {
 
@@ -44,6 +46,12 @@ public class ContextStartupListener implements ServletContextListener {
 
         LOG.info("Initializing runtime properties ...");
         RuntimeProperties.get();
+        
+        try {
+            ProcessEntityParser.init();
+        } catch (IvoryException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void showStartupInfo() {

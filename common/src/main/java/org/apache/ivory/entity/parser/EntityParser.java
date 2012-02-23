@@ -67,7 +67,7 @@ public abstract class EntityParser<T extends Entity> {
      * @return Entity - JAVA Object
      * @throws IvoryException
      */
-    public Entity parse(String xmlString) throws IvoryException {
+    public Entity parseAndValidate(String xmlString) throws IvoryException {
         InputStream inputStream = new ByteArrayInputStream(xmlString.getBytes());
         Entity entity = parseAndValidate(inputStream);
         return entity;

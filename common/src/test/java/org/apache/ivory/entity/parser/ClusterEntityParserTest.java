@@ -28,6 +28,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
@@ -35,65 +36,53 @@ import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class ClusterEntityParserTest {
+public class ClusterEntityParserTest extends AbstractTestBase {
 
-	private final ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory
-			.getParser(EntityType.CLUSTER);
+    private final ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
 
-	private static final String SAMPLE_DATASET_XML = "/config/cluster/cluster-0.1.xml";
+    @Test
+    public void testParse() throws IOException, IvoryException, JAXBException {
 
-	@Test
-	public void testParse() throws IOException, IvoryException, JAXBException {
+        InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
 
-		InputStream stream = this.getClass().getResourceAsStream(
-				SAMPLE_DATASET_XML);
+        Cluster cluster = (Cluster) parser.parseAndValidate(stream);
 
-		Cluster cluster = (Cluster) parser.parseAndValidate(stream);
+        Assert.assertNotNull(cluster);
+        assertEquals(cluster.getName(), "corp");
 
-		Assert.assertNotNull(cluster);
-		assertEquals(cluster.getName(), "corp");
+        Interface execute = cluster.getInterfaces().get(Interfacetype.EXECUTE);
 
-		Interface execute = cluster.getInterfaces().get(
-				Interfacetype.EXECUTE);
+        assertEquals(execute.getEndpoint(), "localhost:8021");
+        assertEquals(execute.getVersion(), "0.20.2");
 
-		assertEquals(execute.getEndpoint(), "localhost:8021");
-		assertEquals(execute.getVersion(), "0.20.2");
-		
-		Interface readonly = cluster.getInterfaces().get(
-				Interfacetype.READONLY);
-		assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
-		assertEquals(readonly.getVersion(), "0.20.2");
-		
-		Interface write = cluster.getInterfaces().get(
-				Interfacetype.WRITE);
-		assertEquals(write.getEndpoint(), "hdfs://localhost:8020");
-		assertEquals(write.getVersion(), "0.20.2");
-		
-		Interface workflow = cluster.getInterfaces().get(
-				Interfacetype.WORKFLOW);
-		assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
-		assertEquals(workflow.getVersion(), "3.1");
+        Interface readonly = cluster.getInterfaces().get(Interfacetype.READONLY);
+        assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
+        assertEquals(readonly.getVersion(), "0.20.2");
 
-		assertEquals(cluster.getLocations().get("staging")
-				.getName(), "staging");
-		assertEquals(cluster.getLocations().get("staging")
-				.getPath(), "/projects/ivory/staging");
+        Interface write = cluster.getInterfaces().get(Interfacetype.WRITE);
+        assertEquals(write.getEndpoint(), "hdfs://localhost:8020");
+        assertEquals(write.getVersion(), "0.20.2");
 
-		assertEquals(cluster.getProperties().get("field1")
-				.getName(), "field1");
-		assertEquals(cluster.getProperties().get("field1")
-				.getValue(), "value1");
+        Interface workflow = cluster.getInterfaces().get(Interfacetype.WORKFLOW);
+        assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
+        assertEquals(workflow.getVersion(), "3.1");
 
-		StringWriter stringWriter = new StringWriter();
-		Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
-		marshaller.marshal(cluster, stringWriter);
-		System.out.println(stringWriter.toString());
+        assertEquals(cluster.getLocations().get("staging").getName(), "staging");
+        assertEquals(cluster.getLocations().get("staging").getPath(), "/projects/ivory/staging");
 
-	}
+        assertEquals(cluster.getProperties().get("field1").getName(), "field1");
+        assertEquals(cluster.getProperties().get("field1").getValue(), "value1");
 
-	// TODO
-	@Test
-	public void applyValidations() {
-		// throw new RuntimeException("Test not implemented");
-	}
+        StringWriter stringWriter = new StringWriter();
+        Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
+        marshaller.marshal(cluster, stringWriter);
+        System.out.println(stringWriter.toString());
+
+    }
+
+    // TODO
+    @Test
+    public void applyValidations() {
+        // throw new RuntimeException("Test not implemented");
+    }
 }

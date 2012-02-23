@@ -25,13 +25,13 @@
     <!-- when -->
     <concurrency>1</concurrency>
     <execution>LIFO</execution>
-    <frequency>hourly</frequency>
+    <frequency>hours</frequency>
     <periodicity>1</periodicity>
-    <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00" timezone="UTC"/>
+    <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" timezone="UTC"/>
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(0,2)" partition="*/US"/> 
+        <input name="impression" feed="impressionFeed" start-instance="today(0,0)" end-instance="today(2,0)" partition="*/US"/> 
         <input name="clicks" feed="clicksFeed" start-instance="yesterday(0,0)" end-instance="yesterday(20,0)" />
     </inputs>
 

@@ -38,6 +38,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.cluster.Interface;
+import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Process;
@@ -45,6 +48,7 @@ import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class OozieProcessMapperTest extends AbstractTestBase{
@@ -56,6 +60,21 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Configuration conf = new Configuration();
         new MiniDFSCluster(conf , 1, true, null);
         hdfsUrl = conf.get("fs.default.name");
+    }
+    
+    @BeforeMethod
+    public void setUp() throws Exception {
+        super.setup();
+        
+        ConfigurationStore store = ConfigurationStore.get();
+        Cluster cluster = store.get(EntityType.CLUSTER, "corp");
+        Interface inter = new Interface();
+        inter.setEndpoint(hdfsUrl);
+        cluster.getInterfaces().put(Interfacetype.WRITE, inter);
+
+        Process process = store.get(EntityType.PROCESS, "clicksummary");
+        Path wfpath = new Path(process.getWorkflow().getPath());
+        assert new Path(hdfsUrl).getFileSystem(new Configuration()).mkdirs(wfpath);
     }
     
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {

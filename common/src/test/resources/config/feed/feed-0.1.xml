@@ -24,19 +24,19 @@
 
     <groups>online,bi</groups>
 
-    <frequency>hourly</frequency>
+    <frequency>hours</frequency>
     <periodicity>1</periodicity>
 
     <late-arrival cut-off="hours(6)" />
 
     <clusters>
         <cluster name="testCluster" type="source">
-            <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00"
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
                       timezone="UTC" />
             <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
         <cluster name="backupCluster" type="target">
-            <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00"
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
                       timezone="UTC" />
             <retention limit="hours(6)" action="archive" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
