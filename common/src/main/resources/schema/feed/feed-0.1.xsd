@@ -116,11 +116,18 @@
   <xs:complexType name="retention">
     <xs:simpleContent>
       <xs:extension base="xs:string">
+        <xs:attribute type="retention-type" name="type" default="instance"/>
         <xs:attribute type="xs:string" name="limit"/>
         <xs:attribute type="action-type" name="action"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:simpleType name="retention-type">
+      <xs:restriction base="xs:string">
+          <xs:enumeration value="instance"/>
+          <xs:enumeration value="age"/>
+      </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="location">
     <xs:simpleContent>
       <xs:extension base="xs:string">

@@ -26,9 +26,9 @@
       <artifactId>ivory-main</artifactId>
       <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-retention</artifactId>
-    <description>Ivory Retention Module</description>
-    <name>Ivory Retention</name>
+    <artifactId>ivory-test-util</artifactId>
+    <description>Ivory Test Utility</description>
+    <name>Ivory Test Utility</name>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -38,10 +38,10 @@
         <version>0.1-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-test-util</artifactId>
-        <version>0.1-SNAPSHOT</version>
-        <scope>test</scope>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-test</artifactId>
+        <version>0.20.2-cdh3u0</version>
       </dependency>
     </dependencies>
+
 </project>
