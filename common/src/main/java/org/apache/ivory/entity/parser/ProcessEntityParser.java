@@ -21,7 +21,6 @@ package org.apache.ivory.entity.parser;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.ivory.IvoryException;
@@ -165,30 +164,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
     }
     
-    private Date getEndDate(String stime, String etime, String timezone, String frequency, String periodicity) throws IvoryException {
-        try {
-            Calendar endCal = Calendar.getInstance(DateUtils.getTimeZone(timezone));
-            endCal.setTime(DateUtils.parseDateUTC(etime));
-            
-            Calendar startCal = Calendar.getInstance(DateUtils.getTimeZone(timezone));
-            startCal.setTime(DateUtils.parseDateUTC(stime));
-            
-            Frequency freq = Frequency.valueOf(frequency);
-            int period = Integer.valueOf(periodicity);
-            while (startCal.compareTo(endCal) <= 0) {
-                startCal.add(freq.timeUnit.getCalendarUnit(), period);
-            }
-            if(freq.endOfDuration != TimeUnit.NONE) {
-                DateUtils.moveToEnd(startCal, freq.endOfDuration);
-                if(startCal.after(endCal))
-                    startCal.add(freq.timeUnit.getCalendarUnit(), period * -1);
-            }
-            return startCal.getTime();
-        } catch (Exception e) {
-            throw new IvoryException(e);
-        }
-    }
-    
     private void validateInstance(Process process, Output output) throws IvoryException {
         ELEvaluator eval = Services.get().get(ELService.class).createEvaluator("coord-action-create");
         SyncCoordDataset ds = new SyncCoordDataset();
@@ -198,30 +173,17 @@ public class ProcessEntityParser extends EntityParser<Process> {
         configEvaluator(ds, appInst, eval, feed, clusterName, process.getValidity());
         
         try {
-            Date procStart = DateUtils.parseDateUTC(process.getValidity().getStart());
-            Date procEnd = getEndDate(process.getValidity().getStart(), process.getValidity().getEnd(), process.getValidity().getTimezone(), 
-                    process.getFrequency(), process.getPeriodicity());
-            
             org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
-            Date feedEnd = getEndDate(feedValidity.getStart(), feedValidity.getEnd(), feedValidity.getTimezone(), feed.getFrequency(), feed.getPeriodicity());
+            Date feedEnd = DateUtils.parseDateUTC(feedValidity.getEnd());
             
             String instEL = output.getInstance();
+            String instStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEL + "}");
+            if(instStr.equals(""))
+                throw new ValidationException("Instance  "  + instEL + " of feed " + feed.getName() + " is before the start of feed " + feedValidity.getStart());    
             
-            Date[] schedTimes = {procStart, procEnd};
-            for(Date schedTime:schedTimes) {
-                appInst.setNominalTime(schedTime);
-                appInst.setActualTime(schedTime);
-                
-                String instStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEL + "}");
-                if(instStr.equals(""))
-                    throw new ValidationException("Instance  "  + instEL + " of feed " + feed.getName() + " is before the start of feed " + 
-                            feedValidity.getStart() + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));    
-                
-                Date inst = DateUtils.parseDateUTC(instStr);
-                if(inst.after(feedEnd))
-                    throw new ValidationException("End instance " + instEL + " for feed " + feed.getName() + " is after the end of feed " + 
-                            feedValidity.getEnd() + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));                    
-            }
+            Date inst = DateUtils.parseDateUTC(instStr);
+            if(inst.after(feedEnd))
+                throw new ValidationException("End instance " + instEL + " for feed " + feed.getName() + " is after the end of feed " + feedValidity.getEnd());                    
         } catch(ValidationException e) {
             throw e;
         } catch(Exception e) {
@@ -238,41 +200,28 @@ public class ProcessEntityParser extends EntityParser<Process> {
         configEvaluator(ds, appInst, eval, feed, clusterName, process.getValidity());
 
         try {
-            Date procStart = DateUtils.parseDateUTC(process.getValidity().getStart());
-            Date procEnd = getEndDate(process.getValidity().getStart(), process.getValidity().getEnd(), process.getValidity().getTimezone(), 
-                    process.getFrequency(), process.getPeriodicity());
             
             org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
-            Date feedEnd = getEndDate(feedValidity.getStart(), feedValidity.getEnd(), feedValidity.getTimezone(), feed.getFrequency(), feed.getPeriodicity());
+            Date feedEnd = DateUtils.parseDateUTC(feedValidity.getEnd());
             
             String instStartEL = input.getStartInstance();
             String instEndEL = input.getEndInstance();
             
-            Date[] schedTimes = {procStart, procEnd};
-            for(Date schedTime:schedTimes) {
-                appInst.setNominalTime(schedTime);
-                appInst.setActualTime(schedTime);
-                
-                String instStartStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instStartEL + "}");
-                if(instStartStr.equals(""))
-                    throw new ValidationException("Start instance  "  + instStartEL + " of feed " + feed.getName() + " is before the start of feed " + 
-                            feedValidity.getStart() + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));    
-                
-                String instEndStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEndEL + "}");
-                if(instEndStr.equals(""))
-                    throw new ValidationException("End instance  "  + instEndEL + " of feed " + feed.getName() + " is before the start of feed " + 
-                            feedValidity.getStart() + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));    
-                
-                Date instStart = DateUtils.parseDateUTC(instStartStr);
-                Date instEnd = DateUtils.parseDateUTC(instEndStr);
-                if(instEnd.before(instStart))
-                    throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName() + " is before the start instance " + 
-                            instStartEL + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));
-                
-                if(instEnd.after(feedEnd))
-                    throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName() + " is after the end of feed " + 
-                            feedValidity.getEnd() + " for process schedule time " +  DateUtils.formatDateUTC(schedTime));
-            }
+            String instStartStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instStartEL + "}");
+            if(instStartStr.equals(""))
+                throw new ValidationException("Start instance  "  + instStartEL + " of feed " + feed.getName() + " is before the start of feed " + feedValidity.getStart());    
+            
+            String instEndStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEndEL + "}");
+            if(instEndStr.equals(""))
+                throw new ValidationException("End instance  "  + instEndEL + " of feed " + feed.getName() + " is before the start of feed " + feedValidity.getStart());    
+            
+            Date instStart = DateUtils.parseDateUTC(instStartStr);
+            Date instEnd = DateUtils.parseDateUTC(instEndStr);
+            if(instEnd.before(instStart))
+                throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName() + " is before the start instance " + instStartEL);
+            
+            if(instEnd.after(feedEnd))
+                throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName() + " is after the end of feed " + feedValidity.getEnd());
         } catch(ValidationException e) {
             throw e;
         } catch(Exception e) {

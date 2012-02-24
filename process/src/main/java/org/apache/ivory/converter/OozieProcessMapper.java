@@ -250,12 +250,12 @@ public class OozieProcessMapper {
             FileSystem fs = new Path(ClusterHelper.getHdfsUrl(cluster)).getFileSystem(new Configuration());
             FileStatus status = fs.getFileStatus(path);
             if(status.isDir())
-                libDir = "${nameNode}" + path.toString() + "/lib";
+                libDir = path.toString() + "/lib";
             else
-                libDir = "${nameNode}" + path.getParent().toString() + "/lib";
+                libDir = path.getParent().toString() + "/lib";
             
             if(fs.exists(new Path(libDir)))
-                return libDir;
+                return "${nameNode}" + libDir;
         } catch (IOException e) {
             throw new IvoryException(e);
         }
