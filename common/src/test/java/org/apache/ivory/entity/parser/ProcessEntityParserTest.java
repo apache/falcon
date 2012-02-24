@@ -176,7 +176,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     }
 
     @Test
-    public void testConcurrentParsing() throws IvoryException, InterruptedException {
+    public void testConcurrentParsing() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
         
         for (int i = 0; i < 3; i++) {
@@ -185,7 +185,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
                     try {
                         ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
                         parser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
-                    } catch (ValidationException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }

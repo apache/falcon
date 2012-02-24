@@ -224,7 +224,7 @@ public class OozieProcessMapper {
             
         //action
         WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(process.getWorkflow().getPath());
+        wf.setAppPath(getHDFSPath(process.getWorkflow().getPath()));
         wf.setConfiguration(conf);
 
         ACTION action = new ACTION();
@@ -234,17 +234,25 @@ public class OozieProcessMapper {
         return coord;
     }
 
+    private String getHDFSPath(String path) {
+        if(path != null) {
+            if(!path.startsWith("${nameNode}"))
+                path = "${nameNode}" + path;
+        }
+        return path;
+    }
+
     private String getLibDirectory(String wfpath, String clusterName) throws IvoryException {
-        Path path = new Path(wfpath);
+        Path path = new Path(wfpath.replace("${nameNode}", ""));
         org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String libDir;
         try {
             FileSystem fs = new Path(ClusterHelper.getHdfsUrl(cluster)).getFileSystem(new Configuration());
             FileStatus status = fs.getFileStatus(path);
             if(status.isDir())
-                libDir = path.toString() + "/lib";
+                libDir = "${nameNode}" + path.toString() + "/lib";
             else
-                libDir = path.getParent().toString() + "/lib";
+                libDir = "${nameNode}" + path.getParent().toString() + "/lib";
             
             if(fs.exists(new Path(libDir)))
                 return libDir;

@@ -80,7 +80,7 @@ public abstract class EntityParser<T extends Entity> {
      * @return entity
      * @throws IvoryException
      */
-    public T parseAndValidate(InputStream xmlStream) throws ValidationException {
+    public T parseAndValidate(InputStream xmlStream) throws IvoryException {
         try {
             // parse against schema
             Unmarshaller unmarshaller = entityType.getUnmarshaller();
@@ -89,8 +89,10 @@ public abstract class EntityParser<T extends Entity> {
 
             validate(entity);
             return entity;
-        } catch (Exception e) {
-            throw new ValidationException(e);
+        } catch (ValidationException e) {
+            throw e;
+        } catch(Exception e) {
+            throw new IvoryException(e);
         }
     }
 
