@@ -18,12 +18,6 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.OozieProcessMapper;
@@ -34,12 +28,11 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.security.CurrentUser;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
-public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
+import java.util.*;
 
-    private static Logger LOG = Logger.getLogger(OozieProcessWorkflowBuilder.class);
+public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
 
     private static final ConfigurationStore configStore = ConfigurationStore.get();
  
@@ -52,10 +45,11 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
         
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") + entity.getStagingPath());
+        Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
+                entity.getStagingPath());
         
         OozieProcessMapper converter = new OozieProcessMapper(process);
-        Path bundlePath = converter.createBundle(ClusterHelper.getHdfsUrl(cluster), workflowPath);
+        Path bundlePath = converter.convert(workflowPath);
         
         return createAppProperties(cluster, bundlePath);
     }

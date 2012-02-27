@@ -113,7 +113,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         Path stagPath = new Path(process.getStagingPath());
-        Path bundlePath = mapper.createBundle(hdfsUrl, stagPath);
+        Path bundlePath = mapper.convert(new Path(hdfsUrl + "/" + stagPath));
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         assertTrue(fs.exists(bundlePath));
