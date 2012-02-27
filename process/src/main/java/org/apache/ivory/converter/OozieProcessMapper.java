@@ -18,25 +18,13 @@
 
 package org.apache.ivory.converter;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
@@ -47,99 +35,56 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Property;
-import org.apache.ivory.oozie.bundle.BUNDLEAPP;
-import org.apache.ivory.oozie.bundle.COORDINATOR;
-import org.apache.ivory.oozie.coordinator.ACTION;
-import org.apache.ivory.oozie.coordinator.CONFIGURATION;
-import org.apache.ivory.oozie.coordinator.CONTROLS;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-import org.apache.ivory.oozie.coordinator.DATAIN;
-import org.apache.ivory.oozie.coordinator.DATAOUT;
-import org.apache.ivory.oozie.coordinator.DATASETS;
-import org.apache.ivory.oozie.coordinator.INPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.OUTPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.ObjectFactory;
-import org.apache.ivory.oozie.coordinator.SYNCDATASET;
-import org.apache.ivory.oozie.coordinator.WORKFLOW;
+import org.apache.ivory.oozie.coordinator.*;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
-public class OozieProcessMapper {
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String EL_PREFIX = "elext:";
-    private Process process;
     private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
+    private static final JAXBContext coordJaxbContext;
 
-    public static final String NAME_NODE = "nameNode";
-    public static final String JOB_TRACKER = "jobTracker";
-
-    public static final JAXBContext coordJaxbContext;
-    public static final JAXBContext bundleJaxbContext;
-
-    static {
+    static  {
         try {
             coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
-            bundleJaxbContext = JAXBContext.newInstance(BUNDLEAPP.class);
         } catch (JAXBException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Unable to create JAXB context", e);
         }
     }
 
-    public OozieProcessMapper(Process process) {
-        this.process = process;
+    public OozieProcessMapper(Process entity) {
+        super(entity);
     }
 
-    /**
-     * Creates oozie bundle for the process
-     * @param hdfsUrl 
-     * 
-     * @param workflowPath
-     *            - path where coord, bundle defs are stored
-     * @return path to bundle
-     * @throws IvoryException
-     */
-    public Path createBundle(String hdfsUrl, Path workflowPath) throws IvoryException {
-        BUNDLEAPP bundleApp = new BUNDLEAPP();
-        bundleApp.setName(process.getWorkflowName());
-
-        // Add default coordinator
-        COORDINATORAPP defCoordApp = createDefaultCoordinator();
-        Path defCoordPath = new Path(workflowPath, "defaultCoordinator.xml");
-        String coord = marshal(defCoordApp);
-        LOG.debug("Default coordinator: " + coord);
-        writeToHDFS(coord, hdfsUrl, defCoordPath);
-        LOG.debug("Wrote default coordinator to: " + defCoordPath);
-        
-        COORDINATOR defCoord = new COORDINATOR();
-        defCoord.setAppPath("${" + NAME_NODE + "}" + defCoordPath.toString());
-        defCoord.setName(defCoordApp.getName());
-        defCoord.setConfiguration(createBundleConf());
-        bundleApp.getCoordinator().add(defCoord);
-
-        // TODO add coords for late data processing
-
-        Path bundlePath = new Path(workflowPath, "bundle.xml");
-        String bundle = marshal(bundleApp);
-        LOG.debug("Bundle: " + bundle);
-        writeToHDFS(bundle, hdfsUrl, bundlePath);
-        LOG.debug("Wrote bundle to: " + bundlePath);
-        return bundlePath;
-    }
-
-    private org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf() {
-        org.apache.ivory.oozie.bundle.CONFIGURATION conf = new org.apache.ivory.oozie.bundle.CONFIGURATION();
-        conf.getProperty().add(createBundleProperty(NAME_NODE, "${" + NAME_NODE + "}"));
-        conf.getProperty().add(createBundleProperty(JOB_TRACKER, "${" + JOB_TRACKER + "}"));
-        return conf;
+    @Override
+    protected Pair<org.apache.ivory.entity.v0.cluster.Cluster,
+            List<COORDINATORAPP>> getCoordinators() throws IvoryException {
+        String clusterName = getEntity().getClusters().getCluster().get(0).getName();
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = configStore.
+                get(EntityType.CLUSTER, clusterName);
+        return Pair.of(cluster, Arrays.asList(createDefaultCoordinator()));
     }
 
     /**
      * Creates default oozie coordinator 
      * 
      * @return COORDINATORAPP
-     * @throws IvoryException 
+     * @throws IvoryException on Error
      */
     public COORDINATORAPP createDefaultCoordinator() throws IvoryException {
+        Process process = getEntity();
         if (process == null)
             return null;
 
@@ -231,6 +176,18 @@ public class OozieProcessMapper {
         action.setWorkflow(wf);
         coord.setAction(action);
 
+        try {
+            if (LOG.isDebugEnabled()) {
+                Marshaller marshaller = coordJaxbContext.createMarshaller();
+                marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+                StringWriter writer = new StringWriter();
+                marshaller.marshal(new ObjectFactory().createCoordinatorApp(coord), writer);
+                LOG.debug(writer.getBuffer());
+            }
+        } catch (JAXBException e) {
+            LOG.error("Unable to marshal coordinator app instance for debug", e);
+        }
+
         return coord;
     }
 
@@ -260,20 +217,6 @@ public class OozieProcessMapper {
             throw new IvoryException(e);
         }
         return null;
-    }
-
-    private org.apache.ivory.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name, String value) {
-        org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
-    }
-
-    private org.apache.ivory.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
-        org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop = new org.apache.ivory.oozie.bundle.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
     }
 
     private SYNCDATASET createDataSet(String feedName, String clusterName) throws IvoryException {
@@ -314,41 +257,4 @@ public class OozieProcessMapper {
         return expr;
     }
 
-    private String marshal(JAXBElement<?> jaxbElement, JAXBContext jaxbContext) throws IvoryException {
-        try{
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            StringWriter writer = new StringWriter();
-            marshaller.marshal(jaxbElement, writer);
-            return writer.toString();
-        }catch(Exception e) {
-            throw new IvoryException(e);
-        }
-    }
-    
-    private void writeToHDFS(String str, String hdfsUrl, Path path) throws IvoryException {
-        OutputStreamWriter writer = null;
-        try{
-            FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
-            writer = new OutputStreamWriter(fs.create(path));
-            writer.write(str);
-        } catch(Exception e) {
-            throw new IvoryException(e);
-        } finally {
-            if(writer != null)
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    throw new IvoryException(e);
-                }
-        }
-    }
-    
-    private String marshal(COORDINATORAPP coord) throws IvoryException {
-        return marshal(new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext);
-    }
-
-    private String marshal(BUNDLEAPP bundle) throws IvoryException {
-        return marshal(new org.apache.ivory.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext);
-    }
 }
