@@ -58,5 +58,74 @@
         <version>3.0.2</version>
       </dependency>
     </dependencies>
-
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.sun.tools.xjc.maven2</groupId>
+				<artifactId>maven-jaxb-plugin</artifactId>
+				<version>1.1.1</version>
+				<executions>
+					<execution>
+						<id>1</id>
+<!-- 						<phase>generate-sources</phase> -->
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generateDirectory>src/main/java</generateDirectory>
+							<generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
+							<includeSchemas>
+								<includeSchema>oozie/xsds/coordinator.xsd</includeSchema>
+							</includeSchemas>
+							<excludeBindings>
+								<exluceBinding>jaxb-binding.xjb</exluceBinding>
+							</excludeBindings>
+						</configuration>
+					</execution>
+					<execution>
+						<id>2</id>
+<!-- 						<phase>generate-sources</phase> -->
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generateDirectory>src/main/java</generateDirectory>
+							<generatePackage>org.apache.ivory.oozie.workflow</generatePackage>
+							<includeSchemas>
+								<includeSchema>oozie/xsds/workflow.xsd</includeSchema>
+							</includeSchemas>
+							<excludeBindings>
+								<exluceBinding>jaxb-binding.xjb</exluceBinding>
+							</excludeBindings>
+						</configuration>
+					</execution>
+					<execution>
+						<id>3</id>
+<!-- 						<phase>generate-sources</phase> -->
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generateDirectory>src/main/java</generateDirectory>
+							<generatePackage>org.apache.ivory.oozie.bundle</generatePackage>
+							<includeSchemas>
+								<includeSchema>oozie/xsds/bundle.xsd</includeSchema>
+							</includeSchemas>
+							<excludeBindings>
+								<exluceBinding>jaxb-binding.xjb</exluceBinding>
+							</excludeBindings>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>  
 </project>

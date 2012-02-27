@@ -65,80 +65,24 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <!-- <directory>target</directory> <outputDirectory>target/classes</outputDirectory> 
-            <finalName>${project.artifactId}-${project.version}</finalName> <testOutputDirectory>target/test-classes</testOutputDirectory> 
-            <sourceDirectory>src/main/java</sourceDirectory> <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory> 
-            <testSourceDirectory>src/test/java</testSourceDirectory> <resources> <resource> 
-            <directory>src/main/resources</directory> </resource> </resources> <testResources> 
-            <testResource> <directory>src/test/resources</directory> </testResource> 
-            </testResources> -->
-        <plugins>
-            <plugin>
-                <groupId>com.sun.tools.xjc.maven2</groupId>
-                <artifactId>maven-jaxb-plugin</artifactId>
-                <version>1.1.1</version>
-                <executions>
-                    <execution>
-                        <id>1</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>coordinator.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <exluceBinding>jaxb-binding.xjb</exluceBinding>
-                            </excludeBindings>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>2</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>org.apache.ivory.oozie.workflow</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>workflow.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <exluceBinding>jaxb-binding.xjb</exluceBinding>
-                            </excludeBindings>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>3</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>org.apache.ivory.oozie.bundle</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>bundle.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <exluceBinding>jaxb-binding.xjb</exluceBinding>
-                            </excludeBindings>
-                        </configuration>
-                    </execution>
-                </executions>
-
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<!-- <directory>target</directory> <outputDirectory>target/classes</outputDirectory> 
+			<finalName>${project.artifactId}-${project.version}</finalName> <testOutputDirectory>target/test-classes</testOutputDirectory> 
+			<sourceDirectory>src/main/java</sourceDirectory> <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory> 
+			<testSourceDirectory>src/test/java</testSourceDirectory> <resources> <resource> 
+			<directory>src/main/resources</directory> </resource> </resources> <testResources> 
+			<testResource> <directory>src/test/resources</directory> </testResource> 
+			</testResources> -->
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

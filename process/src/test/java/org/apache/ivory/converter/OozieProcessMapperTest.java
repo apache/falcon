@@ -133,7 +133,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/coordinator.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/coordinator.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<COORDINATORAPP> jaxbBundle = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), COORDINATORAPP.class);
         return jaxbBundle.getValue();                
@@ -144,7 +144,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/bundle.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/bundle.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<BUNDLEAPP> jaxbBundle = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), BUNDLEAPP.class);
         return jaxbBundle.getValue();        
