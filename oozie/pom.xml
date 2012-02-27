@@ -72,7 +72,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<generateDirectory>src/main/java</generateDirectory>
+<!-- 							<generateDirectory>src/main/java</generateDirectory> -->
 							<generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
 							<includeSchemas>
 								<includeSchema>oozie/xsds/coordinator.xsd</includeSchema>
@@ -89,7 +89,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<generateDirectory>src/main/java</generateDirectory>
+<!-- 							<generateDirectory>src/main/java</generateDirectory> -->
 							<generatePackage>org.apache.ivory.oozie.workflow</generatePackage>
 							<includeSchemas>
 								<includeSchema>oozie/xsds/workflow.xsd</includeSchema>
@@ -106,7 +106,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<generateDirectory>src/main/java</generateDirectory>
+<!-- 							<generateDirectory>src/main/java</generateDirectory> -->
 							<generatePackage>org.apache.ivory.oozie.bundle</generatePackage>
 							<includeSchemas>
 								<includeSchema>oozie/xsds/bundle.xsd</includeSchema>
