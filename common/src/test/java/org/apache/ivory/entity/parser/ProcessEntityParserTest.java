@@ -134,27 +134,6 @@ public class ProcessEntityParserTest extends AbstractTestBase{
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) { }
 
-        process.getInputs().getInput().get(0).setStartInstance("today(0,0)");
-        process.getInputs().getInput().get(0).setEndInstance("today(50,0)");
-        try {
-            parser.validate(process);
-            throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
-        
-        process.getInputs().getInput().get(0).setStartInstance("today(0,0)");
-        process.getInputs().getInput().get(0).setEndInstance("today(2,0)");
-
-        process.getOutputs().getOutput().get(0).setInstance("lastMonth(0,0,0)");
-        try {
-            parser.validate(process);
-            throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
-
-        process.getOutputs().getOutput().get(0).setInstance("today(50,0)");
-        try {
-            parser.validate(process);
-            throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
     }
     
     @Test(expectedExceptions = IvoryException.class)
@@ -176,7 +155,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     }
 
     @Test
-    public void testConcurrentParsing() throws IvoryException, InterruptedException {
+    public void testConcurrentParsing() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
         
         for (int i = 0; i < 3; i++) {
@@ -185,7 +164,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
                     try {
                         ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
                         parser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
-                    } catch (ValidationException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }

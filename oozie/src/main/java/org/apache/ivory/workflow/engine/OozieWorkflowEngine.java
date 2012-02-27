@@ -116,8 +116,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         SUSPENDED_FILTER = suspendedFilter.toString();
     }
 
-    // To be replaced with bundle. We should actually be operating at bundle
-    // granularity
     public Map<Cluster, BundleJob> findActiveBundle(Entity entity) throws IvoryException {
         return findBundleInternal(entity, ACTIVE_FILTER);
     }

@@ -169,7 +169,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             
         //action
         WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(process.getWorkflow().getPath());
+        wf.setAppPath(getHDFSPath(process.getWorkflow().getPath()));
         wf.setConfiguration(conf);
 
         ACTION action = new ACTION();
@@ -191,8 +191,16 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return coord;
     }
 
+    private String getHDFSPath(String path) {
+        if(path != null) {
+            if(!path.startsWith("${nameNode}"))
+                path = "${nameNode}" + path;
+        }
+        return path;
+    }
+
     private String getLibDirectory(String wfpath, String clusterName) throws IvoryException {
-        Path path = new Path(wfpath);
+        Path path = new Path(wfpath.replace("${nameNode}", ""));
         org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String libDir;
         try {
@@ -204,7 +212,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 libDir = path.getParent().toString() + "/lib";
             
             if(fs.exists(new Path(libDir)))
-                return libDir;
+                return "${nameNode}" + libDir;
         } catch (IOException e) {
             throw new IvoryException(e);
         }
