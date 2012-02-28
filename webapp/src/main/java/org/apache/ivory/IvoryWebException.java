@@ -18,14 +18,19 @@
 
 package org.apache.ivory;
 
+import org.apache.log4j.Logger;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 public class IvoryWebException extends WebApplicationException {
 
+    private static final Logger LOG = Logger.getLogger(IvoryWebException.class);
+
     public static IvoryWebException newException(Throwable e,
                                                  Response.Status status) {
+        LOG.error("Action failed: " + status, e);
         return new IvoryWebException(Response.status(status).
                 entity(e.getMessage() + "\n" + getAddnInfo(e)).
                 type(MediaType.TEXT_PLAIN_TYPE).build());

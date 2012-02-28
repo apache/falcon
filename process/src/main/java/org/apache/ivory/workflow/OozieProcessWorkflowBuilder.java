@@ -32,25 +32,23 @@ import org.apache.oozie.client.OozieClient;
 
 import java.util.*;
 
-public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
+public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder {
 
-    private static final ConfigurationStore configStore = ConfigurationStore.get();
- 
     @Override
     public Map<String, Object> newWorkflowSchedule(Entity entity) throws IvoryException {
         if (!(entity instanceof Process))
             throw new IllegalArgumentException(entity.getName() + " is not of type Process");
 
         Process process = (Process) entity;
-        
+
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
                 entity.getStagingPath());
-        
+
         OozieProcessMapper converter = new OozieProcessMapper(process);
-        Path bundlePath = converter.convert(workflowPath);
-        
+        Path bundlePath = converter.convert(cluster, workflowPath);
+
         return createAppProperties(cluster, bundlePath);
     }
 
@@ -65,22 +63,5 @@ public class OozieProcessWorkflowBuilder extends WorkflowBuilder {
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         return new Cluster[] { cluster };
-    }
-
-    private Map<String, Object> createAppProperties(Cluster cluster, Path path) throws IvoryException {
-        Properties properties = new Properties();
-        properties.setProperty(OozieProcessMapper.NAME_NODE, ClusterHelper.getHdfsUrl(cluster));
-        properties.setProperty(OozieProcessMapper.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
-        properties.setProperty(OozieClient.BUNDLE_APP_PATH, "${" + OozieProcessMapper.NAME_NODE + "}" + path.toString());
-        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
-
-        Map<String, Object> map = new HashMap<String, Object>();
-        List<Properties> propList = new ArrayList<Properties>();
-        propList.add(properties);
-        map.put(PROPS, propList);
-        List<Cluster> clList = new ArrayList<Cluster>();
-        clList.add(cluster);
-        map.put(CLUSTERS, clList);
-        return map;
     }
 }

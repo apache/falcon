@@ -19,16 +19,14 @@
 package org.apache.ivory.converter;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Pair;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.feed.Cluster;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
@@ -36,6 +34,7 @@ import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Property;
 import org.apache.ivory.oozie.coordinator.*;
+import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -69,21 +68,19 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     }
 
     @Override
-    protected Pair<org.apache.ivory.entity.v0.cluster.Cluster,
-            List<COORDINATORAPP>> getCoordinators() throws IvoryException {
-        String clusterName = getEntity().getClusters().getCluster().get(0).getName();
-        org.apache.ivory.entity.v0.cluster.Cluster cluster = configStore.
-                get(EntityType.CLUSTER, clusterName);
-        return Pair.of(cluster, Arrays.asList(createDefaultCoordinator()));
+    protected List<COORDINATORAPP> getCoordinators(Cluster cluster)
+            throws IvoryException {
+        return Arrays.asList(createDefaultCoordinator(cluster));
     }
 
     /**
      * Creates default oozie coordinator 
      * 
+     * @param cluster Cluster for which the coordiantor app need to be created
      * @return COORDINATORAPP
      * @throws IvoryException on Error
      */
-    public COORDINATORAPP createDefaultCoordinator() throws IvoryException {
+    public COORDINATORAPP createDefaultCoordinator(Cluster cluster) throws IvoryException {
         Process process = getEntity();
         if (process == null)
             return null;
@@ -110,11 +107,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 properties.put(prop.getName(), prop.getValue());
         }
 
-        String clusterName = process.getClusters().getCluster().get(0).getName();
         // inputs
         if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInput()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), clusterName);
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
@@ -138,7 +134,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // outputs
         if (process.getOutputs() != null) {
             for (Output output : process.getOutputs().getOutput()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), clusterName);
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
@@ -156,9 +152,9 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
 
         // add default properties
-        properties.put(NAME_NODE, "${" + NAME_NODE + "}");
-        properties.put(JOB_TRACKER, "${" + JOB_TRACKER + "}");
-        String libDir = getLibDirectory(process.getWorkflow().getPath(), clusterName);
+        properties.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
+        properties.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
+        String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
         if(libDir != null)
             properties.put(OozieClient.LIBPATH, libDir);
 
@@ -199,12 +195,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return path;
     }
 
-    private String getLibDirectory(String wfpath, String clusterName) throws IvoryException {
+    private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
         Path path = new Path(wfpath.replace("${nameNode}", ""));
-        org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String libDir;
         try {
-            FileSystem fs = new Path(ClusterHelper.getHdfsUrl(cluster)).getFileSystem(new Configuration());
+            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
             FileStatus status = fs.getFileStatus(path);
             if(status.isDir())
                 libDir = path.toString() + "/lib";
@@ -219,7 +214,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return null;
     }
 
-    private SYNCDATASET createDataSet(String feedName, String clusterName) throws IvoryException {
+    private SYNCDATASET createDataSet(String feedName, Cluster cluster) throws IvoryException {
         Feed feed;
         try {
             feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
@@ -234,16 +229,20 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         syncdataset.setUriTemplate("${nameNode}" + feed.getLocations().get(LocationType.DATA).getPath());
         syncdataset.setFrequency("${coord:" + feed.getFrequency() + "(" + feed.getPeriodicity() + ")}");
 
-        Cluster cluster = getCluster(feed.getClusters().getCluster(), clusterName);
-        syncdataset.setInitialInstance(cluster.getValidity().getStart());
-        syncdataset.setTimezone(cluster.getValidity().getTimezone());
+        org.apache.ivory.entity.v0.feed.Cluster feedCluster =
+                getCluster(feed.getClusters().getCluster(), cluster.getName());
+        syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
+        syncdataset.setTimezone(feedCluster.getValidity().getTimezone());
         syncdataset.setDoneFlag("");
         return syncdataset;
     }
 
-    private Cluster getCluster(List<Cluster> clusters, String clusterName) {
+    private org.apache.ivory.entity.v0.feed.Cluster getCluster(
+            List<org.apache.ivory.entity.v0.feed.Cluster> clusters,
+            String clusterName) {
+
         if (clusters != null) {
-            for (Cluster cluster : clusters)
+            for (org.apache.ivory.entity.v0.feed.Cluster cluster : clusters)
                 if (cluster.getName().equals(clusterName))
                     return cluster;
         }

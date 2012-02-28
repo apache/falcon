@@ -18,11 +18,9 @@
 
 package org.apache.ivory.converter;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Pair;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -32,6 +30,7 @@ import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 
 import javax.xml.bind.JAXBContext;
@@ -39,28 +38,26 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.List;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
-    public static final String NAME_NODE = "nameNode";
-    public static final String JOB_TRACKER = "jobTracker";
-
+    private static final JAXBContext workflowJaxbContext;
     private static final JAXBContext coordJaxbContext;
     private static final JAXBContext bundleJaxbContext;
 
     static {
         try {
+            workflowJaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
             coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
             bundleJaxbContext = JAXBContext.newInstance(BUNDLEAPP.class);
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to create JAXB context", e);
         }
     }
-
-    protected static final ConfigurationStore configStore = ConfigurationStore.get();
 
     private final T entity;
 
@@ -72,47 +69,92 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return entity;
     }
 
-    public Path convert(Path workflowBasePath) throws IvoryException {
+    public Path convert(Cluster cluster, Path workflowBasePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
         bundleApp.setName(entity.getWorkflowName());
 
-        Pair<Cluster, List<COORDINATORAPP>> coordinators = getCoordinators();
+        List<COORDINATORAPP> coordinators = getCoordinators(cluster);
 
-        for (COORDINATORAPP coordinatorapp : coordinators.second) {
+        for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = new Path(workflowBasePath,
                     coordinatorapp.getName() + "/coordinator.xml");
-            marshal(coordinators.first, coordinatorapp, coordPath);
+            if(true || LOG.isDebugEnabled()) {
+                debug(coordinatorapp, coordPath);
+            }
+            marshal(cluster, coordinatorapp, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath("${" + NAME_NODE + "}" + coordPath);
+            bundleCoord.setAppPath("${" + OozieWorkflowEngine.NAME_NODE + "}" + coordPath);
             bundleCoord.setConfiguration(createBundleConf());
             bundleApp.getCoordinator().add(bundleCoord);
         }
         Path bundlePath = new Path(workflowBasePath,
                 bundleApp.getName() + "/bundle.xml");
-        marshal(coordinators.first, bundleApp, bundlePath);
+        marshal(cluster, bundleApp, bundlePath);
+        if(true || LOG.isDebugEnabled()) {
+            debug(bundleApp, bundlePath);
+        }
         return bundlePath;
     }
 
-    protected abstract Pair<Cluster, List<COORDINATORAPP>> getCoordinators()
+    private void debug(COORDINATORAPP coordinatorapp, Path coordPath) {
+        try{
+            Marshaller marshaller = coordJaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(new ObjectFactory().
+                    createCoordinatorApp(coordinatorapp), writer);
+            LOG.info("Writing coordinator definition to " + coordPath);
+            LOG.info(writer.getBuffer());
+        } catch(Exception e) {
+            LOG.warn("Unable to marshall app object in " + coordPath, e);
+        }
+    }
+
+    private void debug(BUNDLEAPP bundleApp, Path bundlePath) {
+        try{
+            Marshaller marshaller = bundleJaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(new org.apache.ivory.oozie.bundle.ObjectFactory().
+                    createBundleApp(bundleApp), writer);
+            LOG.info("Writing bundle definition to " + bundlePath);
+            LOG.info(writer.getBuffer());
+        } catch(Exception e) {
+            LOG.warn("Unable to marshall app object in " + bundlePath, e);
+        }
+    }
+
+    protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster)
             throws IvoryException;
 
     protected org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf() {
-        org.apache.ivory.oozie.bundle.CONFIGURATION conf = new org.apache.ivory.oozie.bundle.CONFIGURATION();
-        conf.getProperty().add(createBundleProperty(NAME_NODE, "${" + NAME_NODE + "}"));
-        conf.getProperty().add(createBundleProperty(JOB_TRACKER, "${" + JOB_TRACKER + "}"));
+
+        org.apache.ivory.oozie.bundle.CONFIGURATION conf = new
+                org.apache.ivory.oozie.bundle.CONFIGURATION();
+
+        conf.getProperty().add(createBundleProperty(OozieWorkflowEngine.NAME_NODE,
+                "${" + OozieWorkflowEngine.NAME_NODE + "}"));
+        conf.getProperty().add(createBundleProperty(OozieWorkflowEngine.JOB_TRACKER,
+                "${" + OozieWorkflowEngine.JOB_TRACKER + "}"));
         return conf;
     }
 
-    protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name, String value) {
-        org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
+    protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property
+            createCoordProperty(String name, String value) {
+
+        org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new
+                org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
     }
 
-    protected org.apache.ivory.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
-        org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop = new org.apache.ivory.oozie.bundle.CONFIGURATION.Property();
+    protected org.apache.ivory.oozie.bundle.CONFIGURATION.Property
+            createBundleProperty(String name, String value) {
+
+        org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop = new
+                org.apache.ivory.oozie.bundle.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
@@ -150,5 +192,12 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         marshal(cluster, new org.apache.ivory.oozie.bundle.ObjectFactory().
                 createBundleApp(bundle), bundleJaxbContext, outPath);
+    }
+
+    protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath)
+            throws IvoryException {
+
+        marshal(cluster, new org.apache.ivory.oozie.workflow.ObjectFactory().
+                createWorkflowApp(workflow), workflowJaxbContext, outPath);
     }
 }

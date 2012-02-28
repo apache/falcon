@@ -111,9 +111,10 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     @Test
     public void testBunlde() throws Exception {
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         Path stagPath = new Path(process.getStagingPath());
-        Path bundlePath = mapper.convert(new Path(hdfsUrl + "/" + stagPath));
+        Path bundlePath = mapper.convert(cluster, new Path(hdfsUrl + "/" + stagPath));
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         assertTrue(fs.exists(bundlePath));

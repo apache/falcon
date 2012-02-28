@@ -94,6 +94,8 @@ public class SchedulableEntityManager extends EntityManager {
 			audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
 			Entity entity = submitInternal(request, type);
 			return schedule(request, type, entity.getName());
+		} catch (IvoryWebException e) {
+            throw e;
 		} catch (Exception e) {
 			LOG.error("Unable to submit and schedule ", e);
 			throw IvoryWebException

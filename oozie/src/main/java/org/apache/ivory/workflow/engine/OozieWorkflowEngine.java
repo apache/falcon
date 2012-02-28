@@ -42,6 +42,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
 
+    public static final String NAME_NODE = "nameNode";
+    public static final String JOB_TRACKER = "jobTracker";
+
     public static final String ENGINE = "oozie";
     private static final BundleJob MISSING = new NullBundleJob();
 
@@ -62,6 +65,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 OozieClient client = OozieClientFactory.get(clusters.get(index));
 
                 listener.beforeSchedule(clusters.get(index), entity);
+                LOG.info("**** Submitting with properties : " + workflowProps.get(0));
                 String result = client.run(workflowProps.get(0));
                 listener.afterSchedule(clusters.get(index), entity);
 
