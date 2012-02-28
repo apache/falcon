@@ -88,7 +88,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         COORDINATORAPP coord = new COORDINATORAPP();
 
         // coord attributes
-        coord.setName(process.getWorkflowName() + "_DEFAULT");
+        coord.setName(process.getWorkflowName() + "_" + process.getName() + "_DEFAULT");
         coord.setStart(process.getValidity().getStart());
         coord.setEnd(process.getValidity().getEnd());
         coord.setTimezone(process.getValidity().getTimezone());

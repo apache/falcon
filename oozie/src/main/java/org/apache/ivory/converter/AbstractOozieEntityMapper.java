@@ -71,14 +71,14 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     public Path convert(Cluster cluster, Path workflowBasePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
-        bundleApp.setName(entity.getWorkflowName());
+        bundleApp.setName(entity.getWorkflowName() + "_" + entity.getName());
 
         List<COORDINATORAPP> coordinators = getCoordinators(cluster);
 
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = new Path(workflowBasePath,
                     coordinatorapp.getName() + "/coordinator.xml");
-            if(true || LOG.isDebugEnabled()) {
+            if(LOG.isDebugEnabled()) {
                 debug(coordinatorapp, coordPath);
             }
             marshal(cluster, coordinatorapp, coordPath);
@@ -91,7 +91,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         Path bundlePath = new Path(workflowBasePath,
                 bundleApp.getName() + "/bundle.xml");
         marshal(cluster, bundleApp, bundlePath);
-        if(true || LOG.isDebugEnabled()) {
+        if(LOG.isDebugEnabled()) {
             debug(bundleApp, bundlePath);
         }
         return bundlePath;
@@ -104,8 +104,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             StringWriter writer = new StringWriter();
             marshaller.marshal(new ObjectFactory().
                     createCoordinatorApp(coordinatorapp), writer);
-            LOG.info("Writing coordinator definition to " + coordPath);
-            LOG.info(writer.getBuffer());
+            LOG.debug("Writing coordinator definition to " + coordPath);
+            LOG.debug(writer.getBuffer());
         } catch(Exception e) {
             LOG.warn("Unable to marshall app object in " + coordPath, e);
         }
@@ -118,8 +118,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             StringWriter writer = new StringWriter();
             marshaller.marshal(new org.apache.ivory.oozie.bundle.ObjectFactory().
                     createBundleApp(bundleApp), writer);
-            LOG.info("Writing bundle definition to " + bundlePath);
-            LOG.info(writer.getBuffer());
+            LOG.debug("Writing bundle definition to " + bundlePath);
+            LOG.debug(writer.getBuffer());
         } catch(Exception e) {
             LOG.warn("Unable to marshall app object in " + bundlePath, e);
         }

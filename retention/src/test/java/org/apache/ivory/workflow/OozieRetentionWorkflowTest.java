@@ -18,6 +18,8 @@
 
 package org.apache.ivory.workflow;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
@@ -39,11 +41,13 @@ public class OozieRetentionWorkflowTest {
     @BeforeClass
     public void start() throws Exception{
         cluster = EmbeddedCluster.newCluster("eviction", true);
+        LocalOozie.start();
     }
 
     @AfterClass
     public void close() throws Exception {
         cluster.shutdown();
+        LocalOozie.stop();
     }
 
     //@Test
@@ -54,7 +58,21 @@ public class OozieRetentionWorkflowTest {
                 getHdfsUrl(cluster.getCluster()));
         properties.put(OozieWorkflowEngine.JOB_TRACKER, ClusterHelper.
                 getMREndPoint(cluster.getCluster()));
+        properties.put("queueName", "default");
+        properties.put("feedDataPath", "/data/feed1/${YEAR}-${MONTH}-${DAY}-${HOUR}");
+        properties.put("limit", "hours(5)");
+        properties.put("timeZone", "UTC");
+        properties.put("frequency", "hourly");
+        properties.put(OozieClient.APP_PATH, "/ivory/workflow");
+        properties.put(OozieClient.LIBPATH, "/ivory/workflow/lib");
+        stageSystemFiles();
         client.run(properties);
+    }
+
+    private void stageSystemFiles() throws Exception {
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+
     }
 
 

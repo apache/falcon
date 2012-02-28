@@ -34,7 +34,10 @@ import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
@@ -90,7 +93,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private Path createRetentionWorkflow(Cluster cluster) throws IOException {
         Path outPath = new Path(ClusterHelper.getLocation(cluster, "staging"),
-                "ivory/system/retention-workflow.xml");
+                "ivory/system/retention/workflow.xml");
         if (!retentionUploaded) {
             InputStream in = getClass().getResourceAsStream("/retention-workflow.xml");
             FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
