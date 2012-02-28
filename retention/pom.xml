@@ -39,6 +39,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-feed</artifactId>
+        <version>0.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.ivory</groupId>
         <artifactId>ivory-test-util</artifactId>
         <version>0.1-SNAPSHOT</version>
         <scope>test</scope>

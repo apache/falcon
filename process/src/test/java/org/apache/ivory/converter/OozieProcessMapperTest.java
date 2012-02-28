@@ -78,7 +78,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {
-        assertEquals("IVORY_PROCESS_" + process.getName() + "_DEFAULT", coord.getName());
+        assertEquals("IVORY_PROCESS_DEFAULT", coord.getName());
         assertEquals(process.getValidity().getStart(), coord.getStart());
         assertEquals(process.getValidity().getEnd(), coord.getEnd());
         assertEquals("${coord:"+process.getFrequency()+"("+process.getPeriodicity()+")}", coord.getFrequency());

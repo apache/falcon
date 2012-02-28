@@ -76,6 +76,6 @@ public abstract class Entity {
 	}
 	
 	public String getWorkflowName() {
-	    return "IVORY_" + getEntityType().name().toUpperCase() + "_" + getName();
+	    return "IVORY_" + getEntityType().name().toUpperCase();
 	}
 }
