@@ -16,32 +16,31 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.oozie.workflow;
+package org.apache.ivory.oozie.bundle;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
-public class WorkflowUnmarshallingTest {
-
+public class BundleUnmarshallingTest {
     @Test
-    public void testValidWorkflowUnamrashalling() throws JAXBException, SAXException {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
+    public void testValidBundleUnamrashalling() throws Exception {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/workflow.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/bundle.xsd"));
         unmarshaller.setSchema(schema);
-        JAXBElement<WORKFLOWAPP> workflowApp = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(WorkflowUnmarshallingTest.class
-                .getResourceAsStream("/workflow.xml"));
-        WORKFLOWAPP app = workflowApp.getValue();
-        Assert.assertEquals(app.getName(), "java-main-wf");
-        Assert.assertEquals(((ACTION) app.getDecisionOrForkOrJoin().get(0)).getName(), "java-node");
-    }
+        Object bundle = unmarshaller.unmarshal(new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/bundle.xml")),
+                BUNDLEAPP.class);
+        BUNDLEAPP bundleApp = ((JAXBElement<BUNDLEAPP>) bundle).getValue();
 
+        Assert.assertEquals(bundleApp.getName(), "bundle-app");
+        Assert.assertEquals(bundleApp.getCoordinator().get(0).getName(), "coord-1");
+
+    }
 }

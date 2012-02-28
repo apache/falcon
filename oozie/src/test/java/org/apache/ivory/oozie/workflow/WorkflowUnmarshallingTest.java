@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.oozie.coordinator;
+
+package org.apache.ivory.oozie.workflow;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -28,25 +29,19 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
-/**
- * 
- * Class to test if generated coordinator.xml is valid
- * 
- */
-public class CoordinatorUnmarshallingTest {
+public class WorkflowUnmarshallingTest {
 
     @Test
-    public void testValidCoordinatorUnamrashalling() throws JAXBException, SAXException {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class)
-                .createUnmarshaller();
+    public void testValidWorkflowUnamrashalling() throws JAXBException, SAXException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/coordinator.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/workflow.xsd"));
         unmarshaller.setSchema(schema);
-        JAXBElement<COORDINATORAPP> coordinatorApp = (JAXBElement<COORDINATORAPP>) unmarshaller
-                .unmarshal(CoordinatorUnmarshallingTest.class.getResourceAsStream("/coordinator.xml"));
-        COORDINATORAPP app = coordinatorApp.getValue();
-        Assert.assertEquals(app.getName(), "test");
-        Assert.assertEquals(app.getInputEvents().getDataIn().get(0).getName(), "data-in");
+        JAXBElement<WORKFLOWAPP> workflowApp = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(WorkflowUnmarshallingTest.class
+                .getResourceAsStream("/oozie/xmls/workflow.xml"));
+        WORKFLOWAPP app = workflowApp.getValue();
+        Assert.assertEquals(app.getName(), "java-main-wf");
+        Assert.assertEquals(((ACTION) app.getDecisionOrForkOrJoin().get(0)).getName(), "java-node");
     }
 
 }

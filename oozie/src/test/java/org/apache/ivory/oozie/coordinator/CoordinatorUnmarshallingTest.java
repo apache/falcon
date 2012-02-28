@@ -15,32 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.ivory.oozie.bundle;
+package org.apache.ivory.oozie.coordinator;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
-public class BundleUnmarshallingTest {
+/**
+ * 
+ * Class to test if generated coordinator.xml is valid
+ * 
+ */
+public class CoordinatorUnmarshallingTest {
+
     @Test
-    public void testValidBundleUnamrashalling() throws Exception {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
+    public void testValidCoordinatorUnamrashalling() throws JAXBException, SAXException {
+        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class)
+                .createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/bundle.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/coordinator.xsd"));
         unmarshaller.setSchema(schema);
-        Object bundle = unmarshaller.unmarshal(new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/bundle.xml")),
-                BUNDLEAPP.class);
-        BUNDLEAPP bundleApp = ((JAXBElement<BUNDLEAPP>) bundle).getValue();
-
-        Assert.assertEquals(bundleApp.getName(), "bundle-app");
-        Assert.assertEquals(bundleApp.getCoordinator().get(0).getName(), "coord-1");
-
+        JAXBElement<COORDINATORAPP> coordinatorApp = (JAXBElement<COORDINATORAPP>) unmarshaller
+                .unmarshal(CoordinatorUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/coordinator.xml"));
+        COORDINATORAPP app = coordinatorApp.getValue();
+        Assert.assertEquals(app.getName(), "test");
+        Assert.assertEquals(app.getInputEvents().getDataIn().get(0).getName(), "data-in");
     }
+
 }
