@@ -439,7 +439,7 @@ public class EntityManagerJerseyTest {
         checkIfSuccessful(clientRepsonse);
     }
 
-    @Test
+    @Test (enabled = false)
     public void testFeedSchedule() throws Exception {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
