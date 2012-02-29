@@ -33,7 +33,6 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
@@ -42,7 +41,6 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LateArrival;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.feed.Validity;
-import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -107,7 +105,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		assertEquals(feed.getClusters().getCluster().get(0).getRetention()
 				.getAction(), ActionType.DELETE);
 		assertEquals(feed.getClusters().getCluster().get(0).getRetention()
-				.getLimit(), "hours(6)");
+				.getLimit(), "hours(48)");
 
 		assertEquals(feed.getClusters().getCluster().get(1).getName(),
 				"backupCluster");

@@ -201,4 +201,13 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getValidity().setStart("2011-12-31T00:00Z");
 		parser.validate(process);
 	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testInvalidDependentFeedsRetentionLimit() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getInputs().getInput().get(0).setStartInstance("today(-48,0)");
+		parser.validate(process);
+	}
 }

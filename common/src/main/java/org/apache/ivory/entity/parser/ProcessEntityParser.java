@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.common.ELParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
@@ -98,7 +99,9 @@ public class ProcessEntityParser extends EntityParser<Process> {
 			for (Input input : process.getInputs().getInput()) {
 				validateEntityExists(EntityType.FEED, input.getFeed());
 				validateFeedDefinedForCluster(input.getFeed(), clusterName);
-				//validateFeedValidityForCluster(input.getStartInstance(),input.getEndInstance(),input.getFeed(),clusterName);
+				//TODO currently retention supports deletion of past instances only
+				//hence checking for only startinstance of input
+				validateFeedRetentionPeriod(input.getStartInstance(),input.getFeed(), clusterName);
 				validateInstanceRange(process, input);
 			}
 
@@ -128,6 +131,22 @@ public class ProcessEntityParser extends EntityParser<Process> {
 										+ input.getName() + " is wrong");
 				}
 			}
+	}
+
+	private void validateFeedRetentionPeriod(String startInstance,
+			String feedName, String clusterName) throws IvoryException {
+		Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED,
+				feedName);
+		String feedRetention = feed.getCluster(clusterName).getRetention().getLimit();
+		ELParser elParser = new ELParser();
+		elParser.parseElExpression(startInstance);
+		long requiredInputDuration =elParser.getRequiredInputDuration();
+		elParser.parseOozieELExpression(feedRetention);
+		long feedDuration=elParser.getFeedDuration();
+		
+		if(feedDuration-requiredInputDuration<0){
+			throw new ValidationException("StartInstance :"+startInstance+" of process is out of range for Feed: "+feedName+ "  in cluster: "+clusterName+"'s retention limit :"+feedRetention);
+		}
 	}
 
 	private void validateProcessValidity(String start, String end)
