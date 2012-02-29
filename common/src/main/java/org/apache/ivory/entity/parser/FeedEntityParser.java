@@ -19,15 +19,17 @@
 package org.apache.ivory.entity.parser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
-import org.apache.ivory.entity.store.StoreAccessException;
+import org.apache.ivory.entity.common.DateValidator;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.log4j.Logger;
+import org.apache.oozie.util.DateUtils;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
@@ -39,13 +41,48 @@ public class FeedEntityParser extends EntityParser<Feed> {
     
     @Override
     public void validate(Feed feed) throws IvoryException {
+    	
+    		validateXMLelements(feed);
+    	
         if(feed.getClusters() == null || feed.getClusters().getCluster() == null)
             throw new ValidationException("Feed should have atleast one cluster");
         
         //validate on dependent clusters  
         List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType,String>>();
-        for(Cluster cluster:feed.getClusters().getCluster())
-            entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
-        validateEntitiesExist(entities);
+		for (Cluster cluster : feed.getClusters().getCluster()) {
+			 validateClusterValidity(cluster.getValidity().getStart(),cluster.getValidity().getEnd(),cluster.getName());
+			entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
+		}
+        validateEntitiesExist(entities);       
+       
     }
+
+	private void validateXMLelements(Feed feed) throws ValidationException {
+		DateValidator dateValidator = new DateValidator();
+		
+		for (Cluster cluster : feed.getClusters().getCluster()) {
+			if(!dateValidator.validate(cluster.getValidity().getStart())){
+				 throw new ValidationException("Invalid start date: "+ cluster.getValidity().getStart()+" for cluster: "+cluster.getName());
+			}
+			if(!dateValidator.validate(cluster.getValidity().getEnd())){
+				 throw new ValidationException("Invalid end date: "+ cluster.getValidity().getEnd()+" for cluster: "+cluster.getName());
+			}
+		}		
+	}
+	
+	private void validateClusterValidity(String start, String end, String clusterName)
+			throws IvoryException {
+		try {
+			Date processStart = DateUtils.parseDateUTC(start);
+			Date processEnd = DateUtils.parseDateUTC(end);
+			if (processStart.after(processEnd)) {
+				throw new ValidationException("Feed start time: " + start
+						+ " cannot be after feed end time: " + end + " for cluster: "+clusterName);
+			}
+		} catch (ValidationException e) {
+			throw new ValidationException(e);
+		} catch (Exception e) {
+			throw new IvoryException(e);
+		}
+	}
 }

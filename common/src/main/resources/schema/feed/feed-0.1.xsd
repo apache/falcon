@@ -1,181 +1,187 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Licensed to the Apache Software Foundation (ASF) under one
-  ~ or more contributor license agreements.  See the NOTICE file
-  ~ distributed with this work for additional information
-  ~ regarding copyright ownership.  The ASF licenses this file
-  ~ to you under the Apache License, Version 2.0 (the
-  ~ "License"); you may not use this file except in compliance
-  ~ with the License.  You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="uri:ivory:feed:0.1" xmlns="uri:ivory:feed:0.1">
-  <xs:element name="feed" type="feed">
-    <xs:annotation>
-      <xs:documentation>~ Licensed to the Apache Software Foundation (ASF) under one
-  ~ or more contributor license agreements.  See the NOTICE file
-  ~ distributed with this work for additional information
-  ~ regarding copyright ownership.  The ASF licenses this file
-  ~ to you under the Apache License, Version 2.0 (the
-  ~ "License"); you may not use this file except in compliance
-  ~ with the License.  You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.</xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name="cluster">
-    <xs:sequence>
-      <xs:element type="validity" name="validity"/>
-      <xs:element type="retention" name="retention"/>
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="cluster-type" name="type" use="required"/>
-  </xs:complexType>
-  <xs:complexType name="partitions">
-    <xs:sequence>
-      <xs:element type="partition" name="partition" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="schema">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="location"/>
-        <xs:attribute type="xs:string" name="provider"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="properties">
-    <xs:sequence>
-      <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="validity">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="start" use="required"/>
-        <xs:attribute type="xs:string" name="end" use="required"/>
-        <xs:attribute type="xs:string" name="timezone" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="locations">
-    <xs:choice maxOccurs="unbounded" minOccurs="0">
-      <xs:element type="location" name="location"/>
-    </xs:choice>
-  </xs:complexType>
-  <xs:complexType name="late-arrival">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="cut-off"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="property">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="name" use="required"/>
-        <xs:attribute type="xs:string" name="value" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="clusters">
-    <xs:sequence>
-      <xs:element type="cluster" name="cluster" maxOccurs="unbounded" minOccurs="1">
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="feed">
-    <xs:sequence>
-      <xs:element type="partitions" name="partitions"/>
-      <xs:element type="xs:string" name="groups"/>
-      <xs:element type="xs:string" name="frequency"/>
-      <xs:element type="xs:string" name="periodicity"/>
-      <xs:element type="late-arrival" name="late-arrival"/>
-      <xs:element type="clusters" name="clusters"/>
-      <xs:element type="locations" name="locations"/>
-      <xs:element type="ACL" name="ACL"/>
-      <xs:element type="schema" name="schema"/>
-      <xs:element type="properties" name="properties"/>
-    </xs:sequence>
-    <xs:attribute type="IDENTIFIER" name="name"/>
-    <xs:attribute type="xs:string" name="description"/>
-  </xs:complexType>
-  <xs:complexType name="retention">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="retention-type" name="type" default="instance"/>
-        <xs:attribute type="xs:string" name="limit"/>
-        <xs:attribute type="action-type" name="action"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:simpleType name="retention-type">
-      <xs:restriction base="xs:string">
-          <xs:enumeration value="instance"/>
-          <xs:enumeration value="age"/>
-      </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="location">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="type" use="required"/>
-        <xs:attribute type="xs:string" name="path" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="partition">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="name" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="ACL">
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="owner"/>
-        <xs:attribute type="xs:string" name="group"/>
-        <xs:attribute type="xs:string" name="permission"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-    <xs:simpleType name="action-type">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="archive"/>
-            <xs:enumeration value="delete"/>
-            <xs:enumeration value="chown"/>
-            <xs:enumeration value="chmod"/>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:simpleType name="cluster-type">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="source"/>
-            <xs:enumeration value="target"/>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:simpleType name="location-type">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="data"/>
-            <xs:enumeration value="stats"/>
-            <xs:enumeration value="meta"/>
-        </xs:restriction>
-    </xs:simpleType>
-    	<xs:simpleType name="IDENTIFIER">
+<!-- ~ Licensed to the Apache Software Foundation (ASF) under one ~ or more 
+	contributor license agreements. See the NOTICE file ~ distributed with this 
+	work for additional information ~ regarding copyright ownership. The ASF 
+	licenses this file ~ to you under the Apache License, Version 2.0 (the ~ 
+	"License"); you may not use this file except in compliance ~ with the License. 
+	You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
+	~ ~ Unless required by applicable law or agreed to in writing, software ~ 
+	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
+	License for the specific language governing permissions and ~ limitations 
+	under the License. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	attributeFormDefault="unqualified" elementFormDefault="qualified"
+	targetNamespace="uri:ivory:feed:0.1" xmlns="uri:ivory:feed:0.1">
+	<xs:element name="feed" type="feed">
+		<xs:annotation>
+			<xs:documentation>~ Licensed to the Apache Software Foundation (ASF)
+				under one
+				~ or more contributor license agreements. See the NOTICE
+				file
+				~ distributed with this work for additional information
+				~
+				regarding copyright ownership. The ASF licenses this file
+				~ to you
+				under the Apache License, Version 2.0 (the
+				~ "License"); you may not
+				use this file except in compliance
+				~ with the License. You may obtain
+				a copy of the License at
+				~
+				~
+				http://www.apache.org/licenses/LICENSE-2.0
+				~
+				~ Unless required by
+				applicable law or agreed to in writing, software
+				~ distributed under
+				the License is distributed on an "AS IS" BASIS,
+				~ WITHOUT WARRANTIES
+				OR CONDITIONS OF ANY KIND, either express or
+				implied.
+				~ See the
+				License for the specific language governing permissions and
+				~
+				limitations under the License.
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="cluster">
+		<xs:sequence>
+			<xs:element type="validity" name="validity" />
+			<xs:element type="retention" name="retention" />
+		</xs:sequence>
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="cluster-type" name="type" use="required" />
+	</xs:complexType>
+	<xs:complexType name="partitions">
+		<xs:sequence>
+			<xs:element type="partition" name="partition" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="schema">
+		<xs:attribute type="xs:string" name="location" />
+		<xs:attribute type="xs:string" name="provider" />
+	</xs:complexType>
+	<xs:complexType name="properties">
+		<xs:sequence>
+			<xs:element type="property" name="property" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="validity">
+		<xs:attribute type="date-time-type" name="start" use="required" />
+		<xs:attribute type="date-time-type" name="end" use="required" />
+		<xs:attribute type="timezone-type" name="timezone" use="required" />
+	</xs:complexType>
+	<xs:complexType name="locations">
+		<xs:choice maxOccurs="unbounded" minOccurs="0">
+			<xs:element type="location" name="location" />
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="late-arrival">
+		<xs:attribute type="validity-type" name="cut-off" />
+	</xs:complexType>
+	<xs:complexType name="property">
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="xs:string" name="value" use="required" />
+	</xs:complexType>
+	<xs:complexType name="clusters">
+		<xs:sequence>
+			<xs:element type="cluster" name="cluster" maxOccurs="unbounded"
+				minOccurs="1">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="feed">
+		<xs:sequence>
+			<xs:element type="partitions" name="partitions" />
+			<xs:element type="xs:string" name="groups" />
+			<xs:element type="frequency-type" name="frequency" />
+			<xs:element type="xs:integer" name="periodicity" />
+			<xs:element type="late-arrival" name="late-arrival" />
+			<xs:element type="clusters" name="clusters" />
+			<xs:element type="locations" name="locations" />
+			<xs:element type="ACL" name="ACL" />
+			<xs:element type="schema" name="schema" />
+			<xs:element type="properties" name="properties" />
+		</xs:sequence>
+		<xs:attribute type="IDENTIFIER" name="name" />
+		<xs:attribute type="xs:string" name="description" />
+	</xs:complexType>
+	<xs:complexType name="retention">
+		<xs:attribute type="retention-type" name="type" default="instance" />
+		<xs:attribute type="validity-type" name="limit" />
+		<xs:attribute type="action-type" name="action" />
+	</xs:complexType>
+	<xs:simpleType name="retention-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="instance" />
+			<xs:enumeration value="age" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="location">
+		<xs:attribute type="xs:string" name="type" use="required" />
+		<xs:attribute type="xs:string" name="path" use="required" />
+	</xs:complexType>
+	<xs:complexType name="partition">
+		<xs:attribute type="xs:string" name="name" use="required" />
+	</xs:complexType>
+	<xs:complexType name="ACL">
+		<xs:attribute type="xs:string" name="owner" />
+		<xs:attribute type="xs:string" name="group" />
+		<xs:attribute type="xs:string" name="permission" />
+	</xs:complexType>
+	<xs:simpleType name="action-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="archive" />
+			<xs:enumeration value="delete" />
+			<xs:enumeration value="chown" />
+			<xs:enumeration value="chmod" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="cluster-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="source" />
+			<xs:enumeration value="target" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="location-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="data" />
+			<xs:enumeration value="stats" />
+			<xs:enumeration value="meta" />
+		</xs:restriction>
+	</xs:simpleType>
+		<xs:simpleType name="frequency-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="minutes" />
+			<xs:enumeration value="hours" />
+			<xs:enumeration value="days" />
+			<xs:enumeration value="months" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IDENTIFIER">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="([a-zA-Z]([\-_a-zA-Z0-9])*){1,39})" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="validity-type">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="(minutes\((\d)+\)|hours\((\d)+\)|days\((\d)+\)|months\((\d)+\))" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="date-time-type">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="((19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="timezone-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UTC" />
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>

@@ -35,43 +35,15 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "interface", propOrder = {
-    "value"
-})
+@XmlType(name = "interface")
 public class Interface {
 
-    @XmlValue
-    protected String value;
     @XmlAttribute(required = true)
     protected Interfacetype type;
     @XmlAttribute(required = true)
     protected String endpoint;
     @XmlAttribute(required = true)
     protected String version;
-
-    /**
-     * Gets the value of the value property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     * Sets the value of the value property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setValue(String value) {
-        this.value = value;
-    }
 
     /**
      * Gets the value of the type property.

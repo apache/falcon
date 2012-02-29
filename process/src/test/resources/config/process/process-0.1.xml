@@ -17,17 +17,15 @@
   ~ limitations under the License.
   -->
 <process name="sample" >
-    <!-- where -->
-    <clusters>
-      <cluster name="corp" />
-    </clusters>
+	<!-- where -->
+	<cluster name="corp"/>
 
-    <!-- when -->
+	<!-- when -->
     <concurrency>1</concurrency>
     <execution>LIFO</execution>
-    <frequency>hourly</frequency>
+    <frequency>hours</frequency>
     <periodicity>1</periodicity>
-    <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00" timezone="UTC"/>
+    <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" timezone="UTC"/>
 
     <!-- what -->
     <inputs>
@@ -46,9 +44,9 @@
     
     <workflow engine="oozie" path="/user/guest/workflow" libpath="hdfs://path/to/workflow/lib"/>
 
-    <retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
+    <retry policy="backoff" delay="10" delayUnit="hours" attempts="3" />
 
-    <late-process policy="exp-backoff" delay="1" delayUnit="hour">
+    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
         <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
         <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
     </late-process>

@@ -37,13 +37,9 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "input", propOrder = {
-    "value"
-})
+@XmlType(name = "input")
 public class Input {
 
-    @XmlValue
-    protected String value;
     @XmlAttribute
     protected String name;
     @XmlAttribute
@@ -54,37 +50,13 @@ public class Input {
     protected String endInstance;
     @XmlAttribute
     protected String partition;
-
-    /**
-     * Gets the value of the value property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getValue() {
-        return value;
-    }
-
+  
     public String getPartition() {
         return partition;
     }
 
     public void setPartition(String partition) {
         this.partition = partition;
-    }
-
-    /**
-     * Sets the value of the value property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setValue(String value) {
-        this.value = value;
     }
 
     /**

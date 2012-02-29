@@ -41,7 +41,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder {
 
         Process process = (Process) entity;
 
-        String clusterName = process.getClusters().getCluster().get(0).getName();
+        String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
                 entity.getStagingPath());
@@ -60,7 +60,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder {
 
         Process process = (Process) entity;
         // TODO asserts
-        String clusterName = process.getClusters().getCluster().get(0).getName();
+        String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         return new Cluster[] { cluster };
     }

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <process name="aggregator-coord">
-	<clusters>
-      <cluster name="prod-red" />
-    </clusters>
+    <cluster name="prod-red" />
 	
 	<concurrency>2</concurrency>
 	<execution>LIFO</execution>
