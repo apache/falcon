@@ -61,8 +61,8 @@
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="schema">
-		<xs:attribute type="xs:string" name="location" />
-		<xs:attribute type="xs:string" name="provider" />
+		<xs:attribute type="xs:string" name="location" use="required"/>
+		<xs:attribute type="xs:string" name="provider" use="required"/>
 	</xs:complexType>
 	<xs:complexType name="properties">
 		<xs:sequence>
@@ -81,7 +81,7 @@
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="late-arrival">
-		<xs:attribute type="validity-type" name="cut-off" />
+		<xs:attribute type="validity-type" name="cut-off" use="required"/>
 	</xs:complexType>
 	<xs:complexType name="property">
 		<xs:attribute type="IDENTIFIER" name="name" use="required" />
@@ -107,13 +107,13 @@
 			<xs:element type="schema" name="schema" />
 			<xs:element type="properties" name="properties" />
 		</xs:sequence>
-		<xs:attribute type="IDENTIFIER" name="name" />
+		<xs:attribute type="IDENTIFIER" name="name" use="required"/>
 		<xs:attribute type="xs:string" name="description" />
 	</xs:complexType>
 	<xs:complexType name="retention">
 		<xs:attribute type="retention-type" name="type" default="instance" />
-		<xs:attribute type="validity-type" name="limit" />
-		<xs:attribute type="action-type" name="action" />
+		<xs:attribute type="validity-type" name="limit" use="required"/>
+		<xs:attribute type="action-type" name="action" use="required"/>
 	</xs:complexType>
 	<xs:simpleType name="retention-type">
 		<xs:restriction base="xs:string">
