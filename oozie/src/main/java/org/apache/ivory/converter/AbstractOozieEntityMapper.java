@@ -75,9 +75,10 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         List<COORDINATORAPP> coordinators = getCoordinators(cluster);
 
+        String parentDir = "IVORY_" + entity.getEntityType().name().toUpperCase();
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = new Path(workflowBasePath,
-                    coordinatorapp.getName() + "/coordinator.xml");
+                    parentDir + "/coordinator.xml");
             if(LOG.isDebugEnabled()) {
                 debug(coordinatorapp, coordPath);
             }
@@ -89,7 +90,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             bundleApp.getCoordinator().add(bundleCoord);
         }
         Path bundlePath = new Path(workflowBasePath,
-                bundleApp.getName() + "/bundle.xml");
+                parentDir + "/bundle.xml");
         marshal(cluster, bundleApp, bundlePath);
         if(LOG.isDebugEnabled()) {
             debug(bundleApp, bundlePath);
