@@ -78,7 +78,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {
-        assertEquals("IVORY_PROCESS_" + process.getName() + "_DEFAULT", coord.getName());
+        assertEquals("IVORY_PROCESS_DEFAULT_" + process.getName(), coord.getName());
         assertEquals(process.getValidity().getStart(), coord.getStart());
         assertEquals(process.getValidity().getEnd(), coord.getEnd());
         assertEquals("${coord:"+process.getFrequency()+"("+process.getPeriodicity()+")}", coord.getFrequency());
@@ -122,7 +122,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
         assertEquals(process.getWorkflowName() + "_" + process.getName(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
-        assertEquals(process.getWorkflowName() + "_" + process.getName() + "_DEFAULT", bundle.getCoordinator().get(0).getName());
+        assertEquals(process.getWorkflowName() + "_DEFAULT_" + process.getName(), bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));

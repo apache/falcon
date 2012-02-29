@@ -20,16 +20,20 @@ package org.apache.ivory.workflow;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.local.LocalOozie;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.util.Properties;
 
 public class OozieRetentionWorkflowTest {
@@ -66,12 +70,39 @@ public class OozieRetentionWorkflowTest {
         properties.put(OozieClient.APP_PATH, "/ivory/workflow");
         properties.put(OozieClient.LIBPATH, "/ivory/workflow/lib");
         stageSystemFiles();
+        createTestData();
         client.run(properties);
     }
 
     private void stageSystemFiles() throws Exception {
         Configuration conf = cluster.getConf();
         FileSystem fs = FileSystem.get(conf);
+        File systemLoc = new File(System.getProperty("user.dir") +
+                "/webapps/target/ivory-webapp-0.1-SNAPSHOT/WEB-INF/lib");
+
+        if (!systemLoc.exists()) {
+            systemLoc = new File(System.getProperty("user.dir") +
+                "../webapps/target/ivory-webapp-0.1-SNAPSHOT/WEB-INF/lib");
+        }
+
+        if (!systemLoc.exists()) {
+             systemLoc = new File(StartupProperties.get().
+                     getProperty("system.lib.location"));
+        }
+
+        Assert.assertTrue(systemLoc.exists());
+
+        fs.copyFromLocalFile(new Path(systemLoc.getAbsolutePath(),
+                "ivory-common-0.1-SNAPSHOT.jar"), new Path("/ivory/workflow/lib"));
+        fs.copyFromLocalFile(new Path(systemLoc.getAbsolutePath(),
+                "ivory-retention-0.1-SNAPSHOT.jar"), new Path("/ivory/workflow/lib"));
+        fs.copyFromLocalFile(new Path(systemLoc.getAbsolutePath(),
+                "ivory-oozie-adaptor-0.1-SNAPSHOT.jar"), new Path("/ivory/workflow/lib"));
+
+
+    }
+
+    private void createTestData() {
 
     }
 

@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
@@ -39,7 +38,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
@@ -69,16 +70,31 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return entity;
     }
 
+    private final Map<COORDINATORAPP, String> basePathMap = new HashMap<COORDINATORAPP, String>();
+
+    protected COORDINATORAPP newCOORDINATORAPP(String basePath) {
+        COORDINATORAPP coordinatorApp = new COORDINATORAPP();
+        basePathMap.put(coordinatorApp,  basePath);
+        return coordinatorApp;
+    }
+
+    protected String getCoordBasePath(COORDINATORAPP coordinatorApp) {
+        if (!basePathMap.containsKey(coordinatorApp)) {
+            throw new IllegalStateException("Use newCoordinatorApp method in " +
+                    "to create an COORDINATOR APP instance");
+        }
+        return basePathMap.get(coordinatorApp);
+    }
+
     public Path convert(Cluster cluster, Path workflowBasePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
         bundleApp.setName(entity.getWorkflowName() + "_" + entity.getName());
 
         List<COORDINATORAPP> coordinators = getCoordinators(cluster);
 
-        String parentDir = "IVORY_" + entity.getEntityType().name().toUpperCase();
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = new Path(workflowBasePath,
-                    parentDir + "/coordinator.xml");
+                    getCoordBasePath(coordinatorapp) + "/coordinator.xml");
             if(LOG.isDebugEnabled()) {
                 debug(coordinatorapp, coordPath);
             }
@@ -90,7 +106,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             bundleApp.getCoordinator().add(bundleCoord);
         }
         Path bundlePath = new Path(workflowBasePath,
-                parentDir + "/bundle.xml");
+                entity.getWorkflowName() + "/bundle.xml");
         marshal(cluster, bundleApp, bundlePath);
         if(LOG.isDebugEnabled()) {
             debug(bundleApp, bundlePath);
