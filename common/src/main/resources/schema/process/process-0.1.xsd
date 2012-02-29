@@ -73,8 +73,7 @@
 					<xs:documentation>where</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element type="xs:integer" name="concurrency"
-				minOccurs="1" maxOccurs="12">
+			<xs:element type="xs:integer" name="concurrency">
 				<xs:annotation>
 					<xs:documentation>when</xs:documentation>
 				</xs:annotation>
