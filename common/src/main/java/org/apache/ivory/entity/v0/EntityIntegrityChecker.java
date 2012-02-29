@@ -48,18 +48,18 @@ public class EntityIntegrityChecker {
 
     public static Entity referencedBy(Cluster cluster) throws IvoryException {
 
-        Collection<String> entities = configStore.getEntities(EntityType.PROCESS);
-        for (String entity : entities) {
-            Process process = (Process) configStore.get(EntityType.PROCESS, entity);
-            String clusterName = process.getClusters().getCluster().
-                    get(0).getName();
-            Cluster referredCluster = configStore.
-                    get(EntityType.CLUSTER, clusterName);
-            if (referredCluster != null && referredCluster.equals(cluster)) {
-                return process;
-            }
-        }
-        return null;
+    	Collection<String> entities = configStore.getEntities(EntityType.PROCESS);
+    	for (String entity : entities) {
+    		Process process = (Process) configStore.get(EntityType.PROCESS, entity);
+    		String clusterName = process.getCluster().
+    				getName();
+    		Cluster referredCluster = configStore.
+    				get(EntityType.CLUSTER, clusterName);
+    		if (referredCluster != null && referredCluster.equals(cluster)) {
+    			return process;
+    		}
+    	}
+    	return null;
         //TODO check for dataset dependency
     }
 

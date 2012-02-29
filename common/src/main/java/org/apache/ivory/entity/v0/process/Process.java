@@ -51,7 +51,7 @@ import org.apache.ivory.entity.v0.Entity;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "process", propOrder = {
-    "clusters",
+    "cluster",
     "concurrency",
     "execution",
     "frequency",
@@ -68,7 +68,7 @@ import org.apache.ivory.entity.v0.Entity;
 public class Process extends Entity{
 
     @XmlElement(required = true)
-    protected Clusters clusters;
+    protected Cluster cluster;
     @XmlElement(required = true)
     protected String concurrency;
     @XmlElement(required = true)
@@ -96,27 +96,27 @@ public class Process extends Entity{
     protected String name;
 
     /**
-     * Gets the value of the clusters property.
+     * Gets the value of the cluster property.
      * 
      * @return
      *     possible object is
-     *     {@link Clusters }
+     *     {@link Cluster }
      *     
      */
-    public Clusters getClusters() {
-        return clusters;
+    public Cluster getCluster() {
+        return cluster;
     }
 
     /**
-     * Sets the value of the clusters property.
+     * Sets the value of the cluster property.
      * 
      * @param value
      *     allowed object is
-     *     {@link Clusters }
+     *     {@link Cluster }
      *     
      */
-    public void setClusters(Clusters value) {
-        this.clusters = value;
+    public void setCluster(Cluster value) {
+        this.cluster = value;
     }
 
     /**

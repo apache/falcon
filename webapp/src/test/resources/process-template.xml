@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <process name="##name##">
-	<clusters>
-      <cluster name="##cluster##" />
-    </clusters>
+    <cluster name="##cluster##" />
 	
 	<concurrency>2</concurrency>
 	<execution>LIFO</execution>
@@ -21,10 +19,10 @@
 	<properties>
 		<property name="queueName" value="default"/>
 	</properties>
-	<workflow path="/examples/apps/aggregator" />
-	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />
+	<workflow engine="oozie" path="/examples/apps/aggregator" libpath="hdfs://path/to/workflow/lib" />
+	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
 
-    <late-process policy="exp-backoff" delay="1" delayUnit="hour">
+    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
         <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
         <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
     </late-process>

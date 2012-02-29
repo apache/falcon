@@ -1,8 +1,14 @@
 package org.apache.ivory.entity;
 
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -45,4 +51,12 @@ public class AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary");
         storeEntity(EntityType.PROCESS, "clicksummary");
     }
+
+	public String marshallEntity(final Entity entity) throws IvoryException,
+			JAXBException {
+		Marshaller marshaller = entity.getEntityType().getMarshaller();
+		StringWriter stringWriter = new StringWriter();
+		marshaller.marshal(entity, stringWriter);
+		return stringWriter.toString();
+	}
 }

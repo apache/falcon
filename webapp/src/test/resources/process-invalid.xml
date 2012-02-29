@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Process name="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <clusters>
-    <cluster name="">cluster</cluster>
-  </clusters>
+  <cluster name="">cluster</cluster>
   <frequency>frequency</frequency>
   <periodicity>periodicity</periodicity>
   <validity end="" start="">validity</validity>
@@ -13,7 +11,7 @@
   <outputs>
     <output feed="" instance="">output</output>
   </outputs>
-  <workflow engine="" path="">workflow</workflow>
+  <workflow engine="oozie" path="">workflow</workflow>
   <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
   <late-process delay="" delayUnit="" policy="">
     <late-input feed="" workflow-path="">late-input</late-input>

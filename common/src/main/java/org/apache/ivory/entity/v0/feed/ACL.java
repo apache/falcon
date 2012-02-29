@@ -35,43 +35,15 @@ import javax.xml.bind.annotation.XmlValue;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ACL", propOrder = {
-    "value"
-})
+@XmlType(name = "ACL")
 public class ACL {
 
-    @XmlValue
-    protected String value;
     @XmlAttribute
     protected String owner;
     @XmlAttribute
     protected String group;
     @XmlAttribute
     protected String permission;
-
-    /**
-     * Gets the value of the value property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     * Sets the value of the value property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setValue(String value) {
-        this.value = value;
-    }
 
     /**
      * Gets the value of the owner property.

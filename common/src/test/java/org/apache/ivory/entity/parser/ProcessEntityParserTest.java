@@ -145,7 +145,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidProcess() throws Exception {
         Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(PROCESS_XML));
-        process.getClusters().getCluster().get(0).setName("invalid cluster");
+        process.getCluster().setName("invalid cluster");
         parser.validate(process);
     }
 
@@ -192,4 +192,13 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 
         parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(PROCESS_XML));
     }
+    
+	@Test(expectedExceptions = ValidationException.class)
+	public void testInvalidProcessValidity() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getValidity().setStart("2011-12-31T00:00Z");
+		parser.validate(process);
+	}
 }

@@ -1,42 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Licensed to the Apache Software Foundation (ASF) under one
-  ~ or more contributor license agreements.  See the NOTICE file
-  ~ distributed with this work for additional information
-  ~ regarding copyright ownership.  The ASF licenses this file
-  ~ to you under the Apache License, Version 2.0 (the
-  ~ "License"); you may not use this file except in compliance
-  ~ with the License.  You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+<!-- ~ Licensed to the Apache Software Foundation (ASF) under one ~ or more 
+	contributor license agreements. See the NOTICE file ~ distributed with this 
+	work for additional information ~ regarding copyright ownership. The ASF 
+	licenses this file ~ to you under the Apache License, Version 2.0 (the ~ 
+	"License"); you may not use this file except in compliance ~ with the License. 
+	You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
+	~ ~ Unless required by applicable law or agreed to in writing, software ~ 
+	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
+	License for the specific language governing permissions and ~ limitations 
+	under the License. -->
 <xs:schema attributeFormDefault="unqualified"
 	elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<xs:element name="process" type="process">
 		<xs:annotation>
 			<xs:documentation>/*
-				* Licensed to the Apache Software Foundation (ASF) under one
-				* or more contributor license agreements. See the NOTICE file
+				* Licensed to the Apache Software Foundation
+				(ASF) under one
+				* or more contributor license agreements. See the
+				NOTICE file
 				* distributed with this work for additional information
-				* regarding copyright ownership. The ASF licenses this file
-				* to you under the Apache License, Version 2.0 (the
-				* "License"); you may not use this file except in compliance
-				* with the License. You may obtain a copy of the License at
 				*
-				* http://www.apache.org/licenses/LICENSE-2.0
+				regarding copyright ownership. The ASF licenses this file
+				* to you
+				under the Apache License, Version 2.0 (the
+				* "License"); you may not
+				use this file except in compliance
+				* with the License. You may obtain
+				a copy of the License at
 				*
-				* Unless required by applicable law or agreed to in writing, software
-				* distributed under the License is distributed on an "AS IS" BASIS,
-				* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+				*
+				http://www.apache.org/licenses/LICENSE-2.0
+				*
+				* Unless required by
+				applicable law or agreed to in writing, software
+				* distributed under
+				the License is distributed on an "AS IS" BASIS,
+				* WITHOUT WARRANTIES
+				OR CONDITIONS OF ANY KIND, either express or
 				implied.
-				* See the License for the specific language governing permissions and
-				* limitations under the License.
+				* See the
+				License for the specific language governing permissions and
+				*
+				limitations under the License.
 				*/
 			</xs:documentation>
 		</xs:annotation>
@@ -47,20 +53,7 @@
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:complexType name="cluster">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="name" />
-			</xs:extension>
-		</xs:simpleContent>
-	</xs:complexType>
-	<xs:complexType name="late-process">
-		<xs:sequence>
-			<xs:element type="late-input" name="late-input"
-				maxOccurs="unbounded" minOccurs="0" />
-		</xs:sequence>
-		<xs:attribute type="xs:string" name="policy" />
-		<xs:attribute type="xs:string" name="delay" />
-		<xs:attribute type="xs:string" name="delayUnit" />
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
 	</xs:complexType>
 	<xs:complexType name="properties">
 		<xs:sequence>
@@ -68,49 +61,26 @@
 				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
-	<xs:complexType name="late-input">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="feed" use="optional" />
-				<xs:attribute type="xs:string" name="workflow-path"
-					use="optional" />
-			</xs:extension>
-		</xs:simpleContent>
-	</xs:complexType>
 	<xs:complexType name="validity">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="start" />
-				<xs:attribute type="xs:string" name="end" />
-				<xs:attribute type="xs:string" name="timezone" />
-			</xs:extension>
-		</xs:simpleContent>
-	</xs:complexType>
-	<xs:complexType name="retry">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="policy" />
-				<xs:attribute type="xs:string" name="delay" />
-				<xs:attribute type="xs:string" name="delayUnit" />
-				<xs:attribute type="xs:string" name="attempts" />
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:attribute type="date-time-type" name="start" use="required" />
+		<xs:attribute type="date-time-type" name="end" use="required" />
+		<xs:attribute type="timezone-type" name="timezone" use="required" />
 	</xs:complexType>
 	<xs:complexType name="process">
 		<xs:sequence>
-			<xs:element type="clusters" name="clusters">
+			<xs:element type="cluster" name="cluster">
 				<xs:annotation>
 					<xs:documentation>where</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element type="xs:string" name="concurrency">
+			<xs:element type="xs:integer" name="concurrency">
 				<xs:annotation>
 					<xs:documentation>when</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element type="xs:string" name="execution" />
-			<xs:element type="xs:string" name="frequency" />
-			<xs:element type="xs:string" name="periodicity" />
+			<xs:element type="execution-type" name="execution" />
+			<xs:element type="frequency-type" name="frequency" />
+			<xs:element type="xs:integer" name="periodicity" />
 			<xs:element type="validity" name="validity" />
 			<xs:element type="inputs" name="inputs">
 			</xs:element>
@@ -124,7 +94,7 @@
 			<xs:element type="retry" name="retry" />
 			<xs:element type="late-process" name="late-process" />
 		</xs:sequence>
-		<xs:attribute type="IDENTIFIER" name="name" />
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
 	</xs:complexType>
 	<xs:complexType name="inputs">
 		<xs:sequence>
@@ -133,48 +103,25 @@
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="property">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="name" use="optional" />
-				<xs:attribute type="xs:string" name="value" use="optional" />
-			</xs:extension>
-		</xs:simpleContent>
-	</xs:complexType>
-	<xs:complexType name="clusters">
-		<xs:sequence>
-			<xs:element type="cluster" name="cluster" maxOccurs="unbounded"
-				minOccurs="0"/>
-		</xs:sequence>
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="xs:string" name="value" use="required" />
 	</xs:complexType>
 	<xs:complexType name="input">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
-				<xs:attribute type="xs:string" name="feed" use="optional" />
-				<xs:attribute type="xs:string" name="start-instance"
-					use="optional" />
-				<xs:attribute type="xs:string" name="end-instance" use="optional" />
-                <xs:attribute type="xs:string" name="partition" use="optional" />
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="IDENTIFIER" name="feed" use="required" />
+		<xs:attribute type="xs:string" name="start-instance" use="required" />
+		<xs:attribute type="xs:string" name="end-instance" use="required" />
+		<xs:attribute type="xs:string" name="partition" use="optional" />
 	</xs:complexType>
 	<xs:complexType name="output">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="IDENTIFIER" name="name" use="optional" />
-				<xs:attribute type="xs:string" name="feed" use="optional" />
-				<xs:attribute type="xs:string" name="instance" use="optional" />
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="IDENTIFIER" name="feed" use="required" />
+		<xs:attribute type="xs:string" name="instance" use="required" />
 	</xs:complexType>
 	<xs:complexType name="workflow">
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute type="xs:string" name="engine" />
-				<xs:attribute type="xs:string" name="path" />
-				<xs:attribute type="xs:string" name="libpath" />
-			</xs:extension>
-		</xs:simpleContent>
+		<xs:attribute type="engine-type" name="engine" use="optional" />
+		<xs:attribute type="xs:string" name="path" use="required" />
+		<xs:attribute type="xs:string" name="libpath" use="optional" />
 	</xs:complexType>
 	<xs:complexType name="outputs">
 		<xs:sequence>
@@ -182,4 +129,61 @@
 				minOccurs="0" />
 		</xs:sequence>
 	</xs:complexType>
+	<xs:complexType name="late-input">
+		<xs:attribute type="IDENTIFIER" name="feed" use="required" />
+		<xs:attribute type="xs:string" name="workflow-path" use="required" />
+	</xs:complexType>
+	<xs:complexType name="late-process">
+		<xs:sequence>
+			<xs:element type="late-input" name="late-input" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+		<xs:attribute type="policy-type" name="policy" use="required" />
+		<xs:attribute type="xs:integer" name="delay" use="required" />
+		<xs:attribute type="frequency-type" name="delayUnit" use="required" />
+	</xs:complexType>
+	<xs:complexType name="retry">
+		<xs:attribute type="policy-type" name="policy" use="required" />
+		<xs:attribute type="xs:integer" name="delay" use="required" />
+		<xs:attribute type="frequency-type" name="delayUnit" use="required" />
+		<xs:attribute type="xs:integer" name="attempts" use="required" />
+	</xs:complexType>
+	<xs:simpleType name="engine-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="oozie" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="policy-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="backoff" />
+			<xs:enumeration value="exp-backoff" />
+			<xs:enumeration value="final" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="date-time-type">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="((19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="timezone-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UTC" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="execution-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FIFO" />
+			<xs:enumeration value="LIFO" />
+			<xs:enumeration value="ONLYLAST" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="frequency-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="minutes" />
+			<xs:enumeration value="hours" />
+			<xs:enumeration value="days" />
+			<xs:enumeration value="months" />
+		</xs:restriction>
+	</xs:simpleType>
 </xs:schema>

@@ -145,14 +145,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Clusters }
-     * 
-     */
-    public Clusters createClusters() {
-        return new Clusters();
-    }
-
-    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link Process }{@code >}}
      * 
      */
