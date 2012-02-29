@@ -46,6 +46,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
@@ -439,7 +440,7 @@ public class EntityManagerJerseyTest {
         checkIfSuccessful(clientRepsonse);
     }
 
-    @Test (enabled = false)
+    @Test  (enabled = false)
     public void testFeedSchedule() throws Exception {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
@@ -464,57 +465,54 @@ public class EntityManagerJerseyTest {
         checkIfSuccessful(clientRepsonse);
     }
 
-    private List<Path> createTestData() throws IOException {
+    private List<Path> createTestData() throws Exception {
         List<Path> list = new ArrayList<Path>();
-        Configuration conf = cluster.getConf();
+        Configuration conf = new Configuration();
+        conf.set("fs.default.name", "hdfs://localhost:8020");
         FileSystem fs = FileSystem.get(conf);
         fs.mkdirs(new Path("/user/guest"));
         fs.setOwner(new Path("/user/guest"), "guest", "users");
-        fs.mkdirs(new Path("/examples/input-data/rawLogs"));
-        fs.setOwner(new Path("/examples/input-data/rawLogs"), "guest", "users");
 
         DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date date = new Date(System.currentTimeMillis() + 3 * 86400000L);
+        Date date = new Date(System.currentTimeMillis() + 3 * 3600000);
         Path path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
-        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
-        list.add(path);
-        fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        date = new Date(date.getTime() - 86400000L);
+        date = new Date(date.getTime() - 3600000);
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        for (FileStatus file : fs.globStatus(new Path("/examples/input-data/rawLogs/*"))) {
-            fs.setOwner(file.getPath(), "guest", "users");
-        }
+        date = new Date(date.getTime() - 3600000);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        new FsShell(conf).run(new String[] {"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
         return list;
     }
 

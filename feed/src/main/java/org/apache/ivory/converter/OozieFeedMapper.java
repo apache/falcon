@@ -36,11 +36,9 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
@@ -68,11 +66,15 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         String basePath = feed.getWorkflowName() + "_RETENTION";
         COORDINATORAPP retentionApp = newCOORDINATORAPP(basePath);
 
-        retentionApp.setName(basePath);
+        retentionApp.setName(basePath + "_" + feed.getName());
         org.apache.ivory.entity.v0.feed.Cluster feedCluster =
                 feed.getCluster(cluster.getName());
         retentionApp.setEnd(feedCluster.getValidity().getEnd());
-        retentionApp.setStart(feedCluster.getValidity().getStart());
+
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        formatter.setTimeZone(TimeZone.
+                getTimeZone(feedCluster.getValidity().getTimezone()));
+        retentionApp.setStart(formatter.format(new Date()));
         retentionApp.setTimezone(feedCluster.getValidity().getTimezone());
         if (feed.getFrequency().matches("hours|minutes")) {
             retentionApp.setFrequency("${coord:hours(6)}");
@@ -97,8 +99,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     feed.getCluster(cluster.getName());
 
             conf.getProperty().add(createCoordProperty(OozieClient.LIBPATH,
-                    "${" + OozieWorkflowEngine.NAME_NODE + "}" +
-                            new Path(retentionWorkflowAppPath, "lib").toString()));
+                    new Path(retentionWorkflowAppPath, "lib").toString()));
             conf.getProperty().add(createCoordProperty("queueName", "default"));
             String feedPathMask = feed.getLocations().get(LocationType.DATA).getPath();
             conf.getProperty().add(createCoordProperty("feedDataPath",
@@ -132,8 +133,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             }
             String localLibPath = getLocalLibLocation();
             Path libLoc =  new Path(outPath, "lib");
+            fs.mkdirs(libLoc);
             for (File file : new File(localLibPath).listFiles()) {
-                if (pattern.matcher(file.getName()).matches()) {
+                if (pattern.matcher(file.getName()).find()) {
                     LOG.debug("Copying " + file.getAbsolutePath() + " to " + libLoc);
                     fs.copyFromLocalFile(new Path(file.getAbsolutePath()), libLoc);
                 }

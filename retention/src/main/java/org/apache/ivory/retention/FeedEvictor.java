@@ -119,7 +119,10 @@ public class FeedEvictor extends Configured implements Tool {
         String timeZone = args[3];
         String frequency = args[4]; //to write out smart path filters
 
-        fs = new Path(feedBasePath).getFileSystem(getConf());
+        Path normalizedPath = new Path(feedBasePath);
+        fs = normalizedPath.getFileSystem(getConf());
+        feedBasePath = normalizedPath.toUri().getPath();
+        LOG.info("Normalized path : " + feedBasePath);
         Pair<Date, Date> range = getDateRange(retentionLimit);
         String dateMask = getDateFormatInPath(feedBasePath);
         List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath,
@@ -179,9 +182,12 @@ public class FeedEvictor extends Configured implements Tool {
 
         List<Path> toBeDeleted = new ArrayList<Path>();
         for (FileStatus file : files) {
-            Date date = getDate(file.getPath(), inPath, dateMask, timeZone);
+            Date date = getDate(new Path(file.getPath().toUri().getPath()),
+                    inPath, dateMask, timeZone);
+            LOG.debug("Considering " + file.getPath().toUri().getPath());
+            LOG.debug("Date : " + date);
             if (date != null && !isDateInRange(date, start, end)) {
-                toBeDeleted.add(file.getPath());
+                toBeDeleted.add(new Path(file.getPath().toUri().getPath()));
             }
         }
         return toBeDeleted;
