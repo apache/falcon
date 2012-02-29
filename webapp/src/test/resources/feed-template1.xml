@@ -30,14 +30,9 @@
 
     <clusters>
         <cluster name="##cluster##" type="source">
-            <validity start="2010-01-01T00:00Z" end="2011-01-01T00:00Z"
+            <validity start="2012-02-25T00:00Z" end="9999-01-01T00:00Z"
                       timezone="UTC" />
             <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
-        </cluster>
-        <cluster name="backupCluster" type="target">
-            <validity start="2010-01-01T00:00Z" end="2011-01-01T00:00Z"
-                      timezone="UTC" />
-            <retention limit="hours(6)" action="archive" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
 

@@ -23,43 +23,48 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder {
-
-    private static Logger LOG = Logger.getLogger(OozieFeedWorkflowBuilder.class);
+public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Entity entity)
+    public Map<String, Object> newWorkflowSchedule(Feed feed)
             throws IvoryException {
-        if (!(entity instanceof Feed)) throw new
-                IllegalArgumentException(entity.getName() + " is not of type Feed");
 
-        Feed feed = (Feed) entity;
-
+        List<Cluster> clusters = new ArrayList<Cluster>();
+        List<Path> paths = new ArrayList<Path>();
         for (org.apache.ivory.entity.v0.feed.Cluster feedCluster :
                 feed.getClusters().getCluster()) {
             String clusterName = feedCluster.getName();
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
             Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
-                    entity.getStagingPath());
+                    feed.getStagingPath());
 
             AbstractOozieEntityMapper converter = new OozieFeedMapper(feed);
             Path bundlePath = converter.convert(cluster, workflowPath);
+            clusters.add(cluster);
+            paths.add(bundlePath);
         }
-
-        return null;
+        return createAppProperties(clusters, paths);
     }
 
     @Override
-    public Cluster[] getScheduledClustersFor(Entity entity)
+    public Cluster[] getScheduledClustersFor(Feed feed)
             throws IvoryException {
-        return new Cluster[0];
+
+        List<Cluster> clusters = new ArrayList<Cluster>();
+        for (org.apache.ivory.entity.v0.feed.Cluster feedCluster :
+                feed.getClusters().getCluster()) {
+            String clusterName = feedCluster.getName();
+            Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
+            clusters.add(cluster);
+        }
+        return clusters.toArray(new Cluster[clusters.size()]);
     }
 }

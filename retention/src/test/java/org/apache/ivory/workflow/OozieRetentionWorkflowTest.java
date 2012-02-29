@@ -19,8 +19,11 @@
 package org.apache.ivory.workflow;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.util.StartupProperties;
@@ -34,7 +37,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.Properties;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.PrivilegedExceptionAction;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class OozieRetentionWorkflowTest {
 
@@ -42,21 +51,44 @@ public class OozieRetentionWorkflowTest {
 
     private EmbeddedCluster cluster;
 
-    @BeforeClass
+    //@BeforeClass
     public void start() throws Exception{
-        cluster = EmbeddedCluster.newCluster("eviction", true);
-        LocalOozie.start();
+        cluster = EmbeddedCluster.newCluster("eviction", true, "hdfs");
     }
 
-    @AfterClass
+    //@AfterClass
     public void close() throws Exception {
         cluster.shutdown();
-        LocalOozie.stop();
+    }
+
+    private void startOozie() throws Exception {
+        String oozieHome = System.getProperty("user.dir") + "/retention/src/test/resources";
+        if (!new File(oozieHome).exists()) {
+            oozieHome = System.getProperty("user.dir") + "/src/test/resources";
+        }
+        System.setProperty("oozie.home.dir", oozieHome);
+        LocalOozie.start();
     }
 
     //@Test
     public void test() throws Exception {
-        OozieClient client = LocalOozie.getClient();
+        UserGroupInformation hdfUser = UserGroupInformation.createRemoteUser("hdfs");
+        hdfUser.doAs(new PrivilegedExceptionAction<Object>() {
+            @Override
+            public Object run() throws Exception {
+                startOozie();
+                try {
+                    testInternal();
+                } finally {
+                    LocalOozie.stop();
+                }
+                return null;
+            }
+        });
+    }
+
+    private void testInternal() throws Exception {
+        OozieClient client = LocalOozie.getClient("oozie");
         Properties properties = new Properties();
         properties.put(OozieWorkflowEngine.NAME_NODE, ClusterHelper.
                 getHdfsUrl(cluster.getCluster()));
@@ -67,30 +99,33 @@ public class OozieRetentionWorkflowTest {
         properties.put("limit", "hours(5)");
         properties.put("timeZone", "UTC");
         properties.put("frequency", "hourly");
-        properties.put(OozieClient.APP_PATH, "/ivory/workflow");
-        properties.put(OozieClient.LIBPATH, "/ivory/workflow/lib");
+        properties.put(OozieClient.USER_NAME, "guest");
+        properties.put(OozieClient.GROUP_NAME, "users");
+        properties.put(OozieClient.APP_PATH, "${nameNode}/ivory/workflow");
+        properties.put(OozieClient.LIBPATH, "${nameNode}/ivory/workflow/lib");
         stageSystemFiles();
         createTestData();
-        client.run(properties);
+        System.out.println(client.run(properties));
+        Thread.sleep(100000);
     }
 
     private void stageSystemFiles() throws Exception {
         Configuration conf = cluster.getConf();
         FileSystem fs = FileSystem.get(conf);
-        File systemLoc = new File(System.getProperty("user.dir") +
-                "/webapps/target/ivory-webapp-0.1-SNAPSHOT/WEB-INF/lib");
+        File systemLoc = new File(System.getProperty("user.dir") + "/retention/target");
 
         if (!systemLoc.exists()) {
-            systemLoc = new File(System.getProperty("user.dir") +
-                "../webapps/target/ivory-webapp-0.1-SNAPSHOT/WEB-INF/lib");
+            LOG.info(systemLoc + " is not found");
+            systemLoc = new File(System.getProperty("user.dir") + "/target");
         }
 
         if (!systemLoc.exists()) {
-             systemLoc = new File(StartupProperties.get().
+            LOG.info(systemLoc + " is not found");
+            systemLoc = new File(StartupProperties.get().
                      getProperty("system.lib.location"));
         }
 
-        Assert.assertTrue(systemLoc.exists());
+        Assert.assertTrue(systemLoc.exists(), systemLoc.getAbsolutePath());
 
         fs.copyFromLocalFile(new Path(systemLoc.getAbsolutePath(),
                 "ivory-common-0.1-SNAPSHOT.jar"), new Path("/ivory/workflow/lib"));
@@ -99,12 +134,59 @@ public class OozieRetentionWorkflowTest {
         fs.copyFromLocalFile(new Path(systemLoc.getAbsolutePath(),
                 "ivory-oozie-adaptor-0.1-SNAPSHOT.jar"), new Path("/ivory/workflow/lib"));
 
-
+        InputStream in = getClass().getResourceAsStream("/retention-workflow.xml");
+        Assert.assertNotNull(in, "retention-workflow.xml is not found in cp");
+        OutputStream out = fs.create(new Path("/ivory/workflow/workflow.xml"));
+        IOUtils.copyBytes(in, out, 4096, true);
     }
 
-    private void createTestData() {
-
+    private List<Path> createTestData() throws IOException {
+        List<Path> list = new ArrayList<Path>();
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH");
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date date = new Date(System.currentTimeMillis() + 3 * 86400000L);
+        Path path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/data/feed1/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        fs.setOwner(new Path("/data/feed1"), "guest", "users");
+        for (FileStatus file : fs.globStatus(new Path("/data/feed1/*"))) {
+            fs.setOwner(file.getPath(), "guest", "users");
+        }
+        return list;
     }
-
-
 }

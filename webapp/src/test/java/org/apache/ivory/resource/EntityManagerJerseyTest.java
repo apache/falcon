@@ -28,8 +28,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +44,10 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -109,7 +113,7 @@ public class EntityManagerJerseyTest {
         Client client = Client.create(config);
         this.service = client.resource(getBaseURI());
         this.server.start();
-        this.cluster = EmbeddedCluster.newCluster("##name##", false);
+        this.cluster = EmbeddedCluster.newCluster("##name##", true);
         Cluster clusterEntity = this.cluster.getCluster();
         FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
         marshaller.marshal(clusterEntity, out);
@@ -433,6 +437,85 @@ public class EntityManagerJerseyTest {
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
         checkIfSuccessful(clientRepsonse);
+    }
+
+    @Test
+    public void testFeedSchedule() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        checkIfSuccessful(response);
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        overlay.put("cluster", cluster);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
+        checkIfSuccessful(response);
+
+        List<Path> validInstances = createTestData();
+        ClientResponse clientRepsonse = this.service
+        		.path("api/entities/schedule/feed/" + feed1)
+                .header("Remote-User", "guest")
+        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+        		.post(ClientResponse.class);
+        checkIfSuccessful(clientRepsonse);
+    }
+
+    private List<Path> createTestData() throws IOException {
+        List<Path> list = new ArrayList<Path>();
+        Configuration conf = cluster.getConf();
+        FileSystem fs = FileSystem.get(conf);
+        fs.mkdirs(new Path("/user/guest"));
+        fs.setOwner(new Path("/user/guest"), "guest", "users");
+        fs.mkdirs(new Path("/examples/input-data/rawLogs"));
+        fs.setOwner(new Path("/examples/input-data/rawLogs"), "guest", "users");
+
+        DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date date = new Date(System.currentTimeMillis() + 3 * 86400000L);
+        Path path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        date = new Date(date.getTime() - 86400000L);
+        path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
+        list.add(path);
+        fs.create(path).close();
+        for (FileStatus file : fs.globStatus(new Path("/examples/input-data/rawLogs/*"))) {
+            fs.setOwner(file.getPath(), "guest", "users");
+        }
+        return list;
     }
 
     @Test

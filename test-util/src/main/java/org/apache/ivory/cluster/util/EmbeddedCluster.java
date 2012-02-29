@@ -19,13 +19,19 @@
 package org.apache.ivory.cluster.util;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ivory.entity.v0.cluster.*;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +51,27 @@ public class EmbeddedCluster {
         return conf;
     }
 
-    public static EmbeddedCluster newCluster(String name, boolean withMR)
+    public static EmbeddedCluster newCluster(final String name, final boolean withMR)
+            throws Exception {
+        return createClusterAsUser(name, withMR);
+    }
+
+    public static EmbeddedCluster newCluster(final String name,
+                                             final boolean withMR,
+                                             final String user)
+            throws Exception {
+
+        UserGroupInformation hdfsUser = UserGroupInformation.createRemoteUser(user);
+        return hdfsUser.doAs(new PrivilegedExceptionAction<EmbeddedCluster>() {
+            @Override
+            public EmbeddedCluster run() throws Exception {
+                return createClusterAsUser(name, withMR);
+            }
+        });
+    }
+
+    private static EmbeddedCluster createClusterAsUser(String name,
+                                                       boolean withMR)
             throws IOException {
 
         EmbeddedCluster cluster = new EmbeddedCluster();
@@ -56,9 +82,14 @@ public class EmbeddedCluster {
         } else {
             System.setProperty("test.build.data", "webapp/target/" + name + "/data");
         }
+        String user = System.getProperty("user.name");
         cluster.conf.set("hadoop.log.dir", "/tmp");
         cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
         cluster.conf.set("hadoop.proxyuser.oozie.hosts", "127.0.0.1");
+        cluster.conf.set("hadoop.proxyuser.hdfs.groups", "*");
+        cluster.conf.set("hadoop.proxyuser.hdfs.hosts", "127.0.0.1");
+        cluster.conf.set("mapreduce.jobtracker.kerberos.principal", "");
+        cluster.conf.set("dfs.namenode.kerberos.principal", "");
         cluster.dfsCluster = new MiniDFSCluster(cluster.conf, 1, true, null);
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = " + hdfsUrl);
@@ -67,6 +98,10 @@ public class EmbeddedCluster {
             System.setProperty("org.apache.hadoop.mapred.TaskTracker", "/tmp");
             cluster.conf.set("org.apache.hadoop.mapred.TaskTracker", "/tmp");
             cluster.conf.set("org.apache.hadoop.mapred.TaskTracker", "/tmp");
+            cluster.conf.set("mapreduce.jobtracker.staging.root.dir", "/user");
+            Path path = new Path("/tmp/hadoop-" + user, "mapred");
+            FileSystem.get(cluster.conf).mkdirs(path);
+            FileSystem.get(cluster.conf).setPermission(path, new FsPermission((short)511));
             cluster.mrCluster = new MiniMRCluster(1,
                     hdfsUrl, 1);
             Configuration mrConf = cluster.mrCluster.createJobConf();

@@ -32,33 +32,29 @@ import org.apache.oozie.client.OozieClient;
 
 import java.util.*;
 
-public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder {
+public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Entity entity) throws IvoryException {
-        if (!(entity instanceof Process))
-            throw new IllegalArgumentException(entity.getName() + " is not of type Process");
-
-        Process process = (Process) entity;
+    public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
 
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
-                entity.getStagingPath());
+                process.getStagingPath());
 
         OozieProcessMapper converter = new OozieProcessMapper(process);
         Path bundlePath = converter.convert(cluster, workflowPath);
 
-        return createAppProperties(cluster, bundlePath);
+        List<Cluster> clusters = new ArrayList<Cluster>();
+        List<Path> paths = new ArrayList<Path>();
+        clusters.add(cluster);
+        paths.add(bundlePath);
+        return createAppProperties(clusters, paths);
     }
 
     @Override
-    public Cluster[] getScheduledClustersFor(Entity entity) throws IvoryException {
+    public Cluster[] getScheduledClustersFor(Process process) throws IvoryException {
 
-        if (!(entity instanceof Process))
-            throw new IllegalArgumentException(entity.getName() + " is not of type Process");
-
-        Process process = (Process) entity;
         // TODO asserts
         String clusterName = process.getClusters().getCluster().get(0).getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);

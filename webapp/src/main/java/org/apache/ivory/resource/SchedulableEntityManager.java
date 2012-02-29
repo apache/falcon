@@ -60,7 +60,7 @@ public class SchedulableEntityManager extends EntityManager {
 
 		try {
 			checkSchedulableEntity(type);
-			audit(request, entity, type, "SCHDULED");
+			audit(request, entity, type, "SCHEDULED");
 			Entity entityObj = getEntityObject(entity, type);
 			if (!getWorkflowEngine().isActive(entityObj)) {
 				getWorkflowEngine().schedule(entityObj);

@@ -87,7 +87,7 @@ public class FeedEvictorTest {
             pair = createTestData("feed1", "yyyy-MM-dd", 10, TimeUnit.DAYS);
             FeedEvictor.main(new String[]{cluster.getConf().
                     get("fs.default.name") + "/data/YYYY/feed1/mmHH/dd/MM/" +
-                    "${YEAR}-${MONTH}-${DAY}/more/${YEAR}", "instance",
+                    "?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}", "instance",
                     "days(10)", "UTC", "daily"});
 
             assertFailures(fs, pair);
@@ -131,7 +131,7 @@ public class FeedEvictorTest {
             pair = createTestData("feed2", "yyyyMMddHH", 5, TimeUnit.HOURS);
             FeedEvictor.main(new String[]{cluster.getConf().
                     get("fs.default.name") + "/data/YYYY/feed2/mmHH/dd/MM/" +
-                    "${YEAR}${MONTH}${DAY}${HOUR}/more/${YEAR}", "instance",
+                    "?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}", "instance",
                     "hours(5)", "UTC", "hourly"});
             assertFailures(fs, pair);
 
@@ -153,7 +153,7 @@ public class FeedEvictorTest {
             pair = createTestData();
             FeedEvictor.main(new String[]{cluster.getConf().
                     get("fs.default.name") + "/data/YYYY/feed3/dd/MM/" +
-                    "${MONTH}/more/${HOUR}", "instance",
+                    "?{MONTH}/more/?{HOUR}", "instance",
                     "months(5)", "UTC", "hourly"});
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 

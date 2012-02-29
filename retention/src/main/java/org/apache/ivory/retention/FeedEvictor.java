@@ -113,7 +113,7 @@ public class FeedEvictor extends Configured implements Tool {
             printUsage();
             return -1;
         }
-        String feedBasePath = args[0];
+        String feedBasePath = args[0].replaceAll("\\?\\{", "\\$\\{");
         String retentionType = args[1];
         String retentionLimit = args[2];
         String timeZone = args[3];

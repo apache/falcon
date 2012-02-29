@@ -30,7 +30,7 @@ import org.apache.oozie.client.OozieClient;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
-public abstract class WorkflowBuilder {
+public abstract class WorkflowBuilder<T extends Entity> {
 
     public static final String PROPS = "PROPS";
     public static final String CLUSTERS = "CLUSTERS";
@@ -50,10 +50,10 @@ public abstract class WorkflowBuilder {
         }
     }
 
-    public abstract Map<String, Object> newWorkflowSchedule(Entity entity)
+    public abstract Map<String, Object> newWorkflowSchedule(T entity)
             throws IvoryException;
 
-    public abstract Cluster[] getScheduledClustersFor(Entity entity) throws IvoryException;
+    public abstract Cluster[] getScheduledClustersFor(T entity) throws IvoryException;
     //TODO add methods for re-run, whenever additional work is required
     //beyond just firing an action in the actual workflow engine
 }
