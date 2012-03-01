@@ -26,6 +26,11 @@
     <packaging>jar</packaging>
 
     <dependencies>
+      	<dependency>
+        	<groupId>org.apache.hadoop</groupId>
+        	<artifactId>hadoop-test</artifactId>
+        	<version>0.20.2-cdh3u0</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.oozie.extensions</groupId>
             <artifactId>oozie-el-extensions</artifactId>

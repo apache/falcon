@@ -143,6 +143,12 @@ public class EntityManagerJerseyTest {
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .header("Remote-User", "testuser")
 				.post(ClientResponse.class, backupClusterStream);
+
+		//setup dependent workflow and lipath in hdfs
+		FileSystem fs = FileSystem.get(this.cluster.getConf());
+		fs.mkdirs(new Path("/workflow"));
+		fs.mkdirs(new Path("/workflow/lib"));
+
 	}
 
     @AfterClass

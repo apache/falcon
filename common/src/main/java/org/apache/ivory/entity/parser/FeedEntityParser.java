@@ -27,6 +27,7 @@ import org.apache.ivory.Pair;
 import org.apache.ivory.entity.common.DateValidator;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
+import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.log4j.Logger;
 import org.apache.oozie.util.DateUtils;
@@ -53,7 +54,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 			 validateClusterValidity(cluster.getValidity().getStart(),cluster.getValidity().getEnd(),cluster.getName());
 			entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
 		}
-        validateEntitiesExist(entities);       
+        validateEntitiesExist(entities);   
+        validateFeedSourceCluster(feed);
        
     }
 
@@ -68,6 +70,22 @@ public class FeedEntityParser extends EntityParser<Feed> {
 				 throw new ValidationException("Invalid end date: "+ cluster.getValidity().getEnd()+" for cluster: "+cluster.getName());
 			}
 		}		
+	}
+	
+	private void validateFeedSourceCluster(Feed feed)
+			throws ValidationException {
+		int i = 0;
+		for (Cluster cluster : feed.getClusters().getCluster()) {
+			if (cluster.getType().equals(ClusterType.SOURCE)) {
+				i++;
+			}
+		}
+		if (i == 0)
+			throw new ValidationException(
+					"Feed should have atleast one source cluster");
+		if (i > 1)
+			throw new ValidationException(
+					"Feed should not have more than one source cluster");
 	}
 	
 	private void validateClusterValidity(String start, String end, String clusterName)

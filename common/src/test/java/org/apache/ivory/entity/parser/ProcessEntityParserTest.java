@@ -29,6 +29,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -38,6 +40,7 @@ import org.apache.ivory.entity.v0.feed.Partition;
 import org.apache.ivory.entity.v0.feed.Partitions;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -56,16 +59,25 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @BeforeClass
     public void init() throws Exception {
         ProcessEntityParser.init();
+        conf.set("hadoop.log.dir", "/tmp");
+        this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
     }
+    
+	@AfterClass
+	public void tearDown() {
+		this.dfsCluster.shutdown();
+	}
     
     @BeforeMethod
     public void setup() throws Exception {
-        storeEntity(EntityType.PROCESS, "sample");
+
+        storeEntity(EntityType.CLUSTER, "testCluster");        
         storeEntity(EntityType.FEED, "impressionFeed");
         storeEntity(EntityType.FEED, "clicksFeed");
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
-        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.PROCESS, "sample");
+        
     }
 
     @Test
@@ -100,8 +112,8 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertEquals(process.getValidity().getTimezone(), "UTC");
 
         Assert.assertEquals(process.getWorkflow().getEngine(), "oozie");
-        Assert.assertEquals(process.getWorkflow().getPath(), "hdfs://path/to/workflow");
-        Assert.assertEquals(process.getWorkflow().getLibpath(), "hdfs://path/to/workflow/lib");
+        Assert.assertEquals(process.getWorkflow().getPath(), "/path/to/workflow");
+        Assert.assertEquals(process.getWorkflow().getLibpath(), "/path/to/workflow/lib");
 
         StringWriter stringWriter = new StringWriter();
         Marshaller marshaller = EntityType.PROCESS.getMarshaller();

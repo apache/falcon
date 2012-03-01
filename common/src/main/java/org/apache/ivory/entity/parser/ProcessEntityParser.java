@@ -20,13 +20,20 @@ package org.apache.ivory.entity.parser;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.common.ELParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
@@ -93,6 +100,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		validateEntityExists(EntityType.CLUSTER, clusterName);
 		validateProcessValidity(process.getValidity().getStart(), process
 				.getValidity().getEnd());
+		validateHDFSpaths(process);
 
 		if (process.getInputs() != null
 				&& process.getInputs().getInput() != null)
@@ -131,6 +139,46 @@ public class ProcessEntityParser extends EntityParser<Process> {
 										+ input.getName() + " is wrong");
 				}
 			}
+	}
+
+	private void validateHDFSpaths(Process process) throws IvoryException {
+
+		String clusterName = process.getCluster().getName();
+		org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) ConfigurationStore
+				.get().get(EntityType.CLUSTER, clusterName);
+		String workflowPath = process.getWorkflow().getPath();
+		String libPath = process.getWorkflow().getLibpath();
+		String nameNode = getNameNode(cluster, clusterName);
+		try {
+			Configuration configuration = new Configuration();
+			configuration.set("fs.default.name", nameNode);
+			FileSystem fs = FileSystem.get(configuration);
+			if (!fs.exists(new Path(workflowPath))) {
+				throw new ValidationException("Workflow path: " + workflowPath
+						+ " does not exists in HDFS: " + nameNode);
+			}
+			if (libPath != null && !fs.exists(new Path(libPath))) {
+				throw new ValidationException("Lib path: " + libPath
+						+ " does not exists in HDFS: " + nameNode);
+			}
+		} catch (ValidationException e) {
+			throw new ValidationException(e);
+		} catch (Exception e) {
+			throw new IvoryException(e);
+		}
+	}
+
+	private String getNameNode(
+			org.apache.ivory.entity.v0.cluster.Cluster cluster, String clusterName) throws ValidationException {
+		// cluster should never be null as it is validated while submitting
+		// feeds.
+		if (!ClusterHelper.getHdfsUrl(cluster)
+						.startsWith("hdfs://")) {
+			throw new ValidationException(
+					"Cannot get valid nameNode from write interface of cluster: "
+							+ clusterName);
+		}
+		return ClusterHelper.getHdfsUrl(cluster);
 	}
 
 	private void validateFeedRetentionPeriod(String startInstance,

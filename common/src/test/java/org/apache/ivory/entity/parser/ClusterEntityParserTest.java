@@ -48,7 +48,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Cluster cluster = (Cluster) parser.parseAndValidate(stream);
 
         Assert.assertNotNull(cluster);
-        assertEquals(cluster.getName(), "corp");
+        assertEquals(cluster.getName(), "testCluster");
 
         Interface execute = cluster.getInterfaces().get(Interfacetype.EXECUTE);
 

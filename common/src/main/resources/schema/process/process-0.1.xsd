@@ -121,7 +121,7 @@
 	<xs:complexType name="workflow">
 		<xs:attribute type="engine-type" name="engine" use="optional" />
 		<xs:attribute type="xs:string" name="path" use="required" />
-		<xs:attribute type="xs:string" name="libpath" use="optional" />
+		<xs:attribute type="xs:string" name="libpath" use="required" />
 	</xs:complexType>
 	<xs:complexType name="outputs">
 		<xs:sequence>

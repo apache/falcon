@@ -126,7 +126,7 @@
 		<xs:attribute type="xs:string" name="path" use="required" />
 	</xs:complexType>
 	<xs:complexType name="partition">
-		<xs:attribute type="xs:string" name="name" use="required" />
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
 	</xs:complexType>
 	<xs:complexType name="ACL">
 		<xs:attribute type="xs:string" name="owner" />
