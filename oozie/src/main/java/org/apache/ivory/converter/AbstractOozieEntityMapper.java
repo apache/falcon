@@ -23,8 +23,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.cluster.Property;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
+import org.apache.ivory.oozie.bundle.CONFIGURATION;
 import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
@@ -102,7 +107,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
             bundleCoord.setAppPath("${" + OozieWorkflowEngine.NAME_NODE + "}" + coordPath);
-            bundleCoord.setConfiguration(createBundleConf());
+            bundleCoord.setConfiguration(createBundleConf(cluster));
             bundleApp.getCoordinator().add(bundleCoord);
         }
         Path bundlePath = new Path(workflowBasePath,
@@ -145,15 +150,39 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster)
             throws IvoryException;
 
-    protected org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf() {
+    protected org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf(Cluster cluster) {
 
         org.apache.ivory.oozie.bundle.CONFIGURATION conf = new
                 org.apache.ivory.oozie.bundle.CONFIGURATION();
 
-        conf.getProperty().add(createBundleProperty(OozieWorkflowEngine.NAME_NODE,
+        List<CONFIGURATION.Property> bundleProps = conf.getProperty();
+        bundleProps.add(createBundleProperty(OozieWorkflowEngine.NAME_NODE,
                 "${" + OozieWorkflowEngine.NAME_NODE + "}"));
-        conf.getProperty().add(createBundleProperty(OozieWorkflowEngine.JOB_TRACKER,
+        bundleProps.add(createBundleProperty(OozieWorkflowEngine.JOB_TRACKER,
                 "${" + OozieWorkflowEngine.JOB_TRACKER + "}"));
+        bundleProps.add(createBundleProperty("entity.name", entity.getName()));
+        bundleProps.add(createBundleProperty("entity.type", entity.
+                getEntityType().name().toLowerCase()));
+
+        for (Property property : cluster.getProperties().values()) {
+            bundleProps.add(createBundleProperty(property.getName(),
+                    property.getValueAttribute()));
+        }
+
+        if (entity.getEntityType() == EntityType.PROCESS) {
+            for (org.apache.ivory.entity.v0.process.Property property :
+                    ((Process) entity).getProperties().getProperty()) {
+                bundleProps.add(createBundleProperty(property.getName(),
+                        property.getValueAttribute()));
+            }
+        } else {
+            for (org.apache.ivory.entity.v0.feed.Property property :
+                    ((Feed) entity).getProperties().values()) {
+                bundleProps.add(createBundleProperty(property.getName(),
+                        property.getValueAttribute()));
+            }
+        }
+
         return conf;
     }
 
