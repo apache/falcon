@@ -24,24 +24,24 @@ import org.testng.annotations.Test;
 public class MessageProducerTest {
 
 	private ProcessMessage msgArgs;
-	
+
 	@BeforeClass
-	public void setArgs(){
+	public void setArgs() {
 		this.msgArgs = new ProcessMessage();
-		this.msgArgs.setFeedTopicName("Ivory.process1.click-logs");
-		this.msgArgs.setFeedInstance("/click-logs/10/05/05/00/20");
-		this.msgArgs.setProcessName("process1");
-		this.msgArgs.setCoordinatorName("coord-rerun");
-		this.msgArgs.setWorkflowId("workflow-123");
-		this.msgArgs.setExternalWorkflowId("external-0001");
-		this.msgArgs.setTimeStamp("10:10:10:");
+		this.msgArgs.setProcessTopicName("Ivory.process1.click-logs");
+		this.msgArgs.setFeedName("click-logs,");
+		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,");
+		this.msgArgs.setWorkflowId("workflow-01-00");
 		this.msgArgs.setRunId("1");
+		this.msgArgs.setNominalTime("2011-01-01");
+		this.msgArgs.setTimeStamp("2012-01-01");
+		this.msgArgs.setBrokerUrl("tcp://localhost:61616?daemon=true");
 	}
-	
+
 	@Test
 	public void testProcessMessageCreator() {
 		MessageProducer.main(ArgumentsResolver
-				.resolveToStringArray(this.msgArgs));
-  }
+				.resolveToStringArray(new ProcessMessage[] { this.msgArgs }));
+	}
 
 }

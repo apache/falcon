@@ -31,9 +31,7 @@ import org.springframework.jms.core.JmsTemplate;
 public class MessageProducer {
 
 	private JmsTemplate template;
-
-	private ActiveMQConnectionFactory connectionFactory;
-
+	private static ActiveMQConnectionFactory connectionFactory;
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
 
 	public JmsTemplate getTemplate() {
@@ -50,7 +48,7 @@ public class MessageProducer {
 	}
 
 	public ActiveMQConnectionFactory getConnectionFactory() {
-		return this.connectionFactory;
+		return MessageProducer.connectionFactory;
 	}
 
 	/**
@@ -59,7 +57,7 @@ public class MessageProducer {
 	 *            - Injected by Spring DI
 	 */
 	public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-		this.connectionFactory = connectionFactory;
+		MessageProducer.connectionFactory = connectionFactory;
 	}
 
 	/**
@@ -69,14 +67,13 @@ public class MessageProducer {
 	 *            Topic based on topic name if it does not exist or else
 	 *            existing topic with the same name is used to send the message.
 	 */
-	protected void sendMessage(ProcessMessage arguments) {
+	protected void sendMessage(ProcessMessage args) {
 
-		ActiveMQTopic feedTopic = new ActiveMQTopic(arguments.getFeedTopicName());
-
+		ActiveMQTopic feedTopic = new ActiveMQTopic(args.getProcessTopicName());
 		LOG.debug("Sending message to broker: "
-				+ this.connectionFactory.getBrokerURL());
+				+ MessageProducer.connectionFactory.getBrokerURL());
 
-		this.template.send(feedTopic, new ProcessMessageCreator(arguments));
+		this.template.send(feedTopic, new ProcessMessageCreator(args));
 
 	}
 
@@ -88,14 +85,15 @@ public class MessageProducer {
 	public static void main(String[] args) {
 
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
-				new String[] { "jms-beans.xml" });
-
+				new String[] { "jms-beans.xml" });					
+		
 		MessageProducer messageProducer = (MessageProducer) context
 				.getBean("ivoryProducer");
-
-		ProcessMessage msgArgs = ArgumentsResolver.resolveToMessage(args);
-
-		messageProducer.sendMessage(msgArgs);
+		ProcessMessage[] processMessages = ArgumentsResolver.resolveToMessage(args);
+		MessageProducer.connectionFactory.setBrokerURL(processMessages[0].getBrokerUrl());
+		for(ProcessMessage processMessage: processMessages){
+			messageProducer.sendMessage(processMessage);
+		}
 
 	}
 	
