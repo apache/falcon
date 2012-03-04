@@ -18,6 +18,19 @@
 
 package org.apache.ivory.converter;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,35 +46,35 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Property;
-import org.apache.ivory.oozie.coordinator.*;
+import org.apache.ivory.messaging.ProcessMessage;
+import org.apache.ivory.oozie.coordinator.CONFIGURATION;
+import org.apache.ivory.oozie.coordinator.CONTROLS;
+import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
+import org.apache.ivory.oozie.coordinator.DATAIN;
+import org.apache.ivory.oozie.coordinator.DATAOUT;
+import org.apache.ivory.oozie.coordinator.DATASETS;
+import org.apache.ivory.oozie.coordinator.INPUTEVENTS;
+import org.apache.ivory.oozie.coordinator.OUTPUTEVENTS;
+import org.apache.ivory.oozie.coordinator.ObjectFactory;
+import org.apache.ivory.oozie.coordinator.SYNCDATASET;
+import org.apache.ivory.oozie.coordinator.WORKFLOW;
+import org.apache.ivory.oozie.workflow.ACTION;
+import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
+import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String EL_PREFIX = "elext:";
-    private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
-    private static final JAXBContext coordJaxbContext;
-
-    static  {
-        try {
-            coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
-        } catch (JAXBException e) {
-            throw new RuntimeException("Unable to create JAXB context", e);
-        }
-    }
+    private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);    
+    
+    private HashMap<String, String> userWFprops= new HashMap<String, String>();
+	
+	private static final String PAR_WORKFLOW_TEMPLATE_PATH="/config/workflow/parent-workflow.xml";
+    private static final String NOMINAL_TIME_EL="${coord:nominalTime()}";
+    private static final String ACTUAL_TIME_EL="${coord:actualTime()}";
 
     public OozieProcessMapper(Process entity) {
         super(entity);
@@ -72,8 +85,29 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             throws IvoryException {
         return Arrays.asList(createDefaultCoordinator(cluster));
     }
+    
+	@Override
+	protected WORKFLOWAPP getParentWorkflow(Cluster cluster)
+			throws IvoryException {
+		Process process = getEntity();
+		WORKFLOWAPP parentWorkflow = getParentWorkflowTemplate();
+		// set the subflow app path to users workflow
+		SUBWORKFLOW userSubFlowAction = ((ACTION) parentWorkflow
+				.getDecisionOrForkOrJoin().get(1)).getSubWorkflow();
+		userSubFlowAction.setAppPath(getHDFSPath(process.getWorkflow()
+				.getPath()));
 
-    /**
+		//user wf (subflow) confs
+		org.apache.ivory.oozie.workflow.CONFIGURATION conf = new org.apache.ivory.oozie.workflow.CONFIGURATION();
+		for (Entry<String, String> entry : userWFprops.entrySet())
+			conf.getProperty().add(
+					createWorkflowProperty(entry.getKey(), entry.getValue()));
+		userSubFlowAction.setConfiguration(conf);
+		
+		return parentWorkflow;
+	}
+
+	/**
      * Creates default oozie coordinator 
      * 
      * @param cluster Cluster for which the coordiantor app need to be created
@@ -102,11 +136,21 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setControls(controls);
 
         // user defined properties
-        Map<String, String> properties = new HashMap<String, String>();
-        if (process.getProperties() != null) {
-            for (Property prop : process.getProperties().getProperty())
-                properties.put(prop.getName(), prop.getValue());
-        }
+		Map<String, String> properties = new HashMap<String, String>();
+		if (process.getProperties() != null) {
+			for (Property prop : process.getProperties().getProperty()) {
+				properties.put(prop.getName(), prop.getValue());
+				userWFprops.put(prop.getName(), prop.getValue());
+			}
+		}
+        
+        //Parent workflow properties
+        HashMap<String, String> parentWFprops= new HashMap<String, String>();
+        parentWFprops.put(ProcessMessage.ARG.PROCESS_TOPIC_NAME.NAME(), process.getName());
+        parentWFprops.put(ProcessMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
+        parentWFprops.put(ProcessMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
+        parentWFprops.put(ProcessMessage.ARG.BROKER_URL.NAME(),ClusterHelper.getMessageBrokerUrl(cluster));
+        parentWFprops.put(ProcessMessage.ARG.PROCESS_TOPIC_NAME.NAME(), process.getName());
 
         // inputs
         if (process.getInputs() != null) {
@@ -128,12 +172,16 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 if(StringUtils.isNotEmpty(input.getPartition()))
                     properties.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
                 else
-                    properties.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");                    
+                    properties.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");   
+                	
+                userWFprops.put(input.getName(), "${"+input.getName()+"}");
             }
         }
 
         // outputs
         if (process.getOutputs() != null) {
+        	StringBuilder outputFeedPaths = new StringBuilder();
+        	StringBuilder outputFeedNames = new StringBuilder();
             for (Output output : process.getOutputs().getOutput()) {
                 SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
                 if (coord.getDatasets() == null)
@@ -147,29 +195,44 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 if (coord.getOutputEvents() == null)
                     coord.setOutputEvents(new OUTPUTEVENTS());
                 coord.getOutputEvents().getDataOut().add(dataout);
-
+                
+                outputFeedNames.append(output.getName()).append(",");
+                outputFeedPaths.append("${coord:dataOut('" + output.getName() + "')}").append(",");                
+               
                 properties.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
+                
+                userWFprops.put(output.getName(), "${"+output.getName()+"}");
             }
+            //Output feed name and path for parent workflow
+            parentWFprops.put(ProcessMessage.ARG.FEED_NAME.NAME(), outputFeedNames.toString());
+            parentWFprops.put(ProcessMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.toString());
+            
         }
 
         // add default properties
         properties.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
+        userWFprops.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
         properties.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
+        userWFprops.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
+        
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
         if(libDir != null)
-            properties.put(OozieClient.LIBPATH, libDir);
+            properties.put(OozieClient.LIBPATH, libDir);      
 
         //configuration
         CONFIGURATION conf = new CONFIGURATION();
         for(Entry<String, String> entry:properties.entrySet())
             conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
+        for(Entry<String, String> entry:parentWFprops.entrySet())
+            conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
             
         //action
         WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(getHDFSPath(process.getWorkflow().getPath()));
+        //set the action to parent workflow
+        wf.setAppPath(getHDFSPath(getParentWorkflowPath().toString()));
         wf.setConfiguration(conf);
 
-        ACTION action = new ACTION();
+        org.apache.ivory.oozie.coordinator.ACTION action = new org.apache.ivory.oozie.coordinator.ACTION();
         action.setWorkflow(wf);
         coord.setAction(action);
 
@@ -186,14 +249,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
 
         return coord;
-    }
-
-    private String getHDFSPath(String path) {
-        if(path != null) {
-            if(!path.startsWith("${nameNode}"))
-                path = "${nameNode}" + path;
-        }
-        return path;
     }
 
     private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
@@ -256,5 +311,27 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
         return expr;
     }
+    
+    private String getHDFSPath(String path) {
+        if(path != null) {
+            if(!path.startsWith("${nameNode}"))
+                path = "${nameNode}" + path;
+        }
+        return path;
+    }    
+
+	@SuppressWarnings("unchecked")
+	private WORKFLOWAPP getParentWorkflowTemplate() throws IvoryException {
+		try {
+			Unmarshaller unmarshaller = workflowJaxbContext
+					.createUnmarshaller();
+			JAXBElement<WORKFLOWAPP> workflowapp = (JAXBElement<WORKFLOWAPP>) unmarshaller
+					.unmarshal(AbstractOozieEntityMapper.class
+							.getResourceAsStream(PAR_WORKFLOW_TEMPLATE_PATH));
+			return workflowapp.getValue();
+		} catch (JAXBException e) {
+			throw new IvoryException(e);
+		}
+	}
 
 }

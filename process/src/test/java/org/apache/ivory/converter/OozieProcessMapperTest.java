@@ -32,6 +32,8 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import junit.framework.Assert;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -47,6 +49,9 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
+import org.apache.ivory.oozie.workflow.ACTION;
+import org.apache.ivory.oozie.workflow.JAVA;
+import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -114,7 +119,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         Path stagPath = new Path(process.getStagingPath());
-        Path bundlePath = mapper.convert(cluster, new Path(hdfsUrl + "/" + stagPath));
+        Path bundlePath = mapper.convert(cluster, stagPath);
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         assertTrue(fs.exists(bundlePath));
@@ -127,6 +132,16 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         testDefCoordMap(process, coord);
+        
+        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(bundlePath.getParent(),"workflow.xml"));
+        testParentWorkflow(process,parentWorkflow);
+    }
+    
+    public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
+    		Assert.assertEquals("ivory-parent-workflow", parentWorkflow.getName());
+    		Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
+    		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
+    		Assert.assertEquals("jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
@@ -138,6 +153,17 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         unmarshaller.setSchema(schema);
         JAXBElement<COORDINATORAPP> jaxbBundle = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), COORDINATORAPP.class);
         return jaxbBundle.getValue();                
+    }
+    
+    private WORKFLOWAPP getParentWorkflow(FileSystem fs, Path path) throws Exception {
+        String workflow = readFile(fs, path);
+        
+        Unmarshaller unmarshaller = JAXBContext.newInstance(WORKFLOWAPP.class).createUnmarshaller();
+        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/workflow.xsd"));
+        unmarshaller.setSchema(schema);
+        JAXBElement<WORKFLOWAPP> jaxbWorkflow = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(workflow.trim().getBytes())), WORKFLOWAPP.class);
+        return jaxbWorkflow.getValue();                
     }
     
     private BUNDLEAPP getBundle(FileSystem fs, Path path) throws Exception {

@@ -49,7 +49,8 @@ public class DateValidatorTest {
 			new Object[] {"2010-09-30T00:00Z"}, new Object[] {"2010-09-30T00:00Z"},
 			new Object[] {"2010-10-31T00:00Z"}, new Object[] {"2010-10-31T00:00Z"},
 			new Object[] {"2010-11-30T00:00Z"}, new Object[] {"2010-11-30T00:00Z"},
-			new Object[] {"2010-12-31T00:00Z"}, new Object[] {"2010-12-31T00:00Z"}
+			new Object[] {"2010-12-31T00:00Z"}, new Object[] {"2010-12-31T00:00Z"},
+			new Object[] {"1999-01-30T01:00Z"}, new Object[] {"2999-12-31T00:00Z"}
 		};
 	}
  
@@ -66,7 +67,7 @@ public class DateValidatorTest {
 			new Object[] {"2010-4-31T00:00Z"}, new Object[] {"2010-04-31T00:00Z"},
 			new Object[] {"2010-6-31T00:00Z"}, new Object[] {"2010-06-31T00:00Z"},
 			new Object[] {"2010-9-31T00:00Z"}, new Object[] {"2010-09-31T00:00Z"},
-			new Object[] {"2010-11-31T00:00Z"}
+			new Object[] {"2010-11-31T00:00Z"},new Object[] {"1999-04-31T01:00Z"}, 
 		};
 	}
  
@@ -82,6 +83,6 @@ public class DateValidatorTest {
 	public void InValidDateTest(String date) {
 		boolean valid = dateValidator.validate(date);
 		System.out.println("Date is valid : " + date + " , " + valid);
-		Assert.assertEquals(false, valid); 
+		Assert.assertEquals(valid, false); 
 	}
 }

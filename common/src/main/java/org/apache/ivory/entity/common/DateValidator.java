@@ -25,7 +25,7 @@ public class DateValidator {
 	private Pattern pattern;
 	private Matcher matcher;
 
-	private static final String DATE_PATTERN = "(19|20\\d\\d)-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9])Z";
+	private static final String DATE_PATTERN = "(2\\d\\d\\d|19\\d\\d)-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9])Z";
 
 	public DateValidator() {
 		pattern = Pattern.compile(DATE_PATTERN);
