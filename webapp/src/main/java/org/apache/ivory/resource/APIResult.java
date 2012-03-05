@@ -60,7 +60,7 @@ public class APIResult {
 		this.message = message;
 	}
 
-	private APIResult() {
+	protected APIResult() {
 		// private default constructor for JAXB
 	}
 

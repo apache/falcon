@@ -18,7 +18,13 @@
 
 package org.apache.ivory.workflow.engine;
 
+import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.v0.Entity;
 
 /**
@@ -42,4 +48,16 @@ public interface WorkflowEngine {
     boolean isSuspended(Entity entity) throws IvoryException;
 
     boolean isRunning(Entity entity) throws IvoryException;
+    
+    Map<String, Set<String>> getRunningInstances(Entity entity) throws IvoryException;
+    
+    Map<String, Set<String>> killInstances(Entity entity, Date start, Date end) throws IvoryException;
+    
+    Map<String, Set<String>> reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
+
+    Map<String, Set<String>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
+
+    Map<String, Set<String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
+
+    Map<String, Set<Pair<String, String>>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
 }

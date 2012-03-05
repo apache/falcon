@@ -7,7 +7,7 @@
     <frequency>hours</frequency>
     <periodicity>1</periodicity>
 	
-	<validity timezone="UTC" end="2010-01-01T03:00Z" start="2010-01-01T01:00Z" />
+	<validity timezone="UTC" end="2010-01-01T01:30Z" start="2010-01-01T01:00Z" />
 	<inputs>
 		<input end-instance="today(0,40)" start-instance="today(0,20)"
 			feed="##f1##" name="inputData" partition="OK"/>
@@ -19,7 +19,7 @@
 	<properties>
 		<property name="queueName" value="default"/>
 	</properties>
-	<workflow engine="oozie" path="/workflow" libpath="/workflow/lib"/>
+	<workflow engine="oozie" path="/examples/apps/aggregator" libpath="/examples/apps/aggregator/lib"/>
 	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
 
     <late-process policy="exp-backoff" delay="1" delayUnit="hours">

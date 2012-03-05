@@ -18,16 +18,15 @@
 
 package org.apache.ivory.workflow;
 
-import org.apache.hadoop.fs.Path;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.util.StartupProperties;
-import org.apache.oozie.client.OozieClient;
-
-import java.util.*;
 
 @SuppressWarnings("unchecked")
 public abstract class WorkflowBuilder<T extends Entity> {
@@ -56,4 +55,6 @@ public abstract class WorkflowBuilder<T extends Entity> {
     public abstract Cluster[] getScheduledClustersFor(T entity) throws IvoryException;
     //TODO add methods for re-run, whenever additional work is required
     //beyond just firing an action in the actual workflow engine
+
+    public abstract List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException;
 }

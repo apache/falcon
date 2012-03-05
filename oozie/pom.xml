@@ -50,12 +50,12 @@
       <dependency>
         <groupId>com.yahoo.oozie</groupId>
         <artifactId>oozie-client</artifactId>
-        <version>3.0.2</version>
+        <version>3.0.2.2</version>
       </dependency>
       <dependency>
         <groupId>com.yahoo.oozie</groupId>
         <artifactId>oozie-core</artifactId>
-        <version>3.0.2</version>
+        <version>3.0.2.2</version>
       </dependency>
     </dependencies>
 	<build>

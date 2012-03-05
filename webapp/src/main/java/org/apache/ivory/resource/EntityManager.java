@@ -52,10 +52,10 @@ public class EntityManager {
 
     private static final Logger LOG = Logger.getLogger(EntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
-    private static final int XML_DEBUG_LEN = 10 * 1024;
+    protected static final int XML_DEBUG_LEN = 10 * 1024;
 
     private WorkflowEngine workflowEngine;
-    private ConfigurationStore configStore = ConfigurationStore.get();
+    protected ConfigurationStore configStore = ConfigurationStore.get();
 
     public EntityManager() {
         try {

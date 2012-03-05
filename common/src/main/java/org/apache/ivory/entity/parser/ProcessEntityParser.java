@@ -258,7 +258,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
 	}
 
 	// Mapping to oozie coord's dataset fields
-	private enum Frequency {
+	public static enum Frequency {
 		minutes(TimeUnit.MINUTE, TimeUnit.NONE), hours(TimeUnit.HOUR,
 				TimeUnit.NONE), days(TimeUnit.DAY, TimeUnit.NONE), months(
 				TimeUnit.MONTH, TimeUnit.NONE), endOfDays(TimeUnit.DAY,
@@ -271,6 +271,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		private Frequency(TimeUnit timeUnit, TimeUnit endOfDuration) {
 			this.timeUnit = timeUnit;
 			this.endOfDuration = endOfDuration;
+		}
+		
+		public TimeUnit getTimeUnit() {
+		    return timeUnit;
 		}
 	}
 

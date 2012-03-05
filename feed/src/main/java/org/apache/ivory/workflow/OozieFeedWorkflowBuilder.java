@@ -23,11 +23,14 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -66,5 +69,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             clusters.add(cluster);
         }
         return clusters.toArray(new Cluster[clusters.size()]);
+    }
+
+    @Override
+    public List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException {
+        throw new IvoryException("getExternalIds is not supported for Feeds!");
     }
 }

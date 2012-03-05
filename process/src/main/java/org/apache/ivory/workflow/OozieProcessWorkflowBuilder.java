@@ -18,19 +18,24 @@
 
 package org.apache.ivory.workflow;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.ExternalId;
+import org.apache.ivory.entity.parser.ProcessEntityParser.Frequency;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.security.CurrentUser;
-import org.apache.oozie.client.OozieClient;
-
-import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
@@ -59,5 +64,30 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
         return new Cluster[] { cluster };
+    }
+    
+    @Override
+    public List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException {
+        Process process = (Process) entity;
+        
+        TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
+        Calendar procStart = Calendar.getInstance(timezone);
+        procStart.setTime(EntityUtil.parseDateUTC(process.getValidity().getStart()));
+        Calendar startCal = Calendar.getInstance(timezone);
+        startCal.setTime(start);
+        Calendar endCal = Calendar.getInstance(timezone);
+        endCal.setTime(end);
+        
+        Frequency freq = Frequency.valueOf(process.getFrequency());
+        List<ExternalId> extIds = new ArrayList<ExternalId>();
+        while(procStart.before(startCal)) {
+            procStart.add(freq.getTimeUnit().getCalendarUnit(), Integer.valueOf(process.getPeriodicity()));
+        }
+        
+        while(procStart.before(endCal)) {
+            extIds.add(new ExternalId(process.getName(), procStart.getTime()));
+            procStart.add(freq.getTimeUnit().getCalendarUnit(), Integer.valueOf(process.getPeriodicity()));
+        }
+        return extIds;
     }
 }

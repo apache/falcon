@@ -14,8 +14,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
- -->
-<project>
+ --><project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.ivory</groupId>
   <artifactId>ivory-main</artifactId>
@@ -154,13 +153,13 @@
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-core-asl</artifactId>
-      <version>1.0.1</version>
+      <version>1.5.2</version>
     </dependency>
 
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.0.1</version>
+      <version>1.5.2</version>
     </dependency>
 
   </dependencies>

@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -153,6 +154,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
 
         // add default properties
+        properties.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), "${coord:nominalTime()}").getId());
         properties.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
         properties.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
