@@ -28,33 +28,19 @@ import org.apache.ivory.IvoryException;
  */
 public class ELParser {
 
-	private static final String EL_NOW = "now\\(([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_TODAY = "today\\(([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_YESTERDAY = "yesterday\\(([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_CURRENT_MONTH = "currentMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_LAST_MONTH = "lastMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_CURRENT_YEAR = "currentYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)";
-	private static final String EL_LAST_YEAR = "lastYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)";
-
-	//frequency can't be negative
-	private static final String EL_OOZIE_MINUTES = "minutes\\(([\\d]+)\\)";
-	private static final String EL_OOZIE_HOURS = "hours\\(([\\d]+)\\)";
-	private static final String EL_OOZIE_DAYS = "days\\(([\\d]+)\\)";
-	private static final String EL_OOZIE_MONTHS = "months\\(([\\d]+)\\)";
-
-	private final Pattern nowPattern = Pattern.compile(EL_NOW);
-	private final Pattern todayPattern = Pattern.compile(EL_TODAY);
-	private final Pattern yesterdayPattern = Pattern.compile(EL_YESTERDAY);
-	private final Pattern currentMonthPattern = Pattern
-			.compile(EL_CURRENT_MONTH);
-	private final Pattern lastMonthPattern = Pattern.compile(EL_LAST_MONTH);
-	private final Pattern currentYearPattern = Pattern.compile(EL_CURRENT_YEAR);
-	private final Pattern lastYearPattern = Pattern.compile(EL_LAST_YEAR);
-
-	private final Pattern minutesPattern = Pattern.compile(EL_OOZIE_MINUTES);
-	private final Pattern hoursPattern = Pattern.compile(EL_OOZIE_HOURS);
-	private final Pattern daysPattern = Pattern.compile(EL_OOZIE_DAYS);
-	private final Pattern monthsPattern = Pattern.compile(EL_OOZIE_MONTHS);
+	private static final Pattern nowPattern = Pattern.compile("now\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern todayPattern = Pattern.compile("today\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern yesterdayPattern = Pattern.compile("yesterday\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern currentMonthPattern = Pattern
+			.compile("currentMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern lastMonthPattern = Pattern.compile("lastMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern currentYearPattern = Pattern.compile("currentYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private final Pattern lastYearPattern = Pattern.compile("lastYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
+	//frequency cant be negative
+	private static final Pattern minutesPattern = Pattern.compile("minutes\\(([\\d]+)\\)");
+	private static final Pattern hoursPattern = Pattern.compile("hours\\(([\\d]+)\\)");
+	private static final Pattern daysPattern = Pattern.compile("days\\(([\\d]+)\\)");
+	private static final Pattern monthsPattern = Pattern.compile("months\\(([\\d]+)\\)");
 
 	private String month;
 	private String day;

@@ -30,6 +30,7 @@ import org.apache.ivory.oozie.coordinator.ACTION;
 import org.apache.ivory.oozie.coordinator.CONFIGURATION;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
+import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
@@ -162,4 +163,11 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         LOG.debug("Workflow xml copied to " + outPath + "/workflow.xml");
         LOG.debug(writer);
     }
+
+	@Override
+	protected WORKFLOWAPP getParentWorkflow(Cluster cluster)
+			throws IvoryException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

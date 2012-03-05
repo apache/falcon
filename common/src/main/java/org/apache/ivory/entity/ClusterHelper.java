@@ -53,6 +53,10 @@ public final class ClusterHelper {
     public static String getMREndPoint(Cluster cluster) {
         return getInterfaceFor(cluster, Interfacetype.EXECUTE);
     }
+    
+    public static String getMessageBrokerUrl(Cluster cluster) {
+        return getInterfaceFor(cluster, Interfacetype.MESSAGING);
+    }
 
     private static String getInterfaceFor(Cluster cluster, Interfacetype type) {
         assert cluster != null : "Cluster object can't be null";

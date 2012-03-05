@@ -59,6 +59,9 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                     "${" + OozieWorkflowEngine.NAME_NODE + "}" + path.toString());
 
             properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+            
+            //Ivory common jars to be used.
+            properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
 
             propList.add(properties);
             LOG.info("Cluster: " + clusters.get(index).getName() + ", PROPS: " + properties);

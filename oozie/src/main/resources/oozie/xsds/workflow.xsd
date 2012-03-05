@@ -13,8 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. See accompanying LICENSE file.
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:workflow="uri:oozie:workflow:0.3"
-           elementFormDefault="qualified" targetNamespace="uri:oozie:workflow:0.3">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:workflow="uri:oozie:workflow:0.2"
+           elementFormDefault="qualified" targetNamespace="uri:oozie:workflow:0.2">
 
     <xs:element name="workflow-app" type="workflow:WORKFLOW-APP"/>
 

@@ -20,53 +20,11 @@
 		<artifactId>ivory-main</artifactId>
 		<version>0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>ivory-process</artifactId>
-	<description>Ivory Process Module</description>
-	<name>Ivory Process</name>
+	<artifactId>ivory-messaging</artifactId>
+	<description>Ivory JMS messaging Module</description>
+	<name>Ivory Messaging</name>
 	<packaging>jar</packaging>
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-oozie-adaptor</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-common</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-feed</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-test-util</artifactId>
-			<version>0.1-SNAPSHOT</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-messaging</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.yahoo.oozie</groupId>
-			<artifactId>oozie-client</artifactId>
-			<version>3.0.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>0.20.2-cdh3u0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-test</artifactId>
-			<version>0.20.2-cdh3u0</version>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jms</artifactId>
@@ -87,10 +45,6 @@
 			<artifactId>activemq-pool</artifactId>
 			<version>5.4.3</version>
 		</dependency>
-		<dependency>
-			<groupId>net.sf.dozer</groupId>
-			<artifactId>dozer</artifactId>
-			<version>5.3.1</version>
-		</dependency>
 	</dependencies>
+
 </project>
