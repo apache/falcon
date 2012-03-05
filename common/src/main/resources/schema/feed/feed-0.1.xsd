@@ -99,7 +99,13 @@
 			<xs:element type="partitions" name="partitions" />
 			<xs:element type="xs:string" name="groups" />
 			<xs:element type="frequency-type" name="frequency" />
-			<xs:element type="xs:integer" name="periodicity" />
+			<xs:element name="periodicity">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+ 					</xs:restriction>
+ 				</xs:simpleType>
+			</xs:element>	
 			<xs:element type="late-arrival" name="late-arrival" />
 			<xs:element type="clusters" name="clusters" />
 			<xs:element type="locations" name="locations" />

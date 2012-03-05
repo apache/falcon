@@ -88,10 +88,10 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertNotNull(process);
         Assert.assertEquals(process.getName(), "sample");
 
-        Assert.assertEquals(process.getConcurrency(), "1");
+        Assert.assertEquals(process.getConcurrency(), 1);
         Assert.assertEquals(process.getExecution(), "LIFO");
         Assert.assertEquals(process.getFrequency(), "hours");
-        Assert.assertEquals(process.getPeriodicity(), "1");
+        Assert.assertEquals(process.getPeriodicity(), 1);
         Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
 
         Assert.assertEquals(process.getInputs().getInput().get(0).getName(), "impression");
@@ -113,7 +113,6 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 
         Assert.assertEquals(process.getWorkflow().getEngine(), "oozie");
         Assert.assertEquals(process.getWorkflow().getPath(), "/path/to/workflow");
-        Assert.assertEquals(process.getWorkflow().getLibpath(), "/path/to/workflow/lib");
 
         StringWriter stringWriter = new StringWriter();
         Marshaller marshaller = EntityType.PROCESS.getMarshaller();

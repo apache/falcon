@@ -70,13 +70,13 @@ public class Process extends Entity{
     @XmlElement(required = true)
     protected Cluster cluster;
     @XmlElement(required = true)
-    protected String concurrency;
+    protected int concurrency;
     @XmlElement(required = true)
     protected String execution;
     @XmlElement(required = true)
     protected String frequency;
     @XmlElement(required = true)
-    protected String periodicity;
+    protected int periodicity;
     @XmlElement(required = true)
     protected Validity validity;
     @XmlElement(required = true)
@@ -127,7 +127,7 @@ public class Process extends Entity{
      *     {@link String }
      *     
      */
-    public String getConcurrency() {
+    public int getConcurrency() {
         return concurrency;
     }
 
@@ -139,7 +139,7 @@ public class Process extends Entity{
      *     {@link String }
      *     
      */
-    public void setConcurrency(String value) {
+    public void setConcurrency(int value) {
         this.concurrency = value;
     }
 
@@ -199,7 +199,7 @@ public class Process extends Entity{
      *     {@link String }
      *     
      */
-    public String getPeriodicity() {
+    public int getPeriodicity() {
         return periodicity;
     }
 
@@ -211,7 +211,7 @@ public class Process extends Entity{
      *     {@link String }
      *     
      */
-    public void setPeriodicity(String value) {
+    public void setPeriodicity(int value) {
         this.periodicity = value;
     }
 

@@ -42,7 +42,7 @@
     	<property name="procprop" value="procprop"/>
     </properties>
     
-    <workflow engine="oozie" path="/user/guest/workflow" libpath="hdfs://path/to/workflow/lib"/>
+    <workflow engine="oozie" path="/user/guest/workflow" />
 
     <retry policy="backoff" delay="10" delayUnit="hours" attempts="3" />
 

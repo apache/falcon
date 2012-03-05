@@ -132,7 +132,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // controls
         CONTROLS controls = new CONTROLS();
-        controls.setConcurrency(process.getConcurrency());
+        controls.setConcurrency(""+process.getConcurrency());
         controls.setExecution(process.getExecution());
         coord.setControls(controls);
 

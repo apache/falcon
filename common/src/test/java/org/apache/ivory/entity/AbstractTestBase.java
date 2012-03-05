@@ -53,8 +53,8 @@ public class AbstractTestBase {
                 process.setName(name);
                 FileSystem fs =dfsCluster.getFileSystem();
                 fs.mkdirs(new Path(process.getWorkflow().getPath()));
-                if (process.getWorkflow().getLibpath() != null) {
-                	fs.mkdirs(new Path(process.getWorkflow().getLibpath()));
+                if (!fs.exists(new Path(process.getWorkflow()+"/lib"))) {
+                	fs.mkdirs(new Path(process.getWorkflow()+"/lib"));
                 }
                 store.publish(type, process);
                 break;

@@ -89,7 +89,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals("${coord:"+process.getFrequency()+"("+process.getPeriodicity()+")}", coord.getFrequency());
         assertEquals(process.getValidity().getTimezone(), coord.getTimezone());
         
-        assertEquals(process.getConcurrency(), coord.getControls().getConcurrency());
+        assertEquals(process.getConcurrency()+"", coord.getControls().getConcurrency());
         assertEquals(process.getExecution(), coord.getControls().getExecution());
         
         assertEquals(process.getInputs().getInput().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getName());
@@ -114,7 +114,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     @Test
-    public void testBunlde() throws Exception {
+    public void testBundle() throws Exception {
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);

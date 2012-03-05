@@ -41,8 +41,6 @@ public class Workflow {
     protected String engine;
     @XmlAttribute
     protected String path;
-    @XmlAttribute
-    protected String libpath;
 
     /**
      * Gets the value of the engine property.
@@ -90,30 +88,6 @@ public class Workflow {
      */
     public void setPath(String value) {
         this.path = value;
-    }
-
-    /**
-     * Gets the value of the libpath property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getLibpath() {
-        return libpath;
-    }
-
-    /**
-     * Sets the value of the libpath property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setLibpath(String value) {
-        this.libpath = value;
     }
 
 }

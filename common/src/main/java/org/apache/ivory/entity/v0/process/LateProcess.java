@@ -50,7 +50,7 @@ public class LateProcess {
     @XmlAttribute
     protected String policy;
     @XmlAttribute
-    protected String delay;
+    protected int delay;
     @XmlAttribute
     protected String delayUnit;
 
@@ -115,7 +115,7 @@ public class LateProcess {
      *     {@link String }
      *     
      */
-    public String getDelay() {
+    public int getDelay() {
         return delay;
     }
 
@@ -127,7 +127,7 @@ public class LateProcess {
      *     {@link String }
      *     
      */
-    public void setDelay(String value) {
+    public void setDelay(int value) {
         this.delay = value;
     }
 

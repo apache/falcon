@@ -76,7 +76,7 @@ public class Feed extends Entity{
     @XmlElement(required = true)
     protected String frequency;
     @XmlElement(required = true)
-    protected String periodicity;
+    protected int periodicity;
     @XmlElement(name = "late-arrival", required = true)
     protected LateArrival lateArrival;
     @XmlElement(required = true)
@@ -185,7 +185,7 @@ public class Feed extends Entity{
      *     {@link String }
      *     
      */
-    public String getPeriodicity() {
+    public int getPeriodicity() {
         return periodicity;
     }
 
@@ -197,7 +197,7 @@ public class Feed extends Entity{
      *     {@link String }
      *     
      */
-    public void setPeriodicity(String value) {
+    public void setPeriodicity(int value) {
         this.periodicity = value;
     }
 

@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
-import org.apache.ivory.entity.common.DateValidator;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.ClusterType;
@@ -60,13 +60,12 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
 	private void validateXMLelements(Feed feed) throws ValidationException {
-		DateValidator dateValidator = new DateValidator();
-		
+
 		for (Cluster cluster : feed.getClusters().getCluster()) {
-			if(!dateValidator.validate(cluster.getValidity().getStart())){
+			if(!EntityUtil.isValidUTCData(cluster.getValidity().getStart())){
 				 throw new ValidationException("Invalid start date: "+ cluster.getValidity().getStart()+" for cluster: "+cluster.getName());
 			}
-			if(!dateValidator.validate(cluster.getValidity().getEnd())){
+			if(!EntityUtil.isValidUTCData(cluster.getValidity().getEnd())){
 				 throw new ValidationException("Invalid end date: "+ cluster.getValidity().getEnd()+" for cluster: "+cluster.getName());
 			}
 		}		

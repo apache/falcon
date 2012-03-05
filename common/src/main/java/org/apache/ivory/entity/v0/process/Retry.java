@@ -41,11 +41,11 @@ public class Retry {
     @XmlAttribute
     protected String policy;
     @XmlAttribute
-    protected String delay;
+    protected int delay;
     @XmlAttribute
     protected String delayUnit;
     @XmlAttribute
-    protected String attempts;
+    protected int attempts;
 
     /**
      * Gets the value of the policy property.
@@ -79,7 +79,7 @@ public class Retry {
      *     {@link String }
      *     
      */
-    public String getDelay() {
+    public int getDelay() {
         return delay;
     }
 
@@ -91,7 +91,7 @@ public class Retry {
      *     {@link String }
      *     
      */
-    public void setDelay(String value) {
+    public void setDelay(int value) {
         this.delay = value;
     }
 
@@ -127,7 +127,7 @@ public class Retry {
      *     {@link String }
      *     
      */
-    public String getAttempts() {
+    public int getAttempts() {
         return attempts;
     }
 
@@ -139,7 +139,7 @@ public class Retry {
      *     {@link String }
      *     
      */
-    public void setAttempts(String value) {
+    public void setAttempts(int value) {
         this.attempts = value;
     }
 

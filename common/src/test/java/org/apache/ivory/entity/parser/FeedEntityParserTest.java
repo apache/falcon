@@ -89,7 +89,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		assertEquals(feed.getName(), "clicks");
 		assertEquals(feed.getDescription(), "clicks log");
 		assertEquals(feed.getFrequency(), "hours");
-		assertEquals(feed.getPeriodicity(), "1");
+		assertEquals(feed.getPeriodicity(), 1);
 		assertEquals(feed.getGroups(), "online,bi");
 
 		assertEquals(feed.getClusters().getCluster().get(0).getName(),
@@ -177,12 +177,12 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	@Test
 	public void testInvalidPeriodicity() throws IvoryException, JAXBException {
 		try {
-			modifiableFeed.setPeriodicity("xy");
+			modifiableFeed.setPeriodicity(-1);
 			parser.parseAndValidate(marshallEntity(modifiableFeed));
 			Assert.fail("Periodicity validation failed");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			modifiableFeed.setPeriodicity("1");
+			modifiableFeed.setPeriodicity(1);
 		}
 	}
 	

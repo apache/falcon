@@ -20,7 +20,6 @@ package org.apache.ivory.entity.parser;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
@@ -29,11 +28,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.common.ELParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
@@ -147,7 +145,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) ConfigurationStore
 				.get().get(EntityType.CLUSTER, clusterName);
 		String workflowPath = process.getWorkflow().getPath();
-		String libPath = process.getWorkflow().getLibpath();
 		String nameNode = getNameNode(cluster, clusterName);
 		try {
 			Configuration configuration = new Configuration();
@@ -155,10 +152,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
 			FileSystem fs = FileSystem.get(configuration);
 			if (!fs.exists(new Path(workflowPath))) {
 				throw new ValidationException("Workflow path: " + workflowPath
-						+ " does not exists in HDFS: " + nameNode);
-			}
-			if (libPath != null && !fs.exists(new Path(libPath))) {
-				throw new ValidationException("Lib path: " + libPath
 						+ " does not exists in HDFS: " + nameNode);
 			}
 		} catch (ValidationException e) {
@@ -200,6 +193,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
 	private void validateProcessValidity(String start, String end)
 			throws IvoryException {
 		try {
+			validateProcessDates(start, end);
 			Date processStart = DateUtils.parseDateUTC(start);
 			Date processEnd = DateUtils.parseDateUTC(end);
 			if (processStart.after(processEnd)) {
@@ -369,5 +363,15 @@ public class ProcessEntityParser extends EntityParser<Process> {
 		} catch (Exception e) {
 			throw new IvoryException(e);
 		}
+		
+	}
+	private void validateProcessDates(String start, String end) throws ValidationException {
+		if(!EntityUtil.isValidUTCData(start)){
+			 throw new ValidationException("Invalid start date: "+ start);
+		}
+		if(!EntityUtil.isValidUTCData(end)){
+			 throw new ValidationException("Invalid end date: "+ end);
+		}
+
 	}
 }
