@@ -131,6 +131,6 @@ public class SharedFileSystemJournalTest {
             Assert.assertEquals(tran.getUncommittedActions().get(0).toString(),
                     actionMap.get(tran.getId()).toString());
         }
-        Assert.assertEquals(ids, origids);
+        Assert.assertTrue(ids.containsAll(origids));
     }
 }

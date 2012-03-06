@@ -32,8 +32,7 @@ public class WorkflowEngineFactory {
 
 	public static WorkflowEngine getWorkflowEngine()
             throws IvoryException {
-        String clazzName = StartupProperties.get().getProperty(WORKFLOW_ENGINE);
-        return ReflectionUtils.getInstance(clazzName);
+        return ReflectionUtils.getInstance(WORKFLOW_ENGINE);
 	}
 
 }
