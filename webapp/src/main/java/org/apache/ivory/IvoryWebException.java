@@ -39,8 +39,8 @@ public class IvoryWebException extends WebApplicationException {
     private static String getAddnInfo(Throwable e) {
         String addnInfo = "";
         Throwable cause = e.getCause();
-        if (cause != null && ! cause.getMessage().equals(e.getMessage()) &&
-                cause.getMessage() != null) {
+        if (cause != null && cause.getMessage() != null &&
+                ! cause.getMessage().equals(e.getMessage())) {
             addnInfo = cause.getMessage();
         }
         return addnInfo;
