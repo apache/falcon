@@ -311,8 +311,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                         runInstances.add(extId.getDateAsString());
                 }
             }
-            if (!runInstances.isEmpty())
-                runInstancesMap.put(cluster.getName(), runInstances);
+            runInstancesMap.put(cluster.getName(), runInstances);
         }
         return runInstancesMap;
     }

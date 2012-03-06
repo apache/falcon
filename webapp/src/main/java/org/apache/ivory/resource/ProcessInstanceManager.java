@@ -41,6 +41,7 @@ import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.ValidationException;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
@@ -51,6 +52,11 @@ import org.apache.log4j.Logger;
 public class ProcessInstanceManager extends EntityManager {
     private static final Logger LOG = Logger.getLogger(ProcessInstanceManager.class);
 
+    protected Process getProcess(String processName) throws IvoryException {
+        Entity entity = getEntityObject(processName, EntityType.PROCESS.name());
+        return (Process) entity;
+    }
+    
     @GET
     @Path("running/{process}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -58,7 +64,7 @@ public class ProcessInstanceManager extends EntityManager {
         try {
             validateNotEmpty("process", processName);
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<String>> runInstances = wfEngine.getRunningInstances(process);
             return new ProcessInstancesResult("getRunningInstances is successful", runInstances.values().iterator().next(),
                     WorkflowStatus.RUNNING);
@@ -80,7 +86,7 @@ public class ProcessInstanceManager extends EntityManager {
             Date end = getEndDate(start, endStr);
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<Pair<String, String>>> instances = wfEngine.getStatus(process, start, end);
             return new ProcessInstancesResult("getStatus is successful", instances.values().iterator().next());
         } catch (Exception e) {
@@ -106,7 +112,7 @@ public class ProcessInstanceManager extends EntityManager {
             Date end = getEndDate(start, endStr);
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<String>> killedInstances = wfEngine.killInstances(process, start, end);
             return new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next(),
                     WorkflowStatus.KILLED);
@@ -137,7 +143,7 @@ public class ProcessInstanceManager extends EntityManager {
             Date end = getEndDate(start, endStr);
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
             return new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next(),
                     WorkflowStatus.SUSPENDED);
@@ -159,7 +165,7 @@ public class ProcessInstanceManager extends EntityManager {
             Date end = getEndDate(start, endStr);
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
             return new ProcessInstancesResult("suspendProcessInstance is successful", resumedInstances.values().iterator().next(),
                     WorkflowStatus.RUNNING);
@@ -189,7 +195,7 @@ public class ProcessInstanceManager extends EntityManager {
             }
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = configStore.get(EntityType.PROCESS, processName);
+            Process process = getProcess(processName);
             Map<String, Set<String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
             return new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next(),
                     WorkflowStatus.RUNNING);
