@@ -16,24 +16,28 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.workflow;
+package org.apache.ivory.transaction;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.util.ReflectionUtils;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.log4j.Logger;
 
-@SuppressWarnings("unchecked")
-public class WorkflowEngineFactory {
+public final class JournalFactory {
 
-    private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
+    private static Logger LOG = Logger.getLogger(JournalFactory.class);
 
-    private WorkflowEngineFactory() { }
+    private static Journal handler;
+    static {
+        try {
+            handler = ReflectionUtils.getInstance("journal.impl");
+        } catch (IvoryException e) {
+            LOG.warn("Unable to get journal impl handler. " +
+                    "falling back to shared fs journal");
+            handler = SharedFileSystemJournal.get();
+        }
+    }
 
-	public static WorkflowEngine getWorkflowEngine()
-            throws IvoryException {
-        String clazzName = StartupProperties.get().getProperty(WORKFLOW_ENGINE);
-        return ReflectionUtils.getInstance(clazzName);
-	}
-
+    public static Journal getDefault() {
+        return handler;
+    }
 }

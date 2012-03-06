@@ -16,24 +16,21 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.workflow;
+package org.apache.ivory.transaction;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.util.ReflectionUtils;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-@SuppressWarnings("unchecked")
-public class WorkflowEngineFactory {
+import java.util.List;
 
-    private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
+public interface Journal {
 
-    private WorkflowEngineFactory() { }
+    void begin(AtomicActions id) throws IvoryException;
 
-	public static WorkflowEngine getWorkflowEngine()
-            throws IvoryException {
-        String clazzName = StartupProperties.get().getProperty(WORKFLOW_ENGINE);
-        return ReflectionUtils.getInstance(clazzName);
-	}
+    void commit(AtomicActions id) throws IvoryException;
 
+    void rollback(AtomicActions id) throws IvoryException;
+
+    void onAction(AtomicActions id, Action action) throws IvoryException;
+
+    List<AtomicActions> getUncommittedActions() throws IvoryException;
 }

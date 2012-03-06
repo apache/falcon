@@ -16,24 +16,24 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.workflow;
+package org.apache.ivory.util;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.util.ReflectionUtils;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-@SuppressWarnings("unchecked")
-public class WorkflowEngineFactory {
+public final class ReflectionUtils {
 
-    private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
+    @SuppressWarnings("unchecked")
+    public static <T> T getInstance(String classKey) throws IvoryException {
+        try {
+            String clazzName = StartupProperties.get().getProperty(classKey);
+            Class<T> clazz = (Class<T>)
+                    ReflectionUtils.class.getClassLoader().loadClass(clazzName);
+            return (T) clazz.newInstance();
+        } catch (Exception e) {
+            throw new IvoryException("Unable to get instance for " +
+                    classKey, e);
+        }
+    }
 
-    private WorkflowEngineFactory() { }
-
-	public static WorkflowEngine getWorkflowEngine()
-            throws IvoryException {
-        String clazzName = StartupProperties.get().getProperty(WORKFLOW_ENGINE);
-        return ReflectionUtils.getInstance(clazzName);
-	}
 
 }

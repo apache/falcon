@@ -26,6 +26,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.util.ReflectionUtils;
 import org.apache.ivory.util.StartupProperties;
 
 @SuppressWarnings("unchecked")
@@ -38,15 +39,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
             throws IvoryException {
         String classKey = engine + "." + entity.getEntityType().name().toLowerCase() +
                 ".workflow.builder";
-        try {
-            String clazzName = StartupProperties.get().getProperty(classKey);
-            Class<WorkflowBuilder> clazz = (Class<WorkflowBuilder>)
-                    WorkflowBuilder.class.getClassLoader().loadClass(clazzName);
-            return clazz.newInstance();
-        } catch (Exception e) {
-            throw new IvoryException("Unable to get workflow builder for " +
-                    classKey, e);
-        }
+        return ReflectionUtils.getInstance(classKey);
     }
 
     public abstract Map<String, Object> newWorkflowSchedule(T entity)
