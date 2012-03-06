@@ -140,8 +140,7 @@ public class EntityManager {
 
             canRemove(entityType, entityObj);
 
-            //TODO REMOVE PROCESS CHECK WHEN DONE
-            if (entityType.isSchedulable() && entityType == EntityType.PROCESS) {
+            if (entityType.isSchedulable()) {
                 if (getWorkflowEngine().isActive(entityObj)) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
@@ -238,7 +237,7 @@ public class EntityManager {
             }
 
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            if (entityType == EntityType.PROCESS) { //TODO REMOVE CHECK WHEN DONE
+            if (entityType.isSchedulable()) {
                 if (workflowEngine.isActive(entityObj)) {
                     if (workflowEngine.isSuspended(entityObj)) {
                         return EntityStatus.SUSPENDED.name();
@@ -248,11 +247,11 @@ public class EntityManager {
                 } else {
                     return EntityStatus.NOT_SCHEDULED.name();
                 }
-            } else {   //TODO REMOVE:: DATASET ARE NOT SCHEDULED FOR NOW
+            } else {
                 return EntityStatus.NOT_SCHEDULED.name();
             }
         } catch (Exception e) {
-            LOG.error("Unable to suspend entity", e);
+            LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }

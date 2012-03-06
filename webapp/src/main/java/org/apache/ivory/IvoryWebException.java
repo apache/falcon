@@ -38,11 +38,13 @@ public class IvoryWebException extends WebApplicationException {
 
     private static String getAddnInfo(Throwable e) {
         String addnInfo = "";
-        if (e.getCause() != null) {
-            addnInfo = e.getCause().getMessage();
+        Throwable cause = e.getCause();
+        if (cause != null && ! cause.getMessage().equals(e.getMessage())) {
+            addnInfo = cause.getMessage();
         }
         return addnInfo;
     }
+
     public IvoryWebException(Response response) {
         super(response);
     }
