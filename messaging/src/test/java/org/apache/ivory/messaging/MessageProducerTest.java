@@ -28,28 +28,47 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class MessageProducerTest {
 
-	private ProcessMessage msgArgs;
-	private static final String TEST_CONN_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+	private EntityInstanceMessage msgArgs;
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+	//private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
+	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
 	private static final String TOPIC_NAME = "Ivory.process1.click-logs";
+	private BrokerService broker;
+	
 	private volatile AssertionError error;
 
 	@BeforeClass
-	public void setArgs() {
-		this.msgArgs = new ProcessMessage();
-		this.msgArgs.setProcessTopicName(TOPIC_NAME);
-		this.msgArgs.setFeedName("click-logs,");
-		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,");
+	public void setup() throws Exception {
+		this.msgArgs = new EntityInstanceMessage();
+		this.msgArgs.setEntityTopicName(TOPIC_NAME);
+		this.msgArgs.setFeedName("click-logs");
+		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20");
 		this.msgArgs.setWorkflowId("workflow-01-00");
 		this.msgArgs.setRunId("1");
 		this.msgArgs.setNominalTime("2011-01-01");
 		this.msgArgs.setTimeStamp("2012-01-01");
-		this.msgArgs.setBrokerUrl(TEST_CONN_URL);
+		this.msgArgs.setBrokerUrl(BROKER_URL);
+		this.msgArgs.setBrokerImplClass(BROKER_IMPL_CLASS);
+		this.msgArgs.setEntityType("PROCESS");
+		this.msgArgs.setOperation("GENERATE");
+
+		broker = new BrokerService();
+		broker.setUseJmx(true);
+		broker.addConnector(BROKER_URL);
+		broker.start();
+	}
+
+	@AfterClass
+	public void tearDown() throws Exception {
+		broker.stop();
 	}
 
 	@Test
@@ -62,24 +81,24 @@ public class MessageProducerTest {
 				try {
 					consumer();
 				} catch (AssertionError e) {
-					error=e;
+					error = e;
 				} catch (JMSException ignore) {
-					
+
 				}
 			}
 		};
 		t.start();
-		Thread.sleep(1500);
-		MessageProducer.main(ArgumentsResolver
-				.resolveToStringArray(new ProcessMessage[] { this.msgArgs }));
-		if(error!=null){
+		Thread.sleep(1000);
+		MessageProducer.main(EntityInstanceMessage
+				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
+		if (error != null) {
 			throw error;
 		}
 	}
 
 	private void consumer() throws JMSException {
 		ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				TEST_CONN_URL);
+				BROKER_URL);
 		Connection connection = connectionFactory.createConnection();
 		connection.start();
 
@@ -87,16 +106,20 @@ public class MessageProducerTest {
 				Session.AUTO_ACKNOWLEDGE);
 		Destination destination = session.createTopic(TOPIC_NAME);
 		MessageConsumer consumer = session.createConsumer(destination);
-		Message m = consumer.receive();
 
-		if (m != null) {
-			TextMessage textMessage = (TextMessage) m;
-			String[] items = textMessage.getText().split(",");
-			Assert.assertEquals(items[0], TOPIC_NAME);
-			Assert.assertEquals(items[1], "click-logs");
-			Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20");
-			Assert.assertEquals(items[3], "workflow-01-00");
-		}
+		// wait till you get atleast one message
+		Message m;
+		for (m = null; m == null;)
+			m = consumer.receive();
+
+		TextMessage textMessage = (TextMessage) m;
+		System.out.println("Consumed: " + textMessage.getText());
+		String[] items = textMessage.getText().split(",");
+		Assert.assertEquals(items[0], TOPIC_NAME);
+		Assert.assertEquals(items[1], "click-logs");
+		Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20");
+		Assert.assertEquals(items[3], "workflow-01-00");
+
 		connection.close();
 	}
 }

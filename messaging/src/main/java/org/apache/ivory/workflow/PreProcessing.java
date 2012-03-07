@@ -18,15 +18,15 @@
 
 package org.apache.ivory.workflow;
 
-import org.apache.ivory.messaging.ArgumentsResolver;
-import org.apache.ivory.messaging.ProcessMessage;
+
+import org.apache.ivory.messaging.EntityInstanceMessage;
 
 public class PreProcessing {
 
 	public static void main(String[] args) {
-		ProcessMessage[] processMessages = ArgumentsResolver.resolveToMessage(args);
-		for(ProcessMessage processMessage:processMessages){
-			System.out.println(processMessage);
+		EntityInstanceMessage[] instanceMessages = EntityInstanceMessage.argsToMessage(args);
+		for(EntityInstanceMessage instanceMessage:instanceMessages){
+			System.out.println(instanceMessage);
 		}
 	}
 }
