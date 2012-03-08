@@ -44,6 +44,8 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.monitors.Dimension;
+import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -81,8 +83,9 @@ public class EntityManager {
     @Path("submit/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "submit")
     public APIResult submit(@Context HttpServletRequest request,
-                            @PathParam("type") String type) {
+                            @Dimension ("entityType") @PathParam("type") String type) {
 
         try {
             audit(request, "STREAMED_DATA", type, "SUBMIT");
