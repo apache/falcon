@@ -145,6 +145,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         parentWFprops.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(),brokerImplClass==null||brokerImplClass.equals("")?DEFAULT_BROKER_IMPL_CLASS:brokerImplClass);
         parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(),process.getEntityType().name());
         parentWFprops.put(EntityInstanceMessage.ARG.OPERATION.NAME(),EntityInstanceMessage.entityOperation.GENERATE.name());
+        parentWFprops.put("logDir", getHDFSPath(getParentWorkflowPath().getParent().toString()));
+        
         String queueName=getUserDefinedProps().get("queueName");
         parentWFprops.put("queueName",queueName==null||queueName.equals("")?"default":queueName);
 	

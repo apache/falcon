@@ -103,6 +103,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 		ACTION retentionAction = new ACTION();
 		WORKFLOW parentWorkflow = new WORKFLOW();
 		try {
+			//
+			createRetentionWorkflow(cluster);
 			//parent workflow
 			parentWorkflow.setAppPath(getHDFSPath(getParentWorkflowPath().toString()));
 			
@@ -124,6 +126,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 			conf.getProperty().add(
 					createCoordProperty("limit", feedCluster.getRetention()
 							.getLimit()));
+			conf.getProperty().add(
+					createCoordProperty("logDir", getHDFSPath(getParentWorkflowPath().getParent().toString())));
 			
 			 String queueName=getUserDefinedProps().get("queueName");
 		     conf.getProperty().add(createCoordProperty("queueName",queueName==null||queueName.equals("")?"default":queueName));
@@ -217,6 +221,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 		conf.getProperty().add(createWorkflowProperty("frequency", getVarName("frequency")));
 		conf.getProperty().add(createWorkflowProperty("limit", getVarName("limit")));
 		conf.getProperty().add(createWorkflowProperty("queueName", getVarName("queueName")));
+		conf.getProperty().add(createWorkflowProperty("logDir", getVarName("logDir")));
+		conf.getProperty().add(createWorkflowProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), getVarName(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME())));
 		
 		//user defined props, propagate to subflow using variable names
 		for(String prop: getUserDefinedProps().keySet()){

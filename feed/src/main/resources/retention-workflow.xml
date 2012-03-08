@@ -34,6 +34,7 @@
             <arg>${limit}</arg>
             <arg>${timeZone}</arg>
             <arg>${frequency}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
         </java>
         <ok to="end"/>
         <error to="fail"/>

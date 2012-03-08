@@ -53,8 +53,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
 	private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 	
-    protected static final String NOMINAL_TIME_EL="${coord:nominalTime()}";
-    protected static final String ACTUAL_TIME_EL="${coord:actualTime()}";
+    protected static final String NOMINAL_TIME_EL="${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
+    protected static final String ACTUAL_TIME_EL="${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";
 
 	protected static final JAXBContext workflowJaxbContext;
@@ -203,24 +203,22 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 					property.getValueAttribute()));
 		}
 
+		//populate map to be used by subclasses (bundle props + cluster + (feed or process)
+		for (org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop : bundleProps) {
+			userDefinedProps.put(prop.getName(), prop.getValue());
+		}		
 		if (entity.getEntityType() == EntityType.PROCESS) {
 			for (org.apache.ivory.entity.v0.process.Property property :
 				((Process) entity).getProperties().getProperty()) {
-				bundleProps.add(createBundleProperty(property.getName(),
-						property.getValueAttribute()));
+				userDefinedProps.put(property.getName(),
+						property.getValueAttribute());
 			}
 		} else {
 			for (org.apache.ivory.entity.v0.feed.Property property :
 				((Feed) entity).getProperties().values()) {
-				bundleProps.add(createBundleProperty(property.getName(),
-						property.getValueAttribute()));
+				userDefinedProps.put(property.getName(),
+						property.getValueAttribute());
 			}
-		}
-
-		//populate map to be used by subclasses
-		for (org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop : bundleConf
-				.getProperty()) {
-			userDefinedProps.put(prop.getName(), prop.getValue());
 		}
 
 		return bundleConf;

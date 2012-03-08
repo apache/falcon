@@ -71,6 +71,10 @@ public class MessageProducer {
 		debug(args);
 		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
 				.argsToMessage(args);
+		if(entityInstanceMessage.length==0){
+			LOG.warn("No operation on output feed");
+			return;
+		}
 
 		MessageProducer ivoryMessageProducer = new MessageProducer();
 		try {
@@ -96,8 +100,10 @@ public class MessageProducer {
 	}
 
 	private static void debug(String[] args) {
-		for(int i=0;i<args.length;i++){
-			LOG.debug(args[i]+"::");
+		if(LOG.isDebugEnabled()){
+			for(int i=0;i<args.length;i++){
+				LOG.debug(args[i]+"::");
+			}
 		}
 		
 	}

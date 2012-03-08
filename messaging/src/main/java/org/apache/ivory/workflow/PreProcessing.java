@@ -19,14 +19,12 @@
 package org.apache.ivory.workflow;
 
 
-import org.apache.ivory.messaging.EntityInstanceMessage;
 
 public class PreProcessing {
 
 	public static void main(String[] args) {
-		EntityInstanceMessage[] instanceMessages = EntityInstanceMessage.argsToMessage(args);
-		for(EntityInstanceMessage instanceMessage:instanceMessages){
-			System.out.println(instanceMessage);
+		for(int i=0;i<args.length;i++){
+			System.out.println("Arg: "+args[i]);
 		}
 	}
 }

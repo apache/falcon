@@ -26,6 +26,7 @@
 			<arg>${brokerImplClass}</arg>
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
 			<capture-output />
 		</java>
 		<ok to="user-workflow" />
@@ -56,7 +57,7 @@
 			<arg>${brokerImplClass}</arg>
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
-			<capture-output />
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />

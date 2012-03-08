@@ -18,18 +18,28 @@
 
 package org.apache.ivory.messaging;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Value Object which is stored in JMS Topic as TextMessage
  * 
  */
-public class EntityInstanceMessage {
+public class EntityInstanceMessage{
 
 	private final Map<ARG, String> msgs = new HashMap<ARG, String>();
 	private static final String MSG_SEPERATOR = ",";
 	private static final int ARG_LENGTH = EntityInstanceMessage.ARG.values().length;
+	private static final Logger LOG = Logger.getLogger(EntityInstanceMessage.class);
 
 	/**
 	 * Enum for arguments that are used in coordinators to pass arguments to
@@ -51,7 +61,8 @@ public class EntityInstanceMessage {
 		BROKER_URL(7, "brokerUrl"), 
 		BROKER_IMPL_CLASS(8,"brokerImplClass"),
 		ENTITY_TYPE(9, "entityType"), 
-		OPERATION(10,"operation");
+		OPERATION(10,"operation"),
+		LOG_FILE(11,"logFile");
 
 		private int argOrder;
 		private String argName;
@@ -157,6 +168,14 @@ public class EntityInstanceMessage {
 	public void setOperation(String operation) {
 		this.msgs.put(ARG.OPERATION, operation);
 	}
+	
+	public String getLogFile() {
+		return this.msgs.get(ARG.LOG_FILE);
+	}
+
+	public void setLogFile(String logFile) {
+		this.msgs.put(ARG.LOG_FILE, logFile);
+	}
 
 	@Override
 	public String toString() {
@@ -185,8 +204,14 @@ public class EntityInstanceMessage {
 
 		String[] feedNames = args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()]
 				.split(",");
-		String[] feedPaths = args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH
-		                          .ORDER()].split(",");
+		
+		String[] feedPaths;
+		try {
+			feedPaths = getFeedPaths(args);
+		} catch (IOException e) {
+			LOG.error("Error getting instance paths: ",e);
+			throw new RuntimeException(e);
+		}
 
 		EntityInstanceMessage[] processMessages = new EntityInstanceMessage[feedPaths.length];
 		for (int i = 0; i < feedPaths.length; i++) {
@@ -226,10 +251,37 @@ public class EntityInstanceMessage {
 			instanceMessage
 			.setOperation(args[EntityInstanceMessage.ARG.OPERATION
 			                   .ORDER()]);
+			instanceMessage
+			.setLogFile(args[EntityInstanceMessage.ARG.LOG_FILE
+			                   .ORDER()]);
 
 			processMessages[i] = instanceMessage;
 		}
 		return processMessages;
+	}
+
+	private static String[] getFeedPaths(String[] args) throws IOException {
+		String entityType = args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()];
+		
+		if(entityType.equalsIgnoreCase("PROCESS")){
+			LOG.debug("Returning instance paths for process: "+args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]);
+			return args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()].split(",");
+		}
+		//
+		Path logFile = new Path( args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()]);
+		FileSystem fs = FileSystem.get(logFile.toUri(), new Configuration());
+		ByteArrayOutputStream writer = new ByteArrayOutputStream();
+		InputStream instance = fs.open(logFile);
+		IOUtils.copyBytes(instance, writer, 4096, true);	
+		String [] instancePaths = writer.toString().split("=");
+		if(instancePaths.length==1){
+			LOG.debug("Returning 0 instance paths for feed ");
+			return new String[0];
+		}else{
+			LOG.debug("Returning instance paths for feed "+instancePaths[1]);
+			return instancePaths[1].split(",");
+		}		
+		
 	}
 
 	/**
@@ -276,6 +328,9 @@ public class EntityInstanceMessage {
 				.getEntityType();
 		args[EntityInstanceMessage.ARG.OPERATION.ORDER()] = instanceMessages[0]
 				.getOperation();
+		args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()] = instanceMessages[0]
+				.getLogFile();
+		
 		return args;
 	}
 
