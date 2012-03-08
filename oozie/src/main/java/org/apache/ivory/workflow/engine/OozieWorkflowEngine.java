@@ -324,7 +324,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.getJobId(id.getId());
-            if(jobId == null)
+            if(StringUtils.isEmpty(jobId))
                 return false;
             client.kill(jobId);
             return true;
@@ -373,7 +373,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.getJobId(extId.getId());
-            if(jobId == null)
+            if(StringUtils.isEmpty(jobId))
                 return false;
             client.resume(jobId);
             return true;
@@ -386,7 +386,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.getJobId(extId.getId());
-            if(jobId == null)
+            if(StringUtils.isEmpty(jobId))
                 return false;
             client.suspend(jobId);
             return true;
@@ -409,7 +409,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.getJobId(id.getId());
-            if(jobId == null)
+            if(StringUtils.isEmpty(jobId))
                 return false;
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Properties jobprops = new XConfiguration(new StringReader(jobInfo.getConf())).toProperties();
@@ -463,7 +463,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.getJobId(extId.getId());
-            if(jobId == null) {
+            if(StringUtils.isEmpty(jobId)) {
                 return NOT_STARTED;
             }
             WorkflowJob jobInfo = client.getJobInfo(jobId);
