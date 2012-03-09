@@ -214,6 +214,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         CONFIGURATION conf = new CONFIGURATION();
         for(Entry<String, String> entry:parentWFprops.entrySet())
             conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
+        
+		//user wf (sub-flow) confs, add all user defined props to coordinator
+		for (String propName : getUserDefinedProps().keySet())
+			conf.getProperty().add(
+					createCoordProperty(propName, getVarName(propName)));
             
         //action
         WORKFLOW wf = new WORKFLOW();
