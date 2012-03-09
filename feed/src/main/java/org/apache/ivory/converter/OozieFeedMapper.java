@@ -147,9 +147,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 			conf.getProperty().add(createCoordProperty(OozieClient.LIBPATH, getHDFSPath(getRetentionWorkflowPath(cluster)+"/lib")));
 			
 			//user wf (sub-flow) confs, add all user defined props to coordinator
-			for (String propName : getUserDefinedProps().keySet())
+			for (Entry<String, String> entry : getUserDefinedProps().entrySet())
 				conf.getProperty().add(
-						createCoordProperty(propName, getVarName(propName)));
+						createCoordProperty(entry.getKey(), entry.getValue()));
 
 			parentWorkflow.setConfiguration(conf);
 			retentionAction.setWorkflow(parentWorkflow);
