@@ -62,6 +62,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 	protected static final JAXBContext bundleJaxbContext;
 	
 	private Map<String, String> userDefinedProps = new HashMap<String, String>();
+	org.apache.ivory.oozie.bundle.CONFIGURATION bundleConf = new
+			org.apache.ivory.oozie.bundle.CONFIGURATION();
 
 	static {
 		try {
@@ -104,6 +106,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 	public Path convert(Cluster cluster, Path workflowBasePath) throws IvoryException {
 		this.workflowBasePath=workflowBasePath;
 		BUNDLEAPP bundleApp = new BUNDLEAPP();
+		//all the properties are set prior to bundle and coordinators creation
+		createBundleAndUserConf(cluster);
 		bundleApp.setName(entity.getWorkflowName() + "_" + entity.getName());
 		
 		List<COORDINATORAPP> coordinators = getCoordinators(cluster);
@@ -118,7 +122,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 			COORDINATOR bundleCoord = new COORDINATOR();
 			bundleCoord.setName(coordinatorapp.getName());
 			bundleCoord.setAppPath("${" + OozieWorkflowEngine.NAME_NODE + "}" + coordPath);
-			bundleCoord.setConfiguration(createBundleConf(cluster));
+			bundleCoord.setConfiguration(bundleConf);
 			bundleApp.getCoordinator().add(bundleCoord);
 		}
 		Path bundlePath = new Path(workflowBasePath, entity.getWorkflowName()
@@ -184,10 +188,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 	protected abstract WORKFLOWAPP getParentWorkflow(Cluster cluster)
 			throws IvoryException;
 
-	protected org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf(Cluster cluster) {
-
-		org.apache.ivory.oozie.bundle.CONFIGURATION bundleConf = new
-				org.apache.ivory.oozie.bundle.CONFIGURATION();
+	protected void createBundleAndUserConf(Cluster cluster) {
 
 		List<CONFIGURATION.Property> bundleProps = bundleConf.getProperty();
 		bundleProps.add(createBundleProperty(OozieWorkflowEngine.NAME_NODE,
@@ -211,17 +212,16 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 			for (org.apache.ivory.entity.v0.process.Property property :
 				((Process) entity).getProperties().getProperty()) {
 				userDefinedProps.put(property.getName(),
-						property.getValueAttribute());
+						property.getValue());
 			}
 		} else {
 			for (org.apache.ivory.entity.v0.feed.Property property :
 				((Feed) entity).getProperties().values()) {
 				userDefinedProps.put(property.getName(),
-						property.getValueAttribute());
+						property.getValue());
 			}
 		}
 
-		return bundleConf;
 	}
 
 	protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property
