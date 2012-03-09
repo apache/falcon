@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -146,6 +147,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(),process.getEntityType().name());
         parentWFprops.put(EntityInstanceMessage.ARG.OPERATION.NAME(),EntityInstanceMessage.entityOperation.GENERATE.name());
         parentWFprops.put("logDir", getHDFSPath(getParentWorkflowPath().getParent().toString()));
+        //override external ID
+        parentWFprops.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), "${coord:nominalTime()}").getId());
         
         String queueName=getUserDefinedProps().get("queueName");
         parentWFprops.put("queueName",queueName==null||queueName.equals("")?"default":queueName);
