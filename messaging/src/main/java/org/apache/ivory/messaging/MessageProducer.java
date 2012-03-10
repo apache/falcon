@@ -18,11 +18,16 @@
 
 package org.apache.ivory.messaging;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQTopic;
+import java.lang.reflect.InvocationTargetException;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Session;
+import javax.jms.Topic;
+
 import org.apache.log4j.Logger;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.jms.core.JmsTemplate;
 
 /**
  * Default Ivory Message Producer The configuration are loaded from
@@ -30,35 +35,9 @@ import org.springframework.jms.core.JmsTemplate;
  */
 public class MessageProducer {
 
-	private JmsTemplate template;
-	private static ActiveMQConnectionFactory connectionFactory;
+	private Connection connection;
+	private Topic entityTopic;
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
-
-	public JmsTemplate getTemplate() {
-		return this.template;
-	}
-
-	/**
-	 * 
-	 * @param template
-	 *            - injected by spring JMS template
-	 */
-	public void setTemplate(JmsTemplate template) {
-		this.template = template;
-	}
-
-	public ActiveMQConnectionFactory getConnectionFactory() {
-		return MessageProducer.connectionFactory;
-	}
-
-	/**
-	 * 
-	 * @param connectionFactory
-	 *            - Injected by Spring DI
-	 */
-	public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-		MessageProducer.connectionFactory = connectionFactory;
-	}
 
 	/**
 	 * 
@@ -66,14 +45,20 @@ public class MessageProducer {
 	 *            - Accepts a Message to be send to JMS topic, creates a new
 	 *            Topic based on topic name if it does not exist or else
 	 *            existing topic with the same name is used to send the message.
+	 * @throws JMSException
 	 */
-	protected void sendMessage(ProcessMessage args) {
+	protected void sendMessage(EntityInstanceMessage entityInstanceMessage)
+			throws JMSException {
 
-		ActiveMQTopic feedTopic = new ActiveMQTopic(args.getProcessTopicName());
-		LOG.debug("Sending message to broker: "
-				+ MessageProducer.connectionFactory.getBrokerURL());
+		Session session = connection.createSession(false,
+				Session.AUTO_ACKNOWLEDGE);
+		entityTopic = session.createTopic(entityInstanceMessage.getEntityTopicName());
+		javax.jms.MessageProducer producer = session
+				.createProducer(entityTopic);
+		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-		this.template.send(feedTopic, new ProcessMessageCreator(args));
+		producer.send(new EntityInstanceMessageCreator(entityInstanceMessage)
+				.createMessage(session));
 
 	}
 
@@ -83,19 +68,61 @@ public class MessageProducer {
 	 *            - array of Strings, which will be used to create TextMessage
 	 */
 	public static void main(String[] args) {
+		debug(args);
+		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
+				.argsToMessage(args);
+		if(entityInstanceMessage.length==0){
+			LOG.warn("No operation on output feed");
+			return;
+		}
 
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(
-				new String[] { "jms-beans.xml" });					
-		
-		MessageProducer messageProducer = (MessageProducer) context
-				.getBean("ivoryProducer");
-		ProcessMessage[] processMessages = ArgumentsResolver.resolveToMessage(args);
-		MessageProducer.connectionFactory.setBrokerURL(processMessages[0].getBrokerUrl());
-		for(ProcessMessage processMessage: processMessages){
-			messageProducer.sendMessage(processMessage);
+		MessageProducer ivoryMessageProducer = new MessageProducer();
+		try {
+			ivoryMessageProducer.createAndStartConnection(args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()], "", "",
+					entityInstanceMessage[0].getBrokerUrl());
+			for (EntityInstanceMessage processMessage : entityInstanceMessage) {
+				ivoryMessageProducer.sendMessage(processMessage);
+			}
+		} catch (JMSException e) {
+			LOG.error(e);
+			e.printStackTrace();
+		} catch (Exception e) {
+			LOG.error(e);
+			e.printStackTrace();
+		} finally {
+			try {
+				ivoryMessageProducer.connection.close();
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
-	
+
+	private static void debug(String[] args) {
+		if(LOG.isDebugEnabled()){
+			for(int i=0;i<args.length;i++){
+				LOG.debug(args[i]+"::");
+			}
+		}
+		
+	}
+
+	private void createAndStartConnection(String implementation,
+			String userName, String password, String url) throws JMSException,
+			ClassNotFoundException, IllegalArgumentException,
+			SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+
+		Class<ConnectionFactory> clazz = (Class<ConnectionFactory>) MessageProducer.class
+				.getClassLoader().loadClass(implementation);
+
+		ConnectionFactory connectionFactory = clazz.getConstructor(
+				String.class, String.class, String.class).newInstance(userName,
+				password, url);
+
+		connection = connectionFactory.createConnection();
+		connection.start();
+	}
 
 }

@@ -11,7 +11,7 @@ import org.apache.ivory.Pair;
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
     public static enum WorkflowStatus {
-        RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
     }
     
     @XmlRootElement (name = "pinstance")

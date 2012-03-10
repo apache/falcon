@@ -8,14 +8,14 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
-<workflow-app xmlns='uri:oozie:workflow:0.2' name='ivory-parent-workflow'>
+<workflow-app xmlns='uri:oozie:workflow:0.2' name='ivory-feed-parent-workflow'>
 	<start to='pre-processing' />
 	<action name='pre-processing'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.workflow.PreProcessing</main-class>
-			<arg>${processTopicName}</arg>
+			<arg>${entityTopicName}</arg>
 			<arg>${feedNames}</arg>
 			<arg>${feedInstancePaths}</arg>
 			<arg>${wf:id()}</arg>
@@ -23,6 +23,10 @@
 			<arg>${nominalTime}</arg>
 			<arg>${timeStamp}</arg>
 			<arg>${brokerUrl}</arg>
+			<arg>${brokerImplClass}</arg>
+			<arg>${entityType}</arg>
+			<arg>${operation}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
 			<capture-output />
 		</java>
 		<ok to="user-workflow" />
@@ -42,7 +46,7 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
-			<arg>${processTopicName}</arg>
+			<arg>${entityTopicName}</arg>
 			<arg>${feedNames}</arg>
 			<arg>${feedInstancePaths}</arg>
 			<arg>${wf:id()}</arg>
@@ -50,7 +54,10 @@
 			<arg>${nominalTime}</arg>
 			<arg>${timeStamp}</arg>
 			<arg>${brokerUrl}</arg>
-			<capture-output />
+			<arg>${brokerImplClass}</arg>
+			<arg>${entityType}</arg>
+			<arg>${operation}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />
