@@ -49,6 +49,10 @@
       <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
     </repository>
     <repository>
+      <id>internalRepoSnapshot</id>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
+    </repository>
+    <repository>
       <id>default</id>
       <url>https://repository.apache.org/content/groups/public/</url>
     </repository>

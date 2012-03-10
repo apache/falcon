@@ -52,9 +52,9 @@
 			<version>0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.yahoo.oozie</groupId>
+			<groupId>org.apache.oozie</groupId>
 			<artifactId>oozie-client</artifactId>
-			<version>3.0.2.2</version>
+			<version>3.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>

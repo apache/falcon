@@ -91,8 +91,7 @@ public class FeedEvictor extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Path confPath = new Path("file://" + System.getProperty("user.dir") +
-                "/oozie-action.conf.xml");
+        Path confPath = new Path("file://" + System.getProperty("oozie.action.conf.xml"));
 
         LOG.info(confPath + " found ? " +
                 confPath.getFileSystem(conf).exists(confPath));
