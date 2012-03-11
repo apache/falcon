@@ -25,6 +25,7 @@
   <url>https://github.com/sriksun/Ivory</url>
 
   <modules>
+    <module>client</module>
     <module>common</module>
     <module>test-util</module>
     <module>feed</module>

@@ -22,7 +22,6 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -49,8 +48,8 @@ public class ProcessProducerTest {
 	public void setup() throws Exception {
 		this.msgArgs = new EntityInstanceMessage();
 		this.msgArgs.setEntityTopicName(TOPIC_NAME);
-		this.msgArgs.setFeedName("click-logs");
-		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20");
+		this.msgArgs.setFeedName("click-logs,raw-logs,");
+		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20,");
 		this.msgArgs.setWorkflowId("workflow-01-00");
 		this.msgArgs.setRunId("1");
 		this.msgArgs.setNominalTime("2011-01-01");
@@ -108,18 +107,32 @@ public class ProcessProducerTest {
 		MessageConsumer consumer = session.createConsumer(destination);
 
 		// wait till you get atleast one message
-		Message m;
+		TextMessage m;
 		for (m = null; m == null;)
-			m = consumer.receive();
-
-		TextMessage textMessage = (TextMessage) m;
-		System.out.println("Consumed: " + textMessage.getText());
-		String[] items = textMessage.getText().split(",");
-		Assert.assertEquals(items[0], TOPIC_NAME);
+			m = (TextMessage)consumer.receive();
+		System.out.println("Consumed: " + m.getText());
+		String[] items = m.getText().split(",");
+		assertMessage(items);
 		Assert.assertEquals(items[1], "click-logs");
 		Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20");
-		Assert.assertEquals(items[3], "workflow-01-00");
+		
+		for (m = null; m == null;)
+			m = (TextMessage)consumer.receive();
+		items = m.getText().split(",");
+		assertMessage(items);
+		Assert.assertEquals(items[1], "raw-logs");
+		Assert.assertEquals(items[2], "/raw-logs/10/05/05/00/20");
+
 
 		connection.close();
+	}
+	
+	private void assertMessage(String [] items) throws JMSException {
+		Assert.assertEquals(items.length, 7);
+		Assert.assertEquals(items[0], TOPIC_NAME);
+		Assert.assertEquals(items[3], "workflow-01-00");
+		Assert.assertEquals(items[4],"1");
+		Assert.assertEquals(items[5],"2011-01-01");
+		Assert.assertEquals(items[6],"2012-01-01");
 	}
 }
