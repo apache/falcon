@@ -39,7 +39,7 @@
         <dependency>
             <groupId>org.apache.oozie.extensions</groupId>
             <artifactId>oozie-el-extensions</artifactId>
-            <version>0.1.1</version>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.oozie</groupId>
