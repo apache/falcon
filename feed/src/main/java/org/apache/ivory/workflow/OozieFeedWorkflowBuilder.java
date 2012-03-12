@@ -18,21 +18,22 @@
 
 package org.apache.ivory.workflow;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
@@ -74,5 +75,28 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     @Override
     public List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException {
         throw new IvoryException("getExternalIds is not supported for Feeds!");
+    }
+
+    @Override
+    public int getConcurrency(Entity entity) {
+        return 1;
+    }
+
+    @Override
+    public String getEndTime(Entity entity, String cluster) {
+        Feed feed = (Feed) entity;
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        return clusterDef.getValidity().getEnd();
+    }
+
+    @Override
+    public void setEndDate(Entity entity, Date endDate) {
+        Feed feed = (Feed) entity;
+        if(feed.getClusters() != null) {
+            String endDateStr = EntityUtil.formatDateUTC(endDate);
+            for(org.apache.ivory.entity.v0.feed.Cluster cluster:feed.getClusters().getCluster()) {
+                cluster.getValidity().setEnd(endDateStr);
+            }
+        }
     }
 }

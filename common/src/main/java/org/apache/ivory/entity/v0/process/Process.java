@@ -66,7 +66,7 @@ import org.apache.ivory.entity.v0.Entity;
 })
 @XmlRootElement(name="process")
 public class Process extends Entity{
-
+    
     @XmlElement(required = true)
     protected Cluster cluster;
     @XmlElement(required = true)
@@ -406,4 +406,9 @@ public class Process extends Entity{
         this.name = value;
     }
 
+    @Override
+    public String[] getImmutableProperties() {
+        String[] props = {"name", "validity.start"};
+        return props;
+    }
 }

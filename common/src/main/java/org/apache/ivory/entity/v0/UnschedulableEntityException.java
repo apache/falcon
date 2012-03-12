@@ -28,6 +28,8 @@ import org.apache.ivory.IvoryException;
  */
 public class UnschedulableEntityException extends IvoryException {
 
+    private static final long serialVersionUID = -1134342662497698943L;
+
     public UnschedulableEntityException(Exception e) {
         super(e);
     }

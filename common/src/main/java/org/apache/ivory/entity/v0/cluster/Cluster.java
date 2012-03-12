@@ -217,4 +217,9 @@ public class Cluster extends Entity{
         this.colo = value;
     }
 
+    @Override
+    public String[] getImmutableProperties() {
+        String[] props = {"name"};
+        return props;
+    }
 }

@@ -393,4 +393,9 @@ public class Feed extends Entity{
         this.description = value;
     }
 
+    @Override
+    public String[] getImmutableProperties() {
+        String[] props = {"name"};
+        return props;
+    }
 }

@@ -27,14 +27,12 @@ import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.util.ReflectionUtils;
-import org.apache.ivory.util.StartupProperties;
 
-@SuppressWarnings("unchecked")
 public abstract class WorkflowBuilder<T extends Entity> {
 
     public static final String PROPS = "PROPS";
     public static final String CLUSTERS = "CLUSTERS";
-
+    
     public static WorkflowBuilder getBuilder(String engine, Entity entity)
             throws IvoryException {
         String classKey = engine + "." + entity.getEntityType().name().toLowerCase() +

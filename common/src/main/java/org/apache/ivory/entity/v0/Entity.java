@@ -18,14 +18,18 @@
 
 package org.apache.ivory.entity.v0;
 
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 public abstract class Entity {
 
   public abstract String getName();
-
+  public abstract String[] getImmutableProperties();
+  
   public EntityType getEntityType() {
       for (EntityType type : EntityType.values()) {
           if (type.getEntityClass().equals(getClass())) {
@@ -78,4 +82,17 @@ public abstract class Entity {
 	public String getWorkflowName() {
 	    return "IVORY_" + getEntityType().name().toUpperCase();
 	}
+	
+	@Override
+    public Entity clone() {
+        try {
+            Marshaller marshaller = getEntityType().getMarshaller();
+            Unmarshaller unmarshaller = getEntityType().getUnmarshaller();
+            Writer strWriter = new StringWriter();
+            marshaller.marshal(this, strWriter);
+            return (Entity) unmarshaller.unmarshal(new StringReader(strWriter.toString()));
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

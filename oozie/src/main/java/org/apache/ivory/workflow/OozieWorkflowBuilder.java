@@ -19,6 +19,7 @@
 package org.apache.ivory.workflow;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,4 +71,8 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         map.put(CLUSTERS, clusters);
         return map;
     }
+    
+    public abstract int getConcurrency(Entity entity);
+    public abstract String getEndTime(Entity entity, String cluster);
+    public abstract void setEndDate(Entity entity, Date endDate);
 }

@@ -60,4 +60,6 @@ public interface WorkflowEngine {
     Map<String, Set<String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
 
     Map<String, Set<Pair<String, String>>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
+
+    void update(Entity oldEntity, Entity newEntity) throws IvoryException;
 }
