@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
-package org.apache.ivory;
+package org.apache.ivory.monitors;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class Pair<A, B> {
-    public final A first;
-    public final B second;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
+public @interface Dimension {
 
-    public Pair(A fst, B snd) {
-        this.first = fst;
-        this.second = snd;
-    }
-
-    public static <A, B> Pair<A, B> of(A a, B b) {
-        return new Pair<A, B>(a, b);
-    }
+    /**
+     * @return dimension value associated with the parameter
+     */
+    String value();
 }

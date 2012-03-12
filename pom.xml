@@ -25,6 +25,7 @@
   <url>https://github.com/sriksun/Ivory</url>
 
   <modules>
+    <module>client</module>
     <module>common</module>
     <module>test-util</module>
     <module>feed</module>
@@ -51,6 +52,10 @@
     <repository>
       <id>internal.releases</id>
       <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
+    </repository>
+    <repository>
+      <id>internalRepoSnapshot</id>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
     </repository>
     <repository>
       <id>default</id>

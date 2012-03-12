@@ -46,8 +46,7 @@ import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.entity.v0.process.Property;
-import org.apache.ivory.messaging.ProcessMessage;
+import org.apache.ivory.messaging.EntityInstanceMessage;
 import org.apache.ivory.oozie.coordinator.CONFIGURATION;
 import org.apache.ivory.oozie.coordinator.CONTROLS;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
@@ -62,7 +61,6 @@ import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -70,12 +68,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String EL_PREFIX = "elext:";
     private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);    
-    
-    private HashMap<String, String> userWFprops= new HashMap<String, String>();
 	
-	private static final String PAR_WORKFLOW_TEMPLATE_PATH="/config/workflow/parent-workflow.xml";
-    private static final String NOMINAL_TIME_EL="${coord:nominalTime()}";
-    private static final String ACTUAL_TIME_EL="${coord:actualTime()}";
+	private static final String PAR_WORKFLOW_TEMPLATE_PATH="/config/workflow/process-parent-workflow.xml";    
+	
+	private Map<String,String> subflowProps= new HashMap<String,String>();
 
     public OozieProcessMapper(Process entity) {
         super(entity);
@@ -98,12 +94,16 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 		userSubFlowAction.setAppPath(getHDFSPath(process.getWorkflow()
 				.getPath()));
 
-		//user wf (subflow) confs
+		//user wf (sub-flow) confs, add all user defined props to sub-flow
 		org.apache.ivory.oozie.workflow.CONFIGURATION conf = new org.apache.ivory.oozie.workflow.CONFIGURATION();
-		for (Entry<String, String> entry : userWFprops.entrySet())
+		for (String propName : getUserDefinedProps().keySet())
 			conf.getProperty().add(
-					createWorkflowProperty(entry.getKey(), entry.getValue()));
-		userSubFlowAction.setConfiguration(conf);
+					createWorkflowProperty(propName, getVarName(propName)));
+		
+		for (String propName : subflowProps.keySet())
+			conf.getProperty().add(
+					createWorkflowProperty(propName, getVarName(propName)));		
+		userSubFlowAction.setConfiguration(conf);				
 		
 		return parentWorkflow;
 	}
@@ -135,24 +135,24 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         controls.setConcurrency(""+process.getConcurrency());
         controls.setExecution(process.getExecution());
         coord.setControls(controls);
-
-        // user defined properties
-		Map<String, String> properties = new HashMap<String, String>();
-		if (process.getProperties() != null) {
-			for (Property prop : process.getProperties().getProperty()) {
-				properties.put(prop.getName(), prop.getValue());
-				userWFprops.put(prop.getName(), prop.getValue());
-			}
-		}
         
         //Parent workflow properties
         HashMap<String, String> parentWFprops= new HashMap<String, String>();
-        parentWFprops.put(ProcessMessage.ARG.PROCESS_TOPIC_NAME.NAME(), process.getName());
-        parentWFprops.put(ProcessMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
-        parentWFprops.put(ProcessMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
-        parentWFprops.put(ProcessMessage.ARG.BROKER_URL.NAME(),ClusterHelper.getMessageBrokerUrl(cluster));
-        parentWFprops.put(ProcessMessage.ARG.PROCESS_TOPIC_NAME.NAME(), process.getName());
-
+        parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), process.getName());
+        parentWFprops.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
+        parentWFprops.put(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
+        parentWFprops.put(EntityInstanceMessage.ARG.BROKER_URL.NAME(),ClusterHelper.getMessageBrokerUrl(cluster));
+        String brokerImplClass=getUserDefinedProps().get(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME());
+        parentWFprops.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(),brokerImplClass==null||brokerImplClass.equals("")?DEFAULT_BROKER_IMPL_CLASS:brokerImplClass);
+        parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(),process.getEntityType().name());
+        parentWFprops.put(EntityInstanceMessage.ARG.OPERATION.NAME(),EntityInstanceMessage.entityOperation.GENERATE.name());
+        parentWFprops.put("logDir", getHDFSPath(getParentWorkflowPath().getParent().toString()));
+        //override external ID
+        parentWFprops.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), "${coord:nominalTime()}").getId());
+        
+        String queueName=getUserDefinedProps().get("queueName");
+        parentWFprops.put("queueName",queueName==null||queueName.equals("")?"default":queueName);
+	
         // inputs
         if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInput()) {
@@ -171,11 +171,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 coord.getInputEvents().getDataIn().add(datain);
 
                 if(StringUtils.isNotEmpty(input.getPartition()))
-                    properties.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
+                	parentWFprops.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
                 else
-                    properties.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");   
-                	
-                userWFprops.put(input.getName(), "${"+input.getName()+"}");
+                	parentWFprops.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");     
+                
+                subflowProps.put(input.getName(), getVarName(input.getName())); 
             }
         }
 
@@ -200,33 +200,28 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 outputFeedNames.append(output.getName()).append(",");
                 outputFeedPaths.append("${coord:dataOut('" + output.getName() + "')}").append(",");                
                
-                properties.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
-                
-                userWFprops.put(output.getName(), "${"+output.getName()+"}");
+                parentWFprops.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
+                subflowProps.put(output.getName(), getVarName(output.getName()));
             }
             //Output feed name and path for parent workflow
-            parentWFprops.put(ProcessMessage.ARG.FEED_NAME.NAME(), outputFeedNames.toString());
-            parentWFprops.put(ProcessMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.toString());
+            parentWFprops.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length()-1));
+            parentWFprops.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.toString());
             
         }
 
-        // add default properties
-        properties.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), "${coord:nominalTime()}").getId());
-        properties.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
-        userWFprops.put(OozieWorkflowEngine.NAME_NODE, "${" + OozieWorkflowEngine.NAME_NODE + "}");
-        properties.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
-        userWFprops.put(OozieWorkflowEngine.JOB_TRACKER, "${" + OozieWorkflowEngine.JOB_TRACKER + "}");
-        
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
         if(libDir != null)
-            properties.put(OozieClient.LIBPATH, libDir);      
+        	parentWFprops.put(OozieClient.LIBPATH, libDir);      
 
         //configuration
         CONFIGURATION conf = new CONFIGURATION();
-        for(Entry<String, String> entry:properties.entrySet())
-            conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
         for(Entry<String, String> entry:parentWFprops.entrySet())
             conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
+        
+		//user wf (sub-flow) confs, add all user defined props to coordinator
+		for (Entry<String, String> entry : getUserDefinedProps().entrySet())
+			conf.getProperty().add(
+					createCoordProperty(entry.getKey(), entry.getValue()));
             
         //action
         WORKFLOW wf = new WORKFLOW();
@@ -312,14 +307,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             expr = "${" + EL_PREFIX + expr + "}";
         }
         return expr;
-    }
-    
-    private String getHDFSPath(String path) {
-        if(path != null) {
-            if(!path.startsWith("${nameNode}"))
-                path = "${nameNode}" + path;
-        }
-        return path;
     }    
 
 	@SuppressWarnings("unchecked")

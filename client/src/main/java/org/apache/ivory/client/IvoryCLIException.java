@@ -16,19 +16,34 @@
  * limitations under the License.
  */
 
-package org.apache.ivory;
+package org.apache.ivory.client;
 
+import java.io.InputStream;
+import com.sun.jersey.api.client.ClientResponse;
 
-public class Pair<A, B> {
-    public final A first;
-    public final B second;
+/**
+ * Exception thrown by IvoryClient
+ */
+public class IvoryCLIException extends Exception {
 
-    public Pair(A fst, B snd) {
-        this.first = fst;
-        this.second = snd;
+    public IvoryCLIException(String msg) {
+        super(msg);
     }
 
-    public static <A, B> Pair<A, B> of(A a, B b) {
-        return new Pair<A, B>(a, b);
+    public IvoryCLIException(String msg, Throwable throwable) {
+        super(msg, throwable);
     }
+
+	public IvoryCLIException(ClientResponse clientResponse) {
+		super(convertStreamToString(clientResponse.getEntityInputStream()));
+	}
+	
+	public static String convertStreamToString(InputStream is) {
+	    try {
+	        return new java.util.Scanner(is).useDelimiter("\\A").next();
+	    } catch (java.util.NoSuchElementException e) {
+	        return "";
+	    }
+	}
+
 }

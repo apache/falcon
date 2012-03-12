@@ -24,6 +24,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.ivory.Pair;
@@ -32,8 +33,15 @@ import org.apache.log4j.Logger;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -54,6 +62,7 @@ public class FeedEvictor extends Configured implements Tool {
     private static final ExpressionHelper resolver = ExpressionHelper.get();
 
     static PrintStream stream = System.out;
+    static PrintStream instancePathsStream =System.out;
 
     private enum VARS {
         YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
@@ -91,8 +100,7 @@ public class FeedEvictor extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Path confPath = new Path("file://" + System.getProperty("user.dir") +
-                "/oozie-action.conf.xml");
+        Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
 
         LOG.info(confPath + " found ? " +
                 confPath.getFileSystem(conf).exists(confPath));
@@ -109,8 +117,11 @@ public class FeedEvictor extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        if (args.length != 5) {
+        if (args.length != 6) {
             printUsage();
+            for(int i=0;i<args.length;i++){
+            	System.out.println("Args: "+args[i]);
+            }
             return -1;
         }
         String feedBasePath = args[0].replaceAll("\\?\\{", "\\$\\{");
@@ -118,6 +129,7 @@ public class FeedEvictor extends Configured implements Tool {
         String retentionLimit = args[2];
         String timeZone = args[3];
         String frequency = args[4]; //to write out smart path filters
+        String logFile=args[5];
 
         Path normalizedPath = new Path(feedBasePath);
         fs = normalizedPath.getFileSystem(getConf());
@@ -132,18 +144,22 @@ public class FeedEvictor extends Configured implements Tool {
                 retentionType + ", Limit: " + retentionLimit + ", timezone: " +
                 timeZone + ", frequency: " + frequency);
 
-        DateFormat dateFormat = new SimpleDateFormat(format);
-        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-
-        StringBuffer buffer = new StringBuffer();
-        for (Path path : toBeDeleted) {
-            if (deleteInstance(path)) {
-                LOG.info("Deleted instance " + path);
-                Date date = getDate(path, feedBasePath, dateMask, timeZone);
-                buffer.append(dateFormat.format(date)).append(',');
-            }
-        }
-        int len = buffer.length();
+		DateFormat dateFormat = new SimpleDateFormat(format);
+		dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+		StringBuffer buffer = new StringBuffer();
+		StringBuffer instancePaths = new StringBuffer("instancePaths=");
+		for (Path path : toBeDeleted) {
+			if (deleteInstance(path)) {
+				LOG.info("Deleted instance " + path);
+				Date date = getDate(path, feedBasePath, dateMask, timeZone);
+				buffer.append(dateFormat.format(date)).append(',');
+				instancePaths.append(path).append(",");
+			}
+		}
+		
+		logInstancePaths(new Path(logFile),instancePaths.toString());
+	
+		int len = buffer.length();
         if (len > 0) {
             stream.println("instances=" + buffer.substring(0, len -1));
         } else {
@@ -153,13 +169,25 @@ public class FeedEvictor extends Configured implements Tool {
         return 0;
     }
 
-    private void printUsage() {
+    private void logInstancePaths(Path path, String instancePaths) throws IOException {
+		LOG.info("Writing deleted instances to path " + path);
+		OutputStream out = fs.create(path);
+		out.write(instancePaths.getBytes());
+		out.close();
+		if(LOG.isDebugEnabled()){
+			debug(path, fs);
+		}
+	}
+
+	private void printUsage() {
         LOG.info("Usage: org.apache.ivory.retention.FeedEvictor " +
-                "<feedBasePath> <instance|age> <limit> <timezone> <frequency>");
+                "<feedBasePath> <instance|age> <limit> <timezone> <frequency> <logDir> <timeStamp>");
         LOG.info("\tfeedBasePath: ex /data/feed/${YEAR}-${MONTH}");
         LOG.info("\tlimit: ex hours(5), months(2), days(90)");
         LOG.info("\ttimezone: ex UTC");
         LOG.info("\tfrequency: ex hourly, daily, monthly, minute, weekly, yearly");
+        LOG.info("\tlogDir: ex /ivory/staging/feed");
+        LOG.info("\ttimeStamp: ex 2012-11-28-14-00");
     }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
@@ -282,4 +310,12 @@ public class FeedEvictor extends Configured implements Tool {
     private boolean deleteInstance(Path path) throws IOException {
         return fs.delete(path, true);
     }
+    
+	private void debug(Path outPath, FileSystem fs) throws IOException {
+		ByteArrayOutputStream writer = new ByteArrayOutputStream();
+		InputStream instance = fs.open(outPath);
+		IOUtils.copyBytes(instance, writer, 4096, true);
+		LOG.debug("Instance Paths copied to " + outPath );
+		LOG.debug("Written "+writer);
+	}
 }

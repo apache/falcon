@@ -16,19 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.ivory;
+package org.apache.ivory.converter;
 
+public final class LateDataUtils {
 
-public class Pair<A, B> {
-    public final A first;
-    public final B second;
-
-    public Pair(A fst, B snd) {
-        this.first = fst;
-        this.second = snd;
+    public static String offsetTime(String expr, String offset) {
+        return null;
     }
 
-    public static <A, B> Pair<A, B> of(A a, B b) {
-        return new Pair<A, B>(a, b);
-    }
 }

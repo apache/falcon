@@ -47,14 +47,23 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
 	private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
+	
+    protected static final String NOMINAL_TIME_EL="${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
+    protected static final String ACTUAL_TIME_EL="${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
+    protected static final String DEFAULT_BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";
 
 	protected static final JAXBContext workflowJaxbContext;
 	protected static final JAXBContext coordJaxbContext;
 	protected static final JAXBContext bundleJaxbContext;
+	
+	private Map<String, String> userDefinedProps = new HashMap<String, String>();
+	org.apache.ivory.oozie.bundle.CONFIGURATION bundleConf = new
+			org.apache.ivory.oozie.bundle.CONFIGURATION();
 
 	static {
 		try {
@@ -97,6 +106,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 	public Path convert(Cluster cluster, Path workflowBasePath) throws IvoryException {
 		this.workflowBasePath=workflowBasePath;
 		BUNDLEAPP bundleApp = new BUNDLEAPP();
+		//all the properties are set prior to bundle and coordinators creation
+		createBundleAndUserConf(cluster);
 		bundleApp.setName(entity.getWorkflowName() + "_" + entity.getName());
 		
 		List<COORDINATORAPP> coordinators = getCoordinators(cluster);
@@ -111,7 +122,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 			COORDINATOR bundleCoord = new COORDINATOR();
 			bundleCoord.setName(coordinatorapp.getName());
 			bundleCoord.setAppPath("${" + OozieWorkflowEngine.NAME_NODE + "}" + coordPath);
-			bundleCoord.setConfiguration(createBundleConf(cluster));
+			bundleCoord.setConfiguration(bundleConf);
 			bundleApp.getCoordinator().add(bundleCoord);
 		}
 		Path bundlePath = new Path(workflowBasePath, entity.getWorkflowName()
@@ -177,18 +188,15 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 	protected abstract WORKFLOWAPP getParentWorkflow(Cluster cluster)
 			throws IvoryException;
 
-	protected org.apache.ivory.oozie.bundle.CONFIGURATION createBundleConf(Cluster cluster) {
+	protected void createBundleAndUserConf(Cluster cluster) {
 
-		org.apache.ivory.oozie.bundle.CONFIGURATION conf = new
-				org.apache.ivory.oozie.bundle.CONFIGURATION();
-
-		List<CONFIGURATION.Property> bundleProps = conf.getProperty();
+		List<CONFIGURATION.Property> bundleProps = bundleConf.getProperty();
 		bundleProps.add(createBundleProperty(OozieWorkflowEngine.NAME_NODE,
 				"${" + OozieWorkflowEngine.NAME_NODE + "}"));
 		bundleProps.add(createBundleProperty(OozieWorkflowEngine.JOB_TRACKER,
 				"${" + OozieWorkflowEngine.JOB_TRACKER + "}"));
-		bundleProps.add(createBundleProperty("entity.name", entity.getName()));
-		bundleProps.add(createBundleProperty("entity.type", entity.
+		bundleProps.add(createBundleProperty("entityName", entity.getName()));
+		bundleProps.add(createBundleProperty("entityType", entity.
 				getEntityType().name().toLowerCase()));
 
 		for (Property property : cluster.getProperties().values()) {
@@ -196,21 +204,24 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 					property.getValueAttribute()));
 		}
 
+		//populate map to be used by subclasses (bundle props + cluster + (feed or process)
+		for (org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop : bundleProps) {
+			userDefinedProps.put(prop.getName(), prop.getValue());
+		}		
 		if (entity.getEntityType() == EntityType.PROCESS) {
 			for (org.apache.ivory.entity.v0.process.Property property :
 				((Process) entity).getProperties().getProperty()) {
-				bundleProps.add(createBundleProperty(property.getName(),
-						property.getValueAttribute()));
+				userDefinedProps.put(property.getName(),
+						property.getValue());
 			}
 		} else {
 			for (org.apache.ivory.entity.v0.feed.Property property :
 				((Feed) entity).getProperties().values()) {
-				bundleProps.add(createBundleProperty(property.getName(),
-						property.getValueAttribute()));
+				userDefinedProps.put(property.getName(),
+						property.getValue());
 			}
 		}
 
-		return conf;
 	}
 
 	protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property
@@ -288,6 +299,56 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 		return new Path(this.workflowBasePath,
 				getEntity().getWorkflowName() + "/workflow.xml");
 	}
+
+	protected void populateUserDefinedClusterProperties(Cluster cluster,
+			Map<String, String> properties) {
+		// user defined cluster properties
+		if (cluster.getProperties() != null) {
+			for (Entry<String, org.apache.ivory.entity.v0.cluster.Property> prop : cluster
+					.getProperties().entrySet()) {
+				properties.put(prop.getValue().getName(), prop.getValue()
+						.getValue());
+			}
+		}
+	}
+
+	protected void populateUserDefinedFeedProperties(Feed feed,
+			Map<String, String> properties) {
+		// user defined feed properties
+		if (feed.getProperties() != null) {
+			for (Entry<String, org.apache.ivory.entity.v0.feed.Property> prop : feed
+					.getProperties().entrySet()) {
+				properties.put(prop.getValue().getName(), prop.getValue()
+						.getValue());
+			}
+		}
+	}
+
+	protected void populateUserDefinedProcessProperties(Process process,
+			Map<String, String> properties) {
+		// user defined process properties
+		if (process.getProperties() != null) {
+			for (org.apache.ivory.entity.v0.process.Property prop : process
+					.getProperties().getProperty()) {
+				properties.put(prop.getName(), prop.getValue());
+			}
+		}
+	}
 	
+    protected String getHDFSPath(String path) {
+        if(path != null) {
+            if(!path.startsWith("${nameNode}"))
+                path = "${nameNode}" + path;
+        }
+        return path;
+    }    
+    
+	protected Map<String, String> getUserDefinedProps() {
+		return userDefinedProps;
+	}
+	
+	protected String getVarName(String name) {
+		return "${" + name + "}";
+	}
 
 }

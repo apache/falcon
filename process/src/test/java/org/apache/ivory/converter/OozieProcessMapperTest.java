@@ -138,7 +138,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
-    		Assert.assertEquals("ivory-parent-workflow", parentWorkflow.getName());
+    		Assert.assertEquals("ivory-process-parent-workflow", parentWorkflow.getName());
     		Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
     		Assert.assertEquals("jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());

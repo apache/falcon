@@ -43,6 +43,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+	  <groupId>org.apache.ivory</groupId>
+	  <artifactId>ivory-messaging</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+    <dependency>
       <groupId>org.apache.ivory</groupId>
       <artifactId>ivory-test-util</artifactId>
       <version>${project.version}</version>

@@ -21,27 +21,26 @@ package org.apache.ivory.messaging;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import org.apache.ivory.messaging.EntityInstanceMessage;
 
 import org.apache.log4j.Logger;
-import org.springframework.jms.core.MessageCreator;
 
 /**
  * Ivory JMS message creator- creates JMS TextMessage
  */
-public class ProcessMessageCreator implements MessageCreator {
+public class EntityInstanceMessageCreator  {
 
 	private static final Logger LOG = Logger
-			.getLogger(ProcessMessageCreator.class);
+			.getLogger(EntityInstanceMessageCreator.class);
 
 	private TextMessage textMessage;
 
-	private final ProcessMessage args;
+	private final EntityInstanceMessage args;
 
-	public ProcessMessageCreator(ProcessMessage args) {
+	public EntityInstanceMessageCreator(EntityInstanceMessage args) {
 		this.args = args;
 	}
 
-	@Override
 	public TextMessage createMessage(Session session) throws JMSException {
 		this.textMessage = session.createTextMessage();
 		this.textMessage.setText(this.args.toString());

@@ -16,19 +16,21 @@
  * limitations under the License.
  */
 
-package org.apache.ivory;
+package org.apache.ivory.latedata;
 
+import org.apache.ivory.IvoryException;
 
-public class Pair<A, B> {
-    public final A first;
-    public final B second;
+public class NotEnoughPathsException extends IvoryException {
 
-    public Pair(A fst, B snd) {
-        this.first = fst;
-        this.second = snd;
+    public NotEnoughPathsException(Exception e) {
+        super(e);
     }
 
-    public static <A, B> Pair<A, B> of(A a, B b) {
-        return new Pair<A, B>(a, b);
+    public NotEnoughPathsException(String message, Exception e) {
+        super(message, e);
+    }
+
+    public NotEnoughPathsException(String message) {
+        super(message);
     }
 }

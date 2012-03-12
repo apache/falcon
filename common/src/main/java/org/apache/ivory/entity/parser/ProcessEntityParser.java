@@ -21,6 +21,7 @@ package org.apache.ivory.entity.parser;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
@@ -156,6 +157,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
 			}
 		} catch (ValidationException e) {
 			throw new ValidationException(e);
+		} catch (ConnectException e) {
+			throw new ValidationException("Unable to connect to Namenode: "+nameNode+ " referenced in cluster: "+clusterName);
 		} catch (Exception e) {
 			throw new IvoryException(e);
 		}
