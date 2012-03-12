@@ -48,8 +48,8 @@ public class ProcessProducerTest {
 	public void setup() throws Exception {
 		this.msgArgs = new EntityInstanceMessage();
 		this.msgArgs.setEntityTopicName(TOPIC_NAME);
-		this.msgArgs.setFeedName("click-logs,raw-logs,");
-		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20,");
+		this.msgArgs.setFeedName("click-logs,raw-logs");
+		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
 		this.msgArgs.setWorkflowId("workflow-01-00");
 		this.msgArgs.setRunId("1");
 		this.msgArgs.setNominalTime("2011-01-01");
