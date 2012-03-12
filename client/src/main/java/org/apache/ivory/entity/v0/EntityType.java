@@ -19,12 +19,12 @@
 package org.apache.ivory.entity.v0;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
@@ -58,23 +58,23 @@ public enum EntityType {
         return clazz;
     }
 
-    public Marshaller getMarshaller() throws IvoryException {
+    public Marshaller getMarshaller() throws JAXBException {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             return marshaller;
-        } catch (Exception e) {
-            throw new IvoryException(e);
+        } catch (JAXBException e) {
+            throw new JAXBException(e);
         }
     }
     
-    public Unmarshaller getUnmarshaller() throws IvoryException {
+    public Unmarshaller getUnmarshaller() throws JAXBException {
         try{
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             unmarshaller.setSchema(schema);
             return unmarshaller;
         } catch (Exception e) {
-            throw new IvoryException(e);
+            throw new JAXBException(e);
         }
     }
     

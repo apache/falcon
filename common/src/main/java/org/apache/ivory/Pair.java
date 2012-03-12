@@ -18,6 +18,7 @@
 
 package org.apache.ivory;
 
+
 public class Pair<A, B> {
     public final A first;
     public final B second;
