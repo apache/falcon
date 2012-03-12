@@ -18,10 +18,57 @@
 
 package org.apache.ivory.converter;
 
+import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.apache.ivory.expression.ExpressionHelper;
+
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public final class LateDataUtils {
 
-    public static String offsetTime(String expr, String offset) {
-        return null;
+    private static final ExpressionEvaluator EVALUATOR = new
+            ExpressionEvaluatorImpl();
+    private static final ExpressionHelper resolver = ExpressionHelper.get();
+    
+    private static final String L_P = "\\s*\\(\\s*";
+    private static final String R_P = "\\s*\\)";
+    private static final String NUM = "[-]?[0-9]+";
+    private static final String COMMA = "\\s*,\\s*";
+    private static final String OR = "|";
+
+    private static final Pattern exprPattern = Pattern.compile(
+            "today" + L_P + NUM + COMMA + NUM + R_P + OR +
+            "yesterday" + L_P + NUM + COMMA + NUM + R_P + OR +
+            "now" + L_P + NUM + COMMA + NUM + R_P + OR +
+            "currentMonth" + L_P + NUM + COMMA + NUM + COMMA + NUM + R_P + OR +
+            "lastMonth" + L_P + NUM + COMMA + NUM + COMMA + NUM + R_P + OR +
+            "currentYear" + L_P + NUM + COMMA + NUM + COMMA + NUM + COMMA + NUM + R_P + OR +
+            "lastYear" + L_P + NUM + COMMA + NUM + COMMA + NUM + COMMA + NUM + R_P);
+
+    public static String offsetTime(String expr, String offsetExpr) throws Exception {
+        Long duration = (Long) EVALUATOR.evaluate("${" + offsetExpr + "}",
+                Long.class, resolver, resolver);
+        long minutes = duration / (60000);
+
+        Matcher matcher = exprPattern.matcher(expr);
+
+        StringBuffer newExpr = new StringBuffer();
+        int index = 0;
+        while (matcher.find(index)) {
+            String subExpr = expr.substring(matcher.start(), matcher.end());
+            String func = subExpr.substring(0, subExpr.indexOf('('));
+            if (func.matches("\\s*now\\s*$")) {
+                newExpr.append(expr.substring(0, matcher.start())).append(func).
+                        append(subExpr.substring(func.length()).replaceAll("\\)\\s*$", "-" + minutes + ")"));
+            } else {
+                newExpr.append(expr.substring(0, matcher.start())).append(func.trim()).append("WithOffset").
+                        append(subExpr.substring(func.length()).replaceAll("\\)\\s*$", ", -" + minutes + ")"));
+            }
+            expr = expr.substring(matcher.end());
+            matcher = exprPattern.matcher(expr);
+        }
+        return newExpr.toString() + expr;
     }
 
 }

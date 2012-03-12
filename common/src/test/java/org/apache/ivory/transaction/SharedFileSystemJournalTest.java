@@ -19,6 +19,7 @@
 package org.apache.ivory.transaction;
 
 import org.apache.ivory.IvoryException;
+import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -29,6 +30,7 @@ import java.util.*;
 
 public class SharedFileSystemJournalTest {
 
+    private static Logger LOG = Logger.getLogger(SharedFileSystemJournalTest.class);
     private SharedFileSystemJournal journal =
             (SharedFileSystemJournal) SharedFileSystemJournal.get();
 
@@ -38,7 +40,7 @@ public class SharedFileSystemJournalTest {
     @AfterClass
     public void reset() {
         for (File file : journalPath.listFiles()) {
-            file.delete();
+            LOG.info(file.getAbsolutePath() + " - " + file.delete());
         }
     }
 
@@ -128,6 +130,7 @@ public class SharedFileSystemJournalTest {
         Set<String> ids = new HashSet<String>();
         for (AtomicActions tran : trans) {
             ids.add(tran.getId());
+            LOG.info(tran.getUncommittedActions().get(0) + ", " + actionMap.get(tran.getId()));
             Assert.assertEquals(tran.getUncommittedActions().get(0).toString(),
                     actionMap.get(tran.getId()).toString());
         }
