@@ -204,7 +204,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 subflowProps.put(output.getName(), getVarName(output.getName()));
             }
             //Output feed name and path for parent workflow
-            parentWFprops.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.toString());
+            parentWFprops.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length()-1));
             parentWFprops.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.toString());
             
         }

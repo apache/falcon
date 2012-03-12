@@ -179,17 +179,26 @@ public class EntityInstanceMessage{
 
 	@Override
 	public String toString() {
-		return getEntityType().equals("PROCESS") ? (getEntityTopicName()
+		return getEntityType().equalsIgnoreCase("PROCESS") ? getProcessMessage()
+				:getFeedMessage();
+	}	
+
+	private String getProcessMessage() {
+		return getEntityTopicName()
 				+ MSG_SEPERATOR + getFeedName() + MSG_SEPERATOR
 				+ getFeedInstancePath() + MSG_SEPERATOR + getWorkflowId()
 				+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR + getNominalTime()
-				+ MSG_SEPERATOR + getTimeStamp())
-				: (getEntityTopicName() + MSG_SEPERATOR + getFeedName()
-						+ MSG_SEPERATOR + getFeedInstancePath() + MSG_SEPERATOR
-						+ getOperation() + MSG_SEPERATOR + getWorkflowId()
-						+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR
-						+ getNominalTime() + MSG_SEPERATOR + getTimeStamp());
+				+ MSG_SEPERATOR + getTimeStamp();
 	}
+	
+	private String getFeedMessage() {
+		 return getEntityTopicName() + MSG_SEPERATOR + getFeedName()
+					+ MSG_SEPERATOR + getFeedInstancePath() + MSG_SEPERATOR
+					+ getOperation() + MSG_SEPERATOR + getWorkflowId()
+					+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR
+					+ getNominalTime() + MSG_SEPERATOR + getTimeStamp();
+	}
+		
 
 	/**
 	 * 
@@ -302,7 +311,7 @@ public class EntityInstanceMessage{
 			feedNames.append(instanceMessage.getFeedName()).append(",");
 			feedPaths.append(instanceMessage.getFeedInstancePath()).append(",");
 		}
-		if (instanceMessages[0].getEntityType().equals("PROCESS")) {
+		if (instanceMessages[0].getEntityType().equalsIgnoreCase("PROCESS")) {
 			args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()] = feedNames
 					.toString();
 

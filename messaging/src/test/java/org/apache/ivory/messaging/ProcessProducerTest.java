@@ -118,6 +118,7 @@ public class ProcessProducerTest {
 		
 		for (m = null; m == null;)
 			m = (TextMessage)consumer.receive();
+		System.out.println("Consumed: " + m.getText());
 		items = m.getText().split(",");
 		assertMessage(items);
 		Assert.assertEquals(items[1], "raw-logs");
