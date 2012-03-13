@@ -44,7 +44,7 @@ public class EntityInstanceMessageCreator  {
 	public TextMessage createMessage(Session session) throws JMSException {
 		this.textMessage = session.createTextMessage();
 		this.textMessage.setText(this.args.toString());
-		LOG.debug("Sending Message: " + this.textMessage);
+		LOG.debug("Sending Message: " + this.textMessage.getText());
 		// System.out.println("Sending Message: " + this.textMessage);
 		return this.textMessage;
 	}
