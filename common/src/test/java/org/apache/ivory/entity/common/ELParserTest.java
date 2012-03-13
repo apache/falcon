@@ -125,22 +125,22 @@ public class ELParserTest {
 		assertEquals(elParser.getMinute(), "0");
 		//System.out.println(elName+"  "+elParser.getRequiredInputDuration()/(60));
 
-		elParser.parseElExpression(elName + "(0,12)");
+		elParser.parseElExpression(elName + "  ( 0 ,  12 )");
 		assertEquals(elParser.getHour(), "0");
 		assertEquals(elParser.getMinute(), "12");
 		//System.out.println(elName+"  "+elParser.getRequiredInputDuration()/(60));
 
-		elParser.parseElExpression(elName + "(13,0)");
+		elParser.parseElExpression(elName + "(  13,0)");
 		assertEquals(elParser.getHour(), "13");
 		assertEquals(elParser.getMinute(), "0");
 		//System.out.println(elName+"  "+elParser.getRequiredInputDuration()/(60));
 
-		elParser.parseElExpression(elName + "(15,16)");
+		elParser.parseElExpression(elName + "(15,16  )");
 		assertEquals(elParser.getHour(), "15");
 		assertEquals(elParser.getMinute(), "16");
 		//System.out.println(elName+"  "+elParser.getRequiredInputDuration()/(60));
 
-		elParser.parseElExpression(elName + "(-1,-1)");
+		elParser.parseElExpression(elName + "(-1, -1)");
 		assertEquals(elParser.getHour(), "-1");
 		assertEquals(elParser.getMinute(), "-1");
 		//System.out.println(elName+"  "+elParser.getRequiredInputDuration()/(60));
@@ -163,37 +163,37 @@ public class ELParserTest {
 
 	private void test3paramsEL(String elName) throws IvoryException {
 		ELParser elParser = new ELParser();
-		elParser.parseElExpression(elName + "(0,0,0)");
+		elParser.parseElExpression(elName + "  (  0  ,  0  ,  0  )");
 		assertEquals(elParser.getDay(), "0");
 		assertEquals(elParser.getHour(), "0");
 		assertEquals(elParser.getMinute(), "0");
 
-		elParser.parseElExpression(elName + "(1,0,12)");
+		elParser.parseElExpression(elName + "(1  ,0,12)");
 		assertEquals(elParser.getDay(), "1");
 		assertEquals(elParser.getHour(), "0");
 		assertEquals(elParser.getMinute(), "12");
 
-		elParser.parseElExpression(elName + "(12,13,0)");
+		elParser.parseElExpression(elName + "(12  ,   13,0)");
 		assertEquals(elParser.getDay(), "12");
 		assertEquals(elParser.getHour(), "13");
 		assertEquals(elParser.getMinute(), "0");
 
-		elParser.parseElExpression(elName + "(12,15,16)");
+		elParser.parseElExpression(elName + "(12  ,   15,16)");
 		assertEquals(elParser.getDay(), "12");
 		assertEquals(elParser.getHour(), "15");
 		assertEquals(elParser.getMinute(), "16");
 
-		elParser.parseElExpression(elName + "(-1,-1,-1)");
+		elParser.parseElExpression(elName + "(-1,-1,-1  )");
 		assertEquals(elParser.getDay(), "-1");
 		assertEquals(elParser.getHour(), "-1");
 		assertEquals(elParser.getMinute(), "-1");
 
-		elParser.parseElExpression(elName + "(-12,-13,-14)");
+		elParser.parseElExpression(elName + "(-12 ,-13  ,-14)");
 		assertEquals(elParser.getDay(), "-12");
 		assertEquals(elParser.getHour(), "-13");
 		assertEquals(elParser.getMinute(), "-14");
 
-		elParser.parseElExpression(elName + "(14,15,-14)");
+		elParser.parseElExpression(elName + "  (  14  ,15,-14)");
 		assertEquals(elParser.getDay(), "14");
 		assertEquals(elParser.getHour(), "15");
 		assertEquals(elParser.getMinute(), "-14");
@@ -206,7 +206,7 @@ public class ELParserTest {
 
 	private void test4paramsEL(String elName) throws IvoryException {
 		ELParser elParser = new ELParser();
-		elParser.parseElExpression(elName + "(0,0,0,0)");
+		elParser.parseElExpression(elName + "  (0  ,  0  , 0  ,  0 )");
 		assertEquals(elParser.getMonth(), "0");
 		assertEquals(elParser.getDay(), "0");
 		assertEquals(elParser.getHour(), "0");
@@ -214,45 +214,45 @@ public class ELParserTest {
 		assertEquals(elParser.getMinute(), "0");
 		assertEquals(elParser.getInputDuration(), 0);
 
-		elParser.parseElExpression(elName + "(1,1,0,12)");
+		elParser.parseElExpression(elName + "  (1,1,0,12)");
 		assertEquals(elParser.getMonth(), "1");
 		assertEquals(elParser.getDay(), "1");
 		assertEquals(elParser.getHour(), "0");
 		assertEquals(elParser.getMinute(), "12");
 		assertEquals(elParser.getInputDuration(), 46092);
 
-		elParser.parseElExpression(elName + "(11,12,13,14)");
+		elParser.parseElExpression(elName + "(11  ,12,13,14)");
 		assertEquals(elParser.getMonth(), "11");
 		assertEquals(elParser.getDay(), "12");
 		assertEquals(elParser.getHour(), "13");
 		assertEquals(elParser.getMinute(), "14");
 		assertEquals(elParser.getInputDuration(), 509114);
 
-		elParser.parseElExpression(elName + "(0,12,15,16)");
+		elParser.parseElExpression(elName + "(0  ,  12,15,16)");
 		assertEquals(elParser.getMonth(), "0");
 		assertEquals(elParser.getDay(), "12");
 		assertEquals(elParser.getHour(), "15");
 		assertEquals(elParser.getMinute(), "16");
 
-		elParser.parseElExpression(elName + "(-1,-1,-1,-1)");
+		elParser.parseElExpression(elName + "(-1,-1,  -1,  -1  )");
 		assertEquals(elParser.getMonth(), "-1");
 		assertEquals(elParser.getDay(), "-1");
 		assertEquals(elParser.getHour(), "-1");
 		assertEquals(elParser.getMinute(), "-1");
 
-		elParser.parseElExpression(elName + "(-11,-12,-13,-14)");
+		elParser.parseElExpression(elName + " (  -11,-12,-13,-14)");
 		assertEquals(elParser.getMonth(), "-11");
 		assertEquals(elParser.getDay(), "-12");
 		assertEquals(elParser.getHour(), "-13");
 		assertEquals(elParser.getMinute(), "-14");
 
-		elParser.parseElExpression(elName + "(15,14,15,-14)");
+		elParser.parseElExpression(elName + "(15,   14,  15,-14)");
 		assertEquals(elParser.getMonth(), "15");
 		assertEquals(elParser.getDay(), "14");
 		assertEquals(elParser.getHour(), "15");
 		assertEquals(elParser.getMinute(), "-14");
 
-		elParser.parseElExpression(elName + "(-10,-13,12,30)");
+		elParser.parseElExpression(elName + "(   -10,-13,  12,30)");
 		assertEquals(elParser.getMonth(), "-10");
 		assertEquals(elParser.getDay(), "-13");
 		assertEquals(elParser.getHour(), "12");
