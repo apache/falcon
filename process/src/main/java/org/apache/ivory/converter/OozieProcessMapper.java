@@ -72,6 +72,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 	private static final String PAR_WORKFLOW_TEMPLATE_PATH="/config/workflow/process-parent-workflow.xml";    
 	
 	private Map<String,String> subflowProps= new HashMap<String,String>();
+	private Map<String,String> parentWFProps = new HashMap<String, String>();
 
     public OozieProcessMapper(Process entity) {
         super(entity);
@@ -136,86 +137,32 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         controls.setExecution(process.getExecution());
         coord.setControls(controls);
         
-        //Parent workflow properties
-        HashMap<String, String> parentWFprops= new HashMap<String, String>();
-        parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), process.getName());
-        parentWFprops.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
-        parentWFprops.put(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
-        parentWFprops.put(EntityInstanceMessage.ARG.BROKER_URL.NAME(),ClusterHelper.getMessageBrokerUrl(cluster));
-        String brokerImplClass=getUserDefinedProps().get(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME());
-        parentWFprops.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(),brokerImplClass==null||brokerImplClass.equals("")?DEFAULT_BROKER_IMPL_CLASS:brokerImplClass);
-        parentWFprops.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(),process.getEntityType().name());
-        parentWFprops.put(EntityInstanceMessage.ARG.OPERATION.NAME(),EntityInstanceMessage.entityOperation.GENERATE.name());
-        parentWFprops.put("logDir", getHDFSPath(getParentWorkflowPath().getParent().toString()));
-        //override external ID
-        parentWFprops.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), "${coord:nominalTime()}").getId());
-        
-        String queueName=getUserDefinedProps().get("queueName");
-        parentWFprops.put("queueName",queueName==null||queueName.equals("")?"default":queueName);
-	
+        //parent wf props
+        populateDefaultParentWFprops(cluster, process);
+
         // inputs
-        if (process.getInputs() != null) {
-            for (Input input : process.getInputs().getInput()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
-                if (coord.getDatasets() == null)
-                    coord.setDatasets(new DATASETS());
-                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
-
-                DATAIN datain = new DATAIN();
-                datain.setName(input.getName());
-                datain.setDataset(input.getFeed());
-                datain.setStartInstance(getELExpression(input.getStartInstance()));
-                datain.setEndInstance(getELExpression(input.getEndInstance()));
-                if (coord.getInputEvents() == null)
-                    coord.setInputEvents(new INPUTEVENTS());
-                coord.getInputEvents().getDataIn().add(datain);
-
-                if(StringUtils.isNotEmpty(input.getPartition()))
-                	parentWFprops.put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
-                else
-                	parentWFprops.put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");     
-                
-                subflowProps.put(input.getName(), getVarName(input.getName())); 
-            }
-        }
+        populateInputDatasetProps(coord, cluster, process);
 
         // outputs
-        if (process.getOutputs() != null) {
-        	StringBuilder outputFeedPaths = new StringBuilder();
-        	StringBuilder outputFeedNames = new StringBuilder();
-            for (Output output : process.getOutputs().getOutput()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
-                if (coord.getDatasets() == null)
-                    coord.setDatasets(new DATASETS());
-                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+        populateOutputDatasetProps(coord, cluster, process);
 
-                DATAOUT dataout = new DATAOUT();
-                dataout.setName(output.getName());
-                dataout.setDataset(output.getFeed());
-                dataout.setInstance(getELExpression(output.getInstance()));
-                if (coord.getOutputEvents() == null)
-                    coord.setOutputEvents(new OUTPUTEVENTS());
-                coord.getOutputEvents().getDataOut().add(dataout);
-                
-                outputFeedNames.append(output.getName()).append(",");
-                outputFeedPaths.append("${coord:dataOut('" + output.getName() + "')}").append(",");                
-               
-                parentWFprops.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
-                subflowProps.put(output.getName(), getVarName(output.getName()));
-            }
-            //Output feed name and path for parent workflow
-            parentWFprops.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length()-1));
-            parentWFprops.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.substring(0, outputFeedPaths.length()-1));
-            
-        }
+		// override external ID
+		getParentWFProps().put(OozieClient.EXTERNAL_ID,
+				new ExternalId(process.getName(), "${coord:nominalTime()}")
+						.getId());
 
+		String queueName = getUserDefinedProps().get("queueName");
+		if (queueName == null) {
+			getParentWFProps().put("queueName", "default");
+		}
+		
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
         if(libDir != null)
-        	parentWFprops.put(OozieClient.LIBPATH, libDir);      
+        	getParentWFProps().put(OozieClient.LIBPATH, libDir);      
 
         //configuration
         CONFIGURATION conf = new CONFIGURATION();
-        for(Entry<String, String> entry:parentWFprops.entrySet())
+        for(Entry<String, String> entry:getParentWFProps().entrySet())
             conf.getProperty().add(createCoordProperty(entry.getKey(), entry.getValue()));
         
 		//user wf (sub-flow) confs, add all user defined props to coordinator
@@ -247,8 +194,99 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         return coord;
     }
+    
+	private void populateDefaultParentWFprops(Cluster cluster, Process process) {
+		// Parent workflow properties
+		getParentWFProps().put(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(),
+				process.getName());
+		getParentWFProps().put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(),
+				NOMINAL_TIME_EL);
+		getParentWFProps().put(EntityInstanceMessage.ARG.TIME_STAMP.NAME(),
+				ACTUAL_TIME_EL);
+		getParentWFProps().put(EntityInstanceMessage.ARG.BROKER_URL.NAME(),
+				ClusterHelper.getMessageBrokerUrl(cluster));
+		String brokerImplClass = getUserDefinedProps().get(
+				EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME());
+		if (brokerImplClass == null) {
+			getParentWFProps().put(
+					EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(),
+					DEFAULT_BROKER_IMPL_CLASS);
+		}
+		getParentWFProps().put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), process
+				.getEntityType().name());
+		getParentWFProps().put(EntityInstanceMessage.ARG.OPERATION.NAME(),
+				EntityInstanceMessage.entityOperation.GENERATE.name());
+		getParentWFProps().put("logDir", getHDFSPath(getParentWorkflowPath()
+				.getParent().toString()));
 
-    private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
+	}
+    
+	private void populateInputDatasetProps(COORDINATORAPP coord, Cluster cluster, Process process) throws IvoryException {
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInput()) {
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
+                if (coord.getDatasets() == null)
+                    coord.setDatasets(new DATASETS());
+                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
+                DATAIN datain = new DATAIN();
+                datain.setName(input.getName());
+                datain.setDataset(input.getFeed());
+                datain.setStartInstance(getELExpression(input.getStartInstance()));
+                datain.setEndInstance(getELExpression(input.getEndInstance()));
+                if (coord.getInputEvents() == null)
+                    coord.setInputEvents(new INPUTEVENTS());
+                coord.getInputEvents().getDataIn().add(datain);
+
+                if(StringUtils.isNotEmpty(input.getPartition()))
+                	getParentWFProps().put(input.getName(), getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')"));
+                else
+                	getParentWFProps().put(input.getName(), "${coord:dataIn('" + input.getName() + "')}");     
+                
+                getSubflowProps().put(input.getName(), getVarName(input.getName())); 
+            }
+        }
+		
+	}
+
+    private void populateOutputDatasetProps(COORDINATORAPP coord,
+			Cluster cluster, Process process) throws IvoryException {
+        if (process.getOutputs() != null) {
+        	StringBuilder outputFeedPaths = new StringBuilder();
+        	StringBuilder outputFeedNames = new StringBuilder();
+            for (Output output : process.getOutputs().getOutput()) {
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
+                if (coord.getDatasets() == null)
+                    coord.setDatasets(new DATASETS());
+                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
+                DATAOUT dataout = new DATAOUT();
+                dataout.setName(output.getName());
+                dataout.setDataset(output.getFeed());
+                dataout.setInstance(getELExpression(output.getInstance()));
+                if (coord.getOutputEvents() == null)
+                    coord.setOutputEvents(new OUTPUTEVENTS());
+                coord.getOutputEvents().getDataOut().add(dataout);
+                
+                outputFeedNames.append(output.getName()).append(",");
+                outputFeedPaths.append("${coord:dataOut('" + output.getName() + "')}").append(",");                
+               
+                getParentWFProps().put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
+                getSubflowProps().put(output.getName(), getVarName(output.getName()));
+            }
+			// Output feed name and path for parent workflow
+			getParentWFProps().put(EntityInstanceMessage.ARG.FEED_NAME.NAME(),
+					outputFeedNames.substring(0, outputFeedNames.length() - 1));
+			getParentWFProps().put(
+					EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(),
+					outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
+
+        }
+		
+	}
+
+
+	private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
         Path path = new Path(wfpath.replace("${nameNode}", ""));
         String libDir;
         try {
@@ -321,6 +359,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 		} catch (JAXBException e) {
 			throw new IvoryException(e);
 		}
+	}
+	
+	private Map<String,String> getParentWFProps(){
+		return this.parentWFProps;
+	}
+	
+	private Map<String,String> getSubflowProps(){
+		return this.subflowProps;
 	}
 
 }
