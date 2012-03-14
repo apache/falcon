@@ -22,11 +22,14 @@ import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.FunctionMapper;
 import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public final class ExpressionHelper implements FunctionMapper, VariableResolver {
 
     private static final ExpressionHelper instance = new ExpressionHelper();
+
+    private ThreadLocal<Properties> threadVariables = new ThreadLocal<Properties>();
 
     public static ExpressionHelper get() {
         return instance;
@@ -43,9 +46,13 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         throw new UnsupportedOperationException("Not found " + prefix + ":" + name);
     }
 
+    public void setPropertiesForVariable(Properties properties) {
+        threadVariables.set(properties);
+    }
+
     @Override
     public Object resolveVariable(String field) throws ELException {
-        throw new UnsupportedOperationException("Cant resolve " + field);
+        return threadVariables.get().get(field);
     }
 
     public static long hours(int val) {

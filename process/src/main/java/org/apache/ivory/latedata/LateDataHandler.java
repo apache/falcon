@@ -55,18 +55,19 @@ public class LateDataHandler extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        if (args.length < 3) {
-            throw new IllegalArgumentException("Expected at least 2 arguments. " +
-                    "Usage <record|detect> <result-file> <comma-separated-input-files1> ...");
+        if (args.length != 3) {
+            throw new IllegalArgumentException("Expected 3 arguments. " +
+                    "Usage <record|detect> <result-file> <comma-separated-input-files1>#<comma-s...");
         } else {
 
             Mode mode = Mode.valueOf(args[0]);
             fs = FileSystem.get(getConf());
             Path file = new Path(args[1]);
             Map<String, Long> map = new LinkedHashMap<String, Long>();
-            for (int index = 2; index < args.length; index++) {
-                Path inPath = new Path(args[index]);
-                map.put("Path" + (index - 1), usage(inPath));
+            String[] paths = args[2].split("#");
+            for (int index = 0; index < paths.length; index++) {
+                Path inPath = new Path(paths[index]);
+                map.put("Path" + (index + 1), usage(inPath));
             }
             LOG.info("MAP data: " + map);
             if (mode == Mode.record) {

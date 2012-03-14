@@ -23,10 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBException;
@@ -38,6 +35,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
@@ -46,6 +44,9 @@ public class ConfigurationStore {
     private static final Logger LOG = Logger.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     private static final String UTF_8 = "UTF-8";
+
+    private Set<ConfigurationChangeListener> listeners =
+            new LinkedHashSet<ConfigurationChangeListener>();
 
     public static ConfigurationStore get() {
         return store;
@@ -64,6 +65,7 @@ public class ConfigurationStore {
         }
     };
 
+    @SuppressWarnings("unchecked")
     private ConfigurationStore() {
         Class<? extends Entity>[] entityClasses =
                 new Class[EntityType.values().length];
@@ -104,6 +106,10 @@ public class ConfigurationStore {
         }
     }
 
+    public void registerListener(ConfigurationChangeListener listener) {
+        listeners.add(listener);
+    }
+
     /**
      *
      * @param type - EntityType that need to be published
@@ -116,6 +122,7 @@ public class ConfigurationStore {
             if (get(type, entity.getName()) == null) {
                 persist(type, entity);
                 dictionary.get(type).put(entity.getName(), entity);
+                onAdd(entity);
             } else {
                 throw new EntityAlreadyExistsException(type + ": " + entity.getName() +
                         " already registered with configuration store. " +
@@ -126,6 +133,17 @@ public class ConfigurationStore {
         }
         AUDIT.info(type + "/" + entity.getName() +
                 " is published into config store");
+    }
+
+    private void onAdd(Entity entity) {
+        for (ConfigurationChangeListener listener : listeners) {
+            try {
+                listener.onAdd(entity);
+            } catch (Throwable e) {
+                LOG.warn("Encountered exception while notifying " + listener + "(" +
+                        entity.getEntityType() + ") " + entity.getName(), e);
+            }
+        }
     }
 
     /**
@@ -180,7 +198,7 @@ public class ConfigurationStore {
         if (entityMap.containsKey(name)) {
             try {
                 archive(type, name);
-                entityMap.remove(name);
+                onRemove(entityMap.remove(name));
             } catch (IOException e) {
                 throw new StoreAccessException(e);
             }
@@ -188,6 +206,17 @@ public class ConfigurationStore {
             return true;
         }
         return false;
+    }
+
+    private void onRemove(Entity entity) {
+        for (ConfigurationChangeListener listener : listeners) {
+            try {
+                listener.onRemove(entity);
+            } catch (Throwable e) {
+                LOG.warn("Encountered exception while notifying " + listener + "(" +
+                        entity.getEntityType() + ") " + entity.getName(), e);
+            }
+        }
     }
 
     /**

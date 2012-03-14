@@ -14,7 +14,8 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
- --><project>
+ -->
+<project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.ivory</groupId>
   <artifactId>ivory-main</artifactId>
@@ -43,6 +44,15 @@
         <connection>scm:git:git://github.com/sriksun/Ivory.git</connection>
         <url>https://github.com/sriksun/Ivory</url>
     </scm>
+
+      <distributionManagement>
+        <repository>
+            <id>InMobiRepository</id>
+            <name>InMobi Internal Repository</name>
+            <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
+        </repository>
+    </distributionManagement>
+
 
   <repositories>
     <repository>

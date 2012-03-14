@@ -26,6 +26,7 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
+import org.apache.ivory.service.ServiceInitializer;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -35,6 +36,8 @@ public class ContextStartupListener implements ServletContextListener {
     private static Logger LOG = Logger.getLogger(ContextStartupListener.class);
 
     private static final String BUILD_PROPERTIES = "ivory-buildinfo.properties";
+
+    private final ServiceInitializer startupServices = new ServiceInitializer();
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -49,6 +52,7 @@ public class ContextStartupListener implements ServletContextListener {
         
         try {
             ProcessEntityParser.init();
+            startupServices.initialize();
         } catch (IvoryException e) {
             throw new RuntimeException(e);
         }
@@ -78,6 +82,11 @@ public class ContextStartupListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        try {
+            startupServices.destroy();
+        } catch (IvoryException e) {
+            LOG.warn("Error destroying services", e);
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append("\n############################################");
         buffer.append("\n         Ivory Server (SHUTDOWN)            ");

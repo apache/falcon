@@ -22,16 +22,24 @@ import org.apache.ivory.IvoryException;
 
 public final class ReflectionUtils {
 
-    @SuppressWarnings("unchecked")
     public static <T> T getInstance(String classKey) throws IvoryException {
+        String clazzName = StartupProperties.get().getProperty(classKey);
         try {
-            String clazzName = StartupProperties.get().getProperty(classKey);
+            return getInstanceByClassName(clazzName);
+        } catch (IvoryException e) {
+            throw new IvoryException("Unable to get instance for key: " + classKey, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getInstanceByClassName(String clazzName) throws IvoryException {
+        try {
             Class<T> clazz = (Class<T>)
                     ReflectionUtils.class.getClassLoader().loadClass(clazzName);
-            return (T) clazz.newInstance();
+            return clazz.newInstance();
         } catch (Exception e) {
             throw new IvoryException("Unable to get instance for " +
-                    classKey, e);
+                    clazzName, e);
         }
     }
 

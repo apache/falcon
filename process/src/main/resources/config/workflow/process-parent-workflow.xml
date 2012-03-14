@@ -36,10 +36,24 @@
 			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
 			<capture-output />
 		</java>
+		<ok to="recordsize" />
+		<error to="fail" />
+	</action>
+
+	<action name='recordsize'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
+			<arg>record</arg>
+			<arg>${logDir}/latedata-${nominalTime}</arg>
+			<arg>${ivoryInPaths}</arg>
+			<capture-output />
+		</java>
 		<ok to="user-workflow" />
 		<error to="fail" />
 	</action>
-	
+
 	<action name='user-workflow'>
         <sub-workflow>
          <app-path>#USER_WF_PATH#</app-path>

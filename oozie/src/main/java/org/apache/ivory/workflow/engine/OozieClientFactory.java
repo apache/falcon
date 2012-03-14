@@ -18,13 +18,14 @@
 
 package org.apache.ivory.workflow.engine;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.local.LocalOozie;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OozieClientFactory {
 
@@ -51,7 +52,7 @@ public class OozieClientFactory {
         if (LOCAL_OOZIE.equals(oozieUrl)) {
             return getLocalOozieClient();
         } else {
-            return new OozieClient(oozieUrl);
+            return new CustomOozieClient(oozieUrl);
         }
     }
 

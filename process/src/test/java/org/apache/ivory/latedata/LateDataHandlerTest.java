@@ -58,8 +58,8 @@ public class LateDataHandlerTest {
 
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream in = fs.open(outPath);
@@ -108,13 +108,13 @@ public class LateDataHandlerTest {
 
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         LateDataHandler.stream = writer;
         LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         Assert.assertEquals(writer.getBuffer(), "changedPaths=");
     }
@@ -136,13 +136,13 @@ public class LateDataHandlerTest {
 
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         LateDataHandler.stream = writer;
         try {
             LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                    new Path(baseDir, "data/feed1").toString(),
+                    new Path(baseDir, "data/feed1").toString() + "#" +
                     new Path(baseDir, "data/feed3").toString()});
             Assert.fail("Expected to fail due to insufficient paths either during record or detect phase");
         } catch (NoSuchElementException ignore) { }
@@ -165,13 +165,13 @@ public class LateDataHandlerTest {
 
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         LateDataHandler.stream = writer;
         try {
             LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                    new Path(baseDir, "data/feed1").toString(),
-                    new Path(baseDir, "data/feedhome/feed2").toString(),
+                    new Path(baseDir, "data/feed1").toString() + "#" +
+                    new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                     new Path(baseDir, "data/feed3").toString()});
             Assert.fail("Expected to fail due to insufficient paths either during record or detect phase");
         } catch (NotEnoughPathsException ignore) { }
@@ -196,8 +196,8 @@ public class LateDataHandlerTest {
         fs.delete(outPath, true);
         LateDataHandler.stream = writer;
         LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         Assert.assertEquals(writer.getBuffer(), "changedPaths=INVALID");
     }
@@ -220,13 +220,13 @@ public class LateDataHandlerTest {
         LateDataHandler.stream = writer;
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         createFiles(new Path(baseDir, "data/feed1"));
         LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         Assert.assertEquals(writer.getBuffer(), "changedPaths=Path1");
     }
@@ -249,15 +249,15 @@ public class LateDataHandlerTest {
         LateDataHandler.stream = writer;
         Path outPath = new Path(baseDir, "data/output");
         LateDataHandler.main(new String[]{"record", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         createFiles(new Path(baseDir, "data/feed1"));
         createFiles(new Path(baseDir, "data/feedhome/feed2"));
         createFiles(new Path(baseDir, "data/feed3"));
         LateDataHandler.main(new String[]{"detect", outPath.toString(),
-                new Path(baseDir, "data/feed1").toString(),
-                new Path(baseDir, "data/feedhome/feed2").toString(),
+                new Path(baseDir, "data/feed1").toString() + "#" +
+                new Path(baseDir, "data/feedhome/feed2").toString() + "#" +
                 new Path(baseDir, "data/feed3").toString()});
         Assert.assertEquals(writer.getBuffer(), "changedPaths=Path1,Path2,Path3");
     }
