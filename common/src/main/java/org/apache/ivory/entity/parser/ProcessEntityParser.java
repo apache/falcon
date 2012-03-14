@@ -59,322 +59,265 @@ import org.apache.oozie.util.IOUtils;
  */
 public class ProcessEntityParser extends EntityParser<Process> {
 
-	private static final Logger LOG = Logger
-			.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
 
-	public ProcessEntityParser() {
-		super(EntityType.PROCESS);
-	}
+    public ProcessEntityParser() {
+        super(EntityType.PROCESS);
+    }
 
-	public static void init() throws IvoryException {
-		String uri = StartupProperties.get().getProperty(
-				"config.oozie.conf.uri");
-		System.setProperty(Services.OOZIE_HOME_DIR, uri);
-		File confFile = new File(uri + "/conf");
-		if (!confFile.exists() && !confFile.mkdirs())
-			throw new IvoryException("Failed to create conf directory in path "
-					+ uri);
+    public static void init() throws IvoryException {
+        String uri = StartupProperties.get().getProperty("config.oozie.conf.uri");
+        System.setProperty(Services.OOZIE_HOME_DIR, uri);
+        File confFile = new File(uri + "/conf");
+        if (!confFile.exists() && !confFile.mkdirs())
+            throw new IvoryException("Failed to create conf directory in path " + uri);
 
-		InputStream instream = ProcessEntityParser.class
-				.getResourceAsStream("/oozie-site.xml");
-		try {
-			IOUtils.copyStream(instream, new FileOutputStream(uri
-					+ "/conf/oozie-site.xml"));
-			Services services = new Services();
-			services.getConf().set("oozie.services",
-					"org.apache.oozie.service.ELService");
-			services.init();
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+        InputStream instream = ProcessEntityParser.class.getResourceAsStream("/oozie-site.xml");
+        try {
+            IOUtils.copyStream(instream, new FileOutputStream(uri + "/conf/oozie-site.xml"));
+            Services services = new Services();
+            services.getConf().set("oozie.services", "org.apache.oozie.service.ELService");
+            services.init();
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 
-	@Override
-	public void validate(Process process) throws IvoryException {
-		// check if dependent entities exists
-		if (process.getCluster() == null)
-			throw new ValidationException("No clusters defined in process");
+    @Override
+    public void validate(Process process) throws IvoryException {
+        // check if dependent entities exists
+        String clusterName = process.getCluster().getName();
+        validateEntityExists(EntityType.CLUSTER, clusterName);
+        validateProcessValidity(process.getValidity().getStart(), process.getValidity().getEnd());
+        validateHDFSpaths(process);
 
-		String clusterName = process.getCluster().getName();
-		validateEntityExists(EntityType.CLUSTER, clusterName);
-		validateProcessValidity(process.getValidity().getStart(), process
-				.getValidity().getEnd());
-		validateHDFSpaths(process);
+        if (process.getInputs() != null && process.getInputs().getInput() != null)
+            for (Input input : process.getInputs().getInput()) {
+                validateEntityExists(EntityType.FEED, input.getFeed());
+                validateFeedDefinedForCluster(input.getFeed(), clusterName);
+                // TODO currently retention supports deletion of past instances
+                // only
+                // hence checking for only startinstance of input
+                validateFeedRetentionPeriod(input.getStartInstance(), input.getFeed(), clusterName);
+                validateInstanceRange(process, input);
+            }
 
-		if (process.getInputs() != null
-				&& process.getInputs().getInput() != null)
-			for (Input input : process.getInputs().getInput()) {
-				validateEntityExists(EntityType.FEED, input.getFeed());
-				validateFeedDefinedForCluster(input.getFeed(), clusterName);
-				//TODO currently retention supports deletion of past instances only
-				//hence checking for only startinstance of input
-				validateFeedRetentionPeriod(input.getStartInstance(),input.getFeed(), clusterName);
-				validateInstanceRange(process, input);
-			}
+        if (process.getOutputs() != null && process.getOutputs().getOutput() != null)
+            for (Output output : process.getOutputs().getOutput()) {
+                validateEntityExists(EntityType.FEED, output.getFeed());
+                validateFeedDefinedForCluster(output.getFeed(), clusterName);
+                validateInstance(process, output);
+            }
 
-		if (process.getOutputs() != null
-				&& process.getOutputs().getOutput() != null)
-			for (Output output : process.getOutputs().getOutput()) {
-				validateEntityExists(EntityType.FEED, output.getFeed());
-				validateFeedDefinedForCluster(output.getFeed(), clusterName);
-				validateInstance(process, output);
-			}
+        // validate partitions
+        if (process.getInputs() != null && process.getInputs().getInput() != null)
+            for (Input input : process.getInputs().getInput()) {
+                if (input.getPartition() != null) {
+                    String partition = input.getPartition();
+                    String[] parts = partition.split("/");
+                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+                    if (feed.getPartitions() == null || feed.getPartitions().getPartition() == null
+                            || feed.getPartitions().getPartition().size() == 0
+                            || feed.getPartitions().getPartition().size() < parts.length)
+                        throw new ValidationException("Partition specification in input " + input.getName() + " is wrong");
+                }
+            }
+    }
 
-		// validate partitions
-		if (process.getInputs() != null
-				&& process.getInputs().getInput() != null)
-			for (Input input : process.getInputs().getInput()) {
-				if (input.getPartition() != null) {
-					String partition = input.getPartition();
-					String[] parts = partition.split("/");
-					Feed feed = ConfigurationStore.get().get(EntityType.FEED,
-							input.getFeed());
-					if (feed.getPartitions() == null
-							|| feed.getPartitions().getPartition() == null
-							|| feed.getPartitions().getPartition().size() == 0
-							|| feed.getPartitions().getPartition().size() < parts.length)
-						throw new ValidationException(
-								"Partition specification in input "
-										+ input.getName() + " is wrong");
-				}
-			}
-	}
+    private void validateHDFSpaths(Process process) throws IvoryException {
 
-	private void validateHDFSpaths(Process process) throws IvoryException {
+        String clusterName = process.getCluster().getName();
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) ConfigurationStore.get()
+                .get(EntityType.CLUSTER, clusterName);
+        String workflowPath = process.getWorkflow().getPath();
+        String nameNode = getNameNode(cluster, clusterName);
+        try {
+            Configuration configuration = new Configuration();
+            configuration.set("fs.default.name", nameNode);
+            FileSystem fs = FileSystem.get(configuration);
+            if (!fs.exists(new Path(workflowPath))) {
+                throw new ValidationException("Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
+            }
+        } catch (ValidationException e) {
+            throw new ValidationException(e);
+        } catch (ConnectException e) {
+            throw new ValidationException("Unable to connect to Namenode: " + nameNode + " referenced in cluster: " + clusterName);
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 
-		String clusterName = process.getCluster().getName();
-		org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) ConfigurationStore
-				.get().get(EntityType.CLUSTER, clusterName);
-		String workflowPath = process.getWorkflow().getPath();
-		String nameNode = getNameNode(cluster, clusterName);
-		try {
-			Configuration configuration = new Configuration();
-			configuration.set("fs.default.name", nameNode);
-			FileSystem fs = FileSystem.get(configuration);
-			if (!fs.exists(new Path(workflowPath))) {
-				throw new ValidationException("Workflow path: " + workflowPath
-						+ " does not exists in HDFS: " + nameNode);
-			}
-		} catch (ValidationException e) {
-			throw new ValidationException(e);
-		} catch (ConnectException e) {
-			throw new ValidationException("Unable to connect to Namenode: "+nameNode+ " referenced in cluster: "+clusterName);
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+    private String getNameNode(org.apache.ivory.entity.v0.cluster.Cluster cluster, String clusterName) throws ValidationException {
+        // cluster should never be null as it is validated while submitting
+        // feeds.
+        if (!ClusterHelper.getHdfsUrl(cluster).startsWith("hdfs://")) {
+            throw new ValidationException("Cannot get valid nameNode from write interface of cluster: " + clusterName);
+        }
+        return ClusterHelper.getHdfsUrl(cluster);
+    }
 
-	private String getNameNode(
-			org.apache.ivory.entity.v0.cluster.Cluster cluster, String clusterName) throws ValidationException {
-		// cluster should never be null as it is validated while submitting
-		// feeds.
-		if (!ClusterHelper.getHdfsUrl(cluster)
-						.startsWith("hdfs://")) {
-			throw new ValidationException(
-					"Cannot get valid nameNode from write interface of cluster: "
-							+ clusterName);
-		}
-		return ClusterHelper.getHdfsUrl(cluster);
-	}
+    private void validateFeedRetentionPeriod(String startInstance, String feedName, String clusterName) throws IvoryException {
+        Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, feedName);
+        String feedRetention = feed.getCluster(clusterName).getRetention().getLimit();
+        ELParser elParser = new ELParser();
+        elParser.parseElExpression(startInstance);
+        long requiredInputDuration = elParser.getRequiredInputDuration();
+        elParser.parseOozieELExpression(feedRetention);
+        long feedDuration = elParser.getFeedDuration();
 
-	private void validateFeedRetentionPeriod(String startInstance,
-			String feedName, String clusterName) throws IvoryException {
-		Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED,
-				feedName);
-		String feedRetention = feed.getCluster(clusterName).getRetention().getLimit();
-		ELParser elParser = new ELParser();
-		elParser.parseElExpression(startInstance);
-		long requiredInputDuration =elParser.getRequiredInputDuration();
-		elParser.parseOozieELExpression(feedRetention);
-		long feedDuration=elParser.getFeedDuration();
-		
-		if(feedDuration-requiredInputDuration<0){
-			throw new ValidationException("StartInstance :"+startInstance+" of process is out of range for Feed: "+feedName+ "  in cluster: "+clusterName+"'s retention limit :"+feedRetention);
-		}
-	}
+        if (feedDuration - requiredInputDuration < 0) {
+            throw new ValidationException("StartInstance :" + startInstance + " of process is out of range for Feed: " + feedName
+                    + "  in cluster: " + clusterName + "'s retention limit :" + feedRetention);
+        }
+    }
 
-	private void validateProcessValidity(String start, String end)
-			throws IvoryException {
-		try {
-			validateProcessDates(start, end);
-			Date processStart = DateUtils.parseDateUTC(start);
-			Date processEnd = DateUtils.parseDateUTC(end);
-			if (processStart.after(processEnd)) {
-				throw new ValidationException("Process start time: " + start
-						+ " cannot be after process end time: " + end);
-			}
-		} catch (ValidationException e) {
-			throw new ValidationException(e);
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+    private void validateProcessValidity(String start, String end) throws IvoryException {
+        try {
+            validateProcessDates(start, end);
+            Date processStart = EntityUtil.parseDateUTC(start);
+            Date processEnd = EntityUtil.parseDateUTC(end);
+            if (processStart.after(processEnd)) {
+                throw new ValidationException("Process start time: " + start + " cannot be after process end time: " + end);
+            }
+        } catch (ValidationException e) {
+            throw new ValidationException(e);
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 
-	private void validateFeedDefinedForCluster(String feedName,
-			String clusterName) throws IvoryException {
-		Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED,
-				feedName);
-		if (feed.getCluster(clusterName) == null)
-			throw new ValidationException("Feed " + feed.getName()
-					+ " is not defined for cluster " + clusterName);
-	}
+    private void validateFeedDefinedForCluster(String feedName, String clusterName) throws IvoryException {
+        Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, feedName);
+        if (feed.getCluster(clusterName) == null)
+            throw new ValidationException("Feed " + feed.getName() + " is not defined for cluster " + clusterName);
+    }
 
-	private void configEvaluator(SyncCoordDataset ds, SyncCoordAction appInst,
-			ELEvaluator eval, Feed feed, String clusterName,
-			Validity procValidity) throws IvoryException {
-		try {
-			Cluster cluster = feed.getCluster(clusterName);
-			ds.setInitInstance(DateUtils.parseDateUTC(cluster.getValidity()
-					.getStart()));
-			ds.setFrequency(Integer.valueOf(feed.getPeriodicity()));
-			ds.setTimeUnit(Frequency.valueOf(feed.getFrequency()).timeUnit);
-			ds.setEndOfDuration(Frequency.valueOf(feed.getFrequency()).endOfDuration);
-			ds.setTimeZone(DateUtils.getTimeZone(cluster.getValidity()
-					.getTimezone()));
-			ds.setName(feed.getName());
-			ds.setUriTemplate(feed.getLocations().get(LocationType.DATA)
-					.getPath());
-			ds.setType("SYNC");
-			ds.setDoneFlag("");
+    private void configEvaluator(SyncCoordDataset ds, SyncCoordAction appInst, ELEvaluator eval, Feed feed, String clusterName,
+            Validity procValidity) throws IvoryException {
+        try {
+            Cluster cluster = feed.getCluster(clusterName);
+            ds.setInitInstance(EntityUtil.parseDateUTC(cluster.getValidity().getStart()));
+            ds.setFrequency(feed.getPeriodicity());
+            ds.setTimeUnit(Frequency.valueOf(feed.getFrequency()).timeUnit);
+            ds.setEndOfDuration(Frequency.valueOf(feed.getFrequency()).endOfDuration);
+            ds.setTimeZone(DateUtils.getTimeZone(cluster.getValidity().getTimezone()));
+            ds.setName(feed.getName());
+            ds.setUriTemplate(feed.getLocations().get(LocationType.DATA).getPath());
+            ds.setType("SYNC");
+            ds.setDoneFlag("");
 
-			appInst.setActualTime(DateUtils.parseDateUTC(procValidity
-					.getStart()));
-			appInst.setNominalTime(DateUtils.parseDateUTC(procValidity
-					.getStart()));
-			appInst.setTimeZone(DateUtils.getTimeZone(procValidity
-					.getTimezone()));
-			appInst.setActionId("porcess@1");
-			appInst.setName("process");
+            appInst.setActualTime(EntityUtil.parseDateUTC(procValidity.getStart()));
+            appInst.setNominalTime(EntityUtil.parseDateUTC(procValidity.getStart()));
+            appInst.setTimeZone(EntityUtil.getTimeZone(procValidity.getTimezone()));
+            appInst.setActionId("porcess@1");
+            appInst.setName("process");
 
-			eval.setVariable(OozieClient.USER_NAME, "test_user");
-			eval.setVariable(OozieClient.GROUP_NAME, "test_group");
-			CoordELFunctions.configureEvaluator(eval, ds, appInst);
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+            eval.setVariable(OozieClient.USER_NAME, "test_user");
+            eval.setVariable(OozieClient.GROUP_NAME, "test_group");
+            CoordELFunctions.configureEvaluator(eval, ds, appInst);
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 
-	// Mapping to oozie coord's dataset fields
-	public static enum Frequency {
-		minutes(TimeUnit.MINUTE, TimeUnit.NONE), hours(TimeUnit.HOUR,
-				TimeUnit.NONE), days(TimeUnit.DAY, TimeUnit.NONE), months(
-				TimeUnit.MONTH, TimeUnit.NONE), endOfDays(TimeUnit.DAY,
-				TimeUnit.END_OF_DAY), endOfMonths(TimeUnit.MONTH,
-				TimeUnit.END_OF_MONTH);
+    // Mapping to oozie coord's dataset fields
+    public static enum Frequency {
+        minutes(TimeUnit.MINUTE, TimeUnit.NONE), hours(TimeUnit.HOUR, TimeUnit.NONE), days(TimeUnit.DAY, TimeUnit.NONE), months(
+                TimeUnit.MONTH, TimeUnit.NONE), endOfDays(TimeUnit.DAY, TimeUnit.END_OF_DAY), endOfMonths(TimeUnit.MONTH,
+                TimeUnit.END_OF_MONTH);
 
-		private TimeUnit timeUnit;
-		private TimeUnit endOfDuration;
+        private TimeUnit timeUnit;
+        private TimeUnit endOfDuration;
 
-		private Frequency(TimeUnit timeUnit, TimeUnit endOfDuration) {
-			this.timeUnit = timeUnit;
-			this.endOfDuration = endOfDuration;
-		}
-		
-		public TimeUnit getTimeUnit() {
-		    return timeUnit;
-		}
-	}
+        private Frequency(TimeUnit timeUnit, TimeUnit endOfDuration) {
+            this.timeUnit = timeUnit;
+            this.endOfDuration = endOfDuration;
+        }
 
-	private void validateInstance(Process process, Output output)
-			throws IvoryException {
-		ELEvaluator eval = Services.get().get(ELService.class)
-				.createEvaluator("coord-action-create");
-		SyncCoordDataset ds = new SyncCoordDataset();
-		SyncCoordAction appInst = new SyncCoordAction();
-		Feed feed = ConfigurationStore.get().get(EntityType.FEED,
-				output.getFeed());
-		String clusterName = process.getCluster().getName();
-		configEvaluator(ds, appInst, eval, feed, clusterName,
-				process.getValidity());
+        public TimeUnit getTimeUnit() {
+            return timeUnit;
+        }
+    }
 
-		try {
-			org.apache.ivory.entity.v0.feed.Validity feedValidity = feed
-					.getCluster(clusterName).getValidity();
-			Date feedEnd = DateUtils.parseDateUTC(feedValidity.getEnd());
+    private void validateInstance(Process process, Output output) throws IvoryException {
+        ELEvaluator eval = Services.get().get(ELService.class).createEvaluator("coord-action-create");
+        SyncCoordDataset ds = new SyncCoordDataset();
+        SyncCoordAction appInst = new SyncCoordAction();
+        Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
+        String clusterName = process.getCluster().getName();
+        configEvaluator(ds, appInst, eval, feed, clusterName, process.getValidity());
 
-			String instEL = output.getInstance();
-			String instStr = CoordELFunctions.evalAndWrap(eval, "${elext:"
-					+ instEL + "}");
-			if (instStr.equals(""))
-				throw new ValidationException("Instance  " + instEL
-						+ " of feed " + feed.getName()
-						+ " is before the start of feed "
-						+ feedValidity.getStart());
+        try {
+            org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
+            Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
 
-			Date inst = DateUtils.parseDateUTC(instStr);
-			if (inst.after(feedEnd))
-				throw new ValidationException("End instance " + instEL
-						+ " for feed " + feed.getName()
-						+ " is after the end of feed " + feedValidity.getEnd());
-		} catch (ValidationException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+            String instEL = output.getInstance();
+            String instStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEL + "}");
+            if (instStr.equals(""))
+                throw new ValidationException("Instance  " + instEL + " of feed " + feed.getName() + " is before the start of feed "
+                        + feedValidity.getStart());
 
-	private void validateInstanceRange(Process process, Input input)
-			throws IvoryException {
-		ELEvaluator eval = Services.get().get(ELService.class)
-				.createEvaluator("coord-action-create");
-		SyncCoordDataset ds = new SyncCoordDataset();
-		SyncCoordAction appInst = new SyncCoordAction();
-		Feed feed = ConfigurationStore.get().get(EntityType.FEED,
-				input.getFeed());
-		String clusterName = process.getCluster().getName();
-		configEvaluator(ds, appInst, eval, feed, clusterName,
-				process.getValidity());
+            Date inst = EntityUtil.parseDateUTC(instStr);
+            if (inst.after(feedEnd))
+                throw new ValidationException("End instance " + instEL + " for feed " + feed.getName() + " is after the end of feed "
+                        + feedValidity.getEnd());
+        } catch (ValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 
-		try {
+    private void validateInstanceRange(Process process, Input input) throws IvoryException {
+        ELEvaluator eval = Services.get().get(ELService.class).createEvaluator("coord-action-create");
+        SyncCoordDataset ds = new SyncCoordDataset();
+        SyncCoordAction appInst = new SyncCoordAction();
+        Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+        String clusterName = process.getCluster().getName();
+        configEvaluator(ds, appInst, eval, feed, clusterName, process.getValidity());
 
-			org.apache.ivory.entity.v0.feed.Validity feedValidity = feed
-					.getCluster(clusterName).getValidity();
-			Date feedEnd = DateUtils.parseDateUTC(feedValidity.getEnd());
+        try {
 
-			String instStartEL = input.getStartInstance();
-			String instEndEL = input.getEndInstance();
+            org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
+            Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
 
-			String instStartStr = CoordELFunctions.evalAndWrap(eval, "${elext:"
-					+ instStartEL + "}");
-			if (instStartStr.equals(""))
-				throw new ValidationException("Start instance  " + instStartEL
-						+ " of feed " + feed.getName()
-						+ " is before the start of feed "
-						+ feedValidity.getStart());
+            String instStartEL = input.getStartInstance();
+            String instEndEL = input.getEndInstance();
 
-			String instEndStr = CoordELFunctions.evalAndWrap(eval, "${elext:"
-					+ instEndEL + "}");
-			if (instEndStr.equals(""))
-				throw new ValidationException("End instance  " + instEndEL
-						+ " of feed " + feed.getName()
-						+ " is before the start of feed "
-						+ feedValidity.getStart());
+            String instStartStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instStartEL + "}");
+            if (instStartStr.equals(""))
+                throw new ValidationException("Start instance  " + instStartEL + " of feed " + feed.getName()
+                        + " is before the start of feed " + feedValidity.getStart());
 
-			Date instStart = DateUtils.parseDateUTC(instStartStr);
-			Date instEnd = DateUtils.parseDateUTC(instEndStr);
-			if (instEnd.before(instStart))
-				throw new ValidationException("End instance " + instEndEL
-						+ " for feed " + feed.getName()
-						+ " is before the start instance " + instStartEL);
+            String instEndStr = CoordELFunctions.evalAndWrap(eval, "${elext:" + instEndEL + "}");
+            if (instEndStr.equals(""))
+                throw new ValidationException("End instance  " + instEndEL + " of feed " + feed.getName()
+                        + " is before the start of feed " + feedValidity.getStart());
 
-			if (instEnd.after(feedEnd))
-				throw new ValidationException("End instance " + instEndEL
-						+ " for feed " + feed.getName()
-						+ " is after the end of feed " + feedValidity.getEnd());
-		} catch (ValidationException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-		
-	}
-	private void validateProcessDates(String start, String end) throws ValidationException {
-		if(!EntityUtil.isValidUTCData(start)){
-			 throw new ValidationException("Invalid start date: "+ start);
-		}
-		if(!EntityUtil.isValidUTCData(end)){
-			 throw new ValidationException("Invalid end date: "+ end);
-		}
+            Date instStart = EntityUtil.parseDateUTC(instStartStr);
+            Date instEnd = EntityUtil.parseDateUTC(instEndStr);
+            if (instEnd.before(instStart))
+                throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName()
+                        + " is before the start instance " + instStartEL);
 
-	}
+            if (instEnd.after(feedEnd))
+                throw new ValidationException("End instance " + instEndEL + " for feed " + feed.getName()
+                        + " is after the end of feed " + feedValidity.getEnd());
+        } catch (ValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+
+    }
+
+    private void validateProcessDates(String start, String end) throws ValidationException {
+        if (!EntityUtil.isValidUTCDate(start)) {
+            throw new ValidationException("Invalid start date: " + start);
+        }
+        if (!EntityUtil.isValidUTCDate(end)) {
+            throw new ValidationException("Invalid end date: " + end);
+        }
+
+    }
 }
