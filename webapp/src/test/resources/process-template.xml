@@ -4,20 +4,19 @@
 	
 	<concurrency>2</concurrency>
 	<execution>LIFO</execution>
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>minutes</frequency>
+    <periodicity>30</periodicity>
 	
 	<validity timezone="UTC" end="2010-01-01T01:30Z" start="2010-01-01T01:00Z" />
 	<inputs>
 		<input end-instance="today(0,40)" start-instance="today(0,20)"
-			feed="##f1##" name="inputData" partition="OK"/>
+			feed="##f1##" name="inputData"/>
 	</inputs>
 	<outputs>
 		<output instance="now(0,0)" feed="##f2##"
 			name="outputData" />
 	</outputs>
 	<properties>
-		<property name="queueName" value="default"/>
 	</properties>
 	<workflow engine="oozie" path="/examples/apps/aggregator" />
 	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />

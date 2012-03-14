@@ -190,10 +190,22 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             for (Cluster cluster : clusters) {
                 OozieClient client = OozieClientFactory.get(cluster);
                 List<BundleJob> jobs = client.getBundleJobsInfo(filter + OozieClient.FILTER_NAME + "=" + name + ";", 0, 10);
+                if(jobs == null || jobs.isEmpty())
+                    jobArray.put(cluster, MISSING);
+                else {  //select recent bundle
+                    Date createdTime = null;
+                    BundleJob bundle = null;
+                    for(BundleJob job:jobs) {
+                        if(createdTime == null || (job.getCreatedTime().after(createdTime))) {
+                            createdTime = job.getCreatedTime();
+                            bundle = job;
+                        }
+                    }
+                    jobArray.put(cluster, bundle);
+                }
                 if (jobs.size() > 1) {
                     throw new IllegalStateException("Too many jobs qualified " + jobs);
                 } else if (jobs.isEmpty()) {
-                    jobArray.put(cluster, MISSING);
                 } else {
                     jobArray.put(cluster, jobs.get(0));
                 }

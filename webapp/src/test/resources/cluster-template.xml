@@ -12,7 +12,7 @@
 		<interface type="workflow" endpoint="local"
 			version="3.1" />
 -->
-		<interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
+		<interface type="messaging" endpoint="tcp://10.14.117.33:61616?daemon=true"
 			version="5.1.6" />
 		<interface type="registry" endpoint="Hcat" version="1" />
 	</interfaces>
@@ -22,7 +22,5 @@
 		<location name="working" path="/project/ivory/working" />
 	</locations>
 	<properties>
-		<property name="field1" value="value1" />
-		<property name="field2" value="value2" />
 	</properties>
 </cluster>

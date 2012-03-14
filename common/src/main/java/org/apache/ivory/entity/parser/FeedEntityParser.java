@@ -62,10 +62,10 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	private void validateXMLelements(Feed feed) throws ValidationException {
 
 		for (Cluster cluster : feed.getClusters().getCluster()) {
-			if(!EntityUtil.isValidUTCData(cluster.getValidity().getStart())){
+			if(!EntityUtil.isValidUTCDate(cluster.getValidity().getStart())){
 				 throw new ValidationException("Invalid start date: "+ cluster.getValidity().getStart()+" for cluster: "+cluster.getName());
 			}
-			if(!EntityUtil.isValidUTCData(cluster.getValidity().getEnd())){
+			if(!EntityUtil.isValidUTCDate(cluster.getValidity().getEnd())){
 				 throw new ValidationException("Invalid end date: "+ cluster.getValidity().getEnd()+" for cluster: "+cluster.getName());
 			}
 		}		

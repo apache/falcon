@@ -57,6 +57,7 @@
 	<action name='user-workflow'>
         <sub-workflow>
          <app-path>#USER_WF_PATH#</app-path>
+         <propagate-configuration/>
         </sub-workflow>
 		<ok to="jms-messaging" />
 		<error to="fail" />

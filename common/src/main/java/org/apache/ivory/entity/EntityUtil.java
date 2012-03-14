@@ -41,7 +41,7 @@ public class EntityUtil {
         return (d != null) ? getDateFormat().format(d) : null;
     }
     
-    public static boolean isValidUTCData(String date){
+    public static boolean isValidUTCDate(String date){
     		return DateValidator.validate(date);
     }
 }

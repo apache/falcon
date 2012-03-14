@@ -219,7 +219,7 @@ public class IvoryCLI {
 		Options entityOptions = new Options();
 
 		Option submit = new Option(SUBMIT_OPT, false,
-				"Submits a entity xml to Ivory");
+				"Submits an entity xml to Ivory");
 		Option schedule = new Option(SCHEDULE_OPT, false,
 				"Schedules a submited entity in Ivory");
 		Option suspend = new Option(SUSPEND_OPT, false,

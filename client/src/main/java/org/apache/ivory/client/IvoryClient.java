@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.ServletInputStream;
+//import javax.servlet.ServletInputStream;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -193,20 +193,20 @@ public class IvoryClient {
 
 	public String validate(String entityType, String filePath)
 			throws IvoryCLIException {
-		ServletInputStream entityStream = getServletInputStream(filePath);
+		InputStream entityStream = getServletInputStream(filePath);
 		return sendRequestWithObject(Entities.VALIDATE, entityType,
 				entityStream);
 	}
 
 	public String submit(String entityType, String filePath)
 			throws IvoryCLIException {
-		ServletInputStream entityStream = getServletInputStream(filePath);
+		InputStream entityStream = getServletInputStream(filePath);
 		return sendRequestWithObject(Entities.SUBMIT, entityType, entityStream);
 	}
 
 	public String submitAndSchedule(String entityType, String filePath)
 			throws IvoryCLIException {
-		ServletInputStream entityStream = getServletInputStream(filePath);
+		InputStream entityStream = getServletInputStream(filePath);
 		return sendRequestWithObject(Entities.SUBMITandSCHEDULE, entityType,
 				entityStream);
 	}
@@ -233,11 +233,11 @@ public class IvoryClient {
 	 * @throws IvoryCLIException
 	 * @throws java.io.IOException
 	 */
-	private ServletInputStream getServletInputStream(String filePath)
+	private InputStream getServletInputStream(String filePath)
 			throws IvoryCLIException {
-		ServletInputStream stream = null;
+		InputStream stream = null;
 		try {
-			stream = getServletInputStream(new FileInputStream(filePath));
+			stream = new FileInputStream(filePath);
 		} catch (FileNotFoundException e) {
 			throw new IvoryCLIException("File not found:", e);
 		} catch (IOException e) {
@@ -246,16 +246,17 @@ public class IvoryClient {
 		return stream;
 	}
 
-	private ServletInputStream getServletInputStream(final InputStream stream)
-			throws IOException {
-		return new ServletInputStream() {
-
-			@Override
-			public int read() throws IOException {
-				return stream.read();
-			}
-		};
-	}
+	// private ServletInputStream getServletInputStream(final InputStream
+	// stream)
+	// throws IOException {
+	// return new ServletInputStream() {
+	//
+	// @Override
+	// public int read() throws IOException {
+	// return stream.read();
+	// }
+	// };
+	// }
 
 	private String sendRequest(Entities entities, String entityType,
 			String entityName) throws IvoryCLIException {
@@ -318,20 +319,30 @@ public class IvoryClient {
 
 	public static void main(String[] args) throws IvoryCLIException {
 
-		// IvoryClient ivoryClient = new IvoryClient("http://localhost:15000");
+		IvoryClient ivoryClient = new IvoryClient("http://localhost:15000");
 
-		// System.out.println(ivoryClient.validate("cluster","/Users/shaik.idris/Work/Tests/entities/corp.xml"));
-		// System.out.println(ivoryClient.submit("cluster","/Users/shaik.idris/Work/Tests/entities/corp.xml"));
-		// System.out.println(ivoryClient.getDefinition("cluster", "corp"));
-		// System.out.println(ivoryClient.getStatus("cluster", "corp"));
-		// System.out.println(ivoryClient.submit(
-		// "feed","/Users/shaik.idris/Work/Tests/entities/agg-logs.xml"));
-		// System.out.println(ivoryClient.schedule("feed", "agg-logs"));
-		// System.out.println(ivoryClient.submit("feed","/Users/shaik.idris/Work/Tests/entities/raw-logs.xml"));
-		// System.out.println(ivoryClient.submit(
-		// "process","/Users/shaik.idris/Work/Tests/entities/agg-coord.xml));
-		// System.out.println(ivoryClient.delete("process", "agg-coord"));
-		// System.out.println(ivoryClient.delete("feed", "agg-logs"));
+//		System.out.println(ivoryClient.delete("process", "agg-coord"));
+//		System.out.println(ivoryClient.delete("feed", "agg-logs"));
+//		System.out.println(ivoryClient.delete("feed", "raw-logs"));
+		System.out.println(ivoryClient.delete("cluster", "corp"));
+		System.out.println(ivoryClient.validate("cluster",
+				"/Users/shaik.idris/Work/Tests/entities/corp.xml"));
+		System.out.println(ivoryClient.submit("cluster",
+				"/Users/shaik.idris/Work/Tests/entities/corp.xml"));
+		System.out.println(ivoryClient.getDefinition("cluster", "corp"));
+		System.out.println(ivoryClient.getStatus("cluster", "corp"));
+		System.out.println(ivoryClient.submit("feed",
+				"/Users/shaik.idris/Work/Tests/entities/agg-logs.xml"));
+		System.out.println(ivoryClient.schedule("feed", "agg-logs"));
+		System.out.println(ivoryClient.submit("feed",
+				"/Users/shaik.idris/Work/Tests/entities/raw-logs.xml"));
+		System.out.println(ivoryClient.submit("process",
+				"/Users/shaik.idris/Work/Tests/entities/agg-coord.xml"));
+		System.out.println(ivoryClient.schedule("process", "agg-coord"));
+		System.out.println(ivoryClient.delete("process", "agg-coord"));
+		System.out.println(ivoryClient.delete("feed", "agg-logs"));
+		System.out.println(ivoryClient.delete("feed", "raw-logs"));
+		System.out.println(ivoryClient.delete("cluster", "corp"));
 
 	}
 
