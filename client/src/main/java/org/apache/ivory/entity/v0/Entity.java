@@ -19,13 +19,15 @@
 package org.apache.ivory.entity.v0;
 
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.xml.bind.Marshaller;
 
 public abstract class Entity {
 
     public abstract String getName();
-
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
     private ThreadLocal<String> stagingPath;
 
     public EntityType getEntityType() {
@@ -79,7 +81,7 @@ public abstract class Entity {
         if (stagingPath == null) {
             stagingPath = new ThreadLocal<String>();
             stagingPath.set("/ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName() + "/"
-                    + System.currentTimeMillis() + "/");
+                    + dateFormat.format(new Date()) + "/");
         }
         return stagingPath.get();
     }

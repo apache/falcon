@@ -83,9 +83,9 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         String path = getEntity().getWorkflowNameTag(coordName);
         return new Path(bundlePath, path);
     }
-    
+
     protected abstract List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> getEntityProperties();
-    
+
     public void map(Cluster cluster, Path bundlePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
         bundleApp.setName(entity.getWorkflowName());
@@ -103,7 +103,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             bundleCoord.setConfiguration(bundleConf);
             bundleApp.getCoordinator().add(bundleCoord);
         }
-        
+
         marshal(cluster, bundleApp, bundlePath);
     }
 
@@ -112,18 +112,18 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected org.apache.ivory.oozie.coordinator.CONFIGURATION createCoordDefaultConfiguration(Cluster cluster, Path coordPath) {
         org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
-        
+
         props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), entity.getName()));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));      
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
         props.add(createCoordProperty("logDir", getHDFSPath(coordPath)));
-        
-        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), "${coord:nominalTime()}").getId()));   
+
+        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), "${coord:nominalTime()}").getId()));
         props.add(createCoordProperty("queueName", "default"));
-        
+
         props.addAll(getEntityProperties());
         return conf;
     }
@@ -154,13 +154,6 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return prop;
     }
 
-    protected org.apache.ivory.oozie.workflow.CONFIGURATION.Property createWorkflowProperty(String name, String value) {
-        org.apache.ivory.oozie.workflow.CONFIGURATION.Property prop = new org.apache.ivory.oozie.workflow.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
-    }
-
     protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath) throws IvoryException {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
@@ -172,7 +165,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             } finally {
                 out.close();
             }
-            if(LOG.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 StringWriter writer = new StringWriter();
                 marshaller.marshal(jaxbElement, writer);
                 LOG.debug("Writing definition to " + outPath + " on cluster " + cluster.getName());
@@ -192,7 +185,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws IvoryException {
 
-        marshal(cluster, new org.apache.ivory.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext, new Path(outPath, "bundle.xml"));
+        marshal(cluster, new org.apache.ivory.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext, new Path(
+                outPath, "bundle.xml"));
     }
 
     protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws IvoryException {
@@ -202,11 +196,11 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected String getHDFSPath(Path path) {
-        if(path != null)
+        if (path != null)
             return getHDFSPath(path.toString());
         return null;
     }
-    
+
     protected String getHDFSPath(String path) {
         if (StringUtils.isNotEmpty(path)) {
             if (!path.startsWith("${nameNode}"))
@@ -214,13 +208,13 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         }
         return path;
     }
-    
+
     protected WORKFLOWAPP getWorkflowTemplate(String template) throws IvoryException {
         try {
-            Unmarshaller unmarshaller = workflowJaxbContext
-                    .createUnmarshaller();
+            Unmarshaller unmarshaller = workflowJaxbContext.createUnmarshaller();
             @SuppressWarnings("unchecked")
-            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(this.getClass().getResourceAsStream(template));
+            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(this.getClass()
+                    .getResourceAsStream(template));
             return jaxbElement.getValue();
         } catch (JAXBException e) {
             throw new IvoryException(e);
