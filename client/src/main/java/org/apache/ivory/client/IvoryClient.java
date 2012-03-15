@@ -344,12 +344,8 @@ public class IvoryClient {
 		}
 		checkIfSuccessfull(clientResponse);
 
-		if (instances.path.equals(Instances.SUSPEND.path)
-				|| instances.path.equals(Instances.RESUME.path)) {
-			return parseAPIResult(clientResponse);
-		} else {
-			return parseProcessInstanceResult(clientResponse);
-		}
+		return parseProcessInstanceResult(clientResponse);
+
 	}
 
 	private String parseAPIResult(ClientResponse clientResponse)
@@ -391,7 +387,5 @@ public class IvoryClient {
 		}
 
 	}
-
-
 
 }
