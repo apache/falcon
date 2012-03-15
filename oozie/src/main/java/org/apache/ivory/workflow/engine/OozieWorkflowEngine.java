@@ -39,7 +39,6 @@ import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
@@ -518,7 +517,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 }
                 resume(cluster, bundle.getId());                
                 Entity schedEntity = newEntity.clone();
-                builder.setEndDate(schedEntity, endDate);
+                builder.setStartDate(schedEntity, endDate);
                 schedule(schedEntity);
             }
         }

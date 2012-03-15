@@ -17,6 +17,7 @@
  */
 package org.apache.ivory.resource;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -40,6 +41,8 @@ import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -50,21 +53,53 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      * Tests should be enabled only in local environments as they need running
      * instance of webserver
      */
+    
+    @Test(enabled=false)
+    public void testProcessUpdate() throws Exception {
+        scheduleProcess();
+        waitForProcessStart();
+        
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", "guest")
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
+
+        String feed3 = "f3" + System.currentTimeMillis();
+        Map<String, String> overlay = new HashMap<String, String>();
+        overlay.put("name", feed3);
+        overlay.put("cluster", clusterName);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        Input input = new Input();
+        input.setFeed(feed3);
+        input.setName("inputData2");
+        input.setStartInstance("today(20,0)");
+        input.setEndInstance("today(20,20)");
+        process.getInputs().getInput().add(input);
+
+        File tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
+        assertSuccessful(response);    
+    }
+    
     @Test
-    public void testStatus() throws IOException {
+    public void testStatus() throws Exception {
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
 
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         response = this.service
                 .path("api/entities/status/feed/" + feed1)
@@ -91,7 +126,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     }
 
     @Test
-    public void testClusterSubmit() throws IOException {
+    public void testClusterSubmit() throws Exception {
         ClientResponse clientRepsonse;
         Map<String, String> overlay = new HashMap<String, String>();
 
@@ -104,11 +139,11 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .header("Remote-User", "testuser")
                 .post(ClientResponse.class, stream);
-        checkIfSuccessful(clientRepsonse);
+        assertSuccessful(clientRepsonse);
     }
 
 	@Test
-	public void testClusterSubmitScheduleSuspendResumeDelete() throws IOException {
+	public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
 		ClientResponse clientRepsonse;
 		Map<String, String> overlay = new HashMap<String, String>();
 
@@ -116,7 +151,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         overlay.put("name", cluster);
 		clientRepsonse = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay,
 				EntityType.CLUSTER);
-		checkIfSuccessful(clientRepsonse);
+		assertSuccessful(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/schedule/cluster/" + cluster)
@@ -143,11 +178,11 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 				.path("api/entities/delete/cluster/" + cluster)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-		checkIfSuccessful(clientRepsonse);
+		assertSuccessful(clientRepsonse);
 	}
 
     @Test
-    public void testSubmit() throws IOException {
+    public void testSubmit() throws Exception {
 
         ClientResponse response;
         Map<String, String> overlay = new HashMap<String, String>();
@@ -155,25 +190,25 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
     }
 
     @Test
@@ -184,13 +219,13 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         response = this.service
                 .path("api/entities/definition/feed/" + feed1)
@@ -223,50 +258,19 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
     @Test
     public void testScheduleSuspendResume() throws Exception {
-        ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
-
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
-
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
-        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
-
-        String feed2 = "f2" + System.currentTimeMillis();
-        overlay.put("name", feed2);
-        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
-
-        String process = "p1" + System.currentTimeMillis();
-        overlay.put("name", process);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
-        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfSuccessful(response);
-
+        scheduleProcess();
+        
         ClientResponse clientRepsonse = this.service
-        		.path("api/entities/schedule/process/" + process)
-                .header("Remote-User", "testuser")
-        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-        		.post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
-
-        clientRepsonse = this.service
-                .path("api/entities/suspend/process/" + process)
+                .path("api/entities/suspend/process/" + processName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
+        assertSuccessful(clientRepsonse);
 
         clientRepsonse = this.service
-                .path("api/entities/resume/process/" + process)
+                .path("api/entities/resume/process/" + processName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
+        assertSuccessful(clientRepsonse);
     }
 
     @Test  (enabled = false)
@@ -277,13 +281,13 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         List<Path> validInstances = createTestData();
         ClientResponse clientRepsonse = this.service
@@ -291,7 +295,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", "guest")
         		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
         		.post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
+        assertSuccessful(clientRepsonse);
     }
 
     private List<Path> createTestData() throws Exception {
@@ -353,19 +357,19 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         response = this.service
                 .path("api/entities/delete/feed/" + feed1)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
     }
 
     @Test
@@ -377,25 +381,25 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String cluster = "local" + System.currentTimeMillis();
         overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         String process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         //Delete a referred feed
         response = this.service
@@ -409,28 +413,28 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .path("api/entities/delete/process/" + process)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         process = "p1" + System.currentTimeMillis();
         overlay.put("name", process);
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/schedule/process/" + process)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
+        assertSuccessful(clientRepsonse);
 
         //Delete a scheduled process
         response = this.service
                 .path("api/entities/delete/process/" + process)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        checkIfSuccessful(response);
+        assertSuccessful(response);
 
     }
 }

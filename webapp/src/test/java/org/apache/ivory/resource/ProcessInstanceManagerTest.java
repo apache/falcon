@@ -3,9 +3,6 @@ package org.apache.ivory.resource;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -23,11 +20,8 @@ import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.sun.jersey.api.client.ClientResponse;
 
 public class ProcessInstanceManagerTest extends AbstractTestBase {
 
@@ -36,60 +30,8 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
 
     @BeforeMethod(enabled=false)
     public void schedule() throws Exception {
-        ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
-
-        clusterName = "local" + System.currentTimeMillis();
-        overlay.put("name", clusterName);
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        checkIfSuccessful(response);
-
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", clusterName);
-        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
-
-        String feed2 = "f2" + System.currentTimeMillis();
-        overlay.put("name", feed2);
-        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
-        checkIfSuccessful(response);
-
-        processName = "p1" + System.currentTimeMillis();
-        overlay.put("name", processName);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
-        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfSuccessful(response);
-
-        ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
-                .header("Remote-User", "guest").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
-        checkIfSuccessful(clientRepsonse);
-
-        // Wait for oozie to start bundle
-        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
-        String bundleId = getBundleId(ozClient);
-
-        for (int i = 0; i < 10; i++) {
-            Thread.sleep(1000);
-            BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (bundle.getStatus() == Status.RUNNING) {
-                boolean done = true;
-                for (CoordinatorJob coord : bundle.getCoordinators())
-                    if (coord.getStatus() != Status.RUNNING)
-                        done = false;
-                if (done == true)
-                    return;
-            }
-        }
-        throw new Exception("Bundle " + bundleId + " is not RUNNING in oozie");
-    }
-
-    private String getBundleId(OozieClient ozClient) throws Exception {
-        List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
-        assert bundles != null && bundles.size() == 1;
-        String bundleId = bundles.get(0).getId();
-        return bundleId;
+        scheduleProcess();
+        waitForProcessStart();
     }
 
     @Test(enabled=false)
@@ -204,12 +146,5 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
             Thread.sleep((i + 1) * 1000);
         }
         assertEquals(status, jobInfo.getStatus());
-    }
-    
-    @AfterMethod(enabled=false)
-    public void killBundle() throws Exception {
-        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
-        String bundleId = getBundleId(ozClient);
-        ozClient.kill(bundleId);
     }
 }

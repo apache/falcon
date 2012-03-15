@@ -104,8 +104,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     @Override
-    public void setEndDate(Entity entity, Date endDate) {
+    public void setStartDate(Entity entity, Date startDate) {
         Process process = (Process) entity;
-        process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
+        process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 }

@@ -163,7 +163,7 @@ public class EntityManager {
     }
 
     @POST
-    @Path("update/{type}/{entityName}")
+    @Path("update/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     public APIResult update(@Context HttpServletRequest request, @PathParam("type") String type, @PathParam("entity") String entityName) {
         try {

@@ -32,6 +32,7 @@ public abstract class Entity {
     private ThreadLocal<String> stagingPath;
 
     public abstract String getName();
+    public abstract String[] getImmutableProperties();
 
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {

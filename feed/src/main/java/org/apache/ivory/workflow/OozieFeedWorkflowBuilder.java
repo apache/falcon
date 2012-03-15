@@ -90,12 +90,12 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public void setEndDate(Entity entity, Date endDate) {
+    public void setStartDate(Entity entity, Date startDate) {
         Feed feed = (Feed) entity;
         if(feed.getClusters() != null) {
-            String endDateStr = EntityUtil.formatDateUTC(endDate);
+            String startDateStr = EntityUtil.formatDateUTC(startDate);
             for(org.apache.ivory.entity.v0.feed.Cluster cluster:feed.getClusters().getCluster()) {
-                cluster.getValidity().setEnd(endDateStr);
+                cluster.getValidity().setStart(startDateStr);
             }
         }
     }
