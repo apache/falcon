@@ -18,11 +18,6 @@
 
 package org.apache.ivory.converter;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,22 +33,17 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.messaging.EntityInstanceMessage;
-import org.apache.ivory.oozie.coordinator.CONFIGURATION;
+import org.apache.ivory.oozie.coordinator.*;
 import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
-import org.apache.ivory.oozie.coordinator.CONTROLS;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-import org.apache.ivory.oozie.coordinator.DATAIN;
-import org.apache.ivory.oozie.coordinator.DATAOUT;
-import org.apache.ivory.oozie.coordinator.DATASETS;
-import org.apache.ivory.oozie.coordinator.INPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.OUTPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.SYNCDATASET;
-import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
@@ -61,6 +51,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
+    private static final String LATE_WF_TEMPLATE = "/config/workflow/process-late1-workflow.xml";
 
     public OozieProcessMapper(Process entity) {
         super(entity);
@@ -68,15 +59,25 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     @Override
     protected List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException {
-        return Arrays.asList(createDefaultCoordinator(cluster, bundlePath));
+        List<COORDINATORAPP> apps = new ArrayList<COORDINATORAPP>();
+        apps.add(createDefaultCoordinator(cluster, bundlePath));
+        if (getEntity().getInputs() != null) {
+            apps.add(createLateCoordinator(cluster, bundlePath));
+        }
+        return apps;
     }
 
-    private void createWorkflow(Cluster cluster, String template, String wfName, Path wfPath) throws IvoryException {
+    private void createWorkflow(Cluster cluster, String template,
+                                String wfName, Path wfPath) throws IvoryException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(template);
         wfApp.setName(wfName);
 
-        SUBWORKFLOW subWf = ((ACTION) wfApp.getDecisionOrForkOrJoin().get(1)).getSubWorkflow();
-        subWf.setAppPath(getHDFSPath(getEntity().getWorkflow().getPath()));
+        for (Object object : wfApp.getDecisionOrForkOrJoin()) {
+            if (object instanceof ACTION && ((ACTION) object).getName().equals("user-workflow")) {
+                SUBWORKFLOW subWf = ((ACTION) object).getSubWorkflow();
+                subWf.setAppPath(getHDFSPath(getEntity().getWorkflow().getPath()));
+            }
+        }
 
         marshal(cluster, wfApp, wfPath);
     }
@@ -84,8 +85,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     /**
      * Creates default oozie coordinator
      * 
-     * @param cluster
-     *            Cluster for which the coordiantor app need to be created
+     * @param cluster - Cluster for which the coordiantor app need to be created
+     * @param bundlePath - bundle path
      * @return COORDINATORAPP
      * @throws IvoryException
      *             on Error
@@ -118,6 +119,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // inputs
         if (process.getInputs() != null) {
+            StringBuffer ivoryInPaths = new StringBuffer();
             for (Input input : process.getInputs().getInput()) {
                 SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
                 if (coord.getDatasets() == null)
@@ -133,11 +135,15 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                     coord.setInputEvents(new INPUTEVENTS());
                 coord.getInputEvents().getDataIn().add(datain);
 
-                if (StringUtils.isNotEmpty(input.getPartition()))
-                    props.add(createCoordProperty(input.getName(),
-                            getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')")));
-                else
-                    props.add(createCoordProperty(input.getName(), "${coord:dataIn('" + input.getName() + "')}"));
+                String inputExpr;
+                if (StringUtils.isNotEmpty(input.getPartition())) {
+                    inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
+                } else {
+                    inputExpr = "${coord:dataIn('" + input.getName() + "')}";
+                }
+                props.add(createCoordProperty(input.getName(), inputExpr));
+                ivoryInPaths.append(inputExpr).append('#');
+                props.add(createCoordProperty("ivoryInPaths", ivoryInPaths.substring(0, ivoryInPaths.length() - 1)));
             }
         }
 
@@ -178,11 +184,136 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             props.add(createCoordProperty(OozieClient.LIBPATH, libDir));
 
         // create parent wf
-        Path wfPath = coordPath;
-        createWorkflow(cluster, DEFAULT_WF_TEMPLATE, coordName, wfPath);
+        createWorkflow(cluster, DEFAULT_WF_TEMPLATE, coordName, coordPath);
 
         WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(getHDFSPath(wfPath.toString()));
+        wf.setAppPath(getHDFSPath(coordPath.toString()));
+        wf.setConfiguration(config);
+
+        // set coord action to parent wf
+        org.apache.ivory.oozie.coordinator.ACTION action = new org.apache.ivory.oozie.coordinator.ACTION();
+        action.setWorkflow(wf);
+        coord.setAction(action);
+
+        return coord;
+    }
+
+    public COORDINATORAPP createLateCoordinator(Cluster cluster, Path bundlePath) throws IvoryException {
+        Process process = getEntity();
+        if (process == null)
+            return null;
+
+        String offset = "";
+        long longestOffset = -1;
+        for (Input input : process.getInputs().getInput()) {
+            Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+            String offsetLocal = feed.getLateArrival().getCutOff();
+            long durationLocal = LateDataUtils.getDurationFromOffset(offsetLocal);
+            if (durationLocal > longestOffset) {
+                longestOffset = durationLocal;
+                offset = offsetLocal;
+            }
+        }
+        assert !offset.isEmpty() : "dont expect offset to be empty";
+
+        COORDINATORAPP coord = new COORDINATORAPP();
+        String coordName = process.getWorkflowName("LATE1");
+        Path coordPath = getCoordPath(bundlePath, coordName);
+
+        // coord attributes
+        coord.setName(coordName);
+        long time = LateDataUtils.getTime(process.getValidity().getStart());
+        if (time < System.currentTimeMillis()) time = System.currentTimeMillis();
+
+        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(time), offset));
+        coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offset));
+        coord.setTimezone(process.getValidity().getTimezone());
+        coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");
+
+        // controls
+        CONTROLS controls = new CONTROLS();
+        controls.setConcurrency(String.valueOf(process.getConcurrency()));
+        controls.setExecution(process.getExecution());
+        coord.setControls(controls);
+
+        // Configuration
+        CONFIGURATION config = createCoordDefaultConfiguration(cluster, coordPath);
+        List<Property> props = config.getProperty();
+
+        // inputs
+        if (process.getInputs() != null) {
+            StringBuffer ivoryInPaths = new StringBuffer();
+            for (Input input : process.getInputs().getInput()) {
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
+                if (coord.getDatasets() == null)
+                    coord.setDatasets(new DATASETS());
+                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
+                DATAIN datain = new DATAIN();
+                datain.setName(input.getName());
+                datain.setDataset(input.getFeed());
+                datain.setStartInstance(LateDataUtils.offsetTime(
+                        getELExpression(input.getStartInstance()), offset));
+                datain.setEndInstance(LateDataUtils.offsetTime(
+                        getELExpression(input.getEndInstance()), offset));
+                if (coord.getInputEvents() == null)
+                    coord.setInputEvents(new INPUTEVENTS());
+                coord.getInputEvents().getDataIn().add(datain);
+
+                String inputExpr;
+                if (StringUtils.isNotEmpty(input.getPartition())) {
+                    inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
+                } else {
+                    inputExpr = "${coord:dataIn('" + input.getName() + "')}";
+                }
+                props.add(createCoordProperty(input.getName(), inputExpr));
+                ivoryInPaths.append(inputExpr).append('#');
+                props.add(createCoordProperty("ivoryInPaths", ivoryInPaths.substring(0, ivoryInPaths.length() - 1)));
+            }
+        }
+
+        // outputs
+        if (process.getOutputs() != null) {
+            StringBuilder outputFeedPaths = new StringBuilder();
+            StringBuilder outputFeedNames = new StringBuilder();
+            for (Output output : process.getOutputs().getOutput()) {
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
+                if (coord.getDatasets() == null)
+                    coord.setDatasets(new DATASETS());
+                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
+                DATAOUT dataout = new DATAOUT();
+                dataout.setName(output.getName());
+                dataout.setDataset(output.getFeed());
+                dataout.setInstance(LateDataUtils.offsetTime(
+                        getELExpression(output.getInstance()), offset));
+                if (coord.getOutputEvents() == null)
+                    coord.setOutputEvents(new OUTPUTEVENTS());
+                coord.getOutputEvents().getDataOut().add(dataout);
+
+                outputFeedNames.append(output.getName()).append(",");
+                outputFeedPaths.append("${coord:dataOut('").append(output.getName()).append("')}").append(",");
+
+                props.add(createCoordProperty(output.getName(), "${coord:dataOut('" + output.getName() + "')}"));
+            }
+            // Output feed name and path for parent workflow
+            props.add(createCoordProperty(EntityInstanceMessage.ARG.FEED_NAME.NAME(),
+                    outputFeedNames.substring(0, outputFeedNames.length() - 1)));
+            props.add(createCoordProperty(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(),
+                    outputFeedPaths.substring(0, outputFeedPaths.length() - 1)));
+        }
+
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.OPERATION.NAME(),
+                EntityInstanceMessage.entityOperation.GENERATE.name()));
+        String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
+        if (libDir != null)
+            props.add(createCoordProperty(OozieClient.LIBPATH, libDir));
+
+        // create parent wf
+        createWorkflow(cluster, LATE_WF_TEMPLATE, coordName, coordPath);
+
+        WORKFLOW wf = new WORKFLOW();
+        wf.setAppPath(getHDFSPath(coordPath.toString()));
         wf.setConfiguration(config);
 
         // set coord action to parent wf

@@ -89,12 +89,13 @@ public class EntityManager {
 
         try {
             audit(request, "STREAMED_DATA", type, "SUBMIT");
-            submitInternal(request, type);
+            Entity entity = submitInternal(request, type);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" +
+                    type + ") " + entity.getName());
         } catch (Exception e) {
             LOG.error("Unable to persist entity object", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful");
     }
 
     /**
@@ -113,13 +114,14 @@ public class EntityManager {
 
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            deserializeEntity(request, entityType);
+            Entity entity = deserializeEntity(request, entityType);
+            return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully (" +
+                    entityType + ") " + entity.getName());
         } catch (Exception e) {
             LOG.error("Validation failed for entity (" + type + ") ", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
-        return new APIResult(APIResult.Status.SUCCEEDED, "validate successful");
-    }   
+    }
     
 	 /**
      * Deletes a scheduled entity, a deleted entity is removed completely from

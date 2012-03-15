@@ -19,9 +19,15 @@
 package org.apache.ivory.converter;
 
 import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.expression.ExpressionHelper;
 
+import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +37,13 @@ public final class LateDataUtils {
             ExpressionEvaluatorImpl();
     private static final ExpressionHelper resolver = ExpressionHelper.get();
     
+    private static final ThreadLocal<DateFormat> format = new ThreadLocal<DateFormat>() {
+        @Override
+        protected DateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        }
+    };
+
     private static final String L_P = "\\s*\\(\\s*";
     private static final String R_P = "\\s*\\)";
     private static final String NUM = "[-]?[0-9]+";
@@ -46,9 +59,8 @@ public final class LateDataUtils {
             "currentYear" + L_P + NUM + COMMA + NUM + COMMA + NUM + COMMA + NUM + R_P + OR +
             "lastYear" + L_P + NUM + COMMA + NUM + COMMA + NUM + COMMA + NUM + R_P);
 
-    public static String offsetTime(String expr, String offsetExpr) throws Exception {
-        Long duration = (Long) EVALUATOR.evaluate("${" + offsetExpr + "}",
-                Long.class, resolver, resolver);
+    public static String offsetTime(String expr, String offsetExpr) throws IvoryException {
+        Long duration = getDurationFromOffset(offsetExpr);
         long minutes = duration / (60000);
 
         Matcher matcher = exprPattern.matcher(expr);
@@ -71,4 +83,34 @@ public final class LateDataUtils {
         return newExpr.toString() + expr;
     }
 
+    public static Long getDurationFromOffset(String offsetExpr) throws IvoryException {
+        try {
+            return (Long) EVALUATOR.evaluate("${" + offsetExpr + "}",
+                        Long.class, resolver, resolver);
+        } catch (ELException e) {
+            throw new IvoryException("Unable evaluate " + offsetExpr, e);
+        }
+    }
+
+    public static String addOffset(String dateStr, String offsetExpr) throws IvoryException {
+        try {
+            Long durationInMillis = getDurationFromOffset(offsetExpr);
+            Date date = format.get().parse(dateStr.substring(0, 17));
+            return format.get().format(new Date(date.getTime() + durationInMillis));
+        } catch (Exception e) {
+            throw new IvoryException("Unable to add offset(" + offsetExpr + ") to " + dateStr, e);
+        }
+    }
+
+    public static long getTime(String dateStr) throws IvoryException {
+        try {
+            return format.get().parse(dateStr.substring(0, 17)).getTime();
+        } catch (ParseException e) {
+            throw new IvoryException("Unable to parse " + dateStr);
+        }
+    }
+
+    public static String toDateString(long time) {
+        return format.get().format(new Date(time));
+    }
 }

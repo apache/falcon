@@ -18,6 +18,7 @@
 
 package org.apache.ivory.util;
 
+import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -35,8 +36,6 @@ public abstract class ApplicationProperties extends Properties {
 
   private String propertyFile;
   private LocationType location;
-
-  private Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
   protected ApplicationProperties() throws IOException {
     initialize();
@@ -83,28 +82,11 @@ public abstract class ApplicationProperties extends Properties {
           LOG.info("Loading properties from " + propertyFile);
           load(resource);
           for (Object key : keySet()) {
-            put(key, substitute(getProperty((String)key)));
+            put(key, ExpressionHelper.substitute(getProperty((String) key)));
           }
         } finally {
           resource.close();
         }
     }
   }
-
-  private String substitute(String originalValue) {
-    Matcher envVarMatcher = sysPropertyPattern.matcher(originalValue);
-    while (envVarMatcher.find()) {
-      String envVar = originalValue.substring(envVarMatcher.start() + 2,
-          envVarMatcher.end() - 1);
-      String envVal = System.getProperty(envVar, System.getenv(envVar));
-
-      envVar = "\\$\\{" + envVar + "\\}";
-      if (envVal != null) {
-        originalValue = originalValue.replaceAll(envVar, envVal);
-        envVarMatcher = sysPropertyPattern.matcher(originalValue);
-      }
-    }
-    return originalValue;
-  }
-
 }

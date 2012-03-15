@@ -24,12 +24,16 @@ import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class ExpressionHelper implements FunctionMapper, VariableResolver {
 
     private static final ExpressionHelper instance = new ExpressionHelper();
 
     private ThreadLocal<Properties> threadVariables = new ThreadLocal<Properties>();
+
+    private static final Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
     public static ExpressionHelper get() {
         return instance;
@@ -73,5 +77,25 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     public static long years(int val) {
         return val * days(366);
+    }
+
+    public static String substitute(String originalValue) {
+        return substitute(originalValue, System.getProperties());
+    }
+
+    public static String substitute(String originalValue, Properties properties) {
+      Matcher envVarMatcher = sysPropertyPattern.matcher(originalValue);
+      while (envVarMatcher.find()) {
+        String envVar = originalValue.substring(envVarMatcher.start() + 2,
+            envVarMatcher.end() - 1);
+        String envVal = properties.getProperty(envVar, System.getenv(envVar));
+
+        envVar = "\\$\\{" + envVar + "\\}";
+        if (envVal != null) {
+          originalValue = originalValue.replaceAll(envVar, envVal);
+          envVarMatcher = sysPropertyPattern.matcher(originalValue);
+        }
+      }
+      return originalValue;
     }
 }

@@ -18,19 +18,10 @@
 
 package org.apache.ivory.converter;
 
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.util.List;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.ExternalId;
@@ -46,6 +37,11 @@ import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+
+import javax.xml.bind.*;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.util.List;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
@@ -97,6 +93,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
             marshal(cluster, coordinatorapp, coordPath);
+            createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
             bundleCoord.setAppPath(getHDFSPath(coordPath));
@@ -119,7 +116,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
-        props.add(createCoordProperty("logDir", getHDFSPath(coordPath)));
+        props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
 
         props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), "${coord:nominalTime()}").getId()));
         props.add(createCoordProperty("queueName", "default"));
@@ -175,6 +172,17 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             LOG.info("Marshalled " + jaxbElement.getDeclaredType() + " to " + outPath);
         } catch (Exception e) {
             throw new IvoryException("Unable to marshall app object", e);
+        }
+    }
+
+    private void createTempDir(Cluster cluster, Path coordPath) throws IvoryException {
+        try {
+            FileSystem fs = coordPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
+            Path tempDir = new Path(coordPath, "../tmp");
+            fs.mkdirs(tempDir);
+            fs.setPermission(tempDir, new FsPermission((short)511));
+        } catch (Exception e) {
+            throw new IvoryException("Unable to create temp dir in " + coordPath, e);
         }
     }
 

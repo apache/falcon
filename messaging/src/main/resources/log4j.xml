@@ -30,7 +30,6 @@
   <logger name="org.apache.ivory" additivity="false">
     <level value="debug"/>
     <appender-ref ref="console" />
-   <!--  <appender-ref ref="FILE" /> -->
   </logger>
 
   <logger name="AUDIT">

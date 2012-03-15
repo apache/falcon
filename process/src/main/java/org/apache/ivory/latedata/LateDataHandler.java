@@ -64,10 +64,14 @@ public class LateDataHandler extends Configured implements Tool {
             fs = FileSystem.get(getConf());
             Path file = new Path(args[1]);
             Map<String, Long> map = new LinkedHashMap<String, Long>();
-            String[] paths = args[2].split("#");
-            for (int index = 0; index < paths.length; index++) {
-                Path inPath = new Path(paths[index]);
-                map.put("Path" + (index + 1), usage(inPath));
+            String[] pathGroups = args[2].split("#");
+            for (int index = 0; index < pathGroups.length; index++) {
+                long usage = 0;
+                for (String pathElement : pathGroups[index].split(",")) {
+                    Path inPath = new Path(pathElement);
+                    usage += usage(inPath);
+                }
+                map.put("Path" + (index + 1), usage);
             }
             LOG.info("MAP data: " + map);
             if (mode == Mode.record) {
@@ -79,13 +83,25 @@ public class LateDataHandler extends Configured implements Tool {
             } else {
                 if (!fs.exists(file)) {
                     LOG.warn(file + " is not found. Nothing to do");
-                    stream.println("changedPaths=INVALID");
+                    captureOutput("changedPaths=INVALID");
                     return 0;
                 }
-                stream.println("changedPaths=" + detectChanges(file, map));
+                captureOutput("changedPaths=" + detectChanges(file, map));
             }
             return 0;
         }
+    }
+
+    private void captureOutput(String keyValue) throws IOException {
+        String fileName = System.getProperty("oozie.action.output.properties");
+        if (fileName != null && !fileName.isEmpty()) {
+            File file = new File(fileName);
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(keyValue.getBytes());
+            out.write('\n');
+            out.close();
+        }
+        stream.println(keyValue);
     }
 
     private String detectChanges(Path file, Map<String, Long> map) throws Exception {

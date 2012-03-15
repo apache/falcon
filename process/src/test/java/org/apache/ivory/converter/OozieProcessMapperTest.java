@@ -125,8 +125,9 @@ public class OozieProcessMapperTest extends AbstractTestBase{
 
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
         assertEquals(process.getWorkflowName(), bundle.getName());
-        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(2, bundle.getCoordinator().size());
         assertEquals(process.getWorkflowName("DEFAULT"), bundle.getCoordinator().get(0).getName());
+        assertEquals(process.getWorkflowName("LATE1"), bundle.getCoordinator().get(1).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
@@ -139,7 +140,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
     		Assert.assertEquals(process.getWorkflowName("DEFAULT"), parentWorkflow.getName());
-    		Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
+    		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
+    		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
     		Assert.assertEquals("jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
     }
