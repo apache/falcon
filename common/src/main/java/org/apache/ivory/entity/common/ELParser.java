@@ -27,15 +27,20 @@ import org.apache.ivory.IvoryException;
  * ELparser parses a EL expression and computes number of minutes elapsed
  */
 public class ELParser {
+	
+	private static final String L_P = "\\s*\\(\\s*";
+	private static final String R_P = "\\s*\\)";
+	private static final String NUM = "([-]?[\\d]+)";
+	private static final String COMMA = "\\s*,\\s*";
 
-	private static final Pattern nowPattern = Pattern.compile("now\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
-	private static final Pattern todayPattern = Pattern.compile("today\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
-	private static final Pattern yesterdayPattern = Pattern.compile("yesterday\\(([-]?[\\d]+),([-]?[\\d]+)\\)");
+	private static final Pattern nowPattern = Pattern.compile("now"+L_P+NUM+COMMA+NUM+R_P);
+	private static final Pattern todayPattern = Pattern.compile("today"+L_P+NUM+COMMA+NUM+R_P);
+	private static final Pattern yesterdayPattern = Pattern.compile("yesterday"+L_P+NUM+COMMA+NUM+R_P);
 	private static final Pattern currentMonthPattern = Pattern
-			.compile("currentMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
-	private static final Pattern lastMonthPattern = Pattern.compile("lastMonth\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
-	private static final Pattern currentYearPattern = Pattern.compile("currentYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
-	private final Pattern lastYearPattern = Pattern.compile("lastYear\\(([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+),([-]?[\\d]+)\\)");
+			.compile("currentMonth"+L_P+NUM+COMMA+NUM+COMMA+NUM+R_P);
+	private static final Pattern lastMonthPattern = Pattern.compile("lastMonth"+L_P+NUM+COMMA+NUM+COMMA+NUM+R_P);
+	private static final Pattern currentYearPattern = Pattern.compile("currentYear"+L_P+NUM+COMMA+NUM+COMMA+NUM+COMMA+NUM+R_P);
+	private final Pattern lastYearPattern = Pattern.compile("lastYear"+L_P+NUM+COMMA+NUM+COMMA+NUM+COMMA+NUM+R_P);
 	//frequency cant be negative
 	private static final Pattern minutesPattern = Pattern.compile("minutes\\(([\\d]+)\\)");
 	private static final Pattern hoursPattern = Pattern.compile("hours\\(([\\d]+)\\)");

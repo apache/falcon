@@ -50,7 +50,6 @@ import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
-import org.apache.ivory.oozie.workflow.JAVA;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -118,34 +117,35 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path stagPath = new Path(process.getStagingPath());
-        Path bundlePath = mapper.convert(cluster, stagPath);
+        Path bundlePath = new Path(process.getStagingPath());
+        mapper.map(cluster, bundlePath);
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
-        assertEquals(process.getWorkflowName() + "_" + process.getName(), bundle.getName());
+        assertEquals(process.getWorkflowName(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
-        assertEquals(process.getWorkflowName() + "_DEFAULT_" + process.getName(), bundle.getCoordinator().get(0).getName());
+        assertEquals(process.getWorkflowName("DEFAULT"), bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         testDefCoordMap(process, coord);
         
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(bundlePath.getParent(),"workflow.xml"));
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(wfPath));
         testParentWorkflow(process,parentWorkflow);
     }
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
-    		Assert.assertEquals("ivory-process-parent-workflow", parentWorkflow.getName());
+    		Assert.assertEquals(process.getWorkflowName("DEFAULT"), parentWorkflow.getName());
     		Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
     		Assert.assertEquals("jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
-        String bundleStr = readFile(fs, path);
+        String bundleStr = readFile(fs, new Path(path, "coordinator.xml"));
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -156,7 +156,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     private WORKFLOWAPP getParentWorkflow(FileSystem fs, Path path) throws Exception {
-        String workflow = readFile(fs, path);
+        String workflow = readFile(fs, new Path(path, "workflow.xml"));
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(WORKFLOWAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -167,7 +167,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     private BUNDLEAPP getBundle(FileSystem fs, Path path) throws Exception {
-        String bundleStr = readFile(fs, path);
+        String bundleStr = readFile(fs, new Path(path, "bundle.xml"));
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");

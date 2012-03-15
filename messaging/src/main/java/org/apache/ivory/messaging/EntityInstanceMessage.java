@@ -229,7 +229,7 @@ public class EntityInstanceMessage{
 			.setEntityTopicName(args[EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME
 			                         .ORDER()]);
 			if (args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()]
-					.equals("PROCESS")) {
+					.equalsIgnoreCase("PROCESS")) {
 				instanceMessage.setFeedName(feedNames[i]);
 			} else {
 				instanceMessage

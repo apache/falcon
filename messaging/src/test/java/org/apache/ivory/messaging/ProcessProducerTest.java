@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 
 public class ProcessProducerTest {
 
-	private EntityInstanceMessage msgArgs;
+	private String [] args = new String[12];
 	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	//private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
@@ -46,18 +46,18 @@ public class ProcessProducerTest {
 
 	@BeforeClass
 	public void setup() throws Exception {
-		this.msgArgs = new EntityInstanceMessage();
-		this.msgArgs.setEntityTopicName(TOPIC_NAME);
-		this.msgArgs.setFeedName("click-logs,raw-logs");
-		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
-		this.msgArgs.setWorkflowId("workflow-01-00");
-		this.msgArgs.setRunId("1");
-		this.msgArgs.setNominalTime("2011-01-01");
-		this.msgArgs.setTimeStamp("2012-01-01");
-		this.msgArgs.setBrokerUrl(BROKER_URL);
-		this.msgArgs.setBrokerImplClass(BROKER_IMPL_CLASS);
-		this.msgArgs.setEntityType("PROCESS");
-		this.msgArgs.setOperation("GENERATE");
+		args[EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.ORDER()]=TOPIC_NAME;
+		args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()]="click-logs,raw-logs";
+		args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]="/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20";
+		args[EntityInstanceMessage.ARG.WORKFLOW_ID.ORDER()]="workflow-01-00";
+		args[EntityInstanceMessage.ARG.RUN_ID.ORDER()]="1";
+		args[EntityInstanceMessage.ARG.NOMINAL_TIME.ORDER()]="2011-01-01";
+		args[EntityInstanceMessage.ARG.TIME_STAMP.ORDER()]="2012-01-01";
+		args[EntityInstanceMessage.ARG.BROKER_URL.ORDER()]=BROKER_URL;
+		args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()]=(BROKER_IMPL_CLASS);
+		args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()]=("process");
+		args[EntityInstanceMessage.ARG.OPERATION.ORDER()]=("GENERATE");
+		args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()]=("/logFile");
 
 		broker = new BrokerService();
 		broker.setUseJmx(true);
@@ -88,8 +88,7 @@ public class ProcessProducerTest {
 		};
 		t.start();
 		Thread.sleep(1000);
-		MessageProducer.main(EntityInstanceMessage
-				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
+		MessageProducer.main( this.args );
 		if (error != null) {
 			throw error;
 		}

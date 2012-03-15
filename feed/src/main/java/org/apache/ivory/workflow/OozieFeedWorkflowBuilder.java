@@ -47,11 +47,11 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 feed.getClusters().getCluster()) {
             String clusterName = feedCluster.getName();
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-            Path workflowPath = new Path(ClusterHelper.getLocation(cluster, "staging") +
+            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging") +
                     feed.getStagingPath());
 
-            AbstractOozieEntityMapper converter = new OozieFeedMapper(feed);
-            Path bundlePath = converter.convert(cluster, workflowPath);
+            AbstractOozieEntityMapper mapper = new OozieFeedMapper(feed);
+            mapper.map(cluster, bundlePath);
             clusters.add(cluster);
             paths.add(bundlePath);
         }

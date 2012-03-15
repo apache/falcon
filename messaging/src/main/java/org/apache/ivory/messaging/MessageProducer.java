@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
 public class MessageProducer {
 
 	private Connection connection;
-	private Topic entityTopic;
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
 
 	/**
@@ -52,7 +51,7 @@ public class MessageProducer {
 
 		Session session = connection.createSession(false,
 				Session.AUTO_ACKNOWLEDGE);
-		entityTopic = session.createTopic(entityInstanceMessage.getEntityTopicName());
+		Topic entityTopic = session.createTopic(entityInstanceMessage.getEntityTopicName());
 		javax.jms.MessageProducer producer = session
 				.createProducer(entityTopic);
 		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
