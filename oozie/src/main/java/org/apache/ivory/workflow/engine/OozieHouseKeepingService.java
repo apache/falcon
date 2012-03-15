@@ -52,7 +52,7 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     public void afterDelete(Cluster cluster, Entity entity)
             throws IvoryException {
         Path workflowFolder = new Path(ClusterHelper.
-                getCompleteLocation(cluster, "staging") + entity.getStagingPath());
+                getCompleteLocation(cluster, "staging") + entity.getStagingPath()).getParent();
         try {
             FileSystem fs = workflowFolder.getFileSystem(new Configuration());
             LOG.info("Deleting workflow " + workflowFolder);
