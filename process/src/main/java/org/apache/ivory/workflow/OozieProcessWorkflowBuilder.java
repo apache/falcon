@@ -84,7 +84,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
         
-        while(procStart.before(endCal)) {
+        while(procStart.compareTo(endCal) <= 0) {
             extIds.add(new ExternalId(process.getName(), procStart.getTime()));
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }

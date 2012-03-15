@@ -15,26 +15,20 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+@Test(enabled=true)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
 
-    private String processName;
-    private String clusterName;
-
-    @BeforeMethod(enabled=false)
-    public void schedule() throws Exception {
+    @BeforeMethod
+    protected void schedule() throws Exception {
         scheduleProcess();
         waitForProcessStart();
     }
 
-    @Test(enabled=false)
     public void testGetRunningInstances() throws Exception {
         ProcessInstancesResult response = this.service.path("api/processinstance/running/" + processName)
                 .header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON).get(ProcessInstancesResult.class);
@@ -44,7 +38,6 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
     }
 
-    @Test(enabled=false)
     public void testGetInstanceStatus() throws Exception {
         ProcessInstancesResult response = this.service.path("api/processinstance/status/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
@@ -56,18 +49,6 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
     }
 
-    @Test(enabled=false)
-    public void testGetStatus() throws Exception {
-        ProcessInstancesResult response = this.service.path("api/processinstance/kill/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
-                .post(ProcessInstancesResult.class);
-        assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
-        assertNotNull(response.getInstances());
-        assertEquals(1, response.getInstances().length);
-        assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());        
-    }
-    
-    @Test(enabled=false)
     public void testReRunInstances() throws Exception {
         testKillInstances();
 
@@ -88,11 +69,11 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
         assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
 
         waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.RUNNING);
     }
 
-    @Test(enabled=false)
     public void testKillInstances() throws Exception {
         ProcessInstancesResult response = this.service.path("api/processinstance/kill/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
@@ -101,11 +82,11 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
         assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals(WorkflowStatus.KILLED, response.getInstances()[0].getStatus());
 
         waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.KILLED);
     }
 
-    @Test(enabled=false)
     public void testSuspendInstances() throws Exception {
         ProcessInstancesResult response = this.service.path("api/processinstance/suspend/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
@@ -114,11 +95,11 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
         assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals(WorkflowStatus.SUSPENDED, response.getInstances()[0].getStatus());
 
         waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.SUSPENDED);
     }
 
-    @Test(enabled=false)
     public void testResumesInstances() throws Exception {
         testSuspendInstances();
         
@@ -129,6 +110,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
         assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
 
         waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.RUNNING);
     }

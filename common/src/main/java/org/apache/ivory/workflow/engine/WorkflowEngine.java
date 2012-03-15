@@ -51,13 +51,13 @@ public interface WorkflowEngine {
     
     Map<String, Set<String>> getRunningInstances(Entity entity) throws IvoryException;
     
-    Map<String, Set<String>> killInstances(Entity entity, Date start, Date end) throws IvoryException;
+    Map<String, Set<Pair<String, String>>> killInstances(Entity entity, Date start, Date end) throws IvoryException;
     
-    Map<String, Set<String>> reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
+    Map<String, Set<Pair<String, String>>> reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
 
-    Map<String, Set<String>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
+    Map<String, Set<Pair<String, String>>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
 
-    Map<String, Set<String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
+    Map<String, Set<Pair<String, String>>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
 
     Map<String, Set<Pair<String, String>>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
 

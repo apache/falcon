@@ -2,8 +2,8 @@
 <process name="##name##">
     <cluster name="##cluster##" />
 	
-	<concurrency>2</concurrency>
-	<execution>LIFO</execution>
+	<concurrency>1</concurrency>
+	<execution>FIFO</execution>
     <frequency>minutes</frequency>
     <periodicity>30</periodicity>
 	
