@@ -25,7 +25,7 @@
     <groups>online,bi</groups>
 
     <frequency>minutes</frequency>
-    <periodicity>20</periodicity>
+    <periodicity>30</periodicity>
 
     <late-arrival cut-off="hours(6)" />
 
@@ -43,7 +43,7 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/examples/output-data/aggregator/aggregatedLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}" />
+        <location type="data" path="/examples/output-data/aggregator/aggregatedLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
         <location type="stats" path="/projects/ivory/clicksStats" />
         <location type="meta" path="/projects/ivory/clicksMetaData" />
     </locations>

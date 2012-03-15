@@ -167,7 +167,7 @@ public class ProcessInstanceManager extends EntityManager {
             WorkflowEngine wfEngine = getWorkflowEngine();
             Process process = getProcess(processName);
             Map<String, Set<String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
-            return new ProcessInstancesResult("suspendProcessInstance is successful", resumedInstances.values().iterator().next(),
+            return new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next(),
                     WorkflowStatus.RUNNING);
         } catch (Exception e) {
             LOG.error("Failed to suspend instances", e);
