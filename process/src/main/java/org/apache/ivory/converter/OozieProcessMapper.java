@@ -62,7 +62,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<COORDINATORAPP> apps = new ArrayList<COORDINATORAPP>();
         apps.add(createDefaultCoordinator(cluster, bundlePath));
         if (getEntity().getInputs() != null) {
-            apps.add(createLateCoordinator(cluster, bundlePath));
+            COORDINATORAPP lateCoordinator = createLateCoordinator(cluster, bundlePath);
+            if (lateCoordinator != null) {
+                apps.add(lateCoordinator);
+            }
         }
         return apps;
     }
@@ -222,10 +225,19 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // coord attributes
         coord.setName(coordName);
-        long time = LateDataUtils.getTime(process.getValidity().getStart());
-        if (time < System.currentTimeMillis()) time = System.currentTimeMillis();
+        long endTime = LateDataUtils.getTime(process.getValidity().getEnd());
+        long now = System.currentTimeMillis();
+        if (endTime < now) {
+            LOG.warn("Late date coordinator doesn't apply, as the end date is in past " +
+                    process.getValidity().getEnd());
+            return null;
+        }
 
-        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(time), offset));
+        long startTime = LateDataUtils.getTime(process.getValidity().getStart());
+        if (startTime < now) startTime = now;
+        LOG.info("Using start time as : " + LateDataUtils.toDateString(startTime));
+
+        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(startTime), offset));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offset));
         coord.setTimezone(process.getValidity().getTimezone());
         coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");

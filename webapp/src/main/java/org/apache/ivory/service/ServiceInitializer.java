@@ -34,6 +34,7 @@ public class ServiceInitializer {
     public void initialize() throws IvoryException {
         String serviceClassNames = StartupProperties.get().getProperty("application.services", "");
         for (String serviceClassName : serviceClassNames.split(",")) {
+            if (serviceClassName.isEmpty()) continue;
             IvoryService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
             orderedList.add(service);
             LOG.info("Initializing service : " + serviceClassName);

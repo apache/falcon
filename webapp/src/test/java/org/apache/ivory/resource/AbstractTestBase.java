@@ -26,17 +26,20 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.util.EmbeddedServer;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClientException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -135,6 +138,7 @@ public class AbstractTestBase {
 
     @BeforeClass
     public void configure() throws Exception {
+        StartupProperties.get().setProperty("application.services", "");
         if (new File("webapp/src/main/webapp").exists()) {
             this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
         } else if (new File("src/main/webapp").exists()) {
@@ -153,19 +157,21 @@ public class AbstractTestBase {
         marshaller.marshal(clusterEntity, out);
         out.close();
 
-        ClientResponse clientRepsonse;
         Map<String, String> overlay = new HashMap<String, String>();
+
+        cleanupStore();
+        killOozieJobs();
 
         String testCluster = "testCluster";
         overlay.put("name", testCluster);
         InputStream testClusterStream = getServletInputStream(overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay));
-        clientRepsonse = this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+        this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .header("Remote-User", "testuser").post(ClientResponse.class, testClusterStream);
 
         String backupCluster = "backupCluster";
         overlay.put("name", backupCluster);
         InputStream backupClusterStream = getServletInputStream(overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay));
-        clientRepsonse = this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+        this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .header("Remote-User", "testuser").post(ClientResponse.class, backupClusterStream);
         
         //setup dependent workflow and lipath in hdfs
@@ -195,17 +201,17 @@ public class AbstractTestBase {
         };
     }
 
-    @AfterClass
     public void tearDown() throws Exception {
-        ConfigurationStore.get().remove(EntityType.PROCESS, "testCluster");
-        ConfigurationStore.get().remove(EntityType.PROCESS, "backupCluster");
         this.cluster.shutdown();
         server.stop();
     }
 
-    @BeforeTest
     public void cleanupStore() throws Exception {
-        ConfigurationStore.get().remove(EntityType.PROCESS, "aggregator-coord");
+        for (EntityType type : EntityType.values()) {
+            for (String name : ConfigurationStore.get().getEntities(type)) {
+                ConfigurationStore.get().remove(type, name);
+            }
+        }
     }
 
     protected ClientResponse submitToIvory(String template, Map<String, String> overlay, EntityType entityType) throws IOException {
@@ -265,8 +271,7 @@ public class AbstractTestBase {
             target = new File("target");
         }
 
-        File tmpFile = File.createTempFile("test", ".xml", target);
-        return tmpFile;
+        return File.createTempFile("test", ".xml", target);
     }
     
     protected String getBundleId(OozieClient ozClient) throws Exception {
@@ -276,20 +281,26 @@ public class AbstractTestBase {
         return null;
     }
 
-    @AfterMethod
+    @AfterClass
     public void killBundle() throws Exception {
+        tearDown();
+        cleanupStore();
+    }
+
+    private boolean killOozieJobs() throws IvoryException, OozieClientException {
         if(clusterName == null)
-            return;
-        
+            return true;
+
         Cluster cluster = (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         if(cluster == null)
-            return;
-        
+            return true;
+
         OozieClient ozClient = OozieClientFactory.get(cluster);
         List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
         if(bundles != null) {
             for(BundleJob bundle:bundles)
                 ozClient.kill(bundle.getId());
         }
+        return false;
     }
 }
