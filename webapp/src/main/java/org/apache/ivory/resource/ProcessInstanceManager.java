@@ -134,7 +134,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public APIResult suspendProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult suspendProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
             validateNotEmpty("process", processName);
@@ -156,7 +156,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public APIResult resumeProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult resumeProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
             validateNotEmpty("process", processName);
