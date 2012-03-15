@@ -80,13 +80,13 @@ public class ProcessInstanceManager extends EntityManager {
     public ProcessInstancesResult getStatus(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
-            validateNotEmpty("process", processName);
-            validateNotEmpty("start", startStr);
+            validateParams(processName, startStr, endStr);
+            
             Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
-
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            Date end = getEndDate(start, endStr);            
             Process process = getProcess(processName);
+            
+            WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Set<Pair<String, String>>> instances = wfEngine.getStatus(process, start, end);
             return new ProcessInstancesResult("getStatus is successful", instances.values().iterator().next());
         } catch (Exception e) {
@@ -95,58 +95,42 @@ public class ProcessInstanceManager extends EntityManager {
         }
     }
 
-    private void validateNotEmpty(String field, String param) throws ValidationException {
-        if (StringUtils.isEmpty(param))
-            throw new ValidationException("Parameter " + field + " is empty");
-    }
-
     @POST
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
     public ProcessInstancesResult killProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
-            validateNotEmpty("process", processName);
-            validateNotEmpty("start", startStr);
+            validateParams(processName, startStr, endStr);
+            
             Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
-
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            Date end = getEndDate(start, endStr);            
             Process process = getProcess(processName);
-            Map<String, Set<String>> killedInstances = wfEngine.killInstances(process, start, end);
-            return new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next(),
-                    WorkflowStatus.KILLED);
+            
+            WorkflowEngine wfEngine = getWorkflowEngine();
+            Map<String, Set<Pair<String, String>>> killedInstances = wfEngine.killInstances(process, start, end);
+            return new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
         } catch (Exception e) {
             LOG.error("Failed to kill instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
-    private Date getEndDate(Date start, String endStr) throws IvoryException {
-        Date end;
-        if (StringUtils.isEmpty(endStr)) {
-            end = new Date(start.getTime() + 1000); // next sec
-        } else
-            end = EntityUtil.parseDateUTC(endStr);
-        return end;
-    }
-
     @POST
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public APIResult suspendProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult suspendProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
-            validateNotEmpty("process", processName);
-            validateNotEmpty("start", startStr);
+            validateParams(processName, startStr, endStr);
+            
             Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
-
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            Date end = getEndDate(start, endStr);            
             Process process = getProcess(processName);
-            Map<String, Set<String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
-            return new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next(),
-                    WorkflowStatus.SUSPENDED);
+            
+            WorkflowEngine wfEngine = getWorkflowEngine();
+            Map<String, Set<Pair<String, String>>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
+            return new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
         } catch (Exception e) {
             LOG.error("Failed to suspend instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -156,19 +140,18 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public APIResult resumeProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult resumeProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
-            validateNotEmpty("process", processName);
-            validateNotEmpty("start", startStr);
+            validateParams(processName, startStr, endStr);
+            
             Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
-
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            Date end = getEndDate(start, endStr);            
             Process process = getProcess(processName);
-            Map<String, Set<String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
-            return new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next(),
-                    WorkflowStatus.RUNNING);
+            
+            WorkflowEngine wfEngine = getWorkflowEngine();
+            Map<String, Set<Pair<String, String>>> resumedInstances = wfEngine.resumeInstances(process, start, end);
+            return new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next());
         } catch (Exception e) {
             LOG.error("Failed to suspend instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -181,10 +164,12 @@ public class ProcessInstanceManager extends EntityManager {
     public ProcessInstancesResult reRunInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
-            validateNotEmpty("process", processName);
-            validateNotEmpty("start", startStr);
+            validateParams(processName, startStr, endStr);
+            
             Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            Date end = getEndDate(start, endStr);            
+            Process process = getProcess(processName);
+            
             Properties props = new Properties();
             ServletInputStream xmlStream = request.getInputStream();
             if (xmlStream != null) {
@@ -195,13 +180,53 @@ public class ProcessInstanceManager extends EntityManager {
             }
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Process process = getProcess(processName);
-            Map<String, Set<String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
-            return new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next(),
-                    WorkflowStatus.RUNNING);
+            Map<String, Set<Pair<String, String>>> runInstances = wfEngine.reRunInstances(process, start, end, props);
+            return new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+    }
+    
+    private Date getEndDate(Date start, String endStr) throws IvoryException {
+        Date end;
+        if (StringUtils.isEmpty(endStr)) {
+            end = new Date(start.getTime() + 1000); // next sec
+        } else
+            end = EntityUtil.parseDateUTC(endStr);
+        return end;
+    }
+    
+    private void validateParams(String processName, String startStr, String endStr) throws IvoryException {
+        validateNotEmpty("process", processName);
+        validateNotEmpty("start", startStr);
+        
+        Process process = getProcess(processName);
+        validateDateRange(process, startStr, endStr);
+    }
+
+    private void validateDateRange(Process process, String start, String end) throws IvoryException {
+        Date procStart = EntityUtil.parseDateUTC(process.getValidity().getStart());
+        Date procEnd = EntityUtil.parseDateUTC(process.getValidity().getEnd());
+        
+        Date instStart = EntityUtil.parseDateUTC(start);
+        if(instStart.before(procStart))
+            throw new ValidationException("Start date " + start + " is before process start " + process.getValidity().getStart());
+        
+        if(StringUtils.isNotEmpty(end)) {
+            Date instEnd = EntityUtil.parseDateUTC(end);
+            if(instStart.after(instEnd))
+                throw new ValidationException("Start date " + start + " is after end date " + end);
+            
+            if(instEnd.after(procEnd))
+                throw new ValidationException("End date " + end + " is after process end " + process.getValidity().getEnd());
+        } else if(instStart.after(procEnd))
+            throw new ValidationException("Start date " + start + " is after process end " + process.getValidity().getEnd());
+            
+    }
+
+    private void validateNotEmpty(String field, String param) throws ValidationException {
+        if (StringUtils.isEmpty(param))
+            throw new ValidationException("Parameter " + field + " is empty");
     }
 }

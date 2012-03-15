@@ -34,12 +34,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
+import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
@@ -158,6 +161,46 @@ public class EntityManager {
             LOG.error("Unable to reach workflow engine for deletion or " +
                     "deletion failed", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    @POST
+    @Path("update/{type}/{entity}")
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    public APIResult update(@Context HttpServletRequest request, @PathParam("type") String type, @PathParam("entity") String entityName) {
+        try {
+            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            audit(request, entityName, type, "UPDATE");
+            Entity oldEntity = getEntityObject(entityName, type);
+            Entity newEntity = deserializeEntity(request, entityType);
+            if(oldEntity != newEntity) {
+                if(entityType != EntityType.PROCESS)
+                    throw new IvoryException("Update not supported for " + entityType);
+                
+                validateUpdate(oldEntity, newEntity);
+                getWorkflowEngine().update(oldEntity, newEntity);
+                configStore.remove(entityType, entityName);
+                configStore.publish(entityType, newEntity);
+            }
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
+        } catch (Exception e) {
+            LOG.error("Updation failed", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+    
+    private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException{
+        String[] props = oldEntity.getImmutableProperties();
+        for(String prop:props) {
+            Object oldProp, newProp;
+            try {
+                oldProp = PropertyUtils.getProperty(oldEntity, prop);
+                newProp = PropertyUtils.getProperty(newEntity, prop);
+            } catch (Exception e) {
+                throw new IvoryException(e);
+            }
+            if(!ObjectUtils.equals(oldProp, newProp))
+                throw new ValidationException(prop + " can't be changed");
         }
     }
 

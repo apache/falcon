@@ -63,6 +63,11 @@ public class ConfigurationStore {
         public String getName() {
             return "NULL";
         }
+
+        @Override
+        public String[] getImmutableProperties() {
+            return null;
+        }
     };
 
     @SuppressWarnings("unchecked")

@@ -16,29 +16,19 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.entity.v0;
+package org.apache.ivory.resource;
 
-import org.apache.ivory.IvoryException;
 
-/**
- * This exception is thrown when Unschedulable entity
- * like CLUSTER is tried with actions like Schedule, Suspend,
- * Resume.
- *
- */
-public class UnschedulableEntityException extends IvoryException {
+public class Pair<A, B> {
+    public final A first;
+    public final B second;
 
-    private static final long serialVersionUID = -1134342662497698943L;
-
-    public UnschedulableEntityException(Exception e) {
-        super(e);
+    public Pair(A fst, B snd) {
+        this.first = fst;
+        this.second = snd;
     }
 
-    public UnschedulableEntityException(String message, Exception e) {
-        super(message, e);
-    }
-
-    public UnschedulableEntityException(String message) {
-        super(message);
+    public static <A, B> Pair<A, B> of(A a, B b) {
+        return new Pair<A, B>(a, b);
     }
 }

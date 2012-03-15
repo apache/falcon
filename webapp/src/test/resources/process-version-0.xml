@@ -27,7 +27,7 @@
     <execution>LIFO</execution>
     <frequency>hours</frequency>
     <periodicity>1</periodicity>
-    <validity start="2011-11-01 00:00:00" end="9999-12-31 23:59:00" timezone="UTC"/>
+    <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z" timezone="UTC"/>
 
     <!-- what -->
     <inputs>

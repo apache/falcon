@@ -51,6 +51,7 @@ import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -187,5 +188,10 @@ public class OozieProcessMapperTest extends AbstractTestBase{
             contents.append(line);
         }
         return contents.toString();
+    }
+    
+    @AfterClass
+    public void cleanup() throws Exception{
+    		super.cleanup();
     }
 }

@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,8 +32,14 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.util.EmbeddedServer;
+import org.apache.ivory.workflow.engine.OozieClientFactory;
+import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 
@@ -59,9 +66,62 @@ public class AbstractTestBase {
 
     protected EmbeddedCluster cluster;
     protected WebResource service = null;
+    protected String clusterName;
+    protected String processName;
 
     private static final Pattern varPattern = Pattern.compile("##[A-Za-z0-9_]*##");
 
+    protected void scheduleProcess() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        clusterName = "local" + System.currentTimeMillis();
+        overlay.put("name", clusterName);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        overlay.put("cluster", clusterName);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        String feed2 = "f2" + System.currentTimeMillis();
+        overlay.put("name", feed2);
+        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        processName = "p1" + System.currentTimeMillis();
+        overlay.put("name", processName);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        assertSuccessful(response);
+
+        ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
+                .header("Remote-User", "guest").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
+        assertSuccessful(clientRepsonse);    
+    }
+    
+    protected void waitForProcessStart() throws Exception {
+        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
+        String bundleId = getBundleId(ozClient);
+
+        for (int i = 0; i < 10; i++) {
+            Thread.sleep(1000);
+            BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
+            if (bundle.getStatus() == Status.RUNNING) {
+                boolean done = true;
+                for (CoordinatorJob coord : bundle.getCoordinators())
+                    if (coord.getStatus() != Status.RUNNING)
+                        done = false;
+                if (done == true)
+                    return;
+            }
+        }
+        throw new Exception("Bundle " + bundleId + " is not RUNNING in oozie");
+    }
+    
     public AbstractTestBase() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(APIResult.class, Feed.class, Process.class, Cluster.class, ProcessInstancesResult.class);
@@ -139,7 +199,7 @@ public class AbstractTestBase {
     public void tearDown() throws Exception {
         ConfigurationStore.get().remove(EntityType.PROCESS, "testCluster");
         ConfigurationStore.get().remove(EntityType.PROCESS, "backupCluster");
-//        this.cluster.shutdown();
+        this.cluster.shutdown();
         server.stop();
     }
 
@@ -161,7 +221,7 @@ public class AbstractTestBase {
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
     }
 
-    protected void checkIfSuccessful(ClientResponse clientRepsonse) {
+    protected void assertSuccessful(ClientResponse clientRepsonse) {
         String response = clientRepsonse.getEntity(String.class);
         try {
             APIResult result = (APIResult)unmarshaller.
@@ -173,12 +233,7 @@ public class AbstractTestBase {
     }
 
     protected String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
-        File target = new File("webapp/target");
-        if (!target.exists()) {
-            target = new File("target");
-        }
-
-        File tmpFile = File.createTempFile("test", ".xml", target);
+        File tmpFile = getTempFile();
         OutputStream out = new FileOutputStream(tmpFile);
 
         InputStreamReader in;
@@ -202,5 +257,39 @@ public class AbstractTestBase {
         reader.close();
         out.close();
         return tmpFile.getAbsolutePath();
+    }
+    
+    protected File getTempFile() throws IOException {
+        File target = new File("webapp/target");
+        if (!target.exists()) {
+            target = new File("target");
+        }
+
+        File tmpFile = File.createTempFile("test", ".xml", target);
+        return tmpFile;
+    }
+    
+    protected String getBundleId(OozieClient ozClient) throws Exception {
+        List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
+        if(bundles != null)
+            return bundles.get(0).getId();
+        return null;
+    }
+
+    @AfterMethod
+    public void killBundle() throws Exception {
+        if(clusterName == null)
+            return;
+        
+        Cluster cluster = (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+        if(cluster == null)
+            return;
+        
+        OozieClient ozClient = OozieClientFactory.get(cluster);
+        List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
+        if(bundles != null) {
+            for(BundleJob bundle:bundles)
+                ozClient.kill(bundle.getId());
+        }
     }
 }

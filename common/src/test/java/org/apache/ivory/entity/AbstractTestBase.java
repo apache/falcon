@@ -32,15 +32,12 @@ public class AbstractTestBase {
         store.remove(type, name);
 		switch (type) {
 		case CLUSTER:
-			Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
-					.getResource(CLUSTER_XML));
-			cluster.setName(name);
-			cluster.getInterfaces().put(
-					Interfacetype.WRITE,
-					newInterface(Interfacetype.WRITE,
-							conf.get("fs.default.name"), "0.1"));
-			store.publish(type, cluster);
-			break;
+                Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+                cluster.setName(name);
+                cluster.getInterfaces().put(Interfacetype.WRITE,
+                        newInterface(Interfacetype.WRITE, conf.get("fs.default.name"), "0.1"));
+                store.publish(type, cluster);
+                break;
 
             case FEED:
                 Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));

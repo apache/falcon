@@ -22,21 +22,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-//import javax.servlet.ServletInputStream;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 
 import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.ProcessInstancesResult;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -52,17 +46,7 @@ public class IvoryClient {
 	private String baseUrl;
 	private String version;
 	protected static WebResource service;
-
-	private final Map<String, String> headers = new HashMap<String, String>();
-	private static JAXBContext jaxbContext;
-
-	static {
-		try {
-			jaxbContext = JAXBContext.newInstance(APIResult.class);
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	public static final String WS_HEADER_PREFIX = "header:";
 
 	/**
 	 * Create a Ivory client instance.
@@ -77,10 +61,22 @@ public class IvoryClient {
 		}
 		IvoryClient.service = Client.create(new DefaultClientConfig())
 				.resource(UriBuilder.fromUri(baseUrl).build());
+
+		addHeaders();
+	}
+
+	private void addHeaders() {
+		for (Map.Entry entry : System.getProperties().entrySet()) {
+			String key = (String) entry.getKey();
+			if (key.startsWith(WS_HEADER_PREFIX)) {
+				String header = key.substring(WS_HEADER_PREFIX.length());
+				IvoryClient.service.header(header, (String) entry.getValue());
+			}
+		}
 	}
 
 	/**
-	 * Methods allowed on Resources
+	 * Methods allowed on Entity Resources
 	 */
 	protected static enum Entities {
 		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML), SUBMIT(
@@ -92,7 +88,7 @@ public class IvoryClient {
 				"api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML), DELETE(
 				"api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML), STATUS(
 				"api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN), DEFINITION(
-				"api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML), ;
+				"api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML);
 
 		private String path;
 		private String method;
@@ -106,30 +102,34 @@ public class IvoryClient {
 	}
 
 	/**
-	 * Set a HTTP header to be used in the WS requests by the workflow instance.
-	 * 
-	 * @param name
-	 *            header name.
-	 * @param value
-	 *            header value.
+	 * Methods allowed on Process Instance Resources
 	 */
-	public void setHeader(String name, String value) {
-		headers.put(notEmpty(name, "name"), notNull(value, "value"));
-	}
+	protected static enum Instances {
+		RUNNING("api/processinstance/running/", HttpMethod.GET,
+				MediaType.APPLICATION_JSON), STATUS(
+				"api/processinstance/status/", HttpMethod.GET,
+				MediaType.APPLICATION_JSON), KILL("api/processinstance/kill/",
+				HttpMethod.POST, MediaType.APPLICATION_JSON), SUSPEND(
+				"api/processinstance/suspend/", HttpMethod.POST,
+				MediaType.APPLICATION_JSON), RESUME(
+				"api/processinstance/resume/", HttpMethod.POST,
+				MediaType.APPLICATION_JSON), RERUN(
+				"api/processinstance/rerun/", HttpMethod.POST,
+				MediaType.APPLICATION_JSON);
+		private String path;
+		private String method;
+		private String mimeType;
 
-	/**
-	 * Get the value of a set HTTP header from the ivory instance.
-	 * 
-	 * @param name
-	 *            header name.
-	 * @return header value, <code>null</code> if not set.
-	 */
-	public String getHeader(String name) {
-		return headers.get(notEmpty(name, "name"));
+		Instances(String path, String method, String mimeType) {
+			this.path = path;
+			this.method = method;
+			this.mimeType = mimeType;
+		}
 	}
 
 	public String notEmpty(String str, String name) {
 		if (str == null) {
+
 			throw new IllegalArgumentException(name + " cannot be null");
 		}
 		if (str.length() == 0) {
@@ -153,76 +153,109 @@ public class IvoryClient {
 		return obj;
 	}
 
-	/**
-	 * Return an iterator with all the header names set in the workflow
-	 * instance.
-	 * 
-	 * @return header names.
-	 */
-	public Iterator<String> getHeaderNames() {
-		return Collections.unmodifiableMap(headers).keySet().iterator();
-	}
-
 	public String schedule(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.SCHEDULE, entityType, entityName);
+		return sendEntityRequest(Entities.SCHEDULE, entityType, entityName);
 
 	}
 
 	public String suspend(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.SUSPEND, entityType, entityName);
+		return sendEntityRequest(Entities.SUSPEND, entityType, entityName);
 
 	}
 
 	public String resume(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.RESUME, entityType, entityName);
+		return sendEntityRequest(Entities.RESUME, entityType, entityName);
 
 	}
 
 	public String delete(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.DELETE, entityType, entityName);
+		return sendEntityRequest(Entities.DELETE, entityType, entityName);
 
 	}
 
 	public String validate(String entityType, String filePath)
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
-		return sendRequestWithObject(Entities.VALIDATE, entityType,
+		return sendEntityRequestWithObject(Entities.VALIDATE, entityType,
 				entityStream);
 	}
 
 	public String submit(String entityType, String filePath)
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
-		return sendRequestWithObject(Entities.SUBMIT, entityType, entityStream);
+		return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
+				entityStream);
 	}
 
 	public String submitAndSchedule(String entityType, String filePath)
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
-		return sendRequestWithObject(Entities.SUBMITandSCHEDULE, entityType,
-				entityStream);
+		return sendEntityRequestWithObject(Entities.SUBMITandSCHEDULE,
+				entityType, entityStream);
 	}
 
 	public String getStatus(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.STATUS, entityType, entityName);
+		return sendEntityRequest(Entities.STATUS, entityType, entityName);
 
 	}
 
 	public String getDefinition(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendRequest(Entities.DEFINITION, entityType, entityName);
+		return sendEntityRequest(Entities.DEFINITION, entityType, entityName);
 
+	}
+
+	public String getRunningInstances(String processName)
+			throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.RUNNING, processName, null,
+				null, null);
+	}
+
+	public String getStatusOfInstances(String processName, String start,
+			String end) throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.STATUS, processName, start,
+				end, null);
+	}
+
+	public String killInstances(String processName, String start, String end)
+			throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.KILL, processName, start,
+				end, null);
+	}
+
+	public String suspendInstances(String processName, String start, String end)
+			throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.SUSPEND, processName,
+				start, end, null);
+	}
+
+	public String resumeInstances(String processName, String start, String end)
+			throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.RESUME, processName, start,
+				end, null);
+	}
+
+	public String rerunInstances(String processName, String start, String end,
+			String filePath) throws IvoryCLIException {
+
+		return sendProcessInstanceRequest(Instances.RERUN, processName, start,
+				end, getServletInputStream(filePath));
 	}
 
 	/**
@@ -258,48 +291,92 @@ public class IvoryClient {
 	// };
 	// }
 
-	private String sendRequest(Entities entities, String entityType,
+	private String sendEntityRequest(Entities entities, String entityType,
 			String entityName) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName)
-				.header("Remote-User", "testuser").accept(entities.mimeType)
+				.path(entityType).path(entityName).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
+		checkIfSuccessfull(clientResponse);
+
 		if (entities.method == HttpMethod.GET) {
-			return parseGetResponse(clientResponse);
+			return parseStringResult(clientResponse);
 		} else {
-			return parsePostResponse(clientResponse);
+			return parseAPIResult(clientResponse);
 		}
 
 	}
 
-	private String sendRequestWithObject(Entities entities, String entityType,
-			Object requestObject) throws IvoryCLIException {
+	private String sendEntityRequestWithObject(Entities entities,
+			String entityType, Object requestObject) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).header("Remote-User", "testuser")
-				.accept(entities.mimeType).type(MediaType.TEXT_XML)
+				.path(entityType).accept(entities.mimeType)
+				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
-		return parsePostResponse(clientResponse);
+		checkIfSuccessfull(clientResponse);
+
+		return parseAPIResult(clientResponse);
 
 	}
 
-	private String parsePostResponse(ClientResponse clientResponse)
+	private String sendProcessInstanceRequest(Instances instances,
+			String processName, String start, String end, InputStream props)
+			throws IvoryCLIException {
+		WebResource resource = service.path(instances.path).path(processName);
+		if (start != null) {
+			resource = resource.queryParam("start", start);
+		}
+		if (end != null) {
+			resource = resource.queryParam("end", end);
+		}
+
+		ClientResponse clientResponse = null;
+		if (props == null) {
+			clientResponse = resource.accept(instances.mimeType).method(
+					instances.method, ClientResponse.class);
+		} else {
+			clientResponse = resource.accept(instances.mimeType).method(
+					instances.method, ClientResponse.class, props);
+		}
+		checkIfSuccessfull(clientResponse);
+
+		return parseProcessInstanceResult(clientResponse);
+
+	}
+
+	private String parseAPIResult(ClientResponse clientResponse)
 			throws IvoryCLIException {
 
-		checkIfSuccessfull(clientResponse);
-		try {
-			APIResult result = (APIResult) jaxbContext.createUnmarshaller()
-					.unmarshal(
-							new StringReader(clientResponse
-									.getEntity(String.class)));
-			return result.getMessage();
-		} catch (JAXBException e) {
-			throw new IvoryCLIException("Unable to read Ivory response: ", e);
+		APIResult result = clientResponse.getEntity(APIResult.class);
+		return result.getMessage();
+
+	}
+
+	private String parseStringResult(ClientResponse clientResponse)
+			throws IvoryCLIException {
+
+		return clientResponse.getEntity(String.class);
+	}
+
+	private String parseProcessInstanceResult(ClientResponse clientResponse) {
+		ProcessInstancesResult result = clientResponse
+				.getEntity(ProcessInstancesResult.class);
+
+		if (result.getInstances() == null) {
+			return "";
 		}
+
+		StringBuffer sb = new StringBuffer();
+		for (ProcessInstancesResult.ProcessInstance instance : result
+				.getInstances()) {
+			sb.append("instance=" + instance.getInstance() + ";status="
+					+ instance.getStatus() + "\n");
+		}
+		return sb.toString();
 	}
 
 	private void checkIfSuccessfull(ClientResponse clientResponse)
@@ -308,41 +385,6 @@ public class IvoryClient {
 				.getStatusCode()) {
 			throw new IvoryCLIException(clientResponse);
 		}
-
-	}
-
-	private String parseGetResponse(ClientResponse clientResponse)
-			throws IvoryCLIException {
-		checkIfSuccessfull(clientResponse);
-		return clientResponse.getEntity(String.class);
-	}
-
-	public static void main(String[] args) throws IvoryCLIException {
-
-		IvoryClient ivoryClient = new IvoryClient("http://localhost:15000");
-
-//		System.out.println(ivoryClient.delete("process", "agg-coord"));
-//		System.out.println(ivoryClient.delete("feed", "agg-logs"));
-//		System.out.println(ivoryClient.delete("feed", "raw-logs"));
-		System.out.println(ivoryClient.delete("cluster", "corp"));
-		System.out.println(ivoryClient.validate("cluster",
-				"/Users/shaik.idris/Work/Tests/entities/corp.xml"));
-		System.out.println(ivoryClient.submit("cluster",
-				"/Users/shaik.idris/Work/Tests/entities/corp.xml"));
-		System.out.println(ivoryClient.getDefinition("cluster", "corp"));
-		System.out.println(ivoryClient.getStatus("cluster", "corp"));
-		System.out.println(ivoryClient.submit("feed",
-				"/Users/shaik.idris/Work/Tests/entities/agg-logs.xml"));
-		System.out.println(ivoryClient.schedule("feed", "agg-logs"));
-		System.out.println(ivoryClient.submit("feed",
-				"/Users/shaik.idris/Work/Tests/entities/raw-logs.xml"));
-		System.out.println(ivoryClient.submit("process",
-				"/Users/shaik.idris/Work/Tests/entities/agg-coord.xml"));
-		System.out.println(ivoryClient.schedule("process", "agg-coord"));
-		System.out.println(ivoryClient.delete("process", "agg-coord"));
-		System.out.println(ivoryClient.delete("feed", "agg-logs"));
-		System.out.println(ivoryClient.delete("feed", "raw-logs"));
-		System.out.println(ivoryClient.delete("cluster", "corp"));
 
 	}
 

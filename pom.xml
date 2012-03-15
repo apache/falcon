@@ -56,7 +56,11 @@
 
   <repositories>
     <repository>
-      <id>internalRepo</id>
+      <id>internal.snapshots</id>
+      <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
+    </repository>
+    <repository>
+      <id>internal.releases</id>
       <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
     </repository>
     <repository>

@@ -18,17 +18,21 @@
 
 package org.apache.ivory.entity.v0;
 
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 public abstract class Entity {
-
-    public abstract String getName();
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
     private ThreadLocal<String> stagingPath;
+
+    public abstract String getName();
+    public abstract String[] getImmutableProperties();
 
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {
@@ -99,5 +103,18 @@ public abstract class Entity {
     public String getWorkflowNameTag(String workflowName) {
         String[] parts = workflowName.split("_");
         return parts[parts.length - 2];
+    }
+    
+    @Override
+    public Entity clone() {
+        try {
+            Marshaller marshaller = getEntityType().getMarshaller();
+            Unmarshaller unmarshaller = getEntityType().getUnmarshaller();
+            Writer strWriter = new StringWriter();
+            marshaller.marshal(this, strWriter);
+            return (Entity) unmarshaller.unmarshal(new StringReader(strWriter.toString()));
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

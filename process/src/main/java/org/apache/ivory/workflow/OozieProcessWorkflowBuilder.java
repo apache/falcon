@@ -84,10 +84,28 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
         
-        while(procStart.before(endCal)) {
+        while(procStart.compareTo(endCal) <= 0) {
             extIds.add(new ExternalId(process.getName(), procStart.getTime()));
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
         return extIds;
+    }
+
+    @Override
+    public int getConcurrency(Entity entity) {
+        Process process = (Process) entity;
+        return process.getConcurrency();
+    }
+
+    @Override
+    public String getEndTime(Entity entity, String cluster) {
+        Process process = (Process) entity;
+        return process.getValidity().getEnd();
+    }
+
+    @Override
+    public void setStartDate(Entity entity, Date startDate) {
+        Process process = (Process) entity;
+        process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 }
