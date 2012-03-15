@@ -46,4 +46,13 @@ public class AbstractTestBase {
         storeEntity(EntityType.FEED, "clicksummary");
         storeEntity(EntityType.PROCESS, "clicksummary");
     }    
+    
+    public void cleanup() throws Exception {
+        ConfigurationStore store = ConfigurationStore.get();
+        store.remove(EntityType.PROCESS, "clicksummary");
+        store.remove(EntityType.FEED, "clicksummary");
+        store.remove(EntityType.FEED, "impressions");
+        store.remove(EntityType.FEED, "clicks");
+        store.remove(EntityType.CLUSTER, "corp");
+    }
 }
