@@ -126,9 +126,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
 
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
         assertEquals(process.getWorkflowName(), bundle.getName());
-        assertEquals(2, bundle.getCoordinator().size());
+        assertEquals(1, bundle.getCoordinator().size());
         assertEquals(process.getWorkflowName("DEFAULT"), bundle.getCoordinator().get(0).getName());
-        assertEquals(process.getWorkflowName("LATE1"), bundle.getCoordinator().get(1).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
