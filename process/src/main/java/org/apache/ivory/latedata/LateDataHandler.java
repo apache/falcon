@@ -75,7 +75,7 @@ public class LateDataHandler extends Configured implements Tool {
             }
             LOG.info("MAP data: " + map);
             if (mode == Mode.record) {
-                OutputStream out = fs.create(file);
+                OutputStream out = file.getFileSystem(getConf()).create(file);
                 for (Map.Entry<String, Long> entry : map.entrySet()) {
                     out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
                 }
