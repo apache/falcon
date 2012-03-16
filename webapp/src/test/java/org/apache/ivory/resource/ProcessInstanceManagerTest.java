@@ -20,7 +20,7 @@ import org.apache.oozie.client.WorkflowJob;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-@Test(enabled=true)
+@Test(enabled=false)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
 
     @BeforeMethod

@@ -18,20 +18,6 @@
 
 package org.apache.ivory.converter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.regex.Pattern;
-
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -46,21 +32,23 @@ import org.apache.ivory.oozie.coordinator.CONFIGURATION;
 import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
-import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private static Logger LOG = Logger.getLogger(OozieFeedMapper.class);
 
-    private static final Pattern pattern = Pattern.compile("ivory-common|ivory-feed|ivory-retention");
-
     private static final String RETENTION_WF_TEMPLATE = "/config/workflow/feed-parent-workflow.xml";
-
-    private static volatile boolean retentionUploaded = false;
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -98,12 +86,12 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath) throws IvoryException {
         Feed feed = getEntity();
         ACTION retentionAction = new ACTION();
-        WORKFLOW parentWorkflow = new WORKFLOW();
+        WORKFLOW retentionWorkflow = new WORKFLOW();
         try {
             //
             WORKFLOWAPP retWfApp = createRetentionWorkflow(cluster);
             marshal(cluster, retWfApp, wfPath);
-            parentWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
+            retentionWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
 
             CONFIGURATION conf = createCoordDefaultConfiguration(cluster, wfPath);
 
@@ -124,8 +112,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.add(createCoordProperty(EntityInstanceMessage.ARG.OPERATION.NAME(),
                     EntityInstanceMessage.entityOperation.DELETE.name()));
 
-            parentWorkflow.setConfiguration(conf);
-            retentionAction.setWorkflow(parentWorkflow);
+            retentionWorkflow.setConfiguration(conf);
+            retentionAction.setWorkflow(retentionWorkflow);
             return retentionAction;
         } catch (Exception e) {
             throw new IvoryException("Unable to create parent/retention workflow", e);
@@ -133,45 +121,21 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private WORKFLOWAPP createRetentionWorkflow(Cluster cluster) throws IOException, IvoryException {
-        // Create sub workflow
-        Path subWfPath = new Path(getRetentionWorkflowPath(cluster));
-        if (!retentionUploaded) {
+        Path retentionWorkflowAppPath = new Path(getRetentionWorkflowPath(cluster));
+        FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+        Path workflowPath = new Path(retentionWorkflowAppPath, "workflow.xml");
+        if (!fs.exists(workflowPath)) {
             InputStream in = getClass().getResourceAsStream("/retention-workflow.xml");
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-            OutputStream out = fs.create(new Path(subWfPath, "workflow.xml"));
+            OutputStream out = fs.create(workflowPath);
             IOUtils.copyBytes(in, out, 4096, true);
             if (LOG.isDebugEnabled()) {
-                debug(subWfPath, fs);
+                debug(retentionWorkflowAppPath, fs);
             }
-            String localLibPath = getLocalLibLocation();
-            Path libLoc = new Path(subWfPath, "lib");
+            Path libLoc = new Path(retentionWorkflowAppPath, "lib");
             fs.mkdirs(libLoc);
-            for (File file : new File(localLibPath).listFiles()) {
-                if (pattern.matcher(file.getName()).find()) {
-                    LOG.debug("Copying " + file.getAbsolutePath() + " to " + libLoc);
-                    fs.copyFromLocalFile(new Path(file.getAbsolutePath()), libLoc);
-                }
-            }
-            retentionUploaded = true;
         }
 
-        WORKFLOWAPP parentWorkflow = getWorkflowTemplate(RETENTION_WF_TEMPLATE);
-        // set the subflow app path to users workflow
-        SUBWORKFLOW userSubFlowAction = ((org.apache.ivory.oozie.workflow.ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1))
-                .getSubWorkflow();
-
-        userSubFlowAction.setAppPath(getHDFSPath(subWfPath.toString()));
-
-        return parentWorkflow;
-    }
-
-    private String getLocalLibLocation() {
-        String localLibPath = StartupProperties.get().getProperty("system.lib.location");
-        if (localLibPath == null || localLibPath.isEmpty() || !new File(localLibPath).exists()) {
-            LOG.error("Unable to copy libs: Invalid location " + localLibPath);
-            throw new IllegalStateException("Invalid lib location " + localLibPath);
-        }
-        return localLibPath;
+        return getWorkflowTemplate(RETENTION_WF_TEMPLATE);
     }
 
     private void debug(Path outPath, FileSystem fs) throws IOException {
