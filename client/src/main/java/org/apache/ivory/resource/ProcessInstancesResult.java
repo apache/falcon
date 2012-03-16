@@ -6,6 +6,9 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ivory.Pair;
+
+
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
     public static enum WorkflowStatus {
@@ -68,7 +71,8 @@ public class ProcessInstancesResult extends APIResult {
         }
     }
 
-    public ProcessInstance[] getInstances() {
+
+	public ProcessInstance[] getInstances() {
         return instances;
     }
 
