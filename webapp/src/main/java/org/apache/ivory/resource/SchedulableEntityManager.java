@@ -33,6 +33,8 @@ import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.monitors.Dimension;
+import org.apache.ivory.monitors.Monitored;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,8 +57,10 @@ public class SchedulableEntityManager extends EntityManager {
 	@POST
 	@Path("schedule/{type}/{entity}")
 	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	@Monitored(event="schedule")
 	public APIResult schedule(@Context HttpServletRequest request,
-			@PathParam("type") String type, @PathParam("entity") String entity) {
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entity) {
 
 		try {
 			checkSchedulableEntity(type);
@@ -87,8 +91,9 @@ public class SchedulableEntityManager extends EntityManager {
 	@Path("submitAndSchedule/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	@Monitored(event="submitAndSchedule")
 	public APIResult submitAndSchedule(@Context HttpServletRequest request,
-			@PathParam("type") String type) {
+			@Dimension ("entityType")@PathParam("type") String type) {
 		try {
 			checkSchedulableEntity(type);
 			audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
@@ -113,9 +118,10 @@ public class SchedulableEntityManager extends EntityManager {
     @POST
     @Path("suspend/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+	@Monitored(event="suspend")
     public APIResult suspend(@Context HttpServletRequest request,
-                             @PathParam("type") String type,
-                             @PathParam("entity") String entity) {
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entity) {
 
         try {
 			checkSchedulableEntity(type);
@@ -140,9 +146,10 @@ public class SchedulableEntityManager extends EntityManager {
     @POST
     @Path("resume/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult resume(@Context HttpServletRequest request,
-                            @PathParam("type") String type,
-                            @PathParam("entity") String entity) {
+	@Monitored(event="resume")
+	public APIResult resume(@Context HttpServletRequest request,
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entity) {
 
         try {
 			checkSchedulableEntity(type);

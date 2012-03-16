@@ -44,6 +44,8 @@ import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.monitors.Dimension;
+import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -98,7 +100,8 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProcessInstancesResult killProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+	@Monitored(event="kill")
+    public ProcessInstancesResult killProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
             validateParams(processName, startStr, endStr);
@@ -119,7 +122,8 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProcessInstancesResult suspendProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+	@Monitored(event="suspend")
+    public ProcessInstancesResult suspendProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
             validateParams(processName, startStr, endStr);
@@ -140,7 +144,8 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProcessInstancesResult resumeProcessInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+	@Monitored(event="resume")
+    public ProcessInstancesResult resumeProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
             validateParams(processName, startStr, endStr);
@@ -161,7 +166,8 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("rerun/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProcessInstancesResult reRunInstance(@PathParam("process") String processName, @QueryParam("start") String startStr,
+	@Monitored(event="re-run")
+    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
             validateParams(processName, startStr, endStr);

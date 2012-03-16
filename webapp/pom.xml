@@ -105,11 +105,51 @@
       <version>6.1.26</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>1.8.5</version>
-    </dependency>
+	<dependency>
+		<groupId>org.mockito</groupId>
+		<artifactId>mockito-all</artifactId>
+		<version>1.8.5</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.aspectj</groupId>
+		<artifactId>aspectjrt</artifactId>
+		<version>1.6.11</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.aspectj</groupId>
+		<artifactId>aspectjweaver</artifactId>
+		<version>1.6.11</version>
+	</dependency>
 
   </dependencies>
+
+	<build>
+ 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>aspectj-maven-plugin</artifactId>
+				<version>1.4</version>
+				<configuration>
+					<verbose>true</verbose>
+					<complianceLevel>1.5</complianceLevel>
+							<includes>
+								<include>org/apache/ivory/resource/EntityManager.java</include>
+								<include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
+								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
+								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
+								<include>org/apache/ivory/aspect/*.java</include>
+							</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>       
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

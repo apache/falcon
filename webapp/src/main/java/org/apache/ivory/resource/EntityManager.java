@@ -86,9 +86,9 @@ public class EntityManager {
     @Path("submit/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "submit")
-    public APIResult submit(@Context HttpServletRequest request,
-                            @Dimension ("entityType") @PathParam("type") String type) {
+	@Monitored(event = "submit")
+	public APIResult submit(@Context HttpServletRequest request,
+			@Dimension("entityType") @PathParam("type") String type) {
 
         try {
             audit(request, "STREAMED_DATA", type, "SUBMIT");
@@ -137,9 +137,10 @@ public class EntityManager {
     @DELETE
     @Path("delete/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "delete")
     public APIResult delete(@Context HttpServletRequest request,
-                            @PathParam("type") String type,
-                            @PathParam("entity") String entity) {
+    		@Dimension ("entityType") @PathParam("type") String type,
+    		@Dimension ("entityName") @PathParam("entity") String entity) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entity, type, "DELETE");
@@ -167,8 +168,11 @@ public class EntityManager {
     @POST
     @Path("update/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public APIResult update(@Context HttpServletRequest request, @PathParam("type") String type, @PathParam("entity") String entityName) {
-        try {
+	@Monitored(event = "update")
+	public APIResult update(@Context HttpServletRequest request,
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entityName) {
+   	try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entityName, type, "UPDATE");
             Entity oldEntity = getEntityObject(entityName, type);
@@ -276,8 +280,10 @@ public class EntityManager {
     @GET
     @Path("status/{type}/{entity}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getStatus(@PathParam("type") String type,
-                            @PathParam("entity") String entity) {
+	@Monitored(event = "status")
+	public String getStatus(
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entity) {
         try {
             Entity entityObj = getEntity(entity, type);
             if (entityObj == null) {
