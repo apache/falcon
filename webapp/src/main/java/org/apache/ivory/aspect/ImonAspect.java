@@ -28,50 +28,41 @@ public class ImonAspect extends AbstractIvoryAspect {
 
 	// TODO get this value from system.properties file
 	private static final int ALLOWED_QUEUE_SIZE = 1000;
-	// Producer should consider as non-blocking
+	// Producer should consider as non-blocking and consumer as blocking queue
 	private static final BlockingQueue<ResourceMessage> QUEUE = new ArrayBlockingQueue<ResourceMessage>(
-			ALLOWED_QUEUE_SIZE + 1);
+			ALLOWED_QUEUE_SIZE);
 
 	public ImonAspect() {
 		super();
-		new Consumer().start();
-		System.out.println("iMon constructor invoked");
-
+		// TODO I should'nt spawn a thread
+		Thread daemon = new Consumer();
+		daemon.setName("iMonConsumer");
+		daemon.setDaemon(true);
+		daemon.start();
 	}
 
 	@Override
 	public void publishMessage(ResourceMessage message) {
-		synchronized (QUEUE) {
-			if (QUEUE.size() == ALLOWED_QUEUE_SIZE) {
-				// dont block the queue on full size
-				System.out.println("iMon queue full, returning");
-				return;
-			}
-		}
-
-		QUEUE.add(message);
-
+		QUEUE.offer(message);
 	}
 
 	public static class Consumer extends Thread {
 		@Override
 		public void run() {
 			while (true) {
-				ResourceMessage message = QUEUE.poll();
+				ResourceMessage message = null;
 				try {
-					Thread.sleep(200);
+					message = QUEUE.take();
 				} catch (InterruptedException e) {
-
+					System.out.println("iMon consumer interrupted");
+					return;
 				}
-				if (message != null) {
-					sendToImon(message);
-				}
+				sendToImon(message);
 			}
 		}
 
 		private void sendToImon(ResourceMessage message) {
-			System.out.println("iMon Queue has:" + QUEUE.size()+" messages");
-
+			System.out.println("iMon Queue has:" + QUEUE.size() + " messages");
 		}
 	}
 }
