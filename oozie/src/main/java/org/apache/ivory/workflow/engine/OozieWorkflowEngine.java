@@ -42,7 +42,6 @@ import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -133,42 +132,54 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return buffer.toString();
     }
 
+    @Override
+    public boolean exists(Entity entity) throws IvoryException {
+        return isBundleInState(entity, BundleStatus.EXISTS);
+    }
+    
+    @Override
     public boolean isActive(Entity entity) throws IvoryException {
-        return isBundleInState(entity, null);
+        return isBundleInState(entity, BundleStatus.ACTIVE);
     }
 
+    @Override
     public boolean isSuspended(Entity entity) throws IvoryException {
-        return isBundleInState(entity, Job.Status.SUSPENDED);
+        return isBundleInState(entity, BundleStatus.SUSPENDED);
     }
 
+    @Override
     public boolean isRunning(Entity entity) throws IvoryException {
-        return isBundleInState(entity, Job.Status.RUNNING);
+        return isBundleInState(entity, BundleStatus.RUNNING);
     }
 
-    private boolean isBundleInState(Entity entity, Job.Status status) throws IvoryException {
+    private enum BundleStatus {
+        ACTIVE, RUNNING, SUSPENDED, EXISTS
+    }
+    
+    private boolean isBundleInState(Entity entity, BundleStatus status) throws IvoryException {
         Map<Cluster, BundleJob> bundles = findBundle(entity);
-        boolean found = true;
         for(BundleJob bundle:bundles.values()) {
             if(bundle == MISSING)   //There is no bundle
                 return false;
             
-            if(status == null && !BUNDLE_ACTIVE_STATUS.contains(bundle.getStatus()))   //The bundle is not active
-                return false;
-            
-            if(status != null)
-                switch(status) {
-                    case RUNNING:
-                        if(!BUNDLE_RUNNING_STATUS.contains(bundle.getStatus()))
-                            return false;
-                        break;
-                        
-                    case SUSPENDED:
-                        if(!BUNDLE_SUSPENDED_STATUS.contains(bundle.getStatus()))
-                            return false;
-                        break;
-                }
+            switch (status) {
+                case ACTIVE:
+                    if (!BUNDLE_ACTIVE_STATUS.contains(bundle.getStatus()))
+                        return false;
+                    break;
+
+                case RUNNING:
+                    if (!BUNDLE_RUNNING_STATUS.contains(bundle.getStatus()))
+                        return false;
+                    break;
+
+                case SUSPENDED:
+                    if (!BUNDLE_SUSPENDED_STATUS.contains(bundle.getStatus()))
+                        return false;
+                    break;
+            }
         }
-        return false;
+        return true;
     }
 
     private Map<Cluster, BundleJob> findBundle(Entity entity) throws IvoryException {

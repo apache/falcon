@@ -19,7 +19,7 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.annotations.Test;
 
-@Test(enabled=true)
+@Test(enabled=false)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
 
     protected void schedule() throws Exception {

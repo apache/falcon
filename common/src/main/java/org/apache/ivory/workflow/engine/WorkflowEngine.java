@@ -43,6 +43,8 @@ public interface WorkflowEngine {
 
     String delete(Entity entity) throws IvoryException;
 
+    boolean exists(Entity entity) throws IvoryException;
+
     boolean isActive(Entity entity) throws IvoryException;
 
     boolean isSuspended(Entity entity) throws IvoryException;
