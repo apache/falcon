@@ -7,7 +7,6 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
-import org.apache.ivory.service.IvoryService;
 
 import java.util.HashMap;
 import java.util.HashSet;
