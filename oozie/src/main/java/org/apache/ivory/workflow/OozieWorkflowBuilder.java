@@ -73,6 +73,8 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     }
     
     public abstract int getConcurrency(Entity entity);
+    public abstract void setConcurrency(Entity entity, int concurrency);
     public abstract String getEndTime(Entity entity, String cluster);
-    public abstract void setStartDate(Entity entity, Date startDate);
+    public abstract void setEndTime(Entity entity, String cluster, Date endDate);
+    public abstract void setStartDate(Entity entity, String cluster, Date startDate);
 }

@@ -37,14 +37,13 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -157,23 +156,8 @@ public class AbstractTestBase {
         marshaller.marshal(clusterEntity, out);
         out.close();
 
-        Map<String, String> overlay = new HashMap<String, String>();
-
         cleanupStore();
-        killOozieJobs();
 
-        String testCluster = "testCluster";
-        overlay.put("name", testCluster);
-        InputStream testClusterStream = getServletInputStream(overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay));
-        this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .header("Remote-User", "testuser").post(ClientResponse.class, testClusterStream);
-
-        String backupCluster = "backupCluster";
-        overlay.put("name", backupCluster);
-        InputStream backupClusterStream = getServletInputStream(overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay));
-        this.service.path("api/entities/submit/cluster").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .header("Remote-User", "testuser").post(ClientResponse.class, backupClusterStream);
-        
         //setup dependent workflow and lipath in hdfs
         FileSystem fs = FileSystem.get(this.cluster.getConf());
         fs.mkdirs(new Path("/examples/apps/aggregator"));
@@ -282,12 +266,13 @@ public class AbstractTestBase {
     }
 
     @AfterClass
-    public void killBundle() throws Exception {
+    public void cleanup() throws Exception {
         tearDown();
         cleanupStore();
     }
 
-    private boolean killOozieJobs() throws IvoryException, OozieClientException {
+    @AfterMethod
+    public boolean killOozieJobs() throws IvoryException, OozieClientException {
         if(clusterName == null)
             return true;
 

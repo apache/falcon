@@ -23,12 +23,12 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 public abstract class Entity {
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
     private ThreadLocal<String> stagingPath;
 
     public abstract String getName();
@@ -84,6 +84,8 @@ public abstract class Entity {
     public String getStagingPath() {
         if (stagingPath == null) {
             stagingPath = new ThreadLocal<String>();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
             stagingPath.set("/ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName() + "/"
                     + dateFormat.format(new Date()) + "/");
         }

@@ -104,8 +104,20 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     @Override
-    public void setStartDate(Entity entity, Date startDate) {
+    public void setStartDate(Entity entity, String cluster, Date startDate) {
         Process process = (Process) entity;
         process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
+    }
+
+    @Override
+    public void setConcurrency(Entity entity, int concurrency) {
+        Process process = (Process) entity;
+        process.setConcurrency(concurrency);
+    }
+
+    @Override
+    public void setEndTime(Entity entity, String cluster, Date endDate) {
+        Process process = (Process) entity;
+        process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
     }
 }
