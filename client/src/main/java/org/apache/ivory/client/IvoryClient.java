@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.ProcessInstancesResult;
 
 import com.sun.jersey.api.client.Client;
@@ -51,8 +52,7 @@ public class IvoryClient {
 	/**
 	 * Create a Ivory client instance.
 	 * 
-	 * @param Ivory
-	 *            URL of the server to which client interacts
+	 * @param ivoryUrl of the server to which client interacts
 	 */
 	public IvoryClient(String ivoryUrl) {
 		this.baseUrl = notEmpty(ivoryUrl, "oozieUrl");
@@ -75,20 +75,21 @@ public class IvoryClient {
 		}
 	}
 
-	/**
+    /**
 	 * Methods allowed on Entity Resources
 	 */
 	protected static enum Entities {
-		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML), SUBMIT(
-				"api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML), SUBMITandSCHEDULE(
-				"api/entities/submitAndSchedule/", HttpMethod.POST,
-				MediaType.TEXT_XML), SCHEDULE("api/entities/schedule/",
-				HttpMethod.POST, MediaType.TEXT_XML), SUSPEND(
-				"api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML), RESUME(
-				"api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML), DELETE(
-				"api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML), STATUS(
-				"api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN), DEFINITION(
-				"api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML);
+		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUBMITandSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST,
+				MediaType.TEXT_XML),
+        SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUSPEND("api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML),
+        RESUME("api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML),
+        DELETE("api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML),
+        STATUS("api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN),
+        DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
 
 		private String path;
 		private String method;
@@ -216,6 +217,11 @@ public class IvoryClient {
 
 	}
 
+    public String getDependency(String entityType, String entityName)
+            throws IvoryCLIException {
+        return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
+    }
+
 	public String getRunningInstances(String processName)
 			throws IvoryCLIException {
 
@@ -309,6 +315,20 @@ public class IvoryClient {
 
 	}
 
+	private String sendDependencyRequest(Entities entities, String entityType,
+			String entityName) throws IvoryCLIException {
+
+		ClientResponse clientResponse = service.path(entities.path)
+				.path(entityType).path(entityName).accept(entities.mimeType)
+				.type(MediaType.TEXT_XML)
+				.method(entities.method, ClientResponse.class);
+
+		checkIfSuccessfull(clientResponse);
+
+        return parseEntityList(clientResponse);
+
+	}
+
 	private String sendEntityRequestWithObject(Entities entities,
 			String entityType, Object requestObject) throws IvoryCLIException {
 
@@ -353,6 +373,14 @@ public class IvoryClient {
 
 		APIResult result = clientResponse.getEntity(APIResult.class);
 		return result.getMessage();
+
+	}
+
+	private String parseEntityList(ClientResponse clientResponse)
+			throws IvoryCLIException {
+
+		EntityList result = clientResponse.getEntity(EntityList.class);
+		return result.toString();
 
 	}
 

@@ -26,6 +26,8 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.service.ServiceInitializer;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.util.StartupProperties;
@@ -44,6 +46,8 @@ public class ContextStartupListener implements ServletContextListener {
         //Initialize Startup and runtime properties instance for use
         LOG.info("Initializing startup properties ...");
         StartupProperties.get();
+        ConfigurationStore.get();
+        EntityGraph.get();
 
         showStartupInfo();
 
