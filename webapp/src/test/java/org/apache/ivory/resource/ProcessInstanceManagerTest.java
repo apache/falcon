@@ -17,19 +17,18 @@ import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 @Test(enabled=false)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
 
-    @BeforeMethod
     protected void schedule() throws Exception {
         scheduleProcess();
         waitForProcessStart();
     }
 
     public void testGetRunningInstances() throws Exception {
+        schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/running/" + processName)
                 .header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON).get(ProcessInstancesResult.class);
         assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -39,6 +38,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testGetInstanceStatus() throws Exception {
+        schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/status/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .get(ProcessInstancesResult.class);
@@ -75,6 +75,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testKillInstances() throws Exception {
+        schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/kill/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
@@ -88,6 +89,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testSuspendInstances() throws Exception {
+        schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/suspend/" + processName)
                 .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);

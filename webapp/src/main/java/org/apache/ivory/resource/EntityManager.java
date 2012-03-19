@@ -177,7 +177,8 @@ public class EntityManager {
                     throw new IvoryException("Update not supported for " + entityType);
                 
                 validateUpdate(oldEntity, newEntity);
-                getWorkflowEngine().update(oldEntity, newEntity);
+                if(getWorkflowEngine().exists(oldEntity))
+                    getWorkflowEngine().update(oldEntity, newEntity);
                 configStore.remove(entityType, entityName);
                 configStore.publish(entityType, newEntity);
             }

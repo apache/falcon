@@ -90,13 +90,19 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public void setStartDate(Entity entity, Date startDate) {
+    public void setStartDate(Entity entity, String cluster, Date startDate) {
         Feed feed = (Feed) entity;
-        if(feed.getClusters() != null) {
-            String startDateStr = EntityUtil.formatDateUTC(startDate);
-            for(org.apache.ivory.entity.v0.feed.Cluster cluster:feed.getClusters().getCluster()) {
-                cluster.getValidity().setStart(startDateStr);
-            }
-        }
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
+
+    @Override
+    public void setEndTime(Entity entity, String cluster, Date endDate) {
+        Feed feed = (Feed) entity;
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
+    }
+
+    @Override
+    public void setConcurrency(Entity entity, int concurrency) { }
 }
