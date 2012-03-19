@@ -154,39 +154,6 @@ public class EntityGraph implements ConfigurationChangeListener {
         return nodeEdges;
     }
 
-    private static class Edge {
-        private final Node leftNode;
-        private final Node rightNode;
-
-        private Edge(Node leftNode, Node rightNode) {
-            this.leftNode = leftNode;
-            this.rightNode = rightNode;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Edge edge = (Edge) o;
-
-            if (leftNode != null ? !leftNode.equals(edge.leftNode)
-                    : edge.leftNode != null) return false;
-            if (rightNode != null ? !rightNode.equals(edge.rightNode)
-                    : edge.rightNode != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = leftNode != null ? leftNode.hashCode() : 0;
-            result = 31 * result +
-                    (rightNode != null ? rightNode.hashCode() : 0);
-            return result;
-        }
-    }
-
     private static class Node {
 
         private final EntityType type;
