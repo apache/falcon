@@ -37,6 +37,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
@@ -253,7 +254,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     break;
                     
                 case RESUME:
-                    //not already active and preconditions are true
+                    //not already running and preconditions are true
                     if(!BUNDLE_RUNNING_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
                         resume(cluster, entity, job.getId());
                         success = true;
@@ -261,6 +262,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     break;
                     
                 case KILL:
+                    //not already killed and preconditions are true
                     if(!BUNDLE_KILLED_STATUS.contains(job.getStatus()) && BUNDLE_KILL_PRECOND.contains(job.getStatus())) {
                         kill(cluster, entity, job.getId());
                         success = true;
@@ -445,31 +447,49 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             // suspend so that no new coord actions are created
             suspend(cluster, oldEntity, bundle.getId());
             List<CoordinatorJob> coords = getBundleInfo(cluster, bundle.getId()).getCoordinators();
-            Date endDate = new Date(System.currentTimeMillis() + 30*1000);
-            Date startDate = null;
+            
+            //Find default coord's start time(min start time)
+            Date minCoordStartTime = null;
             for (CoordinatorJob coord : coords) {
+                if(minCoordStartTime == null || minCoordStartTime.after(coord.getStartTime()))
+                    minCoordStartTime = coord.getStartTime();
+            }
+            
+            //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
+            long pauseDelay = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.pause.delayInSecs", "45")) * 1000;
+            Date pauseTime = new Date(System.currentTimeMillis() + pauseDelay);
+            Date newStartTime = null;
+            
+            for (CoordinatorJob coord : coords) {
+                //Add offset to pause time for late coords
+                Date localPauseTime = addOffest(pauseTime, coord.getStartTime(), minCoordStartTime);
+                
                 //Set pause time to now so that future coord actions are deleted
-                change(cluster, coord.getId(), coord.getConcurrency(), coord.getLastActionTime(), endDate);
+                change(cluster, coord.getId(), coord.getConcurrency(), coord.getLastActionTime(), localPauseTime);
+                
                 //Change end time and reset pause time
                 coord = getCoordinatorInfo(cluster, coord.getId());
                 change(cluster, coord.getId(), coord.getConcurrency(), coord.getLastActionTime(), null);
 
-                //calculate start time as next schedule time after end date
-                Calendar cal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
-                cal.setTime(endDate);
-                cal.add(TimeUnit.valueOf(coord.getTimeUnit().name()).getCalendarUnit(), coord.getConcurrency());
-                if(startDate == null || startDate.after(cal.getTime()))
-                    startDate = cal.getTime();
+                //calculate start time for updated entity as next schedule time after end date
+                if(newStartTime == null || newStartTime.after(coord.getLastActionTime())) {
+                    newStartTime = coord.getLastActionTime();
+                }
             }
             resume(cluster, oldEntity, bundle.getId());
             
             //schedule new entity
             Entity schedEntity = newEntity.clone();
-            builder.setStartDate(schedEntity, clusterName, startDate);
+            builder.setStartDate(schedEntity, clusterName, newStartTime);
             schedule(schedEntity);
         }
     }
 
+    private Date addOffest(Date target, Date globalTime, Date localTime) {
+        long offset = localTime.getTime() - globalTime.getTime();
+        return new Date(target.getTime() + offset);
+    }
+    
     private BundleJob getBundleInfo(Cluster cluster, String bundleId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
@@ -479,6 +499,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
+    //Doesn't return any coord actions
     private CoordinatorJob getCoordinatorInfo(Cluster cluster, String coordId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
