@@ -44,6 +44,7 @@ public class ResourcesReflectionUtil {
 	}
 
 	static {
+		//TODO load these classes from properties file
 		buildAnnotationsMapForClass(EntityManager.class);
 		buildAnnotationsMapForClass(SchedulableEntityManager.class);
 		buildAnnotationsMapForClass(ProcessInstanceManager.class);
@@ -64,7 +65,6 @@ public class ResourcesReflectionUtil {
 		
 		@Override
 		public String toString() {
-			// TODO Auto-generated method stub
 			return "{" + monitoredName + "[" + params.toString() + "]" + "}";
 		}
 

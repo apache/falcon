@@ -18,18 +18,63 @@
 
 package org.apache.ivory.aspect;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.Assert;
+
 import org.apache.ivory.resource.EntityManager;
 import org.testng.annotations.Test;
 
 public class LoggingAspectTest {
-	
+
 	private EntityManager em = new EntityManager();
+	private volatile Exception threadException;
 
 	@Test
-	public void testBeanLoading(){
+	public void testBeanLoading() {
+
+		String result = em.getStatus("cluster", "corp");
+		Assert.assertEquals("NOT_FOUND", result);
+	}
+
+	@Test
+	public void testExceptionBeanLoading() {
+		try {
+			em.getStatus("cluster123", "corp");
+			System.out.println();
+			
+		} catch (Exception e) {
+			return;
+		}
+		Assert.fail("Exepected excpetion");
+	}
+	
+	@Test
+	public void testConcurrentRequests() throws Exception{
+        List<Thread> threadList = new ArrayList<Thread>();
+        for (int i = 0; i < 5; i++) {
+            threadList.add(new Thread() {
+                public void run() {
+                    try {
+                    	testBeanLoading();
+                    } catch (Exception e) {
+                    	e.printStackTrace();
+                    	threadException =e;
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        }
+        
+        for(Thread thread:threadList) {
+            thread.start();
+            thread.join();
+        }
 		
-		String result =em.getStatus("cluster", "corp");
-		System.out.println(result);
-	}	
+		if (threadException != null) {
+			throw threadException;
+		}
+	}
 
 }

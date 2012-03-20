@@ -30,6 +30,12 @@
   <description>Ivory Web Application</description>
   <name>Ivory Web Application</name>
   <packaging>war</packaging>
+  <repositories>
+        <repository>
+            <id>platform-pe-releases</id>
+            <url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
+        </repository>
+	</repositories>
 
   <dependencies>
     <dependency>
@@ -123,6 +129,17 @@
 		<version>1.6.11</version>
 	</dependency>
 
+	<dependency>
+		<groupId>org.lwes</groupId>
+		<artifactId>lwes-java</artifactId>
+		<version>0.2.5</version>
+	</dependency>
+	<dependency>
+		<groupId>org.mondemand</groupId>
+		<artifactId>mondemand-java</artifactId>
+		<version>4.0.0</version>
+	</dependency>
+
   </dependencies>
 
 	<build>
@@ -140,6 +157,7 @@
 								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
 								<include>org/apache/ivory/aspect/*.java</include>
+								<include>org/apache/ivory/monitoring/*.java</include>
 							</includes>
 				</configuration>
 				<executions>
