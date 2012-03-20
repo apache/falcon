@@ -51,8 +51,6 @@ public class LateDataHandler extends Configured implements Tool {
         ToolRunner.run(new Configuration(), new LateDataHandler(), args);
     }
 
-    private FileSystem fs;
-
     @Override
     public int run(String[] args) throws Exception {
         if (args.length != 3) {
@@ -61,7 +59,6 @@ public class LateDataHandler extends Configured implements Tool {
         } else {
 
             Mode mode = Mode.valueOf(args[0]);
-            fs = FileSystem.get(getConf());
             Path file = new Path(args[1]);
             Map<String, Long> map = new LinkedHashMap<String, Long>();
             String[] pathGroups = args[2].split("#");
@@ -81,7 +78,7 @@ public class LateDataHandler extends Configured implements Tool {
                 }
                 out.close();
             } else {
-                if (!fs.exists(file)) {
+                if (!file.getFileSystem(getConf()).exists(file)) {
                     LOG.warn(file + " is not found. Nothing to do");
                     captureOutput("changedPaths=INVALID");
                     return 0;
@@ -106,7 +103,8 @@ public class LateDataHandler extends Configured implements Tool {
 
     private String detectChanges(Path file, Map<String, Long> map) throws Exception {
         StringBuffer buffer = new StringBuffer();
-        BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(file)));
+        BufferedReader in = new BufferedReader(new
+                InputStreamReader(file.getFileSystem(getConf()).open(file)));
         String line;
         int lines = 0;
         while ((line = in.readLine()) != null) {
@@ -136,6 +134,7 @@ public class LateDataHandler extends Configured implements Tool {
     }
 
     private long usage(Path inPath) throws IOException {
+        FileSystem fs = inPath.getFileSystem(getConf());
         FileStatus status[] = fs.globStatus(inPath);
         if (status==null || status.length==0) {
             return 0;
