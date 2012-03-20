@@ -18,22 +18,6 @@
 
 package org.apache.ivory.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.NoSuchElementException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -45,6 +29,7 @@ import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
@@ -52,6 +37,16 @@ import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 public class EntityManager {
 
@@ -177,7 +172,7 @@ public class EntityManager {
             audit(request, entityName, type, "UPDATE");
             Entity oldEntity = getEntityObject(entityName, type);
             Entity newEntity = deserializeEntity(request, entityType);
-            if(oldEntity != newEntity) {
+            if(!oldEntity.deepEquals(newEntity)) {
                 if(entityType != EntityType.PROCESS)
                     throw new IvoryException("Update not supported for " + entityType);
                 
@@ -307,6 +302,32 @@ public class EntityManager {
             }
         } catch (Exception e) {
             LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Returns the status of requested entity.
+     *
+     * @param type
+     * @param entity
+     * @return String
+     */
+    @GET
+    @Path("dependencies/{type}/{entity}")
+    @Produces(MediaType.TEXT_XML)
+	@Monitored(event = "dependencies")
+	public EntityList getDependencies(
+			@Dimension("entityType") @PathParam("type") String type,
+			@Dimension("entityName") @PathParam("entity") String entity) {
+        try {
+            Entity entityObj = getEntity(entity, type);
+            Set<Entity> dependents = EntityGraph.get().
+                    getDependents(entityObj);
+            Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
+            return new EntityList(entities);
+        } catch (Exception e) {
+            LOG.error("Unable to get dependencies for entity " + entity + "(" + type + ")", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }

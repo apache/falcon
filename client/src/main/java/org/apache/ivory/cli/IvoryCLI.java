@@ -54,6 +54,7 @@ public class IvoryCLI {
 	public static final String VALIDATE_OPT = "validate";
 	public static final String STATUS_OPT = "status";
 	public static final String DEFINITION_OPT = "definition";
+	public static final String DEPENDENCY_OPT = "dependency";
 
 	public static final String INSTANCE_CMD = "instance";
 	public static final String PROCESS_OPT = "processName";
@@ -241,6 +242,8 @@ public class IvoryCLI {
 			result = client.getStatus(entityType, entityName);
 		} else if (optionsList.contains(DEFINITION_OPT)) {
 			result = client.getDefinition(entityType, entityName);
+		} else if (optionsList.contains(DEPENDENCY_OPT)) {
+			result = client.getDependency(entityType, entityName);
 		} else if (optionsList.contains(HELP_CMD)) {
 			System.out.println("Ivory Help");
 		} else {
@@ -315,6 +318,8 @@ public class IvoryCLI {
 				"Gets the status of entity");
 		Option definition = new Option(DEFINITION_OPT, false,
 				"Gets the Definition of entity");
+		Option dependency = new Option(DEPENDENCY_OPT, false,
+				"Gets the dependencies of entity");
 
 		OptionGroup group = new OptionGroup();
 		group.addOption(submit);
@@ -326,6 +331,7 @@ public class IvoryCLI {
 		group.addOption(validate);
 		group.addOption(status);
 		group.addOption(definition);
+		group.addOption(dependency);
 
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option entityType = new Option(ENTITY_TYPE_OPT, true,

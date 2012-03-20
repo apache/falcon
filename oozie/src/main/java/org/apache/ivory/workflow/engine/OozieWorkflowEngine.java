@@ -20,7 +20,6 @@ package org.apache.ivory.workflow.engine;
 
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +36,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
@@ -47,7 +47,6 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.WorkflowJob.Status;
-import org.apache.oozie.coord.TimeUnit;
 import org.apache.oozie.util.XConfiguration;
 
 /**
@@ -253,14 +252,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     break;
                     
                 case RESUME:
-                    //not already active and preconditions are true
-                    if(!BUNDLE_ACTIVE_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
+                    //not already running and preconditions are true
+                    if(!BUNDLE_RUNNING_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
                         resume(cluster, entity, job.getId());
                         success = true;
                     }
                     break;
                     
                 case KILL:
+                    //not already killed and preconditions are true
                     if(!BUNDLE_KILLED_STATUS.contains(job.getStatus()) && BUNDLE_KILL_PRECOND.contains(job.getStatus())) {
                         kill(cluster, entity, job.getId());
                         success = true;
@@ -363,7 +363,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                 if (!WF_KILL_PRECOND.contains(jobInfo.getStatus())) 
                                 break;
 
-                                client.kill(jobId);
+                                kill(cluster, jobId);
                                 status = Status.KILLED.name();
                                 break;
 
@@ -380,7 +380,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                     }
                                 jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
                                 jobprops.remove(OozieClient.BUNDLE_APP_PATH);
-                                client.reRun(jobId, jobprops);
+                                reRun(cluster, jobId, jobprops);
                                 status = Status.RUNNING.name();
                                 break;
 
@@ -388,7 +388,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                 if (!WF_SUSPEND_PRECOND.contains(jobInfo.getStatus())) 
                                 break;
 
-                                client.suspend(jobId);
+                                suspend(cluster, jobId);
                                 status = Status.SUSPENDED.name();
                                 break;
 
@@ -396,7 +396,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                 if (!WF_RESUME_PRECOND.contains(jobInfo.getStatus())) 
                                 break;
 
-                                client.resume(jobId);
+                                resume(cluster, jobId);
                                 status = Status.RUNNING.name();
                                 break;
                                 
@@ -412,6 +412,46 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
         return instMap;
+    }
+
+    private void suspend(Cluster cluster, String id) throws IvoryException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            client.suspend(id);
+            LOG.info("Suspended job " + id);
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }        
+    }
+    
+    private void resume(Cluster cluster, String id) throws IvoryException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            client.resume(id);
+            LOG.info("Resumed job " + id);
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }        
+    }
+
+    private void kill(Cluster cluster, String id) throws IvoryException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            client.kill(id);
+            LOG.info("Killed job " + id);
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }        
+    }
+
+    private void reRun(Cluster cluster, String id, Properties props) throws IvoryException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            client.reRun(id, props);
+            LOG.info("Rerun job " + id);
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }        
     }
 
     @Override
@@ -433,7 +473,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 Entity clonedOldEntity = oldEntity.clone();
                 builder.setConcurrency(clonedOldEntity, newConcurrency);
                 builder.setEndTime(clonedOldEntity, clusterName, EntityUtil.parseDateUTC(newEndTime));
-                if(clonedOldEntity == newEntity) {
+                if(clonedOldEntity.deepEquals(newEntity)) {
                     //only concurrency and endtime are changed. So, change bundle
                     change(cluster, bundle.getId(), newConcurrency, EntityUtil.parseDateUTC(newEndTime), null);
                     return;
@@ -445,31 +485,51 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             // suspend so that no new coord actions are created
             suspend(cluster, oldEntity, bundle.getId());
             List<CoordinatorJob> coords = getBundleInfo(cluster, bundle.getId()).getCoordinators();
-            Date endDate = new Date(System.currentTimeMillis() + 30*1000);
-            Date startDate = null;
+            
+            //Find default coord's start time(min start time)
+            Date minCoordStartTime = null;
             for (CoordinatorJob coord : coords) {
+                if(minCoordStartTime == null || minCoordStartTime.after(coord.getStartTime()))
+                    minCoordStartTime = coord.getStartTime();
+            }
+            
+            //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
+            long pauseDelay = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.pause.delayInSecs", "45")) * 1000;
+            Date pauseTime = new Date(System.currentTimeMillis() + pauseDelay);
+            Date newStartTime = null;
+            
+            for (CoordinatorJob coord : coords) {
+                //Add offset to pause time for late coords
+                Date localPauseTime = addOffest(pauseTime, coord.getStartTime(), minCoordStartTime);
+                Date localEndTime = coord.getLastActionTime() == null ? coord.getStartTime() : coord.getLastActionTime();
+                
                 //Set pause time to now so that future coord actions are deleted
-                change(cluster, coord.getId(), coord.getConcurrency(), coord.getLastActionTime(), endDate);
+                change(cluster, coord.getId(), coord.getConcurrency(), localEndTime, localPauseTime);
+                
                 //Change end time and reset pause time
                 coord = getCoordinatorInfo(cluster, coord.getId());
-                change(cluster, coord.getId(), coord.getConcurrency(), coord.getLastActionTime(), null);
+                localEndTime = coord.getLastActionTime() == null ? coord.getStartTime() : coord.getLastActionTime();
+                change(cluster, coord.getId(), coord.getConcurrency(), localEndTime, null);
 
-                //calculate start time as next schedule time after end date
-                Calendar cal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
-                cal.setTime(endDate);
-                cal.add(TimeUnit.valueOf(coord.getTimeUnit().name()).getCalendarUnit(), coord.getConcurrency());
-                if(startDate == null || startDate.after(cal.getTime()))
-                    startDate = cal.getTime();
+                //calculate start time for updated entity as next schedule time after end date
+                if(newStartTime == null || newStartTime.after(localEndTime)) {
+                    newStartTime = localEndTime;
+                }
             }
             resume(cluster, oldEntity, bundle.getId());
             
             //schedule new entity
             Entity schedEntity = newEntity.clone();
-            builder.setStartDate(schedEntity, clusterName, startDate);
+            builder.setStartDate(schedEntity, clusterName, newStartTime);
             schedule(schedEntity);
         }
     }
 
+    private Date addOffest(Date target, Date globalTime, Date localTime) {
+        long offset = localTime.getTime() - globalTime.getTime();
+        return new Date(target.getTime() + offset);
+    }
+    
     private BundleJob getBundleInfo(Cluster cluster, String bundleId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
@@ -479,6 +539,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
+    //Doesn't return any coord actions
     private CoordinatorJob getCoordinatorInfo(Cluster cluster, String coordId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
@@ -494,6 +555,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             listener.beforeSuspend(cluster, entity);
             client.suspend(bunldeId);
             listener.afterSuspend(cluster, entity);
+            LOG.info("Suspended bundle " + bunldeId);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
@@ -505,6 +567,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             listener.beforeDelete(cluster, entity);
             client.kill(bunldeId);
             listener.afterDelete(cluster, entity);
+            LOG.info("Killed bundle " + bunldeId);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
@@ -516,6 +579,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             listener.beforeResume(cluster, entity);
             client.resume(bunldeId);
             listener.afterResume(cluster, entity);
+            LOG.info("Resumed bundle " + bunldeId);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
@@ -526,9 +590,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             StringBuilder changeValue = new StringBuilder();
             changeValue.append(OozieClient.CHANGE_VALUE_CONCURRENCY).append("=").append(concurrency).append(";");
-            changeValue.append(OozieClient.CHANGE_VALUE_ENDTIME).append("=").append(EntityUtil.formatDateUTC(endTime)).append(";");
-            changeValue.append(OozieClient.CHANGE_VALUE_PAUSETIME).append("=").append(pauseTime == null ? "" : EntityUtil.formatDateUTC(pauseTime));
+            String endTimeStr = EntityUtil.formatDateUTC(endTime);
+            changeValue.append(OozieClient.CHANGE_VALUE_ENDTIME).append("=").append(endTimeStr).append(";");
+            String pauseTimeStr = EntityUtil.formatDateUTC(pauseTime);
+            changeValue.append(OozieClient.CHANGE_VALUE_PAUSETIME).append("=").append(pauseTime == null ? "" : pauseTimeStr);
             client.change(id, changeValue.toString());
+            LOG.info("Changed bundle/coord " + id + ": concurrency=" + concurrency + ", endTime=" + endTimeStr + ", pauseTime=" + pauseTimeStr);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
