@@ -254,7 +254,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     
                 case RESUME:
                     //not already active and preconditions are true
-                    if(!BUNDLE_ACTIVE_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
+                    if(!BUNDLE_RUNNING_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
                         resume(cluster, entity, job.getId());
                         success = true;
                     }
