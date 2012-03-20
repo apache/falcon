@@ -513,7 +513,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
                 //calculate start time for updated entity as next schedule time after end date
                 if(newStartTime == null || newStartTime.after(localEndTime)) {
-                    newStartTime = coord.getLastActionTime();
+                    newStartTime = localEndTime;
                 }
             }
             resume(cluster, oldEntity, bundle.getId());
