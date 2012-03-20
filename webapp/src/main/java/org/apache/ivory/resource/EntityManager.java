@@ -172,7 +172,7 @@ public class EntityManager {
             audit(request, entityName, type, "UPDATE");
             Entity oldEntity = getEntityObject(entityName, type);
             Entity newEntity = deserializeEntity(request, entityType);
-            if(oldEntity != newEntity) {
+            if(!oldEntity.deepEquals(newEntity)) {
                 if(entityType != EntityType.PROCESS)
                     throw new IvoryException("Update not supported for " + entityType);
                 

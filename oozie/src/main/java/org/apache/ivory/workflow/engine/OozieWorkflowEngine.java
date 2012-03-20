@@ -20,7 +20,6 @@ package org.apache.ivory.workflow.engine;
 
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +47,6 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.WorkflowJob.Status;
-import org.apache.oozie.coord.TimeUnit;
 import org.apache.oozie.util.XConfiguration;
 
 /**
@@ -435,7 +433,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 Entity clonedOldEntity = oldEntity.clone();
                 builder.setConcurrency(clonedOldEntity, newConcurrency);
                 builder.setEndTime(clonedOldEntity, clusterName, EntityUtil.parseDateUTC(newEndTime));
-                if(clonedOldEntity == newEntity) {
+                if(clonedOldEntity.deepEquals(newEntity)) {
                     //only concurrency and endtime are changed. So, change bundle
                     change(cluster, bundle.getId(), newConcurrency, EntityUtil.parseDateUTC(newEndTime), null);
                     return;

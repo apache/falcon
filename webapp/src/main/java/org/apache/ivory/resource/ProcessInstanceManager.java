@@ -101,9 +101,11 @@ public class ProcessInstanceManager extends EntityManager {
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="kill")
-    public ProcessInstancesResult killProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
+            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
             validateParams(processName, startStr, endStr);
             
             Date start = EntityUtil.parseDateUTC(startStr);
@@ -123,9 +125,11 @@ public class ProcessInstanceManager extends EntityManager {
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="suspend")
-    public ProcessInstancesResult suspendProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
+            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
             validateParams(processName, startStr, endStr);
             
             Date start = EntityUtil.parseDateUTC(startStr);
@@ -145,9 +149,11 @@ public class ProcessInstanceManager extends EntityManager {
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="resume")
-    public ProcessInstancesResult resumeProcessInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
+    public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
+            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
             validateParams(processName, startStr, endStr);
             
             Date start = EntityUtil.parseDateUTC(startStr);
@@ -170,6 +176,7 @@ public class ProcessInstanceManager extends EntityManager {
     public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
+            audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
             validateParams(processName, startStr, endStr);
             
             Date start = EntityUtil.parseDateUTC(startStr);
