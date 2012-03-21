@@ -30,6 +30,12 @@
     <description>Ivory Metrics</description>
     <name>Ivory Metrics</name>
     <packaging>jar</packaging>
+    <repositories>
+        <repository>
+            <id>platform-pe-releases</id>
+            <url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
+        </repository>
+	</repositories>
 
     <dependencies>
         <dependency>
@@ -60,30 +66,5 @@
             <artifactId>mondemand-java</artifactId>
             <version>4.0.0</version>
         </dependency>
-
     </dependencies>
-    <build>
-         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.4</version>
-                <configuration>
-                    <verbose>true</verbose>
-                    <complianceLevel>1.5</complianceLevel>
-                            <includes>
-                                <include>org/apache/ivory/aspect/*.java</include>
-                                <include>org/apache/ivory/monitoring/*.java</include>
-                            </includes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
