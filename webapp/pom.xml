@@ -76,6 +76,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-metrics</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
       <version>1.9</version>
@@ -129,17 +135,6 @@
 		<version>1.6.11</version>
 	</dependency>
 
-	<dependency>
-		<groupId>org.lwes</groupId>
-		<artifactId>lwes-java</artifactId>
-		<version>0.2.5</version>
-	</dependency>
-	<dependency>
-		<groupId>org.mondemand</groupId>
-		<artifactId>mondemand-java</artifactId>
-		<version>4.0.0</version>
-	</dependency>
-
   </dependencies>
 
 	<build>
@@ -156,8 +151,6 @@
 								<include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
-								<include>org/apache/ivory/aspect/*.java</include>
-								<include>org/apache/ivory/monitoring/*.java</include>
 							</includes>
 				</configuration>
 				<executions>
