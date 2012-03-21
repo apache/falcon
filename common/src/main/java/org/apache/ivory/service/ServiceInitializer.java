@@ -23,20 +23,18 @@ import org.apache.ivory.util.ReflectionUtils;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ServiceInitializer {
 
     private static Logger LOG = Logger.getLogger(ServiceInitializer.class);
-    private final List<IvoryService> orderedList = new ArrayList<IvoryService>();
+    private final Services services = Services.get();
 
     public void initialize() throws IvoryException {
-        String serviceClassNames = StartupProperties.get().getProperty("application.services", "");
+        String serviceClassNames = StartupProperties.get().
+                getProperty("application.services", "org.apache.ivory.entity.v0.EntityGraph");
         for (String serviceClassName : serviceClassNames.split(",")) {
             if (serviceClassName.isEmpty()) continue;
             IvoryService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
-            orderedList.add(service);
+            services.register(service);
             LOG.info("Initializing service : " + serviceClassName);
             service.init();
             LOG.info("Service initialized : " + serviceClassName);
@@ -44,7 +42,7 @@ public class ServiceInitializer {
     }
 
     public void destroy() throws IvoryException {
-        for (IvoryService service : orderedList) {
+        for (IvoryService service : services) {
             LOG.info("Destroying service : " + service.getClass().getName());
             service.destroy();
             LOG.info("Service destroyed : " + service.getClass().getName());

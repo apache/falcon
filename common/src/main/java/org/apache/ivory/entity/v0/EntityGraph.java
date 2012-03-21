@@ -7,6 +7,7 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
+import org.apache.ivory.service.IvoryService;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,27 +19,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * User: sriksun
  * Date: 18/03/12
  */
-public class EntityGraph implements ConfigurationChangeListener {
+public class EntityGraph implements
+        ConfigurationChangeListener, IvoryService {
 
-    private final ConfigurationStore store =
-            ConfigurationStore.get();
+
+    private static EntityGraph instance = new EntityGraph();
 
     private Map<Node, Set<Node>> graph =
             new ConcurrentHashMap<Node, Set<Node>>();
-
-    private static EntityGraph instance = new EntityGraph();
 
     public static EntityGraph get() {
         return instance;
     }
 
-    public EntityGraph() {
-        store.registerListener(this);
-    }
-
     public Set<Entity> getDependents(Entity entity) throws IvoryException {
         Node entityNode = new Node(entity.getEntityType(), entity.getName());
         if (graph.containsKey(entityNode)) {
+            ConfigurationStore store = ConfigurationStore.get();
             Set<Entity> dependents = new HashSet<Entity>();
             for (Node node: graph.get(entityNode)) {
                 Entity dependentEntity = store.get(node.type, node.name);
@@ -89,6 +86,9 @@ public class EntityGraph implements ConfigurationChangeListener {
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
                 graph.get(entry.getKey()).removeAll(entry.getValue());
+                if (graph.get(entry.getKey()).isEmpty()) {
+                    graph.remove(entry.getKey());
+                }
             }
         }
     }
@@ -151,6 +151,19 @@ public class EntityGraph implements ConfigurationChangeListener {
             clusterEdges.add(feedNode);
         }
         return nodeEdges;
+    }
+
+    @Override
+    public String getName() {
+        return "graph";
+    }
+
+    @Override
+    public void init() throws IvoryException {
+    }
+
+    @Override
+    public void destroy() throws IvoryException {
     }
 
     private static class Node {

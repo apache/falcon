@@ -1,11 +1,13 @@
 package org.apache.ivory.entity.v0;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Clusters;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.*;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.service.Services;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -19,18 +21,18 @@ import java.util.Set;
  */
 public class EntityGraphTest {
 
-    private final ConfigurationStore store =
-            ConfigurationStore.get();
+    private ConfigurationStore store;
 
-    private final EntityGraph graph = new EntityGraph();
+    private EntityGraph graph;
 
     @BeforeClass
     @AfterClass
     public void cleanupStore() throws Exception {
-        store.registerListener(graph);
+        graph = EntityGraph.get();
+        store = ConfigurationStore.get();
         for (EntityType type : EntityType.values()) {
-            for (String name : ConfigurationStore.get().getEntities(type)) {
-                ConfigurationStore.get().remove(type, name);
+            for (String name : store.getEntities(type)) {
+                store.remove(type, name);
             }
         }
     }
@@ -147,7 +149,6 @@ public class EntityGraphTest {
         store.publish(EntityType.CLUSTER, cluster);
         store.publish(EntityType.PROCESS, process);
 
-        graph.onAdd(process);
         Set<Entity> entities = graph.getDependents(process);
         Assert.assertEquals(entities.size(), 1);
         Assert.assertTrue(entities.contains(cluster));
@@ -158,10 +159,10 @@ public class EntityGraphTest {
 
         store.remove(EntityType.PROCESS, process.getName());
         entities = graph.getDependents(cluster);
-        Assert.assertTrue(entities.isEmpty());
+        Assert.assertTrue(entities == null);
 
         entities = graph.getDependents(process);
-        Assert.assertTrue(entities.isEmpty());
+        Assert.assertTrue(entities == null);
     }
 
     @Test
@@ -235,7 +236,7 @@ public class EntityGraphTest {
         Assert.assertTrue(entities.contains(f3));
 
         entities = graph.getDependents(p2);
-        Assert.assertTrue(entities.isEmpty());
+        Assert.assertTrue(entities == null);
 
         entities = graph.getDependents(f1);
         Assert.assertEquals(entities.size(), 2);
@@ -243,7 +244,7 @@ public class EntityGraphTest {
         Assert.assertTrue(entities.contains(cluster));
 
         entities = graph.getDependents(f2);
-        Assert.assertTrue(entities.isEmpty());
+        Assert.assertTrue(entities == null);
 
         entities = graph.getDependents(f3);
         Assert.assertEquals(entities.size(), 2);

@@ -53,6 +53,11 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
             "oozie.service.WorkflowAppService.system.libpath";
 
     @Override
+    public String getName() {
+        return "workflow-libs";
+    }
+
+    @Override
     public void init() throws IvoryException {
         store.registerListener(this);
         Collection<String> clusterNames = store.getEntities(EntityType.CLUSTER);
