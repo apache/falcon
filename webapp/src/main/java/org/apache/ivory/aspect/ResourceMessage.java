@@ -20,7 +20,7 @@ package org.apache.ivory.aspect;
 
 import java.util.Map;
 
-//Message to be sent to iMon
+//Message to be sent to logging system
 public class ResourceMessage {
 
 	private String action;
@@ -40,9 +40,25 @@ public class ResourceMessage {
 		this.executionTime = executionTime;
 	}
 	
+	public String getAction() {
+		return action;
+	}
+
+	public Map<String, String> getDimensions() {
+		return dimensions;
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public long getExecutionTime() {
+		return executionTime;
+	}
+
 	@Override
 	public String toString() {
-		return "{Action:"+action+", Dimensions:"+dimensions+", Status: "+status.name()+", Time-taken:"+executionTime+"}";
+		return "{Action:"+action+", Dimensions:"+dimensions+", Status: "+status.name()+", Time-taken:"+executionTime+" ns}";
 	}
 
 

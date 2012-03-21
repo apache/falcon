@@ -28,6 +28,12 @@ import java.util.TimeZone;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.reflection.FieldDictionary;
+import com.thoughtworks.xstream.converters.reflection.ImmutableFieldKeySorter;
+import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
 public abstract class Entity {
     private ThreadLocal<String> stagingPath;
 
@@ -59,6 +65,20 @@ public abstract class Entity {
         return true;
     }
 
+    public boolean deepEquals(Entity entity) {
+        if(entity == null)
+            return false;
+        if(this == entity)
+            return true;
+        if(!equals(entity))
+            return false;
+        
+        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())),new DomDriver("utf-8"));
+        String thisStr = xstream.toXML(this);
+        String entityStr = xstream.toXML(entity);
+        return thisStr.equals(entityStr);
+    }
+    
     @Override
     public int hashCode() {
         String clazz = this.getClass().getName();

@@ -16,17 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.aspect;
+package org.apache.ivory.monitoring;
 
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.ivory.aspect.AbstractIvoryAspect;
+import org.apache.ivory.aspect.ResourceMessage;
+import org.apache.ivory.monitoring.MonDemandClient;
 import org.aspectj.lang.annotation.Aspect;
+import org.mondemand.Client;
 
+/**
+ * publishes captured messages to MonDemand
+ */
 @Aspect
 public class ImonAspect extends AbstractIvoryAspect {
 
-	// TODO get this value from system.properties file
+	// TODO get this value from properties file
 	private static final int ALLOWED_QUEUE_SIZE = 1000;
 	// Producer should consider as non-blocking and consumer as blocking queue
 	private static final BlockingQueue<ResourceMessage> QUEUE = new ArrayBlockingQueue<ResourceMessage>(
@@ -34,9 +42,8 @@ public class ImonAspect extends AbstractIvoryAspect {
 
 	public ImonAspect() {
 		super();
-		// TODO I should'nt spawn a thread
 		Thread daemon = new Consumer();
-		daemon.setName("iMonConsumer");
+		daemon.setName("iMonPublisher");
 		daemon.setDaemon(true);
 		daemon.start();
 	}
@@ -62,7 +69,17 @@ public class ImonAspect extends AbstractIvoryAspect {
 		}
 
 		private void sendToImon(ResourceMessage message) {
-			System.out.println("iMon Queue has:" + QUEUE.size() + " messages");
+			Client client = MonDemandClient.getClient();
+
+			client.removeAllContexts();
+			client.addContext("hostname", MonDemandClient.getHostname());
+
+			client.setKey(message.getAction(), message.getExecutionTime());
+			for (Map.Entry<String, String> dimension : message.getDimensions()
+					.entrySet()) {
+				client.addContext(dimension.getKey(), dimension.getValue());
+			}
+			client.flushStats(true);
 		}
 	}
 }
