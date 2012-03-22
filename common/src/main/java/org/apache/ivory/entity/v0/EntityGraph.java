@@ -8,6 +8,7 @@ import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.service.IvoryService;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EntityGraph implements
         ConfigurationChangeListener, IvoryService {
 
+    private static Logger LOG = Logger.getLogger(EntityGraph.class);
 
     private static EntityGraph instance = new EntityGraph();
 
@@ -60,6 +62,7 @@ public class EntityGraph implements
                 break;
         }
         if (nodeEdges == null) return;
+        LOG.debug("Adding edges for " + entity.getName() + ": " + nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
@@ -68,6 +71,7 @@ public class EntityGraph implements
                 graph.put(entry.getKey(), entry.getValue());
             }
         }
+        LOG.debug("Merged edges to graph " + entity.getName());
     }
 
     @Override
