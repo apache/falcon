@@ -30,7 +30,7 @@ import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
-import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.parser.ProcessEntityParser.Frequency;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -73,36 +73,40 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException {
+    public List<ExternalId> getExternalIds(Feed feed, String cluster, Date start, Date end) throws IvoryException {
         throw new IvoryException("getExternalIds is not supported for Feeds!");
     }
 
     @Override
-    public int getConcurrency(Entity entity) {
+    public int getConcurrency(Feed feed) {
         return 1;
     }
 
     @Override
-    public String getEndTime(Entity entity, String cluster) {
-        Feed feed = (Feed) entity;
+    public String getEndTime(Feed feed, String cluster) {
         org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
         return clusterDef.getValidity().getEnd();
     }
 
     @Override
-    public void setStartDate(Entity entity, String cluster, Date startDate) {
-        Feed feed = (Feed) entity;
+    public void setStartDate(Feed feed, String cluster, Date startDate) {
         org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
         clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 
     @Override
-    public void setEndTime(Entity entity, String cluster, Date endDate) {
-        Feed feed = (Feed) entity;
+    public void setEndTime(Feed feed, String cluster, Date endDate) {
         org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
         clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
     }
 
     @Override
-    public void setConcurrency(Entity entity, int concurrency) { }
+    public void setConcurrency(Feed feed, int concurrency) { }
+
+    @Override
+    public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
+        org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
+        return getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()), Frequency.valueOf(feed.getFrequency()), 
+                feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
+    }
 }
