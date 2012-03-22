@@ -45,6 +45,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -328,6 +329,31 @@ public class EntityManager {
             return new EntityList(entities);
         } catch (Exception e) {
             LOG.error("Unable to get dependencies for entity " + entity + "(" + type + ")", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Returns the list of entities registered of a given type.
+     *
+     * @param type
+     * @return String
+     */
+    @GET
+    @Path("list/{type}")
+    @Produces(MediaType.TEXT_XML)
+	public EntityList getDependencies(@PathParam("type") String type) {
+        try {
+            EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            Collection<String> entityNames = configStore.getEntities(entityType);
+            Entity[] entities = new Entity[entityNames.size()];
+            int index = 0;
+            for (String entityName : entityNames) {
+                entities[index++] = configStore.get(entityType, entityName);
+            }
+            return new EntityList(entities);
+        } catch (Exception e) {
+            LOG.error("Unable to get list for entities for (" + type + ")", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }

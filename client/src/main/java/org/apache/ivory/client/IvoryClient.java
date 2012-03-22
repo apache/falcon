@@ -89,6 +89,7 @@ public class IvoryClient {
         DELETE("api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML),
         STATUS("api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN),
         DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
+        LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
         DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
 
 		private String path;
@@ -222,6 +223,11 @@ public class IvoryClient {
         return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
     }
 
+    public String getEntityList(String entityType)
+            throws IvoryCLIException {
+        return sendListRequest(Entities.LIST, entityType);
+    }
+
 	public String getRunningInstances(String processName)
 			throws IvoryCLIException {
 
@@ -329,6 +335,20 @@ public class IvoryClient {
 
 	}
 
+	private String sendListRequest(Entities entities, String entityType)
+            throws IvoryCLIException {
+
+		ClientResponse clientResponse = service.path(entities.path)
+				.path(entityType).accept(entities.mimeType)
+				.type(MediaType.TEXT_XML)
+				.method(entities.method, ClientResponse.class);
+
+		checkIfSuccessfull(clientResponse);
+
+        return parseEntityList(clientResponse);
+
+	}
+
 	private String sendEntityRequestWithObject(Entities entities,
 			String entityType, Object requestObject) throws IvoryCLIException {
 
@@ -380,6 +400,9 @@ public class IvoryClient {
 			throws IvoryCLIException {
 
 		EntityList result = clientResponse.getEntity(EntityList.class);
+        if (result == null) {
+            return "";
+        }
 		return result.toString();
 
 	}

@@ -55,6 +55,7 @@ public class IvoryCLI {
 	public static final String STATUS_OPT = "status";
 	public static final String DEFINITION_OPT = "definition";
 	public static final String DEPENDENCY_OPT = "dependency";
+	public static final String LIST_OPT = "list";
 
 	public static final String INSTANCE_CMD = "instance";
 	public static final String PROCESS_OPT = "processName";
@@ -244,6 +245,8 @@ public class IvoryCLI {
 			result = client.getDefinition(entityType, entityName);
 		} else if (optionsList.contains(DEPENDENCY_OPT)) {
 			result = client.getDependency(entityType, entityName);
+		} else if (optionsList.contains(LIST_OPT)) {
+			result = client.getEntityList(entityType);
 		} else if (optionsList.contains(HELP_CMD)) {
 			System.out.println("Ivory Help");
 		} else {
@@ -262,6 +265,11 @@ public class IvoryCLI {
 					|| filePath.equals("")) {
 				throw new IvoryCLIException(
 						"Missing argument: entityType or filePath");
+			}
+        } else if (optionsList.contains(LIST_OPT)) {
+			if (entityType == null || entityType.equals("")) {
+				throw new IvoryCLIException(
+						"Missing argument: entityType");
 			}
 		} else {
 			if (entityType == null || entityType.equals("")
@@ -320,6 +328,8 @@ public class IvoryCLI {
 				"Gets the Definition of entity");
 		Option dependency = new Option(DEPENDENCY_OPT, false,
 				"Gets the dependencies of entity");
+        Option list = new Option(LIST_OPT, false,
+                "List entities registerd for a type");
 
 		OptionGroup group = new OptionGroup();
 		group.addOption(submit);
@@ -332,6 +342,7 @@ public class IvoryCLI {
 		group.addOption(status);
 		group.addOption(definition);
 		group.addOption(dependency);
+		group.addOption(list);
 
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option entityType = new Option(ENTITY_TYPE_OPT, true,
