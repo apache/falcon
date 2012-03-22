@@ -457,7 +457,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     @Override
     public void update(Entity oldEntity, Entity newEntity) throws IvoryException {
         Map<Cluster, BundleJob> bundleMap = findBundle(oldEntity);
-        OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
+        OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.
+                getBuilder(ENGINE, oldEntity);
 
         for (Map.Entry<Cluster, BundleJob> entry : bundleMap.entrySet()) {
             Cluster cluster = entry.getKey();

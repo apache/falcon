@@ -31,7 +31,7 @@ import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
-import org.apache.ivory.entity.parser.ProcessEntityParser.Frequency;
+import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
