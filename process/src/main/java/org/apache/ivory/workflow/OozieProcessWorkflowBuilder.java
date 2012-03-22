@@ -18,13 +18,6 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.OozieProcessMapper;
@@ -32,10 +25,11 @@ import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.Frequency;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
+
+import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
@@ -67,24 +61,15 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
     
     @Override
-    public List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException {
-        Process process = (Process) entity;
-        
+    public List<ExternalId> getExternalIds(Process process, String cluster, Date start, Date end) throws IvoryException {
         TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
+
         Calendar procStart = Calendar.getInstance(timezone);
-        procStart.setTime(EntityUtil.parseDateUTC(process.getValidity().getStart()));
-        Calendar startCal = Calendar.getInstance(timezone);
-        startCal.setTime(start);
-        Calendar endCal = Calendar.getInstance(timezone);
-        endCal.setTime(end);
+        procStart.setTime(getNextStartTime(process, cluster, start));
         
         Frequency freq = Frequency.valueOf(process.getFrequency());
         List<ExternalId> extIds = new ArrayList<ExternalId>();
-        while(procStart.before(startCal)) {
-            procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
-        }
-        
-        while(procStart.compareTo(endCal) <= 0) {
+        while(procStart.getTime().before(end)) {
             extIds.add(new ExternalId(process.getName(), procStart.getTime()));
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
@@ -92,32 +77,33 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     @Override
-    public int getConcurrency(Entity entity) {
-        Process process = (Process) entity;
+    public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
+        return getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()), Frequency.valueOf(process.getFrequency()), 
+                process.getPeriodicity(), process.getValidity().getTimezone(), now);
+    }
+    
+    @Override
+    public int getConcurrency(Process process) {
         return process.getConcurrency();
     }
 
     @Override
-    public String getEndTime(Entity entity, String cluster) {
-        Process process = (Process) entity;
+    public String getEndTime(Process process, String cluster) {
         return process.getValidity().getEnd();
     }
 
     @Override
-    public void setStartDate(Entity entity, String cluster, Date startDate) {
-        Process process = (Process) entity;
+    public void setStartDate(Process process, String cluster, Date startDate) {
         process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 
     @Override
-    public void setConcurrency(Entity entity, int concurrency) {
-        Process process = (Process) entity;
+    public void setConcurrency(Process process, int concurrency) {
         process.setConcurrency(concurrency);
     }
 
     @Override
-    public void setEndTime(Entity entity, String cluster, Date endDate) {
-        Process process = (Process) entity;
+    public void setEndTime(Process process, String cluster, Date endDate) {
         process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
     }
 }

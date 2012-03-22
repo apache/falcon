@@ -19,6 +19,7 @@
 package org.apache.ivory.workflow;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,8 @@ import java.util.Properties;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -72,13 +75,26 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         return map;
     }
     
-    public abstract int getConcurrency(Entity entity);
+    public abstract int getConcurrency(T entity);
 
-    public abstract void setConcurrency(Entity entity, int concurrency);
+    public abstract void setConcurrency(T entity, int concurrency);
 
-    public abstract String getEndTime(Entity entity, String cluster);
+    public abstract String getEndTime(T entity, String cluster);
 
-    public abstract void setEndTime(Entity entity, String cluster, Date endDate);
+    public abstract void setEndTime(T entity, String cluster, Date endDate);
 
-    public abstract void setStartDate(Entity entity, String cluster, Date startDate);
+    public abstract void setStartDate(T entity, String cluster, Date startDate);
+    
+    public abstract Date getNextStartTime(T entity, String cluster, Date now) throws IvoryException;
+    
+    protected Date getNextStartTime(Date startTime, Frequency frequency, int periodicity, String timzone, Date now) {
+        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timzone));
+        startCal.setTime(startTime);
+        
+        while(startCal.getTime().before(now)) {
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), periodicity);
+        }
+        return startCal.getTime();
+        
+    }
 }
