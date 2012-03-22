@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -250,7 +251,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setControls(controls);
 
         // Configuration
-        CONFIGURATION config = createCoordDefaultConfiguration(cluster, coordPath);
+        CONFIGURATION config = createLateCoordinatorConfiguration(cluster, coordPath, offset);
         List<Property> props = config.getProperty();
 
         // inputs
@@ -335,6 +336,31 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setAction(action);
 
         return coord;
+    }
+
+    protected org.apache.ivory.oozie.coordinator.CONFIGURATION
+                    createLateCoordinatorConfiguration(Cluster cluster, Path coordPath, String offsetExpr)
+            throws IvoryException {
+        org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
+        List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
+
+        Process entity = getEntity();
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), entity.getName()));
+        Long millis = LateDataUtils.getDurationFromOffset(offsetExpr);
+        long offset = -millis / (60000);
+        String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
+        props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
+
+        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), nominalTime).getId()));
+        props.add(createCoordProperty("queueName", "default"));
+
+        props.addAll(getEntityProperties());
+        return conf;
     }
 
     private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {

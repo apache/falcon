@@ -26,6 +26,7 @@ public class AbstractTestBase {
     protected static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     protected MiniDFSCluster dfsCluster;
     protected Configuration conf= new Configuration();
+
     protected void storeEntity(EntityType type, String name) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         ConfigurationStore store = ConfigurationStore.get();

@@ -82,7 +82,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @Test
     public void testParse() throws IOException, IvoryException, JAXBException {
 
-        Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(PROCESS_XML));
+        Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
 
         Assert.assertNotNull(process);
         Assert.assertEquals(process.getName(), "sample");
@@ -123,7 +123,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 
     @Test
     public void testELExpressions() throws Exception {
-        Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(PROCESS_XML));
+        Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
         process.getInputs().getInput().get(0).setStartInstance("lastMonth(0,0,0)");
         try {
             parser.validate(process);
@@ -154,7 +154,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidProcess() throws Exception {
-        Process process = (Process) parser.parseAndValidate(ProcessEntityParserTest.class.getResourceAsStream(PROCESS_XML));
+        Process process = (Process) parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
         process.getCluster().setName("invalid cluster");
         parser.validate(process);
     }
@@ -172,7 +172,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
             threadList.add(new Thread() {
                 public void run() {
                     try {
-                        ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+                        EntityParser parser = EntityParserFactory.getParser(EntityType.PROCESS);
                         parser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
                     } catch (Exception e) {
                         throw new RuntimeException(e);

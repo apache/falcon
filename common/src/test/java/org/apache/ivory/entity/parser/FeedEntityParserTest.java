@@ -82,7 +82,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	@Test
 	public void testParse() throws IOException, IvoryException, JAXBException {
 
-		Feed feed = (Feed) parser.parseAndValidate(this.getClass()
+		Feed feed = parser.parseAndValidate(this.getClass()
 				.getResourceAsStream(FEED_XML));
 
 		Assert.assertNotNull(feed);
