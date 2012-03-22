@@ -6,6 +6,7 @@ import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -15,6 +16,10 @@ public class FeedUpdateTest extends AbstractTestBase {
 
     private final FeedEntityParser parser = (FeedEntityParser)
             EntityParserFactory.getParser(EntityType.FEED);
+    private final ProcessEntityParser processParser = (ProcessEntityParser)
+            EntityParserFactory.getParser(EntityType.PROCESS);
+    private static final String FEED1_XML = "/config/feed/feed-0.2.xml";
+    private static final String PROCESS1_XML = "/config/process/process-0.2.xml";
 
     @BeforeClass
     public void init() throws Exception {
@@ -51,6 +56,7 @@ public class FeedUpdateTest extends AbstractTestBase {
     public void testFeedUpdateWithOneDependentProcess() {
         try {
             ConfigurationStore.get().remove(EntityType.FEED, "clicks");
+            ConfigurationStore.get().remove(EntityType.PROCESS, "sample");
             Feed feed = parser.parseAndValidate(this.getClass()
                     .getResourceAsStream(FEED_XML));
             ConfigurationStore.get().publish(EntityType.FEED, feed);
@@ -68,6 +74,9 @@ public class FeedUpdateTest extends AbstractTestBase {
     public void testFeedUpdateWithMultipleDependentProcess() {
         try {
             ConfigurationStore.get().remove(EntityType.FEED, "clicks");
+            ConfigurationStore.get().remove(EntityType.PROCESS, "sample");
+            ConfigurationStore.get().remove(EntityType.PROCESS, "sample2");
+            ConfigurationStore.get().remove(EntityType.PROCESS, "sample3");
             Feed feed = parser.parseAndValidate(this.getClass()
                     .getResourceAsStream(FEED_XML));
             ConfigurationStore.get().publish(EntityType.FEED, feed);
@@ -80,6 +89,33 @@ public class FeedUpdateTest extends AbstractTestBase {
                     .getResourceAsStream(FEED_XML));
         } catch (Exception e) {
             Assert.fail("Didn't expect feed parsing to fail", e);
+        }
+    }
+
+    @Test
+    public void testFeedUpdateWithViolations() throws Exception {
+        ConfigurationStore.get().remove(EntityType.FEED, "clicks");
+        ConfigurationStore.get().remove(EntityType.PROCESS, "sample");
+        ConfigurationStore.get().remove(EntityType.PROCESS, "sample2");
+        storeEntity(EntityType.FEED, "impressionFeed");
+        storeEntity(EntityType.FEED, "imp-click-join1");
+        storeEntity(EntityType.FEED, "imp-click-join2");
+        Feed feed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED_XML));
+        ConfigurationStore.get().publish(EntityType.FEED, feed);
+        Process process = processParser.parseAndValidate(this.getClass()
+                .getResourceAsStream(PROCESS1_XML));
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+        Process p1 = (Process) process.clone();
+        p1.setName("sample2");
+        ConfigurationStore.get().publish(EntityType.PROCESS, p1);
+
+        try {
+            //Try parsing the same feed xml
+            parser.parseAndValidate(this.getClass()
+                    .getResourceAsStream(FEED1_XML));
+            Assert.fail("Expected feed parsing to fail");
+        } catch (ValidationException ignore) {
         }
     }
 }
