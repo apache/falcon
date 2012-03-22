@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.util.StartupProperties;
@@ -95,20 +96,35 @@ public class ConfigurationStore {
 
     private static final ConfigurationStore store = new ConfigurationStore();
 
-    private void bootstrap() throws IOException {
-        for (EntityType type : EntityType.values()) {
-            ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-            FileStatus[] files = fs.globStatus(new Path(storePath, type.name()+Path.SEPARATOR+"*"));
-            if (files != null) {
-                for (FileStatus file : files) {
-                    String fileName = file.getPath().getName();
-                    String encodedEntityName = fileName.substring(0,
-                            fileName.length() - 4); //drop ".xml"
-                    String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
-                    entityMap.put(entityName, NULL);
+    private void bootstrap() throws IvoryException {
+        try {
+            for (EntityType type : EntityType.values()) {
+                ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
+                FileStatus[] files = fs.globStatus(new Path(storePath, type.name()+Path.SEPARATOR+"*"));
+                if (files != null) {
+                    for (FileStatus file : files) {
+                        String fileName = file.getPath().getName();
+                        String encodedEntityName = fileName.substring(0,
+                                fileName.length() - 4); //drop ".xml"
+                        String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
+                        entityMap.put(entityName, restore(type, entityName));
+                    }
                 }
             }
+        } catch (IOException e) {
+            throw new IvoryException("Unable to restore configurations", e);
         }
+        EntityGraph graph = EntityGraph.get();
+        for (Entity cluster : dictionary.get(EntityType.CLUSTER).values()) {
+            graph.onAdd(cluster);
+        }
+        for (Entity feed : dictionary.get(EntityType.FEED).values()) {
+            graph.onAdd(feed);
+        }
+        for (Entity process : dictionary.get(EntityType.PROCESS).values()) {
+            graph.onAdd(process);
+        }
+        registerListener(graph);
     }
 
     public void registerListener(ConfigurationChangeListener listener) {

@@ -26,6 +26,15 @@
       <param name="ConversionPattern" value="%d %-5p - %m%n"/>
     </layout>
   </appender>
+  
+    <appender name="METRIC" class="org.apache.log4j.DailyRollingFileAppender">
+    <param name="File" value="/var/log/ivory/metric.log"/>
+    <param name="Append" value="true"/>
+    <param name="Threshold" value="debug"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d %-5p - %m%n"/>
+    </layout>
+  </appender>
 
   <logger name="org.apache.ivory">
     <level value="debug"/>
@@ -35,6 +44,11 @@
   <logger name="AUDIT">
     <level value="info"/>
     <appender-ref ref="AUDIT" />
+  </logger>
+  
+    <logger name="METRIC">
+    <level value="info"/>
+    <appender-ref ref="METRIC" />
   </logger>
 
   <root>

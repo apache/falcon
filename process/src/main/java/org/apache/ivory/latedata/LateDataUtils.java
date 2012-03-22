@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.converter;
+package org.apache.ivory.latedata;
 
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.ivory.IvoryException;

@@ -18,14 +18,17 @@
 
 package org.apache.ivory.aspect;
 
+import org.apache.log4j.Logger;
 import org.aspectj.lang.annotation.Aspect;
 
 @Aspect
-public class LoggingAspect extends AbstractIvoryAspect{
+public class LoggingAspect extends AbstractIvoryAspect {
+
+	private static final Logger METRIC = Logger.getLogger("METRIC");
 
 	@Override
 	public void publishMessage(ResourceMessage message) {
-		System.out.println(message);
+		METRIC.info(message);
 	}
 
 }

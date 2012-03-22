@@ -43,13 +43,11 @@ public class ContextStartupListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        showStartupInfo();
+
         //Initialize Startup and runtime properties instance for use
         LOG.info("Initializing startup properties ...");
         StartupProperties.get();
-        ConfigurationStore.get();
-        EntityGraph.get();
-
-        showStartupInfo();
 
         LOG.info("Initializing runtime properties ...");
         RuntimeProperties.get();
@@ -57,6 +55,7 @@ public class ContextStartupListener implements ServletContextListener {
         try {
             ProcessEntityParser.init();
             startupServices.initialize();
+            ConfigurationStore.get();
         } catch (IvoryException e) {
             throw new RuntimeException(e);
         }

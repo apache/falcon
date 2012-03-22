@@ -30,6 +30,12 @@
   <description>Ivory Web Application</description>
   <name>Ivory Web Application</name>
   <packaging>war</packaging>
+  <repositories>
+        <repository>
+            <id>platform-pe-releases</id>
+            <url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
+        </repository>
+	</repositories>
 
   <dependencies>
     <dependency>
@@ -66,6 +72,12 @@
     <dependency>
       <groupId>org.apache.ivory</groupId>
       <artifactId>ivory-retention</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-metrics</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -140,6 +152,7 @@
 								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
 								<include>org/apache/ivory/aspect/*.java</include>
+                                <include>org/apache/ivory/monitoring/*.java</include>
 							</includes>
 				</configuration>
 				<executions>

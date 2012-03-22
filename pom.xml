@@ -37,6 +37,7 @@
     <module>replication</module>
     <module>retention</module>
     <module>archival</module>
+    <module>metrics</module>
     <module>webapp</module>
   </modules>
 

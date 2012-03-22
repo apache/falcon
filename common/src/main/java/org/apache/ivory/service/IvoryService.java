@@ -22,6 +22,8 @@ import org.apache.ivory.IvoryException;
 
 public interface IvoryService {
 
+    String getName();
+
     void init() throws IvoryException;
 
     void destroy() throws IvoryException;

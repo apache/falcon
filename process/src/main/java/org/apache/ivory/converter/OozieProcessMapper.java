@@ -32,6 +32,7 @@ import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.latedata.LateDataUtils;
 import org.apache.ivory.messaging.EntityInstanceMessage;
 import org.apache.ivory.oozie.coordinator.*;
 import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;

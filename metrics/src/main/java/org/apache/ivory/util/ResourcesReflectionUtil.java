@@ -18,17 +18,14 @@
 
 package org.apache.ivory.util;
 
+import org.apache.ivory.monitors.Monitored;
+
 import java.awt.Dimension;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.ivory.monitors.Monitored;
-import org.apache.ivory.resource.EntityManager;
-import org.apache.ivory.resource.ProcessInstanceManager;
-import org.apache.ivory.resource.SchedulableEntityManager;
 
 /**
  * Builds a cached of methods annotated with Monitored and params of methods
@@ -44,9 +41,10 @@ public class ResourcesReflectionUtil {
 	}
 
 	static {
-		buildAnnotationsMapForClass(EntityManager.class);
-		buildAnnotationsMapForClass(SchedulableEntityManager.class);
-		buildAnnotationsMapForClass(ProcessInstanceManager.class);
+		//TODO load these classes from properties file
+		buildAnnotationsMapForClass("org.apache.ivory.resource.EntityManager");
+		buildAnnotationsMapForClass("org.apache.ivory.resource.SchedulableEntityManager");
+		buildAnnotationsMapForClass("org.apache.ivory.resource.ProcessInstanceManager");
 	}
 
 	public static Map<Integer, String> getResourceDimensionsName(String methodName) {
@@ -64,15 +62,20 @@ public class ResourcesReflectionUtil {
 		
 		@Override
 		public String toString() {
-			// TODO Auto-generated method stub
 			return "{" + monitoredName + "[" + params.toString() + "]" + "}";
 		}
 
 	}
 
-	private static void buildAnnotationsMapForClass(
-			Class<? extends EntityManager> clazz) {
-		Method[] declMethods = clazz.getMethods();
+	private static void buildAnnotationsMapForClass(String className) {
+        Class clazz = null;
+        try {
+            clazz = ResourcesReflectionUtil.class.
+                    getClassLoader().loadClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Unable to load class " + className, e);
+        }
+        Method[] declMethods = clazz.getMethods();
 
 		// scan every method
 		for (int i = 0; i < declMethods.length; i++) {
