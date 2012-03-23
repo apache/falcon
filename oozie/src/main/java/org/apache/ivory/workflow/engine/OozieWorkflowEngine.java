@@ -464,7 +464,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             int newConcurrency = builder.getConcurrency(newEntity);
             String oldEndTime = builder.getEndTime(oldEntity, clusterName);
             String newEndTime = builder.getEndTime(newEntity, clusterName);
-            
+
             if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
                 Entity clonedOldEntity = oldEntity.clone();
                 builder.setConcurrency(clonedOldEntity, newConcurrency);
@@ -506,6 +506,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.
                 getBuilder(ENGINE, oldEntity);
         String clusterName = cluster.getName();
+
+        Date newEndDate = EntityUtil.parseDateUTC(builder.getEndTime(newEntity, clusterName));
+        if (newEndDate.before(new Date())) {
+            throw new IvoryException("New end time for " + newEntity.getName() +
+                    " is past current time. Entity can't be updated. Use remove and add");
+        }
 
         //Change end time of coords and schedule new bundle
 
