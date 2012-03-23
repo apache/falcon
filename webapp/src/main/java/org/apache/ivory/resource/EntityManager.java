@@ -182,12 +182,12 @@ public class EntityManager {
                 
                 validateUpdate(oldEntity, newEntity);
                 configStore.initiateUpdate(newEntity);
-                if(getWorkflowEngine().exists(oldEntity))
-                    getWorkflowEngine().update(oldEntity, newEntity);
+                getWorkflowEngine().update(oldEntity, newEntity);
                 configStore.update(entityType, newEntity);
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
         } catch (Exception e) {
+            configStore.rollbackUpdate();
             LOG.error("Updation failed", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }

@@ -101,7 +101,7 @@ public class EntityGraph implements
     public void onChange(Entity oldEntity, Entity newEntity)
             throws IvoryException {
         onRemove(oldEntity);
-        onRemove(newEntity);
+        onAdd(newEntity);
     }
 
     private Map<Node, Set<Node>> getEdgesFor(Process process) {

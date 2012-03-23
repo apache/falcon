@@ -38,7 +38,7 @@ import org.apache.oozie.util.DateUtils;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
-    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = Logger.getLogger(FeedEntityParser.class);
 
     public FeedEntityParser() {
         super(EntityType.FEED);
@@ -95,7 +95,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 ensureValidityFor(newFeed, process);
             } catch (IvoryException e) {
                 throw new ValidationException("Process " + process.getName() + " is not compatible " +
-                        "with changes to feed " + newFeed.getName());
+                        "with changes to feed " + newFeed.getName(), e);
             }
         }
     }

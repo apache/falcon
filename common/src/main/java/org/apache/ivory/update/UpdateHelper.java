@@ -19,9 +19,11 @@ public final class UpdateHelper {
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity,
                                        Entity affectedEntity) throws IvoryException {
         if (oldEntity.getEntityType() == EntityType.FEED &&
-                affectedEntity.getEntityType() == EntityType.CLUSTER) {
+                affectedEntity.getEntityType() == EntityType.PROCESS) {
             return shouldUpdate((Feed)oldEntity, (Feed)newEntity, (Process)affectedEntity);
         } else {
+            LOG.debug(newEntity.toShortString());
+            LOG.debug(affectedEntity.toShortString());
             throw new IvoryException("Don't know what to do. Unexpected scenario");
         }
     }

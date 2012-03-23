@@ -212,6 +212,10 @@ public class ConfigurationStore {
         updatesInProgress.set(entity);
     }
 
+    public synchronized void rollbackUpdate() {
+        updatesInProgress.set(null);
+    }
+
     /**
      *
      * @param type - Entity type that is being retrieved

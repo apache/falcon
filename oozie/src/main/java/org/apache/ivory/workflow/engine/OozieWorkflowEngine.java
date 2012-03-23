@@ -452,8 +452,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 getBuilder(ENGINE, oldEntity);
 
         LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
-        LOG.debug("Affected bundles : " + bundleMap);
         for (Map.Entry<Cluster, BundleJob> entry : bundleMap.entrySet()) {
+            if (entry.getValue() == MISSING) continue;
+
             Cluster cluster = entry.getKey();
             BundleJob bundle = entry.getValue();
             String clusterName = cluster.getName();
@@ -488,8 +489,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             if (entity.getEntityType() != EntityType.PROCESS) continue;
             LOG.info("Dependent entities need to be updated " + entity.toShortString());
             if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity));
-            Map<Cluster, BundleJob> processBundles = findBundle(oldEntity);
+            Map<Cluster, BundleJob> processBundles = findBundle(entity);
             for (Map.Entry<Cluster, BundleJob> processBundle : processBundles.entrySet()) {
+                if (processBundle.getValue() == MISSING) continue;
+                LOG.info("Triggering update for " + processBundle.getKey().getName() + ", " +
+                        processBundle.getValue().getId());
                 updateInternal(entity, entity,
                         processBundle.getKey(), processBundle.getValue());
             }
@@ -517,8 +521,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
 
         //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
-        long endTimeDelay = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.change.endTimeDelayInSecs", "45")) * 1000;
-        Date endTime = new Date(System.currentTimeMillis() + endTimeDelay);
+        //set to the next minute. Since time is rounded off, it will be always less than oozie server time
+        //ensure that we are setting it to the next minute.
+        Date endTime = new Date(System.currentTimeMillis() + 60000);
         Date newStartTime = null;
 
         for (CoordinatorJob coord : coords) {

@@ -42,10 +42,11 @@ public class IvoryCLI {
 	private static final String VERSION_CMD = "version";
 
 	public static final String ENTITY_CMD = "entity";
-	public static final String ENTITY_TYPE_OPT = "entityType";
-	public static final String ENTITY_NAME_OPT = "entityName";
-	public static final String FILE_PATH_OPT = "filePath";
+	public static final String ENTITY_TYPE_OPT = "type";
+	public static final String ENTITY_NAME_OPT = "name";
+	public static final String FILE_PATH_OPT = "file";
 	public static final String SUBMIT_OPT = "submit";
+	public static final String UPDATE_OPT = "update";
 	public static final String SCHEDULE_OPT = "schedule";
 	public static final String SUSPEND_OPT = "suspend";
 	public static final String RESUME_OPT = "resume";
@@ -227,6 +228,8 @@ public class IvoryCLI {
 
 		if (optionsList.contains(SUBMIT_OPT)) {
 			result = client.submit(entityType, filePath);
+		} else if (optionsList.contains(UPDATE_OPT)) {
+			result = client.update(entityType, entityName, filePath);
 		} else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
 			result = client.submitAndSchedule(entityType, filePath);
 		} else if (optionsList.contains(VALIDATE_OPT)) {
@@ -264,18 +267,25 @@ public class IvoryCLI {
 			if (entityType == null || entityType.equals("") || filePath == null
 					|| filePath.equals("")) {
 				throw new IvoryCLIException(
-						"Missing argument: entityType or filePath");
+						"Missing argument: type or file");
+			}
+        } else if (optionsList.contains(UPDATE_OPT)) {
+            if (entityType == null || entityType.equals("")
+                    || entityName == null || entityName.equals("")
+                    || filePath == null || filePath.equals("")) {
+				throw new IvoryCLIException(
+						"Missing argument: type or name or file");
 			}
         } else if (optionsList.contains(LIST_OPT)) {
 			if (entityType == null || entityType.equals("")) {
 				throw new IvoryCLIException(
-						"Missing argument: entityType");
+						"Missing argument: type");
 			}
 		} else {
 			if (entityType == null || entityType.equals("")
 					|| entityName == null || entityName.equals("")) {
 				throw new IvoryCLIException(
-						"Missing argument: entityType or entityName");
+						"Missing argument: type or name");
 			}
 		}
 	}
@@ -310,6 +320,8 @@ public class IvoryCLI {
 
 		Option submit = new Option(SUBMIT_OPT, false,
 				"Submits an entity xml to Ivory");
+		Option update = new Option(UPDATE_OPT, false,
+				"Updates an existing entity xml");
 		Option schedule = new Option(SCHEDULE_OPT, false,
 				"Schedules a submited entity in Ivory");
 		Option suspend = new Option(SUSPEND_OPT, false,
@@ -333,6 +345,7 @@ public class IvoryCLI {
 
 		OptionGroup group = new OptionGroup();
 		group.addOption(submit);
+		group.addOption(update);
 		group.addOption(schedule);
 		group.addOption(suspend);
 		group.addOption(resume);

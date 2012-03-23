@@ -81,6 +81,7 @@ public class IvoryClient {
 	protected static enum Entities {
 		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
+        UPDATE("api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML),
         SUBMITandSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST,
 				MediaType.TEXT_XML),
         SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
@@ -195,6 +196,13 @@ public class IvoryClient {
 		InputStream entityStream = getServletInputStream(filePath);
 		return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
 				entityStream);
+	}
+
+	public String update(String entityType, String entityName, String filePath)
+			throws IvoryCLIException {
+		InputStream entityStream = getServletInputStream(filePath);
+		return sendEntityRequestWithNameAndObject(Entities.UPDATE, entityType,
+				entityName, entityStream);
 	}
 
 	public String submitAndSchedule(String entityType, String filePath)
@@ -354,6 +362,20 @@ public class IvoryClient {
 
 		ClientResponse clientResponse = service.path(entities.path)
 				.path(entityType).accept(entities.mimeType)
+				.type(MediaType.TEXT_XML)
+				.method(entities.method, ClientResponse.class, requestObject);
+
+		checkIfSuccessfull(clientResponse);
+
+		return parseAPIResult(clientResponse);
+
+	}
+
+	private String sendEntityRequestWithNameAndObject(Entities entities,
+			String entityType, String entityName, Object requestObject) throws IvoryCLIException {
+
+		ClientResponse clientResponse = service.path(entities.path)
+				.path(entityType).path(entityName).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
