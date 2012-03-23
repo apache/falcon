@@ -19,6 +19,7 @@
 package org.apache.ivory.security;
 
 import org.apache.ivory.util.StartupProperties;
+import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 
 import javax.servlet.*;
@@ -28,6 +29,8 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 public class BasicAuthFilter implements Filter {
+
+    private static final Logger LOG = Logger.getLogger(BasicAuthFilter.class);
 
     private static final String GUEST = "guest";
 
@@ -69,6 +72,9 @@ public class BasicAuthFilter implements Filter {
             CurrentUser.authenticate(user);
             try {
                 NDC.push(user + ":" + httpRequest.getPathInfo());
+                LOG.info("Request from user: " + user + ", path=" +
+                        httpRequest.getPathInfo() + ", query=" +
+                        httpRequest.getQueryString());
                 chain.doFilter(request, response);
             } finally {
                 NDC.pop();
