@@ -97,6 +97,13 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 throw new ValidationException("Process " + process.getName() + " is not compatible " +
                         "with changes to feed " + newFeed.getName(), e);
             }
+
+            Date newEndDate = EntityUtil.parseDateUTC(process.getValidity().getEnd());
+            if (newEndDate.before(new Date())) {
+                throw new ValidationException("End time for " + process.getName() +
+                        " is past current time. Entity can't be updated. Use remove and add," +
+                        " before feed " + newFeed.getName() + " is updated");
+            }
         }
     }
 
