@@ -19,6 +19,7 @@
 package org.apache.ivory.security;
 
 import org.apache.ivory.util.StartupProperties;
+import org.apache.log4j.NDC;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -66,7 +67,12 @@ public class BasicAuthFilter implements Filter {
                     "Remote user header can't be empty");
         } else {
             CurrentUser.authenticate(user);
-            chain.doFilter(request, response);
+            try {
+                NDC.push(user + ":" + httpRequest.getPathInfo());
+                chain.doFilter(request, response);
+            } finally {
+                NDC.pop();
+            }
         }
     }
 

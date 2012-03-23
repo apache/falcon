@@ -34,6 +34,7 @@ import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -165,7 +166,9 @@ public class EntityManager {
     @Path("update/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
 	@Monitored(event = "update")
-	public APIResult update(@Context HttpServletRequest request,
+    //Parallel update can get very clumsy if two feeds are updated which
+    //are referred by a single process. Sequencing them.
+	public synchronized APIResult update(@Context HttpServletRequest request,
 			@Dimension("entityType") @PathParam("type") String type,
 			@Dimension("entityName") @PathParam("entity") String entityName) {
    	try {
@@ -174,14 +177,14 @@ public class EntityManager {
             Entity oldEntity = getEntityObject(entityName, type);
             Entity newEntity = deserializeEntity(request, entityType);
             if(!oldEntity.deepEquals(newEntity)) {
-                if(entityType != EntityType.PROCESS)
-                    throw new IvoryException("Update not supported for " + entityType);
+                if(entityType == EntityType.CLUSTER)
+                    throw new IvoryException("Update not supported for clusters");
                 
                 validateUpdate(oldEntity, newEntity);
+                configStore.initiateUpdate(newEntity);
                 if(getWorkflowEngine().exists(oldEntity))
                     getWorkflowEngine().update(oldEntity, newEntity);
-                configStore.remove(entityType, entityName);
-                configStore.publish(entityType, newEntity);
+                configStore.update(entityType, newEntity);
             }
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
         } catch (Exception e) {
@@ -263,7 +266,7 @@ public class EntityManager {
     protected void audit(HttpServletRequest request, String entity,
                        String type, String action) {
         AUDIT.info("Performed " + action + " on " + entity + "(" + type +
-                ") :: " + request.getRemoteHost() + "/" + request.getRemoteUser());
+                ") :: " + request.getRemoteHost() + "/" + CurrentUser.getUser());
     }
 
     private enum EntityStatus {NOT_FOUND, NOT_SCHEDULED, SUSPENDED, ACTIVE}

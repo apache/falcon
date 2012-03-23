@@ -18,36 +18,27 @@
 
 package org.apache.ivory.workflow.engine;
 
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityGraph;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.update.UpdateHelper;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.Job;
-import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.WorkflowJob;
+import org.apache.oozie.client.*;
 import org.apache.oozie.client.WorkflowJob.Status;
 import org.apache.oozie.util.XConfiguration;
+
+import java.io.StringReader;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Workflow engine which uses oozies APIs
@@ -460,11 +451,14 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.
                 getBuilder(ENGINE, oldEntity);
 
+        LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
+        LOG.debug("Affected bundles : " + bundleMap);
         for (Map.Entry<Cluster, BundleJob> entry : bundleMap.entrySet()) {
             Cluster cluster = entry.getKey();
             BundleJob bundle = entry.getValue();
             String clusterName = cluster.getName();
-            
+            LOG.debug("Updating for cluster : " + clusterName + ", bundle: " + bundle.getId());
+
             int oldConcurrency = builder.getConcurrency(oldEntity);
             int newConcurrency = builder.getConcurrency(newEntity);
             String oldEndTime = builder.getEndTime(oldEntity, clusterName);
@@ -476,52 +470,79 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 builder.setEndTime(clonedOldEntity, clusterName, EntityUtil.parseDateUTC(newEndTime));
                 if(clonedOldEntity.deepEquals(newEntity)) {
                     //only concurrency and endtime are changed. So, change bundle
+                    LOG.info("Change operation is adequate! : " + clusterName + ", bundle: " + bundle.getId());
                     change(cluster, bundle.getId(), newConcurrency, EntityUtil.parseDateUTC(newEndTime), null);
                     return;
                 }
             }
             
-            //Change end time of coords and schedule new bundle     
-            
-            // suspend so that no new coord actions are created
-            suspend(cluster, oldEntity, bundle.getId());
-            List<CoordinatorJob> coords = getBundleInfo(cluster, bundle.getId()).getCoordinators();
-            
-            //Find default coord's start time(min start time)
-            Date minCoordStartTime = null;
-            for (CoordinatorJob coord : coords) {
-                if(minCoordStartTime == null || minCoordStartTime.after(coord.getStartTime()))
-                    minCoordStartTime = coord.getStartTime();
-            }
-            
-            //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
-            long endTimeDelay = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.change.endTimeDelayInSecs", "45")) * 1000;
-            Date endTime = new Date(System.currentTimeMillis() + endTimeDelay);
-            Date newStartTime = null;
-            
-            for (CoordinatorJob coord : coords) {
-                //Add offset to pause time for late coords
-                Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
-                
-                //Set pause time to now so that future coord actions are deleted
-                change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(localEndTime));
-                
-                //Change end time and reset pause time
-                change(cluster, coord.getId(), null, localEndTime, "");
-
-                //calculate start time for updated entity as next schedule time after end date
-                Date localNewStartTime = builder.getNextStartTime(oldEntity, clusterName, localEndTime);
-                if(newStartTime == null || newStartTime.after(localNewStartTime)) {
-                    newStartTime = localNewStartTime;
-                }
-            }
-            resume(cluster, oldEntity, bundle.getId());
-            
-            //schedule new entity
-            Entity schedEntity = newEntity.clone();
-            builder.setStartDate(schedEntity, clusterName, newStartTime);
-            schedule(schedEntity);
+            LOG.debug("Going to update ! : " + newEntity.toShortString() +
+                    clusterName + ", bundle: " + bundle.getId());
+            updateInternal(oldEntity, newEntity, cluster, bundle);
+            LOG.info("Entity update complete : " + newEntity.toShortString() +
+                    clusterName + ", bundle: " + bundle.getId());
         }
+
+        Set<Entity> affectedEntities = EntityGraph.get().getDependents(oldEntity);
+        for (Entity entity : affectedEntities) {
+            if (entity.getEntityType() != EntityType.PROCESS) continue;
+            LOG.info("Dependent entities need to be updated " + entity.toShortString());
+            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity));
+            Map<Cluster, BundleJob> processBundles = findBundle(oldEntity);
+            for (Map.Entry<Cluster, BundleJob> processBundle : processBundles.entrySet()) {
+                updateInternal(entity, entity,
+                        processBundle.getKey(), processBundle.getValue());
+            }
+        }
+    }
+
+    private void updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster,
+                                BundleJob bundle) throws IvoryException {
+
+        OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.
+                getBuilder(ENGINE, oldEntity);
+        String clusterName = cluster.getName();
+
+        //Change end time of coords and schedule new bundle
+
+        // suspend so that no new coord actions are created
+        suspend(cluster, oldEntity, bundle.getId());
+        List<CoordinatorJob> coords = getBundleInfo(cluster, bundle.getId()).getCoordinators();
+
+        //Find default coord's start time(min start time)
+        Date minCoordStartTime = null;
+        for (CoordinatorJob coord : coords) {
+            if(minCoordStartTime == null || minCoordStartTime.after(coord.getStartTime()))
+                minCoordStartTime = coord.getStartTime();
+        }
+
+        //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
+        long endTimeDelay = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.change.endTimeDelayInSecs", "45")) * 1000;
+        Date endTime = new Date(System.currentTimeMillis() + endTimeDelay);
+        Date newStartTime = null;
+
+        for (CoordinatorJob coord : coords) {
+            //Add offset to pause time for late coords
+            Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
+
+            //Set pause time to now so that future coord actions are deleted
+            change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(localEndTime));
+
+            //Change end time and reset pause time
+            change(cluster, coord.getId(), null, localEndTime, "");
+
+            //calculate start time for updated entity as next schedule time after end date
+            Date localNewStartTime = builder.getNextStartTime(oldEntity, clusterName, localEndTime);
+            if(newStartTime == null || newStartTime.after(localNewStartTime)) {
+                newStartTime = localNewStartTime;
+            }
+        }
+        resume(cluster, oldEntity, bundle.getId());
+
+        //schedule new entity
+        Entity schedEntity = newEntity.clone();
+        builder.setStartDate(schedEntity, clusterName, newStartTime);
+        schedule(schedEntity);
     }
 
     private Date addOffest(Date target, Date globalTime, Date localTime) {
