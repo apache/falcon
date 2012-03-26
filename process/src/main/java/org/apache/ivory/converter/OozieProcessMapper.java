@@ -225,9 +225,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         String coordName = process.getWorkflowName("LATE1");
         Path coordPath = getCoordPath(bundlePath, coordName);
 
+        String tz = process.getValidity().getTimezone();
+
         // coord attributes
         coord.setName(coordName);
-        long endTime = LateDataUtils.getTime(process.getValidity().getEnd());
+        long endTime = LateDataUtils.getTime(tz, process.getValidity().getEnd());
         long now = System.currentTimeMillis();
         if (endTime < now) {
             LOG.warn("Late date coordinator doesn't apply, as the end date is in past " +
@@ -235,11 +237,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             return null;
         }
 
-        long startTime = LateDataUtils.getTime(process.getValidity().getStart());
+        long startTime = LateDataUtils.getTime(tz, process.getValidity().getStart());
         if (startTime < now) startTime = now;
-        LOG.info("Using start time as : " + LateDataUtils.toDateString(startTime));
+        LOG.info("Using start time as : " + LateDataUtils.toDateString(tz, startTime));
 
-        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(startTime), offset));
+        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(tz, startTime), offset));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offset));
         coord.setTimezone(process.getValidity().getTimezone());
         coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");
