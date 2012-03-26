@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.util.EmbeddedServer;
 import org.testng.annotations.AfterClass;
@@ -53,7 +54,13 @@ public class IvoryCLITest {
 	private static final String FEED_INPUT = "/org/apache/ivory/cli/feed-input.xml";
 	private static final String FEED_OUTPUT = "/org/apache/ivory/cli/feed-output.xml";
 	private static final String PROCESS = "/org/apache/ivory/cli/process.xml";
-
+	
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+	// private static final String BROKER_URL =
+	// "tcp://localhost:61616?daemon=true";
+	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+	private BrokerService broker;
+	
 	private static final boolean enableTest = false;
 
 	@BeforeClass
@@ -69,6 +76,11 @@ public class IvoryCLITest {
 		}
 		this.ivoryServer.start();
 		this.cluster = EmbeddedCluster.newCluster("test-cluster", false);
+		
+		broker = new BrokerService();
+		broker.setUseJmx(true);
+		broker.addConnector(BROKER_URL);
+		broker.start();
 
 	}
 
@@ -546,8 +558,9 @@ public class IvoryCLITest {
 
 	@AfterClass
 	public void teardown() throws Exception {
-		ivoryServer.stop();
+		broker.stop();
 		this.cluster.shutdown();
+		ivoryServer.stop();
 	}
 
 	public void submitTestFiles(Map<String, String> overlay) throws Exception {

@@ -347,7 +347,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
 
         Process entity = getEntity();
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), entity.getName()));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.PROCESS_NAME.NAME(), entity.getName()));
         Long millis = LateDataUtils.getDurationFromOffset(offsetExpr);
         long offset = -millis / (60000);
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));

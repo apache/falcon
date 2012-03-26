@@ -51,7 +51,7 @@ public class MessageProducer {
 
 		Session session = connection.createSession(false,
 				Session.AUTO_ACKNOWLEDGE);
-		Topic entityTopic = session.createTopic(entityInstanceMessage.getEntityTopicName());
+		Topic entityTopic = session.createTopic(entityInstanceMessage.getTopicName());
 		javax.jms.MessageProducer producer = session
 				.createProducer(entityTopic);
 		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
