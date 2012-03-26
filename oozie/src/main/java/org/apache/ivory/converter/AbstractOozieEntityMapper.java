@@ -48,6 +48,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
+    protected static final String LATE_NOMINAL_TIME_EL = "${coord:formatTime(coord:dateOffset(coord:nominalTime(), " +
+            "#VAL#, 'MINUTE'),'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 

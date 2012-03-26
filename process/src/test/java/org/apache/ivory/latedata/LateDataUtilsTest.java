@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.converter;
+package org.apache.ivory.latedata;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;

@@ -37,6 +37,8 @@ public enum EntityType {
     PROCESS(Process.class, "/schema/process/process-0.1.xsd"), 
     CLUSTER(Cluster.class, "/schema/cluster/cluster-0.1.xsd");
 
+    private static final String NS = "http://www.w3.org/2001/XMLSchema";
+
     private final Class<? extends Entity> clazz;
     private JAXBContext jaxbContext;
     private Schema schema;
@@ -46,8 +48,8 @@ public enum EntityType {
         try {
             jaxbContext = JAXBContext.newInstance(typeClass);
             synchronized(this) {
-                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-                schema = schemaFactory.newSchema(this.getClass().getResource(schemaFile));
+                SchemaFactory schemaFactory = SchemaFactory.newInstance(NS);
+                schema = schemaFactory.newSchema(getClass().getResource(schemaFile));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -59,26 +61,18 @@ public enum EntityType {
     }
 
     public Marshaller getMarshaller() throws JAXBException {
-        try {
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            return marshaller;
-        } catch (JAXBException e) {
-            throw new JAXBException(e);
-        }
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        return marshaller;
     }
     
     public Unmarshaller getUnmarshaller() throws JAXBException {
-        try{
-            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            unmarshaller.setSchema(schema);
-            return unmarshaller;
-        } catch (Exception e) {
-            throw new JAXBException(e);
-        }
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        unmarshaller.setSchema(schema);
+        return unmarshaller;
     }
     
     public boolean isSchedulable() {
-        return this.equals(EntityType.CLUSTER) ? false : true;
+        return this != EntityType.CLUSTER;
     }
 }

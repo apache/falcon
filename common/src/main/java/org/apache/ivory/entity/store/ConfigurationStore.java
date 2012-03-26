@@ -46,8 +46,13 @@ public class ConfigurationStore {
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     private static final String UTF_8 = "UTF-8";
 
+    private static final ConfigurationStore store = new ConfigurationStore();
+
     private Set<ConfigurationChangeListener> listeners =
             new LinkedHashSet<ConfigurationChangeListener>();
+
+    private ThreadLocal<Entity> updatesInProgress =
+            new ThreadLocal<Entity>();
 
     public static ConfigurationStore get() {
         return store;
@@ -93,8 +98,6 @@ public class ConfigurationStore {
             throw new RuntimeException("Unable to bring up config store", e);
         }
     }
-
-    private static final ConfigurationStore store = new ConfigurationStore();
 
     private void bootstrap() throws IvoryException {
         try {
@@ -145,7 +148,7 @@ public class ConfigurationStore {
                 dictionary.get(type).put(entity.getName(), entity);
                 onAdd(entity);
             } else {
-                throw new EntityAlreadyExistsException(type + ": " + entity.getName() +
+                throw new EntityAlreadyExistsException(entity.toShortString() +
                         " already registered with configuration store. " +
                         "Can't be submitted again. Try removing before submitting.");
             }
@@ -156,15 +159,61 @@ public class ConfigurationStore {
                 " is published into config store");
     }
 
+    public synchronized void update(EntityType type, Entity entity)
+            throws IvoryException {
+        try {
+            if (updatesInProgress.get() == entity &&
+                    get(type, entity.getName()) != null) {
+                updatesInProgress.set(null);
+                persist(type, entity);
+                Entity oldEntity = dictionary.get(type).
+                        put(entity.getName(), entity);
+                onChange(oldEntity, entity);
+            } else {
+                throw new IvoryException(entity.toShortString() +
+                        " is not initialized for update or doesn't exist");
+            }
+        } catch (IOException e) {
+            throw new StoreAccessException(e);
+        }
+        AUDIT.info(type + "/" + entity.getName() +
+                " is replaced into config store");
+    }
+
     private void onAdd(Entity entity) {
         for (ConfigurationChangeListener listener : listeners) {
             try {
                 listener.onAdd(entity);
             } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener + "(" +
-                        entity.getEntityType() + ") " + entity.getName(), e);
+                LOG.warn("Encountered exception while notifying " + listener +
+                        entity.toShortString(), e);
             }
         }
+    }
+
+    private void onChange(Entity oldEntity, Entity newEntity) {
+        for (ConfigurationChangeListener listener : listeners) {
+            try {
+                listener.onChange(oldEntity, newEntity);
+            } catch (Throwable e) {
+                LOG.warn("Encountered exception while notifying " + listener +
+                        newEntity.toShortString(), e);
+            }
+        }
+    }
+
+    public synchronized void initiateUpdate(Entity entity)
+            throws IvoryException {
+        if (get(entity.getEntityType(), entity.getName()) == null
+                || updatesInProgress.get() != null) {
+            throw new IvoryException("An update for " +
+                    entity.toShortString() + " is already in progress or doesn't exist");
+        }
+        updatesInProgress.set(entity);
+    }
+
+    public synchronized void rollbackUpdate() {
+        updatesInProgress.set(null);
     }
 
     /**
@@ -183,6 +232,11 @@ public class ConfigurationStore {
             throws IvoryException {
         ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
+            if (updatesInProgress.get() != null &&
+                    updatesInProgress.get().getEntityType() == type &&
+                    updatesInProgress.get().getName().equals(name)) {
+                return (T) updatesInProgress.get();
+            }
             T entity = (T) entityMap.get(name);
             if (entity == NULL) { //Object equality being checked
                 try {

@@ -101,6 +101,10 @@ public abstract class Entity {
         }
     }
 
+    public String toShortString() {
+        return "(" + getEntityType().name().toLowerCase() + ") " + getName();
+    }
+
     public String getStagingPath() {
         if (stagingPath == null) {
             stagingPath = new ThreadLocal<String>();

@@ -42,10 +42,11 @@ public class IvoryCLI {
 	private static final String VERSION_CMD = "version";
 
 	public static final String ENTITY_CMD = "entity";
-	public static final String ENTITY_TYPE_OPT = "entityType";
-	public static final String ENTITY_NAME_OPT = "entityName";
-	public static final String FILE_PATH_OPT = "filePath";
+	public static final String ENTITY_TYPE_OPT = "type";
+	public static final String ENTITY_NAME_OPT = "name";
+	public static final String FILE_PATH_OPT = "file";
 	public static final String SUBMIT_OPT = "submit";
+	public static final String UPDATE_OPT = "update";
 	public static final String SCHEDULE_OPT = "schedule";
 	public static final String SUSPEND_OPT = "suspend";
 	public static final String RESUME_OPT = "resume";
@@ -55,6 +56,7 @@ public class IvoryCLI {
 	public static final String STATUS_OPT = "status";
 	public static final String DEFINITION_OPT = "definition";
 	public static final String DEPENDENCY_OPT = "dependency";
+	public static final String LIST_OPT = "list";
 
 	public static final String INSTANCE_CMD = "instance";
 	public static final String PROCESS_OPT = "processName";
@@ -226,6 +228,8 @@ public class IvoryCLI {
 
 		if (optionsList.contains(SUBMIT_OPT)) {
 			result = client.submit(entityType, filePath);
+		} else if (optionsList.contains(UPDATE_OPT)) {
+			result = client.update(entityType, entityName, filePath);
 		} else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
 			result = client.submitAndSchedule(entityType, filePath);
 		} else if (optionsList.contains(VALIDATE_OPT)) {
@@ -244,6 +248,8 @@ public class IvoryCLI {
 			result = client.getDefinition(entityType, entityName);
 		} else if (optionsList.contains(DEPENDENCY_OPT)) {
 			result = client.getDependency(entityType, entityName);
+		} else if (optionsList.contains(LIST_OPT)) {
+			result = client.getEntityList(entityType);
 		} else if (optionsList.contains(HELP_CMD)) {
 			System.out.println("Ivory Help");
 		} else {
@@ -261,13 +267,25 @@ public class IvoryCLI {
 			if (entityType == null || entityType.equals("") || filePath == null
 					|| filePath.equals("")) {
 				throw new IvoryCLIException(
-						"Missing argument: entityType or filePath");
+						"Missing argument: type or file");
+			}
+        } else if (optionsList.contains(UPDATE_OPT)) {
+            if (entityType == null || entityType.equals("")
+                    || entityName == null || entityName.equals("")
+                    || filePath == null || filePath.equals("")) {
+				throw new IvoryCLIException(
+						"Missing argument: type or name or file");
+			}
+        } else if (optionsList.contains(LIST_OPT)) {
+			if (entityType == null || entityType.equals("")) {
+				throw new IvoryCLIException(
+						"Missing argument: type");
 			}
 		} else {
 			if (entityType == null || entityType.equals("")
 					|| entityName == null || entityName.equals("")) {
 				throw new IvoryCLIException(
-						"Missing argument: entityType or entityName");
+						"Missing argument: type or name");
 			}
 		}
 	}
@@ -302,6 +320,8 @@ public class IvoryCLI {
 
 		Option submit = new Option(SUBMIT_OPT, false,
 				"Submits an entity xml to Ivory");
+		Option update = new Option(UPDATE_OPT, false,
+				"Updates an existing entity xml");
 		Option schedule = new Option(SCHEDULE_OPT, false,
 				"Schedules a submited entity in Ivory");
 		Option suspend = new Option(SUSPEND_OPT, false,
@@ -320,9 +340,12 @@ public class IvoryCLI {
 				"Gets the Definition of entity");
 		Option dependency = new Option(DEPENDENCY_OPT, false,
 				"Gets the dependencies of entity");
+        Option list = new Option(LIST_OPT, false,
+                "List entities registerd for a type");
 
 		OptionGroup group = new OptionGroup();
 		group.addOption(submit);
+		group.addOption(update);
 		group.addOption(schedule);
 		group.addOption(suspend);
 		group.addOption(resume);
@@ -332,6 +355,7 @@ public class IvoryCLI {
 		group.addOption(status);
 		group.addOption(definition);
 		group.addOption(dependency);
+		group.addOption(list);
 
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option entityType = new Option(ENTITY_TYPE_OPT, true,
