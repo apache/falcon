@@ -34,12 +34,14 @@ import org.apache.log4j.Logger;
  * Value Object which is stored in JMS Topic as TextMessage
  * 
  */
-public class EntityInstanceMessage{
+public class EntityInstanceMessage {
 
 	private final Map<ARG, String> msgs = new HashMap<ARG, String>();
-	private static final String MSG_SEPERATOR = ",";
+	private static final String MSG_SEPERATOR = "$";
 	private static final int ARG_LENGTH = EntityInstanceMessage.ARG.values().length;
-	private static final Logger LOG = Logger.getLogger(EntityInstanceMessage.class);
+	private static final Logger LOG = Logger
+			.getLogger(EntityInstanceMessage.class);
+	private static final String IVORY_PROCESS_TOPIC_NAME = "IVORY.PROCESS.TOPIC";
 
 	/**
 	 * Enum for arguments that are used in coordinators to pass arguments to
@@ -51,22 +53,17 @@ public class EntityInstanceMessage{
 	}
 
 	public enum ARG {
-		ENTITY_TOPIC_NAME(0, "entityTopicName"), 
-		FEED_NAME(1, "feedNames"), 
-		FEED_INSTANCE_PATH(2, "feedInstancePaths"), 
-		WORKFLOW_ID(3, "workflowId"), 
-		RUN_ID(4, "runId"), 
-		NOMINAL_TIME(5, "nominalTime"), 
-		TIME_STAMP(6,"timeStamp"), 
-		BROKER_URL(7, "brokerUrl"), 
-		BROKER_IMPL_CLASS(8,"brokerImplClass"),
-		ENTITY_TYPE(9, "entityType"), 
-		OPERATION(10,"operation"),
-		LOG_FILE(11,"logFile");
+		PROCESS_NAME(0, "entityName"), FEED_NAME(1, "feedNames"), FEED_INSTANCE_PATH(
+				2, "feedInstancePaths"), WORKFLOW_ID(3, "workflowId"), RUN_ID(
+				4, "runId"), NOMINAL_TIME(5, "nominalTime"), TIME_STAMP(6,
+				"timeStamp"), BROKER_URL(7, "brokerUrl"), BROKER_IMPL_CLASS(8,
+				"brokerImplClass"), ENTITY_TYPE(9, "entityType"), OPERATION(10,
+				"operation"), LOG_FILE(11, "logFile"), TOPIC_NAME(12,
+				"topicName"), STATUS(13, "status");
 
 		private int argOrder;
 		private String argName;
-		
+
 		private ARG(int argOrder, String argName) {
 			this.argOrder = argOrder;
 			this.argName = argName;
@@ -81,12 +78,20 @@ public class EntityInstanceMessage{
 		}
 	}
 
-	public String getEntityTopicName() {
-		return this.msgs.get(ARG.ENTITY_TOPIC_NAME);
+	public String getProcessName() {
+		return this.msgs.get(ARG.PROCESS_NAME);
 	}
 
-	public void setEntityTopicName(String processTopicName) {
-		this.msgs.put(ARG.ENTITY_TOPIC_NAME, processTopicName);
+	public void setProcessName(String processName) {
+		this.msgs.put(ARG.PROCESS_NAME, processName);
+	}
+
+	public String getTopicName() {
+		return this.msgs.get(ARG.TOPIC_NAME);
+	}
+
+	public void setTopicName(String topicName) {
+		this.msgs.put(ARG.TOPIC_NAME, topicName);
 	}
 
 	public String getFeedName() {
@@ -168,7 +173,7 @@ public class EntityInstanceMessage{
 	public void setOperation(String operation) {
 		this.msgs.put(ARG.OPERATION, operation);
 	}
-	
+
 	public String getLogFile() {
 		return this.msgs.get(ARG.LOG_FILE);
 	}
@@ -177,28 +182,48 @@ public class EntityInstanceMessage{
 		this.msgs.put(ARG.LOG_FILE, logFile);
 	}
 
+	public String getStatus() {
+		return this.msgs.get(ARG.STATUS);
+	}
+
+	public void setStatus(String status) {
+		this.msgs.put(ARG.STATUS, status);
+	}
+
 	@Override
 	public String toString() {
-		return getEntityType().equalsIgnoreCase("PROCESS") ? getProcessMessage()
-				:getFeedMessage();
-	}	
+		if (getEntityType().equalsIgnoreCase("PROCESS")
+				&& getTopicName().equals(IVORY_PROCESS_TOPIC_NAME)) {
+			return getIvoryMessage();
+		}
+		if (getEntityType().equalsIgnoreCase("FEED")) {
+			return getFeedMessage();
+		}
+		return getProcessMessage();
+
+	}
 
 	private String getProcessMessage() {
-		return getEntityTopicName()
-				+ MSG_SEPERATOR + getFeedName() + MSG_SEPERATOR
+		return getProcessName() + MSG_SEPERATOR + getFeedName() + MSG_SEPERATOR
 				+ getFeedInstancePath() + MSG_SEPERATOR + getWorkflowId()
 				+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR + getNominalTime()
 				+ MSG_SEPERATOR + getTimeStamp();
 	}
-	
-	private String getFeedMessage() {
-		 return getEntityTopicName() + MSG_SEPERATOR + getFeedName()
-					+ MSG_SEPERATOR + getFeedInstancePath() + MSG_SEPERATOR
-					+ getOperation() + MSG_SEPERATOR + getWorkflowId()
-					+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR
-					+ getNominalTime() + MSG_SEPERATOR + getTimeStamp();
+
+	private String getIvoryMessage() {
+		return getProcessName() + MSG_SEPERATOR + getFeedName() + MSG_SEPERATOR
+				+ getFeedInstancePath() + MSG_SEPERATOR + getWorkflowId()
+				+ MSG_SEPERATOR + getRunId() + MSG_SEPERATOR + getNominalTime()
+				+ MSG_SEPERATOR + getTimeStamp() + MSG_SEPERATOR + getStatus();
 	}
-		
+
+	private String getFeedMessage() {
+		return getProcessName() + MSG_SEPERATOR + getFeedName() + MSG_SEPERATOR
+				+ getFeedInstancePath() + MSG_SEPERATOR + getOperation()
+				+ MSG_SEPERATOR + getWorkflowId() + MSG_SEPERATOR + getRunId()
+				+ MSG_SEPERATOR + getNominalTime() + MSG_SEPERATOR
+				+ getTimeStamp();
+	}
 
 	/**
 	 * 
@@ -211,14 +236,13 @@ public class EntityInstanceMessage{
 		assert args.length == ARG_LENGTH : "Required number of arguments: "
 				+ ARG_LENGTH;
 
-		String[] feedNames = args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()]
-				.split(",");
-		
+		String[] feedNames = getFeedNames(args);
+
 		String[] feedPaths;
 		try {
 			feedPaths = getFeedPaths(args);
 		} catch (IOException e) {
-			LOG.error("Error getting instance paths: ",e);
+			LOG.error("Error getting instance paths: ", e);
 			throw new RuntimeException(e);
 		}
 
@@ -226,71 +250,96 @@ public class EntityInstanceMessage{
 		for (int i = 0; i < feedPaths.length; i++) {
 			EntityInstanceMessage instanceMessage = new EntityInstanceMessage();
 			instanceMessage
-			.setEntityTopicName(args[EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME
-			                         .ORDER()]);
+					.setProcessName(args[EntityInstanceMessage.ARG.PROCESS_NAME
+							.ORDER()]);
 			if (args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()]
 					.equalsIgnoreCase("PROCESS")) {
 				instanceMessage.setFeedName(feedNames[i]);
 			} else {
 				instanceMessage
-				.setFeedName(args[EntityInstanceMessage.ARG.FEED_NAME
-				                  .ORDER()]);
+						.setFeedName(args[EntityInstanceMessage.ARG.FEED_NAME
+								.ORDER()]);
 			}
 			instanceMessage.setFeedInstancePath(feedPaths[i]);
 			instanceMessage
-			.setWorkflowId(args[EntityInstanceMessage.ARG.WORKFLOW_ID
-			                    .ORDER()]);
+					.setWorkflowId(args[EntityInstanceMessage.ARG.WORKFLOW_ID
+							.ORDER()]);
 			instanceMessage.setRunId(args[EntityInstanceMessage.ARG.RUN_ID
-			                             .ORDER()]);
+					.ORDER()]);
 			instanceMessage
-			.setNominalTime(args[EntityInstanceMessage.ARG.NOMINAL_TIME
-			                     .ORDER()]);
+					.setNominalTime(args[EntityInstanceMessage.ARG.NOMINAL_TIME
+							.ORDER()]);
 			instanceMessage
-			.setTimeStamp(args[EntityInstanceMessage.ARG.TIME_STAMP
-			                   .ORDER()]);
+					.setTimeStamp(args[EntityInstanceMessage.ARG.TIME_STAMP
+							.ORDER()]);
 			instanceMessage
-			.setBrokerUrl(args[EntityInstanceMessage.ARG.BROKER_URL
-			                   .ORDER()]);
+					.setBrokerUrl(args[EntityInstanceMessage.ARG.BROKER_URL
+							.ORDER()]);
 			instanceMessage
-			.setBrokerImplClass(args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS
-			                   .ORDER()]);
+					.setBrokerImplClass(args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS
+							.ORDER()]);
 			instanceMessage
-			.setEntityType(args[EntityInstanceMessage.ARG.ENTITY_TYPE
-			                    .ORDER()]);
+					.setEntityType(args[EntityInstanceMessage.ARG.ENTITY_TYPE
+							.ORDER()]);
 			instanceMessage
-			.setOperation(args[EntityInstanceMessage.ARG.OPERATION
-			                   .ORDER()]);
+					.setOperation(args[EntityInstanceMessage.ARG.OPERATION
+							.ORDER()]);
+			instanceMessage.setLogFile(args[EntityInstanceMessage.ARG.LOG_FILE
+					.ORDER()]);
 			instanceMessage
-			.setLogFile(args[EntityInstanceMessage.ARG.LOG_FILE
-			                   .ORDER()]);
+					.setTopicName(args[EntityInstanceMessage.ARG.TOPIC_NAME
+							.ORDER()]);
+			instanceMessage.setStatus(args[EntityInstanceMessage.ARG.STATUS
+					.ORDER()]);
 
 			processMessages[i] = instanceMessage;
 		}
 		return processMessages;
 	}
 
+	private static String[] getFeedNames(String[] args) {
+		String topicName = args[ARG.TOPIC_NAME.argOrder];
+		if (topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
+			return new String[] { args[EntityInstanceMessage.ARG.FEED_NAME
+					.ORDER()] };
+		}
+		return args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()].split(",");
+	}
+
 	private static String[] getFeedPaths(String[] args) throws IOException {
 		String entityType = args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()];
-		
-		if(entityType.equalsIgnoreCase("PROCESS")){
-			LOG.debug("Returning instance paths for process: "+args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]);
-			return args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()].split(",");
+		String topicName = args[EntityInstanceMessage.ARG.TOPIC_NAME.ORDER()];
+
+		if (entityType.equalsIgnoreCase("PROCESS")
+				&& topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
+			LOG.debug("Returning instance paths for Ivory Topic: "
+					+ args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]);
+			return new String[] { args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH
+					.ORDER()] };
+		}
+
+		if (entityType.equalsIgnoreCase("PROCESS")) {
+			LOG.debug("Returning instance paths for process: "
+					+ args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]);
+			return args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]
+					.split(",");
 		}
 		//
-		Path logFile = new Path( args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()]);
+		Path logFile = new Path(
+				args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()]);
 		FileSystem fs = FileSystem.get(logFile.toUri(), new Configuration());
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
 		InputStream instance = fs.open(logFile);
-		IOUtils.copyBytes(instance, writer, 4096, true);	
-		String [] instancePaths = writer.toString().split("=");
-		if(instancePaths.length==1){
+		IOUtils.copyBytes(instance, writer, 4096, true);
+		String[] instancePaths = writer.toString().split("=");
+		if (instancePaths.length == 1) {
 			LOG.debug("Returning 0 instance paths for feed ");
 			return new String[0];
-		}else{
-			LOG.debug("Returning instance paths for feed "+instancePaths[1]);
+		} else {
+			LOG.debug("Returning instance paths for feed " + instancePaths[1]);
 			return instancePaths[1].split(",");
-		}		
-		
+		}
+
 	}
 
 	/**
@@ -299,11 +348,12 @@ public class EntityInstanceMessage{
 	 *            - value object which is stored in JMS topic as TextMessage
 	 * @return - String array.
 	 */
-	public static String[] messageToArgs(EntityInstanceMessage[] instanceMessages) {
+	public static String[] messageToArgs(
+			EntityInstanceMessage[] instanceMessages) {
 		String[] args = new String[ARG_LENGTH];
 
-		args[EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.ORDER()] = instanceMessages[0]
-				.getEntityTopicName();
+		args[EntityInstanceMessage.ARG.PROCESS_NAME.ORDER()] = instanceMessages[0]
+				.getProcessName();
 		StringBuilder feedNames = new StringBuilder();
 		StringBuilder feedPaths = new StringBuilder();
 
@@ -339,7 +389,11 @@ public class EntityInstanceMessage{
 				.getOperation();
 		args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()] = instanceMessages[0]
 				.getLogFile();
-		
+		args[EntityInstanceMessage.ARG.TOPIC_NAME.ORDER()] = instanceMessages[0]
+				.getTopicName();
+		args[EntityInstanceMessage.ARG.STATUS.ORDER()] = instanceMessages[0]
+				.getStatus();
+
 		return args;
 	}
 

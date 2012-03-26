@@ -62,7 +62,7 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
-			<arg>${entityTopicName}</arg>
+			<arg>${entityName}</arg>
 			<arg>${feedNames}</arg>
 			<arg>${feedInstancePaths}</arg>
 			<arg>${wf:id()}</arg>
@@ -74,6 +74,8 @@
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
 			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>${entityName}</arg>
+			<arg>SUCCEEDED</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />

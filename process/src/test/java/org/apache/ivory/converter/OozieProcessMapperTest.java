@@ -143,7 +143,9 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
-    		Assert.assertEquals("jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
+    		Assert.assertEquals("ivory-succeeded-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
+    		Assert.assertEquals("ivory-failed-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
+    		Assert.assertEquals("user-jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(4)).getName());
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {

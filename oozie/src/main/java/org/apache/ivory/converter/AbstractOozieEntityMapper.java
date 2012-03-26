@@ -48,6 +48,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
+    protected static final String LATE_NOMINAL_TIME_EL = "${coord:formatTime(coord:dateOffset(coord:nominalTime(), " +
+            "#VAL#, 'MINUTE'),'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
@@ -110,7 +112,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
 
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TOPIC_NAME.NAME(), entity.getName()));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.PROCESS_NAME.NAME(), entity.getName()));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL));
         props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));

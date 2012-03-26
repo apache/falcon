@@ -108,6 +108,10 @@ public abstract class Entity {
             throw new RuntimeException(e);
         }
     }
+    
+    public String toShortString() {
+        return "(" + getEntityType().name().toLowerCase() + ") " + getName();
+    }
 
     public String getStagingPath() {
         if (stagingPath == null) {

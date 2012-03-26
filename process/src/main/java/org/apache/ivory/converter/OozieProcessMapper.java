@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -224,9 +225,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         String coordName = process.getWorkflowName("LATE1");
         Path coordPath = getCoordPath(bundlePath, coordName);
 
+        String tz = process.getValidity().getTimezone();
+
         // coord attributes
         coord.setName(coordName);
-        long endTime = LateDataUtils.getTime(process.getValidity().getEnd());
+        long endTime = LateDataUtils.getTime(tz, process.getValidity().getEnd());
         long now = System.currentTimeMillis();
         if (endTime < now) {
             LOG.warn("Late date coordinator doesn't apply, as the end date is in past " +
@@ -234,11 +237,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             return null;
         }
 
-        long startTime = LateDataUtils.getTime(process.getValidity().getStart());
+        long startTime = LateDataUtils.getTime(tz, process.getValidity().getStart());
         if (startTime < now) startTime = now;
-        LOG.info("Using start time as : " + LateDataUtils.toDateString(startTime));
+        LOG.info("Using start time as : " + LateDataUtils.toDateString(tz, startTime));
 
-        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(startTime), offset));
+        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(tz, startTime), offset));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offset));
         coord.setTimezone(process.getValidity().getTimezone());
         coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");
@@ -250,7 +253,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setControls(controls);
 
         // Configuration
-        CONFIGURATION config = createCoordDefaultConfiguration(cluster, coordPath);
+        CONFIGURATION config = createLateCoordinatorConfiguration(cluster, coordPath, offset);
         List<Property> props = config.getProperty();
 
         // inputs
@@ -335,6 +338,31 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setAction(action);
 
         return coord;
+    }
+
+    protected org.apache.ivory.oozie.coordinator.CONFIGURATION
+                    createLateCoordinatorConfiguration(Cluster cluster, Path coordPath, String offsetExpr)
+            throws IvoryException {
+        org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
+        List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
+
+        Process entity = getEntity();
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.PROCESS_NAME.NAME(), entity.getName()));
+        Long millis = LateDataUtils.getDurationFromOffset(offsetExpr);
+        long offset = -millis / (60000);
+        String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS));
+        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
+        props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
+
+        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), nominalTime).getId()));
+        props.add(createCoordProperty("queueName", "default"));
+
+        props.addAll(getEntityProperties());
+        return conf;
     }
 
     private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {

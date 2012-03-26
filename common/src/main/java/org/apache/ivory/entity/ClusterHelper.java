@@ -24,6 +24,7 @@ import org.apache.ivory.entity.v0.cluster.*;
 import java.util.Map;
 
 public final class ClusterHelper {
+	private static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {}
 
@@ -56,6 +57,11 @@ public final class ClusterHelper {
     
     public static String getMessageBrokerUrl(Cluster cluster) {
         return getInterfaceFor(cluster, Interfacetype.MESSAGING);
+    }
+    
+    public static String getMessageBrokerImplClass(Cluster cluster) {
+        Property property = cluster.getProperties().get("brokerImplClass");
+        return property==null?DEFAULT_BROKER_IMPL_CLASS:property.getValue();
     }
 
     private static String getInterfaceFor(Cluster cluster, Interfacetype type) {

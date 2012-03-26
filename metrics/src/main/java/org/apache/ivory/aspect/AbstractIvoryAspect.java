@@ -36,7 +36,7 @@ import org.aspectj.lang.annotation.Aspect;
 @Aspect
 public abstract class AbstractIvoryAspect {
 
-	@Around("within(org.apache.ivory.resource.*) && @annotation(org.apache.ivory.monitors.Monitored)")
+	@Around("@annotation(org.apache.ivory.monitors.Monitored)")
 	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();
@@ -68,6 +68,9 @@ public abstract class AbstractIvoryAspect {
 			Object[] args, ResourceMessage.Status status, long executionTime) {
 		String action = ResourcesReflectionUtil
 				.getResourceMonitorName(methodName);
+
+		assert action != null : "Method :" + methodName
+				+ " not parsed by reflection util";
 		Map<String, String> dimensions = new HashMap<String, String>();
 
 		for (Map.Entry<Integer, String> param : ResourcesReflectionUtil

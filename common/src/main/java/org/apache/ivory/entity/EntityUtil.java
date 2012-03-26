@@ -12,6 +12,7 @@ import org.apache.ivory.entity.common.DateValidator;
 public class EntityUtil {
 	
 	private static final DateValidator DateValidator = new DateValidator();
+
     private static DateFormat getDateFormat() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

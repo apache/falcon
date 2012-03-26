@@ -48,16 +48,15 @@
          <app-path>#USER_WF_PATH#</app-path>
          <propagate-configuration/>
         </sub-workflow>
-		<ok to="jms-messaging" />
-		<error to="fail" />
+		<ok to="ivory-succeeded-messaging" />
+		<error to="ivory-failed-messaging" />
 	</action>
-
-	<action name='jms-messaging'>
+	<action name='ivory-succeeded-messaging'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
-			<arg>${entityTopicName}</arg>
+			<arg>${entityName}</arg>
 			<arg>${feedNames}</arg>
 			<arg>${feedInstancePaths}</arg>
 			<arg>${wf:id()}</arg>
@@ -69,10 +68,58 @@
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
 			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>IVORY.PROCESS.TOPIC</arg>
+			<arg>SUCCEEDED</arg>
 		</java>
-		<ok to="end" />
+		<ok to="user-jms-messaging" />
+		<error to="user-jms-messaging" />
+	</action>
+	<action name='ivory-failed-messaging'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+			<arg>${entityName}</arg>
+			<arg>${feedNames}</arg>
+			<arg>${feedInstancePaths}</arg>
+			<arg>${wf:id()}</arg>
+			<arg>${wf:run()}</arg>
+			<arg>${nominalTime}</arg>
+			<arg>${timeStamp}</arg>
+			<arg>${brokerUrl}</arg>
+			<arg>${brokerImplClass}</arg>
+			<arg>${entityType}</arg>
+			<arg>${operation}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>IVORY.PROCESS.TOPIC</arg>
+			<arg>FAILED</arg>
+		</java>
+		<ok to="fail" />
 		<error to="fail" />
 	</action>
+	<action name='user-jms-messaging'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+			<arg>${entityName}</arg>
+			<arg>${feedNames}</arg>
+			<arg>${feedInstancePaths}</arg>
+			<arg>${wf:id()}</arg>
+			<arg>${wf:run()}</arg>
+			<arg>${nominalTime}</arg>
+			<arg>${timeStamp}</arg>
+			<arg>${brokerUrl}</arg>
+			<arg>${brokerImplClass}</arg>
+			<arg>${entityType}</arg>
+			<arg>${operation}</arg>
+			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>${entityName}</arg>
+			<arg>SUCCEEDED</arg>
+		</java>
+		<ok to="end" />
+		<error to="end" />
+	</action>	
 
 	<kill name="fail">
 		<message>Workflow failed, error

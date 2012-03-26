@@ -28,6 +28,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,15 +103,17 @@ public final class LateDataUtils {
         }
     }
 
-    public static long getTime(String dateStr) throws IvoryException {
+    public static long getTime(String timeZone, String dateStr) throws IvoryException {
         try {
+            format.get().setTimeZone(TimeZone.getTimeZone(timeZone));
             return format.get().parse(dateStr.substring(0, 17)).getTime();
         } catch (ParseException e) {
             throw new IvoryException("Unable to parse " + dateStr);
         }
     }
 
-    public static String toDateString(long time) {
+    public static String toDateString(String timeZone, long time) {
+        format.get().setTimeZone(TimeZone.getTimeZone(timeZone));
         return format.get().format(new Date(time));
     }
 }

@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 
 /**
  * 
- * Generic Abstract Entity Parser, the concrete FEED, PROCESS and DATAENDPOINT
+ * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER
  * Should extend this parser to implement specific parsing.
  * 
  * @param <T>
@@ -49,7 +49,6 @@ public abstract class EntityParser<T extends Entity> {
      * 
      * @param entityType
      *            - can be FEED or PROCESS
-     * @param schemaFile
      */
     protected EntityParser(EntityType entityType) {
         this.entityType = entityType;

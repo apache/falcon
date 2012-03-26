@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.ivory.messaging;
 
 import javax.jms.Connection;
@@ -33,20 +32,19 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class ProcessProducerTest {
-
+public class IvoryTopicProducerTest {
 	private String [] args = new String[14];
 	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	//private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
-	private static final String TOPIC_NAME = "Ivory.process1.click-logs";
+	private static final String TOPIC_NAME = "IVORY.PROCESS.TOPIC";
 	private BrokerService broker;
 	
 	private volatile AssertionError error;
 
 	@BeforeClass
 	public void setup() throws Exception {
-		args[EntityInstanceMessage.ARG.PROCESS_NAME.ORDER()]=TOPIC_NAME;
+		args[EntityInstanceMessage.ARG.PROCESS_NAME.ORDER()]="agg-coord";
 		args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()]="click-logs,raw-logs";
 		args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]="/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20";
 		args[EntityInstanceMessage.ARG.WORKFLOW_ID.ORDER()]="workflow-01-00";
@@ -115,26 +113,19 @@ public class ProcessProducerTest {
 		System.out.println("Consumed: " + m.getText());
 		String[] items = m.getText().split("\\$");
 		assertMessage(items);
-		Assert.assertEquals(items[1], "click-logs");
-		Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20");
-		
-		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
-		System.out.println("Consumed: " + m.getText());
-		items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1], "raw-logs");
-		Assert.assertEquals(items[2], "/raw-logs/10/05/05/00/20");
+		Assert.assertEquals(items[1], "click-logs,raw-logs");
+		Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
 
 		connection.close();
 	}
 	
 	private void assertMessage(String [] items) throws JMSException {
-		Assert.assertEquals(items.length, 7);
-		Assert.assertEquals(items[0], TOPIC_NAME);
+		Assert.assertEquals(items.length, 8);
+		Assert.assertEquals(items[0], "agg-coord");
 		Assert.assertEquals(items[3], "workflow-01-00");
 		Assert.assertEquals(items[4],"1");
 		Assert.assertEquals(items[5],"2011-01-01");
 		Assert.assertEquals(items[6],"2012-01-01");
+		Assert.assertEquals(items[7], "SUCCEEDED");
 	}
 }

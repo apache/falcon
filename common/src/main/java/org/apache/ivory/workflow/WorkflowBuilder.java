@@ -47,5 +47,5 @@ public abstract class WorkflowBuilder<T extends Entity> {
     //TODO add methods for re-run, whenever additional work is required
     //beyond just firing an action in the actual workflow engine
 
-    public abstract List<ExternalId> getExternalIds(Entity entity, Date start, Date end) throws IvoryException;
+    public abstract List<ExternalId> getExternalIds(T entity, String cluster, Date start, Date end) throws IvoryException;
 }

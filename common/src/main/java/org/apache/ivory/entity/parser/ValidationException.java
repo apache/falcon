@@ -32,7 +32,11 @@ public class ValidationException extends IvoryException {
 	}
 
 	public ValidationException(Exception e) {
-	    super(e.getMessage(), e);
+	    super(e);
+    }
+
+	public ValidationException(String message, Exception e) {
+	    super(message, e);
     }
 
     private static final long serialVersionUID = -4502166408759507355L;
