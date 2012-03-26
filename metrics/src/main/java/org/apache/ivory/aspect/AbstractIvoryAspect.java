@@ -36,7 +36,7 @@ import org.aspectj.lang.annotation.Aspect;
 @Aspect
 public abstract class AbstractIvoryAspect {
 
-	@Around("within(org.apache.ivory.resource.*) && @annotation(org.apache.ivory.monitors.Monitored)")
+	@Around("@annotation(org.apache.ivory.monitors.Monitored)")
 	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();

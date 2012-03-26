@@ -151,6 +151,7 @@
 								<include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
 								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
+								<include>org/apache/ivory/aspect/instances/IvoryTopicSubscriber.java</include>
 								<include>org/apache/ivory/aspect/*.java</include>
                                 <include>org/apache/ivory/monitoring/*.java</include>
 							</includes>

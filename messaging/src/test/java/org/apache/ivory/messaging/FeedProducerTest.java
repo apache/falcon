@@ -63,7 +63,7 @@ public class FeedProducerTest {
 	@BeforeClass
 	public void setup() throws Exception {
 		this.msgArgs = new EntityInstanceMessage();
-		this.msgArgs.setEntityTopicName(TOPIC_NAME);
+		this.msgArgs.setProcessName(TOPIC_NAME);
 		this.msgArgs.setFeedName("click-logs");
 		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20");
 		this.msgArgs.setWorkflowId("workflow-01-00");
@@ -74,7 +74,7 @@ public class FeedProducerTest {
 		this.msgArgs.setBrokerImplClass(BROKER_IMPL_CLASS);
 		this.msgArgs.setEntityType("FEED");
 		this.msgArgs.setOperation("DELETE");
-		
+		this.msgArgs.setTopicName(TOPIC_NAME);
         this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
 
 		logFile = new Path(conf.get("fs.default.name"),"/ivory/feed/agg-logs/instance-2012-01-01-10-00.csv");
@@ -133,9 +133,10 @@ public class FeedProducerTest {
 			}
 		};
 		t.start();
-		Thread.sleep(1000);
+		Thread.sleep(1500);
 		MessageProducer.main(EntityInstanceMessage
 				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
+		t.join();
 		if (error != null) {
 			throw error;
 		}
@@ -157,25 +158,25 @@ public class FeedProducerTest {
 		for (m = null; m == null;)
 			m = (TextMessage)consumer.receive();
 		System.out.println("Consumed: " + m.getText());
-		String[] items = m.getText().split(",");
+		String[] items = m.getText().split("\\$");
 		assertMessage(items);
 		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/20");
 		
 		for (m = null; m == null;)
 			m = (TextMessage)consumer.receive();
-		items = m.getText().split(",");
+		items = m.getText().split("\\$");
 		assertMessage(items);
 		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/21");
 		
 		for (m = null; m == null;)
 			m = (TextMessage)consumer.receive();
-		items = m.getText().split(",");
+		items = m.getText().split("\\$");
 		assertMessage(items);
 		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/22");
 		
 		for (m = null; m == null;)
 			m = (TextMessage)consumer.receive();
-		items = m.getText().split(",");
+		items = m.getText().split("\\$");
 		assertMessage(items);
 		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/23");
 		

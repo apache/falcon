@@ -45,6 +45,7 @@ public class ResourcesReflectionUtil {
 		buildAnnotationsMapForClass("org.apache.ivory.resource.EntityManager");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.SchedulableEntityManager");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.ProcessInstanceManager");
+		buildAnnotationsMapForClass("org.apache.ivory.aspect.instances.IvoryTopicSubscriber");
 	}
 
 	public static Map<Integer, String> getResourceDimensionsName(String methodName) {
@@ -53,7 +54,7 @@ public class ResourcesReflectionUtil {
 
 	public static String getResourceMonitorName(String methodName) {
 		return methods.get(methodName)!=null?methods.get(methodName).monitoredName:null;
-	}
+	}	
 
 	public static class MethodAnnotation {
 		private String monitoredName;
@@ -68,7 +69,8 @@ public class ResourcesReflectionUtil {
 	}
 
 	private static void buildAnnotationsMapForClass(String className) {
-        Class clazz = null;
+        @SuppressWarnings("rawtypes")
+		Class clazz = null;
         try {
             clazz = ResourcesReflectionUtil.class.
                     getClassLoader().loadClass(className);
