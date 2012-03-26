@@ -18,15 +18,15 @@
 
 package org.apache.ivory.transaction;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.util.ReflectionUtils;
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.ivory.IvoryException;
+import org.apache.log4j.Logger;
 
 public class AtomicActions {
 
@@ -72,6 +72,10 @@ public class AtomicActions {
     public void rollback() throws IvoryException {
         if (!finalized.compareAndSet(false, true)) checkState();
         handler.rollback(this);
+        //rollback actions in reverse order
+        ListIterator<Action> itr = actions.listIterator(actions.size());
+        while(itr.hasPrevious())
+            itr.previous().rollback();
         actions.clear();
         LOG.info(actionID + "; ROLLBACK");
     }

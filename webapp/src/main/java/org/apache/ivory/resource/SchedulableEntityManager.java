@@ -28,6 +28,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.entity.store.EntityAlreadyExistsException;
@@ -35,6 +36,8 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.transaction.AtomicActions;
+import org.apache.ivory.transaction.TransactionManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -95,16 +98,25 @@ public class SchedulableEntityManager extends EntityManager {
 	public APIResult submitAndSchedule(@Context HttpServletRequest request,
 			@Dimension ("entityType")@PathParam("type") String type) {
 		try {
+            TransactionManager.startTransaction();
 			checkSchedulableEntity(type);
 			audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
 			Entity entity = submitInternal(request, type);
-			return schedule(request, type, entity.getName());
+			APIResult result = schedule(request, type, entity.getName());
+			TransactionManager.commit();
+			return result;
 		} catch (IvoryWebException e) {
             throw e;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			LOG.error("Unable to submit and schedule ", e);
 			throw IvoryWebException
 					.newException(e, Response.Status.BAD_REQUEST);
+		} finally {
+		    try {
+		        TransactionManager.rollback();
+            } catch (Throwable e) {
+                LOG.error("Unable to rollback transaction " +  TransactionManager.getTransactionId(), e);
+            }
 		}
 	}
 

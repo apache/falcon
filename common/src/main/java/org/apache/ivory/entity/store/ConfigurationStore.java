@@ -33,10 +33,12 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.store.ConfigurationStoreAction.Action;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.service.ConfigurationChangeListener;
+import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
@@ -144,6 +146,7 @@ public class ConfigurationStore {
                 persist(type, entity);
                 dictionary.get(type).put(entity.getName(), entity);
                 onAdd(entity);
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.PUBLISH, entity));
             } else {
                 throw new EntityAlreadyExistsException(type + ": " + entity.getName() +
                         " already registered with configuration store. " +
@@ -211,15 +214,17 @@ public class ConfigurationStore {
      * @param name - Name of the entity object being removed
      * @return - True is remove is successful, false if request entity doesn't
      *            exist
-     * @throws StoreAccessException If any error when the config is archived
+     * @throws IvoryException 
      */
     public boolean remove(EntityType type, String name)
-            throws StoreAccessException {
+            throws IvoryException {
         Map<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             try {
+                Entity entity = entityMap.get(name);
                 archive(type, name);
                 onRemove(entityMap.remove(name));
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.REMOVE, entity));
             } catch (IOException e) {
                 throw new StoreAccessException(e);
             }

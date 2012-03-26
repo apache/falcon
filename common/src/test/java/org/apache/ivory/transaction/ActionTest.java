@@ -18,6 +18,7 @@
 
 package org.apache.ivory.transaction;
 
+import static org.testng.AssertJUnit.assertEquals;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -25,20 +26,21 @@ public class ActionTest {
 
     @Test
     public void testGetName() throws Exception {
-        Action action = new Action("hello11", "category22", "label33");
-        Assert.assertEquals(action.getName(), "hello11");
+        Action action = new TestAction("category22");
+        Assert.assertEquals(action.getName(), TestAction.class.getName());
         Assert.assertEquals(action.getCategory(), "category22");
-        Assert.assertEquals(action.getLabel(), "label33");
     }
 
     @Test
     public void testFromLine() throws Exception {
-        Action action = new Action("hello11", "category22", "label33");
+        Action action = new TestAction("category22");
+        action.getPayload().add("key", "value");
         String str = action.toString();
         Action actionNew = Action.fromLine(str);
 
-        Assert.assertEquals(action.getName(), actionNew.getName());
+        Assert.assertEquals(TestAction.class, action.getClass());
         Assert.assertEquals(action.getCategory(), actionNew.getCategory());
-        Assert.assertEquals(action.getLabel(), actionNew.getLabel());
+        Assert.assertNotNull(action.getPayload());
+        assertEquals("value", action.getPayload().get("key"));
     }
 }

@@ -18,6 +18,23 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -37,16 +54,6 @@ import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.NoSuchElementException;
-import java.util.Set;
 
 public class EntityManager {
 
@@ -217,9 +224,7 @@ public class EntityManager {
     }
 
     protected Entity submitInternal(HttpServletRequest request,
-                                  String type)
-            throws IOException, IvoryException {
-
+            String type) throws IOException, IvoryException {
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
         ConfigurationStore configStore = ConfigurationStore.get();

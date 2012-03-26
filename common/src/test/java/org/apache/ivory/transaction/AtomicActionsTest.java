@@ -67,7 +67,7 @@ public class AtomicActionsTest {
         MockJournal mock = new MockJournal();
         AtomicActions trans = new AtomicActions();
         trans.setHandler(mock);
-        Action action = new Action("1", "2", "3");
+        Action action = new TestAction("2");
         trans.peform(action);
         Assert.assertEquals(trans.getUncommittedActions().size(), 1);
         Assert.assertEquals(trans.getUncommittedActions().get(0), action);
@@ -82,7 +82,7 @@ public class AtomicActionsTest {
         MockJournal mock = new MockJournal();
         AtomicActions trans = new AtomicActions();
         trans.setHandler(mock);
-        Action action = new Action("1", "2", "3");
+        Action action = new TestAction("2");
         trans.peform(action);
         Assert.assertEquals(trans.getUncommittedActions().size(), 1);
         Assert.assertEquals(trans.getUncommittedActions().get(0), action);
@@ -96,8 +96,8 @@ public class AtomicActionsTest {
     public void testGetId() throws Exception {
         List<Action> actions = new ArrayList<Action>();
         UUID id = UUID.randomUUID();
-        actions.add(new Action("a", "b", "c"));
-        actions.add(new Action("d", "e", "f"));
+        actions.add(new TestAction("b"));
+        actions.add(new TestAction("e"));
         AtomicActions trans = new AtomicActions(id, actions);
         Assert.assertEquals(trans.getId(), id.toString());
         Assert.assertEquals(trans.getUncommittedActions().size(), actions.size());

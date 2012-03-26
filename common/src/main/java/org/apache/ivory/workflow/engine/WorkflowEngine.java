@@ -33,7 +33,7 @@ import org.apache.ivory.entity.v0.Entity;
  */
 public interface WorkflowEngine {
 
-    String schedule(Entity entity) throws IvoryException;
+    void schedule(Entity entity) throws IvoryException;
 
     String dryRun(Entity entity) throws IvoryException;
 
