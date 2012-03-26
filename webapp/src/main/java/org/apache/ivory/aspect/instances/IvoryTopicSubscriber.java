@@ -115,7 +115,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	 */
 	// TODO capture execution time
 	@Monitored(event = "process-instance")
-	private String instrumentWithAspect(
+	public String instrumentWithAspect(
 			@Dimension(value = "process") String process,
 			@Dimension(value = "feed") String feedName,
 			@Dimension(value = "feedPath") String feedpath,
