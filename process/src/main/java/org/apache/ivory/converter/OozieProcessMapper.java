@@ -31,6 +31,7 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.LateProcess;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.latedata.LateDataUtils;
@@ -207,27 +208,27 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Process process = getEntity();
         if (process == null)
             return null;
+        
+        LateProcess lateProcess = process.getLateProcess();
+        if (lateProcess==null) {
+            LOG.warn("Late date coordinator doesn't apply, as the late-process tag is not present in process: " +
+                    process.getName());
+            return null;
+        }
 
         String offset = "";
         long longestOffset = -1;
         for (Input input : process.getInputs().getInput()) {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
             String offsetLocal = feed.getLateArrival().getCutOff();
-            if(offsetLocal==null){
-            	continue;
-            }
             long durationLocal = LateDataUtils.getDurationFromOffset(offsetLocal);
             if (durationLocal > longestOffset) {
                 longestOffset = durationLocal;
                 offset = offsetLocal;
             }
         }
-		if (offset.isEmpty()) {
-			LOG.warn("Late date coordinator doesn't apply, as cut-off period does not exists in any of the referenced feed of process: "
-					+ process.getName());
-			return null;
-		}
-
+        assert !offset.isEmpty() : "dont expect offset to be empty";
+        
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = process.getWorkflowName("LATE1");
         Path coordPath = getCoordPath(bundlePath, coordName);

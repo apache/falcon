@@ -35,7 +35,6 @@
                       timezone="UTC" />
             <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
-
     </clusters>
 
     <locations>

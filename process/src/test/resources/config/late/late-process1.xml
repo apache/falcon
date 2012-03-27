@@ -46,8 +46,4 @@
 
     <retry policy="backoff" delay="10" delayUnit="hours" attempts="3" />
 
-    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
-        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
-    </late-process>
 </process>

@@ -39,14 +39,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class OozieProcessMapperLateCutOffTest {
+public class OozieProcessMapperLateProcessTest {
 
 	private static String hdfsUrl;
 	private static final String CLUSTER_XML = "/config/late/late-cluster.xml";
 	private static final String FEED1_XML = "/config/late/late-feed1.xml";
 	private static final String FEED2_XML = "/config/late/late-feed2.xml";
 	private static final String FEED3_XML = "/config/late/late-feed3.xml";
-	private static final String FEED4_XML = "/config/late/late-feed4.xml";
 	private static final String PROCESS1_XML = "/config/late/late-process1.xml";
 	private static final String PROCESS2_XML = "/config/late/late-process2.xml";
 	private static final ConfigurationStore store = ConfigurationStore.get();
@@ -78,13 +77,10 @@ public class OozieProcessMapperLateCutOffTest {
 				this.getClass().getResource(FEED2_XML));
 		Feed feed3 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
 				this.getClass().getResource(FEED3_XML));
-		Feed feed4 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
-				this.getClass().getResource(FEED4_XML));
 
 		store.publish(EntityType.FEED, feed1);
 		store.publish(EntityType.FEED, feed2);
 		store.publish(EntityType.FEED, feed3);
-		store.publish(EntityType.FEED, feed4);
 
 		Process process1 = (Process) EntityType.PROCESS.getUnmarshaller()
 				.unmarshal(this.getClass().getResource(PROCESS1_XML));
@@ -101,13 +97,12 @@ public class OozieProcessMapperLateCutOffTest {
 		store.remove(EntityType.FEED, "late-feed1");
 		store.remove(EntityType.FEED, "late-feed2");
 		store.remove(EntityType.FEED, "late-feed3");
-		store.remove(EntityType.FEED, "late-feed4");
 		store.remove(EntityType.CLUSTER, "late-cluster");
 
 	}
 
 	@Test
-	public void testEmptyCutoffPeriod() throws IvoryException {
+	public void testEmptyLateProcess() throws IvoryException {
 		Process process = store.get(EntityType.PROCESS, "late-process1");
 		Cluster cluster = store.get(EntityType.CLUSTER, "late-cluster");
 		OozieProcessMapper mapper = new OozieProcessMapper(process);
@@ -117,7 +112,7 @@ public class OozieProcessMapperLateCutOffTest {
 	}
 	
 	@Test
-	public void testEmptyAndNotEmptyCutoffPeriod() throws IvoryException, IOException {
+	public void testNonEmptyLateProcess() throws IvoryException, IOException {
 		Process process = store.get(EntityType.PROCESS, "late-process2");
 		Cluster cluster = store.get(EntityType.CLUSTER, "late-cluster");
 		OozieProcessMapper mapper = new OozieProcessMapper(process);

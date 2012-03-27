@@ -30,7 +30,7 @@
     <!-- what -->
     <inputs>
         <input name="impression" feed="late-feed1" start-instance="today(0,0)" end-instance="today(0,2)" /> 
-        <input name="clicks" feed="late-feed4" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
+        <input name="clicks" feed="late-feed2" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
     </inputs>
 
     <outputs>
