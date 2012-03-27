@@ -18,8 +18,6 @@
 package org.apache.ivory.aspect.instances;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
-import java.util.Random;
 import java.util.UUID;
 
 import javax.jms.Connection;
@@ -114,15 +112,6 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		}
 
 	}
-	
-	public void test1() throws Exception{
-		processInstanceManager.instrumentWithAspect("", "", "", "", "", "", "", "");
-	}
-	
-	public void test2() throws Exception{
-		processInstanceManager.instrumentWithAspect("", "", "", "", "", "", "", "");
-	}	
-
 
 	// @Override
 	public void onException(JMSException ignore) {
