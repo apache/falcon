@@ -19,6 +19,8 @@ package org.apache.ivory.aspect.instances;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,8 +35,6 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstanceManager;
 import org.apache.log4j.Logger;
 
@@ -65,13 +65,15 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 
 	public void startSubscriber() throws IvoryException {
 		try {
+			//TODO lets not create a unique topic connection id with every restart
+			UUID uuid=UUID.randomUUID();
 			Connection connection = createAndGetConnection(
 					implementation, userName, password, url);
-			connection.setClientID(IVORY_PROCESS_TOPIC_CLIENT+"-"+InetAddress.getLocalHost().getHostName());
+			connection.setClientID(IVORY_PROCESS_TOPIC_CLIENT+"-"+uuid);
 			TopicSession session = (TopicSession) connection.createSession(
 					false, Session.AUTO_ACKNOWLEDGE);
 			Topic destination = session.createTopic(topicName);
-			subscriber = session.createDurableSubscriber(destination,IVORY_PROCESS_TOPIC_CLIENT+"-"+InetAddress.getLocalHost().getHostName());
+			subscriber = session.createDurableSubscriber(destination,IVORY_PROCESS_TOPIC_CLIENT+"-"+uuid);
 			subscriber.setMessageListener(this);
 			connection.setExceptionListener(this);
 			connection.start();
