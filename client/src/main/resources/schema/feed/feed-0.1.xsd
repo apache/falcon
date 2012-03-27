@@ -81,7 +81,7 @@
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="late-arrival">
-		<xs:attribute type="validity-type" name="cut-off" use="required"/>
+		<xs:attribute type="validity-type" name="cut-off" use="optional"/>
 	</xs:complexType>
 	<xs:complexType name="property">
 		<xs:attribute type="IDENTIFIER" name="name" use="required" />
