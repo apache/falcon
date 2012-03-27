@@ -35,6 +35,7 @@ import javax.jms.TopicSubscriber;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.resource.ProcessInstanceManager;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -51,6 +52,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String password;
 	private String url;
 	private String topicName;
+	private ProcessInstanceManager processInstanceManager = new ProcessInstanceManager();
 
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {
@@ -96,8 +98,9 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String status = items[7];
 
 			try {
-				instrumentWithAspect(processName, feedName, feedpath,
-						nominalTime, timeStamp, status);
+				LOG.debug("Instrumenting with aspect: "+processName+":"+nominalTime);
+				processInstanceManager.instrumentWithAspect(processName, feedName, feedpath,
+						nominalTime, timeStamp, status, workflowId, runId);
 			} catch (Exception ignore) {
 				// mocked exception
 			}
@@ -109,25 +112,15 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		}
 
 	}
-
-	/*
-	 * Below method is a mock and gets automatically invoked by Aspect
-	 */
-	// TODO capture execution time
-	@Monitored(event = "process-instance")
-	public String instrumentWithAspect(
-			@Dimension(value = "process") String process,
-			@Dimension(value = "feed") String feedName,
-			@Dimension(value = "feedPath") String feedpath,
-			@Dimension(value = "nominalTime") String nominalTime,
-			@Dimension(value = "timeStamp") String timeStamp,@Dimension(value = "status") String status)
-					throws Exception {
-		if(status.equalsIgnoreCase("FAILED")){
-			throw new Exception(process+":"+nominalTime+" Failed");
-		}
-		return "DONE";
-		
+	
+	public void test1() throws Exception{
+		processInstanceManager.instrumentWithAspect("", "", "", "", "", "", "", "");
 	}
+	
+	public void test2() throws Exception{
+		processInstanceManager.instrumentWithAspect("", "", "", "", "", "", "", "");
+	}	
+
 
 	// @Override
 	public void onException(JMSException ignore) {
