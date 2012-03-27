@@ -236,5 +236,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		feed.getClusters().getCluster().get(0).getValidity().setStart("2012-11-01T00:00Z");
 		parser.validate(feed);
 	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testInvalidFeedLateCutoffPeriod() throws IvoryException{
+		Feed feed = parser
+				.parseAndValidate((FeedEntityParserTest.class
+						.getResourceAsStream(FEED_XML)));
+		feed.getLateArrival().setCutOff("hours(7)");
+		parser.validate(feed);
+	}
 
 }
