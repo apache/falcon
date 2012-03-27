@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<process name="late-process2" >
+	<!-- where -->
+	<cluster name="late-cluster"/>
+
+	<!-- when -->
+    <concurrency>1</concurrency>
+    <execution>LIFO</execution>
+    <frequency>hours</frequency>
+    <periodicity>1</periodicity>
+    <validity start="2011-11-02T00:00Z" end="2999-12-30T00:00Z" timezone="UTC"/>
+
+    <!-- what -->
+    <inputs>
+        <input name="impression" feed="late-feed1" start-instance="today(0,0)" end-instance="today(0,2)" /> 
+        <input name="clicks" feed="late-feed4" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
+    </inputs>
+
+    <outputs>
+        <output name="clicksummary" feed="late-feed3" instance="today(0,0)" />
+    </outputs>
+
+    <!-- how -->
+    <properties>
+    	<property name="procprop" value="procprop"/>
+    </properties>
+    
+    <workflow engine="oozie" path="/user/guest/workflow" />
+
+    <retry policy="backoff" delay="10" delayUnit="hours" attempts="3" />
+
+    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
+        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
+        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+    </late-process>
+</process>

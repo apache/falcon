@@ -213,13 +213,20 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         for (Input input : process.getInputs().getInput()) {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
             String offsetLocal = feed.getLateArrival().getCutOff();
+            if(offsetLocal==null){
+            	continue;
+            }
             long durationLocal = LateDataUtils.getDurationFromOffset(offsetLocal);
             if (durationLocal > longestOffset) {
                 longestOffset = durationLocal;
                 offset = offsetLocal;
             }
         }
-        assert !offset.isEmpty() : "dont expect offset to be empty";
+		if (offset.isEmpty()) {
+			LOG.warn("Late date coordinator doesn't apply, as cut-off period does not exists in any of the referenced feed of process: "
+					+ process.getName());
+			return null;
+		}
 
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = process.getWorkflowName("LATE1");
