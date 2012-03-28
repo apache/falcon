@@ -102,9 +102,9 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
                 if (fstat.getLen() == localFile.length() &&
                         fstat.getModificationTime() == localFile.lastModified()) continue;
             }
-            LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
             fs.copyFromLocalFile(false, true, new Path(localFile.getAbsolutePath()), clusterFile);
             fs.setTimes(clusterFile,  localFile.lastModified(), System.currentTimeMillis());
+            LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
         }
     }
 

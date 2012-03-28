@@ -21,6 +21,7 @@ package org.apache.ivory.workflow.engine;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.local.LocalOozie;
@@ -29,21 +30,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class OozieClientFactory {
 
-    private static final ConcurrentHashMap<Cluster, OozieClient> cache =
-            new ConcurrentHashMap<Cluster, OozieClient>();
+	private static final Logger LOG = Logger.getLogger(OozieClientFactory.class);
+
+    private static final ConcurrentHashMap<String, OozieClient> cache =
+            new ConcurrentHashMap<String, OozieClient>();
     private static final String LOCAL_OOZIE = "local";
     private static volatile boolean localInitialized = false;
 
     public synchronized static OozieClient get(Cluster cluster)
             throws IvoryException {
         assert cluster != null : "Cluster cant be null";
-        if (!cache.containsKey(cluster)) {
-            String oozieUrl = ClusterHelper.getOozieUrl(cluster);
+        String oozieUrl = ClusterHelper.getOozieUrl(cluster);
+        if (!cache.containsKey(oozieUrl)) {
             OozieClient ref = getClientRef(oozieUrl);
-            cache.putIfAbsent(cluster, ref);
+            LOG.info("Caching Oozie client object for " + oozieUrl);
+            cache.putIfAbsent(oozieUrl, ref);
             return ref;
         } else {
-            return cache.get(cluster);
+            return cache.get(oozieUrl);
         }
     }
 

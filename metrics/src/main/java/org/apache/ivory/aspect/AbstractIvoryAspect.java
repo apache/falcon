@@ -18,11 +18,11 @@
 
 package org.apache.ivory.aspect;
 
-import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.ivory.util.ResourcesReflectionUtil;
+import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -35,11 +35,15 @@ import org.aspectj.lang.annotation.Aspect;
  */
 @Aspect
 public abstract class AbstractIvoryAspect {
-
+	
+	private static final Logger LOG = Logger
+			.getLogger(AbstractIvoryAspect.class);
+	
 	@Around("@annotation(org.apache.ivory.monitors.Monitored)")
-	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
+	public Object LogAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();
+		LOG.debug("Before invoke of method: "+methodName);
 		Object[] args = joinPoint.getArgs();
 		Object result = null;
 		ResourceMessage.Status status;
@@ -47,6 +51,7 @@ public abstract class AbstractIvoryAspect {
 		long startTime = System.nanoTime();
 		long endTime;
 		try {
+			LOG.debug("During invoke of method: "+methodName);
 			result = joinPoint.proceed();
 		} catch (Exception e) {
 			endTime = System.nanoTime();
@@ -54,8 +59,10 @@ public abstract class AbstractIvoryAspect {
 			publishMessage(getResourceMessage(joinPoint.getSignature()
 					.getDeclaringType().getSimpleName()
 					+ "." + methodName, args, status, endTime - startTime));
+			LOG.debug("After invoke of method: "+methodName);
 			throw e;
 		}
+		LOG.debug("After invoke of method: "+methodName);
 		endTime = System.nanoTime();
 		status = ResourceMessage.Status.SUCCEEDED;
 		publishMessage(getResourceMessage(joinPoint.getSignature().getDeclaringType()
@@ -77,25 +84,7 @@ public abstract class AbstractIvoryAspect {
 				.getResourceDimensionsName(methodName).entrySet()) {
 			dimensions.put(param.getValue(), args[param.getKey()].toString());
 		}
-
 		return new ResourceMessage(action, dimensions, status, executionTime);
-
-	}
-
-	private String getClassAnnotationValue(Class classType,
-			Class annotationType, String attributeName) {
-		String value = null;
-
-		Annotation annotation = classType.getAnnotation(annotationType);
-		if (annotation != null) {
-			try {
-				value = (String) annotation.annotationType()
-						.getMethod(attributeName).invoke(annotation);
-			} catch (Exception ex) {
-			}
-		}
-
-		return value;
 	}
 
 	abstract public void publishMessage(ResourceMessage message);

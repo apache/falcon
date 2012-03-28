@@ -35,8 +35,8 @@ public class ResourcesReflectionUtilTest {
 		Assert.assertEquals("kill",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.killProcessInstance"));
 		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.killProcessInstance").get(1));		
 	
-		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("IvoryTopicSubscriber.instrumentWithAspect"));
-		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("IvoryTopicSubscriber.instrumentWithAspect").get(0));		
+		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.instrumentWithAspect"));
+		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.instrumentWithAspect").get(0));		
 
 	}
 

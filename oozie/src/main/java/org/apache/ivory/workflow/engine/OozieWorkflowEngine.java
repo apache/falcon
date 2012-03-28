@@ -187,15 +187,17 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 if (jobs == null || jobs.isEmpty())
                     jobArray.put(cluster, MISSING);
                 else { // select recent non-killed bundle, if exists
-                    //some latest bundles may be killed because of transaction rollback
+                       // some latest bundles may be killed because of
+                       // transaction rollback
                     BundleJob bundle = null;
                     for (BundleJob job : jobs) {
-                        if (job.getStatus() != Job.Status.KILLED && (bundle == null || bundle.getCreatedTime().before(job.getCreatedTime())))
+                        if (job.getStatus() != Job.Status.KILLED
+                                && (bundle == null || bundle.getCreatedTime().before(job.getCreatedTime())))
                             bundle = job;
                     }
-                    if(bundle == null)
-                        bundle = jobs.get(0);   
-                    
+                    if (bundle == null)
+                        bundle = jobs.get(0);
+
                     jobArray.put(cluster, bundle);
                 }
             }
@@ -472,7 +474,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         // set to the next minute. Since time is rounded off, it will be always
         // less than oozie server time
         // ensure that we are setting it to the next minute.
-        Date endTime = new Date(System.currentTimeMillis() + 60000);
+        Date endTime = new Date(System.currentTimeMillis() + 70000);
         Date newStartTime = null;
 
         for (CoordinatorJob coord : coords) {

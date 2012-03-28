@@ -18,7 +18,7 @@
 package org.apache.ivory.aspect.instances;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
+import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,8 +33,7 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.resource.ProcessInstanceManager;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -51,6 +50,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String password;
 	private String url;
 	private String topicName;
+	private ProcessInstanceManager processInstanceManager = new ProcessInstanceManager();
 
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {
@@ -63,13 +63,15 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 
 	public void startSubscriber() throws IvoryException {
 		try {
+			//TODO lets not create a unique topic connection id with every restart
+			UUID uuid=UUID.randomUUID();
 			Connection connection = createAndGetConnection(
 					implementation, userName, password, url);
-			connection.setClientID(IVORY_PROCESS_TOPIC_CLIENT+"-"+InetAddress.getLocalHost().getHostName());
+			connection.setClientID(IVORY_PROCESS_TOPIC_CLIENT+"-"+uuid);
 			TopicSession session = (TopicSession) connection.createSession(
 					false, Session.AUTO_ACKNOWLEDGE);
 			Topic destination = session.createTopic(topicName);
-			subscriber = session.createDurableSubscriber(destination,IVORY_PROCESS_TOPIC_CLIENT+"-"+InetAddress.getLocalHost().getHostName());
+			subscriber = session.createDurableSubscriber(destination,IVORY_PROCESS_TOPIC_CLIENT+"-"+uuid);
 			subscriber.setMessageListener(this);
 			connection.setExceptionListener(this);
 			connection.start();
@@ -96,8 +98,9 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String status = items[7];
 
 			try {
-				instrumentWithAspect(processName, feedName, feedpath,
-						nominalTime, timeStamp, status);
+				LOG.debug("Instrumenting with aspect: "+processName+":"+nominalTime);
+				processInstanceManager.instrumentWithAspect(processName, feedName, feedpath,
+						nominalTime, timeStamp, status, workflowId, runId);
 			} catch (Exception ignore) {
 				// mocked exception
 			}
@@ -108,25 +111,6 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 							+ this.toString(), ignore);
 		}
 
-	}
-
-	/*
-	 * Below method is a mock and gets automatically invoked by Aspect
-	 */
-	// TODO capture execution time
-	@Monitored(event = "process-instance")
-	public String instrumentWithAspect(
-			@Dimension(value = "process") String process,
-			@Dimension(value = "feed") String feedName,
-			@Dimension(value = "feedPath") String feedpath,
-			@Dimension(value = "nominalTime") String nominalTime,
-			@Dimension(value = "timeStamp") String timeStamp,@Dimension(value = "status") String status)
-					throws Exception {
-		if(status.equalsIgnoreCase("FAILED")){
-			throw new Exception(process+":"+nominalTime+" Failed");
-		}
-		return "DONE";
-		
 	}
 
 	// @Override
