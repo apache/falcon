@@ -167,11 +167,11 @@ public class ConfigurationStore {
         try {
             if (updatesInProgress.get() == entity &&
                     get(type, entity.getName()) != null) {
-                updatesInProgress.set(null);
                 persist(type, entity);
                 Entity oldEntity = dictionary.get(type).
                         put(entity.getName(), entity);
                 onChange(oldEntity, entity);
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATE, oldEntity));
             } else {
                 throw new IvoryException(entity.toShortString() +
                         " is not initialized for update or doesn't exist");
@@ -213,9 +213,10 @@ public class ConfigurationStore {
                     entity.toShortString() + " is already in progress or doesn't exist");
         }
         updatesInProgress.set(entity);
+        TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATEINIT, entity));
     }
 
-    public synchronized void rollbackUpdate() {
+    public synchronized void cleanupUpdateInit() {
         updatesInProgress.set(null);
     }
 

@@ -29,21 +29,23 @@ import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.util.DateUtils;
 
-public class OozieWorkflowEngineAction extends Action{
+public class OozieWorkflowEngineAction extends Action {
     private static final String CLUSTER_NAME_KEY = "cluster";
     private static final String JOB_ID_KEY = "jobId";
     private static final String ENTITY_TYPE_KEY = "entityType";
     private static final String ENTITY_NAME_KEY = "entityName";
     private static final String CHANGE_VALUE_KEY = "changeValue";
-    
+
+    private static final WorkflowEngineActionListener listener = new OozieHouseKeepingService();
+
     public static enum Action {
         RUN, SUSPEND, RESUME, KILL, CHANGE
     }
-    
+
     protected OozieWorkflowEngineAction() {
         super();
     }
-    
+
     public OozieWorkflowEngineAction(Action action, Cluster cluster, String jobId) {
         this(action, cluster, jobId, null);
     }
@@ -51,15 +53,16 @@ public class OozieWorkflowEngineAction extends Action{
     public OozieWorkflowEngineAction(Action action, Cluster cluster, String jobId, Entity entity) {
         super(action.name());
         Payload payload = new Payload(CLUSTER_NAME_KEY, cluster.getName(), JOB_ID_KEY, jobId);
-        if(entity != null)
+        if (entity != null)
             payload.add(ENTITY_TYPE_KEY, entity.getEntityType().name(), ENTITY_NAME_KEY, entity.getName());
         setPayload(payload);
     }
 
+    // Collects info for change rollback
     public void preparePayload() throws IvoryException {
         Cluster cluster = getCluster();
         String jobId = getJobId();
-        if(getAction() == Action.CHANGE) {
+        if (getAction() == Action.CHANGE) {
             OozieClient client = OozieClientFactory.get(cluster);
             StringBuilder builder = new StringBuilder();
             try {
@@ -69,67 +72,94 @@ public class OozieWorkflowEngineAction extends Action{
                 } else if (jobId.endsWith("-C")) { // coord
                     CoordinatorJob coord = client.getCoordJobInfo(jobId);
                     builder.append(OozieClient.CHANGE_VALUE_CONCURRENCY).append('=').append(coord.getConcurrency()).append(';');
-                    builder.append(OozieClient.CHANGE_VALUE_ENDTIME).append('=').append(DateUtils.formatDateUTC(coord.getEndTime()))
-                            .append(';');
-                    builder.append(OozieClient.CHANGE_VALUE_PAUSETIME).append('=')
-                            .append(coord.getPauseTime() == null ? "" : DateUtils.formatDateUTC(coord.getPauseTime()));
+                    builder.append(OozieClient.CHANGE_VALUE_ENDTIME).append('=').append(DateUtils.formatDateUTC(coord.getEndTime()));
+                    //pause time can't be rolled back
+//                    builder.append(OozieClient.CHANGE_VALUE_PAUSETIME).append('=')
+//                            .append(coord.getPauseTime() == null ? "" : DateUtils.formatDateUTC(coord.getPauseTime()));
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw new IvoryException(e);
             }
             getPayload().add(CHANGE_VALUE_KEY, builder.toString());
         }
     }
-    
+
     private String getJobId() {
         return getPayload().get(JOB_ID_KEY);
     }
-    
-     private Action getAction() {
-         return Action.valueOf(getCategory());
-     }
-    
+
+    private Action getAction() {
+        return Action.valueOf(getCategory());
+    }
+
     private Cluster getCluster() throws IvoryException {
         return ConfigurationStore.get().get(EntityType.CLUSTER, getPayload().get(CLUSTER_NAME_KEY));
     }
-    
+
     private Entity getEntity() throws IvoryException {
         String entityTypeStr = getPayload().get(ENTITY_TYPE_KEY);
-        if(StringUtils.isNotEmpty(entityTypeStr)) {
+        if (StringUtils.isNotEmpty(entityTypeStr)) {
             EntityType entityType = EntityType.valueOf(entityTypeStr);
             String entityName = getPayload().get(ENTITY_NAME_KEY);
             return ConfigurationStore.get().get(entityType, entityName);
         }
         return null;
     }
-    
+
     @Override
     public void rollback() throws IvoryException {
         Cluster cluster = getCluster();
         Entity entity = getEntity();
         String jobId = getJobId();
-        switch(getAction()) {
+        switch (getAction()) {
             case RUN:
                 OozieWorkflowEngine.kill(cluster, jobId, entity);
                 break;
-                
+
             case SUSPEND:
                 OozieWorkflowEngine.resume(cluster, jobId, entity);
                 break;
-                
+
             case RESUME:
                 OozieWorkflowEngine.suspend(cluster, jobId, entity);
                 break;
-                
+
             case KILL:
-                break;
+                if(jobId.endsWith("-B") || jobId.endsWith("-C"))
+                    throw new IvoryException("Can't rollback bundle/coord kill");
                 
+                OozieWorkflowEngine.reRun(cluster, jobId, null);
+                break;
+
             case CHANGE:
-               break;
+                OozieWorkflowEngine.change(cluster, jobId, getPayload().get(CHANGE_VALUE_KEY));
+                break;
         }
     }
 
     @Override
-    public void commit() {
+    public void commit() throws IvoryException {
+        Entity entity = getEntity();
+        if (entity == null)
+            return;
+
+        Cluster cluster = getCluster();
+        switch (getAction()) {
+            case RUN:
+                listener.afterSchedule(cluster, entity);
+                break;
+
+            case SUSPEND:
+                listener.afterSuspend(cluster, entity);
+                break;
+
+            case RESUME:
+                listener.afterResume(cluster, entity);
+                break;
+
+            case KILL:
+                listener.afterDelete(cluster, entity);
+                break;
+        }
     }
 }

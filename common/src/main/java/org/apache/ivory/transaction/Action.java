@@ -138,5 +138,5 @@ public abstract class Action {
     }
 
     public abstract void rollback() throws IvoryException;
-    public abstract void commit();
+    public abstract void commit() throws IvoryException;
 }

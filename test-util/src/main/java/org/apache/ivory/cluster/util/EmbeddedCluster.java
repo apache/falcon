@@ -18,6 +18,12 @@
 
 package org.apache.ivory.cluster.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,15 +31,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ivory.entity.v0.cluster.*;
+import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.cluster.Interface;
+import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.cluster.Location;
+import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.log4j.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.Map;
 
 public class EmbeddedCluster {
 

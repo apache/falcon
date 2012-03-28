@@ -29,7 +29,7 @@ public class ConfigurationStoreAction extends Action{
     private static final String ENTITY_KEY = "entity";
     
     public static enum Action{
-        PUBLISH, REMOVE
+        PUBLISH, REMOVE, UPDATE, UPDATEINIT
     }
     
     protected ConfigurationStoreAction() {
@@ -38,6 +38,9 @@ public class ConfigurationStoreAction extends Action{
     
     public ConfigurationStoreAction(ConfigurationStoreAction.Action action, Entity entity) {
         super(action.name());
+        if(action == Action.UPDATEINIT)
+            return;
+        
         Payload payload = new Payload(ENTITY_TYPE_KEY, entity.getEntityType().name());
         switch(action) {
             case PUBLISH:
@@ -45,6 +48,10 @@ public class ConfigurationStoreAction extends Action{
                 break;
                 
             case REMOVE:
+                payload.add(ENTITY_KEY, entity.toString());
+                break;
+                
+            case UPDATE:
                 payload.add(ENTITY_KEY, entity.toString());
                 break;
         }
@@ -63,9 +70,24 @@ public class ConfigurationStoreAction extends Action{
             case REMOVE:
                 ConfigurationStore.get().publish(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
                 break;
+                
+            case UPDATE:
+                ConfigurationStore.get().update(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
+                break;
+                
+            case UPDATEINIT:
+                ConfigurationStore.get().cleanupUpdateInit();
+                break;
         }
     }
 
     @Override
-    public void commit() { }
+    public void commit() {
+        Action action = Action.valueOf(getCategory());
+        switch(action) {
+            case UPDATEINIT:
+                ConfigurationStore.get().cleanupUpdateInit();
+                break;                
+        }
+    }
 }

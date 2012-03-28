@@ -68,6 +68,7 @@ public class AtomicActionsTest {
         AtomicActions trans = new AtomicActions();
         trans.setHandler(mock);
         Action action = new TestAction("2");
+        trans.begin();
         trans.peform(action);
         Assert.assertEquals(trans.getUncommittedActions().size(), 1);
         Assert.assertEquals(trans.getUncommittedActions().get(0), action);
@@ -83,6 +84,7 @@ public class AtomicActionsTest {
         AtomicActions trans = new AtomicActions();
         trans.setHandler(mock);
         Action action = new TestAction("2");
+        trans.begin();
         trans.peform(action);
         Assert.assertEquals(trans.getUncommittedActions().size(), 1);
         Assert.assertEquals(trans.getUncommittedActions().get(0), action);
@@ -102,5 +104,14 @@ public class AtomicActionsTest {
         Assert.assertEquals(trans.getId(), id.toString());
         Assert.assertEquals(trans.getUncommittedActions().size(), actions.size());
         Assert.assertEquals(trans.getUncommittedActions(), actions);
+    }
+    
+    @Test(expectedExceptions=IllegalStateException.class)
+    public void testPerformInvalidState() throws Exception {
+        MockJournal mock = new MockJournal();
+        AtomicActions trans = new AtomicActions();
+        trans.setHandler(mock);
+        Action action = new TestAction("2");
+        trans.peform(action);        
     }
 }

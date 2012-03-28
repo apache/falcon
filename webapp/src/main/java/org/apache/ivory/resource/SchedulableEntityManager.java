@@ -30,13 +30,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
-import org.apache.ivory.transaction.AtomicActions;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.log4j.Logger;
 
@@ -47,82 +46,75 @@ import org.apache.log4j.Logger;
 @Path("entities")
 public class SchedulableEntityManager extends EntityManager {
 
-	private static final Logger LOG = Logger
-			.getLogger(SchedulableEntityManager.class);
+    private static final Logger LOG = Logger.getLogger(SchedulableEntityManager.class);
 
-	/**
-	 * Schedules an submitted entity immediately
-	 * 
-	 * @param type
-	 * @param entity
-	 * @return APIResult
-	 */
-	@POST
-	@Path("schedule/{type}/{entity}")
-	@Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Monitored(event="schedule")
-	public APIResult schedule(@Context HttpServletRequest request,
-			@Dimension("entityType") @PathParam("type") String type,
-			@Dimension("entityName") @PathParam("entity") String entity) {
+    /**
+     * Schedules an submitted entity immediately
+     * 
+     * @param type
+     * @param entity
+     * @return APIResult
+     */
+    @POST
+    @Path("schedule/{type}/{entity}")
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "schedule")
+    public APIResult schedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity) {
+        try {
+            TransactionManager.startTransaction();
+            audit(request, entity, type, "SCHEDULED");
+            scheduleInternal(type, entity);
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
+            LOG.error("Unable to schedule workflow", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
 
-		try {
-			checkSchedulableEntity(type);
-			audit(request, entity, type, "SCHEDULED");
-			Entity entityObj = getEntityObject(entity, type);
-			if (!getWorkflowEngine().isActive(entityObj)) {
-				getWorkflowEngine().schedule(entityObj);
-				return new APIResult(APIResult.Status.SUCCEEDED, entity + "("
-						+ type + ") scheduled successfully");
-			} else {
-				throw new EntityAlreadyExistsException(entity + "(" + type
-						+ ") is already scheduled with " + "workflow engine");
-			}
-		} catch (Exception e) {
-			LOG.error("Unable to schedule workflow", e);
-			throw IvoryWebException
-					.newException(e, Response.Status.BAD_REQUEST);
-		}
-	}
-
-	/**
-	 * Submits a new entity and schedules it immediately
-	 * 
-	 * @param type
-	 * @return
-	 */
-	@POST
-	@Path("submitAndSchedule/{type}")
+    private void scheduleInternal(String type, String entity) throws IvoryException {
+        checkSchedulableEntity(type);
+        Entity entityObj = getEntityObject(entity, type);
+        if (getWorkflowEngine().isActive(entityObj))
+            throw new EntityAlreadyExistsException(entity + "(" + type + ") is already scheduled with " + "workflow engine");
+        getWorkflowEngine().schedule(entityObj);
+        
+    }
+    
+    /**
+     * Submits a new entity and schedules it immediately
+     * 
+     * @param type
+     * @return
+     */
+    @POST
+    @Path("submitAndSchedule/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Monitored(event="submitAndSchedule")
-	public APIResult submitAndSchedule(@Context HttpServletRequest request,
-			@Dimension ("entityType")@PathParam("type") String type) {
-		try {
+    @Monitored(event = "submitAndSchedule")
+    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type) {
+        try {
             TransactionManager.startTransaction();
-			checkSchedulableEntity(type);
-			audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
-			Entity entity = submitInternal(request, type);
-			APIResult result = schedule(request, type, entity.getName());
-			TransactionManager.commit();
-			return result;
-		} catch (IvoryWebException e) {
-            throw e;
-		} catch (Throwable e) {
-			LOG.error("Unable to submit and schedule ", e);
-			throw IvoryWebException
-					.newException(e, Response.Status.BAD_REQUEST);
-		} finally {
-		    try {
-		        TransactionManager.rollback();
-            } catch (Throwable e) {
-                LOG.error("Unable to rollback transaction " +  TransactionManager.getTransactionId(), e);
-            }
-		}
-	}
+            checkSchedulableEntity(type);
+            audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
+            Entity entity = submitInternal(request, type);
+            scheduleInternal(type, entity.getName());
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
+            LOG.error("Unable to submit and schedule ", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
 
     /**
      * Suspends a running entity
-     *
+     * 
      * @param type
      * @param entity
      * @return APIResult
@@ -130,19 +122,20 @@ public class SchedulableEntityManager extends EntityManager {
     @POST
     @Path("suspend/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Monitored(event="suspend")
-    public APIResult suspend(@Context HttpServletRequest request,
-			@Dimension("entityType") @PathParam("type") String type,
-			@Dimension("entityName") @PathParam("entity") String entity) {
-
+    @Monitored(event = "suspend")
+    public APIResult suspend(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity) {
         try {
-			checkSchedulableEntity(type);
+            TransactionManager.startTransaction();
+            checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
             Entity entityObj = getEntityObject(entity, type);
             getWorkflowEngine().suspend(entityObj);
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                    type + ") suspended successfully");
-        } catch (Exception e) {
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
             LOG.error("Unable to suspend entity", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -150,7 +143,7 @@ public class SchedulableEntityManager extends EntityManager {
 
     /**
      * Resumes a suspended entity
-     *
+     * 
      * @param type
      * @param entity
      * @return APIResult
@@ -158,29 +151,30 @@ public class SchedulableEntityManager extends EntityManager {
     @POST
     @Path("resume/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-	@Monitored(event="resume")
-	public APIResult resume(@Context HttpServletRequest request,
-			@Dimension("entityType") @PathParam("type") String type,
-			@Dimension("entityName") @PathParam("entity") String entity) {
+    @Monitored(event = "resume")
+    public APIResult resume(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity) {
 
         try {
-			checkSchedulableEntity(type);
+            TransactionManager.startTransaction();
+            checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
             Entity entityObj = getEntityObject(entity, type);
             getWorkflowEngine().resume(entityObj);
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" +
-                    type + ") resumed successfully");
-        } catch (Exception e) {
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
             LOG.error("Unable to resume entity", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
-    }    
+    }
 
-	private void checkSchedulableEntity(String type) throws UnschedulableEntityException {
-		EntityType entityType = EntityType.valueOf(type.toUpperCase());
-		if (!entityType.isSchedulable()) {
-			throw new UnschedulableEntityException("Entity type (" + type + ") "
-					+ " cannot be Scheduled/Suspended/Resumed");
-		}
-	}
+    private void checkSchedulableEntity(String type) throws UnschedulableEntityException {
+        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        if (!entityType.isSchedulable()) {
+            throw new UnschedulableEntityException("Entity type (" + type + ") " + " cannot be Scheduled/Suspended/Resumed");
+        }
+    }
 }

@@ -39,7 +39,7 @@
         <dependency>
         	<groupId>org.apache.ivory</groupId>
         	<artifactId>ivory-client</artifactId>
-      		<version>0.1-SNAPSHOT</version>
+      		<version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.oozie.extensions</groupId>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.apache.oozie</groupId>
             <artifactId>oozie-core</artifactId>
-            <version>3.1.3-SNAPSHOT</version>
+            <version>3.1.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>javax.xml.bind</groupId>
@@ -98,6 +98,12 @@
         <artifactId>activemq-pool</artifactId>
         <version>5.4.3</version>
       </dependency>
+    <dependency>
+      <groupId>org.apache.ivory</groupId>
+      <artifactId>ivory-test-util</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     </dependencies>
 
 	<build>

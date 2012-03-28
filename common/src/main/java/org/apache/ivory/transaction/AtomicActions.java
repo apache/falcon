@@ -30,7 +30,8 @@ import org.apache.log4j.Logger;
 
 public class AtomicActions {
 
-    private static Logger LOG = Logger.getLogger("TRANSACTIONLOG");
+    private static Logger TRANLOG = Logger.getLogger("TRANSACTIONLOG");
+    private static Logger LOG = Logger.getLogger(AtomicActions.class);
 
     private final UUID actionID;
     private AtomicBoolean begun = new AtomicBoolean(false);
@@ -57,38 +58,55 @@ public class AtomicActions {
         finalized.set(true);
     }
 
-    private void begin() throws IvoryException {
+    public boolean isFinalized() {
+        return finalized.get();
+    }
+    
+    public boolean isBegun() {
+        return begun.get();
+    }
+    
+    public void begin() throws IvoryException {
+        begun.set(true);
         handler.begin(this);
-        LOG.info(actionID + "; START");
+        TRANLOG.info(actionID + "; START");
     }
 
     public void commit() throws IvoryException {
         if (!finalized.compareAndSet(false, true)) checkState();
-        handler.commit(this);
+        for(Action action:actions) {
+            action.commit();
+            LOG.info("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " committed");
+        }
         actions.clear();
-        LOG.info(actionID + "; COMMIT");
+        handler.commit(this);
+        TRANLOG.info(actionID + "; COMMIT");
     }
 
     public void rollback() throws IvoryException {
         if (!finalized.compareAndSet(false, true)) checkState();
-        handler.rollback(this);
         //rollback actions in reverse order
         ListIterator<Action> itr = actions.listIterator(actions.size());
-        while(itr.hasPrevious())
-            itr.previous().rollback();
+        while(itr.hasPrevious()) {
+            Action action = itr.previous();
+            action.rollback();
+            LOG.info("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " rolled back");
+        }
         actions.clear();
-        LOG.info(actionID + "; ROLLBACK");
+        handler.rollback(this);
+        TRANLOG.info(actionID + "; ROLLBACK");
     }
 
     public void peform(Action action) throws IvoryException {
-        if (begun.compareAndSet(false, true)) begin();
         checkState();
         handler.onAction(this, action);
         actions.add(action);
-        LOG.info(actionID + "; DO " + action);
+        TRANLOG.info(actionID + "; DO " + action);
     }
 
     private void checkState() {
+        if (!begun.get())
+            throw new IllegalStateException("Not begun " + actionID);
         if (finalized.get()) {
             throw new IllegalStateException("Already finalized " + actionID);
         }
