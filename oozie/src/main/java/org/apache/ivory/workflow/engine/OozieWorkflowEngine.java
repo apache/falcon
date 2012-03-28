@@ -28,7 +28,6 @@ import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.update.UpdateHelper;
-import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
@@ -488,7 +487,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         for (Entity entity : affectedEntities) {
             if (entity.getEntityType() != EntityType.PROCESS) continue;
             LOG.info("Dependent entities need to be updated " + entity.toShortString());
-            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity));
+            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity)) continue;
             Map<Cluster, BundleJob> processBundles = findBundle(entity);
             for (Map.Entry<Cluster, BundleJob> processBundle : processBundles.entrySet()) {
                 if (processBundle.getValue() == MISSING) continue;
@@ -529,7 +528,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         //Pause time should be > now in oozie. So, add offset to pause time to account for time difference between ivory host and oozie host
         //set to the next minute. Since time is rounded off, it will be always less than oozie server time
         //ensure that we are setting it to the next minute.
-        Date endTime = new Date(System.currentTimeMillis() + 60000);
+        Date endTime = new Date(System.currentTimeMillis() + 70000);
         Date newStartTime = null;
 
         for (CoordinatorJob coord : coords) {
