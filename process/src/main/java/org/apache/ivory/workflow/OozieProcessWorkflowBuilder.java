@@ -33,6 +33,8 @@ import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
+    private static final String[] COORD_TAGS = {"DEFAULT", "LATE1"}; 
+    
     @Override
     public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
 
@@ -53,7 +55,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public Cluster[] getScheduledClustersFor(Process process) throws IvoryException {
-
         // TODO asserts
         String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
@@ -70,7 +71,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         Frequency freq = Frequency.valueOf(process.getFrequency());
         List<ExternalId> extIds = new ArrayList<ExternalId>();
         while(procStart.getTime().before(end)) {
-            extIds.add(new ExternalId(process.getName(), procStart.getTime()));
+            for(String tag:COORD_TAGS)
+                extIds.add(new ExternalId(process.getName(), tag, procStart.getTime()));
             procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
         return extIds;

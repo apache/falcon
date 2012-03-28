@@ -48,8 +48,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
-    protected static final String LATE_NOMINAL_TIME_EL = "${coord:formatTime(coord:dateOffset(coord:nominalTime(), " +
-            "#VAL#, 'MINUTE'),'yyyy-MM-dd-HH-mm')}";
+    protected static final String LATE_NOMINAL_TIME_EL = "${coord:formatTime(coord:dateOffset(coord:nominalTime(), "
+            + "#VAL#, 'MINUTE'),'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
@@ -108,7 +108,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException;
 
-    protected org.apache.ivory.oozie.coordinator.CONFIGURATION createCoordDefaultConfiguration(Cluster cluster, Path coordPath) {
+    protected org.apache.ivory.oozie.coordinator.CONFIGURATION createCoordDefaultConfiguration(Cluster cluster, Path coordPath,
+            String coordName) {
         org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
 
@@ -120,7 +121,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
         props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
 
-        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), "${coord:nominalTime()}").getId()));
+        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
+                "${coord:nominalTime()}").getId()));
         props.add(createCoordProperty("queueName", "default"));
 
         props.addAll(getEntityProperties());
@@ -182,7 +184,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             FileSystem fs = coordPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
             Path tempDir = new Path(coordPath, "../tmp");
             fs.mkdirs(tempDir);
-            fs.setPermission(tempDir, new FsPermission((short)511));
+            fs.setPermission(tempDir, new FsPermission((short) 511));
         } catch (Exception e) {
             throw new IvoryException("Unable to create temp dir in " + coordPath, e);
         }

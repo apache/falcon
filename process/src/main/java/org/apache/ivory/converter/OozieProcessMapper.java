@@ -120,7 +120,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setControls(controls);
 
         // Configuration
-        CONFIGURATION config = createCoordDefaultConfiguration(cluster, coordPath);
+        CONFIGURATION config = createCoordDefaultConfiguration(cluster, coordPath, coordName);
         List<Property> props = config.getProperty();
 
         // inputs
@@ -261,7 +261,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setControls(controls);
 
         // Configuration
-        CONFIGURATION config = createLateCoordinatorConfiguration(cluster, coordPath, offset);
+        CONFIGURATION config = createLateCoordinatorConfiguration(cluster, coordPath, offset, coordName);
         List<Property> props = config.getProperty();
 
         // inputs
@@ -349,7 +349,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     }
 
     protected org.apache.ivory.oozie.coordinator.CONFIGURATION
-                    createLateCoordinatorConfiguration(Cluster cluster, Path coordPath, String offsetExpr)
+                    createLateCoordinatorConfiguration(Cluster cluster, Path coordPath, String offsetExpr, String coordName)
             throws IvoryException {
         org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
@@ -366,7 +366,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
         props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
 
-        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), nominalTime).getId()));
+        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), nominalTime).getId()));
         props.add(createCoordProperty("queueName", "default"));
 
         props.addAll(getEntityProperties());
