@@ -36,6 +36,7 @@ import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.WorkflowJob.Status;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -43,10 +44,12 @@ public class OozieWorkflowEngineActionTest {
     private static Cluster cluster;
     private static final String WF_PATH = "/ivory/test/workflow";
     private static final String COORD_PATH = "/ivory/test/coordinator";
-
+    private static EmbeddedCluster embCluster;
+    
     @BeforeClass
-    public void init() throws Exception {
-        cluster = EmbeddedCluster.newCluster(RandomStringUtils.randomAlphabetic(5), false).getCluster();
+    public void setUp() throws Exception {
+        embCluster = EmbeddedCluster.newCluster(RandomStringUtils.randomAlphabetic(5), false);
+        cluster = embCluster.getCluster();
         ConfigurationStore.get().publish(EntityType.CLUSTER, cluster);
 
         // copy workflow
@@ -64,6 +67,11 @@ public class OozieWorkflowEngineActionTest {
         fs.copyFromLocalFile(new Path(this.getClass().getResource("/fs-coord.xml").getPath()), new Path(coordPath, "coordinator.xml"));
     }
 
+    @AfterClass
+    public void tearDown() {
+        embCluster.shutdown();
+    }
+    
     private String submitWorkflow() throws Exception {
         Path hdfsUrl = new Path(ClusterHelper.getHdfsUrl(cluster));
         Properties props = new Properties();
