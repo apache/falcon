@@ -23,6 +23,7 @@ import java.util.*;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.common.ELParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
@@ -57,6 +58,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 		for (Cluster cluster : feed.getClusters().getCluster()) {
 			 validateClusterValidity(cluster.getValidity().getStart(),
                      cluster.getValidity().getEnd(),cluster.getName());
+			 validateFeedCutOffPeriod(feed, cluster);
 			entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
 		}
         validateEntitiesExist(entities);   
@@ -175,6 +177,23 @@ public class FeedEntityParser extends EntityParser<Feed> {
 			throw new ValidationException(e);
 		} catch (Exception e) {
 			throw new IvoryException(e);
+		}
+	}
+	
+	private  void validateFeedCutOffPeriod(Feed feed, Cluster cluster)
+			throws IvoryException {
+		String feedRetention = cluster.getRetention()
+				.getLimit();
+		ELParser elParser = new ELParser();
+		elParser.parseOozieELExpression(feedRetention);
+		long retentionPeriod = elParser.getFeedDuration();
+
+		String feedCutoff = feed.getLateArrival().getCutOff();
+		elParser.parseOozieELExpression(feedCutoff);
+		long feedCutOffPeriod = elParser.getFeedDuration();
+		
+		if(retentionPeriod<feedCutOffPeriod){
+			throw new ValidationException("Feed's retention limit: "+feedRetention +" of referenced cluster "+cluster.getName()+" should be more than feed's late arrival cut-off period: "+feedCutoff +" for feed: "+feed.getName());
 		}
 	}
 }

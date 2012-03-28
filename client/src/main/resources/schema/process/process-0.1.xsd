@@ -98,7 +98,7 @@
 			</xs:element>
 			<xs:element type="workflow" name="workflow" />
 			<xs:element type="retry" name="retry" />
-			<xs:element type="late-process" name="late-process" />
+			<xs:element type="late-process" name="late-process"  minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute type="IDENTIFIER" name="name" use="required" />
 	</xs:complexType>
@@ -142,11 +142,11 @@
 	<xs:complexType name="late-process">
 		<xs:sequence>
 			<xs:element type="late-input" name="late-input" maxOccurs="unbounded"
-				minOccurs="0" />
+				minOccurs="1" />
 		</xs:sequence>
 		<xs:attribute type="policy-type" name="policy" use="required" />
-		<xs:attribute type="xs:integer" name="delay" use="required" />
-		<xs:attribute type="frequency-type" name="delayUnit" use="required" />
+		<xs:attribute type="xs:integer" name="delay" use="optional" />
+		<xs:attribute type="frequency-type" name="delayUnit" use="optional" />
 	</xs:complexType>
 	<xs:complexType name="retry">
 		<xs:attribute type="policy-type" name="policy" use="required" />
