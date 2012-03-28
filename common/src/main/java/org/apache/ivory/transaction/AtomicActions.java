@@ -119,4 +119,9 @@ public class AtomicActions {
     public List<Action> getUncommittedActions() throws IvoryException {
         return Collections.unmodifiableList(actions);
     }
+    
+    @Override
+    public String toString() {
+        return getId();
+    }
 }
