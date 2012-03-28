@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.ivory.IvoryException;
 import org.apache.log4j.Logger;
 
-public class AtomicActions {
+class AtomicActions {
 
     private static Logger TRANLOG = Logger.getLogger("TRANSACTIONLOG");
     private static Logger LOG = Logger.getLogger(AtomicActions.class);
@@ -62,7 +62,7 @@ public class AtomicActions {
         return finalized.get();
     }
     
-    public boolean isBegun() {
+    public boolean isInProgress() {
         return begun.get();
     }
     

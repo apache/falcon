@@ -118,7 +118,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
     
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
-        ExternalId extId = new ExternalId(processName, EntityUtil.parseDateUTC(instance));
+        ExternalId extId = new ExternalId(processName, "DEFAULT", EntityUtil.parseDateUTC(instance));
         OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;

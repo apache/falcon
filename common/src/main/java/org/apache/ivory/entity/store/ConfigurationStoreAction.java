@@ -72,7 +72,7 @@ public class ConfigurationStoreAction extends Action{
                 break;
                 
             case UPDATE:
-                ConfigurationStore.get().update(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
+                ConfigurationStore.get().rollbackUpdate(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
                 break;
                 
             case UPDATEINIT:
@@ -87,7 +87,8 @@ public class ConfigurationStoreAction extends Action{
         switch(action) {
             case UPDATEINIT:
                 ConfigurationStore.get().cleanupUpdateInit();
-                break;                
+                break;
+                
         }
     }
 }

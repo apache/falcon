@@ -21,45 +21,38 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.log4j.Logger;
+import org.apache.log4j.NDC;
 
 public class TransactionManager {
     private static final Logger LOG = Logger.getLogger(TransactionManager.class);
 
-    private static ThreadLocal<AtomicActions> trans = null;
+    private static ThreadLocal<AtomicActions> trans = new ThreadLocal<AtomicActions>() {
+        @Override
+        protected AtomicActions initialValue() {
+            return new AtomicActions();
+        }
+    };
 
     public static void startTransaction() throws IvoryException {
-        if (trans == null)
-            trans = new ThreadLocal<AtomicActions>() {
-                @Override
-                protected AtomicActions initialValue() {
-                    return new AtomicActions();
-                }
-            };
-
-        if (trans.get().isBegun())
-            throw new IllegalStateException("Transaction " + getTransactionId() + " is already started");
+        trans.set(new AtomicActions());
         trans.get().begin();
     }
 
     public static String getTransactionId() {
-        if(trans == null)
-            return null;
         return trans.get().getId();
     }
 
     public static void performAction(Action action) throws IvoryException {
-        if (trans != null && trans.get().isBegun() && !trans.get().isFinalized())
+        if (trans.get().isInProgress() && !trans.get().isFinalized())
             trans.get().peform(action);
     }
 
     public static void rollback() {
-        if(trans == null || trans.get().isFinalized())
+        if (trans.get().isFinalized())
             throw new IllegalStateException("Invalid transaction " + getTransactionId());
         try {
             trans.get().rollback();
-            trans = null;   //reset for thread re-use
         } catch (Throwable e) {
-            trans = null;   //reset for thread re-use
             LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
             alertRollbackFailure(getTransactionId());
         }
@@ -71,9 +64,8 @@ public class TransactionManager {
     }
 
     public static void commit() throws IvoryException {
-        if(trans == null || trans.get().isFinalized())
+        if (trans.get().isFinalized())
             throw new IllegalStateException("Invalid transaction " + getTransactionId());
         trans.get().commit();
-        trans = null;   //reset for thread re-use
     }
 }
