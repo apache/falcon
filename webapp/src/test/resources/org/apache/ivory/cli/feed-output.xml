@@ -34,7 +34,7 @@
 		<cluster name="##clusterName##" type="source">
 			<validity start="2009-01-01T01:00Z" end="2012-12-31T23:59Z"
 				timezone="UTC" />
-			<retention limit="minutes(10)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+			<retention limit="hours(10)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
 		</cluster>
 	</clusters>
 

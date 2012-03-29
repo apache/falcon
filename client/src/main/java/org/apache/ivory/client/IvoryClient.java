@@ -22,7 +22,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
@@ -48,6 +47,9 @@ public class IvoryClient {
 	private String version;
 	protected static WebResource service;
 	public static final String WS_HEADER_PREFIX = "header:";
+	private static final String REMOTE_USER="Remote-User";
+	
+	private static final String USER = System.getProperty("user.name");
 
 	/**
 	 * Create a Ivory client instance.
@@ -62,17 +64,7 @@ public class IvoryClient {
 		IvoryClient.service = Client.create(new DefaultClientConfig())
 				.resource(UriBuilder.fromUri(baseUrl).build());
 
-		addHeaders();
-	}
-
-	private void addHeaders() {
-		for (Map.Entry entry : System.getProperties().entrySet()) {
-			String key = (String) entry.getKey();
-			if (key.startsWith(WS_HEADER_PREFIX)) {
-				String header = key.substring(WS_HEADER_PREFIX.length());
-				IvoryClient.service.header(header, (String) entry.getValue());
-			}
-		}
+		//addHeaders();
 	}
 
     /**
@@ -313,9 +305,9 @@ public class IvoryClient {
 
 	private String sendEntityRequest(Entities entities, String entityType,
 			String entityName) throws IvoryCLIException {
-
+		
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).accept(entities.mimeType)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
@@ -333,7 +325,7 @@ public class IvoryClient {
 			String entityName) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).accept(entities.mimeType)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
@@ -347,7 +339,7 @@ public class IvoryClient {
             throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).accept(entities.mimeType)
+				.path(entityType).header(REMOTE_USER, USER).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
@@ -361,7 +353,7 @@ public class IvoryClient {
 			String entityType, Object requestObject) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).accept(entities.mimeType)
+				.path(entityType).header(REMOTE_USER, USER).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
@@ -375,7 +367,7 @@ public class IvoryClient {
 			String entityType, String entityName, Object requestObject) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).accept(entities.mimeType)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
 				.type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
@@ -398,10 +390,10 @@ public class IvoryClient {
 
 		ClientResponse clientResponse = null;
 		if (props == null) {
-			clientResponse = resource.accept(instances.mimeType).method(
+			clientResponse = resource.header(REMOTE_USER, USER).accept(instances.mimeType).method(
 					instances.method, ClientResponse.class);
 		} else {
-			clientResponse = resource.accept(instances.mimeType).method(
+			clientResponse = resource.header(REMOTE_USER, USER).accept(instances.mimeType).method(
 					instances.method, ClientResponse.class, props);
 		}
 		checkIfSuccessfull(clientResponse);

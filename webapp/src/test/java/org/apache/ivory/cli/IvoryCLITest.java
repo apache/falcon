@@ -92,22 +92,22 @@ public class IvoryCLITest {
 
 		filePath = overlayParametersOverTemplate(CLUSTER, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType cluster -filePath "
+				executeWithURL("entity -submit -type cluster -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(PROCESS, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType process -filePath "
+				executeWithURL("entity -submit -type process -file "
 						+ filePath));
 
 	}
@@ -121,36 +121,36 @@ public class IvoryCLITest {
 		filePath = overlayParametersOverTemplate(CLUSTER, overlay);
 		Assert.assertEquals(
 				-1,
-				executeWithURL("entity -submitAndSchedule -entityType cluster -filePath "
+				executeWithURL("entity -submitAndSchedule -type cluster -file "
 						+ filePath));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType cluster -filePath "
+				executeWithURL("entity -submit -type cluster -file "
 						+ filePath));
 		// TODO with feed lib fix
 		// filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		// Assert.assertEquals(0,
-		// executeWithURL("entity -submitAndSchedule -entityType feed -filePath "
+		// executeWithURL("entity -submitAndSchedule -type feed -file "
 		// + filePath));
 		// filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		// Assert.assertEquals(0,
-		// executeWithURL("entity -submitAndSchedule -entityType feed -filePath "
+		// executeWithURL("entity -submitAndSchedule -type feed -file "
 		// + filePath));
 		// TODO remove after feed lib fix
 		filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(PROCESS, overlay);
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -submitAndSchedule -entityType process -filePath "
+				executeWithURL("entity -submitAndSchedule -type process -file "
 						+ filePath));
 
 	}
@@ -164,35 +164,35 @@ public class IvoryCLITest {
 		filePath = overlayParametersOverTemplate(CLUSTER, overlay);
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -validate -entityType cluster -filePath "
+				executeWithURL("entity -validate -type cluster -file "
 						+ filePath));
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType cluster -filePath "
+				executeWithURL("entity -submit -type cluster -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -validate -entityType feed -filePath "
+				executeWithURL("entity -validate -type feed -file "
 						+ filePath));
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -validate -entityType feed -filePath "
+				executeWithURL("entity -validate -type feed -file "
 						+ filePath));
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(PROCESS, overlay);
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -validate -entityType process -filePath "
+				executeWithURL("entity -validate -type process -file "
 						+ filePath));
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType process -filePath "
+				executeWithURL("entity -submit -type process -file "
 						+ filePath));
 
 	}
@@ -204,22 +204,22 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -definition -entityType cluster -entityName "
+				executeWithURL("entity -definition -type cluster -name "
 						+ overlay.get("clusterName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -definition -entityType feed -entityName "
+				executeWithURL("entity -definition -type feed -name "
 						+ overlay.get("inputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -definition -entityType feed -entityName "
+				executeWithURL("entity -definition -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -definition -entityType process -entityName "
+				executeWithURL("entity -definition -type process -name "
 						+ overlay.get("processName")));
 
 	}
@@ -232,17 +232,17 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				-1,
-				executeWithURL("entity -schedule -entityType cluster -entityName "
+				executeWithURL("entity -schedule -type cluster -name "
 						+ overlay.get("clusterName")));
 
 		// TODO with feed lib fix
 		// Assert.assertEquals(0,
-		// executeWithURL("entity -schedule -entityType feed -entityName "
+		// executeWithURL("entity -schedule -type feed -name "
 		// + overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
 	}
@@ -253,12 +253,12 @@ public class IvoryCLITest {
 		Map<String, String> overlay = getUniqueOverlay();
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -status -entityType feed -entityName "
+				executeWithURL("entity -status -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -status -entityType process -entityName "
+				executeWithURL("entity -status -type process -name "
 						+ overlay.get("processName")));
 
 		overlayParametersOverTemplate(CLUSTER, overlay);
@@ -266,48 +266,48 @@ public class IvoryCLITest {
 
 		// TODO with feed lib fix
 		// Assert.assertEquals(0,
-		// executeWithURL("entity -schedule -entityType feed -entityName "
+		// executeWithURL("entity -schedule -type feed -name "
 		// + overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -suspend -entityType feed -entityName "
+				executeWithURL("entity -suspend -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -suspend -entityType process -entityName "
+				executeWithURL("entity -suspend -type process -name "
 						+ overlay.get("processName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -status -entityType feed -entityName "
+				executeWithURL("entity -status -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -status -entityType process -entityName "
+				executeWithURL("entity -status -type process -name "
 						+ overlay.get("processName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -resume -entityType feed -entityName "
+				executeWithURL("entity -resume -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -resume -entityType process -entityName "
+				executeWithURL("entity -resume -type process -name "
 						+ overlay.get("processName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -status -entityType feed -entityName "
+				executeWithURL("entity -status -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -status -entityType process -entityName "
+				executeWithURL("entity -status -type process -name "
 						+ overlay.get("processName")));
 
 	}
@@ -320,33 +320,33 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				-1,
-				executeWithURL("entity -delete -entityType cluster -entityName "
+				executeWithURL("entity -delete -type cluster -name "
 						+ overlay.get("clusterName")));
 
 		Assert.assertEquals(-1,
-				executeWithURL("entity -delete -entityType feed -entityName "
+				executeWithURL("entity -delete -type feed -name "
 						+ overlay.get("inputFeedName")));
 
 		Assert.assertEquals(-1,
-				executeWithURL("entity -delete -entityType feed -entityName "
+				executeWithURL("entity -delete -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -delete -entityType process -entityName "
+				executeWithURL("entity -delete -type process -name "
 						+ overlay.get("processName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -delete -entityType feed -entityName "
+				executeWithURL("entity -delete -type feed -name "
 						+ overlay.get("inputFeedName")));
 
 		Assert.assertEquals(0,
-				executeWithURL("entity -delete -entityType feed -entityName "
+				executeWithURL("entity -delete -type feed -name "
 						+ overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -delete -entityType cluster -entityName "
+				executeWithURL("entity -delete -type cluster -name "
 						+ overlay.get("clusterName")));
 	}
 
@@ -356,11 +356,11 @@ public class IvoryCLITest {
 		Map<String, String> overlay = getUniqueOverlay();
 		overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(-1,
-				executeWithURL("entity -submit -entityType feed -entityName "
+				executeWithURL("entity -submit -type feed -name "
 						+ "name"));
 
 		Assert.assertEquals(-1,
-				executeWithURL("entity -schedule -entityType feed -filePath "
+				executeWithURL("entity -schedule -type feed -file "
 						+ "name"));
 	}
 
@@ -371,7 +371,7 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
 		Thread.sleep(5000);
@@ -390,7 +390,7 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
 		Thread.sleep(5000);
@@ -410,7 +410,7 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
 		Thread.sleep(5000);
@@ -421,7 +421,7 @@ public class IvoryCLITest {
 		Thread.sleep(2000);
 		Assert.assertEquals(0, executeWithURL("instance -rerun -processName "
 				+ overlay.get("processName")
-				+ " -start 2010-01-01T01:00Z -filePath "
+				+ " -start 2010-01-01T01:00Z -file "
 				+ createTempJobPropertiesFile()));
 	}
 
@@ -462,7 +462,7 @@ public class IvoryCLITest {
 		submitTestFiles(overlay);
 		Assert.assertEquals(
 				0,
-				executeWithURL("entity -schedule -entityType process -entityName "
+				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 		Thread.sleep(2000);
 		
@@ -567,22 +567,22 @@ public class IvoryCLITest {
 
 		String filePath = overlayParametersOverTemplate(CLUSTER, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType cluster -filePath "
+				executeWithURL("entity -submit -type cluster -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType feed -filePath "
+				executeWithURL("entity -submit -type feed -file "
 						+ filePath));
 
 		filePath = overlayParametersOverTemplate(PROCESS, overlay);
 		Assert.assertEquals(0,
-				executeWithURL("entity -submit -entityType process -filePath "
+				executeWithURL("entity -submit -type process -file "
 						+ filePath));
 	}
 }
