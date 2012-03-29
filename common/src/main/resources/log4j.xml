@@ -5,7 +5,7 @@
   <appender name="console" class="org.apache.log4j.ConsoleAppender">
     <param name="Target" value="System.out"/>
     <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="%d %-5p - %m (%c{1}:%L)%n"/>
+      <param name="ConversionPattern" value="%d %-5p - %x %m (%c{1}:%L)%n"/>
     </layout>
   </appender>
 
@@ -14,7 +14,7 @@
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="%d %-5p - %m (%c{1}:%L)%n"/>
+      <param name="ConversionPattern" value="%d %-5p - %x %m (%c{1}:%L)%n"/>
     </layout>
   </appender>
 
@@ -23,7 +23,7 @@
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="%d %-5p - %m%n"/>
+      <param name="ConversionPattern" value="%d %-5p - %x %m%n"/>
     </layout>
   </appender>
   

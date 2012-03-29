@@ -35,6 +35,7 @@ public class TransactionManager {
 
     public static void startTransaction() throws IvoryException {
         trans.set(new AtomicActions());
+        NDC.push(getTransactionId());
         trans.get().begin();
     }
 
@@ -48,13 +49,17 @@ public class TransactionManager {
     }
 
     public static void rollback() {
-        if (trans.get().isFinalized())
-            throw new IllegalStateException("Invalid transaction " + getTransactionId());
         try {
-            trans.get().rollback();
-        } catch (Throwable e) {
-            LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
-            alertRollbackFailure(getTransactionId());
+            if (trans.get().isFinalized())
+                throw new IllegalStateException("Invalid transaction " + getTransactionId());
+            try {
+                trans.get().rollback();
+            } catch (Throwable e) {
+                LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
+                alertRollbackFailure(getTransactionId());
+            }
+        } finally {
+            NDC.pop();
         }
     }
 
@@ -64,8 +69,12 @@ public class TransactionManager {
     }
 
     public static void commit() throws IvoryException {
-        if (trans.get().isFinalized())
-            throw new IllegalStateException("Invalid transaction " + getTransactionId());
-        trans.get().commit();
+        try {
+            if (trans.get().isFinalized())
+                throw new IllegalStateException("Invalid transaction " + getTransactionId());
+            trans.get().commit();
+        } finally {
+            NDC.pop();
+        }
     }
 }

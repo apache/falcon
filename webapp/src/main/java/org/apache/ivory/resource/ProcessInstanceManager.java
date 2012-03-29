@@ -90,7 +90,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> instances = wfEngine.getStatus(process, start, end);
+            Map<String, Map<String, String>> instances = wfEngine.getStatus(process, start, end);
             return new ProcessInstancesResult("getStatus is successful", instances.values().iterator().next());
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
@@ -115,7 +115,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> killedInstances = wfEngine.killInstances(process, start, end);
+            Map<String, Map<String, String>> killedInstances = wfEngine.killInstances(process, start, end);
             ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
@@ -143,7 +143,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
+            Map<String, Map<String, String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
             ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
@@ -171,7 +171,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> resumedInstances = wfEngine.resumeInstances(process, start, end);
+            Map<String, Map<String, String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
             ProcessInstancesResult result = new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
@@ -207,7 +207,7 @@ public class ProcessInstanceManager extends EntityManager {
             }
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> runInstances = wfEngine.reRunInstances(process, start, end, props);
+            Map<String, Map<String, String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
             ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
             TransactionManager.commit();
             return result;

@@ -19,6 +19,7 @@
 package org.apache.ivory.workflow.engine;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,7 +32,6 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
@@ -124,11 +124,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     @Override
-    public boolean exists(Entity entity) throws IvoryException {
-        return isBundleInState(entity, BundleStatus.EXISTS);
-    }
-
-    @Override
     public boolean isActive(Entity entity) throws IvoryException {
         return isBundleInState(entity, BundleStatus.ACTIVE);
     }
@@ -144,13 +139,13 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private enum BundleStatus {
-        ACTIVE, RUNNING, SUSPENDED, EXISTS
+        ACTIVE, RUNNING, SUSPENDED
     }
 
     private boolean isBundleInState(Entity entity, BundleStatus status) throws IvoryException {
-        Map<Cluster, BundleJob> bundles = findBundle(entity);
+        Map<Cluster, BundleJob> bundles = findLatestBundle(entity);
         for (BundleJob bundle : bundles.values()) {
-            if (bundle == MISSING) // There is no bundle
+            if (bundle == MISSING) // There is no active bundle
                 return false;
 
             switch (status) {
@@ -173,38 +168,47 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return true;
     }
 
-    private Map<Cluster, BundleJob> findBundle(Entity entity) throws IvoryException {
+    private Map<Cluster, List<BundleJob>> findActiveBundles(Entity entity) throws IvoryException {
         try {
             WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             String name = entity.getWorkflowName();
 
             Cluster[] clusters = builder.getScheduledClustersFor(entity);
-            Map<Cluster, BundleJob> jobArray = new HashMap<Cluster, BundleJob>();
+            Map<Cluster, List<BundleJob>> jobArray = new HashMap<Cluster, List<BundleJob>>();
 
             for (Cluster cluster : clusters) {
                 OozieClient client = OozieClientFactory.get(cluster);
+                List<BundleJob> jobsForCluster = new ArrayList<BundleJob>();
                 List<BundleJob> jobs = client.getBundleJobsInfo(OozieClient.FILTER_NAME + "=" + name + ";", 0, 100);
-                if (jobs == null || jobs.isEmpty())
-                    jobArray.put(cluster, MISSING);
-                else { // select recent non-killed bundle, if exists
-                       // some latest bundles may be killed because of
-                       // transaction rollback
-                    BundleJob bundle = null;
+                if (jobs != null)
                     for (BundleJob job : jobs) {
-                        if (job.getStatus() != Job.Status.KILLED
-                                && (bundle == null || bundle.getCreatedTime().before(job.getCreatedTime())))
-                            bundle = job;
+                        if (job.getStatus() != Job.Status.KILLED)
+                            jobsForCluster.add(job);
                     }
-                    if (bundle == null)
-                        bundle = jobs.get(0);
-
-                    jobArray.put(cluster, bundle);
-                }
+                jobArray.put(cluster, jobsForCluster);
             }
             return jobArray;
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
+    }
+
+    private Map<Cluster, BundleJob> findLatestBundle(Entity entity) throws IvoryException {
+        Map<Cluster, List<BundleJob>> bundlesMap = findActiveBundles(entity);
+        Map<Cluster, BundleJob> returnMap = new HashMap<Cluster, BundleJob>();
+        for (Cluster cluster : bundlesMap.keySet()) {
+            List<BundleJob> bundles = bundlesMap.get(cluster);
+            if (bundles.isEmpty())
+                returnMap.put(cluster, MISSING);
+            else { // Find latest bundle
+                BundleJob latestBundle = null;
+                for (BundleJob bundle : bundles)
+                    if (latestBundle == null || bundle.getCreatedTime().after(latestBundle.getCreatedTime()))
+                        latestBundle = bundle;
+                returnMap.put(cluster, latestBundle);
+            }
+        }
+        return returnMap;
     }
 
     @Override
@@ -228,39 +232,41 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private String doBundleAction(Entity entity, BundleAction action) throws IvoryException {
         boolean success = true;
-        Map<Cluster, BundleJob> jobs = findBundle(entity);
-        for (Cluster cluster : jobs.keySet()) {
-            BundleJob job = jobs.get(cluster);
-            if (job == MISSING || !BUNDLE_ACTIVE_STATUS.contains(job.getStatus())) {
+        Map<Cluster, List<BundleJob>> jobsMap = findActiveBundles(entity);
+        for (Cluster cluster : jobsMap.keySet()) {
+            List<BundleJob> jobs = jobsMap.get(cluster);
+            if (jobs.isEmpty()) {
                 LOG.warn("No active job found for " + entity.getName());
                 success = false;
                 break;
             }
 
-            switch (action) {
-                case SUSPEND:
-                    // not already suspended and preconditions are true
-                    if (!BUNDLE_SUSPENDED_STATUS.contains(job.getStatus()) && BUNDLE_SUSPEND_PRECOND.contains(job.getStatus())) {
-                        suspend(cluster, job.getId(), entity);
-                        success = true;
-                    }
-                    break;
+            for (BundleJob job : jobs) {
+                switch (action) {
+                    case SUSPEND:
+                        // not already suspended and preconditions are true
+                        if (!BUNDLE_SUSPENDED_STATUS.contains(job.getStatus()) && BUNDLE_SUSPEND_PRECOND.contains(job.getStatus())) {
+                            suspend(cluster, job.getId(), entity);
+                            success = true;
+                        }
+                        break;
 
-                case RESUME:
-                    // not already running and preconditions are true
-                    if (!BUNDLE_RUNNING_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
-                        resume(cluster, job.getId(), entity);
-                        success = true;
-                    }
-                    break;
+                    case RESUME:
+                        // not already running and preconditions are true
+                        if (!BUNDLE_RUNNING_STATUS.contains(job.getStatus()) && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
+                            resume(cluster, job.getId(), entity);
+                            success = true;
+                        }
+                        break;
 
-                case KILL:
-                    // not already killed and preconditions are true
-                    if (!BUNDLE_KILLED_STATUS.contains(job.getStatus()) && BUNDLE_KILL_PRECOND.contains(job.getStatus())) {
-                        kill(cluster, job.getId(), entity);
-                        success = true;
-                    }
-                    break;
+                    case KILL:
+                        // not already killed and preconditions are true
+                        if (!BUNDLE_KILLED_STATUS.contains(job.getStatus()) && BUNDLE_KILL_PRECOND.contains(job.getStatus())) {
+                            kill(cluster, job.getId(), entity);
+                            success = true;
+                        }
+                        break;
+                }
             }
         }
         return success ? "SUCCESS" : "FAILED";
@@ -290,28 +296,28 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     @Override
-    public Map<String, Set<Pair<String, String>>> killInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public Map<String, Map<String, String>> killInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.KILL, entity, start, end);
     }
 
     @Override
-    public Map<String, Set<Pair<String, String>>> reRunInstances(Entity entity, Date start, Date end, Properties props)
+    public Map<String, Map<String, String>> reRunInstances(Entity entity, Date start, Date end, Properties props)
             throws IvoryException {
         return doJobAction(JobAction.RERUN, entity, start, end, props);
     }
 
     @Override
-    public Map<String, Set<Pair<String, String>>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public Map<String, Map<String, String>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.SUSPEND, entity, start, end);
     }
 
     @Override
-    public Map<String, Set<Pair<String, String>>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public Map<String, Map<String, String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.RESUME, entity, start, end);
     }
 
     @Override
-    public Map<String, Set<Pair<String, String>>> getStatus(Entity entity, Date start, Date end) throws IvoryException {
+    public Map<String, Map<String, String>> getStatus(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.STATUS, entity, start, end);
     }
 
@@ -319,21 +325,20 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         KILL, SUSPEND, RESUME, RERUN, STATUS
     }
 
-    private Map<String, Set<Pair<String, String>>> doJobAction(JobAction action, Entity entity, Date start, Date end)
-            throws IvoryException {
+    private Map<String, Map<String, String>> doJobAction(JobAction action, Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(action, entity, start, end, null);
     }
 
-    private Map<String, Set<Pair<String, String>>> doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props)
+    private Map<String, Map<String, String>> doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props)
             throws IvoryException {
         WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
         Cluster[] clusters = builder.getScheduledClustersFor(entity);
-        Map<String, Set<Pair<String, String>>> instMap = new HashMap<String, Set<Pair<String, String>>>();
+        Map<String, Map<String, String>> instMap = new HashMap<String, Map<String, String>>();
 
         try {
             for (Cluster cluster : clusters) {
                 List<ExternalId> extIds = builder.getExternalIds(entity, cluster.getName(), start, end);
-                Set<Pair<String, String>> insts = new HashSet<Pair<String, String>>();
+                Map<String, String> instStatusMap = new HashMap<String, String>();
                 OozieClient client = OozieClientFactory.get(cluster);
 
                 for (ExternalId extId : extIds) {
@@ -380,9 +385,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                 break;
                         }
                     }
-                    insts.add(Pair.of(extId.getDateAsString(), status));
+
+                    instStatusMap.put(extId.getDateAsString(), consolidateStatus(status, instStatusMap.get(extId.getDateAsString())));
                 }
-                instMap.put(cluster.getName(), insts);
+                instMap.put(cluster.getName(), instStatusMap);
             }
         } catch (Exception e) {
             throw new IvoryException(e);
@@ -390,9 +396,16 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return instMap;
     }
 
+    private String consolidateStatus(String newStatus, String oldStatus) {
+        if (oldStatus == null || oldStatus.equals(NOT_STARTED)
+                || (oldStatus.equals(Status.SUCCEEDED.name()) && !newStatus.equals(NOT_STARTED)))
+            return newStatus;
+        return oldStatus;
+    }
+
     @Override
     public void update(Entity oldEntity, Entity newEntity) throws IvoryException {
-        Map<Cluster, BundleJob> bundleMap = findBundle(oldEntity);
+        Map<Cluster, BundleJob> bundleMap = findLatestBundle(oldEntity);
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
         LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
@@ -413,12 +426,26 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
                 Entity clonedOldEntity = oldEntity.clone();
                 builder.setConcurrency(clonedOldEntity, newConcurrency);
-                builder.setEndTime(clonedOldEntity, clusterName, EntityUtil.parseDateUTC(newEndTime));
+                Date endTime = EntityUtil.parseDateUTC(newEndTime);
+                builder.setEndTime(clonedOldEntity, clusterName, endTime);
                 if (clonedOldEntity.deepEquals(newEntity)) {
                     // only concurrency and endtime are changed. So, change
-                    // bundle
+                    // coords
                     LOG.info("Change operation is adequate! : " + clusterName + ", bundle: " + bundle.getId());
-                    change(cluster, bundle.getId(), newConcurrency, EntityUtil.parseDateUTC(newEndTime), null);
+
+                    List<CoordinatorJob> coords = getBundleInfo(cluster, bundle.getId()).getCoordinators();
+
+                    // Find default coord's start time(min start time)
+                    Date minCoordStartTime = null;
+                    for (CoordinatorJob coord : coords) {
+                        if (minCoordStartTime == null || minCoordStartTime.after(coord.getStartTime()))
+                            minCoordStartTime = coord.getStartTime();
+                    }
+                    for (CoordinatorJob coord : coords) {
+                        // Add offset to end time for late coords
+                        Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
+                        change(cluster, coord.getId(), newConcurrency, localEndTime, null);
+                    }
                     return;
                 }
             }
@@ -435,7 +462,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             LOG.info("Dependent entities need to be updated " + entity.toShortString());
             if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity))
                 continue;
-            Map<Cluster, BundleJob> processBundles = findBundle(entity);
+            Map<Cluster, BundleJob> processBundles = findLatestBundle(entity);
             for (Map.Entry<Cluster, BundleJob> processBundle : processBundles.entrySet()) {
                 if (processBundle.getValue() == MISSING)
                     continue;

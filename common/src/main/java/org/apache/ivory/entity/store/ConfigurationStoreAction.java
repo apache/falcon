@@ -61,17 +61,19 @@ public class ConfigurationStoreAction extends Action{
     @Override
     public void rollback() throws IvoryException {
         Action action = Action.valueOf(getCategory());
-        EntityType entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
         switch (action) {
             case PUBLISH:
+                EntityType entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
                 ConfigurationStore.get().remove(entityType, getPayload().get(ENTITY_NAME_KEY));
                 break;
                 
             case REMOVE:
+                entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
                 ConfigurationStore.get().publish(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
                 break;
                 
             case UPDATE:
+                entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
                 ConfigurationStore.get().rollbackUpdate(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
                 break;
                 

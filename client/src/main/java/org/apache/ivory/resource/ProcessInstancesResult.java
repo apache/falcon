@@ -1,12 +1,13 @@
 package org.apache.ivory.resource;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.ivory.Pair;
 
 
 @XmlRootElement
@@ -45,15 +46,15 @@ public class ProcessInstancesResult extends APIResult {
         super();
     }
 
-    public ProcessInstancesResult(String message, Set<Pair<String, String>> insts) {
+    public ProcessInstancesResult(String message, Map<String, String> instMap) {
         super(Status.SUCCEEDED, message);
-        if(insts != null) {
-            instances = new ProcessInstance[insts.size()];
-            Iterator<Pair<String, String>> itr = insts.iterator();
+        if(instMap != null) {
+            instances = new ProcessInstance[instMap.size()];
+            List<String> sortedInstances = new ArrayList<String>(instMap.keySet());
+            Collections.sort(sortedInstances);
             int index = 0;
-            while(itr.hasNext()) {
-                Pair<String, String> pair = itr.next();
-                instances[index++] = new ProcessInstance(pair.first, WorkflowStatus.valueOf(pair.second));
+            for(String instance:sortedInstances) {
+                instances[index++] = new ProcessInstance(instance, WorkflowStatus.valueOf(instMap.get(instance)));
             }
         }
     }
@@ -62,11 +63,11 @@ public class ProcessInstancesResult extends APIResult {
         super(Status.SUCCEEDED, message);
         if(insts != null) {
             instances = new ProcessInstance[insts.size()];
-            Iterator<String> itr = insts.iterator();
+            List<String> sortedInstances = new ArrayList<String>(insts);
+            Collections.sort(sortedInstances);
             int index = 0;
-            while(itr.hasNext()) {
-                String inst = itr.next();
-                instances[index++] = new ProcessInstance(inst, status);
+            for(String instance:sortedInstances) {
+                instances[index++] = new ProcessInstance(instance, status);
             }
         }
     }
