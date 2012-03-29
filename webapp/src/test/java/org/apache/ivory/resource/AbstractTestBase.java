@@ -98,8 +98,7 @@ public class AbstractTestBase {
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        assertSuccessful(response);
-
+        assertSuccessful(response);        
         ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
                 .header("Remote-User", "guest").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
         assertSuccessful(clientRepsonse);    
@@ -198,6 +197,14 @@ public class AbstractTestBase {
         }
     }
 
+    protected ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType) throws Exception {
+        String tmpFile = overlayParametersOverTemplate(template, overlay);        
+        ServletInputStream rawlogStream = getServletInputStream(tmpFile);
+
+        return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase()).header("Remote-User", "testuser")
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
+    }
+    
     protected ClientResponse submitToIvory(String template, Map<String, String> overlay, EntityType entityType) throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         return submitFileToIvory(entityType, tmpFile);

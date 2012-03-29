@@ -18,30 +18,85 @@
 
 package org.apache.ivory.transaction;
 
-public class Action {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ivory.IvoryException;
+
+public abstract class Action {
+    private static final String SEPARATOR = "&";
+    private static final String PAYLOAD_SEPARATOR = "#";
+    
     private String name;
     private String category;
-    private String label;
+    private Payload payload = new Payload();
 
-    private Action() { }
-
-    public Action(String name, String category, String label) {
-        this.name = name;
-        this.category = category;
-        this.label = label;
+    protected static class Payload {
+        private Map<String, String> params = new HashMap<String, String>();
+        
+        public Payload(String... typeValues) {
+            for(int index = 0 ; index < typeValues.length ; index += 2) {
+                params.put(typeValues[index], typeValues[index + 1]);
+            }
+        }
+        
+        public void add(String... typeValues) {
+            for(int index = 0 ; index < typeValues.length ; index += 2) {
+                params.put(typeValues[index], typeValues[index + 1]);
+            }            
+        }
+        
+        private Payload() { }
+        
+        public String get(String key) {
+            return params.get(key);
+        }
+        
+        public static Payload fromString(String str) {
+            if(StringUtils.isNotEmpty(str)) {
+                String[] parts = str.substring(1, str.length()-1).split(PAYLOAD_SEPARATOR);
+                Payload payload = new Payload();
+                for(String part:parts) {
+                    if(StringUtils.isEmpty(part))
+                        continue;
+                    String key = part.substring(0, part.indexOf('='));
+                    String value = part.substring(part.indexOf('=') + 1, part.length());
+                    payload.params.put(key, value);
+                }
+                return payload;
+            }
+            return null;
+        }
+        
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder("{");
+            for(Entry<String, String> entry: params.entrySet()) {
+                if(entry.getValue() != null) {
+                    builder.append(entry.getKey()).append('=').append(entry.getValue()).append(PAYLOAD_SEPARATOR);
+                }
+            }
+            builder.append('}');
+            return builder.toString();
+        }
+        
     }
+    
+    protected Action() { }
 
-    private void setName(String name) {
-        this.name = name;
+    public Action(String category) {
+        this.name = getClass().getName();
+        this.category = category;
     }
 
     private void setCategory(String category) {
         this.category = category;
     }
 
-    private void setLabel(String label) {
-        this.label = label;
+    protected void setPayload(Payload payload) {
+        this.payload = payload;
     }
 
     public String getName() {
@@ -52,29 +107,36 @@ public class Action {
         return category;
     }
 
-    public String getLabel() {
-        return label;
+    public Payload getPayload() {
+        return payload;
     }
 
     @Override
     public String toString() {
         return "Action{" +
-                "name=" + name +
-                ", category=" + category +
-                ", label=" + label + '}';
+                "name=" + name + SEPARATOR +
+                "category=" + category + SEPARATOR +
+                "payload=" + payload.toString() + '}';
     }
 
     public static Action fromLine(String line) {
         try {
             String[] data = (line.substring(line.indexOf("{") + 1,
-                    line.length() - 1)).split(",");
-            Action action = new Action();
-            action.setName(data[0].substring(data[0].indexOf('=') + 1));
-            action.setCategory(data[1].substring(data[1].indexOf('=') + 1));
-            action.setLabel(data[2].substring(data[2].indexOf('=') + 1));
+                    line.length() - 1)).split(SEPARATOR);
+            
+            String name = data[0].substring(data[0].indexOf('=') + 1);
+            String category = data[1].substring(data[1].indexOf('=') + 1);
+            String payloadStr = data[2].substring(data[2].indexOf('=') + 1);
+            
+            Action action = (Action) Class.forName(name).newInstance();
+            action.setCategory(category);
+            action.setPayload(Payload.fromString(payloadStr));
             return action;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid input line " + line);
+            throw new IllegalArgumentException("Invalid input line " + line, e);
         }
     }
+
+    public abstract void rollback() throws IvoryException;
+    public abstract void commit() throws IvoryException;
 }

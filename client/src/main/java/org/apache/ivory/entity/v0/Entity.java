@@ -20,7 +20,6 @@ package org.apache.ivory.entity.v0;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -101,6 +100,15 @@ public abstract class Entity {
         }
     }
 
+    public static Entity fromString(EntityType type, String str) {
+        try {
+            Unmarshaller unmarshaler = type.getUnmarshaller();
+            return (Entity) unmarshaler.unmarshal(new StringReader(str));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public String toShortString() {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }
@@ -133,14 +141,6 @@ public abstract class Entity {
     
     @Override
     public Entity clone() {
-        try {
-            Marshaller marshaller = getEntityType().getMarshaller();
-            Unmarshaller unmarshaller = getEntityType().getUnmarshaller();
-            Writer strWriter = new StringWriter();
-            marshaller.marshal(this, strWriter);
-            return (Entity) unmarshaller.unmarshal(new StringReader(strWriter.toString()));
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        }
+        return fromString(getEntityType(), toString());
     }
 }

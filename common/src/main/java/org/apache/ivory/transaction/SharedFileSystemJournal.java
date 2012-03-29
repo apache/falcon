@@ -65,7 +65,7 @@ public class SharedFileSystemJournal implements Journal {
         if (!actionFile.exists()) {
             throw new IllegalStateException("No file for transaction id: " + id);
         } else {
-            if (actionFile.delete()) {
+            if (!actionFile.delete()) {
                 LOG.warn("Unable to remove transaction " + id);
                 actionFile.deleteOnExit();
             }

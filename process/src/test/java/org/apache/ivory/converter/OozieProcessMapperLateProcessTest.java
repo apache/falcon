@@ -91,7 +91,7 @@ public class OozieProcessMapperLateProcessTest {
 
 	}
 
-	private void cleanupStore() throws StoreAccessException {
+	private void cleanupStore() throws IvoryException {
 		store.remove(EntityType.PROCESS, "late-process1");
 		store.remove(EntityType.PROCESS, "late-process2");
 		store.remove(EntityType.FEED, "late-feed1");
@@ -123,7 +123,7 @@ public class OozieProcessMapperLateProcessTest {
 	}
 
 	@AfterClass
-	public void tearDown() throws StoreAccessException {
+	public void tearDown() throws Exception {
 		cleanupStore();
 		dfsCluster.shutdown();
 	}

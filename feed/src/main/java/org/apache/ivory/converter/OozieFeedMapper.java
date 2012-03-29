@@ -79,11 +79,11 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
 
         Path wfPath = getCoordPath(bundlePath, coordName);
-        retentionApp.setAction(getRetentionWorkflowAction(cluster, wfPath));
+        retentionApp.setAction(getRetentionWorkflowAction(cluster, wfPath, coordName));
         return retentionApp;
     }
 
-    private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath) throws IvoryException {
+    private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath, String wfName) throws IvoryException {
         Feed feed = getEntity();
         ACTION retentionAction = new ACTION();
         WORKFLOW retentionWorkflow = new WORKFLOW();
@@ -93,7 +93,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             marshal(cluster, retWfApp, wfPath);
             retentionWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
 
-            CONFIGURATION conf = createCoordDefaultConfiguration(cluster, wfPath);
+            CONFIGURATION conf = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
             String feedPathMask = feed.getLocations().get(LocationType.DATA).getPath();

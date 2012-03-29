@@ -55,7 +55,7 @@ public class SharedFileSystemJournalTest {
     @Test
     public void testCommit() throws Exception {
         AtomicActions id = new AtomicActions();
-        journal.onAction(id, new Action("1", "2", "3"));
+        journal.onAction(id, new TestAction("2"));
         journal.commit(id);
         File file = new File(journalPath, id.getId());
         Assert.assertFalse(file.exists());
@@ -74,7 +74,7 @@ public class SharedFileSystemJournalTest {
     @Test
     public void testRollback() throws Exception {
         AtomicActions id = new AtomicActions();
-        journal.onAction(id, new Action("1", "2", "3"));
+        journal.onAction(id, new TestAction("2"));
         journal.rollback(id);
         File file = new File(journalPath, id.getId());
         Assert.assertFalse(file.exists());
@@ -93,7 +93,7 @@ public class SharedFileSystemJournalTest {
     @Test
     public void testOnAction() throws Exception {
         AtomicActions id = new AtomicActions();
-        Action action = new Action("1", "2", "3");
+        Action action = new TestAction("2");
         int length = action.toString().length() + 1;
 
         journal.onAction(id, action);
@@ -101,7 +101,7 @@ public class SharedFileSystemJournalTest {
         Assert.assertTrue(file.exists());
         Assert.assertEquals(file.length(), length);
 
-        action = new Action("hello", "world", "foobar");
+        action = new TestAction("world");
         length += action.toString().length() + 1;
 
         journal.onAction(id, action);
@@ -112,13 +112,13 @@ public class SharedFileSystemJournalTest {
     @Test
     public void testGetUncommittedActions() throws Exception {
         AtomicActions id1 = new AtomicActions();
-        Action action1 = new Action("1", "2", "3");
+        Action action1 = new TestAction("2");
         journal.onAction(id1, action1);
         Map<String, Action> actionMap = new HashMap<String, Action>();
         actionMap.put(id1.getId(), action1);
 
         AtomicActions id2 = new AtomicActions();
-        Action action2 = new Action("hello", "world", "foobar");
+        Action action2 = new TestAction("hello");
         journal.onAction(id2, action2);
         actionMap.put(id2.getId(), action2);
 

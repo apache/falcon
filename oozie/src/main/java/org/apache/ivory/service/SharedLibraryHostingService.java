@@ -18,7 +18,11 @@
 
 package org.apache.ivory.service;
 
-import org.apache.commons.el.ExpressionEvaluatorImpl;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Properties;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,12 +40,6 @@ import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
-
-import javax.servlet.jsp.el.ExpressionEvaluator;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Properties;
 
 public class SharedLibraryHostingService implements IvoryService, ConfigurationChangeListener {
 

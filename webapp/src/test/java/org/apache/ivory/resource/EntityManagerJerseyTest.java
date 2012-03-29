@@ -17,6 +17,8 @@
  */
 package org.apache.ivory.resource;
 
+import static org.testng.AssertJUnit.assertNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
+import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
@@ -54,7 +57,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      * instance of webserver
      */
     
-    @Test(enabled=false)
+    @Test
     public void testProcessUpdate() throws Exception {
         scheduleProcess();
         waitForProcessStart();
@@ -83,6 +86,36 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
         assertSuccessful(response);    
+    }
+    
+    @Test(enabled=false)    //works only if oozie is down
+    public void testTransaction() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        clusterName = "local" + System.currentTimeMillis();
+        overlay.put("name", clusterName);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);
+
+        String feed1 = "f1" + System.currentTimeMillis();
+        overlay.put("name", feed1);
+        overlay.put("cluster", clusterName);
+        response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        String feed2 = "f2" + System.currentTimeMillis();
+        overlay.put("name", feed2);
+        response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        processName = "p1" + System.currentTimeMillis();
+        overlay.put("name", processName);
+        overlay.put("f1", feed1);
+        overlay.put("f2", feed2);
+        response = submitAndSchedule(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        checkIfBadRequest(response);
+        assertNull(ConfigurationStore.get().get(EntityType.PROCESS, processName));
     }
     
     @Test

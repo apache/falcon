@@ -26,7 +26,7 @@
     <frequency>minutes</frequency>
     <periodicity>20</periodicity>
 
-    <late-arrival cut-off="hours(6)" />
+    <late-arrival cut-off="minutes(5)" />
 
     <clusters>
         <cluster name="##cluster##" type="source">

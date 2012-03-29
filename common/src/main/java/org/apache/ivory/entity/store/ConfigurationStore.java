@@ -33,10 +33,12 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.store.ConfigurationStoreAction.Action;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.service.ConfigurationChangeListener;
+import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
@@ -48,23 +50,20 @@ public class ConfigurationStore {
 
     private static final ConfigurationStore store = new ConfigurationStore();
 
-    private Set<ConfigurationChangeListener> listeners =
-            new LinkedHashSet<ConfigurationChangeListener>();
+    private Set<ConfigurationChangeListener> listeners = new LinkedHashSet<ConfigurationChangeListener>();
 
-    private ThreadLocal<Entity> updatesInProgress =
-            new ThreadLocal<Entity>();
+    private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<Entity>();
 
     public static ConfigurationStore get() {
         return store;
     }
 
-    private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary =
-            new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
+    private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
 
     private final FileSystem fs;
     private final Path storePath;
 
-    private static final Entity NULL = new Entity(){
+    private static final Entity NULL = new Entity() {
         @Override
         public String getName() {
             return "NULL";
@@ -78,8 +77,7 @@ public class ConfigurationStore {
 
     @SuppressWarnings("unchecked")
     private ConfigurationStore() {
-        Class<? extends Entity>[] entityClasses =
-                new Class[EntityType.values().length];
+        Class<? extends Entity>[] entityClasses = new Class[EntityType.values().length];
 
         int index = 0;
 
@@ -103,12 +101,12 @@ public class ConfigurationStore {
         try {
             for (EntityType type : EntityType.values()) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
-                FileStatus[] files = fs.globStatus(new Path(storePath, type.name()+Path.SEPARATOR+"*"));
+                FileStatus[] files = fs.globStatus(new Path(storePath, type.name() + Path.SEPARATOR + "*"));
                 if (files != null) {
                     for (FileStatus file : files) {
                         String fileName = file.getPath().getName();
-                        String encodedEntityName = fileName.substring(0,
-                                fileName.length() - 4); //drop ".xml"
+                        String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
+                                                                                                 // ".xml"
                         String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
                         entityMap.put(entityName, restore(type, entityName));
                     }
@@ -135,49 +133,56 @@ public class ConfigurationStore {
     }
 
     /**
-     *
-     * @param type - EntityType that need to be published
-     * @param entity - Reference to the Entity Object
-     * @throws IvoryException 
+     * 
+     * @param type
+     *            - EntityType that need to be published
+     * @param entity
+     *            - Reference to the Entity Object
+     * @throws IvoryException
      */
-    public synchronized void publish(EntityType type, Entity entity)
-            throws IvoryException {
+    public synchronized void publish(EntityType type, Entity entity) throws IvoryException {
         try {
             if (get(type, entity.getName()) == null) {
                 persist(type, entity);
                 dictionary.get(type).put(entity.getName(), entity);
                 onAdd(entity);
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.PUBLISH, entity));
             } else {
-                throw new EntityAlreadyExistsException(entity.toShortString() +
-                        " already registered with configuration store. " +
-                        "Can't be submitted again. Try removing before submitting.");
+                throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
+                        + "Can't be submitted again. Try removing before submitting.");
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);
         }
-        AUDIT.info(type + "/" + entity.getName() +
-                " is published into config store");
+        AUDIT.info(type + "/" + entity.getName() + " is published into config store");
     }
 
-    public synchronized void update(EntityType type, Entity entity)
-            throws IvoryException {
+    private synchronized void updateInternal(EntityType type, Entity entity) throws IvoryException {
         try {
-            if (updatesInProgress.get() == entity &&
-                    get(type, entity.getName()) != null) {
-                updatesInProgress.set(null);
+            if (get(type, entity.getName()) != null) {
                 persist(type, entity);
-                Entity oldEntity = dictionary.get(type).
-                        put(entity.getName(), entity);
+                Entity oldEntity = dictionary.get(type).put(entity.getName(), entity);
                 onChange(oldEntity, entity);
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATE, oldEntity));
             } else {
-                throw new IvoryException(entity.toShortString() +
-                        " is not initialized for update or doesn't exist");
+                throw new IvoryException(entity.toShortString() + " doesn't exist");
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);
         }
-        AUDIT.info(type + "/" + entity.getName() +
-                " is replaced into config store");
+        AUDIT.info(type + "/" + entity.getName() + " is replaced into config store");
+    }
+
+    public synchronized void rollbackUpdate(EntityType type, Entity entity) throws IvoryException {
+        updateInternal(type, entity);
+    }
+
+    public synchronized void update(EntityType type, Entity entity) throws IvoryException {
+        if (updatesInProgress.get() == entity) {
+            updateInternal(type, entity);
+        } else {
+            throw new IvoryException(entity.toShortString() + " is not initialized for update");
+        }
     }
 
     private void onAdd(Entity entity) {
@@ -185,8 +190,7 @@ public class ConfigurationStore {
             try {
                 listener.onAdd(entity);
             } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener +
-                        entity.toShortString(), e);
+                LOG.warn("Encountered exception while notifying " + listener + entity.toShortString(), e);
             }
         }
     }
@@ -196,49 +200,43 @@ public class ConfigurationStore {
             try {
                 listener.onChange(oldEntity, newEntity);
             } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener +
-                        newEntity.toShortString(), e);
+                LOG.warn("Encountered exception while notifying " + listener + newEntity.toShortString(), e);
             }
         }
     }
 
-    public synchronized void initiateUpdate(Entity entity)
-            throws IvoryException {
-        if (get(entity.getEntityType(), entity.getName()) == null
-                || updatesInProgress.get() != null) {
-            throw new IvoryException("An update for " +
-                    entity.toShortString() + " is already in progress or doesn't exist");
+    public synchronized void initiateUpdate(Entity entity) throws IvoryException {
+        if (get(entity.getEntityType(), entity.getName()) == null || updatesInProgress.get() != null) {
+            throw new IvoryException("An update for " + entity.toShortString() + " is already in progress or doesn't exist");
         }
         updatesInProgress.set(entity);
-    }
-
-    public synchronized void rollbackUpdate() {
-        updatesInProgress.set(null);
+        TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATEINIT, entity));
     }
 
     /**
-     *
-     * @param type - Entity type that is being retrieved
-     * @param name - Name as it appears in the entity xml definition
-     * @param <T> - Actual Entity object type
+     * 
+     * @param type
+     *            - Entity type that is being retrieved
+     * @param name
+     *            - Name as it appears in the entity xml definition
+     * @param <T>
+     *            - Actual Entity object type
      * @return - Entity object from internal dictionary, If the object is not
-     *            loaded in memory yet, it will retrieve it from persistent
-     *            store just in time. On startup all the entities will be added
-     *            to the dictionary with null reference.
-     * @throws IvoryException 
+     *         loaded in memory yet, it will retrieve it from persistent store
+     *         just in time. On startup all the entities will be added to the
+     *         dictionary with null reference.
+     * @throws IvoryException
      */
     @SuppressWarnings("unchecked")
-    public <T extends Entity> T get(EntityType type, String name)
-            throws IvoryException {
+    public <T extends Entity> T get(EntityType type, String name) throws IvoryException {
         ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
-            if (updatesInProgress.get() != null &&
-                    updatesInProgress.get().getEntityType() == type &&
-                    updatesInProgress.get().getName().equals(name)) {
+            if (updatesInProgress.get() != null && updatesInProgress.get().getEntityType() == type
+                    && updatesInProgress.get().getName().equals(name)) {
                 return (T) updatesInProgress.get();
             }
             T entity = (T) entityMap.get(name);
-            if (entity == NULL) { //Object equality being checked
+            if (entity == NULL) { // Object equality being checked
                 try {
                     entity = restore(type, name);
                 } catch (IOException e) {
@@ -255,25 +253,28 @@ public class ConfigurationStore {
     }
 
     public Collection<String> getEntities(EntityType type) {
-        return Collections.
-                unmodifiableCollection(dictionary.get(type).keySet());
+        return Collections.unmodifiableCollection(dictionary.get(type).keySet());
     }
 
     /**
      * Remove an entity which is already stored in the config store
-     * @param type - Entity type being removed
-     * @param name - Name of the entity object being removed
+     * 
+     * @param type
+     *            - Entity type being removed
+     * @param name
+     *            - Name of the entity object being removed
      * @return - True is remove is successful, false if request entity doesn't
-     *            exist
-     * @throws StoreAccessException If any error when the config is archived
+     *         exist
+     * @throws IvoryException
      */
-    public boolean remove(EntityType type, String name)
-            throws StoreAccessException {
+    public boolean remove(EntityType type, String name) throws IvoryException {
         Map<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             try {
+                Entity entity = entityMap.get(name);
                 archive(type, name);
                 onRemove(entityMap.remove(name));
+                TransactionManager.performAction(new ConfigurationStoreAction(Action.REMOVE, entity));
             } catch (IOException e) {
                 throw new StoreAccessException(e);
             }
@@ -288,88 +289,98 @@ public class ConfigurationStore {
             try {
                 listener.onRemove(entity);
             } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener + "(" +
-                        entity.getEntityType() + ") " + entity.getName(), e);
+                LOG.warn(
+                        "Encountered exception while notifying " + listener + "(" + entity.getEntityType() + ") " + entity.getName(),
+                        e);
             }
         }
     }
 
     /**
-     *
-     * @param type - Entity type that needs to be searched
-     * @param keywords - List of keywords to search for. only entities that have
-     *                    all the keywords being searched would be returned
+     * 
+     * @param type
+     *            - Entity type that needs to be searched
+     * @param keywords
+     *            - List of keywords to search for. only entities that have all
+     *            the keywords being searched would be returned
      * @return - Array of entity types
      */
     public Entity[] search(EntityType type, String... keywords) {
-        return null;//TODO
+        return null;// TODO
     }
 
     /**
-     *
-     * @param type - Entity type that is to be stored into persistent storage
-     * @param entity - entity to persist. JAXB Annotated entity will be marshalled
-     *                  to the persistent store. The convention used for storing
-     *                  the object::
-     *                  PROP(config.store.uri)/{entitytype}/{entityname}.xml
-     * @throws java.io.IOException  If any error in accessing the storage
-     * @throws IvoryException 
+     * 
+     * @param type
+     *            - Entity type that is to be stored into persistent storage
+     * @param entity
+     *            - entity to persist. JAXB Annotated entity will be marshalled
+     *            to the persistent store. The convention used for storing the
+     *            object:: PROP(config.store.uri)/{entitytype}/{entityname}.xml
+     * @throws java.io.IOException
+     *             If any error in accessing the storage
+     * @throws IvoryException
      */
-    private void persist(EntityType type, Entity entity)
-            throws IOException, IvoryException {
-        OutputStream out = fs.create(new Path(storePath, type +
-                Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
+    private void persist(EntityType type, Entity entity) throws IOException, IvoryException {
+        OutputStream out = fs
+                .create(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
         try {
             type.getMarshaller().marshal(entity, out);
             LOG.info("Persisted configuration " + type + "/" + entity.getName());
         } catch (JAXBException e) {
             LOG.error(e);
-            throw new StoreAccessException("Unable to serialize the entity object "
-                    + type + "/" + entity.getName(), e);
-        }finally{
+            throw new StoreAccessException("Unable to serialize the entity object " + type + "/" + entity.getName(), e);
+        } finally {
             out.close();
         }
     }
 
     /**
      * Archive removed configuration in the persistent store
-     * @param type - Entity type to archive
-     * @param name - name
-     * @throws IOException If any error in accessing the storage
+     * 
+     * @param type
+     *            - Entity type to archive
+     * @param name
+     *            - name
+     * @throws IOException
+     *             If any error in accessing the storage
      */
     private void archive(EntityType type, String name) throws IOException {
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
         fs.mkdirs(archivePath);
-        fs.rename(new Path(storePath, type + Path.SEPARATOR +
-                URLEncoder.encode(name, UTF_8) + ".xml"), new Path(archivePath,
+        fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"), new Path(archivePath,
                 URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
         LOG.info("Archived configuration " + type + "/" + name);
     }
 
     /**
-     *
-     * @param type - Entity type to restore from persistent store
-     * @param name - Name of the entity to restore.
-     * @param <T>  - Actual entity object type
-     * @return     - De-serialized entity object restored from persistent store
-     * @throws IOException If any error in accessing the storage
-     * @throws IvoryException 
+     * 
+     * @param type
+     *            - Entity type to restore from persistent store
+     * @param name
+     *            - Name of the entity to restore.
+     * @param <T>
+     *            - Actual entity object type
+     * @return - De-serialized entity object restored from persistent store
+     * @throws IOException
+     *             If any error in accessing the storage
+     * @throws IvoryException
      */
     @SuppressWarnings("unchecked")
-    private synchronized <T extends Entity> T restore(EntityType type,
-                                                      String name)
-            throws IOException, IvoryException {
+    private synchronized <T extends Entity> T restore(EntityType type, String name) throws IOException, IvoryException {
 
-        InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR +
-                URLEncoder.encode(name, UTF_8) + ".xml"));
+        InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
         try {
             return (T) type.getUnmarshaller().unmarshal(in);
-        } catch(JAXBException e) {
-            throw new StoreAccessException("Unable to un-marshall xml definition for "
-                    + type + "/" + name, e);
-        }  finally {
+        } catch (JAXBException e) {
+            throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, e);
+        } finally {
             in.close();
             LOG.info("Restored configuration " + type + "/" + name);
         }
+    }
+
+    public void cleanupUpdateInit() {
+        updatesInProgress.set(null);
     }
 }

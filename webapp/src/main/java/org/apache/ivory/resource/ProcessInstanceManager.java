@@ -47,6 +47,7 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
+import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -70,7 +71,7 @@ public class ProcessInstanceManager extends EntityManager {
             Map<String, Set<String>> runInstances = wfEngine.getRunningInstances(process);
             return new ProcessInstancesResult("getRunningInstances is successful", runInstances.values().iterator().next(),
                     WorkflowStatus.RUNNING);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -89,9 +90,9 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> instances = wfEngine.getStatus(process, start, end);
+            Map<String, Map<String, String>> instances = wfEngine.getStatus(process, start, end);
             return new ProcessInstancesResult("getStatus is successful", instances.values().iterator().next());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -105,6 +106,7 @@ public class ProcessInstanceManager extends EntityManager {
             @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
             validateParams(processName, startStr, endStr);
             
@@ -113,9 +115,12 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> killedInstances = wfEngine.killInstances(process, start, end);
-            return new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
-        } catch (Exception e) {
+            Map<String, Map<String, String>> killedInstances = wfEngine.killInstances(process, start, end);
+            ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
             LOG.error("Failed to kill instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -129,6 +134,7 @@ public class ProcessInstanceManager extends EntityManager {
             @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
             validateParams(processName, startStr, endStr);
             
@@ -137,9 +143,12 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
-            return new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
-        } catch (Exception e) {
+            Map<String, Map<String, String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
+            ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
             LOG.error("Failed to suspend instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -153,6 +162,7 @@ public class ProcessInstanceManager extends EntityManager {
             @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr) {
         try {
+            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
             validateParams(processName, startStr, endStr);
             
@@ -161,9 +171,12 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> resumedInstances = wfEngine.resumeInstances(process, start, end);
-            return new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next());
-        } catch (Exception e) {
+            Map<String, Map<String, String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
+            ProcessInstancesResult result = new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next());
+            TransactionManager.commit();
+            return result;
+        } catch (Throwable e) {
+            TransactionManager.rollback();
             LOG.error("Failed to suspend instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -176,6 +189,7 @@ public class ProcessInstanceManager extends EntityManager {
     public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
             @QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
+            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
             validateParams(processName, startStr, endStr);
             
@@ -193,9 +207,12 @@ public class ProcessInstanceManager extends EntityManager {
             }
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Set<Pair<String, String>>> runInstances = wfEngine.reRunInstances(process, start, end, props);
-            return new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
+            Map<String, Map<String, String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
+            ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
+            TransactionManager.commit();
+            return result;
         } catch (Exception e) {
+            TransactionManager.rollback();
             LOG.error("Failed to rerun instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }

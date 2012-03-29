@@ -6,7 +6,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
 
-//TODO Handle late data coords
 public class ExternalId {
     private static final String SEPARATOR = "/";
     private String id;
@@ -19,15 +18,15 @@ public class ExternalId {
         return id;
     }
     
-    public ExternalId(String name, String elexpr) {
-        if(StringUtils.isEmpty(name) || StringUtils.isEmpty(elexpr))
+    public ExternalId(String name, String tag, String elexpr) {
+        if(StringUtils.isEmpty(name) || StringUtils.isEmpty(tag) || StringUtils.isEmpty(elexpr))
             throw new IllegalArgumentException("Empty inputs!");
         
-        id = name + SEPARATOR + elexpr;        
+        id = name + SEPARATOR + tag + SEPARATOR + elexpr;        
     }
     
-    public ExternalId(String name, Date date) {
-        this(name, EntityUtil.formatDateUTC(date));
+    public ExternalId(String name, String tag, Date date) {
+        this(name, tag, EntityUtil.formatDateUTC(date));
     }
     
     public String getName() {
@@ -41,6 +40,6 @@ public class ExternalId {
     
     public String getDateAsString() throws IvoryException {
         String[] parts = id.split(SEPARATOR);
-        return parts[1];
+        return parts[2];
     }
 }
