@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (c) 2010 Yahoo! Inc. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License. See accompanying LICENSE file.
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:workflow="uri:oozie:workflow:0.2"
            elementFormDefault="qualified" targetNamespace="uri:oozie:workflow:0.2">
@@ -26,7 +29,6 @@ limitations under the License. See accompanying LICENSE file.
 
     <xs:complexType name="WORKFLOW-APP">
         <xs:sequence>
-         <xs:element name="credentials" type="workflow:CREDENTIALS" minOccurs="0" maxOccurs="1"/>
             <xs:element name="start" type="workflow:START" minOccurs="1" maxOccurs="1"/>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="decision" type="workflow:DECISION" minOccurs="1" maxOccurs="1"/>
@@ -110,6 +112,7 @@ limitations under the License. See accompanying LICENSE file.
 
     <xs:element name="map-reduce" type="workflow:MAP-REDUCE"/>
     <xs:element name="pig" type="workflow:PIG"/>
+    <xs:element name="ssh" type="workflow:SSH"/>
     <xs:element name="sub-workflow" type="workflow:SUB-WORKFLOW"/>
     <xs:element name="fs" type="workflow:FS"/>
     <xs:element name="java" type="workflow:JAVA"/>
@@ -119,19 +122,17 @@ limitations under the License. See accompanying LICENSE file.
             <xs:choice minOccurs="1" maxOccurs="1">
                 <xs:element name="map-reduce" type="workflow:MAP-REDUCE" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="pig" type="workflow:PIG" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="ssh" type="workflow:SSH" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="sub-workflow" type="workflow:SUB-WORKFLOW" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="fs" type="workflow:FS" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="java" type="workflow:JAVA" minOccurs="1" maxOccurs="1"/>
-                <!--  <xs:any namespace="##other" minOccurs="1" maxOccurs="1"/> Hack, to help mvn xjc generate pojo-->
+               <!-- <xs:any namespace="##other" minOccurs="1" maxOccurs="1"/>-->
             </xs:choice>
             <xs:element name="ok" type="workflow:ACTION_TRANSITION" minOccurs="1" maxOccurs="1"/>
             <xs:element name="error" type="workflow:ACTION_TRANSITION" minOccurs="1" maxOccurs="1"/>
             <xs:any namespace="uri:oozie:sla:0.1" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute name="name" type="workflow:IDENTIFIER" use="required"/>
-        <xs:attribute name="cred" type="xs:string"/>
-        <xs:attribute name="retry-max" type="xs:string"/>
-        <xs:attribute name="retry-interval" type="xs:string"/>
     </xs:complexType>
 
     <xs:complexType name="MAP-REDUCE">
@@ -162,6 +163,15 @@ limitations under the License. See accompanying LICENSE file.
             <xs:element name="argument" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="file" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="archive" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="SSH">
+        <xs:sequence>
+            <xs:element name="host" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="command" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="args" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="capture-output" type="workflow:FLAG" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -260,27 +270,5 @@ limitations under the License. See accompanying LICENSE file.
         <xs:attribute name="permissions" type="xs:string" use="required"/>
         <xs:attribute name="dir-files" type="xs:string"/>
     </xs:complexType>
-    
-    <xs:complexType name="CREDENTIALS">
-        <xs:sequence minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="credential" type="workflow:CREDENTIAL"/>
-</xs:sequence>
-    </xs:complexType>
-    
-    <xs:complexType name="CREDENTIAL">
-        <xs:sequence minOccurs="0" maxOccurs="unbounded" >
-                   <xs:element name="property" minOccurs="1" maxOccurs="unbounded">
-                 <xs:complexType>
-<xs:sequence>
-<xs:element name="name" minOccurs="1" maxOccurs="1" type="xs:string"/>
-<xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:string"/>
-<xs:element name="description" minOccurs="0" maxOccurs="1" type="xs:string"/>
-</xs:sequence>
-                 </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-        <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="type" type="xs:string" use="required"/>
-    </xs:complexType>
-</xs:schema>
 
+</xs:schema>

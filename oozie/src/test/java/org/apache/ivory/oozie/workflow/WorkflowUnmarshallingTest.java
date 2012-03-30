@@ -35,7 +35,7 @@ public class WorkflowUnmarshallingTest {
     public void testValidWorkflowUnamrashalling() throws JAXBException, SAXException {
         Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.workflow.WORKFLOWAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/workflow.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-workflow-0.2.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<WORKFLOWAPP> workflowApp = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(WorkflowUnmarshallingTest.class
                 .getResourceAsStream("/oozie/xmls/workflow.xml"));

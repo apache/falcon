@@ -33,7 +33,7 @@ public class BundleUnmarshallingTest {
     public void testValidBundleUnamrashalling() throws Exception {
         Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/bundle.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-bundle-0.1.xsd"));
         unmarshaller.setSchema(schema);
         Object bundle = unmarshaller.unmarshal(new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/bundle.xml")),
                 BUNDLEAPP.class);
