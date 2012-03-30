@@ -76,7 +76,7 @@ class AtomicActions {
         if (!finalized.compareAndSet(false, true)) checkState();
         for(Action action:actions) {
             action.commit();
-            LOG.info("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " committed");
+            LOG.debug("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " committed");
         }
         actions.clear();
         handler.commit(this);
@@ -90,7 +90,7 @@ class AtomicActions {
         while(itr.hasPrevious()) {
             Action action = itr.previous();
             action.rollback();
-            LOG.info("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " rolled back");
+            LOG.debug("Action " + actionID + ":" + action.getName() + " - " + action.getCategory() + " rolled back");
         }
         actions.clear();
         handler.rollback(this);

@@ -18,6 +18,19 @@
 
 package org.apache.ivory.converter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -28,21 +41,11 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.messaging.EntityInstanceMessage;
 import org.apache.ivory.oozie.coordinator.ACTION;
-import org.apache.ivory.oozie.coordinator.CONFIGURATION;
-import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
@@ -93,26 +96,22 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             marshal(cluster, retWfApp, wfPath);
             retentionWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
 
-            CONFIGURATION conf = createCoordDefaultConfiguration(cluster, wfPath, wfName);
+            Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
             String feedPathMask = feed.getLocations().get(LocationType.DATA).getPath();
 
-            List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
+            props.put(OozieClient.LIBPATH, getRetentionWorkflowPath(cluster) + "/lib");
+            props.put("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{"));
+            props.put("timeZone", feedCluster.getValidity().getTimezone());
+            props.put("frequency", feed.getFrequency());
+            props.put("limit", feedCluster.getRetention().getLimit());
+            props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.DELETE.name());
+            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), feed.getName());
+            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), feed.getStagingPath());
+            props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.DELETE.name());
 
-            props.add(createCoordProperty(OozieClient.LIBPATH, getRetentionWorkflowPath(cluster) + "/lib"));
-            props.add(createCoordProperty("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{")));
-            props.add(createCoordProperty("timeZone", feedCluster.getValidity().getTimezone()));
-            props.add(createCoordProperty("frequency", feed.getFrequency()));
-            props.add(createCoordProperty("limit", feedCluster.getRetention().getLimit()));
-            props.add(createCoordProperty(EntityInstanceMessage.ARG.OPERATION.NAME(),
-                    EntityInstanceMessage.entityOperation.DELETE.name()));
-            props.add(createCoordProperty(EntityInstanceMessage.ARG.FEED_NAME.NAME(), feed.getName()));
-            props.add(createCoordProperty(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), feed.getStagingPath()));
-            props.add(createCoordProperty(EntityInstanceMessage.ARG.OPERATION.NAME(),
-                    EntityInstanceMessage.entityOperation.DELETE.name()));
-
-            retentionWorkflow.setConfiguration(conf);
+            retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);
             return retentionAction;
         } catch (Exception e) {
@@ -151,12 +150,12 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     @Override
-    protected List<Property> getEntityProperties() {
+    protected Map<String, String> getEntityProperties() {
         Feed feed = getEntity();
-        List<CONFIGURATION.Property> props = new ArrayList<CONFIGURATION.Property>();
+        Map<String, String> props = new HashMap<String, String>();
         if (feed.getProperties() != null) {
             for (org.apache.ivory.entity.v0.feed.Property prop : feed.getProperties().values())
-                props.add(createCoordProperty(prop.getName(), prop.getValue()));
+                props.put(prop.getName(), prop.getValue());
         }
         return props;
     }

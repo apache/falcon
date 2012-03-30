@@ -41,7 +41,10 @@ import org.apache.oozie.client.OozieClient;
 import javax.xml.bind.*;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
@@ -82,7 +85,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return new Path(bundlePath, path);
     }
 
-    protected abstract List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> getEntityProperties();
+    protected abstract Map<String, String> getEntityProperties();
 
     public void map(Cluster cluster, Path bundlePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
@@ -108,25 +111,31 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException;
 
-    protected org.apache.ivory.oozie.coordinator.CONFIGURATION createCoordDefaultConfiguration(Cluster cluster, Path coordPath,
-            String coordName) {
+    protected org.apache.ivory.oozie.coordinator.CONFIGURATION getCoordConfig(Map<String, String> propMap) {
         org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
         List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
-
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.PROCESS_NAME.NAME(), entity.getName()));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster)));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS));
-        props.add(createCoordProperty(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name()));
-        props.add(createCoordProperty("logDir", getHDFSPath(new Path(coordPath, "../tmp"))));
-
-        props.add(createCoordProperty(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
-                "${coord:nominalTime()}").getId()));
-        props.add(createCoordProperty("queueName", "default"));
-
-        props.addAll(getEntityProperties());
+        for (Entry<String, String> prop : propMap.entrySet())
+            props.add(createCoordProperty(prop.getKey(), prop.getValue()));
         return conf;
+    }
+
+    protected Map<String, String> createCoordDefaultConfiguration(Cluster cluster, Path coordPath, String coordName) {
+        Map<String, String> props = new HashMap<String, String>();
+        props.put(EntityInstanceMessage.ARG.PROCESS_NAME.NAME(), entity.getName());
+        props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
+        props.put(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
+        props.put(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster));
+        props.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS);
+        props.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name());
+        props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
+        props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.GENERATE.name());
+
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
+                "${coord:nominalTime()}").getId());
+        props.put("queueName", "default");
+
+        props.putAll(getEntityProperties());
+        return props;
     }
 
     protected CONFIGURATION createBundleConf(Cluster cluster) {

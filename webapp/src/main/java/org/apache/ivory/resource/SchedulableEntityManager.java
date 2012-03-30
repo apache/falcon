@@ -102,7 +102,7 @@ public class SchedulableEntityManager extends EntityManager {
             audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
