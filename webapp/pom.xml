@@ -30,12 +30,6 @@
   <description>Ivory Web Application</description>
   <name>Ivory Web Application</name>
   <packaging>war</packaging>
-  <repositories>
-        <repository>
-            <id>platform-pe-releases</id>
-            <url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
-        </repository>
-	</repositories>
 
   <dependencies>
     <dependency>
@@ -134,11 +128,23 @@
 		<artifactId>aspectjweaver</artifactId>
 		<version>1.6.11</version>
 	</dependency>
+	
+	<dependency>
+		<groupId>org.aspectj</groupId>
+		<artifactId>aspectjweaver</artifactId>
+		<version>1.6.11</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.inmobi.ivory</groupId>
+		<artifactId>ivory-monitoring</artifactId>
+		<version>0.1-SNAPSHOT</version>
+	</dependency>
 
   </dependencies>
 
 	<build>
- 		<plugins>
+		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>aspectj-maven-plugin</artifactId>
@@ -146,19 +152,24 @@
 				<configuration>
 					<verbose>true</verbose>
 					<complianceLevel>1.5</complianceLevel>
-							<includes>
-								<include>org/apache/ivory/resource/EntityManager.java</include>
-								<include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
-								<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
-								<include>org/apache/ivory/resource/ProcessInstancesResult.java</include> 
-								<include>org/apache/ivory/aspect/LoggingAspect.java</include>
-                                <include>org/apache/ivory/monitoring/*.java</include>
-							</includes>
+					<includes>
+						<include>org/apache/ivory/resource/EntityManager.java</include>
+						<include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
+						<include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
+						<include>org/apache/ivory/resource/ProcessInstancesResult.java</include>
+						<include>org/apache/ivory/aspect/LoggingAspect.java</include>
+					</includes>
+					<weaveDependencies>
+						<weaveDependency>
+							<groupId>com.inmobi.ivory</groupId>
+							<artifactId>ivory-monitoring</artifactId>
+						</weaveDependency>
+					</weaveDependencies>
 				</configuration>
 				<executions>
 					<execution>
 						<goals>
-							<goal>compile</goal>       
+							<goal>compile</goal>
 						</goals>
 					</execution>
 				</executions>
