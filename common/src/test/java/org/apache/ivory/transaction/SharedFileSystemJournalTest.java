@@ -59,16 +59,6 @@ public class SharedFileSystemJournalTest {
         journal.commit(id);
         File file = new File(journalPath, id.getId());
         Assert.assertFalse(file.exists());
-
-        id = new AtomicActions();
-        try {
-            journal.commit(id);
-            Assert.fail("Expect commit to fail. Nothing to commit");
-        } catch (IllegalStateException ignore) {
-            //Test pass
-        } catch (IvoryException e) {
-            Assert.fail("Unexpected exception", e);
-        }
     }
 
     @Test
@@ -78,16 +68,6 @@ public class SharedFileSystemJournalTest {
         journal.rollback(id);
         File file = new File(journalPath, id.getId());
         Assert.assertFalse(file.exists());
-
-        id = new AtomicActions();
-        try {
-            journal.rollback(id);
-            Assert.fail("Expect rollback to fail. Nothing to rollback");
-        } catch (IllegalStateException ignore) {
-            //Test pass
-        } catch (IvoryException e) {
-            Assert.fail("Unexpected exception", e);
-        }
     }
 
     @Test

@@ -63,7 +63,7 @@ public class SharedFileSystemJournal implements Journal {
     public void commit(AtomicActions id) throws IvoryException {
         File actionFile = new File(basePath, id.getId());
         if (!actionFile.exists()) {
-            throw new IllegalStateException("No file for transaction id: " + id);
+            LOG.warn("No file for transaction id: " + id);
         } else {
             if (!actionFile.delete()) {
                 LOG.warn("Unable to remove transaction " + id);

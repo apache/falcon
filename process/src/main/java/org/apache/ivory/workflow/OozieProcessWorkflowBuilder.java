@@ -65,15 +65,16 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     public List<ExternalId> getExternalIds(Process process, String cluster, Date start, Date end) throws IvoryException {
         TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
 
-        Calendar procStart = Calendar.getInstance(timezone);
-        procStart.setTime(getNextStartTime(process, cluster, start));
+        Calendar instance = Calendar.getInstance(timezone);
+        instance.setTime(getNextStartTime(process, cluster, start));
+        Date procEnd = EntityUtil.parseDateUTC(process.getValidity().getEnd());
         
         Frequency freq = Frequency.valueOf(process.getFrequency());
         List<ExternalId> extIds = new ArrayList<ExternalId>();
-        while(procStart.getTime().before(end)) {
+        while(instance.getTime().compareTo(end) <= 0 && instance.getTime().before(procEnd)) {
             for(String tag:COORD_TAGS)
-                extIds.add(new ExternalId(process.getName(), tag, procStart.getTime()));
-            procStart.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
+                extIds.add(new ExternalId(process.getName(), tag, instance.getTime()));
+            instance.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
         return extIds;
     }

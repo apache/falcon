@@ -38,7 +38,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;

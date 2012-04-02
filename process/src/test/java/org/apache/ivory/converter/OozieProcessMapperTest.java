@@ -153,7 +153,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/coordinator.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-coordinator-0.2.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<COORDINATORAPP> jaxbBundle = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), COORDINATORAPP.class);
         return jaxbBundle.getValue();                
@@ -164,7 +164,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(WORKFLOWAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/workflow.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-workflow-0.2.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<WORKFLOWAPP> jaxbWorkflow = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(workflow.trim().getBytes())), WORKFLOWAPP.class);
         return jaxbWorkflow.getValue();                
@@ -175,7 +175,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie/xsds/bundle.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-bundle-0.1.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<BUNDLEAPP> jaxbBundle = unmarshaller.unmarshal(new StreamSource(new ByteArrayInputStream(bundleStr.trim().getBytes())), BUNDLEAPP.class);
         return jaxbBundle.getValue();        
