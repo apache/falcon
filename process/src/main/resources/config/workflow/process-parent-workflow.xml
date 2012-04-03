@@ -53,7 +53,7 @@
 			<capture-output />
 		</java>
 		<ok to="user-workflow" />
-		<error to="fail" />
+		<error to="ivory-failed-messaging" />
 	</action>
 
 	<action name='user-workflow'>
