@@ -130,7 +130,10 @@ public class SchedulableEntityManager extends EntityManager {
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
             Entity entityObj = getEntityObject(entity, type);
-            getWorkflowEngine().suspend(entityObj);
+            if(getWorkflowEngine().isActive(entityObj))
+                getWorkflowEngine().suspend(entityObj);
+            else
+                throw new IvoryException(entity + "(" + type + ") is not scheduled");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
             TransactionManager.commit();
             return result;
@@ -160,7 +163,10 @@ public class SchedulableEntityManager extends EntityManager {
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
             Entity entityObj = getEntityObject(entity, type);
-            getWorkflowEngine().resume(entityObj);
+            if(getWorkflowEngine().isSuspended(entityObj))
+                getWorkflowEngine().resume(entityObj);
+            else
+                throw new IvoryException(entity + "(" + type + ") is not suspended");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
             TransactionManager.commit();
             return result;
