@@ -18,72 +18,40 @@
 
 package org.apache.ivory.entity.v0;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.entity.v0.process.Input;
-import org.apache.ivory.entity.v0.process.Output;
-import org.apache.ivory.entity.v0.process.Process;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
-import java.util.Collection;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.Pair;
 
 public class EntityIntegrityChecker {
 
-    private static final ConfigurationStore configStore = ConfigurationStore.get();
+    public static Pair<String, EntityType>[] referencedBy(Entity entity) throws IvoryException {
+        Set<Entity> deps = EntityGraph.get().getDependents(entity);
+        if(deps == null)
+            return null;
+        
+        switch (entity.getEntityType()) {
+            case CLUSTER:
+                return filter(deps, EntityType.FEED, EntityType.PROCESS);
 
-    public static Entity referencedBy(EntityType type,
-                                    Entity entity)
-            throws IvoryException {
+            case FEED:
+                return filter(deps, EntityType.PROCESS);
 
-        switch (type) {
             default:
                 return null;
-            case FEED:
-                return referencedBy((Feed) entity);
-            case CLUSTER:
-                return referencedBy((Cluster) entity);
         }
     }
 
-    public static Entity referencedBy(Cluster cluster) throws IvoryException {
-
-    	Collection<String> entities = configStore.getEntities(EntityType.PROCESS);
-    	for (String entity : entities) {
-    		Process process = (Process) configStore.get(EntityType.PROCESS, entity);
-    		String clusterName = process.getCluster().
-    				getName();
-    		Cluster referredCluster = configStore.
-    				get(EntityType.CLUSTER, clusterName);
-    		if (referredCluster != null && referredCluster.equals(cluster)) {
-    			return process;
-    		}
-    	}
-    	return null;
-        //TODO check for dataset dependency
-    }
-
-    public static Entity referencedBy(Feed dataset) throws IvoryException {
-        Collection<String> entities = configStore.getEntities(EntityType.PROCESS);
-        for (String entity : entities) {
-            Process process = configStore.get(EntityType.PROCESS, entity);
-            for (Input input : process.getInputs().getInput()) {
-                String datasetName = input.getFeed();
-                Feed referredDataset = configStore.
-                        get(EntityType.FEED, datasetName);
-                if (referredDataset != null && referredDataset.equals(dataset)) {
-                    return process;
-                }
-            }
-            for (Output output : process.getOutputs().getOutput()) {
-                String datasetName = output.getFeed();
-                Feed referredDataset = configStore.
-                        get(EntityType.FEED, datasetName);
-                if (referredDataset != null && referredDataset.equals(dataset)) {
-                    return process;
-                }
-            }
-        }
-        return null;
+    @SuppressWarnings("unchecked")
+    private static Pair<String, EntityType>[] filter(Set<Entity> deps, EntityType ... types) {
+        List<Pair<String, EntityType>> filteredSet = new ArrayList<Pair<String,EntityType>>();
+        List<EntityType> validTypes = Arrays.asList(types);
+        for(Entity dep:deps)
+            if(validTypes.contains(dep.getEntityType()))
+                filteredSet.add(Pair.of(dep.getName(), dep.getEntityType()));
+        return filteredSet.toArray(new Pair[0]);
     }
 }

@@ -422,6 +422,12 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
+        response = this.service
+                .path("api/entities/delete/cluster/" + cluster)
+                .header("Remote-User", "testuser")
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        checkIfBadRequest(response);
+
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);

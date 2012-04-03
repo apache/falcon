@@ -42,6 +42,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ValidationException;
@@ -151,7 +152,7 @@ public class EntityManager {
             String removedFromEngine = "";
             Entity entityObj = getEntityObject(entity, type);
 
-            canRemove(entityType, entityObj);
+            canRemove(entityObj);
 
             if (entityType.isSchedulable()) {
                 if (getWorkflowEngine().isActive(entityObj)) {
@@ -218,12 +219,11 @@ public class EntityManager {
         }
     }
 
-    private void canRemove(EntityType entityType, Entity entityObj) throws IvoryException {
-
-        Entity referencedBy = EntityIntegrityChecker.referencedBy(entityType, entityObj);
-        if (referencedBy != null) {
-            throw new IvoryException(entityObj.getName() + "(" + entityType + ") cant " + "be removed as it is referred by "
-                    + referencedBy.getName() + " (" + referencedBy.getEntityType() + ")");
+    private void canRemove(Entity entity) throws IvoryException {
+        Pair<String, EntityType>[] referencedBy = EntityIntegrityChecker.referencedBy(entity);
+        if (referencedBy != null && referencedBy.length > 0) {
+            throw new IvoryException(entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
+                    + referencedBy);
         }
     }
 
