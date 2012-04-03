@@ -176,7 +176,7 @@
 	<xs:simpleType name="validity-type">
 		<xs:restriction base="xs:string">
 			<xs:pattern
-				value="(minutes\((\d)+\)|hours\((\d)+\)|days\((\d)+\)|months\((\d)+\))" />
+				value="(minutes\([1-9]\d*\)|hours\([1-9]\d*\)|days\([1-9]\d*\)|months\([1-9]\d*\))" />
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="date-time-type">

@@ -34,7 +34,7 @@ public class ProcessSubscriberService implements IvoryService {
 	private IvoryTopicSubscriber subscriber;
 
 	private static enum JMSprops {
-		IvoryBrokerImplClass("broker.impl.class", ""), 
+		IvoryBrokerImplClass("broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory"), 
 		IvoryBrokerUrl("broker.url", "tcp://localhost:61616?daemon=true"), 
 		IvoryProcessTopic("process.topic", "IVORY.PROCESS.TOPIC");
 
