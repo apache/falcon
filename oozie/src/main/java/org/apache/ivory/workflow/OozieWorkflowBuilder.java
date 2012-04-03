@@ -91,7 +91,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timzone));
         startCal.setTime(startTime);
         
-        while(startCal.getTime().before(now)) {
+        while(startCal.getTime().compareTo(now) <= 0) {
             startCal.add(frequency.getTimeUnit().getCalendarUnit(), periodicity);
         }
         return startCal.getTime();
