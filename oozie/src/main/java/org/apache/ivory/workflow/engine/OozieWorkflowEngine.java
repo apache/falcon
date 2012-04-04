@@ -423,6 +423,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             String oldEndTime = builder.getEndTime(oldEntity, clusterName);
             String newEndTime = builder.getEndTime(newEntity, clusterName);
 
+            if (EntityUtil.parseDateUTC(newEndTime).before(new Date())) {
+                throw new IvoryException("New end time for " + newEntity.getName()
+                        + " is past current time. Entity can't be updated. Use remove and add");
+            }
+
             if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
                 Entity clonedOldEntity = oldEntity.clone();
                 builder.setConcurrency(clonedOldEntity, newConcurrency);
@@ -447,7 +452,16 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                         Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
                         //if end time < last action time, use pause time to delete future actions
                         if (coord.getLastActionTime() != null && localEndTime.before(coord.getLastActionTime())) {
-                            change(cluster, coord.getId(), newConcurrency, coord.getLastActionTime(), EntityUtil.formatDateUTC(localEndTime));
+                            //Pause time should be < endTime as coord materializes actions at pauseTime, but not at endTime
+                            Date pauseTime = getPreviousMin(localEndTime);
+                            
+                            //Pause time should be > oozie now. Use next min for comparison to account for diff in time 
+                            //between ivory and oozie
+                            if(pauseTime.before(new Date()))
+                                throw new IvoryException("New end time for " + newEntity.getName()
+                                        + " is past current time. Entity can't be updated. Use remove and add");
+                            
+                            change(cluster, coord.getId(), newConcurrency, null, EntityUtil.formatDateUTC(pauseTime));
                             change(cluster, coord.getId(), newConcurrency, localEndTime, "");
                         } else
                             change(cluster, coord.getId(), newConcurrency, localEndTime, null);
@@ -478,6 +492,14 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
+    private Date getNextMin(Date date) {
+        return new Date(date.getTime() + 60 * 1000);
+    }
+    
+    private Date getPreviousMin(Date date) {
+        return new Date(date.getTime() - 60 * 1000);
+    }
+    
     private void updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob bundle) throws IvoryException {
 
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
@@ -507,15 +529,18 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         // set to the next minute. Since time is rounded off, it will be always
         // less than oozie server time
         // ensure that we are setting it to the next minute.
-        Date endTime = new Date(System.currentTimeMillis() + 70000);
+        Date endTime = getNextMin(getNextMin(new Date()));
         Date newStartTime = null;
 
         for (CoordinatorJob coord : coords) {
-            // Add offset to pause time for late coords
+            // Add offset to end time for late coords
             Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
 
+            //Pause time should be < endTime as coord materializes actions at pauseTime, but not at endTime
+            Date pauseTime = getPreviousMin(localEndTime);
+
             // Set pause time to now so that future coord actions are deleted
-            change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(localEndTime));
+            change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(pauseTime));
 
             // Change end time and reset pause time
             change(cluster, coord.getId(), null, localEndTime, "");
