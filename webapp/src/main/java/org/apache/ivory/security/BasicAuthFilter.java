@@ -40,7 +40,7 @@ public class BasicAuthFilter implements Filter {
     public void init(FilterConfig filterConfig)
             throws ServletException {
         String secure = StartupProperties.get().getProperty("security.enabled",
-                "false");
+                "true");
         this.secure = Boolean.parseBoolean(secure);
     }
 
