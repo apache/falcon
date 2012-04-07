@@ -78,7 +78,7 @@ public class BasicAuthFilterTest {
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
         when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
         filter.doFilter(mockRequest, mockResponse, mockChain);
-        Assert.assertEquals(CurrentUser.getUser(), "guest");
+        Assert.assertEquals(CurrentUser.getUser(), "testuser");
     }
 
     @Test

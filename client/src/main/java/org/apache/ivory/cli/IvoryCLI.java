@@ -114,7 +114,7 @@ public class IvoryCLI {
 		parser.addCommand(
 				INSTANCE_CMD,
 				"",
-				"Process instances operation like running, status, kill, suspend, resume, rerun",
+				"Process instances operations like running, status, kill, suspend, resume, rerun",
 				instanceOptions(), false);
 
 		try {
@@ -199,11 +199,6 @@ public class IvoryCLI {
 		if (!optionsList.contains(RUNNING_OPT)) {
 			if (start == null || start.equals("")) {
 				throw new IvoryCLIException("Missing argument: start");
-			}
-		}
-		if (optionsList.contains(RERUN_OPT)) {
-			if (filePath == null || filePath.equals("")) {
-				throw new IvoryCLIException("Missing argument: filePath");
 			}
 		}
 
