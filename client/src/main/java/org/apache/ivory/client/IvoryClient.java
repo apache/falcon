@@ -47,14 +47,15 @@ public class IvoryClient {
 	private String version;
 	protected static WebResource service;
 	public static final String WS_HEADER_PREFIX = "header:";
-	private static final String REMOTE_USER="Remote-User";
-	
+	private static final String REMOTE_USER = "Remote-User";
+
 	private static final String USER = System.getProperty("user.name");
 
 	/**
 	 * Create a Ivory client instance.
 	 * 
-	 * @param ivoryUrl of the server to which client interacts
+	 * @param ivoryUrl
+	 *            of the server to which client interacts
 	 */
 	public IvoryClient(String ivoryUrl) {
 		this.baseUrl = notEmpty(ivoryUrl, "oozieUrl");
@@ -64,26 +65,27 @@ public class IvoryClient {
 		IvoryClient.service = Client.create(new DefaultClientConfig())
 				.resource(UriBuilder.fromUri(baseUrl).build());
 
-		//addHeaders();
+		// addHeaders();
 	}
 
-    /**
+	/**
 	 * Methods allowed on Entity Resources
 	 */
 	protected static enum Entities {
-		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
-        SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
-        UPDATE("api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML),
-        SUBMITandSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST,
-				MediaType.TEXT_XML),
-        SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
-        SUSPEND("api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML),
-        RESUME("api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML),
-        DELETE("api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML),
-        STATUS("api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
-        LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
-        DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
+		VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML), SUBMIT(
+				"api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML), UPDATE(
+				"api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML), SUBMITandSCHEDULE(
+				"api/entities/submitAndSchedule/", HttpMethod.POST,
+				MediaType.TEXT_XML), SCHEDULE("api/entities/schedule/",
+				HttpMethod.POST, MediaType.TEXT_XML), SUSPEND(
+				"api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML), RESUME(
+				"api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML), DELETE(
+				"api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML), STATUS(
+				"api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN), DEFINITION(
+				"api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML), LIST(
+				"api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML), DEPENDENCY(
+				"api/entities/dependencies/", HttpMethod.GET,
+				MediaType.TEXT_XML);
 
 		private String path;
 		private String method;
@@ -218,15 +220,15 @@ public class IvoryClient {
 
 	}
 
-    public String getDependency(String entityType, String entityName)
-            throws IvoryCLIException {
-        return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
-    }
+	public String getDependency(String entityType, String entityName)
+			throws IvoryCLIException {
+		return sendDependencyRequest(Entities.DEPENDENCY, entityType,
+				entityName);
+	}
 
-    public String getEntityList(String entityType)
-            throws IvoryCLIException {
-        return sendListRequest(Entities.LIST, entityType);
-    }
+	public String getEntityList(String entityType) throws IvoryCLIException {
+		return sendListRequest(Entities.LIST, entityType);
+	}
 
 	public String getRunningInstances(String processName)
 			throws IvoryCLIException {
@@ -280,6 +282,9 @@ public class IvoryClient {
 	 */
 	private InputStream getServletInputStream(String filePath)
 			throws IvoryCLIException {
+		if (filePath == null) {
+			return null;
+		}
 		InputStream stream = null;
 		try {
 			stream = new FileInputStream(filePath);
@@ -305,10 +310,10 @@ public class IvoryClient {
 
 	private String sendEntityRequest(Entities entities, String entityType,
 			String entityName) throws IvoryCLIException {
-		
+
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
-				.type(MediaType.TEXT_XML)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
 		checkIfSuccessfull(clientResponse);
@@ -325,27 +330,27 @@ public class IvoryClient {
 			String entityName) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
-				.type(MediaType.TEXT_XML)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
 		checkIfSuccessfull(clientResponse);
 
-        return parseEntityList(clientResponse);
+		return parseEntityList(clientResponse);
 
 	}
 
 	private String sendListRequest(Entities entities, String entityType)
-            throws IvoryCLIException {
+			throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).header(REMOTE_USER, USER).accept(entities.mimeType)
-				.type(MediaType.TEXT_XML)
+				.path(entityType).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
 		checkIfSuccessfull(clientResponse);
 
-        return parseEntityList(clientResponse);
+		return parseEntityList(clientResponse);
 
 	}
 
@@ -353,8 +358,8 @@ public class IvoryClient {
 			String entityType, Object requestObject) throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).header(REMOTE_USER, USER).accept(entities.mimeType)
-				.type(MediaType.TEXT_XML)
+				.path(entityType).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
 		checkIfSuccessfull(clientResponse);
@@ -364,11 +369,12 @@ public class IvoryClient {
 	}
 
 	private String sendEntityRequestWithNameAndObject(Entities entities,
-			String entityType, String entityName, Object requestObject) throws IvoryCLIException {
+			String entityType, String entityName, Object requestObject)
+			throws IvoryCLIException {
 
 		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).header(REMOTE_USER, USER).accept(entities.mimeType)
-				.type(MediaType.TEXT_XML)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
 		checkIfSuccessfull(clientResponse);
@@ -390,11 +396,13 @@ public class IvoryClient {
 
 		ClientResponse clientResponse = null;
 		if (props == null) {
-			clientResponse = resource.header(REMOTE_USER, USER).accept(instances.mimeType).method(
-					instances.method, ClientResponse.class);
+			clientResponse = resource.header(REMOTE_USER, USER)
+					.accept(instances.mimeType)
+					.method(instances.method, ClientResponse.class);
 		} else {
-			clientResponse = resource.header(REMOTE_USER, USER).accept(instances.mimeType).method(
-					instances.method, ClientResponse.class, props);
+			clientResponse = resource.header(REMOTE_USER, USER)
+					.accept(instances.mimeType)
+					.method(instances.method, ClientResponse.class, props);
 		}
 		checkIfSuccessfull(clientResponse);
 
@@ -414,9 +422,9 @@ public class IvoryClient {
 			throws IvoryCLIException {
 
 		EntityList result = clientResponse.getEntity(EntityList.class);
-        if (result == null) {
-            return "";
-        }
+		if (result == null) {
+			return "";
+		}
 		return result.toString();
 
 	}

@@ -264,10 +264,9 @@ public class IvoryCLITest {
 		overlayParametersOverTemplate(CLUSTER, overlay);
 		submitTestFiles(overlay);
 
-		// TODO with feed lib fix
-		// Assert.assertEquals(0,
-		// executeWithURL("entity -schedule -type feed -name "
-		// + overlay.get("outputFeedName")));
+		 Assert.assertEquals(0,
+		 executeWithURL("entity -schedule -type feed -name "
+		 + overlay.get("outputFeedName")));
 
 		Assert.assertEquals(
 				0,
@@ -403,7 +402,7 @@ public class IvoryCLITest {
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"));
 	}
 
-	@Test(enabled = enableTest)
+	@Test(enabled = true)
 	public void testInstanceKillAndRerun() throws Exception {
 		Map<String, String> overlay = getUniqueOverlay();
 		submitTestFiles(overlay);
