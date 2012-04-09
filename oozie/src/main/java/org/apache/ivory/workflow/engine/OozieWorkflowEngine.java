@@ -543,11 +543,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             // Add offset to end time for late coords
             Date localEndTime = addOffest(endTime, minCoordStartTime, coord.getStartTime());
 
-            // Pause time should be < endTime as coord materializes actions at
-            // pauseTime, but not at endTime
-            Date pauseTime = getPreviousMin(localEndTime);
+            if (coord.getLastActionTime() != null && localEndTime.before(coord.getLastActionTime())) {
+                // Pause time should be < endTime as coord materializes actions at
+                // pauseTime, but not at endTime
+                Date pauseTime = getPreviousMin(localEndTime);
 
-            if (localEndTime.before(coord.getLastActionTime())) {
                 // Set pause time to now so that future coord actions are
                 // deleted
                 change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(pauseTime));
