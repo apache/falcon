@@ -18,6 +18,7 @@
 
 package org.apache.ivory;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -32,8 +33,14 @@ public class IvoryWebException extends WebApplicationException {
                                                  Response.Status status) {
         LOG.error("Action failed: " + status, e);
         return new IvoryWebException(Response.status(status).
-                entity(e.getMessage() + "\n" + getAddnInfo(e)).
+                entity(getMessage(e)+ "\n" + getAddnInfo(e)).
                 type(MediaType.TEXT_PLAIN_TYPE).build());
+    }
+
+    private static String getMessage(Throwable e) {
+        if(StringUtils.isEmpty(e.getMessage()))
+            return e.getClass().getName();
+        return e.getMessage();
     }
 
     private static String getAddnInfo(Throwable e) {
