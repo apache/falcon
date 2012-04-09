@@ -22,20 +22,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
@@ -69,11 +67,12 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         String coordName = feed.getWorkflowName("RETENTION");
         retentionApp.setName(coordName);
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
+        
+        if(EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd()).before(new Date()))
+            throw new IvoryException("Feed's end time for cluster " + cluster.getName() + " should be in the future");
+        
         retentionApp.setEnd(feedCluster.getValidity().getEnd());
-
-        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-        formatter.setTimeZone(TimeZone.getTimeZone(feedCluster.getValidity().getTimezone()));
-        retentionApp.setStart(formatter.format(new Date()));
+        retentionApp.setStart(EntityUtil.formatDateUTC(new Date()));
         retentionApp.setTimezone(feedCluster.getValidity().getTimezone());
         if (feed.getFrequency().matches("hours|minutes")) {
             retentionApp.setFrequency("${coord:hours(6)}");

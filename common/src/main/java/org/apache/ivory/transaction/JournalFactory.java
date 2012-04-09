@@ -18,6 +18,8 @@
 
 package org.apache.ivory.transaction;
 
+import java.util.List;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.util.ReflectionUtils;
 import org.apache.log4j.Logger;
@@ -39,5 +41,13 @@ public final class JournalFactory {
 
     public static Journal getDefault() {
         return handler;
+    }
+    
+    public void init() throws IvoryException {
+        //rollback un-committed transactions at startup
+        Journal journal = getDefault();
+        List<AtomicActions> transactions = journal.getUncommittedActions();
+        for(AtomicActions trans:transactions)
+            trans.rollback();
     }
 }
