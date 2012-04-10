@@ -82,7 +82,7 @@ public abstract class AbstractIvoryAspect {
 
 		for (Map.Entry<Integer, String> param : ResourcesReflectionUtil
 				.getResourceDimensionsName(methodName).entrySet()) {
-			dimensions.put(param.getValue(), args[param.getKey()].toString());
+			dimensions.put(param.getValue(), args[param.getKey()]==null?"NULL":args[param.getKey()].toString());
 		}
 		return new ResourceMessage(action, dimensions, status, executionTime);
 	}

@@ -103,8 +103,8 @@ public class ProcessInstanceManager extends EntityManager {
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="kill")
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
@@ -131,8 +131,8 @@ public class ProcessInstanceManager extends EntityManager {
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="suspend")
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
@@ -159,8 +159,8 @@ public class ProcessInstanceManager extends EntityManager {
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="resume")
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
@@ -186,8 +186,8 @@ public class ProcessInstanceManager extends EntityManager {
     @Path("rerun/{process}")
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="re-run")
-    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr, @Context HttpServletRequest request) {
+    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+    		@Dimension("end-time")@QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
