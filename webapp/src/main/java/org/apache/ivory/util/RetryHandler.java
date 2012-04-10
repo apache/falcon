@@ -53,7 +53,9 @@ public class RetryHandler {
 				ProcessInstancesResult result = new ProcessInstanceManager()
 						.reRunInstance(processName, ivoryDate, null, null);
 				LOG.info("Automatic re-run:" + result.getStatus() + " -"
-						+ result.getMessage() + "-" + result.getInstances());
+						+ result.getMessage());
+				LOG.info(result.getInstances() == null ? "NULL" : result
+						.getInstances()[0]);
 			}
 		} catch (Exception e) {
 			LOG.error(e);

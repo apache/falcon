@@ -37,6 +37,11 @@ public class ProcessInstancesResult extends APIResult {
         public WorkflowStatus getStatus() {
             return status;
         }
+        
+        @Override
+        public String toString() {
+        	return "{instance:"+this.instance+",status:"+this.status+"}";
+        }
     }
     
     @XmlElement
