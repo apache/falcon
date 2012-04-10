@@ -158,7 +158,6 @@ public class OozieWorkflowEngineAction extends Action {
                 break;
 
             case KILL:
-                listener.afterDelete(cluster, entity);
                 break;
         }
     }

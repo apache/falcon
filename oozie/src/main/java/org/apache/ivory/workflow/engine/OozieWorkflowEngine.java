@@ -682,6 +682,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 listener.beforeDelete(cluster, entity);
             client.kill(jobId);
             LOG.info("Killed job " + jobId + " on cluster " + cluster.getName());
+            if (entity != null)
+                listener.afterDelete(cluster, entity);
             TransactionManager.performAction(new OozieWorkflowEngineAction(Action.KILL, cluster, jobId, entity));
         } catch (OozieClientException e) {
             throw new IvoryException(e);
