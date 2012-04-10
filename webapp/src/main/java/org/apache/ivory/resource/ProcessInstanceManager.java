@@ -47,6 +47,7 @@ import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.util.RetryHandler;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -197,7 +198,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             Properties props = new Properties();
-            ServletInputStream xmlStream = request.getInputStream();
+            ServletInputStream xmlStream = request==null?null:request.getInputStream();
             if (xmlStream != null) {
                 if (xmlStream.markSupported()) {
                     xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
@@ -277,6 +278,7 @@ public class ProcessInstanceManager extends EntityManager {
 				+ nominalTime);
 		if (status.equalsIgnoreCase("FAILED")) {
 			LOG.debug(process + ":" + nominalTime + " Failed");
+			RetryHandler.retry( process,  nominalTime, runId);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		LOG.debug(process + ":" + nominalTime + " Succeeded");
