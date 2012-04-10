@@ -20,6 +20,7 @@ package org.apache.ivory.transaction;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.util.GenericAlert;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 
@@ -56,16 +57,11 @@ public class TransactionManager {
                 trans.get().rollback();
             } catch (Throwable e) {
                 LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
-                alertRollbackFailure(getTransactionId());
+                GenericAlert.alertRollbackFailure(getTransactionId());
             }
         } finally {
             NDC.pop();
         }
-    }
-
-    @Monitored(event = "TransactionRollbackFailed")
-    private static String alertRollbackFailure(@Dimension(value = "transactionId") String transactionId) {
-        return transactionId;
     }
 
     public static void commit() throws IvoryException {

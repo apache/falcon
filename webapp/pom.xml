@@ -160,6 +160,10 @@
 						<include>org/apache/ivory/aspect/LoggingAspect.java</include>
 					</includes>
 					<weaveDependencies>
+					<weaveDependency>
+      						<groupId>org.apache.ivory</groupId>
+      						<artifactId>ivory-common</artifactId>
+						</weaveDependency>
 						<weaveDependency>
 							<groupId>com.inmobi.ivory</groupId>
 							<artifactId>ivory-monitoring</artifactId>
