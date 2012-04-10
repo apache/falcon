@@ -21,10 +21,11 @@ package org.apache.ivory.transaction;
 import java.util.List;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.ReflectionUtils;
 import org.apache.log4j.Logger;
 
-public final class JournalFactory {
+public final class JournalFactory implements IvoryService{
 
     private static Logger LOG = Logger.getLogger(JournalFactory.class);
 
@@ -49,5 +50,14 @@ public final class JournalFactory {
         List<AtomicActions> transactions = journal.getUncommittedActions();
         for(AtomicActions trans:transactions)
             trans.rollback();
+    }
+
+    @Override
+    public String getName() {
+        return "journal";
+    }
+
+    @Override
+    public void destroy() throws IvoryException {
     }
 }
