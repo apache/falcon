@@ -46,6 +46,7 @@ public class ResourcesReflectionUtil {
 		buildAnnotationsMapForClass("org.apache.ivory.resource.SchedulableEntityManager");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.ProcessInstanceManager");
 		buildAnnotationsMapForClass("org.apache.ivory.aspect.instances.IvoryTopicSubscriber");
+		buildAnnotationsMapForClass("org.apache.ivory.util.GenericAlert");
 	}
 
 	public static Map<Integer, String> getResourceDimensionsName(String methodName) {
