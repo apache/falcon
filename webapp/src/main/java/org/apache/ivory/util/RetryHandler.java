@@ -22,11 +22,15 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.jms.TextMessage;
+
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.aspect.instances.IvoryTopicSubscriber;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.resource.ProcessInstanceManager;
 import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.log4j.Logger;
 
 public class RetryHandler {
@@ -35,7 +39,7 @@ public class RetryHandler {
 
 	// TODO handle different retry options, currently immediate retry
 	public static void retry(String processName, String nominalTime,
-			String runId) throws IvoryException {
+			String runId, TextMessage textMessage) throws IvoryException {
 
 		try {
 			ProcessInstanceManager instanceManager = new ProcessInstanceManager();
@@ -44,9 +48,20 @@ public class RetryHandler {
 			int attempts = processObj.getRetry().getAttempts();
 			int intRunId = Integer.parseInt(runId);
 			String ivoryDate = getIvoryDate(nominalTime);
+			ProcessInstancesResult statusResult = new ProcessInstanceManager()
+			.getStatus(processName, ivoryDate, null);
+			WorkflowStatus status;
+			 if(statusResult.getInstances()!=null){
+				 status=statusResult.getInstances()[0].status;
+				 if(status.equals(WorkflowStatus.RUNNING)){
+					 LOG.info("Re-enqueing message:"+processName+":"+ivoryDate);
+					 IvoryTopicSubscriber.sendMessage(textMessage);
+					 return;
+				 }
+			 }
 			if (attempts > intRunId) {
-				LOG.info("Retrying " + (intRunId + 1)
-						+ "th attempt out of configured: " + attempts
+				LOG.info("Retrying attempt" + (intRunId + 1)
+						+ " out of configured: " + attempts
 						+ " attempt for process instance::" + processName + ":"
 						+ nominalTime);
 				ProcessInstancesResult result = new ProcessInstanceManager()

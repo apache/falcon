@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.jms.TextMessage;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -273,12 +274,12 @@ public class ProcessInstanceManager extends EntityManager {
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId) throws Exception {
+			@Dimension(value = "runId") String runId, TextMessage textMessage) throws Exception {
 		LOG.debug("inside instrumentWithAspect method: " + process + ":"
 				+ nominalTime);
 		if (status.equalsIgnoreCase("FAILED")) {
 			LOG.debug(process + ":" + nominalTime + " Failed");
-			RetryHandler.retry( process,  nominalTime, runId);
+			RetryHandler.retry( process,  nominalTime, runId, textMessage);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		LOG.debug(process + ":" + nominalTime + " Succeeded");
