@@ -36,7 +36,10 @@ public class ResourcesReflectionUtilTest {
 		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.killProcessInstance").get(1));		
 	
 		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.instrumentWithAspect"));
-		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.instrumentWithAspect").get(0));		
+		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.instrumentWithAspect").get(0));	
+		
+		Assert.assertEquals("TransactionRollbackFailed",ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.alertRollbackFailure"));
+		Assert.assertEquals("transactionId", ResourcesReflectionUtil.getResourceDimensionsName("GenericAlert.alertRollbackFailure").get(0));	
 
 	}
 
