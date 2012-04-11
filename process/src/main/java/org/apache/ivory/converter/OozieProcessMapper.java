@@ -81,8 +81,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return apps;
     }
 
-    private void createWorkflow(Cluster cluster, String template,
-                                String wfName, Path wfPath) throws IvoryException {
+    private void createWorkflow(Cluster cluster, String template, String wfName, Path wfPath) throws IvoryException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(template);
         wfApp.setName(wfName);
 
@@ -99,8 +98,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     /**
      * Creates default oozie coordinator
      * 
-     * @param cluster - Cluster for which the coordiantor app need to be created
-     * @param bundlePath - bundle path
+     * @param cluster
+     *            - Cluster for which the coordiantor app need to be created
+     * @param bundlePath
+     *            - bundle path
      * @return COORDINATORAPP
      * @throws IvoryException
      *             on Error
@@ -184,10 +185,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
             }
             // Output feed name and path for parent workflow
-            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(),
-                    outputFeedNames.substring(0, outputFeedNames.length() - 1));
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(),
-                    outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
+            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
+            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
         }
 
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
@@ -213,11 +212,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Process process = getEntity();
         if (process == null)
             return null;
-        
+
         LateProcess lateProcess = process.getLateProcess();
-        if (lateProcess==null) {
-            LOG.warn("Late date coordinator doesn't apply, as the late-process tag is not present in process: " +
-                    process.getName());
+        if (lateProcess == null) {
+            LOG.warn("Late data coordinator doesn't apply, as the late-process tag is not present in process: " + process.getName());
             return null;
         }
 
@@ -233,7 +231,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             }
         }
         assert !offsetExpr.isEmpty() : "dont expect offset to be empty";
-        
+
         COORDINATORAPP coord = new COORDINATORAPP();
         String coordName = process.getWorkflowName("LATE1");
         Path coordPath = getCoordPath(bundlePath, coordName);
@@ -245,13 +243,13 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         long endTime = LateDataUtils.getTime(tz, process.getValidity().getEnd());
         long now = System.currentTimeMillis();
         if (endTime < now) {
-            LOG.warn("Late date coordinator doesn't apply, as the end date is in past " +
-                    process.getValidity().getEnd());
+            LOG.warn("Late data coordinator doesn't apply, as the end date is in past " + process.getValidity().getEnd());
             return null;
         }
 
         long startTime = LateDataUtils.getTime(tz, process.getValidity().getStart());
-        if (startTime < now) startTime = now;
+        if (startTime < now)
+            startTime = now;
         LOG.info("Using start time as : " + LateDataUtils.toDateString(tz, startTime));
 
         coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(tz, startTime), offsetExpr));
@@ -284,10 +282,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 DATAIN datain = new DATAIN();
                 datain.setName(input.getName());
                 datain.setDataset(input.getFeed());
-                datain.setStartInstance(LateDataUtils.offsetTime(
-                        getELExpression(input.getStartInstance()), offsetExpr));
-                datain.setEndInstance(LateDataUtils.offsetTime(
-                        getELExpression(input.getEndInstance()), offsetExpr));
+                datain.setStartInstance(LateDataUtils.offsetTime(getELExpression(input.getStartInstance()), offsetExpr));
+                datain.setEndInstance(LateDataUtils.offsetTime(getELExpression(input.getEndInstance()), offsetExpr));
                 if (coord.getInputEvents() == null)
                     coord.setInputEvents(new INPUTEVENTS());
                 coord.getInputEvents().getDataIn().add(datain);
@@ -317,8 +313,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 DATAOUT dataout = new DATAOUT();
                 dataout.setName(output.getName());
                 dataout.setDataset(output.getFeed());
-                dataout.setInstance(LateDataUtils.offsetTime(
-                        getELExpression(output.getInstance()), offsetExpr));
+                dataout.setInstance(LateDataUtils.offsetTime(getELExpression(output.getInstance()), offsetExpr));
                 if (coord.getOutputEvents() == null)
                     coord.setOutputEvents(new OUTPUTEVENTS());
                 coord.getOutputEvents().getDataOut().add(dataout);
@@ -329,10 +324,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
             }
             // Output feed name and path for parent workflow
-            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(),
-                    outputFeedNames.substring(0, outputFeedNames.length() - 1));
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(),
-                    outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
+            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
+            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
         }
 
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);

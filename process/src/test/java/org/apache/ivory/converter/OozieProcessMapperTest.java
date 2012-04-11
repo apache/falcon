@@ -118,7 +118,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path(process.getStagingPath());
+        Path bundlePath = new Path("/", process.getStagingPath());
         mapper.map(cluster, bundlePath);
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());

@@ -79,22 +79,24 @@ public abstract class EntityParser<T extends Entity> {
      * @return entity
      * @throws IvoryException
      */
-    public T parseAndValidate(InputStream xmlStream) throws IvoryException {
+    public T parse(InputStream xmlStream) throws IvoryException {
         try {
             // parse against schema
             Unmarshaller unmarshaller = entityType.getUnmarshaller();
             T entity = (T) unmarshaller.unmarshal(xmlStream);
             LOG.info("Parsed Entity: " + entity.getName());
-
-            validate(entity);
             return entity;
-        } catch (ValidationException e) {
-            throw e;
         } catch(Exception e) {
             throw new IvoryException(e);
         }
     }
 
+    public T parseAndValidate(InputStream xmlStream) throws IvoryException {
+        T entity = parse(xmlStream);
+        validate(entity);
+        return entity;
+    }
+    
     protected void validateEntityExists(EntityType type, String name) throws IvoryException {
         if(ConfigurationStore.get().get(type, name) == null)
             throw new ValidationException("Referenced " + type + " " + name + " is not registered");        
