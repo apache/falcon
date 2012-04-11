@@ -38,7 +38,7 @@ public final class EntityParserFactory {
 	 * @param entityType
 	 * @return concrete parser based on entity type
 	 */
-	public static EntityParser<?> getParser(final EntityType entityType) {
+	public static EntityParser getParser(final EntityType entityType) {
 
 		switch (entityType) {
 		case PROCESS:

@@ -40,7 +40,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging") +
+        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"),
                 process.getStagingPath());
 
         OozieProcessMapper mapper = new OozieProcessMapper(process);

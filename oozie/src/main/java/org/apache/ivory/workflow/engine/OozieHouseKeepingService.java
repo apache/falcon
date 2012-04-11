@@ -34,31 +34,25 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     private static Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
 
     @Override
-    public void beforeSchedule(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void beforeSchedule(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void afterSchedule(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void afterSchedule(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void beforeDelete(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void beforeDelete(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void afterDelete(Cluster cluster, Entity entity)
-            throws IvoryException {
-        Path workflowFolder = new Path(ClusterHelper.
-                getCompleteLocation(cluster, "staging") + entity.getStagingPath()).getParent();
+    public void afterDelete(Cluster cluster, Entity entity) throws IvoryException {
+        Path workflowFolder = new Path(ClusterHelper.getCompleteLocation(cluster, "staging"), entity.getStagingPath()).getParent();
         try {
             FileSystem fs = workflowFolder.getFileSystem(new Configuration());
             LOG.info("Deleting workflow " + workflowFolder);
             if (!fs.delete(workflowFolder, true)) {
-                throw new IvoryException("Unable to cleanup workflow xml; " +
-                        "delete failed " + workflowFolder);
+                throw new IvoryException("Unable to cleanup workflow xml; " + "delete failed " + workflowFolder);
             }
         } catch (IOException e) {
             throw new IvoryException("Unable to cleanup workflow xml", e);
@@ -66,22 +60,18 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     }
 
     @Override
-    public void beforeSuspend(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void beforeSuspend(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void afterSuspend(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void afterSuspend(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void beforeResume(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void beforeResume(Cluster cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void afterResume(Cluster cluster, Entity entity)
-            throws IvoryException {
+    public void afterResume(Cluster cluster, Entity entity) throws IvoryException {
     }
 }

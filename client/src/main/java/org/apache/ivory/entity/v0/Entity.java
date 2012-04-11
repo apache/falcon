@@ -34,9 +34,8 @@ import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
 public abstract class Entity {
-    private ThreadLocal<String> stagingPath;
-
     public abstract String getName();
+
     public abstract String[] getImmutableProperties();
 
     public EntityType getEntityType() {
@@ -65,19 +64,20 @@ public abstract class Entity {
     }
 
     public boolean deepEquals(Entity entity) {
-        if(entity == null)
+        if (entity == null)
             return false;
-        if(this == entity)
+        if (this == entity)
             return true;
-        if(!equals(entity))
+        if (!equals(entity))
             return false;
-        
-        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())),new DomDriver("utf-8"));
+
+        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
+                "utf-8"));
         String thisStr = xstream.toXML(this);
         String entityStr = xstream.toXML(entity);
         return thisStr.equals(entityStr);
     }
-    
+
     @Override
     public int hashCode() {
         String clazz = this.getClass().getName();
@@ -108,20 +108,16 @@ public abstract class Entity {
             throw new RuntimeException(e);
         }
     }
-    
+
     public String toShortString() {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }
 
     public String getStagingPath() {
-        if (stagingPath == null) {
-            stagingPath = new ThreadLocal<String>();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
-            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-            stagingPath.set("/ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName() + "/"
-                    + dateFormat.format(new Date()) + "/");
-        }
-        return stagingPath.get();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return "ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName() + "/" + dateFormat.format(new Date())
+                + "/";
     }
 
     public String getWorkflowName() {
@@ -138,7 +134,7 @@ public abstract class Entity {
         String[] parts = workflowName.split("_");
         return parts[parts.length - 2];
     }
-    
+
     @Override
     public Entity clone() {
         return fromString(getEntityType(), toString());
