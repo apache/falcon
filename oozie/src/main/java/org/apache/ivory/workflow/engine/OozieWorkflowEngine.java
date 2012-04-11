@@ -344,6 +344,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
                 for (ExternalId extId : extIds) {
                     String jobId = client.getJobId(extId.getId());
+                	LOG.info("JobAction for ExternalId:" +extId+" ,JobId:"+jobId);
                     String status = NOT_STARTED;
                     if (StringUtils.isNotEmpty(jobId)) {
                         WorkflowJob jobInfo = client.getJobInfo(jobId);
@@ -359,9 +360,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                                 break;
 
                             case RERUN:
-                                if (!WF_RERUN_PRECOND.contains(jobInfo.getStatus()))
+                                if (!WF_RERUN_PRECOND.contains(jobInfo.getStatus())){
+                                	LOG.warn("Rerun returning as job status is: "+jobInfo.getStatus());
                                     break;
-
+                                }
                                 reRun(cluster, jobId, props);
                                 status = Status.RUNNING.name();
                                 break;
@@ -614,7 +616,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     public static void reRun(Cluster cluster, String jobId, Properties props) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
-
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Properties jobprops = new XConfiguration(new StringReader(jobInfo.getConf())).toProperties();
@@ -626,10 +627,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
+            LOG.debug("About to reRun jobId:"+jobId);
             client.reRun(jobId, jobprops);
             LOG.info("Rerun job " + jobId + " on cluster " + cluster.getName());
             TransactionManager.performAction(new OozieWorkflowEngineAction(Action.RUN, cluster, jobId, null));
         } catch (Exception e) {
+        	 LOG.error("Unable to rerun workflows", e);
             throw new IvoryException(e);
         }
     }
