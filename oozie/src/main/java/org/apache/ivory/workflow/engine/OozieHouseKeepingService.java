@@ -51,7 +51,7 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
         try {
             FileSystem fs = workflowFolder.getFileSystem(new Configuration());
             LOG.info("Deleting workflow " + workflowFolder);
-            if (!fs.delete(workflowFolder, true)) {
+            if (fs.exists(workflowFolder) && !fs.delete(workflowFolder, true)) {
                 throw new IvoryException("Unable to cleanup workflow xml; " + "delete failed " + workflowFolder);
             }
         } catch (IOException e) {
