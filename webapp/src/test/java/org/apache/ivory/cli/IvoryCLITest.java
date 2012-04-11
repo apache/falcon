@@ -390,7 +390,7 @@ public class IvoryCLITest {
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"));
 	}
 
-	@Test(enabled = true)
+	@Test(enabled = enableTest)
 	public void testInstanceKillAndRerun() throws Exception {
 		Map<String, String> overlay = getUniqueOverlay();
 		submitTestFiles(overlay);
