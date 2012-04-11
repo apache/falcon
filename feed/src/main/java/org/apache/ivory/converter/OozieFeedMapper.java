@@ -107,8 +107,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put("limit", feedCluster.getRetention().getLimit());
             props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.DELETE.name());
             props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), feed.getName());
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), "");
-            props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.DELETE.name());
+            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), "IGNORE");
 
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);
