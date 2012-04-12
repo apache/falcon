@@ -108,7 +108,7 @@ public class ConfigurationStoreAction extends Action {
                 ConfigurationStore configStore = ConfigurationStore.get();
                 for (String clusterName : clusters) {
                     Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-                    Path entityFolder = new Path(ClusterHelper.getLocation(cluster, "staging"), entity.getStagingPath()).getParent();
+                    Path entityFolder = new Path(ClusterHelper.getCompleteLocation(cluster, "staging"), entity.getStagingPath()).getParent();
                     LOG.info("Deleting entity folder on cluster " + clusterName + ": " + entityFolder);
                     try {
                         FileSystem fs = entityFolder.getFileSystem(new Configuration());
