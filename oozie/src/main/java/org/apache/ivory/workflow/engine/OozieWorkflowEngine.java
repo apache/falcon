@@ -657,6 +657,21 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
     }
+    
+    @Override
+	public String instanceStatus(String cluster, String jobId)
+			throws IvoryException {
+		OozieClient client = OozieClientFactory.get(cluster);
+		try {
+			WorkflowJob jobInfo = client.getJobInfo(jobId);
+			Status status = jobInfo.getStatus();
+			LOG.debug("Status of jobId:" + status);
+			return status.name();
+		} catch (Exception e) {
+			LOG.error("Unable to get status of workflows", e);
+			throw new IvoryException(e);
+		}
+	}
 
     private String scheduleEntity(String cluster, Properties props, Entity entity) throws IvoryException {
         listener.beforeSchedule(cluster, entity);
