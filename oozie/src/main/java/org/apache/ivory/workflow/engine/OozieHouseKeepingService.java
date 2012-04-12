@@ -22,56 +22,60 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
-
-import java.io.IOException;
+import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.OozieClient;
 
 public class OozieHouseKeepingService implements WorkflowEngineActionListener {
 
     private static Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
 
     @Override
-    public void beforeSchedule(Cluster cluster, Entity entity) throws IvoryException {
+    public void beforeSchedule(String cluster, Entity entity) throws IvoryException {
     }
 
     @Override
-    public void afterSchedule(Cluster cluster, Entity entity) throws IvoryException {
+    public void afterSchedule(String cluster, String jobId) throws IvoryException {
     }
 
     @Override
-    public void beforeDelete(Cluster cluster, Entity entity) throws IvoryException {
+    public void beforeDelete(String cluster, String jobId) throws IvoryException {
     }
 
     @Override
-    public void afterDelete(Cluster cluster, Entity entity) throws IvoryException {
-        Path workflowFolder = new Path(ClusterHelper.getCompleteLocation(cluster, "staging"), entity.getStagingPath()).getParent();
+    public void afterDelete(String cluster, String jobId) throws IvoryException {
+        if(!jobId.endsWith("-B"))
+            return;
+        
+        //clean up bundle workflow
         try {
-            FileSystem fs = workflowFolder.getFileSystem(new Configuration());
-            LOG.info("Deleting workflow " + workflowFolder);
-            if (fs.exists(workflowFolder) && !fs.delete(workflowFolder, true)) {
-                throw new IvoryException("Unable to cleanup workflow xml; " + "delete failed " + workflowFolder);
+            OozieClient client = OozieClientFactory.get(cluster);
+            BundleJob bundle = client.getBundleJobInfo(jobId);
+            Path bundlePath = new Path(bundle.getAppPath());
+            FileSystem fs = bundlePath.getFileSystem(new Configuration());
+            LOG.info("Deleting workflow " + bundlePath);
+            if (fs.exists(bundlePath) && !fs.delete(bundlePath, true)) {
+                throw new IvoryException("Unable to cleanup workflow xml; " + "delete failed " + bundlePath);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new IvoryException("Unable to cleanup workflow xml", e);
         }
     }
 
     @Override
-    public void beforeSuspend(Cluster cluster, Entity entity) throws IvoryException {
+    public void beforeSuspend(String cluster, String jobId) throws IvoryException {
     }
 
     @Override
-    public void afterSuspend(Cluster cluster, Entity entity) throws IvoryException {
+    public void afterSuspend(String cluster, String jobId) throws IvoryException {
     }
 
     @Override
-    public void beforeResume(Cluster cluster, Entity entity) throws IvoryException {
+    public void beforeResume(String cluster, String jobId) throws IvoryException {
     }
 
     @Override
-    public void afterResume(Cluster cluster, Entity entity) throws IvoryException {
+    public void afterResume(String cluster, String jobId) throws IvoryException {
     }
 }

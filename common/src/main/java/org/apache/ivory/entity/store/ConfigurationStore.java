@@ -70,7 +70,7 @@ public class ConfigurationStore {
         }
 
         @Override
-        public String[] getImmutableProperties() {
+        public String[] getClustersDefined() {
             return null;
         }
     };

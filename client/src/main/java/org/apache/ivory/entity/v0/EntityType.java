@@ -33,18 +33,20 @@ import org.apache.ivory.entity.v0.process.Process;
  * Enum for types of entities in Ivory Process, Feed and Cluster
  */
 public enum EntityType {
-    FEED(Feed.class, "/schema/feed/feed-0.1.xsd"), 
-    PROCESS(Process.class, "/schema/process/process-0.1.xsd"), 
-    CLUSTER(Cluster.class, "/schema/cluster/cluster-0.1.xsd");
+    FEED(Feed.class, "/schema/feed/feed-0.1.xsd", "name"), 
+    PROCESS(Process.class, "/schema/process/process-0.1.xsd", "name", "validity.start"), 
+    CLUSTER(Cluster.class, "/schema/cluster/cluster-0.1.xsd", "name");
 
     private static final String NS = "http://www.w3.org/2001/XMLSchema";
 
     private final Class<? extends Entity> clazz;
     private JAXBContext jaxbContext;
     private Schema schema;
+    private String[] immutableProperties;
 
-    private EntityType(Class<? extends Entity> typeClass, String schemaFile) {
+    private EntityType(Class<? extends Entity> typeClass, String schemaFile, String... immutableProperties) {
         clazz = typeClass;
+        this.immutableProperties = immutableProperties;
         try {
             jaxbContext = JAXBContext.newInstance(typeClass);
             synchronized(this) {
@@ -74,5 +76,9 @@ public enum EntityType {
     
     public boolean isSchedulable() {
         return this != EntityType.CLUSTER;
+    }
+    
+    public String[] getImmutableProperties() {
+        return immutableProperties;
     }
 }

@@ -31,6 +31,7 @@ import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.Frequency;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -56,25 +57,6 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             paths.add(bundlePath);
         }
         return createAppProperties(clusters, paths);
-    }
-
-    @Override
-    public Cluster[] getScheduledClustersFor(Feed feed)
-            throws IvoryException {
-
-        List<Cluster> clusters = new ArrayList<Cluster>();
-        for (org.apache.ivory.entity.v0.feed.Cluster feedCluster :
-                feed.getClusters().getCluster()) {
-            String clusterName = feedCluster.getName();
-            Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-            clusters.add(cluster);
-        }
-        return clusters.toArray(new Cluster[clusters.size()]);
-    }
-
-    @Override
-    public List<ExternalId> getExternalIds(Feed feed, String cluster, Date start, Date end) throws IvoryException {
-        throw new IvoryException("getExternalIds is not supported for Feeds!");
     }
 
     @Override
@@ -108,5 +90,20 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
         return getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()), Frequency.valueOf(feed.getFrequency()),
                 feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
+    }
+
+    @Override
+    public List<ExternalId> getExternalIds(Feed feed, Date start, Date end) throws IvoryException {
+        throw new IvoryException("getExternalIds is not supported for Feeds!");
+    }
+
+    @Override
+    public List<ExternalId> getExternalIdsForRerun(Feed entity, Date start, Date end) throws IvoryException {
+        throw new IvoryException("getExternalIds is not supported for Feeds!");
+    }
+
+    @Override
+    public List<ExternalId> getMappedExternalIds(Entity entity, ExternalId extId) throws IvoryException {
+        throw new IvoryException("getExternalIds is not supported for Feeds!");
     }
 }

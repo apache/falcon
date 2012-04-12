@@ -18,19 +18,17 @@
 
 package org.apache.ivory.latedata;
 
-import org.apache.commons.el.ExpressionEvaluatorImpl;
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.expression.ExpressionHelper;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.expression.ExpressionHelper;
 
 public final class LateDataUtils {
 
@@ -38,13 +36,6 @@ public final class LateDataUtils {
             ExpressionEvaluatorImpl();
     private static final ExpressionHelper resolver = ExpressionHelper.get();
     
-    private static final ThreadLocal<DateFormat> format = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-        }
-    };
-
     private static final String L_P = "\\s*\\(\\s*";
     private static final String R_P = "\\s*\\)";
     private static final String NUM = "[-]?[0-9]+";
@@ -96,24 +87,11 @@ public final class LateDataUtils {
     public static String addOffset(String dateStr, String offsetExpr) throws IvoryException {
         try {
             Long durationInMillis = getDurationFromOffset(offsetExpr);
-            Date date = format.get().parse(dateStr.substring(0, 17));
-            return format.get().format(new Date(date.getTime() + durationInMillis));
+            Date date = EntityUtil.parseDateUTC(dateStr.substring(0, 17));
+            return EntityUtil.formatDateUTC(new Date(date.getTime() + durationInMillis));
         } catch (Exception e) {
             throw new IvoryException("Unable to add offset(" + offsetExpr + ") to " + dateStr, e);
         }
     }
 
-    public static long getTime(String timeZone, String dateStr) throws IvoryException {
-        try {
-            format.get().setTimeZone(TimeZone.getTimeZone(timeZone));
-            return format.get().parse(dateStr.substring(0, 17)).getTime();
-        } catch (ParseException e) {
-            throw new IvoryException("Unable to parse " + dateStr);
-        }
-    }
-
-    public static String toDateString(String timeZone, long time) {
-        format.get().setTimeZone(TimeZone.getTimeZone(timeZone));
-        return format.get().format(new Date(time));
-    }
 }

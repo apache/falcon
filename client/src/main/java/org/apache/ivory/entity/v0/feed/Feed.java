@@ -8,6 +8,8 @@
 
 package org.apache.ivory.entity.v0.feed;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -394,8 +396,10 @@ public class Feed extends Entity{
     }
 
     @Override
-    public String[] getImmutableProperties() {
-        String[] props = {"name"};
-        return props;
+    public String[] getClustersDefined() {
+        List<String> clusters = new ArrayList<String>();
+        for(Cluster cluster:getClusters().getCluster())
+            clusters.add(cluster.getName());
+        return clusters.toArray(new String[clusters.size()]);
     }
 }

@@ -36,8 +36,6 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
 public abstract class Entity {
     public abstract String getName();
 
-    public abstract String[] getImmutableProperties();
-
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {
             if (type.getEntityClass().equals(getClass())) {
@@ -139,4 +137,6 @@ public abstract class Entity {
     public Entity clone() {
         return fromString(getEntityType(), toString());
     }
+    
+    public abstract String[] getClustersDefined();
 }

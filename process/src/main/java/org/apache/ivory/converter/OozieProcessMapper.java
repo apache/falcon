@@ -20,6 +20,7 @@ package org.apache.ivory.converter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -236,23 +238,21 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         String coordName = process.getWorkflowName("LATE1");
         Path coordPath = getCoordPath(bundlePath, coordName);
 
-        String tz = process.getValidity().getTimezone();
-
         // coord attributes
         coord.setName(coordName);
-        long endTime = LateDataUtils.getTime(tz, process.getValidity().getEnd());
+        long endTime = EntityUtil.parseDateUTC(process.getValidity().getEnd()).getTime();
         long now = System.currentTimeMillis();
         if (endTime < now) {
             LOG.warn("Late data coordinator doesn't apply, as the end date is in past " + process.getValidity().getEnd());
             return null;
         }
 
-        long startTime = LateDataUtils.getTime(tz, process.getValidity().getStart());
+        long startTime = EntityUtil.parseDateUTC(process.getValidity().getStart()).getTime();
         if (startTime < now)
             startTime = now;
-        LOG.info("Using start time as : " + LateDataUtils.toDateString(tz, startTime));
+        LOG.info("Using start time as : " + EntityUtil.formatDateUTC(new Date(startTime)));
 
-        coord.setStart(LateDataUtils.addOffset(LateDataUtils.toDateString(tz, startTime), offsetExpr));
+        coord.setStart(LateDataUtils.addOffset(EntityUtil.formatDateUTC(new Date(startTime)), offsetExpr));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offsetExpr));
         coord.setTimezone(process.getValidity().getTimezone());
         coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");

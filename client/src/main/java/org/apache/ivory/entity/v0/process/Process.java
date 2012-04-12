@@ -407,8 +407,7 @@ public class Process extends Entity{
     }
 
     @Override
-    public String[] getImmutableProperties() {
-        String[] props = {"name", "validity.start"};
-        return props;
+    public String[] getClustersDefined() {
+        return new String[] { getCluster().getName() };
     }
 }

@@ -210,7 +210,7 @@ public class EntityManager {
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
-        String[] props = oldEntity.getImmutableProperties();
+        String[] props = oldEntity.getEntityType().getImmutableProperties();
         for (String prop : props) {
             Object oldProp, newProp;
             try {

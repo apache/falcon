@@ -45,6 +45,7 @@ public class OozieWorkflowEngineActionTest {
     private static final String WF_PATH = "/ivory/test/workflow";
     private static final String COORD_PATH = "/ivory/test/coordinator";
     private static EmbeddedCluster embCluster;
+    private static OozieWorkflowEngine workflowEgine = new OozieWorkflowEngine();
     
     @BeforeClass
     public void setUp() throws Exception {
@@ -79,7 +80,7 @@ public class OozieWorkflowEngineActionTest {
         props.put(OozieClient.USER_NAME, "guest");
         props.put(OozieClient.APP_PATH, "${nameNode}" + WF_PATH);
 
-        return OozieWorkflowEngine.run(cluster, props, null);
+        return workflowEgine.run(cluster.getName(), props);
     }
 
     private String submitCoord() throws Exception {
@@ -89,7 +90,7 @@ public class OozieWorkflowEngineActionTest {
         props.put(OozieClient.USER_NAME, "guest");
         props.put(OozieClient.COORDINATOR_APP_PATH, "${nameNode}" + COORD_PATH);
 
-        return OozieWorkflowEngine.run(cluster, props, null);
+        return workflowEgine.run(cluster.getName(), props);
     }
 
     @Test
@@ -115,7 +116,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitWorkflow();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.suspend(cluster, jobId);
+        workflowEgine.suspend(cluster.getName(), jobId);
         TransactionManager.rollback();
 
         assertStatus(jobId, WorkflowJob.Status.RUNNING);
@@ -126,7 +127,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitWorkflow();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.suspend(cluster, jobId);
+        workflowEgine.suspend(cluster.getName(), jobId);
         TransactionManager.commit();
 
         assertStatus(jobId, WorkflowJob.Status.SUSPENDED);
@@ -135,10 +136,10 @@ public class OozieWorkflowEngineActionTest {
     @Test
     public void testResumeRollback() throws Exception {
         String jobId = submitWorkflow();
-        OozieWorkflowEngine.suspend(cluster, jobId);
+        workflowEgine.suspend(cluster.getName(), jobId);
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.resume(cluster, jobId);
+        workflowEgine.resume(cluster.getName(), jobId);
         TransactionManager.rollback();
 
         assertStatus(jobId, WorkflowJob.Status.SUSPENDED);
@@ -147,10 +148,10 @@ public class OozieWorkflowEngineActionTest {
     @Test
     public void testResumeCommit() throws Exception {
         String jobId = submitWorkflow();
-        OozieWorkflowEngine.suspend(cluster, jobId);
+        workflowEgine.suspend(cluster.getName(), jobId);
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.resume(cluster, jobId);
+        workflowEgine.resume(cluster.getName(), jobId);
         TransactionManager.commit();
 
         assertStatus(jobId, WorkflowJob.Status.RUNNING);
@@ -161,7 +162,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitCoord();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.change(cluster, jobId, OozieClient.CHANGE_VALUE_CONCURRENCY + "=4");
+        workflowEgine.change(cluster.getName(), jobId, OozieClient.CHANGE_VALUE_CONCURRENCY + "=4");
         TransactionManager.rollback();
 
         assertCoordConcurrency(jobId, 2);
@@ -172,7 +173,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitCoord();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.change(cluster, jobId, OozieClient.CHANGE_VALUE_CONCURRENCY + "=4");
+        workflowEgine.change(cluster.getName(), jobId, OozieClient.CHANGE_VALUE_CONCURRENCY + "=4");
         TransactionManager.commit();
 
         assertCoordConcurrency(jobId, 4);
@@ -183,7 +184,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitWorkflow();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.kill(cluster, jobId);
+        workflowEgine.kill(cluster.getName(), jobId);
         TransactionManager.rollback();
 
         assertStatus(jobId, WorkflowJob.Status.RUNNING);
@@ -194,7 +195,7 @@ public class OozieWorkflowEngineActionTest {
         String jobId = submitWorkflow();
 
         TransactionManager.startTransaction();
-        OozieWorkflowEngine.kill(cluster, jobId);
+        workflowEgine.kill(cluster.getName(), jobId);
         TransactionManager.commit();
 
         assertStatus(jobId, WorkflowJob.Status.KILLED);

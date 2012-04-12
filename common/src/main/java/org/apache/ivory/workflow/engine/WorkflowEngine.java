@@ -41,6 +41,8 @@ public interface WorkflowEngine {
     String resume(Entity entity) throws IvoryException;
 
     String delete(Entity entity) throws IvoryException;
+    
+    void reRun(String cluster, String wfId, Properties props) throws IvoryException;
 
     boolean isActive(Entity entity) throws IvoryException;
 
