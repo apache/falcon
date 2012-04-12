@@ -31,6 +31,7 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.resource.ProcessInstanceManager;
 import org.apache.ivory.resource.ProcessInstancesResult;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 public class RetryHandler {
@@ -39,7 +40,8 @@ public class RetryHandler {
 
 	// TODO handle different retry options, currently immediate retry
 	public static void retry(String processName, String nominalTime,
-			String runId, TextMessage textMessage) throws IvoryException {
+			String runId, TextMessage textMessage, String wfId,
+			WorkflowEngine workflowEngine) throws IvoryException {
 
 		try {
 			ProcessInstanceManager instanceManager = new ProcessInstanceManager();
@@ -49,27 +51,25 @@ public class RetryHandler {
 			int intRunId = Integer.parseInt(runId);
 			String ivoryDate = getIvoryDate(nominalTime);
 			ProcessInstancesResult statusResult = new ProcessInstanceManager()
-			.getStatus(processName, ivoryDate, null);
+					.getStatus(processName, ivoryDate, null);
 			WorkflowStatus status;
-			 if(statusResult.getInstances()!=null){
-				 status=statusResult.getInstances()[0].status;
-				 if(status.equals(WorkflowStatus.RUNNING)){
-					 LOG.info("Re-enqueing message:"+processName+":"+ivoryDate);
-					 IvoryTopicSubscriber.sendMessage(textMessage);
-					 return;
-				 }
-			 }
+			if (statusResult.getInstances() != null) {
+				status = statusResult.getInstances()[0].status;
+				if (status.equals(WorkflowStatus.RUNNING)) {
+					LOG.info("Re-enqueing message:" + processName + ":"
+							+ ivoryDate);
+					IvoryTopicSubscriber.sendMessage(textMessage);
+					return;
+				}
+			}
 			if (attempts > intRunId) {
 				LOG.info("Retrying attempt" + (intRunId + 1)
 						+ " out of configured: " + attempts
 						+ " attempt for process instance::" + processName + ":"
-						+ nominalTime);
-				ProcessInstancesResult result = new ProcessInstanceManager()
-						.reRunInstance(processName, ivoryDate, null, null);
-				LOG.info("Automatic re-run:" + result.getStatus() + " -"
-						+ result.getMessage());
-				LOG.info(result.getInstances() == null ? "NULL" : result
-						.getInstances()[0]);
+						+ nominalTime + " And WorkflowId: " + wfId);
+
+				workflowEngine.reRun(processObj.getCluster().getName(), wfId,
+						null);
 			}
 		} catch (Exception e) {
 			LOG.error(e);
