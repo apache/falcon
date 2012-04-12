@@ -327,7 +327,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                             WorkflowJob mapJobInfo = getJobInfoByExternalId(cluster, mapExtId);
                             if (mapJobInfo != null && mapJobInfo.getStatus() == Status.RUNNING) {
                                 status = "LATE_RUNNING";
-                                continue;
+                                break;
                             }
                         }
 
@@ -335,7 +335,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                             reRun(cluster, jobInfo.getId(), props);
                             status = Status.RUNNING.name();
                         }
-                        break;
                     }
                     instStatusMap.put(extId.getDateAsString(), status);
                 }
