@@ -279,7 +279,7 @@ public class ProcessInstanceManager extends EntityManager {
 				+ nominalTime);
 		if (status.equalsIgnoreCase("FAILED")) {
 			LOG.debug(process + ":" + nominalTime + " Failed");
-			RetryHandler.retry( process,  nominalTime, runId, textMessage);
+			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine());
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		LOG.debug(process + ":" + nominalTime + " Succeeded");
