@@ -434,7 +434,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private String consolidateStatus(String newStatus, String oldStatus) {
         if (oldStatus == null || oldStatus.equals(NOT_STARTED)
-                || (oldStatus.equals(Status.SUCCEEDED.name()) && !newStatus.equals(NOT_STARTED)))
+                || (WF_RERUN_PRECOND.contains(Status.valueOf(oldStatus)) && !newStatus.equals(NOT_STARTED)))
             return newStatus;
         return oldStatus;
     }
