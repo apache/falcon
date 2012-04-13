@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
@@ -272,6 +273,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         long offset = -millis / (60000);
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
         props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalTime).getId());
 
         // inputs
         if (process.getInputs() != null) {
