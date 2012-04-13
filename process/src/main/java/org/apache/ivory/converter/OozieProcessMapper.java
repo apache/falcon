@@ -273,7 +273,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         long offset = -millis / (60000);
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
         props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalTime).getId());
+        
+        String nominalForExtId = "coord:dateOffset(coord:nominalTime(), #VAL#, 'MINUTE')";
+        nominalForExtId = nominalForExtId.replace("#VAL#", String.valueOf(offset));
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalForExtId).getId());
 
         // inputs
         if (process.getInputs() != null) {
