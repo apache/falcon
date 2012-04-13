@@ -87,14 +87,4 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     
     public abstract Date getNextStartTime(T entity, String cluster, Date now) throws IvoryException;
     
-    protected Date getNextStartTime(Date startTime, Frequency frequency, int periodicity, String timzone, Date now) {
-        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timzone));
-        startCal.setTime(startTime);
-        
-        while(startCal.getTime().before(now)) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(), periodicity);
-        }
-        return startCal.getTime();
-        
-    }
 }

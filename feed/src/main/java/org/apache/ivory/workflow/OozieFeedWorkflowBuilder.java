@@ -35,6 +35,7 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.util.OozieUtils;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
@@ -88,8 +89,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     @Override
     public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
-        return getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()), Frequency.valueOf(feed.getFrequency()),
-                feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
+        return OozieUtils.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
+                Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(),
+                feedCluster.getValidity().getTimezone(), now);
     }
 
     @Override

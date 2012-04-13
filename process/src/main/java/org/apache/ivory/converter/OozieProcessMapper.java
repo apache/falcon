@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -55,6 +56,7 @@ import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.util.OozieUtils;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -247,12 +249,13 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             return null;
         }
 
-        long startTime = EntityUtil.parseDateUTC(process.getValidity().getStart()).getTime();
-        if (startTime < now)
-            startTime = now;
-        LOG.info("Using start time as : " + EntityUtil.formatDateUTC(new Date(startTime)));
+        String processStartTime = process.getValidity().getStart();
+        Date startTime = OozieUtils.getNextStartTime(EntityUtil.parseDateUTC(processStartTime),
+                Frequency.valueOf(process.getFrequency()), process.getPeriodicity(),
+                process.getValidity().getTimezone(), new Date(now));
+        LOG.info("Using start time as (aligned to default) : " + EntityUtil.formatDateUTC(startTime));
 
-        coord.setStart(LateDataUtils.addOffset(EntityUtil.formatDateUTC(new Date(startTime)), offsetExpr));
+        coord.setStart(LateDataUtils.addOffset(EntityUtil.formatDateUTC(startTime), offsetExpr));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offsetExpr));
         coord.setTimezone(process.getValidity().getTimezone());
         coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");
