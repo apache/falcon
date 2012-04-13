@@ -278,7 +278,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
         props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);       
         
-        String nominalTimeForExtId = "coord:dateOffset(coord:nominalTime(), #VAL#, 'MINUTE')";
+        String nominalTimeForExtId = "${coord:dateOffset(coord:nominalTime(), #VAL#, 'MINUTE')}";
         nominalTimeForExtId = nominalTimeForExtId.replace("#VAL#", String.valueOf(offset));
         props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalTimeForExtId).getId());
 

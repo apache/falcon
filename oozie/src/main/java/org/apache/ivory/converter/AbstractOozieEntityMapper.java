@@ -131,7 +131,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.GENERATE.name());
 
         props.put(OozieClient.EXTERNAL_ID,
-                new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), "coord:nominalTime()").getId());
+                new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), "${coord:nominalTime()}").getId());
         props.put("queueName", "default");
 
         props.putAll(getEntityProperties());
