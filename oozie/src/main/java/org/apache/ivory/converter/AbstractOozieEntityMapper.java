@@ -130,8 +130,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
         props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.GENERATE.name());
 
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
-                "${coord:nominalTime()}").getId());
+        props.put(OozieClient.EXTERNAL_ID,
+                new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), "${coord:nominalTime()}").getId());
         props.put("queueName", "default");
 
         props.putAll(getEntityProperties());

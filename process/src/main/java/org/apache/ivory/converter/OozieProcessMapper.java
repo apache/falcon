@@ -243,9 +243,9 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // coord attributes
         coord.setName(coordName);
-        long endTime = EntityUtil.parseDateUTC(process.getValidity().getEnd()).getTime();
+        Date endTime = EntityUtil.parseDateUTC(process.getValidity().getEnd());
         long now = System.currentTimeMillis();
-        if (endTime < now) {
+        if (endTime.getTime() < now) {
             LOG.warn("Late data coordinator doesn't apply, as the end date is in past " + process.getValidity().getEnd());
             return null;
         }
@@ -255,6 +255,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 Frequency.valueOf(process.getFrequency()), process.getPeriodicity(),
                 process.getValidity().getTimezone(), new Date(now));
         LOG.info("Using start time as (aligned to default) : " + EntityUtil.formatDateUTC(startTime));
+        if(startTime.compareTo(endTime) >= 0 ) {
+            LOG.warn("Late data coordinator doesn't apply, start time is after end time" + process.getValidity().getEnd());
+            return null;            
+        }
 
         coord.setStart(LateDataUtils.addOffset(EntityUtil.formatDateUTC(startTime), offsetExpr));
         coord.setEnd(LateDataUtils.addOffset(process.getValidity().getEnd(), offsetExpr));
@@ -272,8 +276,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Long millis = LateDataUtils.getDurationFromOffset(offsetExpr);
         long offset = -millis / (60000);
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
-        props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalTime).getId());
+        props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);       
+        
+        String nominalTimeForExtId = "${coord:dateOffset(coord:nominalTime(), #VAL#, 'MINUTE')}";
+        nominalTimeForExtId = nominalTimeForExtId.replace("#VAL#", String.valueOf(offset));
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(process.getName(), process.getWorkflowNameTag(coordName), nominalTimeForExtId).getId());
 
         // inputs
         if (process.getInputs() != null) {
