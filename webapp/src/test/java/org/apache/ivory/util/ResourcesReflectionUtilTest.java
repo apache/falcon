@@ -32,7 +32,7 @@ public class ResourcesReflectionUtilTest {
 		Assert.assertEquals("submitAndSchedule",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManager.submitAndSchedule"));
 		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("EntityManager.submit").get(1));		
 		
-		Assert.assertEquals("kill",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.killProcessInstance"));
+		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.killProcessInstance"));
 		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.killProcessInstance").get(1));		
 	
 		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.instrumentWithAspect"));
