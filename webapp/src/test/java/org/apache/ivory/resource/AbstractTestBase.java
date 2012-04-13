@@ -122,10 +122,10 @@ public class AbstractTestBase {
             Thread.sleep(1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
             if (bundle.getStatus() == Status.RUNNING) {
-                boolean done = true;
+                boolean done = false;
                 for (CoordinatorJob coord : bundle.getCoordinators())
-                    if (coord.getStatus() != Status.RUNNING)
-                        done = false;
+                    if (coord.getStatus() == Status.RUNNING)
+                        done = true;
                 if (done == true)
                     return;
             }
