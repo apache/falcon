@@ -102,7 +102,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="kill")
+	@Monitored(event="kill-instance")
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
             @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
@@ -130,7 +130,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="suspend")
+	@Monitored(event="suspend-instance")
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
             @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
@@ -158,7 +158,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="resume")
+	@Monitored(event="resume-instance")
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
             @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
@@ -186,7 +186,7 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("rerun/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="re-run")
+	@Monitored(event="re-run-instance")
     public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
     		@Dimension("end-time")@QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {

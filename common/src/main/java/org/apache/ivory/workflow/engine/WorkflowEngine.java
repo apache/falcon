@@ -62,5 +62,7 @@ public interface WorkflowEngine {
 
     Map<String, Map<String, String>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
 
-    void update(Entity oldEntity, Entity newEntity) throws IvoryException;
+	void update(Entity oldEntity, Entity newEntity) throws IvoryException;
+
+	String instanceStatus(String cluster, String jobId) throws IvoryException;
 }

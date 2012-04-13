@@ -29,7 +29,6 @@ import org.apache.ivory.aspect.instances.IvoryTopicSubscriber;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.resource.ProcessInstanceManager;
-import org.apache.ivory.resource.ProcessInstancesResult;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -50,17 +49,13 @@ public class RetryHandler {
 			int attempts = processObj.getRetry().getAttempts();
 			int intRunId = Integer.parseInt(runId);
 			String ivoryDate = getIvoryDate(nominalTime);
-			ProcessInstancesResult statusResult = new ProcessInstanceManager()
-					.getStatus(processName, ivoryDate, null);
-			WorkflowStatus status;
-			if (statusResult.getInstances() != null) {
-				status = statusResult.getInstances()[0].status;
-				if (status.equals(WorkflowStatus.RUNNING)) {
-					LOG.info("Re-enqueing message:" + processName + ":"
-							+ ivoryDate);
-					IvoryTopicSubscriber.sendMessage(textMessage);
-					return;
-				}
+			String jobStatus = workflowEngine.instanceStatus(processObj
+					.getCluster().getName(), wfId);
+			if (!jobStatus.equals(WorkflowStatus.KILLED.name())) {
+				LOG.debug("Re-enqueing message:" + processName + ":"
+						+ ivoryDate);
+				IvoryTopicSubscriber.sendMessage(textMessage);
+				return;
 			}
 			if (attempts > intRunId) {
 				LOG.info("Retrying attempt" + (intRunId + 1)
