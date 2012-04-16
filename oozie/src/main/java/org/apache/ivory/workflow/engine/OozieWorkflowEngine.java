@@ -318,22 +318,20 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     WorkflowJob jobInfo = getJobInfoByExternalId(cluster, extId);
                     if (jobInfo != null) {
                         status = jobInfo.getStatus().name();
-                        if (!WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
-                            break;
-                        }
-
-                        List<ExternalId> mappedExtIds = builder.getMappedExternalIds(entity, extId);
-                        for (ExternalId mapExtId : mappedExtIds) {
-                            WorkflowJob mapJobInfo = getJobInfoByExternalId(cluster, mapExtId);
-                            if (mapJobInfo != null && mapJobInfo.getStatus() == Status.RUNNING) {
-                                status = "LATE_RUNNING";
-                                break;
+                        if (WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
+                            List<ExternalId> mappedExtIds = builder.getMappedExternalIds(entity, extId);
+                            for (ExternalId mapExtId : mappedExtIds) {
+                                WorkflowJob mapJobInfo = getJobInfoByExternalId(cluster, mapExtId);
+                                if (mapJobInfo != null && mapJobInfo.getStatus() == Status.RUNNING) {
+                                    status = "LATE_RUNNING";
+                                    break;
+                                }
                             }
-                        }
 
-                        if (!status.equals("LATE_RUNNING")) {
-                            reRun(cluster, jobInfo.getId(), props);
-                            status = Status.RUNNING.name();
+                            if (!status.equals("LATE_RUNNING")) {
+                                reRun(cluster, jobInfo.getId(), props);
+                                status = Status.RUNNING.name();
+                            }
                         }
                     }
                     instStatusMap.put(extId.getDateAsString(), status);
@@ -657,21 +655,20 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
     }
-    
+
     @Override
-	public String instanceStatus(String cluster, String jobId)
-			throws IvoryException {
-		OozieClient client = OozieClientFactory.get(cluster);
-		try {
-			WorkflowJob jobInfo = client.getJobInfo(jobId);
-			Status status = jobInfo.getStatus();
-			LOG.debug("Status of jobId:" + status);
-			return status.name();
-		} catch (Exception e) {
-			LOG.error("Unable to get status of workflows", e);
-			throw new IvoryException(e);
-		}
-	}
+    public String instanceStatus(String cluster, String jobId) throws IvoryException {
+        OozieClient client = OozieClientFactory.get(cluster);
+        try {
+            WorkflowJob jobInfo = client.getJobInfo(jobId);
+            Status status = jobInfo.getStatus();
+            LOG.debug("Status of jobId:" + status);
+            return status.name();
+        } catch (Exception e) {
+            LOG.error("Unable to get status of workflows", e);
+            throw new IvoryException(e);
+        }
+    }
 
     private String scheduleEntity(String cluster, Properties props, Entity entity) throws IvoryException {
         listener.beforeSchedule(cluster, entity);
