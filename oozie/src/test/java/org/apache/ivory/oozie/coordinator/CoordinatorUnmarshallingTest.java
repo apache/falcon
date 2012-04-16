@@ -40,7 +40,7 @@ public class CoordinatorUnmarshallingTest {
         Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.ivory.oozie.coordinator.COORDINATORAPP.class)
                 .createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-coordinator-0.2.xsd"));
+        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-coordinator-0.3.xsd"));
         unmarshaller.setSchema(schema);
         JAXBElement<COORDINATORAPP> coordinatorApp = (JAXBElement<COORDINATORAPP>) unmarshaller
                 .unmarshal(CoordinatorUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/coordinator.xml"));

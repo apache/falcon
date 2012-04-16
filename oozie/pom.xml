@@ -71,7 +71,7 @@
 <!-- 							<generateDirectory>src/main/java</generateDirectory> -->
 							<generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
 							<includeSchemas>
-								<includeSchema>oozie-coordinator-0.2.xsd</includeSchema>
+								<includeSchema>oozie-coordinator-0.3.xsd</includeSchema>
 							</includeSchemas>
 							<excludeBindings>
 								<exluceBinding>jaxb-binding.xjb</exluceBinding>
@@ -88,7 +88,7 @@
 <!-- 							<generateDirectory>src/main/java</generateDirectory> -->
 							<generatePackage>org.apache.ivory.oozie.workflow</generatePackage>
 							<includeSchemas>
-								<includeSchema>oozie-workflow-0.2.xsd</includeSchema>
+								<includeSchema>oozie-workflow-0.3.xsd</includeSchema>
 							</includeSchemas>
 							<excludeBindings>
 								<exluceBinding>jaxb-binding.xjb</exluceBinding>

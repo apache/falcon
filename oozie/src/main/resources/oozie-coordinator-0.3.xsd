@@ -16,8 +16,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:coordinator="uri:oozie:coordinator:0.2"
-           elementFormDefault="qualified" targetNamespace="uri:oozie:coordinator:0.2">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:coordinator="uri:oozie:coordinator:0.3"
+           elementFormDefault="qualified" targetNamespace="uri:oozie:coordinator:0.3">
 
     <xs:element name="coordinator-app" type="coordinator:COORDINATOR-APP"/>
     <xs:element name="datasets" type="coordinator:DATASETS"/>

@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License. See accompanying LICENSE file.
 -->
-<coordinator-app frequency="${coord:days(1)}" name="fs-coord" start="2012-03-20T08:00Z" end="2012-03-25T08:00Z"  timezone="UTC" xmlns="uri:oozie:coordinator:0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<coordinator-app frequency="${coord:days(1)}" name="fs-coord" start="2012-03-20T08:00Z" end="2012-03-25T08:00Z"  timezone="UTC" xmlns="uri:oozie:coordinator:0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <controls>
     <timeout>10</timeout>
     <concurrency>2</concurrency>
