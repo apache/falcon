@@ -16,6 +16,16 @@ import java.util.Map;
 public final class UpdateHelper {
     private static final Logger LOG = Logger.getLogger(UpdateHelper.class);
 
+    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity) {                    
+        if(oldEntity.getEntityType() == EntityType.PROCESS) {
+            Process clonedEntity = (Process) newEntity.clone();
+            clonedEntity.setRetry(((Process)oldEntity).getRetry());
+            if(clonedEntity.deepEquals(oldEntity))
+                return false;
+        }
+        return true;
+    }
+    
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity,
                                        Entity affectedEntity) throws IvoryException {
         if (oldEntity.getEntityType() == EntityType.FEED &&
