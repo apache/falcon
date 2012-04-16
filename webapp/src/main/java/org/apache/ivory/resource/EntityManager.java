@@ -56,6 +56,7 @@ import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.update.UpdateHelper;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -189,11 +190,8 @@ public class EntityManager {
             Entity newEntity = deserializeEntity(request, entityType);
             validate(newEntity);
             
+            validateUpdate(oldEntity, newEntity);
             if (!oldEntity.deepEquals(newEntity)) {
-                if (entityType == EntityType.CLUSTER)
-                    throw new IvoryException("Update not supported for clusters");
-
-                validateUpdate(oldEntity, newEntity);
                 configStore.initiateUpdate(newEntity);
                 getWorkflowEngine().update(oldEntity, newEntity);
                 configStore.update(entityType, newEntity);
@@ -210,6 +208,12 @@ public class EntityManager {
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
+        if(oldEntity.getEntityType() != newEntity.getEntityType())
+            throw new IvoryException(oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString()); 
+            
+        if(oldEntity.getEntityType() == EntityType.CLUSTER)
+            throw new IvoryException("Update not supported for clusters");
+        
         String[] props = oldEntity.getEntityType().getImmutableProperties();
         for (String prop : props) {
             Object oldProp, newProp;
@@ -220,7 +224,7 @@ public class EntityManager {
                 throw new IvoryException(e);
             }
             if (!ObjectUtils.equals(oldProp, newProp))
-                throw new ValidationException(prop + " can't be changed");
+                throw new ValidationException(oldEntity.toShortString() + ": " + prop + " can't be changed");
         }
     }
 

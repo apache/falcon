@@ -439,6 +439,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public void update(Entity oldEntity, Entity newEntity) throws IvoryException {
+        if(!UpdateHelper.shouldUpdate(oldEntity, newEntity))
+            return;
+        
         Map<String, BundleJob> bundleMap = findLatestBundle(oldEntity);
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
