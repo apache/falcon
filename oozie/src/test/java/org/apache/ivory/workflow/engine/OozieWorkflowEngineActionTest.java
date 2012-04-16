@@ -57,7 +57,7 @@ public class OozieWorkflowEngineActionTest {
         Path hdfsUrl = new Path(ClusterHelper.getHdfsUrl(cluster));
         Path workflowPath = new Path(WF_PATH);
         FileSystem fs = hdfsUrl.getFileSystem(new Configuration());
-        FsPermission perm = new FsPermission((short) 777);
+        FsPermission perm = new FsPermission((short) 511);
         fs.mkdirs(workflowPath, perm);
         fs.copyFromLocalFile(new Path(this.getClass().getResource("/fs-workflow.xml").getPath()), new Path(workflowPath,
                 "workflow.xml"));
