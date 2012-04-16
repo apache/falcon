@@ -111,7 +111,7 @@
 			<xs:element type="locations" name="locations" />
 			<xs:element type="ACL" name="ACL" />
 			<xs:element type="schema" name="schema" />
-			<xs:element type="properties" name="properties" />
+			<xs:element type="properties" name="properties" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute type="IDENTIFIER" name="name" use="required"/>
 		<xs:attribute type="xs:string" name="description" />

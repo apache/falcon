@@ -91,10 +91,10 @@
  				</xs:simpleType>
 			</xs:element>			
 			<xs:element type="validity" name="validity" />
-			<xs:element type="inputs" name="inputs">
+			<xs:element type="inputs" name="inputs" minOccurs="0">
 			</xs:element>
-			<xs:element type="outputs" name="outputs" />
-			<xs:element type="properties" name="properties">
+			<xs:element type="outputs" name="outputs" minOccurs="0"/>
+			<xs:element type="properties" name="properties" minOccurs="0">
 			</xs:element>
 			<xs:element type="workflow" name="workflow" />
 			<xs:element type="retry" name="retry" />
