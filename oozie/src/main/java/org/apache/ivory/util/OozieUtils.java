@@ -15,17 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.ivory.util;
 
-package org.apache.ivory.service;
+import java.util.Calendar;
+import java.util.Date;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.parser.Frequency;
 
-public interface ConfigurationChangeListener {
+public final class OozieUtils {
 
-    void onAdd(Entity entity) throws IvoryException;
+	public static Date getNextStartTime(Date startTime, Frequency frequency,
+			int periodicity, String timzone, Date now) {
 
-    void onRemove(Entity entity) throws IvoryException;
+		Calendar startCal = Calendar.getInstance(EntityUtil
+				.getTimeZone(timzone));
+		startCal.setTime(startTime);
 
-    void onChange(Entity oldEntity, Entity newEntity) throws IvoryException;
+		while (startCal.getTime().before(now)) {
+			startCal.add(frequency.getTimeUnit().getCalendarUnit(), periodicity);
+		}
+		return startCal.getTime();
+	}
 }

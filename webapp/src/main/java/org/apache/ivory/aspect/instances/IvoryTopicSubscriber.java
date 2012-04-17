@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -49,7 +50,8 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String userName;
 	private String password;
 	private String url;
-	private String topicName;
+	private static String topicName;
+	private static Connection connection;
 	private ProcessInstanceManager processInstanceManager = new ProcessInstanceManager();
 
 	public IvoryTopicSubscriber(String implementation, String userName,
@@ -58,14 +60,14 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		this.userName = userName;
 		this.password = password;
 		this.url = url;
-		this.topicName = topicName;
+		IvoryTopicSubscriber.topicName = topicName;
 	}
 
 	public void startSubscriber() throws IvoryException {
 		try {
 			//TODO lets not create a unique topic connection id with every restart
 			UUID uuid=UUID.randomUUID();
-			Connection connection = createAndGetConnection(
+			connection = createAndGetConnection(
 					implementation, userName, password, url);
 			connection.setClientID(IVORY_PROCESS_TOPIC_CLIENT+"-"+uuid);
 			TopicSession session = (TopicSession) connection.createSession(
@@ -100,7 +102,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			try {
 				LOG.debug("Instrumenting with aspect: "+processName+":"+nominalTime);
 				processInstanceManager.instrumentWithAspect(processName, feedName, feedpath,
-						nominalTime, timeStamp, status, workflowId, runId);
+						nominalTime, timeStamp, status, workflowId, runId, textmessage);
 			} catch (Exception ignore) {
 				// mocked exception
 			}
@@ -151,6 +153,20 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 
 	@Override
 	public String toString() {
-		return this.topicName;
+		return IvoryTopicSubscriber.topicName;
+	}
+	
+	public static void sendMessage(Message textMessage)
+			throws JMSException {
+
+		Session session = connection.createSession(false,
+				Session.AUTO_ACKNOWLEDGE);
+		Topic entityTopic = session.createTopic(IvoryTopicSubscriber.topicName);
+		javax.jms.MessageProducer producer = session
+				.createProducer(entityTopic);
+		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+		producer.send(textMessage);
+
 	}
 }

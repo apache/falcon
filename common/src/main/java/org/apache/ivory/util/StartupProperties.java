@@ -18,9 +18,10 @@
 
 package org.apache.ivory.util;
 
-import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.ivory.IvoryException;
 
 public class StartupProperties extends ApplicationProperties {
 
@@ -29,7 +30,7 @@ public class StartupProperties extends ApplicationProperties {
   private static final AtomicReference<StartupProperties> instance =
       new AtomicReference<StartupProperties>();
 
-  private StartupProperties() throws IOException {
+  private StartupProperties() throws IvoryException {
     super();
   }
 
@@ -44,7 +45,7 @@ public class StartupProperties extends ApplicationProperties {
         instance.compareAndSet(null, new StartupProperties());
       }
       return instance.get();
-    } catch (IOException e) {
+    } catch (IvoryException e) {
       throw new RuntimeException("Unable to read application " +
           "startup properties", e);
     }

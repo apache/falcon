@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.jms.TextMessage;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -47,6 +48,7 @@ import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.util.RetryHandler;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -100,10 +102,10 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="kill")
+	@Monitored(event="kill-instance")
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
@@ -128,10 +130,10 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("suspend/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="suspend")
+	@Monitored(event="suspend-instance")
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
@@ -156,10 +158,10 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("resume/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="resume")
+	@Monitored(event="resume-instance")
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
+            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
@@ -184,9 +186,9 @@ public class ProcessInstanceManager extends EntityManager {
     @POST
     @Path("rerun/{process}")
     @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="re-run")
-    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr, @Context HttpServletRequest request) {
+	@Monitored(event="re-run-instance")
+    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+    		@Dimension("end-time")@QueryParam("end") String endStr, @Context HttpServletRequest request) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
@@ -197,7 +199,7 @@ public class ProcessInstanceManager extends EntityManager {
             Process process = getProcess(processName);
             
             Properties props = new Properties();
-            ServletInputStream xmlStream = request.getInputStream();
+            ServletInputStream xmlStream = request==null?null:request.getInputStream();
             if (xmlStream != null) {
                 if (xmlStream.markSupported()) {
                     xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
@@ -272,11 +274,12 @@ public class ProcessInstanceManager extends EntityManager {
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId) throws Exception {
+			@Dimension(value = "runId") String runId, TextMessage textMessage) throws Exception {
 		LOG.debug("inside instrumentWithAspect method: " + process + ":"
 				+ nominalTime);
 		if (status.equalsIgnoreCase("FAILED")) {
 			LOG.debug(process + ":" + nominalTime + " Failed");
+			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine());
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		LOG.debug(process + ":" + nominalTime + " Succeeded");

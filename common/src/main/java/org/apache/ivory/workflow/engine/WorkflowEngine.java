@@ -41,6 +41,8 @@ public interface WorkflowEngine {
     String resume(Entity entity) throws IvoryException;
 
     String delete(Entity entity) throws IvoryException;
+    
+    void reRun(String cluster, String wfId, Properties props) throws IvoryException;
 
     boolean isActive(Entity entity) throws IvoryException;
 
@@ -60,5 +62,7 @@ public interface WorkflowEngine {
 
     Map<String, Map<String, String>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
 
-    void update(Entity oldEntity, Entity newEntity) throws IvoryException;
+	void update(Entity oldEntity, Entity newEntity) throws IvoryException;
+
+	String instanceStatus(String cluster, String jobId) throws IvoryException;
 }

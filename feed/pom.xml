@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.ivory</groupId>
         <artifactId>ivory-main</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
     <artifactId>ivory-feed</artifactId>
     <description>Ivory Feed Module</description>

@@ -218,8 +218,7 @@ public class Cluster extends Entity{
     }
 
     @Override
-    public String[] getImmutableProperties() {
-        String[] props = {"name"};
-        return props;
+    public String[] getClustersDefined() {
+        return new String[]{getName()};
     }
 }

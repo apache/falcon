@@ -3,9 +3,6 @@ package org.apache.ivory.resource;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
-import java.util.Map.Entry;
-import java.util.Properties;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.ivory.entity.EntityUtil;
@@ -52,40 +49,31 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     public void testReRunInstances() throws Exception {
         testKillInstances();
 
-        Properties props = new Properties();
-        props.put(OozieClient.RERUN_FAIL_NODES, "true");
-
-        StringBuffer buffer = new StringBuffer();
-        for (Entry<Object, Object> entry : props.entrySet()) {
-            buffer.append(entry.getKey()).append("=").append(entry.getValue()).append("\n");
-        }
-
-        this.service.type(MediaType.TEXT_PLAIN);
         ProcessInstancesResult response = this.service.path("api/processinstance/rerun/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
-                .post(ProcessInstancesResult.class, buffer.toString());
+                .queryParam("start", "2012-04-12T05:30Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .post(ProcessInstancesResult.class);
 
         assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
-        assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals("2012-04-12T05:30Z", response.getInstances()[0].getInstance());
         assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
 
-        waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.RUNNING);
+        waitForWorkflow("2012-04-12T05:30Z", WorkflowJob.Status.RUNNING);
     }
 
     public void testKillInstances() throws Exception {
         schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/kill/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", "2012-04-12T05:30Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
         assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         assertNotNull(response.getInstances());
         assertEquals(1, response.getInstances().length);
-        assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertEquals("2012-04-12T05:30Z", response.getInstances()[0].getInstance());
         assertEquals(WorkflowStatus.KILLED, response.getInstances()[0].getStatus());
 
-        waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.KILLED);
+        waitForWorkflow("2012-04-12T05:30Z", WorkflowJob.Status.KILLED);
     }
 
     public void testSuspendInstances() throws Exception {

@@ -15,7 +15,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<workflow-app xmlns='uri:oozie:workflow:0.2' name='ivory-process-parent-workflow'>
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-process-parent-workflow'>
 	<start to='detectlate' />
 	<action name='detectlate'>
 		<java>

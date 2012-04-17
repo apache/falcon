@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
     public static enum WorkflowStatus {
-        WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+        WAITING, LATE_RUNNING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
     }
     
     @XmlRootElement (name = "pinstance")
@@ -36,6 +36,11 @@ public class ProcessInstancesResult extends APIResult {
         
         public WorkflowStatus getStatus() {
             return status;
+        }
+        
+        @Override
+        public String toString() {
+        	return "{instance:"+this.instance+",status:"+this.status+"}";
         }
     }
     

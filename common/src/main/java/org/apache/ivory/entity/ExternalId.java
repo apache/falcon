@@ -38,8 +38,13 @@ public class ExternalId {
         return EntityUtil.parseDateUTC(getDateAsString());            
     }
     
-    public String getDateAsString() throws IvoryException {
+    public String getDateAsString() {
         String[] parts = id.split(SEPARATOR);
         return parts[2];
+    }
+    
+    public String getTag() {
+        String[] parts = id.split(SEPARATOR);
+        return parts[1];
     }
 }

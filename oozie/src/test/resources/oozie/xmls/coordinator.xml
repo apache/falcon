@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns="uri:oozie:coordinator:0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.2 ../../main/resources/coordinator.xsd ">
+<coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns="uri:oozie:coordinator:0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.2 ../../main/resources/coordinator.xsd ">
   <controls>
     <timeout>timeout</timeout>
     <concurrency>concurrency</concurrency>

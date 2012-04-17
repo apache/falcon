@@ -47,6 +47,7 @@ import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
@@ -55,6 +56,7 @@ import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.update.UpdateHelper;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -120,10 +122,10 @@ public class EntityManager {
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
-
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity entity = deserializeEntity(request, entityType);
+            validate(entity);
             return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Validation failed for entity (" + type + ") ", e);
@@ -161,7 +163,8 @@ public class EntityManager {
                 }
             }
             configStore.remove(entityType, entity);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully " + removedFromEngine);
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
+                    + removedFromEngine);
             TransactionManager.commit();
           
             return result;
@@ -186,15 +189,15 @@ public class EntityManager {
             audit(request, entityName, type, "UPDATE");
             Entity oldEntity = getEntityObject(entityName, type);
             Entity newEntity = deserializeEntity(request, entityType);
+            validate(newEntity);
+            
+            validateUpdate(oldEntity, newEntity);
             if (!oldEntity.deepEquals(newEntity)) {
-                if (entityType == EntityType.CLUSTER)
-                    throw new IvoryException("Update not supported for clusters");
-
-                validateUpdate(oldEntity, newEntity);
                 configStore.initiateUpdate(newEntity);
                 getWorkflowEngine().update(oldEntity, newEntity);
                 configStore.update(entityType, newEntity);
             }
+            
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
             TransactionManager.commit();
             return result;
@@ -206,7 +209,13 @@ public class EntityManager {
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
-        String[] props = oldEntity.getImmutableProperties();
+        if(oldEntity.getEntityType() != newEntity.getEntityType())
+            throw new IvoryException(oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString()); 
+            
+        if(oldEntity.getEntityType() == EntityType.CLUSTER)
+            throw new IvoryException("Update not supported for clusters");
+        
+        String[] props = oldEntity.getEntityType().getImmutableProperties();
         for (String prop : props) {
             Object oldProp, newProp;
             try {
@@ -216,7 +225,7 @@ public class EntityManager {
                 throw new IvoryException(e);
             }
             if (!ObjectUtils.equals(oldProp, newProp))
-                throw new ValidationException(prop + " can't be changed");
+                throw new ValidationException(oldEntity.toShortString() + ": " + prop + " can't be changed");
         }
     }
 
@@ -235,21 +244,26 @@ public class EntityManager {
     protected Entity submitInternal(HttpServletRequest request, String type) throws IOException, IvoryException {
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
+        
         ConfigurationStore configStore = ConfigurationStore.get();
+        if(configStore.get(entityType, entity.getName()) != null)
+            throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
+                    + "Can't be submitted again. Try removing before submitting.");
+
+        validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: (" + type + ")" + entity.getName());
         return entity;
     }
 
     private Entity deserializeEntity(HttpServletRequest request, EntityType entityType) throws IOException, IvoryException {
-
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         InputStream xmlStream = request.getInputStream();
         if (xmlStream.markSupported()) {
             xmlStream.mark(XML_DEBUG_LEN); // mark up to debug len
         }
         try {
-            return entityParser.parseAndValidate(xmlStream);
+            return entityParser.parse(xmlStream);
         } catch (IvoryException e) {
             if (LOG.isDebugEnabled() && xmlStream.markSupported()) {
                 try {
@@ -263,6 +277,11 @@ public class EntityManager {
         }
     }
 
+    private void validate(Entity entity) throws IvoryException {
+        EntityParser entityParser = EntityParserFactory.getParser(entity.getEntityType());
+        entityParser.validate(entity);
+    }
+
     private String getAsString(InputStream xmlStream) throws IOException {
         byte[] data = new byte[XML_DEBUG_LEN];
         IOUtils.readFully(xmlStream, data, 0, XML_DEBUG_LEN);
@@ -270,6 +289,10 @@ public class EntityManager {
     }
 
     protected void audit(HttpServletRequest request, String entity, String type, String action) {
+
+        if (request == null) {
+            return; // this must be internal call from Ivory
+        }
         AUDIT.info("Performed " + action + " on " + entity + "(" + type + ") :: " + request.getRemoteHost() + "/"
                 + CurrentUser.getUser());
     }
@@ -392,7 +415,7 @@ public class EntityManager {
         }
     }
 
-    protected Entity getEntityObject(String entity, String type) throws IvoryException {
+    public Entity getEntityObject(String entity, String type) throws IvoryException {
         Entity entityObj = getEntity(entity, type);
         if (entityObj == null) {
             throw new NoSuchElementException(entity + " (" + type + ") not found");

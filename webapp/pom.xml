@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.ivory</groupId>
     <artifactId>ivory-main</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
   <artifactId>ivory-webapp</artifactId>
   <description>Ivory Web Application</description>
@@ -160,6 +160,10 @@
 						<include>org/apache/ivory/aspect/LoggingAspect.java</include>
 					</includes>
 					<weaveDependencies>
+					<weaveDependency>
+      						<groupId>org.apache.ivory</groupId>
+      						<artifactId>ivory-common</artifactId>
+						</weaveDependency>
 						<weaveDependency>
 							<groupId>com.inmobi.ivory</groupId>
 							<artifactId>ivory-monitoring</artifactId>

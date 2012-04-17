@@ -28,22 +28,20 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
 /**
- * Abstract Ivory Aspect,
- * which intercept methods annotated with Monitored
- * and publishes messages.
- * Subclasses should override publishMessage Method.
+ * Abstract Ivory Aspect, which intercept methods annotated with Monitored and
+ * publishes messages. Subclasses should override publishMessage Method.
  */
 @Aspect
 public abstract class AbstractIvoryAspect {
-	
+
 	private static final Logger LOG = Logger
 			.getLogger(AbstractIvoryAspect.class);
-	
+
 	@Around("@annotation(org.apache.ivory.monitors.Monitored)")
 	public Object LogAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();
-		LOG.debug("Before invoke of method: "+methodName);
+		LOG.debug("Before invoke of method: " + methodName);
 		Object[] args = joinPoint.getArgs();
 		Object result = null;
 		ResourceMessage.Status status;
@@ -51,7 +49,7 @@ public abstract class AbstractIvoryAspect {
 		long startTime = System.nanoTime();
 		long endTime;
 		try {
-			LOG.debug("During invoke of method: "+methodName);
+			LOG.debug("During invoke of method: " + methodName);
 			result = joinPoint.proceed();
 		} catch (Exception e) {
 			endTime = System.nanoTime();
@@ -59,14 +57,14 @@ public abstract class AbstractIvoryAspect {
 			publishMessage(getResourceMessage(joinPoint.getSignature()
 					.getDeclaringType().getSimpleName()
 					+ "." + methodName, args, status, endTime - startTime));
-			LOG.debug("After invoke of method: "+methodName);
+			LOG.debug("After invoke of method: " + methodName);
 			throw e;
 		}
-		LOG.debug("After invoke of method: "+methodName);
+		LOG.debug("After invoke of method: " + methodName);
 		endTime = System.nanoTime();
 		status = ResourceMessage.Status.SUCCEEDED;
-		publishMessage(getResourceMessage(joinPoint.getSignature().getDeclaringType()
-				.getSimpleName()
+		publishMessage(getResourceMessage(joinPoint.getSignature()
+				.getDeclaringType().getSimpleName()
 				+ "." + methodName, args, status, endTime - startTime));
 		return result;
 	}
@@ -80,9 +78,17 @@ public abstract class AbstractIvoryAspect {
 				+ " not parsed by reflection util";
 		Map<String, String> dimensions = new HashMap<String, String>();
 
-		for (Map.Entry<Integer, String> param : ResourcesReflectionUtil
-				.getResourceDimensionsName(methodName).entrySet()) {
-			dimensions.put(param.getValue(), args[param.getKey()].toString());
+		if (ResourcesReflectionUtil.getResourceDimensionsName(methodName) == null) {
+			LOG.warn("Class for method name: " + methodName
+					+ " is not added to ResourcesReflectionUtil");
+		} else {
+			for (Map.Entry<Integer, String> param : ResourcesReflectionUtil
+					.getResourceDimensionsName(methodName).entrySet()) {
+				dimensions.put(
+						param.getValue(),
+						args[param.getKey()] == null ? "NULL" : args[param
+								.getKey()].toString());
+			}
 		}
 		return new ResourceMessage(action, dimensions, status, executionTime);
 	}

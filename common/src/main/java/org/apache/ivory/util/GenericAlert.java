@@ -15,17 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.ivory.util;
 
-package org.apache.ivory.service;
+import org.apache.ivory.monitors.Dimension;
+import org.apache.ivory.monitors.Monitored;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.Entity;
+/**
+ * Create a method with params you want to monitor via Aspect and log in metric
+ * and iMon, invoke this method from code.
+ */
+public class GenericAlert {
+	@Monitored(event = "TransactionRollbackFailed")
+	public static String alertRollbackFailure(
+			@Dimension(value = "transactionId") String transactionId) {
+		return transactionId;
+	}
 
-public interface ConfigurationChangeListener {
-
-    void onAdd(Entity entity) throws IvoryException;
-
-    void onRemove(Entity entity) throws IvoryException;
-
-    void onChange(Entity oldEntity, Entity newEntity) throws IvoryException;
 }

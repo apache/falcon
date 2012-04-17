@@ -10,12 +10,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
@@ -32,6 +41,7 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.listener.ContextStartupListener;
 import org.apache.ivory.util.EmbeddedServer;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
@@ -112,10 +122,10 @@ public class AbstractTestBase {
             Thread.sleep(1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
             if (bundle.getStatus() == Status.RUNNING) {
-                boolean done = true;
+                boolean done = false;
                 for (CoordinatorJob coord : bundle.getCoordinators())
-                    if (coord.getStatus() != Status.RUNNING)
-                        done = false;
+                    if (coord.getStatus() == Status.RUNNING)
+                        done = true;
                 if (done == true)
                     return;
             }
@@ -136,7 +146,8 @@ public class AbstractTestBase {
 
     @BeforeClass
     public void configure() throws Exception {
-        StartupProperties.get().setProperty("application.services", "");
+        StartupProperties.get().setProperty("application.services", 
+                StartupProperties.get().getProperty("application.services").replace("org.apache.ivory.aspect.instances.ProcessSubscriberService", ""));
         if (new File("webapp/src/main/webapp").exists()) {
             this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
         } else if (new File("src/main/webapp").exists()) {

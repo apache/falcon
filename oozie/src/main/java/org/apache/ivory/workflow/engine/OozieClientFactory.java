@@ -20,6 +20,8 @@ package org.apache.ivory.workflow.engine;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
@@ -51,6 +53,9 @@ public class OozieClientFactory {
         }
     }
 
+    public static OozieClient get(String cluster) throws IvoryException {
+        return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, cluster));
+    }
     private static OozieClient getClientRef(String oozieUrl)
             throws IvoryException {
         if (LOCAL_OOZIE.equals(oozieUrl)) {

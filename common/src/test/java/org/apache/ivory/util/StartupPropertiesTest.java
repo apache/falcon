@@ -16,16 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.service;
+package org.apache.ivory.util;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.Entity;
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
-public interface ConfigurationChangeListener {
-
-    void onAdd(Entity entity) throws IvoryException;
-
-    void onRemove(Entity entity) throws IvoryException;
-
-    void onChange(Entity oldEntity, Entity newEntity) throws IvoryException;
+@Test
+public class StartupPropertiesTest {
+    @BeforeClass
+    public void setUp() {
+        StartupProperties.get();
+    }
+    
+    public void testDomain() {
+        StartupProperties props = (StartupProperties) StartupProperties.get();
+        assertEquals("debug", props.getDomain());
+        assertEquals("/tmp/ivory/journal", props.get("fs.journal.path"));
+        assertEquals("IVORY.PROCESS.TOPIC", props.get("process.topic"));
+    }
 }

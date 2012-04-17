@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License. See accompanying LICENSE file.
 -->
-<workflow-app xmlns="uri:oozie:workflow:0.2" name="fs-workflow">
+<workflow-app xmlns="uri:oozie:workflow:0.3" name="fs-workflow">
     <start to="fs-cmds"/>
     <action name="fs-cmds">
         <fs>
