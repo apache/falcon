@@ -92,6 +92,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         try {
             //
             WORKFLOWAPP retWfApp = createRetentionWorkflow(cluster);
+            retWfApp.setName(wfName);
             marshal(cluster, retWfApp, wfPath);
             retentionWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
 
