@@ -18,36 +18,21 @@
 
 package org.apache.ivory.util;
 
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
+import static org.testng.AssertJUnit.assertEquals;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
-import org.apache.ivory.IvoryException;
-
-public class StartupProperties extends ApplicationProperties {
-
-  private static final String PROPERTY_FILE = "startup.properties";
-
-  private static final AtomicReference<StartupProperties> instance =
-      new AtomicReference<StartupProperties>();
-
-  private StartupProperties() throws IvoryException {
-    super();
-  }
-
-  @Override
-  protected String getPropertyFile() {
-    return PROPERTY_FILE;
-  }
-
-  public static Properties get() {
-    try {
-      if (instance.get() == null) {
-        instance.compareAndSet(null, new StartupProperties());
-      }
-      return instance.get();
-    } catch (IvoryException e) {
-      throw new RuntimeException("Unable to read application " +
-          "startup properties", e);
+@Test
+public class StartupPropertiesTest {
+    @BeforeClass
+    public void setUp() {
+        StartupProperties.get();
     }
-  }
+    
+    public void testDomain() {
+        StartupProperties props = (StartupProperties) StartupProperties.get();
+        assertEquals("debug", props.getDomain());
+        assertEquals("/tmp/ivory/journal", props.get("fs.journal.path"));
+        assertEquals("IVORY.PROCESS.TOPIC", props.get("process.topic"));
+    }
 }

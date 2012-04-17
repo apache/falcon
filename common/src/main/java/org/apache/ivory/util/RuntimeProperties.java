@@ -18,11 +18,11 @@
 
 package org.apache.ivory.util;
 
-import org.apache.log4j.Logger;
-
-import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.ivory.IvoryException;
+import org.apache.log4j.Logger;
 
 public class RuntimeProperties extends ApplicationProperties {
 
@@ -33,7 +33,7 @@ public class RuntimeProperties extends ApplicationProperties {
   private static final AtomicReference<RuntimeProperties> instance =
       new AtomicReference<RuntimeProperties>();
 
-  private RuntimeProperties() throws IOException {
+  private RuntimeProperties() throws IvoryException {
     super();
     Thread refreshThread = new Thread(new DynamicLoader(this));
     refreshThread.start();
@@ -50,7 +50,7 @@ public class RuntimeProperties extends ApplicationProperties {
         instance.compareAndSet(null, new RuntimeProperties());
       }
       return instance.get();
-    } catch (IOException e) {
+    } catch (IvoryException e) {
       throw new RuntimeException("Unable to read application " +
           "runtime properties", e);
     }
@@ -74,7 +74,7 @@ public class RuntimeProperties extends ApplicationProperties {
           try {
             applicationProperties.loadProperties();
             backOffDelay = REFRESH_DELAY;
-          } catch (IOException e) {
+          } catch (IvoryException e) {
             LOG.warn("Error refreshing runtime properties", e);
             backOffDelay += REFRESH_DELAY;
           }
