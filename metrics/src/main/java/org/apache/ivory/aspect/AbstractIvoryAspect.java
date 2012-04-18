@@ -41,7 +41,6 @@ public abstract class AbstractIvoryAspect {
 	public Object LogAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();
-		LOG.debug("Before invoke of method: " + methodName);
 		Object[] args = joinPoint.getArgs();
 		Object result = null;
 		ResourceMessage.Status status;
@@ -49,7 +48,6 @@ public abstract class AbstractIvoryAspect {
 		long startTime = System.nanoTime();
 		long endTime;
 		try {
-			LOG.debug("During invoke of method: " + methodName);
 			result = joinPoint.proceed();
 		} catch (Exception e) {
 			endTime = System.nanoTime();
@@ -57,10 +55,8 @@ public abstract class AbstractIvoryAspect {
 			publishMessage(getResourceMessage(joinPoint.getSignature()
 					.getDeclaringType().getSimpleName()
 					+ "." + methodName, args, status, endTime - startTime));
-			LOG.debug("After invoke of method: " + methodName);
 			throw e;
 		}
-		LOG.debug("After invoke of method: " + methodName);
 		endTime = System.nanoTime();
 		status = ResourceMessage.Status.SUCCEEDED;
 		publishMessage(getResourceMessage(joinPoint.getSignature()

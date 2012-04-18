@@ -38,6 +38,7 @@
     <module>retention</module>
     <module>archival</module>
     <module>metrics</module>
+    <module>retry</module>
     <module>webapp</module>
   </modules>
 

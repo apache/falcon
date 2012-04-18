@@ -25,10 +25,27 @@ import org.apache.ivory.monitors.Monitored;
  * and iMon, invoke this method from code.
  */
 public class GenericAlert {
-	@Monitored(event = "TransactionRollbackFailed")
+	@Monitored(event = "transaction-rollback-failed")
 	public static String alertRollbackFailure(
-			@Dimension(value = "transactionId") String transactionId) {
+			@Dimension(value = "transaction-Id") String transactionId) {
 		return transactionId;
+	}
+
+	@Monitored(event = "process-instance-failed")
+	public static String alertWFfailed(
+			@Dimension(value = "process-name") String processName,
+			@Dimension(value = "nominal-time") String nominalTime) {
+		return "IGNORE";
+	}
+
+	@Monitored(event = "retry-instance-failed")
+	public static String alertRetryFailed(
+			@Dimension(value = "process-name") String processName,
+			@Dimension(value = "nominal-name") String processInstance,
+			@Dimension(value = "current-run-id") int runId,
+			@Dimension(value = "error-message") String message) {
+		return "IGNORE";
+
 	}
 
 }

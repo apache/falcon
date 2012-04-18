@@ -649,7 +649,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
-            LOG.debug("About to reRun jobId:" + jobId);
             client.reRun(jobId, jobprops);
             LOG.info("Rerun job " + jobId + " on cluster " + cluster);
             TransactionManager.performAction(new OozieWorkflowEngineAction(Action.RUN, cluster, jobId));
@@ -665,7 +664,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             Status status = jobInfo.getStatus();
-            LOG.debug("Status of jobId:" + status);
             return status.name();
         } catch (Exception e) {
             LOG.error("Unable to get status of workflows", e);

@@ -100,9 +100,8 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String status = items[7];
 
 			try {
-				LOG.debug("Instrumenting with aspect: "+processName+":"+nominalTime);
 				processInstanceManager.instrumentWithAspect(processName, feedName, feedpath,
-						nominalTime, timeStamp, status, workflowId, runId, textmessage);
+						nominalTime, timeStamp, status, workflowId, runId, textmessage, System.currentTimeMillis());
 			} catch (Exception ignore) {
 				// mocked exception
 			}
