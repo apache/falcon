@@ -19,12 +19,6 @@
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <configuration>
-                <property>
-                    <name>mapred.job.queue.name</name>
-                    <value>${queueName}</value>
-                </property>
-            </configuration>
             <main-class>org.apache.ivory.messaging.MessageProducer</main-class>
             <arg>${wf:name()}</arg>
             <arg>${wf:appPath()}</arg>

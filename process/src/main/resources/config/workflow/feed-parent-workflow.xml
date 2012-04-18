@@ -10,41 +10,10 @@
 	language governing permissions and limitations under the License. -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-feed-parent-workflow'>
 	<start to='eviction' />
-<!--
-	<action name='pre-processing'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<main-class>org.apache.ivory.workflow.PreProcessing</main-class>
-			<arg>${entityTopicName}</arg>
-			<arg>${feedNames}</arg>
-			<arg>${feedInstancePaths}</arg>
-			<arg>${wf:id()}</arg>
-			<arg>${wf:run()}</arg>
-			<arg>${nominalTime}</arg>
-			<arg>${timeStamp}</arg>
-			<arg>${brokerUrl}</arg>
-			<arg>${brokerImplClass}</arg>
-			<arg>${entityType}</arg>
-			<arg>${operation}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
-			<capture-output />
-		</java>
-		<ok to="user-workflow" />
-		<error to="fail" />
-	</action>
--->
-
     <action name="eviction">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <configuration>
-                <property>
-                    <name>mapred.job.queue.name</name>
-                    <value>${queueName}</value>
-                </property>
-            </configuration>
             <main-class>org.apache.ivory.retention.FeedEvictor</main-class>
             <arg>${nameNode}/${feedDataPath}</arg>
             <arg>instance</arg>
