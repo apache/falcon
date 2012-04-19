@@ -29,11 +29,15 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Inputs;
 import org.apache.ivory.entity.v0.process.Output;
+import org.apache.ivory.entity.v0.process.Outputs;
 import org.apache.ivory.entity.v0.process.Process;
 
 import java.net.ConnectException;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -58,9 +62,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 validateEntityExists(EntityType.FEED, input.getFeed());
                 Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
                 CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                // TODO currently retention supports deletion of past instances
-                // only
-                // hence checking for only startinstance of input
                 CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(), feed, clusterName);
                 CrossEntityValidations.validateInstanceRange(process, input, feed);
                 if (input.getPartition() != null) {
@@ -77,9 +78,11 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 CrossEntityValidations.validateInstance(process, output, feed);
             }
         }
+        
+        validateDatasetName(process.getInputs(),process.getOutputs());
     }
 
-    private void validateHDFSpaths(Process process) throws IvoryException {
+	private void validateHDFSpaths(Process process) throws IvoryException {
 
         String clusterName = process.getCluster().getName();
         org.apache.ivory.entity.v0.cluster.Cluster cluster =
@@ -133,6 +136,19 @@ public class ProcessEntityParser extends EntityParser<Process> {
         if (!EntityUtil.isValidUTCDate(end)) {
             throw new ValidationException("Invalid end date: " + end);
         }
-
+    }
+    
+    private void validateDatasetName(Inputs inputs, Outputs outputs) throws ValidationException {
+    	Set<String> datasetNames = new HashSet<String>();
+    	for(Input input:inputs.getInput()){
+    		if(!datasetNames.add(input.getName())){
+    			throw new ValidationException("Input name: "+input.getName() +" is already used");
+    		}
+    	}
+    	for(Output output:outputs.getOutput()){
+    		if(!datasetNames.add(output.getName())){
+    			throw new ValidationException("Output name: "+output.getName() +" is already used");
+    		}
+    	}		
     }
 }
