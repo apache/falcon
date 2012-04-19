@@ -51,7 +51,8 @@ public abstract class RetryHandler {
 
 	public static void retry(String processName, String nominalTime,
 			String runId, TextMessage textMessage, String wfId,
-			WorkflowEngine workflowEngine, long msgReceivedTime) throws IvoryException {
+			WorkflowEngine workflowEngine, long msgReceivedTime)
+			throws IvoryException {
 
 		try {
 			Process processObj = ConfigurationStore.get().get(
@@ -72,7 +73,8 @@ public abstract class RetryHandler {
 				if (policy.equals("backoff")) {
 					retryBackoff(delayUnit, delay, workflowEngine, processObj
 							.getCluster().getName(), wfId, processName,
-							ivoryDate, textMessage, intRunId, attempts, msgReceivedTime);
+							ivoryDate, textMessage, intRunId, attempts,
+							msgReceivedTime);
 				} else if (policy.equals("exp-backoff")) {
 					retryExpBackoff(delayUnit, delay, workflowEngine,
 							processObj.getCluster().getName(), wfId,
@@ -89,6 +91,8 @@ public abstract class RetryHandler {
 			}
 		} catch (Exception e) {
 			LOG.error(e);
+			GenericAlert.alertRetryFailed(processName, nominalTime,
+					Integer.parseInt(runId), e.getMessage());
 			throw new IvoryException(e);
 		}
 	}
@@ -96,11 +100,12 @@ public abstract class RetryHandler {
 	private static void retryBackoff(String delayUnit, int delay,
 			WorkflowEngine workflowEngine, String clusterName, String wfId,
 			String processName, String ivoryDate, TextMessage textMessage,
-			int runId, int attempts, long msgReceivedTime) throws IvoryException, JMSException {
+			int runId, int attempts, long msgReceivedTime)
+			throws IvoryException, JMSException {
 		long endOfDelay = getEndOfDealy(delayUnit, delay);
 		RetryEvent event = new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate,
-				runId, attempts, 0);
+				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
+				attempts, 0);
 		QUEUE.offer(event);
 
 	}
@@ -108,13 +113,14 @@ public abstract class RetryHandler {
 	private static void retryExpBackoff(String delayUnit, int delay,
 			WorkflowEngine workflowEngine, String clusterName, String wfId,
 			String processName, String ivoryDate, TextMessage textMessage,
-			int runId, int attempts, long msgReceivedTime) throws IvoryException, JMSException {
+			int runId, int attempts, long msgReceivedTime)
+			throws IvoryException, JMSException {
 
 		long endOfDelay = (long) (getEndOfDealy(delayUnit, delay) * Math.pow(2,
 				runId));
 		RetryEvent event = new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate,
-				runId, attempts, 0);
+				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
+				attempts, 0);
 		QUEUE.offer(event);
 
 	}
