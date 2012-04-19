@@ -30,11 +30,11 @@
     <!-- what -->
     <inputs>
         <input name="impression" feed="impressions" start-instance="today(0,0)" end-instance="today(0,2)" /> 
-        <input name="clicks" feed="clicks" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
+        <input name="click" feed="clicks" start-instance="yesterday(0,0)" end-instance="latest(0)" partition="*/US"/>
     </inputs>
 
     <outputs>
-        <output name="clicksummary" feed="clicksummary" instance="today(0,0)" />
+        <output name="clicksummary" feed="impressions" instance="today(0,0)" />
     </outputs>
 
     <!-- how -->
