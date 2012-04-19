@@ -397,7 +397,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
         syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
         syncdataset.setTimezone(feedCluster.getValidity().getTimezone());
-        syncdataset.setDoneFlag("");
+		if (feed.getAvailabilityFlag() == null) {
+			syncdataset.setDoneFlag("");
+		} else {
+			syncdataset.setDoneFlag(feed.getAvailabilityFlag());
+		}
         return syncdataset;
     }
 

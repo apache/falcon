@@ -37,6 +37,7 @@ import org.apache.ivory.entity.v0.feed.adapter.LocationsMapAdapter;
  *       &lt;sequence>
  *         &lt;element name="partitions" type="{uri:ivory:feed:0.1}partitions"/>
  *         &lt;element name="groups" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="availability-flag" type="{uri:ivory:feed:0.1}availability-flag"/>
  *         &lt;element name="frequency" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="periodicity" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="late-arrival" type="{uri:ivory:feed:0.1}late-arrival"/>
@@ -59,6 +60,7 @@ import org.apache.ivory.entity.v0.feed.adapter.LocationsMapAdapter;
 @XmlType(name = "feed", propOrder = {
     "partitions",
     "groups",
+    "availabilityFlag",
     "frequency",
     "periodicity",
     "lateArrival",
@@ -75,6 +77,8 @@ public class Feed extends Entity{
     protected Partitions partitions;
     @XmlElement(required = true)
     protected String groups;
+    @XmlElement(required = false)
+    protected String availabilityFlag;
     @XmlElement(required = true)
     protected String frequency;
     @XmlElement(required = true)
@@ -153,6 +157,30 @@ public class Feed extends Entity{
      */
     public void setGroups(String value) {
         this.groups = value;
+    }
+
+    /**
+     * Gets the value of the availabilityFlag property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAvailabilityFlag() {
+        return availabilityFlag;
+    }
+
+    /**
+     * Sets the value of the availabilityFlag property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAvailabilityFlag(String value) {
+        this.availabilityFlag = value;
     }
 
     /**
