@@ -18,12 +18,9 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.util.*;
-
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.common.ELParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
@@ -34,8 +31,10 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.log4j.Logger;
-import org.apache.oozie.util.DateUtils;
+
+import java.util.*;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
@@ -167,8 +166,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	private void validateClusterValidity(String start, String end, String clusterName)
 			throws IvoryException {
 		try {
-			Date processStart = DateUtils.parseDateUTC(start);
-			Date processEnd = DateUtils.parseDateUTC(end);
+			Date processStart = EntityUtil.parseDateUTC(start);
+			Date processEnd = EntityUtil.parseDateUTC(end);
 			if (processStart.after(processEnd)) {
 				throw new ValidationException("Feed start time: " + start
 						+ " cannot be after feed end time: " + end + " for cluster: "+clusterName);
@@ -182,18 +181,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	
 	private  void validateFeedCutOffPeriod(Feed feed, Cluster cluster)
 			throws IvoryException {
-		String feedRetention = cluster.getRetention()
-				.getLimit();
-		ELParser elParser = new ELParser();
-		elParser.parseOozieELExpression(feedRetention);
-		long retentionPeriod = elParser.getFeedDuration();
+        ExpressionHelper evaluator = ExpressionHelper.get();
+
+        String feedRetention = cluster.getRetention().getLimit();
+		long retentionPeriod = evaluator.evaluate(feedRetention, Long.class);
 
 		String feedCutoff = feed.getLateArrival().getCutOff();
-		elParser.parseOozieELExpression(feedCutoff);
-		long feedCutOffPeriod = elParser.getFeedDuration();
+		long feedCutOffPeriod = evaluator.evaluate(feedCutoff, Long.class);
 		
 		if(retentionPeriod<feedCutOffPeriod){
-			throw new ValidationException("Feed's retention limit: "+feedRetention +" of referenced cluster "+cluster.getName()+" should be more than feed's late arrival cut-off period: "+feedCutoff +" for feed: "+feed.getName());
+			throw new ValidationException("Feed's retention limit: " + feedRetention
+                    +" of referenced cluster "+ cluster.getName() +
+                    " should be more than feed's late arrival cut-off period: " +
+                    feedCutoff + " for feed: " + feed.getName());
 		}
 	}
 }

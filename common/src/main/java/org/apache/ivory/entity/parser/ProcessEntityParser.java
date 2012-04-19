@@ -31,13 +31,7 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.oozie.service.Services;
-import org.apache.oozie.util.IOUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.Date;
 
@@ -49,24 +43,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     public ProcessEntityParser() {
         super(EntityType.PROCESS);
-    }
-
-    public static void init() throws IvoryException {
-        String uri = StartupProperties.get().getProperty("config.oozie.conf.uri");
-        System.setProperty(Services.OOZIE_HOME_DIR, uri);
-        File confFile = new File(uri + "/conf");
-        if (!confFile.exists() && !confFile.mkdirs())
-            throw new IvoryException("Failed to create conf directory in path " + uri);
-
-        InputStream instream = ProcessEntityParser.class.getResourceAsStream("/oozie-site.xml");
-        try {
-            IOUtils.copyStream(instream, new FileOutputStream(uri + "/conf/oozie-site.xml"));
-            Services services = new Services();
-            services.getConf().set("oozie.services", "org.apache.oozie.service.ELService");
-            services.init();
-        } catch (Exception e) {
-            throw new IvoryException(e);
-        }
     }
 
     @Override
