@@ -218,4 +218,14 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getInputs().getInput().get(0).setStartInstance("today(-48,0)");
 		parser.validate(process);
 	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testDuplicateInputOutputNames() throws IvoryException {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getInputs().getInput().get(0).setName("duplicateName");
+		process.getOutputs().getOutput().get(0).setName("duplicateName");
+		parser.validate(process);
+	}
 }
