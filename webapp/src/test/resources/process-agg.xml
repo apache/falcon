@@ -17,7 +17,6 @@
 			name="outputData" />
 	</outputs>
 	<properties>
-		<property name="queueName" value="default"/>
 	</properties>
 	<workflow path="${nameNode}/examples/apps/aggregator" />
 	<retry policy="backoff" delay="10" delayUnit="min" attempts="3" />

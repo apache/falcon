@@ -15,16 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.ivory.retry;
 
-package org.apache.ivory.workflow;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.retry.RetryHandler.Consumer;
+import org.apache.ivory.service.IvoryService;
+import org.apache.log4j.Logger;
 
+public class RetryService implements IvoryService{
 
-
-public class PreProcessing {
-
-	public static void main(String[] args) {
-		for(int i=0;i<args.length;i++){
-			System.out.println("Arg: "+args[i]);
-		}
+	private static final Logger LOG = Logger
+			.getLogger(RetryService.class);
+	
+	@Override
+	public String getName() {
+		return "Ivory Retry failed Instance";
 	}
+
+	@Override
+	public void init() throws IvoryException {
+			Thread daemon = new Consumer();
+			daemon.setName("RetryHandler");
+			daemon.setDaemon(true);
+			daemon.start();
+			LOG.info("RetryHandler  thread started");
+	}
+
+	@Override
+	public void destroy() throws IvoryException {
+		LOG.info("RetryHandler  thread destroyed");
+		
+	}
+
 }

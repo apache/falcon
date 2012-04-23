@@ -64,6 +64,10 @@ import org.apache.oozie.client.OozieClient;
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String EL_PREFIX = "elext:";
+    
+    //TODO Hack for Adroit to use oozie's latest expression, to remove after el fix
+    private static final String LATEST="latest";
+    
     private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
@@ -140,14 +144,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         if (process.getInputs() != null) {
             StringBuffer ivoryInPaths = new StringBuffer();
             for (Input input : process.getInputs().getInput()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAIN datain = new DATAIN();
                 datain.setName(input.getName());
-                datain.setDataset(input.getFeed());
+                datain.setDataset(input.getName());
                 datain.setStartInstance(getELExpression(input.getStartInstance()));
                 datain.setEndInstance(getELExpression(input.getEndInstance()));
                 if (coord.getInputEvents() == null)
@@ -171,14 +175,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             StringBuilder outputFeedPaths = new StringBuilder();
             StringBuilder outputFeedNames = new StringBuilder();
             for (Output output : process.getOutputs().getOutput()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAOUT dataout = new DATAOUT();
                 dataout.setName(output.getName());
-                dataout.setDataset(output.getFeed());
+                dataout.setDataset(output.getName());
                 dataout.setInstance(getELExpression(output.getInstance()));
                 if (coord.getOutputEvents() == null)
                     coord.setOutputEvents(new OUTPUTEVENTS());
@@ -286,14 +290,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         if (process.getInputs() != null) {
             StringBuffer ivoryInPaths = new StringBuffer();
             for (Input input : process.getInputs().getInput()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster);
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAIN datain = new DATAIN();
                 datain.setName(input.getName());
-                datain.setDataset(input.getFeed());
+                datain.setDataset(input.getName());
                 datain.setStartInstance(LateDataUtils.offsetTime(getELExpression(input.getStartInstance()), offsetExpr));
                 datain.setEndInstance(LateDataUtils.offsetTime(getELExpression(input.getEndInstance()), offsetExpr));
                 if (coord.getInputEvents() == null)
@@ -317,14 +321,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             StringBuilder outputFeedPaths = new StringBuilder();
             StringBuilder outputFeedNames = new StringBuilder();
             for (Output output : process.getOutputs().getOutput()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster);
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAOUT dataout = new DATAOUT();
                 dataout.setName(output.getName());
-                dataout.setDataset(output.getFeed());
+                dataout.setDataset(output.getName());
                 dataout.setInstance(LateDataUtils.offsetTime(getELExpression(output.getInstance()), offsetExpr));
                 if (coord.getOutputEvents() == null)
                     coord.setOutputEvents(new OUTPUTEVENTS());
@@ -378,7 +382,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return null;
     }
 
-    private SYNCDATASET createDataSet(String feedName, Cluster cluster) throws IvoryException {
+    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName) throws IvoryException {
         Feed feed;
         try {
             feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
@@ -390,23 +394,32 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             throw new RuntimeException("Referenced feed " + feedName + " is not registered!");
 
         SYNCDATASET syncdataset = new SYNCDATASET();
-        syncdataset.setName(feed.getName());
+        syncdataset.setName(datasetName);
         syncdataset.setUriTemplate("${nameNode}" + feed.getLocations().get(LocationType.DATA).getPath());
         syncdataset.setFrequency("${coord:" + feed.getFrequency() + "(" + feed.getPeriodicity() + ")}");
 
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
         syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
         syncdataset.setTimezone(feedCluster.getValidity().getTimezone());
-        syncdataset.setDoneFlag("");
+		if (feed.getAvailabilityFlag() == null) {
+			syncdataset.setDoneFlag("");
+		} else {
+			syncdataset.setDoneFlag(feed.getAvailabilityFlag());
+		}
         return syncdataset;
     }
 
-    private String getELExpression(String expr) {
-        if (expr != null) {
-            expr = "${" + EL_PREFIX + expr + "}";
-        }
-        return expr;
-    }
+	private String getELExpression(String expr) {
+		if (expr != null) {
+			//TODO remove this check for Adroit after el fix
+			if (expr.contains(LATEST)) {
+				expr = "${" + "coord:" + expr + "}";
+			} else {
+				expr = "${" + EL_PREFIX + expr + "}";
+			}
+		}
+		return expr;
+	}
 
     @Override
     protected Map<String, String> getEntityProperties() {

@@ -47,8 +47,8 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
+import org.apache.ivory.retry.RetryHandler;
 import org.apache.ivory.transaction.TransactionManager;
-import org.apache.ivory.util.RetryHandler;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -274,12 +274,10 @@ public class ProcessInstanceManager extends EntityManager {
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId, TextMessage textMessage) throws Exception {
-		LOG.debug("inside instrumentWithAspect method: " + process + ":"
-				+ nominalTime);
+			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
 			LOG.debug(process + ":" + nominalTime + " Failed");
-			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine());
+			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		LOG.debug(process + ":" + nominalTime + " Succeeded");

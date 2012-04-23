@@ -23,6 +23,7 @@
     </partitions>
 
     <groups>online,bi</groups>
+    <availabilityFlag>_SUCCESS</availabilityFlag>
 
     <frequency>hours</frequency>
     <periodicity>1</periodicity>

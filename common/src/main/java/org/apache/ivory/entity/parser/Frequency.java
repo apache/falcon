@@ -1,6 +1,6 @@
 package org.apache.ivory.entity.parser;
 
-import org.apache.oozie.coord.TimeUnit;
+import org.apache.ivory.entity.common.TimeUnit;
 
 public enum Frequency {
 

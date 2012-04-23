@@ -97,7 +97,7 @@
 			<xs:element type="properties" name="properties" minOccurs="0">
 			</xs:element>
 			<xs:element type="workflow" name="workflow" />
-			<xs:element type="retry" name="retry" />
+			<xs:element type="retry" name="retry" minOccurs="0"/>
 			<xs:element type="late-process" name="late-process"  minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute type="IDENTIFIER" name="name" use="required" />

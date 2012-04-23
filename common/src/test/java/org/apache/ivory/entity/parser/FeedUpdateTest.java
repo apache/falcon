@@ -23,7 +23,6 @@ public class FeedUpdateTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        ProcessEntityParser.init();
         conf.set("hadoop.log.dir", "/tmp");
         this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
         setup();

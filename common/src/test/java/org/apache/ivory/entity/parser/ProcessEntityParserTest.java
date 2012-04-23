@@ -18,17 +18,6 @@
 
 package org.apache.ivory.entity.parser;
 
-import static org.testng.AssertJUnit.assertEquals;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
@@ -44,6 +33,16 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.testng.AssertJUnit.assertEquals;
+
 public class ProcessEntityParserTest extends AbstractTestBase{
 
     private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
@@ -57,7 +56,6 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 
     @BeforeClass
     public void init() throws Exception {
-        ProcessEntityParser.init();
         conf.set("hadoop.log.dir", "/tmp");
         this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
     }
@@ -218,6 +216,16 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 				.parseAndValidate((ProcessEntityParserTest.class
 						.getResourceAsStream(PROCESS_XML)));
 		process.getInputs().getInput().get(0).setStartInstance("today(-48,0)");
+		parser.validate(process);
+	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testDuplicateInputOutputNames() throws IvoryException {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getInputs().getInput().get(0).setName("duplicateName");
+		process.getOutputs().getOutput().get(0).setName("duplicateName");
 		parser.validate(process);
 	}
 }

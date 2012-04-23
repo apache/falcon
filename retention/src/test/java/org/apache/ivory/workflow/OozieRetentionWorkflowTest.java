@@ -18,6 +18,19 @@
 
 package org.apache.ivory.workflow;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.PrivilegedExceptionAction;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+import java.util.TimeZone;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,18 +45,6 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.local.LocalOozie;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.PrivilegedExceptionAction;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class OozieRetentionWorkflowTest {
 
@@ -94,7 +95,6 @@ public class OozieRetentionWorkflowTest {
                 getHdfsUrl(cluster.getCluster()));
         properties.put(OozieWorkflowEngine.JOB_TRACKER, ClusterHelper.
                 getMREndPoint(cluster.getCluster()));
-        properties.put("queueName", "default");
         properties.put("feedDataPath", "/data/feed1/${YEAR}-${MONTH}-${DAY}-${HOUR}");
         properties.put("limit", "hours(5)");
         properties.put("timeZone", "UTC");

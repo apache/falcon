@@ -18,11 +18,18 @@
 
 package org.apache.ivory.expression;
 
+import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.apache.ivory.IvoryException;
+
 import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
 import javax.servlet.jsp.el.FunctionMapper;
 import javax.servlet.jsp.el.VariableResolver;
 import java.lang.reflect.Method;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,11 +42,23 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     private static final Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
+    private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    private static final ExpressionHelper resolver = ExpressionHelper.get();
+
     public static ExpressionHelper get() {
         return instance;
     }
 
     private ExpressionHelper() {}
+
+    @SuppressWarnings("unchecked")
+    public <T> T evaluate(String expression, Class<T> clazz) throws IvoryException {
+        try {
+            return (T) EVALUATOR.evaluate("${" + expression + "}", clazz, resolver, resolver);
+        } catch (ELException e) {
+            throw new IvoryException("Unable to evaluate " + expression, e);
+        }
+    }
 
     @Override
     public Method resolveFunction(String prefix, String name) {
@@ -57,6 +76,69 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     @Override
     public Object resolveVariable(String field) throws ELException {
         return threadVariables.get().get(field);
+    }
+
+    private static ThreadLocal<Date> referenceDate = new ThreadLocal<Date>();
+
+    public static void setReferenceDate(Date date) {
+        referenceDate.set(date);
+    }
+
+    private static Date getRelative(Date date, int boundary, int month, int day, int hour, int minute) {
+        Calendar dsInstanceCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        dsInstanceCal.setTime(date);
+        switch (boundary) {
+            case Calendar.YEAR:
+                dsInstanceCal.set(Calendar.MONTH, 0);
+            case Calendar.MONTH:
+                dsInstanceCal.set(Calendar.DAY_OF_MONTH, 1);
+            case Calendar.DAY_OF_MONTH:
+                dsInstanceCal.set(Calendar.HOUR_OF_DAY, 0);
+            case Calendar.HOUR:
+                dsInstanceCal.set(Calendar.MINUTE, 0);
+                dsInstanceCal.set(Calendar.SECOND, 0);
+                dsInstanceCal.set(Calendar.MILLISECOND, 0);
+                break;
+            case Calendar.SECOND:
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid boundary " + boundary);
+        }
+
+        dsInstanceCal.add(Calendar.YEAR, 0);
+        dsInstanceCal.add(Calendar.MONTH, month);
+        dsInstanceCal.add(Calendar.DAY_OF_MONTH, day);
+        dsInstanceCal.add(Calendar.HOUR_OF_DAY, hour);
+        dsInstanceCal.add(Calendar.MINUTE, minute);
+        return dsInstanceCal.getTime();
+    }
+
+    public static Date now(int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.SECOND, 0, 0, hour, minute);
+    }
+
+    public static Date today(int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.DAY_OF_MONTH, 0, 0, hour, minute);
+    }
+
+    public static Date yesterday(int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.DAY_OF_MONTH, 0, -1, hour, minute);
+    }
+
+    public static Date currentMonth(int day, int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.MONTH, 0, day, hour, minute);
+    }
+
+    public static Date lastMonth(int day, int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.MONTH, -1, day, hour, minute);
+    }
+
+    public static Date currentYear(int month, int day, int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.YEAR, month, day, hour, minute);
+    }
+
+    public static Date lastYear(int month, int day, int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.YEAR, month - 12, day, hour, minute);
     }
 
     public static long hours(int val) {
@@ -92,7 +174,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
         envVar = "\\$\\{" + envVar + "\\}";
         if (envVal != null) {
-          originalValue = originalValue.replaceAll(envVar, envVal);
+          originalValue = originalValue.replaceAll(envVar, Matcher.quoteReplacement(envVal));
           envVarMatcher = sysPropertyPattern.matcher(originalValue);
         }
       }

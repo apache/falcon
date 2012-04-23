@@ -98,6 +98,7 @@
 		<xs:sequence>
 			<xs:element type="partitions" name="partitions" />
 			<xs:element type="xs:string" name="groups" />
+			<xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
 			<xs:element type="frequency-type" name="frequency" />
 			<xs:element name="periodicity">
 				<xs:simpleType>

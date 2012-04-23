@@ -29,17 +29,15 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Inputs;
 import org.apache.ivory.entity.v0.process.Output;
+import org.apache.ivory.entity.v0.process.Outputs;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.oozie.service.Services;
-import org.apache.oozie.util.IOUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -49,24 +47,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     public ProcessEntityParser() {
         super(EntityType.PROCESS);
-    }
-
-    public static void init() throws IvoryException {
-        String uri = StartupProperties.get().getProperty("config.oozie.conf.uri");
-        System.setProperty(Services.OOZIE_HOME_DIR, uri);
-        File confFile = new File(uri + "/conf");
-        if (!confFile.exists() && !confFile.mkdirs())
-            throw new IvoryException("Failed to create conf directory in path " + uri);
-
-        InputStream instream = ProcessEntityParser.class.getResourceAsStream("/oozie-site.xml");
-        try {
-            IOUtils.copyStream(instream, new FileOutputStream(uri + "/conf/oozie-site.xml"));
-            Services services = new Services();
-            services.getConf().set("oozie.services", "org.apache.oozie.service.ELService");
-            services.init();
-        } catch (Exception e) {
-            throw new IvoryException(e);
-        }
     }
 
     @Override
@@ -82,9 +62,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 validateEntityExists(EntityType.FEED, input.getFeed());
                 Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
                 CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                // TODO currently retention supports deletion of past instances
-                // only
-                // hence checking for only startinstance of input
                 CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(), feed, clusterName);
                 CrossEntityValidations.validateInstanceRange(process, input, feed);
                 if (input.getPartition() != null) {
@@ -101,9 +78,11 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 CrossEntityValidations.validateInstance(process, output, feed);
             }
         }
+        
+        validateDatasetName(process.getInputs(),process.getOutputs());
     }
 
-    private void validateHDFSpaths(Process process) throws IvoryException {
+	private void validateHDFSpaths(Process process) throws IvoryException {
 
         String clusterName = process.getCluster().getName();
         org.apache.ivory.entity.v0.cluster.Cluster cluster =
@@ -157,6 +136,19 @@ public class ProcessEntityParser extends EntityParser<Process> {
         if (!EntityUtil.isValidUTCDate(end)) {
             throw new ValidationException("Invalid end date: " + end);
         }
-
+    }
+    
+    private void validateDatasetName(Inputs inputs, Outputs outputs) throws ValidationException {
+    	Set<String> datasetNames = new HashSet<String>();
+    	for(Input input:inputs.getInput()){
+    		if(!datasetNames.add(input.getName())){
+    			throw new ValidationException("Input name: "+input.getName() +" is already used");
+    		}
+    	}
+    	for(Output output:outputs.getOutput()){
+    		if(!datasetNames.add(output.getName())){
+    			throw new ValidationException("Output name: "+output.getName() +" is already used");
+    		}
+    	}		
     }
 }

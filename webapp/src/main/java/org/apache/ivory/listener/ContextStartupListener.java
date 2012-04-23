@@ -52,7 +52,6 @@ public class ContextStartupListener implements ServletContextListener {
         RuntimeProperties.get();
         
         try {
-            ProcessEntityParser.init();
             startupServices.initialize();
             ConfigurationStore.get();
         } catch (IvoryException e) {
