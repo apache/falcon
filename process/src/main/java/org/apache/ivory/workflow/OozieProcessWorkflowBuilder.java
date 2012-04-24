@@ -18,6 +18,13 @@
 
 package org.apache.ivory.workflow;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.converter.OozieProcessMapper;
@@ -29,21 +36,21 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.util.OozieUtils;
-
-import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
-    private static final String[] COORD_TAGS = {"DEFAULT", "LATE1"}; 
-    
+    private static final String[] COORD_TAGS = { "DEFAULT", "LATE1" };
+
     @Override
     public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
+        if (!EntityUtil.parseDateUTC(process.getValidity().getStart())
+                .before(EntityUtil.parseDateUTC(process.getValidity().getEnd())))
+            // start time >= end time
+            return null;
 
         String clusterName = process.getCluster().getName();
         Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"),
-                process.getStagingPath());
+        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), process.getStagingPath());
 
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         mapper.map(cluster, bundlePath);
@@ -64,39 +71,38 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     public List<ExternalId> getExternalIdsForRerun(Process entity, Date start, Date end) throws IvoryException {
         return getExternalIds(entity, start, end, "DEFAULT");
     }
-    
+
     private List<ExternalId> getExternalIds(Process process, Date start, Date end, String... tags) throws IvoryException {
         TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
 
         Calendar instance = Calendar.getInstance(timezone);
         instance.setTime(getNextStartTime(process, process.getCluster().getName(), start));
         Date procEnd = EntityUtil.parseDateUTC(process.getValidity().getEnd());
-        
+
         Frequency freq = Frequency.valueOf(process.getFrequency());
         List<ExternalId> extIds = new ArrayList<ExternalId>();
-        while(instance.getTime().compareTo(end) <= 0 && instance.getTime().before(procEnd)) {
-            for(String tag:tags)
+        while (instance.getTime().compareTo(end) <= 0 && instance.getTime().before(procEnd)) {
+            for (String tag : tags)
                 extIds.add(new ExternalId(process.getName(), tag, instance.getTime()));
             instance.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
-        return extIds;        
+        return extIds;
     }
-    
+
     @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
-        return OozieUtils.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
-                Frequency.valueOf(process.getFrequency()), process.getPeriodicity(),
-                process.getValidity().getTimezone(), now);
+        return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
+                Frequency.valueOf(process.getFrequency()), process.getPeriodicity(), process.getValidity().getTimezone(), now);
     }
-    
+
     @Override
     public int getConcurrency(Process process) {
         return process.getConcurrency();
     }
 
     @Override
-    public String getEndTime(Process process, String cluster) {
-        return process.getValidity().getEnd();
+    public Date getEndTime(Process process, String cluster) throws IvoryException {
+        return EntityUtil.parseDateUTC(process.getValidity().getEnd());
     }
 
     @Override
@@ -117,7 +123,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     @Override
     public List<ExternalId> getMappedExternalIds(Entity entity, ExternalId extId) throws IvoryException {
         List<ExternalId> extIds = new ArrayList<ExternalId>();
-        if(extId.getTag().equals("DEFAULT")) {
+        if (extId.getTag().equals("DEFAULT")) {
             extIds.add(new ExternalId(extId.getName(), "LATE1", extId.getDate()));
         }
         return extIds;

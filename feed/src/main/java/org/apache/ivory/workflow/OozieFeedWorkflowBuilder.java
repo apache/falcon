@@ -35,22 +35,22 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.util.OozieUtils;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Feed feed)
-            throws IvoryException {
+    public Map<String, Object> newWorkflowSchedule(Feed feed) throws IvoryException {
 
         List<Cluster> clusters = new ArrayList<Cluster>();
         List<Path> paths = new ArrayList<Path>();
-        for (org.apache.ivory.entity.v0.feed.Cluster feedCluster :
-                feed.getClusters().getCluster()) {
-            String clusterName = feedCluster.getName();
-            Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"),
-                    feed.getStagingPath());
+        for (org.apache.ivory.entity.v0.feed.Cluster feedCluster : feed.getClusters().getCluster()) {
+            if (!EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()).before(
+                    EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd())))
+                // start time >= end time
+                continue;
+            
+            Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
+            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), feed.getStagingPath());
 
             AbstractOozieEntityMapper mapper = new OozieFeedMapper(feed);
             mapper.map(cluster, bundlePath);
@@ -66,9 +66,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public String getEndTime(Feed feed, String cluster) {
+    public Date getEndTime(Feed feed, String cluster) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
-        return clusterDef.getValidity().getEnd();
+        return EntityUtil.parseDateUTC(clusterDef.getValidity().getEnd());
     }
 
     @Override
@@ -84,14 +84,14 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public void setConcurrency(Feed feed, int concurrency) { }
+    public void setConcurrency(Feed feed, int concurrency) {
+    }
 
     @Override
     public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
-        return OozieUtils.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
-                Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(),
-                feedCluster.getValidity().getTimezone(), now);
+        return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
+                Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
     }
 
     @Override

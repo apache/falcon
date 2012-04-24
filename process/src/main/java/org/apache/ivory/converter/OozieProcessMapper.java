@@ -57,7 +57,6 @@ import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.ivory.util.OozieUtils;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -255,7 +254,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
 
         String processStartTime = process.getValidity().getStart();
-        Date startTime = OozieUtils.getNextStartTime(EntityUtil.parseDateUTC(processStartTime),
+        Date startTime = EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(processStartTime),
                 Frequency.valueOf(process.getFrequency()), process.getPeriodicity(),
                 process.getValidity().getTimezone(), new Date(now));
         LOG.info("Using start time as (aligned to default) : " + EntityUtil.formatDateUTC(startTime));
