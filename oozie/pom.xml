@@ -50,13 +50,19 @@
         </dependency>
         <dependency>
             <groupId>org.apache.oozie</groupId>
-            <artifactId>oozie-core</artifactId>
+            <artifactId>oozie-client</artifactId>
             <version>3.1.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-core</artifactId>
             <version>0.20.2-cdh3u0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jdt</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <build>

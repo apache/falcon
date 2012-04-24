@@ -18,19 +18,6 @@
 
 package org.apache.ivory.workflow.engine;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
@@ -41,18 +28,16 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.update.UpdateHelper;
+import org.apache.ivory.util.OozieUtils;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngineAction.Action;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.Job;
-import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.WorkflowJob;
+import org.apache.oozie.client.*;
 import org.apache.oozie.client.WorkflowJob.Status;
-import org.apache.oozie.util.XConfiguration;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Workflow engine which uses oozies APIs
@@ -640,7 +625,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
-            Properties jobprops = new XConfiguration(new StringReader(jobInfo.getConf())).toProperties();
+            Properties jobprops = OozieUtils.toProperties(jobInfo.getConf());
             if (props == null || props.isEmpty())
                 jobprops.put(OozieClient.RERUN_FAIL_NODES, "false");
             else

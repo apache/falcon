@@ -29,6 +29,12 @@
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-core</artifactId>
 			<version>5.4.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.ibm.icu</groupId>
+                    <artifactId>icu4j</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
@@ -37,8 +43,20 @@
 		</dependency>
 		<dependency>
         	<groupId>org.apache.hadoop</groupId>
+        	<artifactId>hadoop-core</artifactId>
+        	<version>0.20.2-cdh3u0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jdt</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+            </exclusions>
+      </dependency>
+		<dependency>
+        	<groupId>org.apache.hadoop</groupId>
         	<artifactId>hadoop-test</artifactId>
         	<version>0.20.2-cdh3u0</version>
+            <scope>test</scope>
       </dependency>
 	</dependencies>
 	<build>

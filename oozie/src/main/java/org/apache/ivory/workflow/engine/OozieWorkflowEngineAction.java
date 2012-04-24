@@ -18,11 +18,11 @@
 package org.apache.ivory.workflow.engine;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.transaction.Action;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.util.DateUtils;
 
 public class OozieWorkflowEngineAction extends Action {
     private static final String CLUSTER_NAME_KEY = "cluster";
@@ -58,7 +58,7 @@ public class OozieWorkflowEngineAction extends Action {
                 } else if (jobId.endsWith("-C")) { // coord
                     CoordinatorJob coord = client.getCoordJobInfo(jobId);
                     builder.append(OozieClient.CHANGE_VALUE_CONCURRENCY).append('=').append(coord.getConcurrency()).append(';');
-                    builder.append(OozieClient.CHANGE_VALUE_ENDTIME).append('=').append(DateUtils.formatDateUTC(coord.getEndTime()));
+                    builder.append(OozieClient.CHANGE_VALUE_ENDTIME).append('=').append(EntityUtil.formatDateUTC(coord.getEndTime()));
                     //pause time can't be rolled back as pause time > now
 //                    builder.append(OozieClient.CHANGE_VALUE_PAUSETIME).append('=')
 //                            .append(coord.getPauseTime() == null ? "" : DateUtils.formatDateUTC(coord.getPauseTime()));

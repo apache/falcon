@@ -17,14 +17,12 @@
  */
 package org.apache.ivory.util;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.util.*;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.Frequency;
-import org.apache.oozie.coord.TimeUnit;
 
 public final class OozieUtils {
 
@@ -80,4 +78,15 @@ public final class OozieUtils {
         }
         return startCal.getTime();
     }
+
+    public static Properties toProperties(String properties) {
+        Configuration conf = new Configuration(false);
+        conf.addResource(new ByteArrayInputStream(properties.getBytes()));
+        Properties jobprops = new Properties();
+        for (Map.Entry<String, String> entry : conf) {
+            jobprops.put(entry.getKey(), entry.getValue());
+        }
+        return jobprops;
+    }
+
 }
