@@ -284,7 +284,6 @@ public class EntityManager {
     }
 
     protected void audit(HttpServletRequest request, String entity, String type, String action) {
-
         if (request == null) {
             return; // this must be internal call from Ivory
         }

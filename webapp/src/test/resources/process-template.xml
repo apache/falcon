@@ -4,10 +4,10 @@
 	
 	<concurrency>1</concurrency>
 	<execution>FIFO</execution>
-    <frequency>minutes</frequency>
-    <periodicity>60</periodicity>
+    <frequency>days</frequency>
+    <periodicity>1</periodicity>
 	
-	<validity timezone="UTC" end="2013-03-20T00:00Z" start="2012-03-20T00:00Z" />
+	<validity timezone="UTC" end="2013-03-20T00:00Z" start="2012-04-20T00:00Z" />
 	<inputs>
 		<input end-instance="today(0,40)" start-instance="today(0,20)"
 			feed="##f1##" name="inputData"/>
