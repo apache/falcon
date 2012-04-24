@@ -18,6 +18,12 @@
 
 package org.apache.ivory.cli;
 
+import java.io.BufferedReader;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.util.HashSet;
 import java.util.Set;
@@ -261,26 +267,23 @@ public class IvoryCLI {
 				|| optionsList.contains(VALIDATE_OPT)) {
 			if (entityType == null || entityType.equals("") || filePath == null
 					|| filePath.equals("")) {
-				throw new IvoryCLIException(
-						"Missing argument: type or file");
+				throw new IvoryCLIException("Missing argument: type or file");
 			}
-        } else if (optionsList.contains(UPDATE_OPT)) {
-            if (entityType == null || entityType.equals("")
-                    || entityName == null || entityName.equals("")
-                    || filePath == null || filePath.equals("")) {
+		} else if (optionsList.contains(UPDATE_OPT)) {
+			if (entityType == null || entityType.equals("")
+					|| entityName == null || entityName.equals("")
+					|| filePath == null || filePath.equals("")) {
 				throw new IvoryCLIException(
 						"Missing argument: type or name or file");
 			}
-        } else if (optionsList.contains(LIST_OPT)) {
+		} else if (optionsList.contains(LIST_OPT)) {
 			if (entityType == null || entityType.equals("")) {
-				throw new IvoryCLIException(
-						"Missing argument: type");
+				throw new IvoryCLIException("Missing argument: type");
 			}
 		} else {
 			if (entityType == null || entityType.equals("")
 					|| entityName == null || entityName.equals("")) {
-				throw new IvoryCLIException(
-						"Missing argument: type or name");
+				throw new IvoryCLIException("Missing argument: type or name");
 			}
 		}
 	}
@@ -335,8 +338,8 @@ public class IvoryCLI {
 				"Gets the Definition of entity");
 		Option dependency = new Option(DEPENDENCY_OPT, false,
 				"Gets the dependencies of entity");
-        Option list = new Option(LIST_OPT, false,
-                "List entities registerd for a type");
+		Option list = new Option(LIST_OPT, false,
+				"List entities registerd for a type");
 
 		OptionGroup group = new OptionGroup();
 		group.addOption(submit);
@@ -434,7 +437,19 @@ public class IvoryCLI {
 	protected String validateIvoryUrl(CommandLine commandLine) {
 		String url = commandLine.getOptionValue(URL_OPTION);
 		if (url == null) {
-			url = System.getenv(IVORY_URL);
+			try {
+				InputStream input = IvoryCLI.class
+						.getResourceAsStream("IvoryURL.properties");
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						new DataInputStream(input)));
+				String brline;
+				brline = br.readLine();
+				url = brline.substring(brline.indexOf('=') + 1).trim();
+			} catch (IOException e) {
+				System.err.println("IvoryURL.properties file does not exist");
+				e.printStackTrace();
+			}
+
 			if (url == null) {
 				throw new IllegalArgumentException(
 						"Ivory URL is neither available in command option nor in the environment");
