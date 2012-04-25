@@ -17,31 +17,6 @@
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-process-parent-workflow'>
 	<start to='recordsize' />
-<!--
-	<action name='pre-processing'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<main-class>org.apache.ivory.workflow.PreProcessing</main-class>
-			<arg>${entityTopicName}</arg>
-			<arg>${feedNames}</arg>
-			<arg>${feedInstancePaths}</arg>
-			<arg>${wf:id()}</arg>
-			<arg>${wf:run()}</arg>
-			<arg>${nominalTime}</arg>
-			<arg>${timeStamp}</arg>
-			<arg>${brokerUrl}</arg>
-			<arg>${brokerImplClass}</arg>
-			<arg>${entityType}</arg>
-			<arg>${operation}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
-			<capture-output />
-		</java>
-		<ok to="recordsize" />
-		<error to="fail" />
-	</action>
--->
-
 	<action name='recordsize'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
@@ -57,13 +32,27 @@
 	</action>
 
 	<action name='user-workflow'>
-        <sub-workflow>
-         <app-path>#USER_WF_PATH#</app-path>
-         <propagate-configuration/>
-        </sub-workflow>
-		<ok to="ivory-succeeded-messaging" />
-		<error to="ivory-failed-messaging" />
+		<sub-workflow>
+			<app-path>#USER_WF_PATH#</app-path>
+			<propagate-configuration />
+		</sub-workflow>
+		<ok to="fork-for-succeeded" />
+		<error to="fork-for-failed" />
 	</action>
+
+	<fork name="fork-for-succeeded">
+		<path start="ivory-succeeded-messaging" />
+		<path start="user-jms-messaging" />
+		<path start="ivory-succeeded-log-mover" />
+	</fork>
+	<join name="join-for-succeeded" to="end" />
+
+	<fork name="fork-for-failed">
+		<path start="ivory-failed-messaging" />
+		<path start="ivory-failed-log-mover" />
+	</fork>
+	<join name="join-for-failed" to="fail" />
+
 	<action name='ivory-succeeded-messaging'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
@@ -80,12 +69,42 @@
 			<arg>${brokerImplClass}</arg>
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>SUCCEEDED</arg>
 		</java>
-		<ok to="user-jms-messaging" />
-		<error to="user-jms-messaging" />
+		<ok to="join-for-succeeded" />
+		<error to="fail" />
+	</action>
+	<action name='ivory-succeeded-log-mover'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.logging.LogMover</main-class>
+			<arg>${workflowEngineUrl}</arg>
+			<arg>${wf:id()}@user-workflow</arg>
+			<arg>${wf:run()}</arg>
+			<arg>${userWorkflowPath}/log/</arg>
+			<arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>SUCCEEDED</arg>
+		</java>
+		<ok to="join-for-succeeded" />
+		<error to="fail" />
+	</action>
+	<action name='ivory-failed-log-mover'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.logging.LogMover</main-class>
+			<arg>${workflowEngineUrl}</arg>
+			<arg>${wf:id()}@user-workflow</arg>
+			<arg>${wf:run()}</arg>
+			<arg>${userWorkflowPath}/log/</arg>
+			<arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>FAILED</arg>
+		</java>
+		<ok to="join-for-failed" />
+		<error to="fail" />
 	</action>
 	<action name='ivory-failed-messaging'>
 		<java>
@@ -103,11 +122,11 @@
 			<arg>${brokerImplClass}</arg>
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>FAILED</arg>
 		</java>
-		<ok to="fail" />
+		<ok to="join-for-failed" />
 		<error to="fail" />
 	</action>
 	<action name='user-jms-messaging'>
@@ -130,9 +149,9 @@
 			<arg>${entityName}</arg>
 			<arg>SUCCEEDED</arg>
 		</java>
-		<ok to="end" />
-		<error to="end" />
-	</action>	
+		<ok to="join-for-succeeded" />
+		<error to="fail" />
+	</action>
 
 	<kill name="fail">
 		<message>Workflow failed, error

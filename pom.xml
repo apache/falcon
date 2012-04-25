@@ -39,6 +39,7 @@
         <module>archival</module>
         <module>metrics</module>
         <module>retry</module>
+        <module>logging</module>
         <module>webapp</module>
     </modules>
 

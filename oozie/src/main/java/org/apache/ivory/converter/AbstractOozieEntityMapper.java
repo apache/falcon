@@ -132,6 +132,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         props.put(OozieClient.EXTERNAL_ID,
                 new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), "${coord:nominalTime()}").getId());
+        props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
 
         props.putAll(getEntityProperties());
         return props;

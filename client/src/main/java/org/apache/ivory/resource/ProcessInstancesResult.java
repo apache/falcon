@@ -9,6 +9,8 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
+
 
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
@@ -22,6 +24,9 @@ public class ProcessInstancesResult extends APIResult {
         public String instance;
         @XmlElement
         public WorkflowStatus status;
+		@XmlElement
+		public String logDir;
+        
         
         public ProcessInstance() {}
         
@@ -29,6 +34,12 @@ public class ProcessInstancesResult extends APIResult {
             this.instance = instance;
             this.status = status;
         }
+        
+        public ProcessInstance(ProcessInstance processInstance, String logDir) {
+			this.instance = processInstance.instance;
+			this.status = processInstance.status;
+			this.logDir = logDir;
+		}
         
         public String getInstance() {
             return instance;
@@ -38,19 +49,22 @@ public class ProcessInstancesResult extends APIResult {
             return status;
         }
         
-        @Override
-        public String toString() {
-        	return "{instance:"+this.instance+",status:"+this.status+"}";
-        }
+		@Override
+		public String toString() {
+			return "{instance:" + this.instance + ", status:" + this.status
+					+ this.logDir == null ? "": ", logDir:" + this.logDir
+					+ "}";
+		}
     }
     
-    @XmlElement
+	@XmlElement
     private ProcessInstance[] instances;
 
     private ProcessInstancesResult() { // for jaxb
         super();
     }
 
+    
     public ProcessInstancesResult(String message, Map<String, String> instMap) {
         super(Status.SUCCEEDED, message);
         if(instMap != null) {
@@ -77,6 +91,10 @@ public class ProcessInstancesResult extends APIResult {
         }
     }
 
+	public ProcessInstancesResult(String message,
+			ProcessInstance[] processInstanceExs) {
+		this.instances = processInstanceExs;
+	}
 
 	public ProcessInstance[] getInstances() {
         return instances;

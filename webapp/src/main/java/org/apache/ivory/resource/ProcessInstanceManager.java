@@ -18,6 +18,7 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -37,12 +38,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
@@ -78,28 +84,51 @@ public class ProcessInstanceManager extends EntityManager {
         }
     }
 
-    @GET
-    @Path("status/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ProcessInstancesResult getStatus(@PathParam("process") String processName, @QueryParam("start") String startStr,
-            @QueryParam("end") String endStr) {
-        try {
-            validateParams(processName, startStr, endStr);
-            
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);            
-            Process process = getProcess(processName);
-            
-            WorkflowEngine wfEngine = getWorkflowEngine();
-            Map<String, Map<String, String>> instances = wfEngine.getStatus(process, start, end);
-            return new ProcessInstancesResult("getStatus is successful", instances.values().iterator().next());
-        } catch (Throwable e) {
-            LOG.error("Failed to kill instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
+	@GET
+	@Path("status/{process}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public ProcessInstancesResult getStatus(
+			@PathParam("process") String processName,
+			@QueryParam("start") String startStr,
+			@QueryParam("end") String endStr, @QueryParam("type") String type) {
+		try {
+			validateParams(processName, startStr, endStr);
 
-    @POST
+			Date start = EntityUtil.parseDateUTC(startStr);
+			Date end = getEndDate(start, endStr);
+			Process process = getProcess(processName);
+
+			WorkflowEngine wfEngine = getWorkflowEngine();
+			Map<String, Map<String, String>> instances = wfEngine.getStatus(
+					process, start, end);
+			ProcessInstancesResult result = new ProcessInstancesResult(
+					"getStatus is successful", instances.values().iterator()
+							.next());
+			return getProcessInstanceEx(processName, type, result);
+		} catch (Throwable e) {
+			LOG.error("Failed to get instances status", e);
+			throw IvoryWebException
+					.newException(e, Response.Status.BAD_REQUEST);
+		}
+	}
+
+	private ProcessInstancesResult getProcessInstanceEx(String processName,
+			String type, ProcessInstancesResult result) throws IvoryException {
+		ProcessInstancesResult.ProcessInstance[] processInstanceExs = new ProcessInstancesResult.ProcessInstance[result
+				.getInstances().length];
+		for (int i = 0; i < result.getInstances().length; i++) {
+			String logDir = getLogUrl(processName,
+					result.getInstances()[i].instance, type);
+			ProcessInstancesResult.ProcessInstance exInstance = new ProcessInstancesResult.ProcessInstance(
+					result.getInstances()[i], logDir);
+			processInstanceExs[i] = exInstance;
+		}
+
+		return new ProcessInstancesResult(result.getMessage(),
+				processInstanceExs);
+	}
+
+	@POST
     @Path("kill/{process}")
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="kill-instance")
@@ -178,7 +207,7 @@ public class ProcessInstanceManager extends EntityManager {
             return result;
         } catch (Throwable e) {
             TransactionManager.rollback();
-            LOG.error("Failed to suspend instances", e);
+            LOG.error("Failed to resume instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -283,5 +312,49 @@ public class ProcessInstanceManager extends EntityManager {
 		LOG.debug(process + ":" + nominalTime + " Succeeded");
 		return "DONE";
 
+	}	
+
+	public String getLogUrl(String processName, String instance, String type) throws IvoryException {
+		validateParams(processName, instance, null);
+		Date date = EntityUtil.parseDateUTC(instance);
+		String logPath = getDFSlocation(processName, date, type);
+		Process process = getProcess(processName);
+		String logLocation = getDFSbrowserUrl(process,logPath);
+		return logLocation;
 	}
+
+	private String getDFSlocation(String processName, Date date, String type)
+			throws ValidationException {
+		if (type == null || type.equalsIgnoreCase("DEFAULT")) {
+			return new ExternalId(processName, "DEFAULT", date).getDFSname();
+		} else if (type.equalsIgnoreCase("LATE1")) {
+			return new ExternalId(processName, "LATE1", date).getDFSname();
+		} else {
+			throw new ValidationException("Query param type: " + type
+					+ " is not valid");
+		}
+
+	}
+
+	private String getDFSbrowserUrl(Process process, String logFile)
+			throws IvoryException {
+		Cluster cluster = (Cluster) getEntityObject(process.getCluster()
+				.getName(), EntityType.CLUSTER.name());
+		String nameNode = ClusterHelper.getHdfsUrl(cluster);
+		Configuration conf = new Configuration();
+		conf.set("fs.default.name", nameNode);
+		org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(nameNode
+				+ "/" + process.getWorkflow().getPath() + "/log/" + logFile);
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			if (fs.exists(path)) {
+				return path.toString();
+			}else{
+				return "-";
+			}
+		} catch (IOException e) {
+			throw new IvoryException(e);
+		}
+	}
+
 }
