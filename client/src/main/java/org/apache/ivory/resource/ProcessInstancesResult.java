@@ -52,7 +52,7 @@ public class ProcessInstancesResult extends APIResult {
 		@Override
 		public String toString() {
 			return "{instance:" + this.instance + ", status:" + this.status
-					+ this.logDir == null ? "": ", logDir:" + this.logDir
+					+ this.logDir == null ? "": ", log:" + this.logDir
 					+ "}";
 		}
     }

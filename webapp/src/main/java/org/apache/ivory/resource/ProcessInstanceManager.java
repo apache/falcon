@@ -18,7 +18,6 @@
 
 package org.apache.ivory.resource;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -38,18 +37,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.logging.LogProvider;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
@@ -117,8 +112,8 @@ public class ProcessInstanceManager extends EntityManager {
 		ProcessInstancesResult.ProcessInstance[] processInstanceExs = new ProcessInstancesResult.ProcessInstance[result
 				.getInstances().length];
 		for (int i = 0; i < result.getInstances().length; i++) {
-			String logDir = getLogUrl(processName,
-					result.getInstances()[i].instance, type);
+			String logDir = LogProvider.getLogUrl(processName,
+					result.getInstances()[i], type );
 			ProcessInstancesResult.ProcessInstance exInstance = new ProcessInstancesResult.ProcessInstance(
 					result.getInstances()[i], logDir);
 			processInstanceExs[i] = exInstance;
@@ -305,56 +300,11 @@ public class ProcessInstanceManager extends EntityManager {
 			@Dimension(value = "workflowId") String workflowId,
 			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
-			LOG.debug(process + ":" + nominalTime + " Failed");
 			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
-		LOG.debug(process + ":" + nominalTime + " Succeeded");
 		return "DONE";
 
 	}	
-
-	public String getLogUrl(String processName, String instance, String type) throws IvoryException {
-		validateParams(processName, instance, null);
-		Date date = EntityUtil.parseDateUTC(instance);
-		String logPath = getDFSlocation(processName, date, type);
-		Process process = getProcess(processName);
-		String logLocation = getDFSbrowserUrl(process,logPath);
-		return logLocation;
-	}
-
-	private String getDFSlocation(String processName, Date date, String type)
-			throws ValidationException {
-		if (type == null || type.equalsIgnoreCase("DEFAULT")) {
-			return new ExternalId(processName, "DEFAULT", date).getDFSname();
-		} else if (type.equalsIgnoreCase("LATE1")) {
-			return new ExternalId(processName, "LATE1", date).getDFSname();
-		} else {
-			throw new ValidationException("Query param type: " + type
-					+ " is not valid");
-		}
-
-	}
-
-	private String getDFSbrowserUrl(Process process, String logFile)
-			throws IvoryException {
-		Cluster cluster = (Cluster) getEntityObject(process.getCluster()
-				.getName(), EntityType.CLUSTER.name());
-		String nameNode = ClusterHelper.getHdfsUrl(cluster);
-		Configuration conf = new Configuration();
-		conf.set("fs.default.name", nameNode);
-		org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(nameNode
-				+ "/" + process.getWorkflow().getPath() + "/log/" + logFile);
-		try {
-			FileSystem fs = FileSystem.get(conf);
-			if (fs.exists(path)) {
-				return path.toString();
-			}else{
-				return "-";
-			}
-		} catch (IOException e) {
-			throw new IvoryException(e);
-		}
-	}
 
 }

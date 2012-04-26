@@ -47,6 +47,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.apache.ivory</groupId>
+			<artifactId>ivory-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.oozie</groupId>
 			<artifactId>oozie-core</artifactId>
 			<version>3.1.5-SNAPSHOT</version>
