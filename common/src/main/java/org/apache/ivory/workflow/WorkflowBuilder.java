@@ -42,9 +42,6 @@ public abstract class WorkflowBuilder<T extends Entity> {
     public abstract Map<String, Object> newWorkflowSchedule(T entity)
             throws IvoryException;
 
-    //TODO add methods for re-run, whenever additional work is required
-    //beyond just firing an action in the actual workflow engine
-
     public abstract List<ExternalId> getExternalIds(T entity, Date start, Date end) throws IvoryException;
     
     public abstract List<ExternalId> getExternalIdsForRerun(T entity, Date start, Date end) throws IvoryException;

@@ -139,15 +139,12 @@ Process:
 <process name="rmc-daily">
 	<cluster name="staging-red" />
 
-	<concurrency>1</concurrency>
-	<execution>LIFO</execution>
-	<frequency>days</frequency>
-	<periodicity>1</periodicity>
+	<frequency>days(1)</frequency>
 
 	<validity start="2012-04-03T06:00Z" end="2022-12-30T00:00Z" timezone="UTC" />
 
 	<inputs>
-		<input name="WapAd" feed="WapAd" start-instance="today(0,0)" end-instance="today(0,0)" />
+		<input name="WapAd" feed="WapAd" start="today(0,0)" end="today(0,0)" />
 	</inputs>
 
 	<outputs>
@@ -155,7 +152,7 @@ Process:
 	</outputs>
 
 	<properties>
-		<property name="lastday" value="${coord:formatTime(coord:dateOffset(coord:nominalTime(), -1, 'DAY'), 'yyyy-MM-dd')}" />
+		<property name="lastday" value="${formatTime(yesterday(0,0), 'yyyy-MM-dd')}" />
 	</properties>
 
 	<workflow engine="oozie" path="/projects/bi/rmc/pipelines/workflow/rmcdaily" />

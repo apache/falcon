@@ -43,8 +43,12 @@ public class ExternalId {
         return parts[2];
     }
     
-    public String getTag() {
-        String[] parts = id.split(SEPARATOR);
-        return parts[1];
-    }
+	public String getTag() {
+		String[] parts = id.split(SEPARATOR);
+		return parts[1];
+	}
+
+	public String getDFSname() {
+		return id.replace(":", "-");
+	}
 }

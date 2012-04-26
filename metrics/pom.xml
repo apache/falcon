@@ -55,16 +55,5 @@
             <artifactId>aspectjweaver</artifactId>
             <version>1.6.11</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.lwes</groupId>
-            <artifactId>lwes-java</artifactId>
-            <version>0.2.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mondemand</groupId>
-            <artifactId>mondemand-java</artifactId>
-            <version>4.0.0</version>
-        </dependency>
     </dependencies>
 </project>

@@ -19,7 +19,6 @@
 package org.apache.ivory.workflow;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +28,6 @@ import java.util.Properties;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -79,7 +76,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 
     public abstract void setConcurrency(T entity, int concurrency);
 
-    public abstract String getEndTime(T entity, String cluster);
+    public abstract Date getEndTime(T entity, String cluster) throws IvoryException;
 
     public abstract void setEndTime(T entity, String cluster, Date endDate);
 

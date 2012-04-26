@@ -26,27 +26,48 @@
 		<artifactId>ivory-main</artifactId>
 		<version>0.2-SNAPSHOT</version>
 	</parent>
-	<artifactId>ivory-retry</artifactId>
-	<description>Ivory Retry Handler</description>
-	<name>Ivory Retry</name>
+	<artifactId>ivory-logging</artifactId>
+	<description>Ivory Logging Module</description>
+	<name>Ivory Logging</name>
 	<packaging>jar</packaging>
 	<repositories>
 		<repository>
 			<id>platform-pe-releases</id>
 			<url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
 		</repository>
+		<repository>
+			<id>cdh.repo</id>
+			<url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+			<name>Cloudera Repository</name>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
 	</repositories>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-common</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.apache.oozie</groupId>
+			<artifactId>oozie-core</artifactId>
+			<version>3.1.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>jms</artifactId>
-			<version>1.1</version>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-core</artifactId>
+			<version>0.20.2-cdh3u0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.jdt</groupId>
+					<artifactId>core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-test</artifactId>
+			<version>0.20.2-cdh3u0</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
 </project>

@@ -26,7 +26,7 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.local.LocalOozie;
+//import org.apache.oozie.local.LocalOozie;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,10 +68,11 @@ public class OozieClientFactory {
     private static OozieClient getLocalOozieClient() throws IvoryException {
         try {
             if (!localInitialized) {
-                LocalOozie.start();
+                //LocalOozie.start();
                 localInitialized = true;
             }
-            return LocalOozie.getClient();
+            //return LocalOozie.getClient();
+            return null;
         } catch (Exception e) {
             throw new IvoryException(e);
         }

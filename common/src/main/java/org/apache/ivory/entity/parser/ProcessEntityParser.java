@@ -119,8 +119,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
             validateProcessDates(start, end);
             Date processStart = EntityUtil.parseDateUTC(start);
             Date processEnd = EntityUtil.parseDateUTC(end);
-            if (processStart.after(processEnd)) {
-                throw new ValidationException("Process start time: " + start + " cannot be after process end time: " + end);
+            if (!processStart.before(processEnd)) {
+                throw new ValidationException("Process start time: " + start + " should be before process end time: " + end);
             }
         } catch (ValidationException e) {
             throw new ValidationException(e);

@@ -15,31 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.ivory.logging;
 
-package org.apache.ivory.entity.parser;
+import org.testng.annotations.Test;
 
-import org.apache.ivory.entity.common.TimeUnit;
 
-public enum Frequency {
+public class LoggingParserTest {
 
-    minutes(TimeUnit.MINUTE, TimeUnit.NONE), hours(TimeUnit.HOUR, TimeUnit.NONE), days(TimeUnit.DAY, TimeUnit.NONE), months(
-            TimeUnit.MONTH, TimeUnit.NONE), endOfDays(TimeUnit.DAY, TimeUnit.END_OF_DAY), endOfMonths(TimeUnit.MONTH,
-            TimeUnit.END_OF_MONTH);
+	@Test(enabled=false)
+	public void testLogParser() throws Exception{
 
-    private TimeUnit timeUnit;
-    private TimeUnit endOfDuration;
+		LogMover mover = new LogMover();
+		mover.run(new String[]{"http://10.14.117.33:11000/oozie/","0000060-120424164133213-oozie-rish-W@user-workflow","0","/log/","agregator-coord16-11d4ae80-6d2a-4a55-92b6-c214983856ef/LATE1/2012-04-24T17:25Z","SUCCESS"} );
+		//mover.run(new String[]{"rmc-daily-wf","2012-04-24-04-10","http://oozie.red.ua2.inmobi.com:11000/oozie/","0003080-120412101016717-oozie-oozi-W@user-workflow","1","hdfs://nn.red.ua2.inmobi.com:54310/projects/ivory/staging/ivory/workflows/process/rmc-daily/2012-04-19T10.02.39.688/tmp"} );
 
-    private Frequency(TimeUnit timeUnit, TimeUnit endOfDuration) {
-        this.timeUnit = timeUnit;
-        this.endOfDuration = endOfDuration;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
-
-    public TimeUnit getEndOfDuration() {
-        return endOfDuration;
-    }
-
+	}
+	
 }
