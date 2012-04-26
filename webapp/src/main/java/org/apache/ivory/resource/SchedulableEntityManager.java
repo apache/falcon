@@ -71,7 +71,7 @@ public class SchedulableEntityManager extends EntityManager {
         } catch (Throwable e) {
             TransactionManager.rollback();
             LOG.error("Unable to schedule workflow", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newException(e, Response.Status.NOT_FOUND);
         }
     }
 

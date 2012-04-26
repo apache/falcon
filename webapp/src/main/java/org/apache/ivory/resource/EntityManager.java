@@ -166,6 +166,7 @@ public class EntityManager {
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
                     + removedFromEngine);
             TransactionManager.commit();
+          
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
@@ -231,8 +232,12 @@ public class EntityManager {
     private void canRemove(Entity entity) throws IvoryException {
         Pair<String, EntityType>[] referencedBy = EntityIntegrityChecker.referencedBy(entity);
         if (referencedBy != null && referencedBy.length > 0) {
+        	StringBuffer messages= new StringBuffer();
+        	for(Pair<String, EntityType> ref: referencedBy){
+        		messages.append(ref).append("\n");
+        	}
             throw new IvoryException(entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
-                    + referencedBy);
+                    + messages);
         }
     }
 
@@ -351,11 +356,11 @@ public class EntityManager {
             Entity entityObj = getEntity(entity, type);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
             Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
-            return new EntityList(entities);
-        } catch (Exception e) {
+            return new EntityList(entities==null?new Entity[]{}:entities);
+        }catch (Exception e) {
             LOG.error("Unable to get dependencies for entity " + entity + "(" + type + ")", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        } 
     }
 
     /**
