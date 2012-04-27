@@ -53,7 +53,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.oozie</groupId>
-			<artifactId>oozie-core</artifactId>
+			<artifactId>oozie-client</artifactId>
 			<version>3.1.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
