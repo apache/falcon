@@ -24,6 +24,8 @@ import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class RetryEvent implements Delayed {
 
+	public static final String SEP = "*";
+
 	private WorkflowEngine wfEngine;
 	private String clusterName;
 	private String wfId;
@@ -112,4 +114,19 @@ public class RetryEvent implements Delayed {
 				+ endOfDelay, TimeUnit.MILLISECONDS);
 	}
 
+	@Override
+	public String toString() {
+		return clusterName + SEP + wfId + SEP + queueInsertTime + SEP
+				+ endOfDelay + SEP + processName + SEP + processInstance + SEP
+				+ runId + SEP + attempts + SEP + failRetryCount;
+	}
+
+	public static RetryEvent fromString(WorkflowEngine workflowEngine, String message) {
+		String[] items = message.split("\\"+SEP);
+		RetryEvent event = new RetryEvent(workflowEngine, items[0], items[1],
+				Long.parseLong(items[2]), Long.parseLong(items[3]), items[4],
+				items[5], Integer.parseInt(items[6]),
+				Integer.parseInt(items[7]), Integer.parseInt(items[8]));
+		return event;
+	}
 }

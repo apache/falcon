@@ -300,7 +300,7 @@ public class ProcessInstanceManager extends EntityManager {
 			@Dimension(value = "workflowId") String workflowId,
 			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
-			RetryHandler.retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
+			new RetryHandler().retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		return "DONE";
