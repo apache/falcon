@@ -114,6 +114,14 @@ public class RetryEvent implements Delayed {
 				+ endOfDelay, TimeUnit.MILLISECONDS);
 	}
 
+	public long getQueueInsertTime() {
+		return queueInsertTime;
+	}
+
+	public void setQueueInsertTime(long queueInsertTime) {
+		this.queueInsertTime = queueInsertTime;
+	}
+
 	@Override
 	public String toString() {
 		return clusterName + SEP + wfId + SEP + queueInsertTime + SEP

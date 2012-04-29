@@ -191,8 +191,9 @@ public final class RetryHandler {
 					String jobStatus = message.getWfEngine().instanceStatus(
 							message.getClusterName(), message.getWfId());
 					if (!jobStatus.equals("KILLED")) {
-						LOG.debug("Re-enqueing message in RetryHandler for workflow:"
+						LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
 								+ message.getWfId());
+						message.setQueueInsertTime(System.currentTimeMillis());
 						offerToQueue(message);
 						continue;
 					}
