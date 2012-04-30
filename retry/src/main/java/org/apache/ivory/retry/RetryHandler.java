@@ -171,7 +171,7 @@ public final class RetryHandler {
 
 	}
 
-	public static class Consumer extends Thread {
+	public static final class Consumer extends Thread {
 		@Override
 		public void run() {
 			while (true) {
@@ -186,7 +186,7 @@ public final class RetryHandler {
 					Process processObj = ConfigurationStore.get().get(
 							EntityType.PROCESS, message.getProcessName());
 					if (!validate(message.getProcessName(), processObj)) {
-						return;
+						continue;
 					}
 					String jobStatus = message.getWfEngine().instanceStatus(
 							message.getClusterName(), message.getWfId());
@@ -257,9 +257,11 @@ public final class RetryHandler {
 		File retryFile = getRetryFile(basePath, event.getProcessName(),
 				event.getProcessInstance());
 		if (!retryFile.exists()) {
-			LOG.warn("Retry file delete or renamed for process-instance: " + event.getProcessName()
-					+ ":" + event.getProcessInstance());
-			GenericAlert.alertRetryFailed(event.getProcessName(),  event.getProcessInstance(), event.getRunId(), "Retry file delete or renamed for process-instance");
+			LOG.warn("Retry file deleted or renamed for process-instance: "
+					+ event.getProcessName() + ":" + event.getProcessInstance());
+			GenericAlert.alertRetryFailed(event.getProcessName(),
+					event.getProcessInstance(), event.getRunId(),
+					"Retry file deleted or renamed for process-instance");
 		} else {
 			if (!retryFile.delete()) {
 				LOG.warn("Unable to remove retry file " + event.getWfId());
@@ -302,7 +304,8 @@ public final class RetryHandler {
 
 	private static File getRetryFile(File basePath, String processName,
 			String processInstance) {
-		return new File(basePath, processName + "-" + processInstance.replaceAll(":", "-"));
+		return new File(basePath, processName + "-"
+				+ processInstance.replaceAll(":", "-"));
 	}
 
 }
