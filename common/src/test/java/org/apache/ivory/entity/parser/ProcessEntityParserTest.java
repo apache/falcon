@@ -228,4 +228,22 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getOutputs().getOutput().get(0).setName("duplicateName");
 		parser.validate(process);
 	}
+	
+	@Test(expectedExceptions = IvoryException.class)
+	public void testInvalidRetryAttempt() throws IvoryException {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getRetry().setAttempts(-1);
+		parser.parseAndValidate(process.toString());
+	}
+
+	@Test(expectedExceptions = IvoryException.class)
+	public void testInvalidRetryDelay() throws IvoryException {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getRetry().setDelay(0);
+		parser.parseAndValidate(process.toString());
+	}
 }
