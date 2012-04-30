@@ -150,9 +150,9 @@
 	</xs:complexType>
 	<xs:complexType name="retry">
 		<xs:attribute type="policy-type" name="policy" use="required" />
-		<xs:attribute type="xs:integer" name="delay" use="required" />
+		<xs:attribute type="xs:positiveInteger" name="delay" use="required" />
 		<xs:attribute type="frequency-type" name="delayUnit" use="required" />
-		<xs:attribute type="xs:integer" name="attempts" use="required" />
+		<xs:attribute type="xs:positiveInteger" name="attempts" use="required" />
 	</xs:complexType>
 	<xs:simpleType name="engine-type">
 		<xs:restriction base="xs:string">
