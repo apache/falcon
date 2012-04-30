@@ -41,6 +41,7 @@
         <module>retry</module>
         <module>logging</module>
         <module>webapp</module>
+        <module>docs</module>
     </modules>
 
     <scm>
