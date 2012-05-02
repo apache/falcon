@@ -41,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
+import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -129,6 +130,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
+        String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -140,9 +142,22 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
 
         String status = response.getEntity(String.class);
-        Assert.assertEquals(status, "NOT_SCHEDULED");
+        Assert.assertEquals(status, "SUBMITTED");
     }
-
+    @Test
+    public void testNotFoundStatus() throws IvoryWebException
+    {
+    	ClientResponse response;
+    	String feed1 = "f1" + System.currentTimeMillis();
+    	response = this.service
+                .path("api/entities/status/feed/" + feed1)
+                .header("Remote-User", "testuser")
+                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+        String status = response.getEntity(String.class);
+        System.out.println(status);
+    	Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    	
+    }
     @Test
     public void testValidate() throws IOException {
 
@@ -476,4 +491,6 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
 
     }
+    
+    
 }

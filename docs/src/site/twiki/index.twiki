@@ -1,10 +1,10 @@
----+ Ivory - Feed management and data processing platform 
+---+ Ivory - Feed management and data processing platform
 
 Ivory is a feed processing and feed management system aimed at making it
 easier for end consumers to onboard their feed processing and feed
 management on hadoop clusters.
 
----+++ Why?
+---++ Why?
 
    * Establishes relationship between various data and processing elements on a Hadoop environment
 
@@ -14,15 +14,17 @@ management on hadoop clusters.
 
    * Integration with metastore/catalog
 
-   * Provide notification to end customer based on availability of feed groups (logical group of related feeds, which are likely to be used together)
+   * Provide notification to end customer based on availability of feed groups
+     (logical group of related feeds, which are likely to be used together)
 
    * Enables use cases for local processing in colo and global aggregations
 
----++ Getting Started
+---+ Getting Started
 
-Start with these simple steps to install an ivory instance [[InstallationSteps][Simple setup]]. Also refer to Ivory architecture and documentation in [[IvoryDocumentation][Documentation]].
+Start with these simple steps to install an ivory instance [[InstallationSteps][Simple setup]]. Also refer
+to Ivory architecture and documentation in [[IvoryDocumentation][Documentation]].
 
 #LicenseInfo
----++ Licensing Information
+---+ Licensing Information
 
 Ivory is distributed under [[http://www.apache.org/licenses/LICENSE-2.0][Apache License 2.0]].
