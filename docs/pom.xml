@@ -60,6 +60,10 @@
                 <configuration>
                     <webResources>
                         <resource>
+                            <directory>src/site/resources</directory>
+                            <targetPath>docs</targetPath>
+                        </resource>
+                        <resource>
                             <directory>target/site</directory>
                             <targetPath>docs</targetPath>
                         </resource>
