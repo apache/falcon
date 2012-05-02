@@ -79,15 +79,17 @@ public class ProcessInstanceManager extends EntityManager {
         }
     }
 
+
 	@GET
 	@Path("status/{process}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public ProcessInstancesResult getStatus(
 			@PathParam("process") String processName,
 			@QueryParam("start") String startStr,
-			@QueryParam("end") String endStr, @QueryParam("type") String type) {
+			@QueryParam("end") String endStr, @QueryParam("type") String type,
+			@QueryParam("runid") String runId) {
 		try {
-			validateParams(processName, startStr, endStr);
+			validateParams(processName, startStr, endStr, type, runId);
 
 			Date start = EntityUtil.parseDateUTC(startStr);
 			Date end = getEndDate(start, endStr);
@@ -99,7 +101,7 @@ public class ProcessInstanceManager extends EntityManager {
 			ProcessInstancesResult result = new ProcessInstancesResult(
 					"getStatus is successful", instances.values().iterator()
 							.next());
-			return getProcessInstanceEx(processName, type, result);
+			return getProcessInstanceEx(process, type, runId, result);
 		} catch (Throwable e) {
 			LOG.error("Failed to get instances status", e);
 			throw IvoryWebException
@@ -107,20 +109,21 @@ public class ProcessInstanceManager extends EntityManager {
 		}
 	}
 
-	private ProcessInstancesResult getProcessInstanceEx(String processName,
-			String type, ProcessInstancesResult result) throws IvoryException {
-		ProcessInstancesResult.ProcessInstance[] processInstanceExs = new ProcessInstancesResult.ProcessInstance[result
+	private ProcessInstancesResult getProcessInstanceEx(Process process,
+			String type, String runId, ProcessInstancesResult result)
+			throws IvoryException {
+		ProcessInstancesResult.ProcessInstance[] processInstances = new ProcessInstancesResult.ProcessInstance[result
 				.getInstances().length];
 		for (int i = 0; i < result.getInstances().length; i++) {
-			String logDir = LogProvider.getLogUrl(processName,
-					result.getInstances()[i], type );
-			ProcessInstancesResult.ProcessInstance exInstance = new ProcessInstancesResult.ProcessInstance(
-					result.getInstances()[i], logDir);
-			processInstanceExs[i] = exInstance;
+			ProcessInstancesResult.ProcessInstance pInstance = LogProvider
+					.getLogUrl(process, result.getInstances()[i],
+							type == null ? "DEFAULT" : type,
+							runId == null ? "0" : runId);
+			processInstances[i] = pInstance;
 		}
 
 		return new ProcessInstancesResult(result.getMessage(),
-				processInstanceExs);
+				processInstances);
 	}
 
 	@POST
@@ -284,6 +287,22 @@ public class ProcessInstanceManager extends EntityManager {
         if (StringUtils.isEmpty(param))
             throw new ValidationException("Parameter " + field + " is empty");
     }
+    
+	private void validateParams(String processName, String startStr,
+			String endStr, String type, String runId) throws IvoryException {
+		validateParams(processName, startStr, endStr);
+		if (type != null && !type.equalsIgnoreCase("DEFAULT")
+				&& !type.equalsIgnoreCase("LATE1")) {
+			throw new ValidationException("Invalid process type: " + type);
+		}
+		if (runId != null) {
+			try {
+				Integer.parseInt(runId);
+			} catch (NumberFormatException e) {
+				throw new ValidationException("Invalid runId:", e);
+			}
+		}
+	}
     
 	/*
 	 * Below method is a mock and gets automatically invoked by Aspect

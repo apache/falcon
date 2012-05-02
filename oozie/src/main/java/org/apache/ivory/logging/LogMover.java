@@ -24,7 +24,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -73,18 +72,25 @@ public class LogMover extends Configured implements Tool {
 		List<WorkflowAction> actions = subflowInfo.getActions();
 		Path path = new Path(args.logDir + "/" + args.externalId + "/"
 				+ args.runId);
-		FileSystem fs = path.getFileSystem(getHadoopConf());
+		FileSystem fs = path.getFileSystem(getConf());
 		for (WorkflowAction action : actions) {
 			try {
-				String ttLogURL = getTTlogURL(action.getExternalId());
-				if (ttLogURL != null) {
-					LOG.info("Fetching log for action: "
-							+ action.getExternalId() + " from url: " + ttLogURL);
-					InputStream in = getURLinputStream(new URL(ttLogURL));
-					OutputStream out = fs.create(new Path(path, action
-							.getName() + ".log"));
-					IOUtils.copyBytes(in, out, 4096, true);
-					LOG.info("Copied log to " + path);
+				if (action.getType().equals("pig")
+						|| action.getType().equals("java")) {
+					String ttLogURL = getTTlogURL(action.getExternalId());
+					if (ttLogURL != null) {
+						LOG.info("Fetching log for action: "
+								+ action.getExternalId() + " from url: "
+								+ ttLogURL);
+						InputStream in = getURLinputStream(new URL(ttLogURL));
+						OutputStream out = fs.create(new Path(path, action
+								.getName() + ".log"));
+						IOUtils.copyBytes(in, out, 4096, true);
+						LOG.info("Copied log to " + path);
+					}
+				} else {
+					LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
+							+ action.getName());
 				}
 			} catch (Exception e) {
 				LOG.error("Exception while fetching TT log for action: "
@@ -116,7 +122,7 @@ public class LogMover extends Configured implements Tool {
 	}
 
 	private String getTTlogURL(String jobId) throws Exception {
-		JobConf jobConf = new JobConf(getHadoopConf());
+		JobConf jobConf = new JobConf(getConf());
 		JobClient jobClient = new JobClient(jobConf);
 		RunningJob job = jobClient.getJob(JobID.forName(jobId));
 		if (job == null) {
@@ -141,13 +147,4 @@ public class LogMover extends Configured implements Tool {
 		return connection.getInputStream();
 	}
 
-	private Configuration getHadoopConf() {
-		Configuration conf = getConf();
-		if (conf == null) {
-			conf = new Configuration();
-			conf.set("mapred.job.tracker", "localhost:8021");
-			conf.set("fs.default.name", "hdfs://localhost:8020");
-		}
-		return conf;
-	}
 }

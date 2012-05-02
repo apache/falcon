@@ -9,36 +9,38 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
-
-
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
-    public static enum WorkflowStatus {
-        WAITING, LATE_RUNNING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
-    }
-    
-    @XmlRootElement (name = "pinstance")
-    public static class ProcessInstance {
-        @XmlElement
-        public String instance;
-        @XmlElement
-        public WorkflowStatus status;
+	public static enum WorkflowStatus {
+		WAITING, LATE_RUNNING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+	}
+
+	@XmlRootElement(name = "pinstance")
+	public static class ProcessInstance {
 		@XmlElement
-		public String logDir;
-        
-        
-        public ProcessInstance() {}
-        
-        public ProcessInstance(String instance, WorkflowStatus status) {
-            this.instance = instance;
-            this.status = status;
-        }
-        
-        public ProcessInstance(ProcessInstance processInstance, String logDir) {
+		public String instance;
+		@XmlElement
+		public WorkflowStatus status;
+		@XmlElement
+		public String logFile;
+
+		@XmlElement
+		public InstanceAction[] actions;
+
+		public ProcessInstance() {
+		}
+
+		public ProcessInstance(String instance, WorkflowStatus status) {
+			this.instance = instance;
+			this.status = status;
+		}
+
+		public ProcessInstance(ProcessInstance processInstance, String logFile,
+				InstanceAction[] actions) {
 			this.instance = processInstance.instance;
 			this.status = processInstance.status;
-			this.logDir = logDir;
+			this.logFile = logFile;
+			this.actions = actions;
 		}
         
         public String getInstance() {
@@ -52,7 +54,8 @@ public class ProcessInstancesResult extends APIResult {
 		@Override
 		public String toString() {
 			return "{instance:" + this.instance + ", status:" + this.status
-					+ this.logDir == null ? "": ", log:" + this.logDir
+					+ this.logFile == null ? "" : (", log:" + this.logFile)
+					+ this.actions == null ? "" : (", actions:" + this.actions)
 					+ "}";
 		}
     }
@@ -101,7 +104,46 @@ public class ProcessInstancesResult extends APIResult {
         return instances;
     }
 
-    public void setInstances(ProcessInstance[] instances) {
-        this.instances = instances;
-    }
+	public void setInstances(ProcessInstance[] instances) {
+		this.instances = instances;
+	}
+
+	@XmlRootElement(name = "actions")
+	public static class InstanceAction {
+		@XmlElement
+		public String action;
+		@XmlElement
+		public String status;
+		@XmlElement
+		public String logFile;
+
+		public InstanceAction() {
+		}
+
+		public InstanceAction(String action, String status, String logFile) {
+			this.action = action;
+			this.status = status;
+			this.logFile = logFile;
+		}
+
+		public String getAction() {
+			return action;
+		}
+
+		public String getStatus() {
+			return action;
+		}
+
+		public String getLogFile() {
+			return logFile;
+		}
+
+		@Override
+		public String toString() {
+			return "{action:" + this.action + ", status:" + this.status
+					+ this.logFile == null ? "" : (", log:" + this.logFile)
+					+ "}";
+		}
+	}
+
 }

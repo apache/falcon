@@ -80,12 +80,6 @@
       <artifactId>ivory-retry</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-logging</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>

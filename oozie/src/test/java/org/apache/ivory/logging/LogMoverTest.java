@@ -17,23 +17,19 @@
  */
 package org.apache.ivory.logging;
 
-import org.apache.ivory.IvoryException;
-import org.apache.ivory.resource.ProcessInstancesResult;
-import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.testng.annotations.Test;
 
-public class LogProviderTest {
+public class LogMoverTest {
 
 	@Test(enabled=false)
-	public void testLogProvider() throws IvoryException {
-
-		ProcessInstancesResult.ProcessInstance processInstance = new ProcessInstancesResult.ProcessInstance();
-		processInstance.instance = "2012-04-26T07:01Z";
-		processInstance.status = WorkflowStatus.RUNNING;
-		System.out
-				.println(LogProvider
-						.getLogUrl(
-								"agregator-coord16-ce988633-6bea-44a2-8f4d-af997a0c6bf2-712c1bb2-f60a-4dc7-8d25-2850d60e4e4b",
-								processInstance, "LATE1"));
+	public void testLogMover() throws Exception {
+		LogMover.main(new String[] {
+				"http://10.14.117.33:11000/oozie/",
+				"0000715-120501035446291-oozie-rish-W@user-workflow",
+				"0",
+				"/user/shaik.idris/log/",
+				"agregator-coord16-d0dd2a19-d517-4513-bb1d-07233ba03808-510c900c-e3fe-4a8a-9313-b1d55178f20a/DEFAULT/2010-01-02T01:00Z",
+				"SUCCESS" });
 	}
+
 }
