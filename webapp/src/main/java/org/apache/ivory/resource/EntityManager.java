@@ -297,7 +297,7 @@ public class EntityManager {
     }
 
     private enum EntityStatus {
-        NOT_FOUND, NOT_SCHEDULED, SUSPENDED, ACTIVE
+        SUBMITTED, SUSPENDED, RUNNING
     }
 
     /**
@@ -312,28 +312,32 @@ public class EntityManager {
     @Produces(MediaType.TEXT_PLAIN)
     @Monitored(event = "status")
     public String getStatus(@Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+            @Dimension("entityName") @PathParam("entity") String entity) throws IvoryWebException{
+    	Entity entityObj = null;
         try {
-            Entity entityObj = getEntity(entity, type);
-            if (entityObj == null) {
-                return EntityStatus.NOT_FOUND.name();
-            }
-
+            entityObj = getEntity(entity, type);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            if (entityObj == null) {
+                throw IvoryWebException.newException(new IvoryException(entity + "(" + 
+                		type + ") is not present") , Response.Status.NOT_FOUND);
+            }
             if (entityType.isSchedulable()) {
                 if (workflowEngine.isActive(entityObj)) {
                     if (workflowEngine.isSuspended(entityObj)) {
                         return EntityStatus.SUSPENDED.name();
                     } else {
-                        return EntityStatus.ACTIVE.name();
+                        return EntityStatus.RUNNING.name();
                     }
                 } else {
-                    return EntityStatus.NOT_SCHEDULED.name();
+                    return EntityStatus.SUBMITTED.name();
                 }
             } else {
-                return EntityStatus.NOT_SCHEDULED.name();
+                return EntityStatus.SUBMITTED.name();
             }
+        } catch (IvoryWebException e) {
+        	throw e;
         } catch (Exception e) {
+        	
             LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
