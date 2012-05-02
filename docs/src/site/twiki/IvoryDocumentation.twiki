@@ -1,0 +1,133 @@
+---++ Contents
+   * <a href="#Architecture">Architecture</a>
+   * <a href="#Control_flow">Control flow</a>
+   * <a href="#Entity_Specification">Entity Specification</a>
+   * <a href="#Entity_Management_actions">Entity Management actions</a>
+   * <a href="#Instance_Management_actions">Instance Management actions</a>
+   * <a href="#Retention">Retention</a>
+   * <a href="#Cross_entity_validations">Cross entity validations</a>
+   * <a href="#Updating_process_and_feed_definition">Updating process and feed definition</a>
+   * <a href="#Handling_late_input_data">Handling late input data</a>
+   * <a href="#Alerting_and_Monitoring">Alerting and Monitoring</a>
+   * <a href="#Ivory_EL_Expressions">Ivory EL Expressions</a>
+
+---++ Architecture
+---+++ Introduction
+Ivory is a feed and process management platform over hadoop. Ivory essentially transforms user's feed
+and process configurations into repeated actions through a standard workflow engine. Ivory by itself
+doesn't do any heavy lifting. All the functions and workflow state management requirements are delegated
+to the workflow scheduler. The only thing that Ivory maintains is the dependencies and relationship between
+these entities. This is adequate to provide integrated and seamless experience to the developers using
+the ivory platform.
+
+---+++ Ivory Architecture - Overview
+<img src="Architecture.png" height="400" width="600" />
+
+---+++ Scheduler
+Ivory system has picked Oozie as the default scheduler. However the system is open for integration with
+other schedulers. Lot of the data processing in hadoop requires scheduling to be based on both data availability
+as well as time. Oozie currently supports these capabilities off the shelf and hence the choice.
+
+---+++ Control flow
+Though the actual responsibility of the workflow is with the scheduler (Oozie), Ivory remains in the
+execution path, by subscribing to messages that each of the workflow may generate. When Ivory generates a
+workflow in Oozie, it does so, after instrumenting the workflow with additional steps which includes messaging
+via JMS. Ivory system itself subscribes to these control messages and can perform actions such as retries,
+handling late input arrival etc.
+
+---++++ Feed Schedule flow
+<img src="FeedSchedule.png" height="400" width="600" />
+
+---++++ Process Schedule flow
+<img src="ProcessSchedule.png" height="400" width="600" />
+
+---+++ Configuration Store
+Configuration store is file system based store that the Ivory system maintains where the entity definitions
+are stored. File System used for the configuration store can either be a local file system or a hdfs file system.
+It is recommended that to maintain this store outside of the system where Ivory is deployed. This is needed
+for handling issues relating to disk failures or other permanent failures of the system where Ivory is deployed.
+Configuration store also maintains an archive location where prior versions of the configuration or deleted
+configurations are maintained. They are never accessed by the Ivory system and they merely serve to track
+historical changes to the entity definitions.
+
+---+++ Atomic Actions
+Often times when Ivory performs entity management actions, it may need to do several individual actions.
+If one of the action were to fail, then the system could be in an inconsistent state. To avoid this, all
+individual operations performed are recorded into a transaction journal. This journal is then used to undo
+the overall user action. In some cases, it is not possible to undo the action. In such cases, Ivory attempts
+to keep the system in an consistent state.
+
+---++ Entity Specification
+---++ Entity Management actions
+
+---+++ Submit:
+Entity submit action allows a new cluster/feed/process to be setup within Ivory. Submitted entity is not
+scheduled, meaning it would simply be in the configuration store within Ivory. Besides validating against
+the schema for the corresponding entity being added, the Ivory system would also perform inter-field
+validations within the configuration file and validations across dependent entities.
+
+---+++ List:
+List all the entities within the ivory config store for the entity type being requested. This will include
+both scheduled and submitted entity configurations.
+
+---+++ Dependency:
+Returns the dependencies of the requested entity. Dependency list include both forward and backward
+dependencies (depends on & is dependent on). For ex, a feed would show process that are dependent on the
+feed and the clusters that it depends on.'
+
+---+++ Schedule:
+Feeds or Processes that are already submitted and present in the config store can be scheduled. Upon schedule,
+Ivory system wraps the required repeatable action as a bundle of oozie coordinators and executes them on the
+Oozie scheduler. (It is possible to extend Ivory to use an alternate workflow engine other than Oozie).
+Ivory overrides the workflow instance's external id in Oozie to reflect the process/feed and the nominal
+time. This external Id can then be used for instance management functions.
+
+---+++ Suspend:
+This action is applicable only on scheduled entity. This triggers suspend on the oozie bundle that was
+scheduled earlier through the schedule function. No further instances are executed on a suspended process/feed.
+
+---+++ Resume:
+Puts a suspended process/feed back to active, which in turn resumes applicable oozie bundle.
+
+---+++ Status:
+Gets the current status of the entity.
+
+---+++ Definition:
+Gets the current entity definition as stored in the configuration store. Please note that user documentations
+in the entity will not be retained.
+
+---+++ Delete:
+Delete operation on the entity removes any scheduled activity on the workflow engine, besides removing the
+entity from the ivory configuration store. Delete operation on an entity would only succeed if there are
+no dependent entities on the deleted entity.
+
+---+++ Update:
+Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
+not allowed. Feed update can cause cascading update to all the processes already scheduled. The following
+set of actions are performed in Oozie to realize an update.
+
+   * Suspend the previously scheduled Oozie coordinator. This is prevent any new action from being triggered.
+   * Update the coordinator to set the end time to "now"
+   * Resume the suspended coordiantors
+   * Schedule as per the new process/feed definition with the start time as "now"
+
+---++ Instance Management actions
+---++ Retention
+---++ Cross entity validations
+---++ Updating process and feed definition
+---++ Handling late input data
+Ivory system can handle late arrival of input data and appropriately re-trigger processing for the affected
+instance. From the perspective of late handling, there are two main configuration parameters late-arrival cut-off
+and late-inputs section in feed and process entity definition that are central. These configurations govern
+how and when the late processing happens. In the current implementation (oozie based) the late handling is very
+simple and basic. The ivory system looks at all dependent input feeds for a process and computes the max late
+cut-off period. Then for every coordinator scheduled for the process, it also schedules a late coordinator.
+This default or the regular coordinator as part of the user workflow also records the input size that it is
+considering for processing. This data is then used by the late coordinator to see if the input has changed
+since the normal execution time. If it has, it essentially re-triggers the user's workflow. These actions to
+record input size or detecting late input based on this size is added to the workflow that Ivory schedules
+for each process. The offset between the late coordinator and the default coordinator is same as the max
+late-cut-off of the input feeds. However they run with the same external id as the default one.
+
+---++ Alerting and Monitoring
+---++ Ivory EL Expressions
