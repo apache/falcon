@@ -167,9 +167,9 @@
 				The cut-off period is specified by expression
 				frequency(times), ex: if the feed can arrive late
 				upto 8 hours then late-arrival's cut-off="hours(8)"
-				<xs:attribute type="validity-type" name="cut-off" use="required" />
 			</xs:documentation>
 		</xs:annotation>
+		<xs:attribute type="validity-type" name="cut-off" use="required" />
 	</xs:complexType>
 	<xs:complexType name="property">
 	<xs:annotation>
