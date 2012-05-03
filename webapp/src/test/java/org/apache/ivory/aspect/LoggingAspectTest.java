@@ -23,19 +23,20 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.resource.EntityManager;
 import org.testng.annotations.Test;
 
 public class LoggingAspectTest {
 
+	
 	private EntityManager em = new EntityManager();
 	private volatile Exception threadException;
 
-	@Test
+	@Test(expectedExceptions=IvoryWebException.class)
 	public void testBeanLoading() {
 
 		String result = em.getStatus("cluster", "corp");
-		Assert.assertEquals("NOT_FOUND", result);
 	}
 
 	@Test
@@ -50,7 +51,7 @@ public class LoggingAspectTest {
 		Assert.fail("Exepected excpetion");
 	}
 	
-	@Test
+	@Test(expectedExceptions=IvoryWebException.class)
 	public void testConcurrentRequests() throws Exception{
         List<Thread> threadList = new ArrayList<Thread>();
         for (int i = 0; i < 5; i++) {
