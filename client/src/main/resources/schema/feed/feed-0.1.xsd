@@ -13,88 +13,48 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	attributeFormDefault="unqualified" elementFormDefault="qualified"
 	targetNamespace="uri:ivory:feed:0.1" xmlns="uri:ivory:feed:0.1">
-	<xs:element name="feed" type="feed">
 		<xs:annotation>
-			<xs:documentation>~ Licensed to the Apache Software Foundation (ASF)
-				under one
-				~ or more contributor license agreements. See the NOTICE
-				file
-				~ distributed with this work for additional information
-				~
-				regarding copyright ownership. The ASF licenses this file
-				~ to you
-				under the Apache License, Version 2.0 (the
-				~ "License"); you may not
-				use this file except in compliance
-				~ with the License. You may obtain
-				a copy of the License at
-				~
-				~
+			<xs:documentation>
+				Licensed to the Apache Software Foundation (ASF) under one or more
+				contributor license agreements. See the NOTICE file distributed with
+				this work for additional information regarding copyright ownership.
+				The ASF licenses this file to You under the Apache License, Version
+				2.0
+				(the "License"); you may not use this file except in compliance with
+				the License. You may obtain a copy of the License at
+
 				http://www.apache.org/licenses/LICENSE-2.0
-				~
-				~ Unless required by
-				applicable law or agreed to in writing, software
-				~ distributed under
-				the License is distributed on an "AS IS" BASIS,
-				~ WITHOUT WARRANTIES
-				OR CONDITIONS OF ANY KIND, either express or
+
+				Unless required by applicable law or agreed to in writing, software
+				distributed under the License is distributed on an "AS IS" BASIS,
+				WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 				implied.
-				~ See the
-				License for the specific language governing permissions and
-				~
+				See the License for the specific language governing permissions and
 				limitations under the License.
 			</xs:documentation>
 		</xs:annotation>
+	<xs:element name="feed" type="feed">
 	</xs:element>
-	<xs:complexType name="cluster">
-		<xs:sequence>
-			<xs:element type="validity" name="validity" />
-			<xs:element type="retention" name="retention" />
-		</xs:sequence>
-		<xs:attribute type="IDENTIFIER" name="name" use="required" />
-		<xs:attribute type="cluster-type" name="type" use="required" />
-	</xs:complexType>
-	<xs:complexType name="partitions">
-		<xs:sequence>
-			<xs:element type="partition" name="partition" maxOccurs="unbounded"
-				minOccurs="0" />
-		</xs:sequence>
-	</xs:complexType>
-	<xs:complexType name="schema">
-		<xs:attribute type="xs:string" name="location" use="required"/>
-		<xs:attribute type="xs:string" name="provider" use="required"/>
-	</xs:complexType>
-	<xs:complexType name="properties">
-		<xs:sequence>
-			<xs:element type="property" name="property" maxOccurs="unbounded"
-				minOccurs="0" />
-		</xs:sequence>
-	</xs:complexType>
-	<xs:complexType name="validity">
-		<xs:attribute type="date-time-type" name="start" use="required" />
-		<xs:attribute type="date-time-type" name="end" use="required" />
-		<xs:attribute type="timezone-type" name="timezone" use="required" />
-	</xs:complexType>
-	<xs:complexType name="locations">
-		<xs:choice maxOccurs="unbounded" minOccurs="0">
-			<xs:element type="location" name="location" />
-		</xs:choice>
-	</xs:complexType>
-	<xs:complexType name="late-arrival">
-		<xs:attribute type="validity-type" name="cut-off" use="required"/>
-	</xs:complexType>
-	<xs:complexType name="property">
-		<xs:attribute type="xs:string" name="name" use="required" />
-		<xs:attribute type="xs:string" name="value" use="required" />
-	</xs:complexType>
-	<xs:complexType name="clusters">
-		<xs:sequence>
-			<xs:element type="cluster" name="cluster" maxOccurs="unbounded"
-				minOccurs="1">
-			</xs:element>
-		</xs:sequence>
-	</xs:complexType>
 	<xs:complexType name="feed">
+		<xs:annotation>
+			<xs:documentation>
+				name: A feed should have a unique name and this name is referenced 
+				by processes as input or output feed.
+				groups: a feed specifies a list of comma separated groups,
+				a group is a logical grouping of feeds and a group is said to be
+				available if all the feeds belonging to a group are available.
+				The frequency of all the feed which belong to the same group
+				must be same.
+				availabilityFlag: specifies the name of a file which when
+				present/created
+				in a feeds data directory, the feed is termed as available. ex: _SUCCESS, if
+				this element is ignored then Ivory would consider the presence of feed's 
+				data directory as feed availability.
+				A feed has a frequency and a periodicity which specifies the frequency by which 
+				this feed is generated. ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
+				valid frequency type for a feed are minutes, hours, days, months.
+			</xs:documentation>
+		</xs:annotation>			
 		<xs:sequence>
 			<xs:element type="partitions" name="partitions" />
 			<xs:element type="xs:string" name="groups" />
@@ -117,6 +77,122 @@
 		<xs:attribute type="IDENTIFIER" name="name" use="required"/>
 		<xs:attribute type="xs:string" name="description" />
 	</xs:complexType>
+	
+	<xs:complexType name="cluster">
+		<xs:annotation>
+			<xs:documentation>
+				Feed references a cluster by it's name, before submitting a feed all the
+				referenced cluster should be submitted to Ivory.
+				type: specifies whether the referenced cluster should be treated as a
+				source or target for a feed.
+				Validity of a feed on cluster specifies duration for which this feed is
+				valid on this cluster.
+				Retention specifies how long the feed is retained on this cluster and the 
+				action to be taken on the feed after the expiry of retention period.
+				The retention limit is specified by expression frequency(times), ex: if
+				feed should be retained for at least 6 hours then retention's limit="hours(6)".
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element type="validity" name="validity" />
+			<xs:element type="retention" name="retention" />
+		</xs:sequence>
+		<xs:attribute type="IDENTIFIER" name="name" use="required" />
+		<xs:attribute type="cluster-type" name="type" use="required" />
+	</xs:complexType>
+	<xs:complexType name="partitions">
+		<xs:annotation>
+			<xs:documentation>
+				A list of partition, which is the logical partition of a feed and this
+				is maintained in Hcatalog registry.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element type="partition" name="partition" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="schema">
+		<xs:annotation>
+			<xs:documentation>A schema specifies the location of a schema file
+				for a feed and the provider of schema like protobuf, thrift etc.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute type="xs:string" name="location" use="required"/>
+		<xs:attribute type="xs:string" name="provider" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="properties">
+		<xs:annotation>
+			<xs:documentation>
+				A list of name-value pair of property.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element type="property" name="property" maxOccurs="unbounded"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="validity">
+		<xs:annotation>
+			<xs:documentation>
+				A validity has a start, which is the validity start date and end the
+				validity
+				end date. ex: start="2011-11-01T00:00Z" in TZ format.
+				timezone can be UTC, GMT.
+				Processes referring this feed would consider the validity period for
+				validation.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute type="date-time-type" name="start" use="required" />
+		<xs:attribute type="date-time-type" name="end" use="required" />
+		<xs:attribute type="timezone-type" name="timezone" use="required" />
+	</xs:complexType>
+	<xs:complexType name="locations">
+		<xs:annotation>
+			<xs:documentation>
+				A list of locations.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:choice maxOccurs="unbounded" minOccurs="0">
+			<xs:element type="location" name="location" />
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="late-arrival">
+		<xs:annotation>
+			<xs:documentation>
+				late-arrival specifies the cut-off period till which the feed is
+				expected to arrive late and should be honored be processes referring
+				to it as input feed by rerunning the instances in case 
+				the data arrives late with in a cut-off period.
+				The cut-off period is specified by expression
+				frequency(times), ex: if the feed can arrive late
+				upto 8 hours then late-arrival's cut-off="hours(8)"
+				<xs:attribute type="validity-type" name="cut-off" use="required" />
+			</xs:documentation>
+		</xs:annotation>
+	</xs:complexType>
+	<xs:complexType name="property">
+	<xs:annotation>
+		<xs:documentation>
+			A key-value pair, which are propagated to the
+			workflow engine.
+		</xs:documentation>
+	</xs:annotation>
+		<xs:attribute type="xs:string" name="name" use="required" />
+		<xs:attribute type="xs:string" name="value" use="required" />
+	</xs:complexType>
+	<xs:complexType name="clusters">
+		<xs:annotation>
+			<xs:documentation>
+				A list of clusters.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element type="cluster" name="cluster" maxOccurs="unbounded"
+				minOccurs="1">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:complexType name="retention">
 		<xs:attribute type="retention-type" name="type" default="instance" />
 		<xs:attribute type="validity-type" name="limit" use="required"/>
@@ -125,10 +201,19 @@
 	<xs:simpleType name="retention-type">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="instance" />
-			<xs:enumeration value="age" />
+			<!-- <xs:enumeration value="age" /> -->
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:complexType name="location">
+	<xs:annotation>
+		<xs:documentation>
+			location specifies the type of location like data, meta, stats
+			and the corresponding paths for them.
+			A feed should at least define the location for type data, which
+			specifies the HDFS path pattern where the feed is generated
+			periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
+			</xs:documentation>
+		</xs:annotation>
 		<xs:attribute type="xs:string" name="type" use="required" />
 		<xs:attribute type="xs:string" name="path" use="required" />
 	</xs:complexType>
@@ -136,12 +221,25 @@
 		<xs:attribute type="IDENTIFIER" name="name" use="required" />
 	</xs:complexType>
 	<xs:complexType name="ACL">
+		<xs:annotation>
+			<xs:documentation>
+				Access control list for this feed.
+			</xs:documentation>
+		</xs:annotation>
 		<xs:attribute type="xs:string" name="owner" />
 		<xs:attribute type="xs:string" name="group" />
 		<xs:attribute type="xs:string" name="permission" />
 	</xs:complexType>
 	<xs:simpleType name="action-type">
-		<xs:restriction base="xs:string">
+	<xs:restriction base="xs:string">
+		<xs:annotation>
+			<xs:documentation>
+				action type specifies the action that should be taken on a feed
+				when the retention period of a feed expires on a cluster,
+				the valid
+				actions are archive, delete, chown and chmod.
+			</xs:documentation>
+		</xs:annotation>
 			<xs:enumeration value="archive" />
 			<xs:enumeration value="delete" />
 			<xs:enumeration value="chown" />
@@ -149,6 +247,15 @@
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="cluster-type">
+		<xs:annotation>
+			<xs:documentation>
+				The clusters on feed can be either defined as source or target,
+				a feed
+				should at least have one source cluster defined.
+				the target clusters
+				are used for replication of feed.
+			</xs:documentation>
+		</xs:annotation>
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="source" />
 			<xs:enumeration value="target" />
