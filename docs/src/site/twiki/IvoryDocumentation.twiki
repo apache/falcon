@@ -113,7 +113,218 @@ set of actions are performed in Oozie to realize an update.
 
 ---++ Instance Management actions
 ---++ Retention
+In coherence with it's feed lifecycle management philosophy, Ivory allows the user to retain  data in the system
+for a specific period of time for a scheduled feed. The user can specify the retention period in the respective 
+feed/data xml in the following manner for each cluster the feed can belong to :
+<verbatim>
+<clusters>
+        <cluster name="corp" type="source">
+            <validity start="2012-01-30T00:00Z" end="2013-03-31T23:59Z"
+                      timezone="UTC" />
+            <retention limit="hours(10)" action="delete" /> 
+        </cluster>
+ </clusters> 
+</verbatim>
+
+The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
+be attached to it. It essentially instructs the system to retain data spanning from the current moment to the time specified
+in the attribute spanning backwards in time. Any data beyond the limit (past/future) is erased from the system.
+
+---+++ Example:
+ If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
+one falling in between [t-10h,t]. Any data in the boundaries [-°,t-10h) and (t,°] is removed from the system.
+
+The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is either
+deleted/archived.
+
+---+++ NOTE: Ivory 0.1/0.2 releases support Delete operation only
+
+---+++ When does retention policy come into play, aka when is retention really performed?
+
+Retention policy in Ivory kicks off on the basis of the time value specified by the user. Here are the basic rules:
+
+   * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
+   * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
+   * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
+
+Relation between feed path and retention policy: Retention policy for a particular scheduled feed applies only to the eligible feed path
+specified in the feed xml. Any other paths that do not conform to the specified feed path are left unaffected by the retention policy.
+
+---+++ Where is the feed path defined?
+
+It's defined in the feed xml within the location tag.
+
+*Example:*
+<verbatim>
+<locations>
+        <location type="data" path="/retention/testFolders/${YEAR}-${MONTH}-${DAY}" />
+</locations>
+</verbatim>
+
+Now, if the above path contains folders in the following fashion:
+
+/retention/testFolders/${YEAR}-${MONTH}-${DAY}
+/retention/testFolders/${YEAR}-${MONTH}/someFolder
+
+The feed retention policy would only act on the former and not the latter.
+
+
+---+++ Relation between feed's retention limit and feed's late arrival cut off period:
+
+For reasons that are obvious, Ivory has an external validation that ensures that the user
+always specifies the feed retention limit to be more than the feed's allowed late arrival period.
+If this rule is violated by the user, the feed submission call itself throws back an error.
+   
+
 ---++ Cross entity validations
+
+
+---+++ Entity Dependencies in a nutshell
+<img src="EntityDependency.png" height="50" width="300" />
+
+
+The above schematic shows the dependencies between entities in Ivory. The arrow in above diagram
+points from a dependency to the dependent. 
+
+
+Let's just get one simple rule stated here, which we will keep referring to time and again while
+talking about entities: A dependency in the system cannot be removed unless all it's dependents are
+removed first. This holds true for all transitive dependencies also.
+
+Now, let's follow it up with a simple illustration of an Ivory Job:
+
+Let's consider a process P that refers to feed F1 as an input feed, and generates feed F2 as an
+output feed. These feeds/processes are supposed to be associated with a cluster C1.
+
+The order of submission of this job would be in the following order:
+
+C1->F1/F2(in any order)->P
+
+The order of removal of this job from the system is in the exact opposite order, i.e.:
+
+P->F1/F2(in any order)->C1
+
+Please note that there might be multiple process referring to a particular feed, or a single feed belonging
+to multiple clusters. In that event, any of the dependencies cannot be removed unless ALL of their dependents
+are removed first. Attempting to do so will result in an error message and a 400 Bad Request operation.
+
+
+---+++ Other cross validations between entities in Ivory system
+
+*Cluster-Feed Cross validations:*
+
+   * The cluster(s) referenced by feed (inside the <clusters> tag) should be  present in the system at the time
+of submission. Any exception to this results in a feed submission failure. Note that a feed might be referring
+to more than a single cluster. The identifier for the same is the 'name' attribute for the individual cluster.
+
+*Example:*
+
+*Feed XML:*
+   
+<verbatim>
+   <clusters>
+        <cluster name="corp" type="source">
+            <validity start="2009-01-01T00:00Z" end="2012-12-31T23:59Z"
+                      timezone="UTC" />
+            <retention limit="months(6)" action="delete" />
+        </cluster>
+    </clusters>
+</verbatim>
+
+*Cluster corp's XML:*
+
+<verbatim>
+<cluster colo="gs" description="" name="corp" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+
+*Cluster-Process Cross validations:*
+
+
+   * In a similar relationship to that of feed and a cluster, a process also refers to the relevant cluster by the
+'name' attribute. Any exception results in a process submission failure.
+
+
+---+++ Example:
+---+++ Process XML:
+<verbatim>
+<process name="agregator-coord16">
+    <cluster name="corp"/>....
+</verbatim>
+---+++ Cluster corp's XML:
+<verbatim>
+<cluster colo="gs" description="" name="corp" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+
+*Feed-Process Cross Validations:*
+
+
+1. The process <input> and feeds designated as input feeds for the job:
+
+	For every feed referenced in the <input> tag in a process definition, following rules are applied
+when the process is due for submission:
+
+   * The feed having a value associated with the 'feed' attribute in input tag should be present in
+the system. The corresponding attribute in the feed definition is the 'name' attribute in the <feed> tag.
+
+*Example:*
+
+*Process xml:*
+
+<verbatim>
+<input end-instance="now(0,20)" start-instance="now(0,-60)"
+feed="raaw-logs16" name="inputData"/>
+</verbatim>
+
+*Feed xml:*
+<verbatim>
+<feed description="clicks log" name="raaw-logs16"....
+</verbatim>
+
+   
+    * The time interpretation for corresponding tags indicating the start and end instances for a
+particular input feed in the process xml should lie well within the timespan of  the period specified in
+<validity> tag of the particular feed.
+
+*Example:*
+
+1. In the following scenario, process submission will result in an error:
+
+*Process XML:*
+<verbatim>
+<input end-instance="now(0,20)" start-instance="now(0,-60)"
+			feed="raaw-logs16" name="inputData"/>
+</verbatim>
+*Feed XML:*
+<verbatim>
+<validity start="2009-01-01T00:00Z" end="2009-12-31T23:59Z".....
+</verbatim>
+Explanation: The process timelines for the feed range between a 40 minute interval between [-60m,-20m] from
+the current timestamp (which lets assume is  'today' as per the 'now' directive). However, the feed validity
+is between a 1 year period in 2009, which makes it anachronistic. 
+
+2. The following example would work just fine:
+
+*Process XML:*
+<verbatim>
+<input end-instance="now(0,20)" start-instance="now(0,-60)"
+			feed="raaw-logs16" name="inputData"/>
+</verbatim>
+*Feed XML:*
+<verbatim>
+validity start="2009-01-01T00:00Z" end="2012-12-31T23:59Z" .......
+</verbatim>
+since at the time of charting this document (03/03/2012), the feed validity is able to encapsulate the process
+input's start  and end instances.
+
+
+Failure to follow any of the above rules would result in a process submission failure.
+
+*NOTE:* Even though the above check ensures that the timelines are not anachronistic, if the input data is not
+present in the system for the specified time period, the process can be submitted and scheduled, but all instances
+created would result in a WAITING state unless data is actually provided in the cluster.
+
+
+
 ---++ Updating process and feed definition
 ---++ Handling late input data
 Ivory system can handle late arrival of input data and appropriately re-trigger processing for the affected
