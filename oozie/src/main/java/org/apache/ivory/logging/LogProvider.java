@@ -82,7 +82,7 @@ public final class LogProvider {
 			return getActionsUrl(cluster, process, processInstance, externalId,
 					runId);
 		} catch (Exception e) {
-			LOG.error(e);
+			LOG.error("Exception in LogProvider while getting job id", e);
 			return new ProcessInstancesResult.ProcessInstance(processInstance,
 					"-", null);
 		}
