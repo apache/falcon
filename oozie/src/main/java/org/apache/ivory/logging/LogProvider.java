@@ -66,13 +66,15 @@ public final class LogProvider {
 			List<WorkflowAction> actions = jobInfo.getActions();
 			// if parent wf killed manually or ivory actions fail, return
 			// oozie's console url of parent wf
-			if (actions.size() != 4
+			if (actions.size() < 4
 					|| !actions.get(0).getStatus()
 							.equals(WorkflowAction.Status.OK)
 					|| !actions.get(2).getStatus()
 							.equals(WorkflowAction.Status.OK)
 					|| !actions.get(3).getStatus()
-							.equals(WorkflowAction.Status.OK)) {
+							.equals(WorkflowAction.Status.OK)
+					|| (actions.size() == 5 && !actions.get(4).getStatus()
+							.equals(WorkflowAction.Status.OK))) {
 				return new ProcessInstancesResult.ProcessInstance(
 						processInstance, jobInfo.getConsoleUrl(), null);
 			}
