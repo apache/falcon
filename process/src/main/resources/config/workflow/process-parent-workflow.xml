@@ -81,12 +81,12 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.logging.LogMover</main-class>
-			<arg>${workflowEngineUrl}</arg>
-			<arg>${wf:id()}@user-workflow</arg>
-			<arg>${wf:run()}</arg>
-			<arg>${userWorkflowPath}/log/</arg>
-			<arg>${wf:conf("oozie.wf.external.id")}</arg>
-			<arg>SUCCEEDED</arg>
+			<arg>-oozieurl ${workflowEngineUrl}</arg>
+			<arg>-subflowid ${wf:id()}@user-workflow</arg>
+			<arg>-runid ${wf:run()}</arg>
+			<arg>-logdir ${userWorkflowPath}/log/</arg>
+			<arg>-externalid ${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-status SUCCEEDED</arg>
 		</java>
 		<ok to="join-for-succeeded" />
 		<error to="fail" />
@@ -96,12 +96,12 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.logging.LogMover</main-class>
-			<arg>${workflowEngineUrl}</arg>
-			<arg>${wf:id()}@user-workflow</arg>
-			<arg>${wf:run()}</arg>
-			<arg>${userWorkflowPath}/log/</arg>
-			<arg>${wf:conf("oozie.wf.external.id")}</arg>
-			<arg>FAILED</arg>
+			<arg>-oozieurl ${workflowEngineUrl}</arg>
+			<arg>-subflowid ${wf:id()}@user-workflow</arg>
+			<arg>-runid ${wf:run()}</arg>
+			<arg>-logdir ${userWorkflowPath}/log/</arg>
+			<arg>-externalid ${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-status FAILED</arg>
 		</java>
 		<ok to="join-for-failed" />
 		<error to="fail" />

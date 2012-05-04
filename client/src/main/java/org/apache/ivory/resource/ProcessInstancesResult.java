@@ -54,8 +54,7 @@ public class ProcessInstancesResult extends APIResult {
 		@Override
 		public String toString() {
 			return "{instance:" + this.instance + ", status:" + this.status
-					+ this.logFile == null ? "" : (", log:" + this.logFile)
-					+ this.actions == null ? "" : (", actions:" + this.actions)
+					+ (this.logFile == null ? "" : ", log:" + this.logFile)
 					+ "}";
 		}
     }
@@ -141,7 +140,7 @@ public class ProcessInstancesResult extends APIResult {
 		@Override
 		public String toString() {
 			return "{action:" + this.action + ", status:" + this.status
-					+ this.logFile == null ? "" : (", log:" + this.logFile)
+					+ (this.logFile == null ? "" : ", log:" + this.logFile)
 					+ "}";
 		}
 	}

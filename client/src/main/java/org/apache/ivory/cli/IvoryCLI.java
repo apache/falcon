@@ -71,6 +71,8 @@ public class IvoryCLI {
 	public static final String RUNNING_OPT = "running";
 	public static final String KILL_OPT = "kill";
 	public static final String RERUN_OPT = "rerun";
+	public static final String RUNID_OPT = "runid";
+	public static final String INSTANCE_TYPE_OPT = "type";
 
 	/**
 	 * Entry point for the Ivory CLI when invoked from the command line. Upon
@@ -172,13 +174,15 @@ public class IvoryCLI {
 		String start = commandLine.getOptionValue(START_OPT);
 		String end = commandLine.getOptionValue(END_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
+		String type=commandLine.getOptionValue(INSTANCE_TYPE_OPT);
+		String runid=commandLine.getOptionValue(RUNID_OPT);
 
 		validateInstanceCommands(optionsList, processName, start, end, filePath);
 
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(processName);
 		} else if (optionsList.contains(STATUS_OPT)) {
-			result = client.getStatusOfInstances(processName, start, end);
+			result = client.getStatusOfInstances(processName, start, end,type,runid);
 		} else if (optionsList.contains(KILL_OPT)) {
 			result = client.killInstances(processName, start, end);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
@@ -416,6 +420,8 @@ public class IvoryCLI {
 				END_OPT,
 				true,
 				"End time is optional for commands, status, kill, suspend, resume and re-run; if not specified then current time is considered as end time");
+		Option type = new Option(INSTANCE_TYPE_OPT, true,"Instance type is optional and user can provide type of instance, valid values are DEFAULT and LATE1");
+		Option runid = new Option(RUNID_OPT, true,"Instance runid  is optional and user can specify the runid, defaults to 0");
 		Option filePath = new Option(
 				FILE_PATH_OPT,
 				true,
@@ -429,6 +435,8 @@ public class IvoryCLI {
 		instanceOptions.addOption(end);
 		instanceOptions.addOption(filePath);
 		instanceOptions.addOption(processName);
+		instanceOptions.addOption(type);
+		instanceOptions.addOption(runid);
 
 		return instanceOptions;
 
@@ -452,7 +460,7 @@ public class IvoryCLI {
 
 			if (url == null) {
 				throw new IllegalArgumentException(
-						"Ivory URL is neither available in command option nor in the environment");
+						"Ivory URL is neither available in command option nor in the client.properties file");
 			}
 		}
 		return url;

@@ -369,6 +369,10 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(0, executeWithURL("instance -status -processName "
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"));
+		
+		Assert.assertEquals(0, executeWithURL("instance -status -processName "
+				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"
+				+ " -type DEFAULT -runid 0"));
 	}
 
 	@Test(enabled = enableTest)

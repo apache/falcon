@@ -24,6 +24,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -105,20 +110,43 @@ public class LogMover extends Configured implements Tool {
 		return 0;
 	}
 
-	private void setupArgs(String[] arguments, ARGS args) {
+	private void setupArgs(String[] arguments, ARGS args) throws ParseException {
+		CommandLineParser parser = new PosixParser();
+		Options options = new Options();
+		options.addOption("oozieurl", true, "url of workflow engine, ex:oozie");
+		options.addOption("subflowid", true, "external id of userworkflow");
+		options.addOption("runid", true, "current workflow's runid");
+		options.addOption("logdir", true, "log dir where job logs are stored");
+		options.addOption("externalid", true, "current workflow's externalid ");
+		options.addOption("status", true, "user workflow status");
+
+		StringBuilder command = new StringBuilder();
+		for (int i = 0; i < arguments.length; i++) {
+			command.append(arguments[i]).append(" ");
+		}
+
+		CommandLine cmd = parser
+				.parse(options, command.toString().split("\\s"));
+		if (!cmd.hasOption("oozieurl") || !cmd.hasOption("subflowid")
+				|| !cmd.hasOption("runid") || !cmd.hasOption("logdir")
+				|| !cmd.hasOption("externalid") || !cmd.hasOption("status")) {
+			throw new ParseException(
+					"Required options are: oozieurl, subflowid, runid,logdir,externalid,status");
+		}
 		LOG.info("Arguments:");
-		LOG.info("Oozie url:" + arguments[0]);
-		args.oozieUrl = arguments[0];
-		LOG.info("Subflow-id:" + arguments[1]);
-		args.subflowId = arguments[1];
-		LOG.info("Run id:" + arguments[2]);
-		args.runId = arguments[2];
-		LOG.info("Log dir path:" + arguments[3]);
-		args.logDir = arguments[3];
-		LOG.info("ExternalId:" + arguments[4]);
-		args.externalId = arguments[4].replaceAll(":", "-");
-		LOG.info("Status:" + arguments[5]);
-		args.status = arguments[5];
+		LOG.info("Oozie url:" + cmd.getOptionValue("oozieurl"));
+		args.oozieUrl = cmd.getOptionValue("oozieurl");
+		LOG.info("Subflow-id:" + cmd.getOptionValue("subflowid"));
+		args.subflowId = cmd.getOptionValue("subflowid");
+		LOG.info("Run id:" + cmd.getOptionValue("runid"));
+		args.runId = cmd.getOptionValue("runid");
+		LOG.info("Log dir path:" + cmd.getOptionValue("logdir"));
+		args.logDir = cmd.getOptionValue("logdir");
+		LOG.info("ExternalId:" + cmd.getOptionValue("externalid"));
+		args.externalId = cmd.getOptionValue("externalid").replaceAll(":", "-");
+		LOG.info("Status:" + cmd.getOptionValue("status"));
+		args.status = cmd.getOptionValue("status");
+
 	}
 
 	private String getTTlogURL(String jobId) throws Exception {

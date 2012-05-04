@@ -234,42 +234,42 @@ public class IvoryClient {
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RUNNING, processName, null,
-				null, null);
+				null, null,null,null);
 	}
 
 	public String getStatusOfInstances(String processName, String start,
-			String end) throws IvoryCLIException {
+			String end, String type, String runid) throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.STATUS, processName, start,
-				end, null);
+				end, null,type, runid);
 	}
 
 	public String killInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.KILL, processName, start,
-				end, null);
+				end, null,null,null);
 	}
 
 	public String suspendInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.SUSPEND, processName,
-				start, end, null);
+				start, end, null,null,null);
 	}
 
 	public String resumeInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RESUME, processName, start,
-				end, null);
+				end, null,null,null);
 	}
 
 	public String rerunInstances(String processName, String start, String end,
 			String filePath) throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RERUN, processName, start,
-				end, getServletInputStream(filePath));
+				end, getServletInputStream(filePath),null,null);
 	}
 
 	/**
@@ -384,7 +384,7 @@ public class IvoryClient {
 	}
 
 	private String sendProcessInstanceRequest(Instances instances,
-			String processName, String start, String end, InputStream props)
+			String processName, String start, String end, InputStream props, String type, String runid)
 			throws IvoryCLIException {
 		WebResource resource = service.path(instances.path).path(processName);
 		if (start != null) {
@@ -392,6 +392,12 @@ public class IvoryClient {
 		}
 		if (end != null) {
 			resource = resource.queryParam("end", end);
+		}
+		if (type != null) {
+			resource = resource.queryParam("type", type);
+		}
+		if (runid != null) {
+			resource = resource.queryParam("runid", runid);
 		}
 
 		ClientResponse clientResponse = null;
@@ -447,7 +453,17 @@ public class IvoryClient {
 		for (ProcessInstancesResult.ProcessInstance instance : result
 				.getInstances()) {
 			sb.append("instance=" + instance.getInstance() + ";status="
-					+ instance.getStatus() + "\n");
+					+ instance.getStatus());
+			if (instance.logFile != null) {
+				sb.append(";log=").append(instance.logFile);
+			}
+			sb.append("\n");
+			if(instance.actions!=null){
+				sb.append("actions:\n");
+				for(ProcessInstancesResult.InstanceAction action:instance.actions){
+					sb.append("    ").append(action).append("\n");
+				}
+			}
 		}
 		return sb.toString();
 	}

@@ -17,6 +17,8 @@
  */
 package org.apache.ivory.logging;
 
+import java.util.List;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.ExternalId;
@@ -47,13 +49,32 @@ public final class LogProvider {
 		ExternalId externalId = getExternalId(process.getName(), type,
 				processInstance.instance);
 		try {
+			// if parent wf is running/suspend return oozie's console url of
+			// parent wf
 			if (processInstance.status.equals(WorkflowStatus.RUNNING)
 					|| processInstance.status.equals(WorkflowStatus.SUSPENDED)) {
 				String parentWFUrl = getConsoleURL(
 						ClusterHelper.getOozieUrl(cluster), externalId.getId());
 				return new ProcessInstancesResult.ProcessInstance(
-						processInstance, parentWFUrl,
-						new ProcessInstancesResult.InstanceAction[] {});
+						processInstance, parentWFUrl, null);
+			}
+
+			OozieClient client = new OozieClient(
+					ClusterHelper.getOozieUrl(cluster));
+			String parentJobId = client.getJobId(externalId.getId());
+			WorkflowJob jobInfo = client.getJobInfo(parentJobId);
+			List<WorkflowAction> actions = jobInfo.getActions();
+			// if parent wf killed manually or ivory actions fail, return
+			// oozie's console url of parent wf
+			if (actions.size() != 4
+					|| !actions.get(0).getStatus()
+							.equals(WorkflowAction.Status.OK)
+					|| !actions.get(2).getStatus()
+							.equals(WorkflowAction.Status.OK)
+					|| !actions.get(3).getStatus()
+							.equals(WorkflowAction.Status.OK)) {
+				return new ProcessInstancesResult.ProcessInstance(
+						processInstance, jobInfo.getConsoleUrl(), null);
 			}
 
 			return getActionsUrl(cluster, process, processInstance, externalId,
@@ -123,9 +144,10 @@ public final class LogProvider {
 	private static String getDFSbrowserUrl(Cluster cluster, Process process,
 			ExternalId externalId, String runId, String action)
 			throws IvoryException {
-		return ClusterHelper.getReadOnlyHdfsUrl(cluster) + "/"
+		return (ClusterHelper.getReadOnlyHdfsUrl(cluster) + "/data/"
 				+ process.getWorkflow().getPath() + "/log/"
-				+ externalId.getDFSname() + "/" + runId + "/" + action + ".log";
+				+ externalId.getDFSname() + "/" + runId + "/" + action + ".log")
+				.replaceAll("//", "/");
 	}
 
 }

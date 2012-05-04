@@ -21,15 +21,15 @@ import org.testng.annotations.Test;
 
 public class LogMoverTest {
 
-	@Test(enabled=false)
+	@Test(enabled=true)
 	public void testLogMover() throws Exception {
 		LogMover.main(new String[] {
-				"http://10.14.117.33:11000/oozie/",
-				"0000715-120501035446291-oozie-rish-W@user-workflow",
-				"0",
-				"/user/shaik.idris/log/",
-				"agregator-coord16-d0dd2a19-d517-4513-bb1d-07233ba03808-510c900c-e3fe-4a8a-9313-b1d55178f20a/DEFAULT/2010-01-02T01:00Z",
-				"SUCCESS" });
+				"-oozieurl http://localhost:11000/oozie/",
+				"-subflowid 0000029-120503115115560-oozie-oozi-W@user-workflow",
+				"-runid 0",
+				"-logdir /log/",
+				"-externalid agg-coord/DEFAULT/2010-01-01T01:15Z",
+				"-status SUCCESS" });
 	}
 
 }
