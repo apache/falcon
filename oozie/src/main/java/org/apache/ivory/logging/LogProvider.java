@@ -81,10 +81,10 @@ public final class LogProvider {
 
 			return getActionsUrl(cluster, process, processInstance, externalId,
 					runId);
-		} catch (OozieClientException e) {
-			LOG.error(e);
+		} catch (Exception e) {
+			LOG.error("Exception in LogProvider while getting job id", e);
 			return new ProcessInstancesResult.ProcessInstance(processInstance,
-					"-", new ProcessInstancesResult.InstanceAction[] {});
+					"-", null);
 		}
 
 	}
