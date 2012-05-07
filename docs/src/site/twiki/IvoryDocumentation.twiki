@@ -260,7 +260,7 @@ to more than a single cluster. The identifier for the same is the 'name' attribu
 
 1. The process <input> and feeds designated as input feeds for the job:
 
-	For every feed referenced in the <input> tag in a process definition, following rules are applied
+ For every feed referenced in the <input> tag in a process definition, following rules are applied
 when the process is due for submission:
 
    * The feed having a value associated with the 'feed' attribute in input tag should be present in
@@ -292,7 +292,7 @@ particular input feed in the process xml should lie well within the timespan of 
 *Process XML:*
 <verbatim>
 <input end-instance="now(0,20)" start-instance="now(0,-60)"
-			feed="raaw-logs16" name="inputData"/>
+   feed="raaw-logs16" name="inputData"/>
 </verbatim>
 *Feed XML:*
 <verbatim>
@@ -307,7 +307,7 @@ is between a 1 year period in 2009, which makes it anachronistic.
 *Process XML:*
 <verbatim>
 <input end-instance="now(0,20)" start-instance="now(0,-60)"
-			feed="raaw-logs16" name="inputData"/>
+   feed="raaw-logs16" name="inputData"/>
 </verbatim>
 *Feed XML:*
 <verbatim>
@@ -340,5 +340,74 @@ record input size or detecting late input based on this size is added to the wor
 for each process. The offset between the late coordinator and the default coordinator is same as the max
 late-cut-off of the input feeds. However they run with the same external id as the default one.
 
+
 ---++ Alerting and Monitoring
+---+++ Alerting
+Ivory provides monitoring of various events by capturing metrics of those events.
+The metric numbers can then be used to monitor performance and health of the Ivory system and the entire processing pipelines.
+
+Users can view the logs of these events in the metric.log file, by default this file is created under /var/log/ivory/ directory.
+Users may also extend the Ivory monitoring framework to send events to systems like Mondemand/lwes.
+
+The following events are captured by Ivory for logging the metrics:
+   1. New cluster definitions posted to Ivory (success & failures)
+   1. New feed definition posted to Ivory (success & failures)
+   1. New process definition posted to Ivory (success & failures)
+   1. Process update events (success & failures)
+   1. Feed update events (success & failures)
+   1. Cluster update events (success & failures)
+   1. Process suspend events (success & failures)
+   1. Feed suspend events (success & failures)
+   1. Process resume events (success & failures)
+   1. Feed resume events (success & failures)
+   1. Process remove events (success & failures)
+   1. Feed remove events (success & failures)
+   1. Cluster remove events (success & failures)
+   1. Process instance kill events (success & failures)
+   1. Process instance re-run events (success & failures)
+   1. Process instance generation events
+   1. Process instance failure events
+   1. Process instance auto-retry events
+   1. Process instance retry exhaust events
+   1. Feed instance deletion event
+   1. Feed instance deletion failure event (no retries)
+   1. Feed instance replication event
+   1. Feed instance replication failure event
+   1. Feed instance replication auto-retry event
+   1. Feed instance replication retry exhaust event
+   1. Feed instance late arrival event
+   1. Feed instance post cut-off arrival event
+   1. Process re-run due to late feed event
+   1. Transaction rollback failed event
+
+The metric logged for an event has the following properties:
+   1. Action - Name of the event.
+   2. Dimensions - A list of name/value pairs of various attributes for a given action.
+   3. Status- Status of an action FAILED/SUCCEEDED.
+   4. Time-taken - Time taken in nano seconds for a given action.
+
+An example for an event logged for a submit of a new process definition:   
+
+   2012-05-04 12:23:34,026 {Action:submit, Dimensions:{entityType=process}, Status: SUCCEEDED, Time-taken:97087000 ns}
+
+Users may parse the metric.log or capture these events from custom monitoring frameworks and can plot various graphs 
+or send alerts according to their requirements.
+
+---+++ Notifications
+Ivory creates a JMS topic for every process/feed that is scheduled in Ivory.
+The implementation class and the broker url of the JMS engine are read from the dependent cluster's definition.
+Users may register consumers on the required topic to check the availability or status of feed instances.
+ 
+For a given process that is scheduled, the name of the topic is same as the process name.
+Ivory sends a text message for every feed produced by the instance of a process to the JMS topic.
+The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$workflowId$runId$nominalTime$timeStamp
+Ex:aggregator$clicks$/clicks/hour/00/00$workflow-0$0$2012-10-10-10-10$2012-10-10-10-10
+
+For a given feed that is scheduled, the name of the topic is same as the feed name.
+Ivory sends a text message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
+The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$retentionAction$workflowId$runId$nominalTime$timeStamp
+Ex:aggregatedLogs$aggregatedLogs$/retention/testFolders/2012/05/08/07$DELETE$0000042-120506235551389-oozie-oozi-W$0$2012-05-06-20-17$2012-05-06-20-17
+
+The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.
+
 ---++ Ivory EL Expressions
