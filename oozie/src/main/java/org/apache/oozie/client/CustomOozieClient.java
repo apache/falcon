@@ -1,5 +1,6 @@
 package org.apache.oozie.client;
 
+import org.apache.ivory.util.RuntimeProperties;
 import org.apache.oozie.client.rest.RestConstants;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -28,6 +30,19 @@ public class CustomOozieClient extends OozieClient {
         return (new OozieConfiguration(RestConstants.ADMIN_JAVA_SYS_PROPS_RESOURCE)).call();
     }
 
+    @Override
+    protected HttpURLConnection createConnection(URL url, String method) throws IOException, OozieClientException {
+        HttpURLConnection conn = super.createConnection(url, method);
+        
+        int connectTimeout = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.connect.timeout", "1000"));
+        conn.setConnectTimeout(connectTimeout);
+
+        int readTimeout = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.read.timeout", "45000"));
+        conn.setReadTimeout(readTimeout);
+        
+        return conn;
+    }
+    
     private class OozieConfiguration extends ClientCallable<Properties> {
 
         public OozieConfiguration(String resource) {
