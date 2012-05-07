@@ -144,8 +144,8 @@ deleted/archived.
 Retention policy in Ivory kicks off on the basis of the time value specified by the user. Here are the basic rules:
 
    * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
-   * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
-   * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
+   * If the retention policy specified is more than 24 hours: In this event, the retention policy automatically kicks off every 24 hours.
+   * As soon as a feed is successfully scheduled:  the retention policy is triggered immediately regardless of the current timestamp/state of the system.
 
 Relation between feed path and retention policy: Retention policy for a particular scheduled feed applies only to the eligible feed path
 specified in the feed xml. Any other paths that do not conform to the specified feed path are left unaffected by the retention policy.
