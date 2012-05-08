@@ -16,17 +16,24 @@ package org.apache.ivory;/*
  * limitations under the License.
  */
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.ivory.util.EmbeddedServer;
 import org.apache.log4j.Logger;
 
 public class Main {
 
-  private static Logger LOG = Logger.getLogger(Main.class);
+    private static Logger LOG = Logger.getLogger(Main.class);
 
-  public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-    EmbeddedServer server = new EmbeddedServer(15000,
-            "webapp/target/ivory-webapp-0.1-SNAPSHOT");
-    server.start();
-  }
+        EmbeddedServer server = new EmbeddedServer(15000,
+                "webapp/target/ivory-webapp-0.2-SNAPSHOT");
+        server.start();
+
+        BrokerService broker = new BrokerService();
+        broker.setUseJmx(true);
+        broker.addConnector("vm://localhost?broker.useJmx=false&broker.persistent=true");
+        broker.start();
+
+    }
 }

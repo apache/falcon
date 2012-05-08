@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
@@ -120,7 +121,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             return null;
 
         COORDINATORAPP coord = new COORDINATORAPP();
-        String coordName = process.getWorkflowName("DEFAULT");
+        String coordName = process.getWorkflowName(Tag.DEFAULT);
         Path coordPath = getCoordPath(bundlePath, coordName);
 
         // coord attributes
@@ -243,7 +244,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         assert !offsetExpr.isEmpty() : "dont expect offset to be empty";
 
         COORDINATORAPP coord = new COORDINATORAPP();
-        String coordName = process.getWorkflowName("LATE1");
+        String coordName = process.getWorkflowName(Tag.LATE1);
         Path coordPath = getCoordPath(bundlePath, coordName);
 
         // coord attributes

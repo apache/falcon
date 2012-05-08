@@ -32,8 +32,11 @@ import com.thoughtworks.xstream.converters.reflection.FieldDictionary;
 import com.thoughtworks.xstream.converters.reflection.ImmutableFieldKeySorter;
 import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.DomDriver;
+import org.apache.ivory.Tag;
 
 public abstract class Entity {
+    private static final String PREFIX = "IVORY_";
+
     public abstract String getName();
 
     public EntityType getEntityType() {
@@ -122,15 +125,15 @@ public abstract class Entity {
         return getWorkflowName(null);
     }
 
-    public String getWorkflowName(String tag) {
-        if (tag != null && !tag.trim().isEmpty())
-            return "IVORY_" + getEntityType().name().toUpperCase() + "_" + tag + "_" + getName();
-        return "IVORY_" + getEntityType().name().toUpperCase() + "_" + getName();
+    public String getWorkflowName(Tag tag) {
+        if (tag != null)
+            return PREFIX + getEntityType().name().toUpperCase() + "_" + tag.name() + "_" + getName();
+        return PREFIX + getEntityType().name().toUpperCase() + "_" + getName();
     }
 
-    public String getWorkflowNameTag(String workflowName) {
+    public Tag getWorkflowNameTag(String workflowName) {
         String[] parts = workflowName.split("_");
-        return parts[parts.length - 2];
+        return Tag.valueOf(parts[parts.length - 2]);
     }
 
     @Override

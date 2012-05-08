@@ -18,6 +18,7 @@
 
 package org.apache.ivory.latedata;
 
+import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -25,7 +26,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
+import org.apache.ivory.entity.ExternalId;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CustomOozieClient;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.WorkflowJob;
 
 import java.io.*;
 import java.util.LinkedHashMap;
@@ -51,42 +58,105 @@ public class LateDataHandler extends Configured implements Tool {
         ToolRunner.run(new Configuration(), new LateDataHandler(), args);
     }
 
+    private static CommandLine getCommand(String[] args)
+            throws ParseException {
+        Options options = new Options();
+        Option opt = new Option("mode", true, "Mode. Can be record | detect");
+        opt.setRequired(true);
+        options.addOption(opt);
+        opt = new Option("out", true, "Out file name");
+        opt.setRequired(true);
+        options.addOption(opt);
+        opt = new Option("paths", true, "Comma separated path list, further separated by #");
+        opt.setRequired(true);
+        options.addOption(opt);
+        opt = new Option("oozie", true, "Oozie Url");
+        opt.setRequired(true);
+        options.addOption(opt);
+        opt = new Option("extid", true, "oozie external id");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        return new GnuParser().parse(options, args);
+    }
+
     @Override
     public int run(String[] args) throws Exception {
-        if (args.length != 3) {
-            throw new IllegalArgumentException("Expected 3 arguments. " +
-                    "Usage <record|detect> <result-file> <comma-separated-input-files1>#<comma-s...");
-        } else {
 
-            Mode mode = Mode.valueOf(args[0]);
-            Path file = new Path(args[1]);
-            Map<String, Long> map = new LinkedHashMap<String, Long>();
-            String[] pathGroups = args[2].split("#");
-            for (int index = 0; index < pathGroups.length; index++) {
-                long usage = 0;
-                for (String pathElement : pathGroups[index].split(",")) {
-                    Path inPath = new Path(pathElement);
-                    usage += usage(inPath);
-                }
-                map.put("Path" + (index + 1), usage);
-            }
-            LOG.info("MAP data: " + map);
-            if (mode == Mode.record) {
-                OutputStream out = file.getFileSystem(getConf()).create(file);
-                for (Map.Entry<String, Long> entry : map.entrySet()) {
-                    out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
-                }
-                out.close();
-            } else {
-                if (!file.getFileSystem(getConf()).exists(file)) {
-                    LOG.warn(file + " is not found. Nothing to do");
+        CommandLine command = getCommand(args);
+
+        Mode mode = Mode.valueOf(command.getOptionValue("mode"));
+        String extIdStr = command.getOptionValue("extid");
+        String oozieUrl = command.getOptionValue("oozie");
+        if (!extIdStr.isEmpty()) {
+            ExternalId externalId = new ExternalId(extIdStr);
+            String errMesg = checkRunningInstances(oozieUrl, externalId);
+            if (errMesg != null) {
+                if (mode == Mode.detect) {
+                    LOG.warn(errMesg);
                     captureOutput("changedPaths=INVALID");
                     return 0;
+                } else {
+                    throw new IvoryException(errMesg);
                 }
-                captureOutput("changedPaths=" + detectChanges(file, map));
             }
-            return 0;
         }
+
+        Path file = new Path(command.getOptionValue("out"));
+        Map<String, Long> map = new LinkedHashMap<String, Long>();
+        String[] pathGroups = command.getOptionValue("paths").split("#");
+        for (int index = 0; index < pathGroups.length; index++) {
+            long usage = 0;
+            for (String pathElement : pathGroups[index].split(",")) {
+                Path inPath = new Path(pathElement);
+                usage += usage(inPath);
+            }
+            map.put("Path" + (index + 1), usage);
+        }
+        LOG.info("MAP data: " + map);
+        if (mode == Mode.record) {
+            OutputStream out = file.getFileSystem(getConf()).create(file);
+            for (Map.Entry<String, Long> entry : map.entrySet()) {
+                out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
+            }
+            out.close();
+        } else {
+            if (!file.getFileSystem(getConf()).exists(file)) {
+                LOG.warn(file + " is not found. Nothing to do");
+                captureOutput("changedPaths=INVALID");
+                return 0;
+            }
+            captureOutput("changedPaths=" + detectChanges(file, map));
+        }
+        return 0;
+    }
+
+    private String checkRunningInstances(String oozieUrl, ExternalId externalId)
+            throws Exception {
+
+        Tag runningTag = externalId.getTag();
+
+        for (Tag tag : Tag.values()) {
+            if (tag != runningTag && tag.getType() == runningTag.getType()) {
+                ExternalId newId = new ExternalId(externalId.getName(), tag, externalId.getDate());
+                OozieClient client = new CustomOozieClient(oozieUrl);
+
+                String jobId = client.getJobId(newId.getId());
+                if (jobId == null || jobId.trim().isEmpty()) continue;
+
+                WorkflowJob job = client.getJobInfo(jobId);
+                if (job == null) continue;
+
+                WorkflowJob.Status status = job.getStatus();
+                if (!(status == WorkflowJob.Status.SUCCEEDED ||
+                        status == WorkflowJob.Status.FAILED ||
+                        status == WorkflowJob.Status.KILLED)) {
+                    return "Workflow for " + newId.getId() +
+                            "(" + jobId + ") is in " + status + " state." ;
+                }
+            }
+        }
+        return null;
     }
 
     private void captureOutput(String keyValue) throws IOException {

@@ -18,15 +18,9 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
@@ -37,9 +31,11 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 
+import java.util.*;
+
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
-    private static final String[] COORD_TAGS = { "DEFAULT", "LATE1" };
+    private static final Tag[] COORD_TAGS = { Tag.DEFAULT, Tag.LATE1 };
 
     @Override
     public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
@@ -69,10 +65,10 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public List<ExternalId> getExternalIdsForRerun(Process entity, Date start, Date end) throws IvoryException {
-        return getExternalIds(entity, start, end, "DEFAULT");
+        return getExternalIds(entity, start, end, Tag.DEFAULT);
     }
 
-    private List<ExternalId> getExternalIds(Process process, Date start, Date end, String... tags) throws IvoryException {
+    private List<ExternalId> getExternalIds(Process process, Date start, Date end, Tag... tags) throws IvoryException {
         TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
 
         Calendar instance = Calendar.getInstance(timezone);
@@ -82,7 +78,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         Frequency freq = Frequency.valueOf(process.getFrequency());
         List<ExternalId> extIds = new ArrayList<ExternalId>();
         while (instance.getTime().compareTo(end) <= 0 && instance.getTime().before(procEnd)) {
-            for (String tag : tags)
+            for (Tag tag : tags)
                 extIds.add(new ExternalId(process.getName(), tag, instance.getTime()));
             instance.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
         }
@@ -123,8 +119,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     @Override
     public List<ExternalId> getMappedExternalIds(Entity entity, ExternalId extId) throws IvoryException {
         List<ExternalId> extIds = new ArrayList<ExternalId>();
-        if (extId.getTag().equals("DEFAULT")) {
-            extIds.add(new ExternalId(extId.getName(), "LATE1", extId.getDate()));
+        if (extId.getTag().equals(Tag.DEFAULT)) {
+            extIds.add(new ExternalId(extId.getName(), Tag.LATE1, extId.getDate()));
         }
         return extIds;
     }

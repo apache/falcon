@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
@@ -101,7 +102,7 @@ public class ProcessInstanceManager extends EntityManager {
 			ProcessInstancesResult result = new ProcessInstancesResult(
 					"getStatus is successful", instances.values().iterator()
 							.next());
-			return getProcessInstanceEx(process, type, runId, result);
+			return getProcessInstanceEx(process, Tag.valueOf(type), runId, result);
 		} catch (Throwable e) {
 			LOG.error("Failed to get instances status", e);
 			throw IvoryWebException
@@ -110,14 +111,14 @@ public class ProcessInstanceManager extends EntityManager {
 	}
 
 	private ProcessInstancesResult getProcessInstanceEx(Process process,
-			String type, String runId, ProcessInstancesResult result)
+			Tag type, String runId, ProcessInstancesResult result)
 			throws IvoryException {
 		ProcessInstancesResult.ProcessInstance[] processInstances = new ProcessInstancesResult.ProcessInstance[result
 				.getInstances().length];
 		for (int i = 0; i < result.getInstances().length; i++) {
 			ProcessInstancesResult.ProcessInstance pInstance = LogProvider
 					.getLogUrl(process, result.getInstances()[i],
-							type == null ? "DEFAULT" : type,
+							type == null ? Tag.DEFAULT : type,
 							runId == null ? "0" : runId);
 			processInstances[i] = pInstance;
 		}

@@ -17,9 +17,8 @@
  */
 package org.apache.ivory.logging;
 
-import java.util.List;
-
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.ValidationException;
@@ -37,13 +36,15 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 
+import java.util.List;
+
 public final class LogProvider {
 	private static final Logger LOG = Logger.getLogger(LogProvider.class);
 
 	public static ProcessInstancesResult.ProcessInstance getLogUrl(
 			Process process,
 			ProcessInstancesResult.ProcessInstance processInstance,
-			String type, String runId) throws IvoryException {
+			Tag type, String runId) throws IvoryException {
 		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
 				process.getCluster().getName());
 		ExternalId externalId = getExternalId(process.getName(), type,
@@ -130,17 +131,9 @@ public final class LogProvider {
 		return jobInfo.getConsoleUrl();
 	}
 
-	private static ExternalId getExternalId(String processName, String type,
+	private static ExternalId getExternalId(String processName, Tag tag,
 			String date) throws ValidationException {
-		if (type == null || type.equalsIgnoreCase("DEFAULT")) {
-			return new ExternalId(processName, "DEFAULT", date);
-		} else if (type.equalsIgnoreCase("LATE1")) {
-			return new ExternalId(processName, "LATE1", date);
-		} else {
-			throw new ValidationException("Query param type: " + type
-					+ " is not valid");
-		}
-
+        return new ExternalId(processName, tag, date);
 	}
 
 	private static String getDFSbrowserUrl(Cluster cluster, Process process,

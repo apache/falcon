@@ -38,6 +38,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -135,7 +136,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
         assertEquals(process.getWorkflowName(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
-        assertEquals(process.getWorkflowName("DEFAULT"), bundle.getCoordinator().get(0).getName());
+        assertEquals(process.getWorkflowName(Tag.DEFAULT), bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
@@ -147,7 +148,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
-    		Assert.assertEquals(process.getWorkflowName("DEFAULT"), parentWorkflow.getName());
+    		Assert.assertEquals(process.getWorkflowName(Tag.DEFAULT), parentWorkflow.getName());
     		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());

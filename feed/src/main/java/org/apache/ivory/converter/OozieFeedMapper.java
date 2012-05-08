@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -64,7 +65,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
         Feed feed = getEntity();
         COORDINATORAPP retentionApp = new COORDINATORAPP();
-        String coordName = feed.getWorkflowName("RETENTION");
+        String coordName = feed.getWorkflowName(Tag.RETENTION);
         retentionApp.setName(coordName);
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
 

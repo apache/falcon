@@ -61,11 +61,11 @@
                     <webResources>
                         <resource>
                             <directory>src/site/resources</directory>
-                            <targetPath>docs</targetPath>
+                            <targetPath>pages</targetPath>
                         </resource>
                         <resource>
                             <directory>target/site</directory>
-                            <targetPath>docs</targetPath>
+                            <targetPath>pages</targetPath>
                         </resource>
                     </webResources>
                 </configuration>
