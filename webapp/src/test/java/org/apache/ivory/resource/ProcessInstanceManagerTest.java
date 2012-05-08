@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -106,7 +107,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
     
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
-        ExternalId extId = new ExternalId(processName, "DEFAULT", EntityUtil.parseDateUTC(instance));
+        ExternalId extId = new ExternalId(processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
         OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;

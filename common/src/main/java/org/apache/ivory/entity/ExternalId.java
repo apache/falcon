@@ -1,10 +1,10 @@
 package org.apache.ivory.entity;
 
-import java.util.Date;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.Tag;
+
+import java.util.Date;
 
 public class ExternalId {
     private static final String SEPARATOR = "/";
@@ -18,14 +18,14 @@ public class ExternalId {
         return id;
     }
     
-    public ExternalId(String name, String tag, String elexpr) {
-        if(StringUtils.isEmpty(name) || StringUtils.isEmpty(tag) || StringUtils.isEmpty(elexpr))
+    public ExternalId(String name, Tag tag, String elexpr) {
+        if(StringUtils.isEmpty(name) || tag == null || StringUtils.isEmpty(elexpr))
             throw new IllegalArgumentException("Empty inputs!");
         
-        id = name + SEPARATOR + tag + SEPARATOR + elexpr;        
+        id = name + SEPARATOR + tag.name() + SEPARATOR + elexpr;
     }
     
-    public ExternalId(String name, String tag, Date date) {
+    public ExternalId(String name, Tag tag, Date date) {
         this(name, tag, EntityUtil.formatDateUTC(date));
     }
     
@@ -43,9 +43,9 @@ public class ExternalId {
         return parts[2];
     }
     
-	public String getTag() {
+	public Tag getTag() {
 		String[] parts = id.split(SEPARATOR);
-		return parts[1];
+		return Tag.valueOf(parts[1]);
 	}
 
 	public String getDFSname() {

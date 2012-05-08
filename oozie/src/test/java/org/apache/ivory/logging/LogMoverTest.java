@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 public class LogMoverTest {
 
-	@Test(enabled=true)
+	@Test(enabled=false)
 	public void testLogMover() throws Exception {
 		LogMover.main(new String[] {
 				"-oozieurl http://localhost:11000/oozie/",

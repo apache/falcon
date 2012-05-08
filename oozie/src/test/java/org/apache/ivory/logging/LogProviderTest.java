@@ -18,6 +18,7 @@
 package org.apache.ivory.logging;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.resource.ProcessInstancesResult;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
@@ -34,6 +35,6 @@ public class LogProviderTest {
 		Process process = new Process();
 		process.setName("agg-coord");
 		System.out
-				.println(LogProvider.getLogUrl(process, processInstance, "DEFAULT", "0"));
+				.println(LogProvider.getLogUrl(process, processInstance, Tag.DEFAULT, "0"));
 	}
 }

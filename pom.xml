@@ -25,6 +25,29 @@
     <packaging>pom</packaging>
     <url>https://github.com/sriksun/Ivory</url>
 
+    <profiles>
+        <profile>
+            <id>all</id>
+            <modules>
+                <module>client</module>
+                <module>common</module>
+                <module>test-util</module>
+                <module>feed</module>
+                <module>messaging</module>
+                <module>process</module>
+                <module>oozie</module>
+                <module>acquisition</module>
+                <module>replication</module>
+                <module>retention</module>
+                <module>archival</module>
+                <module>metrics</module>
+                <module>retry</module>
+                <module>webapp</module>
+                <module>docs</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <modules>
         <module>client</module>
         <module>common</module>
@@ -40,7 +63,6 @@
         <module>metrics</module>
         <module>retry</module>
         <module>webapp</module>
-        <module>docs</module>
     </modules>
 
     <scm>

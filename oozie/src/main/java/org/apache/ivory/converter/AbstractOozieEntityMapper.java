@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
@@ -81,8 +82,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected Path getCoordPath(Path bundlePath, String coordName) {
-        String path = getEntity().getWorkflowNameTag(coordName);
-        return new Path(bundlePath, path);
+        Tag tag = getEntity().getWorkflowNameTag(coordName);
+        return new Path(bundlePath, tag.name());
     }
 
     protected abstract Map<String, String> getEntityProperties();
