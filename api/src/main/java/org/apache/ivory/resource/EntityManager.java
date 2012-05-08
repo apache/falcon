@@ -380,6 +380,10 @@ public class EntityManager {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Collection<String> entityNames = configStore.getEntities(entityType);
+            if(entityNames == null || entityNames.equals(""))
+            {
+            	return new EntityList(new Entity[]{});
+            }
             Entity[] entities = new Entity[entityNames.size()];
             int index = 0;
             for (String entityName : entityNames) {

@@ -492,5 +492,27 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
     }
     
-    
+    @Test
+    public void testGetDependencies() throws Exception {
+    	ClientResponse response;
+    	response = this.service
+                .path("api/entities/list/process/")
+                .header("Remote-User", "testuser").type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+    	Assert.assertEquals(response.getStatus(), 200);
+    	
+    	Map<String, String> overlay = new HashMap<String, String>();
+
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);
+        
+        response = this.service
+                .path("api/entities/list/cluster/")
+                .header("Remote-User", "testuser").type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        
+    }
 }
