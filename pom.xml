@@ -42,6 +42,8 @@
                 <module>archival</module>
                 <module>metrics</module>
                 <module>retry</module>
+                <module>api</module>
+                <module>prism</module>
                 <module>webapp</module>
                 <module>docs</module>
             </modules>
@@ -62,6 +64,8 @@
         <module>archival</module>
         <module>metrics</module>
         <module>retry</module>
+        <module>api</module>
+        <module>prism</module>
         <module>webapp</module>
     </modules>
 
