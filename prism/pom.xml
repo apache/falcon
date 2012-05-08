@@ -20,141 +20,176 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.ivory</groupId>
-    <artifactId>ivory-main</artifactId>
-    <version>0.2-SNAPSHOT</version>
-  </parent>
-  <artifactId>ivory-prism</artifactId>
-  <description>Ivory Prism</description>
-  <name>Ivory Prism</name>
-  <packaging>war</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-main</artifactId>
+        <version>0.2-SNAPSHOT</version>
+    </parent>
+    <artifactId>ivory-prism</artifactId>
+    <description>Ivory Prism</description>
+    <name>Ivory Prism</name>
+    <packaging>war</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-test-util</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-test-util</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-process</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-process</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-oozie-adaptor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-oozie-adaptor</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-feed</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-feed</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-retention</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-retention</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-metrics</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-retry</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-retry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
-      <version>1.9</version>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.9</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>1.9</version>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.9</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-      <version>1.9</version>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>1.9</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>1.1</version>
-    </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
-      <version>6.1.26</version>
-      <scope>provided</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty</artifactId>
+            <version>6.1.26</version>
+            <scope>provided</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-plus</artifactId>
-      <version>6.1.26</version>
-      <scope>provided</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-plus</artifactId>
+            <version>6.1.26</version>
+            <scope>provided</scope>
+        </dependency>
 
-	<dependency>
-		<groupId>org.mockito</groupId>
-		<artifactId>mockito-all</artifactId>
-		<version>1.8.5</version>
-        <scope>provided</scope>
-	</dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.5</version>
+            <scope>provided</scope>
+        </dependency>
 
-	<dependency>
-		<groupId>org.aspectj</groupId>
-		<artifactId>aspectjrt</artifactId>
-		<version>1.6.11</version>
-	</dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>1.6.11</version>
+        </dependency>
 
-	<dependency>
-		<groupId>org.aspectj</groupId>
-		<artifactId>aspectjweaver</artifactId>
-		<version>1.6.11</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.aspectj</groupId>
-		<artifactId>aspectjweaver</artifactId>
-		<version>1.6.11</version>
-	</dependency>
-	
-	<dependency>
-		<groupId>com.inmobi.ivory</groupId>
-		<artifactId>ivory-monitoring</artifactId>
-		<version>0.1-SNAPSHOT</version>
-	</dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.6.11</version>
+        </dependency>
 
-  </dependencies>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.6.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.inmobi.ivory</groupId>
+            <artifactId>ivory-monitoring</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.1.1</version>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+                <configuration>
+                    <verbose>true</verbose>
+                    <complianceLevel>1.5</complianceLevel>
+                    <includes>
+                        <include>org/apache/ivory/resource/EntityManager.java</include>
+                        <include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
+                        <include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
+                        <include>org/apache/ivory/resource/ProcessInstancesResult.java</include>
+                        <include>org/apache/ivory/aspect/LoggingAspect.java</include>
+                    </includes>
+                    <weaveDependencies>
+                        <weaveDependency>
+                            <groupId>org.apache.ivory</groupId>
+                            <artifactId>ivory-common</artifactId>
+                        </weaveDependency>
+                    </weaveDependencies>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
