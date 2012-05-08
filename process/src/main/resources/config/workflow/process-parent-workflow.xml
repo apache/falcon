@@ -30,7 +30,7 @@
 			<capture-output />
 		</java>
 		<ok to="user-workflow" />
-		<error to="ivory-failed-messaging" />
+		<error to="fork-for-failed" />
 	</action>
 
 	<action name='user-workflow'>
