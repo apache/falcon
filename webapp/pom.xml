@@ -40,8 +40,9 @@
 
     <dependency>
       <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-api</artifactId>
+      <artifactId>ivory-prism</artifactId>
       <version>${project.version}</version>
+      <classifier>classes</classifier>
     </dependency>
 
     <dependency>
@@ -151,5 +152,7 @@
 	</dependency>
 	
   </dependencies>
+
+
 
 </project>

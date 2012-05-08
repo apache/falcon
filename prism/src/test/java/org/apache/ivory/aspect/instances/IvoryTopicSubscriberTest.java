@@ -28,7 +28,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.aspect.instances.IvoryTopicSubscriber;
 import org.apache.ivory.messaging.EntityInstanceMessage;
 import org.mortbay.log.Log;
 import org.testng.annotations.AfterClass;
