@@ -74,6 +74,7 @@
 			<arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>SUCCEEDED</arg>
+			<arg>${wf:conf("broker.ttlInMins")}</arg>
 		</java>
 		<ok to="join-for-succeeded" />
 		<error to="fail" />
@@ -83,12 +84,12 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.logging.LogMover</main-class>
-			<arg>-oozieurl ${workflowEngineUrl}</arg>
-			<arg>-subflowid ${wf:id()}@user-workflow</arg>
-			<arg>-runid ${wf:run()}</arg>
-			<arg>-logdir ${userWorkflowPath}/log/</arg>
-			<arg>-externalid ${wf:conf("oozie.wf.external.id")}</arg>
-			<arg>-status SUCCEEDED</arg>
+			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
+			<arg>-subflowid</arg> <arg>${wf:id()}@user-workflow</arg>
+			<arg>-runid</arg> <arg>${wf:run()}</arg>
+			<arg>-logdir</arg> <arg>${userWorkflowPath}/log/</arg>
+			<arg>-externalid</arg> <arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-status </arg> <arg>SUCCEEDED</arg>
 		</java>
 		<ok to="join-for-succeeded" />
 		<error to="fail" />
@@ -98,12 +99,12 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.logging.LogMover</main-class>
-			<arg>-oozieurl ${workflowEngineUrl}</arg>
-			<arg>-subflowid ${wf:id()}@user-workflow</arg>
-			<arg>-runid ${wf:run()}</arg>
-			<arg>-logdir ${userWorkflowPath}/log/</arg>
-			<arg>-externalid ${wf:conf("oozie.wf.external.id")}</arg>
-			<arg>-status FAILED</arg>
+			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
+			<arg>-subflowid</arg> <arg>${wf:id()}@user-workflow</arg>
+			<arg>-runid</arg> <arg>${wf:run()}</arg>
+			<arg>-logdir</arg> <arg>${userWorkflowPath}/log/</arg>
+			<arg>-externalid</arg> <arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-status </arg> <arg>FAILED</arg>
 		</java>
 		<ok to="join-for-failed" />
 		<error to="fail" />
@@ -127,6 +128,7 @@
 			<arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>FAILED</arg>
+			<arg>${wf:conf("broker.ttlInMins")}</arg>
 		</java>
 		<ok to="join-for-failed" />
 		<error to="fail" />
@@ -148,8 +150,9 @@
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
 			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
-			<arg>${entityName}</arg>
+			<arg>IVORY.${entityName}</arg>
 			<arg>SUCCEEDED</arg>
+			<arg>${wf:conf("broker.ttlInMins")}</arg>
 		</java>
 		<ok to="join-for-succeeded" />
 		<error to="fail" />

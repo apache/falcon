@@ -57,8 +57,7 @@ public class FeedProducerTest {
 
 	private volatile AssertionError error;
 	private MiniDFSCluster dfsCluster;
-	private Configuration conf= new Configuration();
-	
+	private Configuration conf = new Configuration();
 
 	@BeforeClass
 	public void setup() throws Exception {
@@ -75,24 +74,30 @@ public class FeedProducerTest {
 		this.msgArgs.setEntityType("FEED");
 		this.msgArgs.setOperation("DELETE");
 		this.msgArgs.setTopicName(TOPIC_NAME);
-        this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+		this.msgArgs.setBrokerTTL("3600000");
+		this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
 
-		logFile = new Path(conf.get("fs.default.name"),"/ivory/feed/agg-logs/instance-2012-01-01-10-00.csv");
+		logFile = new Path(conf.get("fs.default.name"),
+				"/ivory/feed/agg-logs/instance-2012-01-01-10-00.csv");
 		FileSystem fs = dfsCluster.getFileSystem();
 		OutputStream out = fs.create(logFile);
-		InputStream in =new ByteArrayInputStream(("instancePaths=/ivory/feed/agg-logs/path1/2010/10/10/20," +
-						"/ivory/feed/agg-logs/path1/2010/10/10/21," +
-						"/ivory/feed/agg-logs/path1/2010/10/10/22," +
-						"/ivory/feed/agg-logs/path1/2010/10/10/23").getBytes());		
+		InputStream in = new ByteArrayInputStream(
+				("instancePaths=/ivory/feed/agg-logs/path1/2010/10/10/20,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/21,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/22,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/23")
+						.getBytes());
 		IOUtils.copyBytes(in, out, conf);
-		
-		emptyLogFile = new Path(conf.get("fs.default.name"),"/ivory/feed/agg-logs/instance-2012-01-02-10-00.csv");
+
+		emptyLogFile = new Path(conf.get("fs.default.name"),
+				"/ivory/feed/agg-logs/instance-2012-01-02-10-00.csv");
 		out = fs.create(emptyLogFile);
-		in =new ByteArrayInputStream(("instancePaths=").getBytes());	
+		in = new ByteArrayInputStream(("instancePaths=").getBytes());
 		IOUtils.copyBytes(in, out, conf);
-		
+
 		broker = new BrokerService();
 		broker.setUseJmx(true);
+		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
 		broker.start();
 	}
@@ -103,20 +108,19 @@ public class FeedProducerTest {
 		this.dfsCluster.shutdown();
 	}
 
-
 	@Test
-	public void testLogFile() throws Exception{
+	public void testLogFile() throws Exception {
 		this.msgArgs.setLogFile(logFile.toString());
 		testProcessMessageCreator();
 	}
-	
+
 	@Test
-	public void testEmptyLogFile() throws Exception{
+	public void testEmptyLogFile() throws Exception {
 		this.msgArgs.setLogFile(emptyLogFile.toString());
 		MessageProducer.main(EntityInstanceMessage
 				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
-	}	
-	
+	}
+
 	private void testProcessMessageCreator() throws JMSException,
 			InterruptedException {
 
@@ -156,41 +160,45 @@ public class FeedProducerTest {
 		// wait till you get atleast one message
 		TextMessage m;
 		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
+			m = (TextMessage) consumer.receive();
 		System.out.println("Consumed: " + m.getText());
 		String[] items = m.getText().split("\\$");
 		assertMessage(items);
-		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/20");
-		
+		Assert.assertEquals(items[1],
+				"/ivory/feed/agg-logs/path1/2010/10/10/20");
+
 		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
+			m = (TextMessage) consumer.receive();
 		items = m.getText().split("\\$");
 		assertMessage(items);
-		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/21");
-		
+		Assert.assertEquals(items[1],
+				"/ivory/feed/agg-logs/path1/2010/10/10/21");
+
 		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
+			m = (TextMessage) consumer.receive();
 		items = m.getText().split("\\$");
 		assertMessage(items);
-		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/22");
-		
+		Assert.assertEquals(items[1],
+				"/ivory/feed/agg-logs/path1/2010/10/10/22");
+
 		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
+			m = (TextMessage) consumer.receive();
 		items = m.getText().split("\\$");
 		assertMessage(items);
-		Assert.assertEquals(items[2], "/ivory/feed/agg-logs/path1/2010/10/10/23");
-		
+		Assert.assertEquals(items[1],
+				"/ivory/feed/agg-logs/path1/2010/10/10/23");
+
 		connection.close();
 	}
 
-	private void assertMessage(String [] items) throws JMSException {
-		Assert.assertEquals(items.length, 8);
-		Assert.assertEquals(items[0], TOPIC_NAME);
-		Assert.assertEquals(items[1], "click-logs");
-		Assert.assertEquals(items[3], "DELETE");
-		Assert.assertEquals(items[4], "workflow-01-00");
-		Assert.assertEquals(items[5],"1");
-		Assert.assertEquals(items[6],"2011-01-01");
-		Assert.assertEquals(items[7],"2012-01-01");
+	private void assertMessage(String[] items) throws JMSException {
+		Assert.assertEquals(items.length, 7);
+		Assert.assertEquals(items[0], "click-logs");
+		Assert.assertEquals(items[2], "DELETE");
+		Assert.assertEquals(items[3], "workflow-01-00");
+		Assert.assertEquals(items[4], "1");
+		Assert.assertEquals(items[5], "2011-01-01");
+		Assert.assertEquals(items[6], "2012-01-01");
+
 	}
 }

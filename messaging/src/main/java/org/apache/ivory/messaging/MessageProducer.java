@@ -37,6 +37,7 @@ public class MessageProducer {
 
 	private Connection connection;
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
+	private static final long DEFAULT_TTL = 3 * 24 * 60 * 60 * 1000;
 
 	/**
 	 * 
@@ -51,11 +52,21 @@ public class MessageProducer {
 
 		Session session = connection.createSession(false,
 				Session.AUTO_ACKNOWLEDGE);
-		Topic entityTopic = session.createTopic(entityInstanceMessage.getTopicName());
+		Topic entityTopic = session.createTopic(entityInstanceMessage
+				.getTopicName());
 		javax.jms.MessageProducer producer = session
 				.createProducer(entityTopic);
 		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-
+		long messageTTL = DEFAULT_TTL;
+		try {
+			long messageTTLinMins = Long.parseLong(entityInstanceMessage
+					.getBrokerTTL());
+			messageTTL = messageTTLinMins * 60 * 1000;
+		} catch (NumberFormatException e) {
+			LOG.error("Error in parsing broker.ttl, setting TTL to:"
+					+ DEFAULT_TTL+ " milli-seconds");
+		}
+		producer.setTimeToLive(messageTTL);
 		producer.send(new EntityInstanceMessageCreator(entityInstanceMessage)
 				.createMessage(session));
 
@@ -70,15 +81,16 @@ public class MessageProducer {
 		debug(args);
 		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
 				.argsToMessage(args);
-		if(entityInstanceMessage.length==0){
+		if (entityInstanceMessage.length == 0) {
 			LOG.warn("No operation on output feed");
 			return;
 		}
 
 		MessageProducer ivoryMessageProducer = new MessageProducer();
 		try {
-			ivoryMessageProducer.createAndStartConnection(args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()], "", "",
-					entityInstanceMessage[0].getBrokerUrl());
+			ivoryMessageProducer.createAndStartConnection(
+					args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()],
+					"", "", entityInstanceMessage[0].getBrokerUrl());
 			for (EntityInstanceMessage processMessage : entityInstanceMessage) {
 				ivoryMessageProducer.sendMessage(processMessage);
 			}
@@ -99,12 +111,12 @@ public class MessageProducer {
 	}
 
 	private static void debug(String[] args) {
-		if(LOG.isDebugEnabled()){
-			for(int i=0;i<args.length;i++){
-				LOG.debug(args[i]+"::");
+		if (LOG.isDebugEnabled()) {
+			for (int i = 0; i < args.length; i++) {
+				LOG.debug(args[i] + "::");
 			}
 		}
-		
+
 	}
 
 	private void createAndStartConnection(String implementation,

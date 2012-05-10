@@ -43,8 +43,9 @@
 			<arg>${entityType}</arg>
 			<arg>${operation}</arg>
 			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
-			<arg>${entityName}</arg>
+			<arg>IVORY.${entityName}</arg>
 			<arg>SUCCEEDED</arg>
+			<arg>${wf:conf("broker.ttl")}</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />

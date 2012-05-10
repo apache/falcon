@@ -36,6 +36,7 @@ import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -56,6 +57,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             + "#VAL#, 'MINUTE'),'yyyy-MM-dd-HH-mm')}";
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+    protected static final Long DEFAULT_BROKER_MSG_TTL = 3*24*60*60*1000L;
 
     protected static final JAXBContext workflowJaxbContext;
     protected static final JAXBContext coordJaxbContext;
@@ -126,7 +128,19 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), NOMINAL_TIME_EL);
         props.put(EntityInstanceMessage.ARG.TIME_STAMP.NAME(), ACTUAL_TIME_EL);
         props.put(EntityInstanceMessage.ARG.BROKER_URL.NAME(), ClusterHelper.getMessageBrokerUrl(cluster));
-        props.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(), DEFAULT_BROKER_IMPL_CLASS);
+        String userBrokerImplClass = cluster.getProperties().get(
+        EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME()) == null ? DEFAULT_BROKER_IMPL_CLASS
+        				: cluster.getProperties().get(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME()).getValue();
+		props.put(EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.NAME(),userBrokerImplClass);
+		String ivoryBrokerUrl = StartupProperties.get().getProperty("broker.url","tcp://localhost:61616?daemon=true");
+		props.put("broker.url", ivoryBrokerUrl);
+		String ivoryBrokerImplClass = StartupProperties.get().getProperty(
+				"broker.impl.class", DEFAULT_BROKER_IMPL_CLASS);
+		props.put("broker.impl.class", ivoryBrokerImplClass);
+		String jmsMessageTTL = StartupProperties.get().getProperty(
+				EntityInstanceMessage.ARG.BROKER_TTL.NAME(),
+				DEFAULT_BROKER_MSG_TTL.toString());
+		props.put(EntityInstanceMessage.ARG.BROKER_TTL.NAME(), jmsMessageTTL);
         props.put(EntityInstanceMessage.ARG.ENTITY_TYPE.NAME(), entity.getEntityType().name());
         props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
         props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.GENERATE.name());
