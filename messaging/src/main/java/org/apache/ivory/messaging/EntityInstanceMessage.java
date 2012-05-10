@@ -59,7 +59,7 @@ public class EntityInstanceMessage {
 				"timeStamp"), BROKER_URL(7, "brokerUrl"), BROKER_IMPL_CLASS(8,
 				"brokerImplClass"), ENTITY_TYPE(9, "entityType"), OPERATION(10,
 				"operation"), LOG_FILE(11, "logFile"), TOPIC_NAME(12,
-				"topicName"), STATUS(13, "status"), BROKER_TTL(14, "broker.ttl");
+				"topicName"), STATUS(13, "status"), BROKER_TTL(14, "broker.ttlInMins");
 
 		private int argOrder;
 		private String argName;
