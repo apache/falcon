@@ -1,8 +1,11 @@
-package org.apache.ivory.resource;
+package org.apache.ivory.resource.proxy;
 
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.AbstractSchedulableEntityManager;
+import org.apache.ivory.resource.EntityList;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -10,7 +13,50 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 @Path("entities")
-public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
+public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
+
+    @POST
+    @Path("submit/{type}")
+    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "submit")
+    @Override
+    public APIResult submit(@Context HttpServletRequest request,
+                            @Dimension("entityType") @PathParam("type") String type) {
+        return super.submit(request, type);
+    }
+
+    @POST
+    @Path("validate/{type}")
+    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Override
+    public APIResult validate(@Context HttpServletRequest request,
+                              @PathParam("type") String type) {
+        return super.validate(request, type);
+    }
+
+    @DELETE
+    @Path("delete/{type}/{entity}")
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "delete")
+    @Override
+    public APIResult delete(@Context HttpServletRequest request,
+                            @Dimension("entityType") @PathParam("type") String type,
+                            @Dimension("entityName") @PathParam("entity") String entity) {
+        return super.delete(request, type, entity);
+    }
+
+    @POST
+    @Path("update/{type}/{entity}")
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "update")
+    @Override
+    public APIResult update(@Context HttpServletRequest request,
+                            @Dimension("entityType") @PathParam("type") String type,
+                            @Dimension("entityName") @PathParam("entity") String entityName) {
+        return super.update(request, type, entityName);
+    }
 
     @GET
     @Path("status/{type}/{entity}")
@@ -61,11 +107,11 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         return super.schedule(request, type, entity);
     }
 
-    @POST
-    @Path("submitAndSchedule/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "submitAndSchedule")
+     @POST
+     @Path("submitAndSchedule/{type}")
+     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+     @Monitored(event = "submitAndSchedule")
     @Override
     public APIResult submitAndSchedule(@Context HttpServletRequest request,
                                        @Dimension("entityType") @PathParam("type") String type) {

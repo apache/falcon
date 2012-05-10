@@ -25,6 +25,10 @@
     <packaging>pom</packaging>
     <url>https://github.com/sriksun/Ivory</url>
 
+    <properties>
+        <include.prism>true</include.prism>
+    </properties>
+
     <profiles>
         <profile>
             <id>all</id>
@@ -42,6 +46,7 @@
                 <module>archival</module>
                 <module>metrics</module>
                 <module>retry</module>
+                <module>prism</module>
                 <module>webapp</module>
                 <module>docs</module>
             </modules>
@@ -62,6 +67,7 @@
         <module>archival</module>
         <module>metrics</module>
         <module>retry</module>
+        <module>prism</module>
         <module>webapp</module>
     </modules>
 

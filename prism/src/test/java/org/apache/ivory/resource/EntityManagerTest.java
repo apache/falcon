@@ -17,14 +17,6 @@
  */
 package org.apache.ivory.resource;
 
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.mockito.Mock;
@@ -34,10 +26,17 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.mockito.Mockito.when;
+
 /**
- * Unit testing class for EntityManager class for testing APIs/methods in it.
+ * Unit testing class for AbstractEntityManager class for testing APIs/methods in it.
  */
-public class EntityManagerTest {
+public class EntityManagerTest extends AbstractEntityManager {
 
     @Mock
     private HttpServletRequest mockHttpServletRequest;
@@ -45,8 +44,6 @@ public class EntityManagerTest {
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
-
-    private final EntityManager entityManager = new EntityManager();
 
     @BeforeClass
     public void init() {
@@ -83,7 +80,7 @@ public class EntityManagerTest {
                 invalidProcessXML);
 
         try {
-            entityManager.validate(mockHttpServletRequest,
+            validate(mockHttpServletRequest,
                     EntityType.PROCESS.name());
             Assert.fail("Invalid entity type was accepted by the system");
         } catch (IvoryWebException ignore) {
@@ -97,7 +94,7 @@ public class EntityManagerTest {
                 invalidProcessXML);
 
         try {
-            entityManager.validate(mockHttpServletRequest,
+            validate(mockHttpServletRequest,
                     "InvalidEntityType");
             Assert.fail("Invalid entity type was accepted by the system");
         } catch (IvoryWebException ignore) {}

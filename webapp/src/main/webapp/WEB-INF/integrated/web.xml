@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Placeholder</display-name>
-    <description>Ivory Placeholder</description>
+    <display-name>Ivory Integrated Server</display-name>
+    <description>Ivory Integrated Server</description>
 
   <filter>
     <filter-name>auth</filter-name>
