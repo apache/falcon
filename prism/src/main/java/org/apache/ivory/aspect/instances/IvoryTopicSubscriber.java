@@ -34,7 +34,8 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.resource.ProcessInstanceManager;
+import org.apache.ivory.resource.AbstractProcessInstanceManager;
+import org.apache.ivory.resource.proxy.ProcessInstanceManagerProxy;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -52,7 +53,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String url;
 	private static String topicName;
 	private static Connection connection;
-	private ProcessInstanceManager processInstanceManager = new ProcessInstanceManager();
+	private AbstractProcessInstanceManager processInstanceManager = new ProcessInstanceManagerProxy();
 
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {

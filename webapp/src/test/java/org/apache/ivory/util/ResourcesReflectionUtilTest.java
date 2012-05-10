@@ -32,11 +32,11 @@ public class ResourcesReflectionUtilTest {
 		Assert.assertEquals("submitAndSchedule",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submitAndSchedule"));
 		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
 		
-		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.killProcessInstance"));
-		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.killProcessInstance").get(1));		
+		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManagerProxy.killProcessInstance"));
+		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManagerProxy.killProcessInstance").get(1));
 	
-		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.instrumentWithAspect"));
-		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.instrumentWithAspect").get(0));	
+		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("AbstractProcessInstanceManager.instrumentWithAspect"));
+		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("AbstractProcessInstanceManager.instrumentWithAspect").get(0));
 		
 		Assert.assertEquals("transaction-rollback-failed",ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.alertRollbackFailure"));
 		Assert.assertEquals("transaction-Id", ResourcesReflectionUtil.getResourceDimensionsName("GenericAlert.alertRollbackFailure").get(0));	

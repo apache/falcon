@@ -54,18 +54,14 @@ import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-@Path("processinstance")
-public class ProcessInstanceManager extends AbstractEntityManager {
-    private static final Logger LOG = Logger.getLogger(ProcessInstanceManager.class);
+public class AbstractProcessInstanceManager extends AbstractEntityManager {
+    private static final Logger LOG = Logger.getLogger(AbstractProcessInstanceManager.class);
 
     protected Process getProcess(String processName) throws IvoryException {
         Entity entity = getEntityObject(processName, EntityType.PROCESS.name());
         return (Process) entity;
     }
     
-    @GET
-    @Path("running/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
     public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName) {
         try {
             validateNotEmpty("process", processName);
@@ -81,9 +77,6 @@ public class ProcessInstanceManager extends AbstractEntityManager {
     }
 
 
-	@GET
-	@Path("status/{process}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public ProcessInstancesResult getStatus(
 			@PathParam("process") String processName,
 			@QueryParam("start") String startStr,
@@ -127,12 +120,9 @@ public class ProcessInstanceManager extends AbstractEntityManager {
 				processInstances);
 	}
 
-	@POST
-    @Path("kill/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="kill-instance")
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("processName")@PathParam("process") String processName,
+            @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
@@ -155,13 +145,11 @@ public class ProcessInstanceManager extends AbstractEntityManager {
         }
     }
 
-    @POST
-    @Path("suspend/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="suspend-instance")
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("processName")@PathParam("process") String processName,
+            @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
+
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
@@ -183,12 +171,9 @@ public class ProcessInstanceManager extends AbstractEntityManager {
         }
     }
 
-    @POST
-    @Path("resume/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="resume-instance")
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
+            @Dimension("processName")@PathParam("process") String processName,
+            @Dimension("start-time")@QueryParam("start") String startStr,
             @Dimension("end-time")@QueryParam("end") String endStr) {
         try {
             TransactionManager.startTransaction();
@@ -211,12 +196,10 @@ public class ProcessInstanceManager extends AbstractEntityManager {
         }
     }
 
-    @POST
-    @Path("rerun/{process}")
-    @Produces(MediaType.APPLICATION_JSON)
-	@Monitored(event="re-run-instance")
-    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName, @Dimension("start-time")@QueryParam("start") String startStr,
-    		@Dimension("end-time")@QueryParam("end") String endStr, @Context HttpServletRequest request) {
+    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName,
+                                                @Dimension("start-time")@QueryParam("start") String startStr,
+                                                @Dimension("end-time")@QueryParam("end") String endStr,
+                                                @Context HttpServletRequest request) {
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
