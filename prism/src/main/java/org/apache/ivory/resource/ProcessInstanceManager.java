@@ -55,7 +55,7 @@ import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 @Path("processinstance")
-public class ProcessInstanceManager extends EntityManager {
+public class ProcessInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(ProcessInstanceManager.class);
 
     protected Process getProcess(String processName) throws IvoryException {
