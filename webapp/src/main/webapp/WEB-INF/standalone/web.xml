@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Prism</display-name>
-    <description>Ivory Prism</description>
+    <display-name>Ivory Standalone Server</display-name>
+    <description>Ivory Standalone Server</description>
 
   <filter>
     <filter-name>auth</filter-name>
@@ -31,7 +31,7 @@
 
   <filter-mapping>
     <filter-name>auth</filter-name>
-    <servlet-name>IvoryProxyAPI</servlet-name>
+    <servlet-name>IvoryRESTApi</servlet-name>
   </filter-mapping>
 
   <listener>
@@ -39,21 +39,21 @@
   </listener>
 
   <servlet>
-      <servlet-name>IvoryProxyAPI</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
       <init-param>
           <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
-          <param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
+          <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
       </init-param>
       <init-param>
           <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>org.apache.ivory.resource.proxy</param-value>
+          <param-value>org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.ProcessInstanceManager</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
-      <servlet-name>IvoryProxyAPI</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <url-pattern>/api/*</url-pattern>
   </servlet-mapping>
 

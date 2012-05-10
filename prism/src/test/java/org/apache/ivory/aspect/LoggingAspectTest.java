@@ -24,13 +24,14 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.resource.EntityManager;
+import org.apache.ivory.resource.AbstractEntityManager;
+import org.apache.ivory.resource.proxy.SchedulableEntityManagerProxy;
 import org.testng.annotations.Test;
 
 public class LoggingAspectTest {
 
 	
-	private EntityManager em = new EntityManager();
+	private AbstractEntityManager em = new SchedulableEntityManagerProxy();
 	private volatile Exception threadException;
 
 	@Test(expectedExceptions=IvoryWebException.class)

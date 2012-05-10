@@ -42,8 +42,7 @@ public class ResourcesReflectionUtil {
 
 	static {
 		//TODO load these classes from properties file
-		buildAnnotationsMapForClass("org.apache.ivory.resource.EntityManager");
-		buildAnnotationsMapForClass("org.apache.ivory.resource.SchedulableEntityManager");
+		buildAnnotationsMapForClass("org.apache.ivory.resource.proxy.SchedulableEntityManagerProxy");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.ProcessInstanceManager");
 		buildAnnotationsMapForClass("org.apache.ivory.aspect.instances.IvoryTopicSubscriber");
 		buildAnnotationsMapForClass("org.apache.ivory.util.GenericAlert");

@@ -26,11 +26,11 @@ public class ResourcesReflectionUtilTest {
 	
 	@Test
 	public void testMonitoredResources(){
-		Assert.assertEquals("submit",ResourcesReflectionUtil.getResourceMonitorName("EntityManager.submit"));
-		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("EntityManager.submit").get(1));
+		Assert.assertEquals("submit",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submit"));
+		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
 		
-		Assert.assertEquals("submitAndSchedule",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManager.submitAndSchedule"));
-		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("EntityManager.submit").get(1));		
+		Assert.assertEquals("submitAndSchedule",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submitAndSchedule"));
+		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
 		
 		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("ProcessInstanceManager.killProcessInstance"));
 		Assert.assertEquals("processName", ResourcesReflectionUtil.getResourceDimensionsName("ProcessInstanceManager.killProcessInstance").get(1));		

@@ -56,20 +56,19 @@ import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.transaction.TransactionManager;
-import org.apache.ivory.update.UpdateHelper;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-public class EntityManager {
-    private static final Logger LOG = Logger.getLogger(EntityManager.class);
+public abstract class AbstractEntityManager {
+    private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
 
     private WorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
 
-    public EntityManager() {
+    public AbstractEntityManager() {
         try {
             workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
         } catch (IvoryException e) {
@@ -89,11 +88,6 @@ public class EntityManager {
      *            - feed, process or data end point
      * @return result of the operation
      */
-    @POST
-    @Path("submit/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "submit")
     public APIResult submit(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type) {
 
         try {
@@ -117,10 +111,6 @@ public class EntityManager {
      * @param type
      * @return APIResule -Succeeded or Failed
      */
-    @POST
-    @Path("validate/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -141,10 +131,6 @@ public class EntityManager {
      * @param entity
      * @return APIResult
      */
-    @DELETE
-    @Path("delete/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "delete")
     public APIResult delete(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) {
         try {
@@ -175,10 +161,6 @@ public class EntityManager {
         }
     }
 
-    @POST
-    @Path("update/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "update")
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
     public synchronized APIResult update(@Context HttpServletRequest request,
@@ -307,10 +289,6 @@ public class EntityManager {
      * @param entity
      * @return String
      */
-    @GET
-    @Path("status/{type}/{entity}")
-    @Produces(MediaType.TEXT_PLAIN)
-    @Monitored(event = "status")
     public String getStatus(@Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) throws IvoryWebException{
     	Entity entityObj = null;
@@ -350,10 +328,6 @@ public class EntityManager {
      * @param entity
      * @return String
      */
-    @GET
-    @Path("dependencies/{type}/{entity}")
-    @Produces(MediaType.TEXT_XML)
-    @Monitored(event = "dependencies")
     public EntityList getDependencies(@Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) {
         try {
@@ -373,9 +347,6 @@ public class EntityManager {
      * @param type
      * @return String
      */
-    @GET
-    @Path("list/{type}")
-    @Produces(MediaType.TEXT_XML)
     public EntityList getDependencies(@PathParam("type") String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -422,7 +393,7 @@ public class EntityManager {
         }
     }
 
-    public Entity getEntityObject(String entity, String type) throws IvoryException {
+    protected Entity getEntityObject(String entity, String type) throws IvoryException {
         Entity entityObj = getEntity(entity, type);
         if (entityObj == null) {
             throw new NoSuchElementException(entity + " (" + type + ") not found");

@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Server</display-name>
-    <description>Ivory Server</description>
+    <display-name>Ivory Placeholder</display-name>
+    <description>Ivory Placeholder</description>
 
   <filter>
     <filter-name>auth</filter-name>
@@ -47,7 +47,7 @@
       </init-param>
       <init-param>
           <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>org.apache.ivory.resource</param-value>
+          <param-value>org.apache.ivory.resource.proxy</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
   </servlet>

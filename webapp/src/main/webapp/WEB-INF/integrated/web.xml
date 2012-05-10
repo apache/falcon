@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Prism</display-name>
-    <description>Ivory Prism</description>
+    <display-name>Ivory Integrated Server</display-name>
+    <description>Ivory Integrated Server</description>
 
   <filter>
     <filter-name>auth</filter-name>
@@ -31,7 +31,7 @@
 
   <filter-mapping>
     <filter-name>auth</filter-name>
-    <servlet-name>IvoryProxyAPI</servlet-name>
+    <servlet-name>IvoryRESTApi</servlet-name>
   </filter-mapping>
 
   <listener>
@@ -39,7 +39,7 @@
   </listener>
 
   <servlet>
-      <servlet-name>IvoryProxyAPI</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
       <init-param>
           <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
@@ -53,7 +53,7 @@
   </servlet>
 
   <servlet-mapping>
-      <servlet-name>IvoryProxyAPI</servlet-name>
+      <servlet-name>IvoryRESTApi</servlet-name>
       <url-pattern>/api/*</url-pattern>
   </servlet-mapping>
 

@@ -19,13 +19,8 @@
 package org.apache.ivory.resource;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.ivory.IvoryException;
@@ -35,7 +30,6 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.log4j.Logger;
 
@@ -43,10 +37,9 @@ import org.apache.log4j.Logger;
  * REST resource of allowed actions on Schedulable Entities Only Process and
  * Feed can have schedulable actions
  */
-@Path("entities")
-public class SchedulableEntityManager extends EntityManager {
+public abstract class AbstractSchedulableEntityManager extends AbstractEntityManager {
 
-    private static final Logger LOG = Logger.getLogger(SchedulableEntityManager.class);
+    private static final Logger LOG = Logger.getLogger(AbstractSchedulableEntityManager.class);
 
     /**
      * Schedules an submitted entity immediately
@@ -55,10 +48,6 @@ public class SchedulableEntityManager extends EntityManager {
      * @param entity
      * @return APIResult
      */
-    @POST
-    @Path("schedule/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "schedule")
     public APIResult schedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) {
         try {
@@ -90,11 +79,6 @@ public class SchedulableEntityManager extends EntityManager {
      * @param type
      * @return
      */
-    @POST
-    @Path("submitAndSchedule/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "submitAndSchedule")
     public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type) {
         try {
             TransactionManager.startTransaction();
@@ -119,10 +103,6 @@ public class SchedulableEntityManager extends EntityManager {
      * @param entity
      * @return APIResult
      */
-    @POST
-    @Path("suspend/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "suspend")
     public APIResult suspend(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) {
         try {
@@ -151,10 +131,6 @@ public class SchedulableEntityManager extends EntityManager {
      * @param entity
      * @return APIResult
      */
-    @POST
-    @Path("resume/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "resume")
     public APIResult resume(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("entityName") @PathParam("entity") String entity) {
 
