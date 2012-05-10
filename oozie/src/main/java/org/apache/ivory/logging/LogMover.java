@@ -25,10 +25,10 @@ import java.net.URLConnection;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,6 +42,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.tools.ant.filters.StringInputStream;
@@ -65,21 +66,25 @@ public class LogMover extends Configured implements Tool {
 
 	@Override
 	public int run(String[] arguments) throws Exception {
-		if (arguments.length != 6) {
-			throw new IllegalArgumentException("Expecting 6 arguments");
-		}
-		ARGS args = new ARGS();
-		setupArgs(arguments, args);
-		OozieClient client = new OozieClient(args.oozieUrl);
-		WorkflowJob jobInfo = client.getJobInfo(args.subflowId);
-		String subflowId = jobInfo.getExternalId();
-		WorkflowJob subflowInfo = client.getJobInfo(subflowId);
-		List<WorkflowAction> actions = subflowInfo.getActions();
-		Path path = new Path(args.logDir + "/" + args.externalId + "/"
-				+ args.runId);
-		FileSystem fs = path.getFileSystem(getConf());
-		for (WorkflowAction action : actions) {
+		try {
+			ARGS args = new ARGS();
+			setupArgs(arguments, args);
+			OozieClient client = new OozieClient(args.oozieUrl);
+			WorkflowJob jobInfo = null;
 			try {
+				jobInfo = client.getJobInfo(args.subflowId);
+			} catch (OozieClientException e) {
+				LOG.error("Error getting jobinfo for: " + args.subflowId);
+				return 0;
+			}
+			String subflowId = jobInfo.getExternalId();
+			WorkflowJob subflowInfo = client.getJobInfo(subflowId);
+			List<WorkflowAction> actions = subflowInfo.getActions();
+			Path path = new Path(args.logDir + "/" + args.externalId + "/"
+					+ args.runId);
+			FileSystem fs = path.getFileSystem(getConf());
+			for (WorkflowAction action : actions) {
+
 				if (action.getType().equals("pig")
 						|| action.getType().equals("java")) {
 					String ttLogURL = getTTlogURL(action.getExternalId());
@@ -97,54 +102,46 @@ public class LogMover extends Configured implements Tool {
 					LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
 							+ action.getName());
 				}
-			} catch (Exception e) {
-				LOG.error("Exception while fetching TT log for action: "
-						+ action.getName(), e);
 			}
+			InputStream in = new StringInputStream(client.getJobLog(subflowId));
+			OutputStream out = fs.create(new Path(path, "oozie.log"));
+			IOUtils.copyBytes(in, out, 4096, true);
+			LOG.info("Copied oozie log to " + path);
+		} catch (Exception e) {
+			LOG.error("Exception in log mover:", e);
 		}
-		InputStream in = new StringInputStream(client.getJobLog(subflowId));
-		OutputStream out = fs.create(new Path(path, "oozie.log"));
-		IOUtils.copyBytes(in, out, 4096, true);
-		LOG.info("Copied oozie log to " + path);
-
 		return 0;
 	}
 
 	private void setupArgs(String[] arguments, ARGS args) throws ParseException {
-		CommandLineParser parser = new PosixParser();
 		Options options = new Options();
-		options.addOption("oozieurl", true, "url of workflow engine, ex:oozie");
-		options.addOption("subflowid", true, "external id of userworkflow");
-		options.addOption("runid", true, "current workflow's runid");
-		options.addOption("logdir", true, "log dir where job logs are stored");
-		options.addOption("externalid", true, "current workflow's externalid ");
-		options.addOption("status", true, "user workflow status");
+		Option opt;
+		opt = new Option("workflowengineurl", true, "url of workflow engine, ex:oozie");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("subflowid", true, "external id of userworkflow");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("runid", true, "current workflow's runid");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("logdir", true, "log dir where job logs are stored");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("externalid", true, "current workflow's externalid ");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("status", true, "user workflow status");
+		opt.setRequired(true);
+		options.addOption(opt);
 
-		StringBuilder command = new StringBuilder();
-		for (int i = 0; i < arguments.length; i++) {
-			command.append(arguments[i]).append(" ");
-		}
+		CommandLine cmd = new GnuParser().parse(options, arguments);
 
-		CommandLine cmd = parser
-				.parse(options, command.toString().split("\\s"));
-		if (!cmd.hasOption("oozieurl") || !cmd.hasOption("subflowid")
-				|| !cmd.hasOption("runid") || !cmd.hasOption("logdir")
-				|| !cmd.hasOption("externalid") || !cmd.hasOption("status")) {
-			throw new ParseException(
-					"Required options are: oozieurl, subflowid, runid,logdir,externalid,status");
-		}
-		LOG.info("Arguments:");
-		LOG.info("Oozie url:" + cmd.getOptionValue("oozieurl"));
-		args.oozieUrl = cmd.getOptionValue("oozieurl");
-		LOG.info("Subflow-id:" + cmd.getOptionValue("subflowid"));
+		args.oozieUrl = cmd.getOptionValue("workflowengineurl");
 		args.subflowId = cmd.getOptionValue("subflowid");
-		LOG.info("Run id:" + cmd.getOptionValue("runid"));
 		args.runId = cmd.getOptionValue("runid");
-		LOG.info("Log dir path:" + cmd.getOptionValue("logdir"));
 		args.logDir = cmd.getOptionValue("logdir");
-		LOG.info("ExternalId:" + cmd.getOptionValue("externalid"));
 		args.externalId = cmd.getOptionValue("externalid").replaceAll(":", "-");
-		LOG.info("Status:" + cmd.getOptionValue("status"));
 		args.status = cmd.getOptionValue("status");
 
 	}

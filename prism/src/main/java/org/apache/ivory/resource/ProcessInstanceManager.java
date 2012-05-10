@@ -102,7 +102,9 @@ public class ProcessInstanceManager extends EntityManager {
 			ProcessInstancesResult result = new ProcessInstancesResult(
 					"getStatus is successful", instances.values().iterator()
 							.next());
-			return getProcessInstanceEx(process, Tag.valueOf(type), runId, result);
+			return getProcessInstanceWithLog(process,
+					Tag.valueOf(type == null ? Tag.DEFAULT.name() : type),
+					runId == null ? "0" : runId, result);
 		} catch (Throwable e) {
 			LOG.error("Failed to get instances status", e);
 			throw IvoryWebException
@@ -110,21 +112,18 @@ public class ProcessInstanceManager extends EntityManager {
 		}
 	}
 
-	private ProcessInstancesResult getProcessInstanceEx(Process process,
+	private ProcessInstancesResult getProcessInstanceWithLog(Process process,
 			Tag type, String runId, ProcessInstancesResult result)
 			throws IvoryException {
 		ProcessInstancesResult.ProcessInstance[] processInstances = new ProcessInstancesResult.ProcessInstance[result
 				.getInstances().length];
 		for (int i = 0; i < result.getInstances().length; i++) {
 			ProcessInstancesResult.ProcessInstance pInstance = LogProvider
-					.getLogUrl(process, result.getInstances()[i],
-							type == null ? Tag.DEFAULT : type,
-							runId == null ? "0" : runId);
+					.getLogUrl(process, result.getInstances()[i], type, runId);
 			processInstances[i] = pInstance;
 		}
 
-		return new ProcessInstancesResult(result.getMessage(),
-				processInstances);
+		return new ProcessInstancesResult(result.getMessage(), processInstances);
 	}
 
 	@POST
