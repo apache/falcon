@@ -55,12 +55,14 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.security.CurrentUser;
+import org.apache.ivory.service.IvoryService;
+import org.apache.ivory.service.Services;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-public abstract class AbstractEntityManager {
+public abstract class AbstractEntityManager implements IvoryService {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
@@ -74,6 +76,14 @@ public abstract class AbstractEntityManager {
         } catch (IvoryException e) {
             throw new IvoryRuntimException(e);
         }
+    }
+
+    @Override
+    public void init() throws IvoryException {
+    }
+
+    @Override
+    public void destroy() throws IvoryException {
     }
 
     /**
@@ -238,7 +248,7 @@ public abstract class AbstractEntityManager {
         return entity;
     }
 
-    private Entity deserializeEntity(HttpServletRequest request, EntityType entityType) throws IOException, IvoryException {
+    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType) throws IOException, IvoryException {
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         InputStream xmlStream = request.getInputStream();
         if (xmlStream.markSupported()) {

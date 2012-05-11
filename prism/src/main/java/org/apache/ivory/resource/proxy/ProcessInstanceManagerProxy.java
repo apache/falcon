@@ -15,6 +15,11 @@ import javax.ws.rs.core.MediaType;
 @Path("processinstance")
 public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager {
 
+    @Override
+    public String getName() {
+        return getClass().getName();
+    }
+
     @GET
     @Path("running/{process}")
     @Produces(MediaType.APPLICATION_JSON)

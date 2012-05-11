@@ -11,6 +11,11 @@ import javax.ws.rs.core.MediaType;
 @Path("sync")
 public class ConfigSyncService extends AbstractEntityManager {
 
+    @Override
+    public String getName() {
+        return getClass().getName();
+    }
+
     @POST
     @Path("submit/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })

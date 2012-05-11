@@ -1,6 +1,8 @@
 package org.apache.ivory.service;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryRuntimException;
+import org.apache.ivory.util.ReflectionUtils;
 import org.apache.log4j.Logger;
 
 import java.util.Iterator;
@@ -53,5 +55,15 @@ public final class Services implements Iterable<IvoryService> {
     @Override
     public Iterator<IvoryService> iterator() {
         return services.values().iterator();
+    }
+
+    public IvoryService init(String serviceName) throws IvoryException {
+        if (isRegistered(serviceName)) {
+            throw new IvoryException("Service is already initialized " +
+                    serviceName);
+        }
+        IvoryService service = ReflectionUtils.getInstance(serviceName + ".impl");
+        register(service);
+        return service;
     }
 }

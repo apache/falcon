@@ -45,6 +45,11 @@ public class EntityManagerTest extends AbstractEntityManager {
 
     private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
 
+    @Override
+    public String getName() {
+        return "Test";
+    }
+
     @BeforeClass
     public void init() {
         MockitoAnnotations.initMocks(this);

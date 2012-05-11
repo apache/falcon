@@ -1,19 +1,39 @@
 package org.apache.ivory.resource.proxy;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.AbstractSchedulableEntityManager;
 import org.apache.ivory.resource.EntityList;
+import org.apache.ivory.resource.channel.Channel;
+import org.apache.ivory.resource.channel.ChannelFactory;
+import org.apache.ivory.service.Services;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
+
+    private final Channel entityManagerChannel;
+    private final Channel configSyncChannel;
+
+    public SchedulableEntityManagerProxy() {
+        entityManagerChannel = ChannelFactory.get("SchedulableEntityManager");
+        configSyncChannel = ChannelFactory.get("ConfigSyncService");
+    }
+
+    @Override
+    public String getName() {
+        return getClass().getName();
+    }
 
     @POST
     @Path("submit/{type}")
@@ -23,7 +43,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public APIResult submit(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type) {
-        return super.submit(request, type);
+        try {
+            //TODO: Add back super.submit(request, type);
+            return configSyncChannel.invoke("submit", request, type);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 
     @POST
@@ -44,7 +71,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult delete(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.delete(request, type, entity);
+        try {
+            //super.delete(request, type, entity);
+            return configSyncChannel.invoke("delete", request, type, entity);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 
     @POST
@@ -55,7 +89,14 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult update(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entityName) {
-        return super.update(request, type, entityName);
+        try {
+            //super.update(request, type, entityName);
+            return configSyncChannel.invoke("update", request, type, entityName);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 
     @GET
@@ -104,7 +145,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult schedule(@Context HttpServletRequest request,
                               @Dimension("entityType") @PathParam("type") String type,
                               @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.schedule(request, type, entity);
+        try {
+            return entityManagerChannel.invoke("schedule", request, type, entity);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 
      @POST
@@ -115,7 +162,17 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public APIResult submitAndSchedule(@Context HttpServletRequest request,
                                        @Dimension("entityType") @PathParam("type") String type) {
-        return super.submitAndSchedule(request, type);
+
+         try {
+             submit(request, type);
+             EntityType entityType = EntityType.valueOf(type.toUpperCase());
+             Entity entity = deserializeEntity(request, entityType);
+             return entityManagerChannel.invoke("schedule", request, type, entity);
+         } catch (IvoryWebException e) {
+             throw e;
+         } catch (Exception e) {
+             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+         }
     }
 
     @POST
@@ -126,7 +183,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult suspend(@Context HttpServletRequest request,
                              @Dimension("entityType") @PathParam("type") String type,
                              @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.suspend(request, type, entity);
+        try {
+            return entityManagerChannel.invoke("suspend", request, type, entity);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 
     @POST
@@ -137,6 +200,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult resume(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.resume(request, type, entity);
+        try {
+            return entityManagerChannel.invoke("resume", request, type, entity);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } catch (IvoryWebException e) {
+            throw e;
+        }
     }
 }

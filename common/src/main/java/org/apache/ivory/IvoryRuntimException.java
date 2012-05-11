@@ -37,4 +37,8 @@ public class IvoryRuntimException extends RuntimeException{
 		super(message);
 	}
 	
+	public IvoryRuntimException(String message, Throwable e) {
+		super(message);
+	}
+
 }
