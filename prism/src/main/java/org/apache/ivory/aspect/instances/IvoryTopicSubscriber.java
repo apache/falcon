@@ -49,7 +49,12 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String url;
 	private String topicName;
 	private Connection connection;
-	private AbstractProcessInstanceManager processInstanceManager = new ProcessInstanceManagerProxy();
+	private AbstractProcessInstanceManager processInstanceManager = new AbstractProcessInstanceManager() {
+        @Override
+        public String getName() {
+            return "Test";
+        }
+    };
 
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {

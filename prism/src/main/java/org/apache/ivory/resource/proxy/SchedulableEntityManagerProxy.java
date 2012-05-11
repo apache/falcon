@@ -48,8 +48,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return configSyncChannel.invoke("submit", request, type);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 
@@ -76,8 +74,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return configSyncChannel.invoke("delete", request, type, entity);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 
@@ -94,8 +90,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return configSyncChannel.invoke("update", request, type, entityName);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 
@@ -149,8 +143,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return entityManagerChannel.invoke("schedule", request, type, entity);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 
@@ -168,8 +160,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
              EntityType entityType = EntityType.valueOf(type.toUpperCase());
              Entity entity = deserializeEntity(request, entityType);
              return entityManagerChannel.invoke("schedule", request, type, entity);
-         } catch (IvoryWebException e) {
-             throw e;
          } catch (Exception e) {
              throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
          }
@@ -187,8 +177,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return entityManagerChannel.invoke("suspend", request, type, entity);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 
@@ -204,8 +192,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             return entityManagerChannel.invoke("resume", request, type, entity);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        } catch (IvoryWebException e) {
-            throw e;
         }
     }
 }

@@ -1,19 +1,28 @@
 package org.apache.ivory.resource.proxy;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.AbstractProcessInstanceManager;
 import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.channel.Channel;
+import org.apache.ivory.resource.channel.ChannelFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("processinstance")
 public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager {
+
+    private final Channel processInstanceManagerChannel;
+
+    public ProcessInstanceManagerProxy() {
+        processInstanceManagerChannel = ChannelFactory.get("ProcessInstanceManager");
+    }
 
     @Override
     public String getName() {
@@ -25,7 +34,11 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName) {
-        return super.getRunningInstances(processName);
+        try {
+            return processInstanceManagerChannel.invoke("getRunningInstances", processName);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 
     @GET
@@ -37,7 +50,12 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                             @QueryParam("end") String endStr,
                                             @QueryParam("type") String type,
                                             @QueryParam("runid") String runId) {
-        return super.getStatus(processName, startStr, endStr, type, runId);
+        try {
+            return processInstanceManagerChannel.invoke("getStatus", processName,
+                    startStr, endStr, type, runId);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 
     @POST
@@ -49,7 +67,12 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                                       @Dimension("processName") @PathParam("process") String processName,
                                                       @Dimension("start-time") @QueryParam("start") String startStr,
                                                       @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.killProcessInstance(request, processName, startStr, endStr);
+        try {
+            return processInstanceManagerChannel.invoke("killProcessInstance",
+                    processName, startStr, endStr);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 
     @POST
@@ -61,7 +84,12 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                                          @Dimension("processName") @PathParam("process") String processName,
                                                          @Dimension("start-time") @QueryParam("start") String startStr,
                                                          @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.suspendProcessInstance(request, processName, startStr, endStr);
+        try {
+            return processInstanceManagerChannel.invoke("suspendProcessInstance",
+                    request, processName, startStr, endStr);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 
     @POST
@@ -73,7 +101,12 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                                         @Dimension("processName") @PathParam("process") String processName,
                                                         @Dimension("start-time") @QueryParam("start") String startStr,
                                                         @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.resumeProcessInstance(request, processName, startStr, endStr);
+        try {
+            return processInstanceManagerChannel.invoke("resumeProcessInstance",
+                    request, processName, startStr, endStr);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 
     @POST
@@ -85,6 +118,11 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                                 @Dimension("start-time") @QueryParam("start") String startStr,
                                                 @Dimension("end-time") @QueryParam("end") String endStr,
                                                 @Context HttpServletRequest request) {
-        return super.reRunInstance(processName, startStr, endStr, request);
+        try {
+            return processInstanceManagerChannel.invoke("reRunInstance",
+                    processName, startStr, endStr, request);
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
     }
 }
