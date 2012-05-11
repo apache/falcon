@@ -112,6 +112,35 @@ set of actions are performed in Oozie to realize an update.
    * Schedule as per the new process/feed definition with the start time as "now"
 
 ---++ Instance Management actions
+
+
+Instance Manager gives user the option to control individual instances of the process based on their instance start time (start time of that instance). Start time needs to be given in standard TZ format. Example:   01 Jan 2012 01:00  => 2012-01-01T01:00Z
+
+All the instance management operations (except running) allow single instance or list of instance within a Date range to be acted on. Make sure the dates are valid. i.e are within the start and  end time of process itself. 
+
+For every query in instance management the process name is a compulsory parameter. 
+
+Parameters -start and -end are used to mention the date range within which you want the instance to be operated upon. 
+
+-start:   using only  "-start" without  "-end"  will conduct the desired operation only on single instance given by date along with start.
+
+-end:  "-end"  can only be used along with "-start" . It corresponds to the end date till which instance need to operated upon. 
+
+   * 1. *status*: -status option via CLI can be used to get the status of a single or multiple instances.  If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state.Along with the status of the instance log location is also returned.
+
+
+   * 2.	*running*: -running returns all the running instance of the process. It does not take any start or end dates but simply return all the instances in state RUNNING at that given time. 
+
+   * 3.	*rerun*: -rerun is the option that you will use most often from instance management. As the name suggest this option is used to rerun a particular instance or instances of the process. The rerun option reruns all parent workflow for the instance, which in turn rerun all the sub-workflows for it. This option is valid for any instance in terminal state, i.e. KILLED, SUCCEEDED, FAILED. User can also set properties in the request, which will give options what types of actions should be rerun like, only failed, run all etc. These properties are dependent on the workflow engine being used along with ivory. 
+   
+   * 4. *suspend*: -suspend is used to suspend a instance or instances  for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command. This command is similar to SUSPEND process command in functionality only difference being, SUSPEND process suspends all the instance whereas suspend instance suspend only that instance or instances in the range. 
+
+   * 5.	*resume*: -resume option is used to resume any instance that  is in suspended state.  (Note: due to a bug in oozie Ðresume option in some cases may not actually resume the suspended instance/ instances)
+   * 6. *kill*: -kill option can be used to kill an instance or multiple instances 
+
+
+In all the cases where your request is syntactically correct but logically not, the instance / instances are returned with the same status as earlier. Example:  trying to resume a KILLED  / SUCCEEDED instance will return the instance with KILLED / SUCCEEDED, without actually performing any operation. This is so because only an instance in SUSPENDED state can be resumed. Same thing is valid for rerun a SUSPENDED or RUNNING options etc. 
+
 ---++ Retention
 In coherence with it's feed lifecycle management philosophy, Ivory allows the user to retain  data in the system
 for a specific period of time for a scheduled feed. The user can specify the retention period in the respective 
@@ -411,3 +440,83 @@ Ex:aggregatedLogs$aggregatedLogs$/retention/testFolders/2012/05/08/07$DELETE$000
 The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.
 
 ---++ Ivory EL Expressions
+
+
+Ivory expression language can be used in process definition for giving the start and end instance for various feeds.
+
+Before going into how to use ivory EL expressions it is necessary to understand what does instance and instance start time refer to with respect to Ivory. 
+
+Lets consider a part of process definition below:
+
+<verbatim>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<process name="testProcess">
+
+   <cluster name="corp"/>
+   <concurrency>2</concurrency>
+   <execution>LIFO</execution>
+   <frequency>minutes</frequency>
+   <periodicity>30</periodicity>
+	
+  <validity timezone="UTC" end="2011-01-03T03:00Z"        start="2010-01-02T01:00Z" />
+  <inputs>
+ <input end-instance="now(0,20)" start-instance="now(0,-60)"
+			feed="input-log" name="inputData"/>
+ </inputs>
+<outputs>
+	<output instance="now(0,0)" feed="output-log"
+		name="outputData" />
+</outputs>
+...
+...
+...
+...
+</process>
+</verbatim>
+
+
+The above definition says that the process will start at 2nd of Jan 2010 at 1 am and will end at 3rd of Jan 2011 at 3 am. Also process will start a user-defined workflow (which we will call instance) every 30 mins.
+
+This means starting 2010-01-02T01:00Z every 30 mins a instance will start will run user defined workflow. Now if this workflow needs some input data and produce some output, user needs to give that in <inputs> and <outputs> tags. 
+Since the inputs that the process takes can be distributed over a wide range we use the limits by giving "start" and "end" instance for input. Output is only one location so only instance is given. 
+
+Coming back to instance start time, since a instance will start every 30 mins starting 2010-01-02T01:00Z, the time it is scheduled to start is called its instance time. For example first few instance time for above example are:
+
+
+<pre>Instance Number      instance start Time</pre>
+
+<pre>1			 2010-01-02T01:00Z</pre>
+<pre>2			 2010-01-02T01:30Z</pre>
+<pre>3			 2010-01-02T02:00Z</pre>
+<pre>4			 2010-01-02T02:30Z</pre>
+<pre>.				.</pre>
+<pre>.				.</pre>
+<pre>.				.</pre>
+<pre>.				.</pre>
+
+Now lets go to how to use expression language. Only thing to keep in mind is all EL evaluation are done based on the start time of that instance, and very instance will have different inputs / outputs based on the feed instance given in process definition.  
+
+All the parameters in various El can be both positive, zero or negative values. Positive values indicate so many units in future, zero means the base time EL has been resolved to, and negative values indicate corresponding units in past. 
+
+__Note: if no instance is created at the resolved time, then the instance immediately before it is considered.__
+
+Ivory currently support following ELs:
+
+
+   * 1.	*now(hours,minutes)*: now refer to the instance start time.Hours and minutes given are in reference with the start time of instance. For example now(-2,40)  corresponds to feed instance at -2 hr and +40 minutes i.e  feed instance 80 mins before the instance start time. Id user would have given now(0,-80) it would have correspond to the same. 
+   * 2.	*today(hours,minutes)*: hours and minutes given in this EL corresponds to instance from the start day of instance start time. Ie. If instance start is at 2010-01-02T01:30Z  then today(-3,-20) will mean instance created at 2010-01-01T20:40 and today(3,20) will correspond to 2010-01-02T3:20Z. 
+
+   * 3.	*yesterday(hours,minutes)*: As the name suggest EL yesterday picks up feed instances with respect to start of day yesterday. Hours and minutes are added to the 00 hours starting yesterday, Example:  yesterday(24,30) will actually correspond to 00:30 am of today, for 2010-01-02T01:30Z this would mean 2010-01-02:00:30 feed. 
+
+   * 4.	*currentMonth(day,hour,minute)*: Current month takes the reference to start of the month with respect to instance start time.  One thing to keep in mind is that day is added to the first day of the month. So the value of day is the number of days you want to add to the first day of the month.For example:  for instance start time 2010-01-12T01:30Z and El as currentMonth(3,2,40) will correspond to feed created at  2010-01-04T02:40Z  and  currentMonth(0,0,0) will mean 2010-01-01T00:00Z.
+
+   * 5.	*lastMonth(day,hour,minute)*: Parameters for lastMonth is same as currentMonth, only difference being the reference is shifted to one month back.  For instance start 2010-01-12T01:30Z  lastMonth(2,3,30)  will correspond to feed instance at 2009-12-03:T03:30Z 
+
+   * 6.	*currentYear(month,day,hour,minute)*: The month,day,hour, minutes in the pareamter are added with reference to the start of year of instance start time. For our exmple start time 2010-01-02:00:30 reference will go back to 2010-01-01:T00:00Z. Also similar to days, months are added to the 1st month that Jan. So currentYear(0,2,2,20) will mean 2010-01-03T02:20Z while currentYear(11,2,2,20) will mean 2010-12-03T02:20Z
+
+
+   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similary to currentYear in usage> only difference being start reference is taken to start of previous year.For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.
+   
+   * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest avaliable instance of the feed given as parameter. For exmample: latest(0) will consider the last avaliable instance of feed, where as latest latest(-1) will consider second last avaliable feed and latest(-3) will consider 4th last avaliable feed.
+   
+
