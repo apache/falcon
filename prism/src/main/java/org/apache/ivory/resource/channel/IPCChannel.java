@@ -22,6 +22,7 @@ public class IPCChannel implements Channel {
         try {
             this.service = Services.get().init(serviceName);
         } catch (IvoryException e) {
+            LOG.error(e);
             throw new IvoryRuntimException("Unable to initialize channel", e);
         }
     }

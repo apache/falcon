@@ -156,9 +156,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                        @Dimension("entityType") @PathParam("type") String type) {
 
          try {
-             submit(request, type);
-             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-             Entity entity = deserializeEntity(request, entityType);
+             Entity entity = submitInternal(request, type);
              return entityManagerChannel.invoke("schedule", request, type, entity);
          } catch (Exception e) {
              throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);

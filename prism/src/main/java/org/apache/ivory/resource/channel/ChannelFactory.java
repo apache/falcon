@@ -8,14 +8,14 @@ public class ChannelFactory {
     private static Map<String, Channel> channels = new HashMap<String, Channel>();
 
     public synchronized static Channel get(String serviceName) {
-        if (true) {
+        if (true) { //inproc channel
             Channel channel;
             if ((channel = channels.get(serviceName)) == null) {
                 channel = new IPCChannel(serviceName);
                 channels.put(serviceName, channel);
             }
             return channel;
-        } else {
+        } else { //Remote channel
             throw new UnsupportedOperationException(serviceName);
         }
     }
