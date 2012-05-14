@@ -54,7 +54,11 @@ public class IPCChannel implements Channel {
         if (method == null) {
             Class[] argsClasses = new Class[args.length];
             for (int index = 0; index < args.length; index++) {
-                argsClasses[index] = args[index].getClass();
+                if (args[index] == null) {
+                    argsClasses[index] = null;
+                } else {
+                    argsClasses[index] = args[index].getClass();
+                }
             }
             for (Method item : service.getClass().getDeclaredMethods()) {
                 if (item.getName().endsWith(methodName) &&

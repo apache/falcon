@@ -3,7 +3,6 @@ package org.apache.ivory.resource.proxy;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
@@ -11,7 +10,6 @@ import org.apache.ivory.resource.AbstractSchedulableEntityManager;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
-import org.apache.ivory.service.Services;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -157,7 +155,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
          try {
              Entity entity = submitInternal(request, type);
-             return entityManagerChannel.invoke("schedule", request, type, entity);
+             return entityManagerChannel.invoke("schedule", request, type, entity.getName());
          } catch (Exception e) {
              throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
          }
