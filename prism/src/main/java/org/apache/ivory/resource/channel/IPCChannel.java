@@ -66,7 +66,8 @@ public class IPCChannel implements Channel {
                     boolean matching = true;
                     Class[] paramTypes = item.getParameterTypes();
                     for (int index = 0; index < argsClasses.length; index++) {
-                        if (!paramTypes[index].isAssignableFrom(argsClasses[index])) {
+                        if (argsClasses[index] != null &&
+                                !paramTypes[index].isAssignableFrom(argsClasses[index])) {
                              matching = false;
                         }
                     }
