@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.resource;
+package org.apache.ivory.resource.provider;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -27,6 +27,8 @@ import javax.xml.bind.JAXBException;
 
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.api.json.JSONJAXBContext;
+import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.ProcessInstancesResult;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)

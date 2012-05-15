@@ -24,37 +24,61 @@
     <display-name>Ivory Standalone Server</display-name>
     <description>Ivory Standalone Server</description>
 
-  <filter>
-    <filter-name>auth</filter-name>
-    <filter-class>org.apache.ivory.security.BasicAuthFilter</filter-class>
-  </filter>
+    <filter>
+        <filter-name>auth</filter-name>
+        <filter-class>org.apache.ivory.security.BasicAuthFilter</filter-class>
+    </filter>
 
-  <filter-mapping>
-    <filter-name>auth</filter-name>
-    <servlet-name>IvoryRESTApi</servlet-name>
-  </filter-mapping>
+    <filter-mapping>
+        <filter-name>auth</filter-name>
+        <servlet-name>IvoryRESTApi</servlet-name>
+    </filter-mapping>
 
-  <listener>
-    <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
-  </listener>
+    <filter-mapping>
+        <filter-name>auth</filter-name>
+        <servlet-name>SecureApi</servlet-name>
+    </filter-mapping>
 
-  <servlet>
-      <servlet-name>IvoryRESTApi</servlet-name>
-      <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-      <init-param>
-          <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
-          <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
-      </init-param>
-      <init-param>
-          <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.ProcessInstanceManager</param-value>
-      </init-param>
-      <load-on-startup>1</load-on-startup>
-  </servlet>
+    <listener>
+        <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
+    </listener>
 
-  <servlet-mapping>
-      <servlet-name>IvoryRESTApi</servlet-name>
-      <url-pattern>/api/*</url-pattern>
-  </servlet-mapping>
+    <servlet>
+        <servlet-name>IvoryRESTApi</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+            <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.classnames</param-name>
+            <param-value>org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.ProcessInstanceManager</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>SecureApi</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+            <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.classnames</param-name>
+            <param-value>org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.ConfigSyncService</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>IvoryRESTApi</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SecureApi</servlet-name>
+        <url-pattern>/secure/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>

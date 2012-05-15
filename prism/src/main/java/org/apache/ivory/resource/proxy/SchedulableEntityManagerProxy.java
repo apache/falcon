@@ -1,6 +1,7 @@
 package org.apache.ivory.resource.proxy;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.monitors.Dimension;
@@ -24,8 +25,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     private final Channel configSyncChannel;
 
     public SchedulableEntityManagerProxy() {
-        entityManagerChannel = ChannelFactory.get("SchedulableEntityManager");
-        configSyncChannel = ChannelFactory.get("ConfigSyncService");
+        try {
+            entityManagerChannel = ChannelFactory.get("SchedulableEntityManager");
+            configSyncChannel = ChannelFactory.get("ConfigSyncService");
+        } catch (IvoryException e) {
+            throw new IvoryRuntimException("Unable to initialize channels", e);
+        }
     }
 
     @Override
