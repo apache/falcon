@@ -421,15 +421,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
     }
 
-    @Test
-    public void testGetThreadDump() throws Exception {
-    	ClientResponse response;
-    	response = this.service.path("api/admin/threads")
-    			.header("Remote-User", "testuser")
-                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
-    	Assert.assertEquals(response.getStatus(), 200);
-    }
-    
+   
     @Test
     public void testDelete() throws Exception {
 
