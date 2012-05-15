@@ -32,6 +32,8 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.expression.ExpressionHelper;
+import org.apache.ivory.group.FeedGroupMap;
+import org.apache.ivory.group.FeedGroup;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -60,8 +62,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
 			 validateFeedCutOffPeriod(feed, cluster);
 			entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
 		}
-        validateEntitiesExist(entities);   
-        validateFeedSourceCluster(feed);
+		validateEntitiesExist(entities);
+		validateFeedSourceCluster(feed);
+		validateFeedGroups(feed);
 
         //Seems like a good enough entity object for a new one
         //But is this an update ?
@@ -89,6 +92,27 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
         return processes;
     }
+
+	private void validateFeedGroups(Feed feed) throws ValidationException {
+		String[] groupNames = feed.getGroups() != null ? feed.getGroups()
+				.split(",") : new String[] {};
+		for (String groupName : groupNames) {
+			FeedGroup group = FeedGroupMap.get().getGroupsMapping()
+					.get(groupName);
+			if (group == null || group.canContainFeed(feed)) {
+				continue;
+			} else {
+				throw new ValidationException("Feed " + feed.getName()
+						+ "'s frequency: " + feed.getFrequency()
+						+ ", periodicity: " + feed.getPeriodicity()
+						+ ", path pattern: " + feed.getDataPath()
+						+ " does not match with group: " + group.getName()
+						+ "'s frequency: " + group.getFrequency()
+						+ ", periodicity: " + group.getPeriodicity()
+						+ ", date pattern: " + group.getDatePattern());
+			}
+		}
+	}
 
     private void ensureValidityFor(Feed newFeed, Set<Process> processes) throws IvoryException {
         for (Process process : processes) {

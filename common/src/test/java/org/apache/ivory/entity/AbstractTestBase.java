@@ -60,6 +60,12 @@ public class AbstractTestBase {
     }
 
     public void setup() throws Exception {
+		ConfigurationStore store = ConfigurationStore.get();
+		for (EntityType type : EntityType.values()) {
+			for (String name : store.getEntities(type)) {
+				store.remove(type, name);
+			}
+		}
         storeEntity(EntityType.CLUSTER, "corp");
         storeEntity(EntityType.FEED, "clicks");
         storeEntity(EntityType.FEED, "impressions");
