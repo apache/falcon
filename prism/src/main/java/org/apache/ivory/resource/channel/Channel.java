@@ -4,5 +4,5 @@ import org.apache.ivory.IvoryException;
 
 public interface Channel {
 
-    <T> T invoke(String method, Object... args) throws IvoryException;
+    <T> T invoke(String methodName, Object... args) throws IvoryException;
 }

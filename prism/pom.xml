@@ -169,9 +169,8 @@
                     <verbose>true</verbose>
                     <complianceLevel>1.5</complianceLevel>
                     <includes>
-                        <include>org/apache/ivory/resource/EntityManager.java</include>
-                        <include>org/apache/ivory/resource/SchedulableEntityManager.java</include>
-                        <include>org/apache/ivory/resource/ProcessInstanceManager.java</include>
+                        <include>org/apache/ivory/resource/SchedulableEntityManagerProxy.java</include>
+                        <include>org/apache/ivory/resource/ProcessInstanceManagerProxy.java</include>
                         <include>org/apache/ivory/resource/ProcessInstancesResult.java</include>
                         <include>org/apache/ivory/aspect/LoggingAspect.java</include>
                     </includes>

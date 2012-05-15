@@ -22,6 +22,7 @@ public class IPCChannel implements Channel {
         try {
             this.service = Services.get().init(serviceName);
         } catch (IvoryException e) {
+            LOG.error(e);
             throw new IvoryRuntimException("Unable to initialize channel", e);
         }
     }
@@ -53,7 +54,11 @@ public class IPCChannel implements Channel {
         if (method == null) {
             Class[] argsClasses = new Class[args.length];
             for (int index = 0; index < args.length; index++) {
-                argsClasses[index] = args[index].getClass();
+                if (args[index] == null) {
+                    argsClasses[index] = null;
+                } else {
+                    argsClasses[index] = args[index].getClass();
+                }
             }
             for (Method item : service.getClass().getDeclaredMethods()) {
                 if (item.getName().endsWith(methodName) &&
@@ -61,7 +66,8 @@ public class IPCChannel implements Channel {
                     boolean matching = true;
                     Class[] paramTypes = item.getParameterTypes();
                     for (int index = 0; index < argsClasses.length; index++) {
-                        if (!paramTypes[index].isAssignableFrom(argsClasses[index])) {
+                        if (argsClasses[index] != null &&
+                                !paramTypes[index].isAssignableFrom(argsClasses[index])) {
                              matching = false;
                         }
                     }
