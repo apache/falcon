@@ -18,6 +18,7 @@
 package org.apache.ivory.resource;
 
 import static org.testng.AssertJUnit.assertNull;
+import org.apache.ivory.resource.AdminResources;
 
 import java.io.File;
 import java.io.IOException;
@@ -156,7 +157,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String status = response.getEntity(String.class);
         System.out.println(status);
     	Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-    	
+  
     }
     @Test
     public void testValidate() throws IOException {
@@ -420,6 +421,15 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
     }
 
+    @Test
+    public void testGetThreadDump() throws Exception {
+    	ClientResponse response;
+    	response = this.service.path("api/admin/threads")
+    			.header("Remote-User", "testuser")
+                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+    	Assert.assertEquals(response.getStatus(), 200);
+    }
+    
     @Test
     public void testDelete() throws Exception {
 
