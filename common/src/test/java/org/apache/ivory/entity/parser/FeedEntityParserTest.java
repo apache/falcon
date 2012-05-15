@@ -158,7 +158,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		System.out.println(stringWriter.toString());
 	}
 
-	@Test(expectedExceptions = ValidationException.class)
+	@Test(expectedExceptions = NullPointerException.class)
 	public void applyValidationInvalidFeed() throws Exception {
 		Feed feed = (Feed) parser
 				.parseAndValidate(ProcessEntityParserTest.class
@@ -177,6 +177,15 @@ public class FeedEntityParserTest extends AbstractTestBase {
 			modifiableFeed.setFrequency("hours");
 			System.out.println(e.getMessage());
 		}
+	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testPartitionExpression() throws IvoryException {
+		Feed feed = (Feed) parser
+				.parseAndValidate(ProcessEntityParserTest.class
+						.getResourceAsStream(FEED_XML));
+		feed.getClusters().getCluster().get(0).setPartitionExp(null);
+		parser.validate(feed);
 	}
 
 	@Test

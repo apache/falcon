@@ -52,8 +52,11 @@ public class Cluster {
     protected String name;
     @XmlAttribute(required = true)
     protected ClusterType type;
+    @XmlAttribute(required = true)
+    protected String partitionExp;
 
-    /**
+
+	/**
      * Gets the value of the validity property.
      * 
      * @return
@@ -148,5 +151,29 @@ public class Cluster {
     public void setType(ClusterType value) {
         this.type = value;
     }
+    
+    /**
+     * Gets the value of the partitionExp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPartitionExp() {
+		return partitionExp;
+	}
+
+    /**
+     * Sets the value of the partitionExp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+	public void setPartitionExp(String partitionExp) {
+		this.partitionExp = partitionExp;
+	}
 
 }

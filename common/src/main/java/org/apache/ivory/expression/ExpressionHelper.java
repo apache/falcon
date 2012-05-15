@@ -53,8 +53,13 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     @SuppressWarnings("unchecked")
     public <T> T evaluate(String expression, Class<T> clazz) throws IvoryException {
+        return (T) evaluateFullExpression("${" + expression + "}", clazz);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T evaluateFullExpression(String expression, Class<T> clazz) throws IvoryException {
         try {
-            return (T) EVALUATOR.evaluate("${" + expression + "}", clazz, resolver, resolver);
+            return (T) EVALUATOR.evaluate(expression, clazz, resolver, resolver);
         } catch (ELException e) {
             throw new IvoryException("Unable to evaluate " + expression, e);
         }

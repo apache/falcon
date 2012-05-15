@@ -156,7 +156,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         String status = response.getEntity(String.class);
         System.out.println(status);
     	Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-    	
+  
     }
     @Test
     public void testValidate() throws IOException {
@@ -420,6 +420,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
     }
 
+   
     @Test
     public void testDelete() throws Exception {
 
