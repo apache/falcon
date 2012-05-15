@@ -18,7 +18,6 @@
 package org.apache.ivory.resource;
 
 import static org.testng.AssertJUnit.assertNull;
-import org.apache.ivory.resource.AdminResources;
 
 import java.io.File;
 import java.io.IOException;
