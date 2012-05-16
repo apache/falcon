@@ -34,9 +34,8 @@ public class MethodKey {
                 methodKey.name != null) return false;
         boolean matching = true;
         for (int index = 0; index < argClasses.length; index++) {
-            if (argClasses[index] != null &&
-                    !methodKey.argClasses[index].
-                            isAssignableFrom(argClasses[index])) {
+            if (argClasses[index] != null && methodKey.argClasses[index] != null &&
+                    !methodKey.argClasses[index].isAssignableFrom(argClasses[index])) {
                  matching = false;
             }
         }
