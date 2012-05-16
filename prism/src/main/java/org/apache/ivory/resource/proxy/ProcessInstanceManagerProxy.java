@@ -1,6 +1,7 @@
 package org.apache.ivory.resource.proxy;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
@@ -21,7 +22,11 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     private final Channel processInstanceManagerChannel;
 
     public ProcessInstanceManagerProxy() {
-        processInstanceManagerChannel = ChannelFactory.get("ProcessInstanceManager");
+        try {
+            processInstanceManagerChannel = ChannelFactory.get("ProcessInstanceManager");
+        } catch (IvoryException e) {
+            throw new IvoryRuntimException("Unable to initialize channel", e);
+        }
     }
 
     @Override
@@ -69,7 +74,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                                                       @Dimension("end-time") @QueryParam("end") String endStr) {
         try {
             return processInstanceManagerChannel.invoke("killProcessInstance",
-                    processName, startStr, endStr);
+                    request, processName, startStr, endStr);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }

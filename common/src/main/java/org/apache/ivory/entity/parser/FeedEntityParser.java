@@ -32,8 +32,9 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.expression.ExpressionHelper;
+import org.apache.ivory.group.FeedGroupMap;
+import org.apache.ivory.group.FeedGroup;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -68,101 +69,102 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
 		validateEntitiesExist(entities);
 		validateFeedSourceCluster(feed);
+		validateFeedGroups(feed);
 
-		// Seems like a good enough entity object for a new one
-		// But is this an update ?
+        //Seems like a good enough entity object for a new one
+        //But is this an update ?
 
-		Feed oldFeed = ConfigurationStore.get().get(EntityType.FEED,
-				feed.getName());
-		if (oldFeed == null)
-			return; // Not an update case
+        Feed oldFeed = ConfigurationStore.get().get(EntityType.FEED, feed.getName());
+        if (oldFeed == null) return; //Not an update case
 
-		// Is actually an update. Need to iterate over all the processes
-		// depending on this feed and see if they are valid with the new
-		// feed reference
-		EntityGraph graph = EntityGraph.get();
-		Set<Entity> referenced = graph.getDependents(oldFeed);
-		Set<Process> processes = findProcesses(referenced);
-		if (processes.isEmpty())
-			return;
+        //Is actually an update. Need to iterate over all the processes
+        //depending on this feed and see if they are valid with the new
+        //feed reference
+        EntityGraph graph = EntityGraph.get();
+        Set<Entity> referenced = graph.getDependents(oldFeed);
+        Set<Process> processes = findProcesses(referenced);
+        if (processes.isEmpty()) return;
 
-		ensureValidityFor(feed, processes);
-	}
+        ensureValidityFor(feed, processes);
+    }
 
-	
+    private Set<Process> findProcesses(Set<Entity> referenced) {
+        Set<Process> processes = new HashSet<Process>();
+        for (Entity entity : referenced) {
+            if (entity.getEntityType() == EntityType.PROCESS) {
+                processes.add((Process)entity);
+            }
+        }
+        return processes;
+    }
 
-	private Set<Process> findProcesses(Set<Entity> referenced) {
-		Set<Process> processes = new HashSet<Process>();
-		for (Entity entity : referenced) {
-			if (entity.getEntityType() == EntityType.PROCESS) {
-				processes.add((Process) entity);
-			}
-		}
-		return processes;
-	}
-
-	private void ensureValidityFor(Feed newFeed, Set<Process> processes)
-			throws IvoryException {
-		for (Process process : processes) {
-			try {
-				ensureValidityFor(newFeed, process);
-			} catch (IvoryException e) {
-				throw new ValidationException("Process " + process.getName()
-						+ " is not compatible " + "with changes to feed "
-						+ newFeed.getName(), e);
-			}
-
-			Date newEndDate = EntityUtil.parseDateUTC(process.getValidity()
-					.getEnd());
-			if (newEndDate.before(new Date())) {
-				throw new ValidationException(
-						"End time for "
-								+ process.getName()
-								+ " is in the past. Entity can't be updated. Use remove and add,"
-								+ " before feed " + newFeed.getName()
-								+ " is updated");
+	private void validateFeedGroups(Feed feed) throws ValidationException {
+		String[] groupNames = feed.getGroups() != null ? feed.getGroups()
+				.split(",") : new String[] {};
+		for (String groupName : groupNames) {
+			FeedGroup group = FeedGroupMap.get().getGroupsMapping()
+					.get(groupName);
+			if (group == null || group.canContainFeed(feed)) {
+				continue;
+			} else {
+				throw new ValidationException("Feed " + feed.getName()
+						+ "'s frequency: " + feed.getFrequency()
+						+ ", periodicity: " + feed.getPeriodicity()
+						+ ", path pattern: " + feed.getDataPath()
+						+ " does not match with group: " + group.getName()
+						+ "'s frequency: " + group.getFrequency()
+						+ ", periodicity: " + group.getPeriodicity()
+						+ ", date pattern: " + group.getDatePattern());
 			}
 		}
 	}
 
-	private void ensureValidityFor(Feed newFeed, Process process)
-			throws IvoryException {
-		String clusterName = process.getCluster().getName();
-		if (process.getInputs() != null
-				&& process.getInputs().getInput() != null) {
-			for (Input input : process.getInputs().getInput()) {
-				if (!input.getFeed().equals(newFeed.getName()))
-					continue;
-				CrossEntityValidations.validateFeedDefinedForCluster(newFeed,
-						clusterName);
-				CrossEntityValidations.validateFeedRetentionPeriod(
-						input.getStartInstance(), newFeed, clusterName);
-				CrossEntityValidations.validateInstanceRange(process, input,
-						newFeed);
+    private void ensureValidityFor(Feed newFeed, Set<Process> processes) throws IvoryException {
+        for (Process process : processes) {
+            try {
+                ensureValidityFor(newFeed, process);
+            } catch (IvoryException e) {
+                throw new ValidationException("Process " + process.getName() + " is not compatible " +
+                        "with changes to feed " + newFeed.getName(), e);
+            }
 
-				if (input.getPartition() != null) {
-					CrossEntityValidations.validateInputPartition(input,
-							newFeed);
-				}
-			}
-		}
+            Date newEndDate = EntityUtil.parseDateUTC(process.getValidity().getEnd());
+            if (newEndDate.before(new Date())) {
+                throw new ValidationException("End time for " + process.getName() +
+                        " is in the past. Entity can't be updated. Use remove and add," +
+                        " before feed " + newFeed.getName() + " is updated");
+            }
+        }
+    }
 
-		if (process.getOutputs() != null
-				&& process.getOutputs().getOutput() != null) {
-			for (Output output : process.getOutputs().getOutput()) {
-				if (!output.getFeed().equals(newFeed.getName()))
-					continue;
-				CrossEntityValidations.validateFeedDefinedForCluster(newFeed,
-						clusterName);
-				CrossEntityValidations.validateInstance(process, output,
-						newFeed);
-			}
-		}
-		LOG.debug("Verified and found " + process.getName()
-				+ " to be valid for new definition of " + newFeed.getName());
-	}
+    private void ensureValidityFor(Feed newFeed, Process process) throws IvoryException {
+        String clusterName = process.getCluster().getName();
+        if (process.getInputs() != null && process.getInputs().getInput() != null) {
+            for (Input input : process.getInputs().getInput()) {
+                if (!input.getFeed().equals(newFeed.getName())) continue;
+                CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
+                CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(),
+                        newFeed, clusterName);
+                CrossEntityValidations.validateInstanceRange(process, input, newFeed);
 
-	private void validateXMLelements(Feed feed) throws ValidationException {
+                if (input.getPartition() != null) {
+                    CrossEntityValidations.validateInputPartition(input, newFeed);
+                }
+            }
+        }
+
+        if (process.getOutputs() != null && process.getOutputs().getOutput() != null) {
+            for (Output output : process.getOutputs().getOutput()) {
+                if (!output.getFeed().equals(newFeed.getName())) continue;
+                CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
+                CrossEntityValidations.validateInstance(process, output, newFeed);
+            }
+        }
+        LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of " +
+                newFeed.getName());
+    }
+
+  	private void validateXMLelements(Feed feed) throws ValidationException {
 
 		for (Cluster cluster : feed.getClusters().getCluster()) {
 			if (!EntityUtil.isValidUTCDate(cluster.getValidity().getStart())) {

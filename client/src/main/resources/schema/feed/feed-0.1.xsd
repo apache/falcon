@@ -57,7 +57,7 @@
 		</xs:annotation>			
 		<xs:sequence>
 			<xs:element type="partitions" name="partitions" minOccurs="0"/>
-			<xs:element type="xs:string" name="groups" />
+			<xs:element type="group-type" name="groups" minOccurs="0"/>
 			<xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
 			<xs:element type="frequency-type" name="frequency" />
 			<xs:element name="periodicity">
@@ -299,6 +299,12 @@
 	<xs:simpleType name="timezone-type">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="UTC" />
+		</xs:restriction>
+	</xs:simpleType>
+		<xs:simpleType name="group-type">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="(\w+(,\w+)*)" />
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>

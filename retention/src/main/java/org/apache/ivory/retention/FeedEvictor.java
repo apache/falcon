@@ -50,6 +50,8 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.ivory.Pair;
+import org.apache.ivory.entity.common.FeedDataPath.VARS;
+import org.apache.ivory.entity.common.FeedDataPath;
 import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.log4j.Logger;
 
@@ -68,38 +70,7 @@ public class FeedEvictor extends Configured implements Tool {
     static PrintStream stream = System.out;
     static PrintStream instancePathsStream =System.out;
 
-    private enum VARS {
-        YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
 
-        private final Pattern pattern;
-        private final String datePattern;
-
-        private VARS(String datePattern) {
-            pattern = Pattern.compile("\\$\\{" + name() + "\\}");
-            this.datePattern = datePattern;
-        }
-
-        public String regex() {
-            return pattern.pattern();
-        }
-
-        public static VARS from(String str) {
-            for (VARS var : VARS.values()) {
-                if (var.datePattern.equals(str)) {
-                    return var;
-                }
-            }
-            return null;
-        }
-    }
-
-    private static Pattern pattern = Pattern.compile
-            (VARS.YEAR.regex() + "|" + VARS.MONTH.regex() + "|" +
-                    VARS.DAY.regex() + "|" + VARS.HOUR.regex() + "|" +
-                    VARS.MINUTE.regex());
-
-    private static final Pattern dateFieldPattern = Pattern.
-            compile("yyyy|MM|dd|HH|mm");
     private static final String format = "yyyyMMddHHmm";
 
     public static void main(String[] args) throws Exception {
@@ -238,18 +209,18 @@ public class FeedEvictor extends Configured implements Tool {
     private FileStatus[] findFilesForFeed(String feedBasePath)
             throws IOException {
 
-        Matcher matcher = pattern.matcher(feedBasePath);
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         while (matcher.find()) {
             String var = feedBasePath.substring(matcher.start(), matcher.end());
             feedBasePath = feedBasePath.replaceAll(Pattern.quote(var), "*");
-            matcher = pattern.matcher(feedBasePath);
+            matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         }
         LOG.info("Searching for " + feedBasePath);
         return fs.globStatus(new Path(feedBasePath));
     }
 
     private String extractDatePartFromPathMask(String mask, String inPath) {
-        String[] elements = pattern.split(mask);
+        String[] elements = FeedDataPath.PATTERN.split(mask);
 
         String out = inPath;
         for (String element : elements) {
@@ -294,7 +265,7 @@ public class FeedEvictor extends Configured implements Tool {
 
     private void populateDatePartMap(String path, String mask) {
         map.clear();
-        Matcher matcher = dateFieldPattern.matcher(mask);
+        Matcher matcher = FeedDataPath.DATE_FIELD_PATTERN.matcher(mask);
         int start = 0;
         while (matcher.find(start)) {
             String subMask = mask.substring(matcher.start(), matcher.end());

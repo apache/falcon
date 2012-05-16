@@ -55,7 +55,7 @@ public class IvoryCLITest {
 	private static final String FEED_OUTPUT = "/org/apache/ivory/cli/feed-output.xml";
 	private static final String PROCESS = "/org/apache/ivory/cli/process.xml";
 
-	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
@@ -76,15 +76,13 @@ public class IvoryCLITest {
 		}
 		this.ivoryServer.start();
 		this.cluster = EmbeddedCluster.newCluster("test-cluster", false);
-
+		
 		broker = new BrokerService();
 		broker.setUseJmx(true);
-		broker.setUseLocalHostBrokerName(true);
 		broker.setDataDirectory("target/activemq");
-		
+		broker.addConnector(BROKER_URL);
 		broker.setBrokerName("localhost");
 		broker.start();
-
 	}
 
 	@Test(enabled = enableTest)

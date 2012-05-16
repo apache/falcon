@@ -37,6 +37,7 @@ import org.apache.ivory.entity.store.ConfigurationStoreAction.Action;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.group.FeedGroupMap;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.util.StartupProperties;
@@ -116,16 +117,19 @@ public class ConfigurationStore {
             throw new IvoryException("Unable to restore configurations", e);
         }
         EntityGraph graph = EntityGraph.get();
+        FeedGroupMap feedGroupMap = FeedGroupMap.get();
         for (Entity cluster : dictionary.get(EntityType.CLUSTER).values()) {
             graph.onAdd(cluster);
         }
         for (Entity feed : dictionary.get(EntityType.FEED).values()) {
             graph.onAdd(feed);
+            feedGroupMap.onAdd(feed);
         }
         for (Entity process : dictionary.get(EntityType.PROCESS).values()) {
             graph.onAdd(process);
-        }
+        }      
         registerListener(graph);
+        registerListener(feedGroupMap);
     }
 
     public void registerListener(ConfigurationChangeListener listener) {

@@ -430,4 +430,8 @@ public class Feed extends Entity{
             clusters.add(cluster.getName());
         return clusters.toArray(new String[clusters.size()]);
     }
+    
+	public String getDataPath() {
+		return this.getLocations().get(LocationType.DATA).getPath();
+	}
 }

@@ -23,7 +23,7 @@
 		<partition name="good" />
 	</partitions>
 
-	<groups>online,bi</groups>
+	<groups>summary</groups>
 
 	<frequency>hours</frequency>
 	<periodicity>1</periodicity>
