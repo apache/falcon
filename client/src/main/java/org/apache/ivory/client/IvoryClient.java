@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
@@ -56,16 +57,41 @@ public class IvoryClient {
 	 * 
 	 * @param ivoryUrl
 	 *            of the server to which client interacts
+	 * @throws IOException 
 	 */
-	public IvoryClient(String ivoryUrl) {
-		this.baseUrl = notEmpty(ivoryUrl, "oozieUrl");
+	public IvoryClient(String ivoryUrl) throws IOException {
+		this.baseUrl = notEmpty(ivoryUrl, "IvoryUrl");
 		if (!this.baseUrl.endsWith("/")) {
 			this.baseUrl += "/";
 		}
-		IvoryClient.service = Client.create(new DefaultClientConfig())
-				.resource(UriBuilder.fromUri(baseUrl).build());
+		Client client = Client.create(new DefaultClientConfig());
+		setIvoryTimeOut(client);
+		IvoryClient.service = client.resource(UriBuilder.fromUri(baseUrl)
+				.build());
+		client.resource(UriBuilder.fromUri(baseUrl).build());
 
 		// addHeaders();
+	}
+
+	private void setIvoryTimeOut(Client client) throws IOException {
+		Properties prop = new Properties();
+		InputStream input = IvoryClient.class
+				.getResourceAsStream("/client.properties");
+		int readTimeout = 0;
+		int connectTimeout = 0;
+		if (input != null) {
+			prop.load(input);
+			readTimeout = prop.containsKey("ivory.read.timeout") ? Integer
+					.parseInt(prop.getProperty("ivory.read.timeout")) : 60000;
+			connectTimeout = prop.containsKey("ivory.connect.timeout") ? Integer
+					.parseInt(prop.getProperty("ivory.connect.timeout"))
+					: 60000;
+		} else{
+			readTimeout = 60000;
+			connectTimeout = 60000;
+		}
+		client.setConnectTimeout(connectTimeout);
+		client.setReadTimeout(readTimeout);
 	}
 
 	/**
@@ -234,42 +260,42 @@ public class IvoryClient {
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RUNNING, processName, null,
-				null, null,null,null);
+				null, null, null, null);
 	}
 
 	public String getStatusOfInstances(String processName, String start,
 			String end, String type, String runid) throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.STATUS, processName, start,
-				end, null,type, runid);
+				end, null, type, runid);
 	}
 
 	public String killInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.KILL, processName, start,
-				end, null,null,null);
+				end, null, null, null);
 	}
 
 	public String suspendInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.SUSPEND, processName,
-				start, end, null,null,null);
+				start, end, null, null, null);
 	}
 
 	public String resumeInstances(String processName, String start, String end)
 			throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RESUME, processName, start,
-				end, null,null,null);
+				end, null, null, null);
 	}
 
 	public String rerunInstances(String processName, String start, String end,
 			String filePath) throws IvoryCLIException {
 
 		return sendProcessInstanceRequest(Instances.RERUN, processName, start,
-				end, getServletInputStream(filePath),null,null);
+				end, getServletInputStream(filePath), null, null);
 	}
 
 	/**
@@ -384,8 +410,8 @@ public class IvoryClient {
 	}
 
 	private String sendProcessInstanceRequest(Instances instances,
-			String processName, String start, String end, InputStream props, String type, String runid)
-			throws IvoryCLIException {
+			String processName, String start, String end, InputStream props,
+			String type, String runid) throws IvoryCLIException {
 		WebResource resource = service.path(instances.path).path(processName);
 		if (start != null) {
 			resource = resource.queryParam("start", start);
@@ -458,9 +484,9 @@ public class IvoryClient {
 				sb.append(";log=").append(instance.logFile);
 			}
 			sb.append("\n");
-			if(instance.actions!=null){
+			if (instance.actions != null) {
 				sb.append("actions:\n");
-				for(ProcessInstancesResult.InstanceAction action:instance.actions){
+				for (ProcessInstancesResult.InstanceAction action : instance.actions) {
 					sb.append("    ").append(action).append("\n");
 				}
 			}

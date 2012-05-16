@@ -245,7 +245,11 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	
 	private void validateFeedPartitionExpression(Feed feed, Cluster cluster)
 			throws IvoryException {
-		int expressions = 0;
+		int expressions = 0 , numSourceClusters = 0;
+		for(Cluster cl : feed.getClusters().getCluster()){
+			if(cl.getType().value().equals("source"))
+				numSourceClusters++;
+		}
 		if (cluster.getType().value() == "source"
 				&& feed.getPartitions() != null
 				&& feed.getPartitions().getPartition().size() != 0
@@ -280,8 +284,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 						"Target Cluster do not have Partition Expression");
 			else if (feed.getPartitions() != null
 					&& feed.getPartitions().getPartition().size() != 0
-					&& cluster.getPartitionExp() == null && cluster.getType().value() == "source" )
-				throw new ValidationException("Partition Expression is missing");
+					&& cluster.getPartitionExp() == null && cluster.getType().value() == "source" && numSourceClusters > 1)
+				throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
 			else if (feed.getPartitions() == null
 					&& cluster.getPartitionExp() != null)
 				throw new ValidationException(

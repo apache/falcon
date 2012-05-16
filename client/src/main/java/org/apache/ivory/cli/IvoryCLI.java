@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
@@ -160,7 +161,7 @@ public class IvoryCLI {
 	}
 
 	private void instanceCommand(CommandLine commandLine)
-			throws IvoryCLIException {
+			throws IvoryCLIException, IOException {
 		String ivoryUrl = validateIvoryUrl(commandLine);
 		IvoryClient client = new IvoryClient(ivoryUrl);
 
@@ -174,15 +175,16 @@ public class IvoryCLI {
 		String start = commandLine.getOptionValue(START_OPT);
 		String end = commandLine.getOptionValue(END_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
-		String type=commandLine.getOptionValue(INSTANCE_TYPE_OPT);
-		String runid=commandLine.getOptionValue(RUNID_OPT);
+		String type = commandLine.getOptionValue(INSTANCE_TYPE_OPT);
+		String runid = commandLine.getOptionValue(RUNID_OPT);
 
 		validateInstanceCommands(optionsList, processName, start, end, filePath);
 
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(processName);
 		} else if (optionsList.contains(STATUS_OPT)) {
-			result = client.getStatusOfInstances(processName, start, end,type,runid);
+			result = client.getStatusOfInstances(processName, start, end, type,
+					runid);
 		} else if (optionsList.contains(KILL_OPT)) {
 			result = client.killInstances(processName, start, end);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
@@ -215,7 +217,7 @@ public class IvoryCLI {
 	}
 
 	private void entityCommand(CommandLine commandLine)
-			throws IvoryCLIException, ConnectException {
+			throws IvoryCLIException, IOException {
 		String ivoryUrl = validateIvoryUrl(commandLine);
 		IvoryClient client = new IvoryClient(ivoryUrl);
 
@@ -228,30 +230,41 @@ public class IvoryCLI {
 		String entityType = commandLine.getOptionValue(ENTITY_TYPE_OPT);
 		String entityName = commandLine.getOptionValue(ENTITY_NAME_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
-
-		validateEntityCommands(optionsList, entityType, entityName, filePath);
+		validateEntityType(optionsList, entityType);
 
 		if (optionsList.contains(SUBMIT_OPT)) {
+			validateFilePath(optionsList, filePath);
 			result = client.submit(entityType, filePath);
 		} else if (optionsList.contains(UPDATE_OPT)) {
+			validateFilePath(optionsList, filePath);
+			validateEntityName(optionsList, entityName);
 			result = client.update(entityType, entityName, filePath);
 		} else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
+			validateFilePath(optionsList, filePath);
 			result = client.submitAndSchedule(entityType, filePath);
 		} else if (optionsList.contains(VALIDATE_OPT)) {
+			validateFilePath(optionsList, filePath);
 			result = client.validate(entityType, filePath);
 		} else if (optionsList.contains(SCHEDULE_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.schedule(entityType, entityName);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.suspend(entityType, entityName);
 		} else if (optionsList.contains(RESUME_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.resume(entityType, entityName);
 		} else if (optionsList.contains(DELETE_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.delete(entityType, entityName);
 		} else if (optionsList.contains(STATUS_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.getStatus(entityType, entityName);
 		} else if (optionsList.contains(DEFINITION_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.getDefinition(entityType, entityName);
 		} else if (optionsList.contains(DEPENDENCY_OPT)) {
+			validateEntityName(optionsList, entityName);
 			result = client.getDependency(entityType, entityName);
 		} else if (optionsList.contains(LIST_OPT)) {
 			result = client.getEntityList(entityType);
@@ -263,32 +276,24 @@ public class IvoryCLI {
 		System.out.println(result);
 	}
 
-	private void validateEntityCommands(Set<String> optionsList,
-			String entityType, String entityName, String filePath)
+	private void validateFilePath(Set<String> optionsList, String filePath)
 			throws IvoryCLIException {
-		if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)
-				|| optionsList.contains(SUBMIT_OPT)
-				|| optionsList.contains(VALIDATE_OPT)) {
-			if (entityType == null || entityType.equals("") || filePath == null
-					|| filePath.equals("")) {
-				throw new IvoryCLIException("Missing argument: type or file");
-			}
-		} else if (optionsList.contains(UPDATE_OPT)) {
-			if (entityType == null || entityType.equals("")
-					|| entityName == null || entityName.equals("")
-					|| filePath == null || filePath.equals("")) {
-				throw new IvoryCLIException(
-						"Missing argument: type or name or file");
-			}
-		} else if (optionsList.contains(LIST_OPT)) {
-			if (entityType == null || entityType.equals("")) {
-				throw new IvoryCLIException("Missing argument: type");
-			}
-		} else {
-			if (entityType == null || entityType.equals("")
-					|| entityName == null || entityName.equals("")) {
-				throw new IvoryCLIException("Missing argument: type or name");
-			}
+		if (filePath == null || filePath.equals("")) {
+			throw new IvoryCLIException("Missing argument: file");
+		}
+	}
+
+	private void validateEntityName(Set<String> optionsList, String entityName)
+			throws IvoryCLIException {
+		if (entityName == null || entityName.equals("")) {
+			throw new IvoryCLIException("Missing argument: name");
+		}
+	}
+
+	private void validateEntityType(Set<String> optionsList, String entityType)
+			throws IvoryCLIException {
+		if (entityType == null || entityType.equals("")) {
+			throw new IvoryCLIException("Missing argument: type");
 		}
 	}
 
@@ -420,8 +425,12 @@ public class IvoryCLI {
 				END_OPT,
 				true,
 				"End time is optional for commands, status, kill, suspend, resume and re-run; if not specified then current time is considered as end time");
-		Option type = new Option(INSTANCE_TYPE_OPT, true,"Instance type is optional and user can provide type of instance, valid values are DEFAULT and LATE1");
-		Option runid = new Option(RUNID_OPT, true,"Instance runid  is optional and user can specify the runid, defaults to 0");
+		Option type = new Option(
+				INSTANCE_TYPE_OPT,
+				true,
+				"Instance type is optional and user can provide type of instance, valid values are DEFAULT and LATE1");
+		Option runid = new Option(RUNID_OPT, true,
+				"Instance runid  is optional and user can specify the runid, defaults to 0");
 		Option filePath = new Option(
 				FILE_PATH_OPT,
 				true,
@@ -442,25 +451,28 @@ public class IvoryCLI {
 
 	}
 
-	protected String validateIvoryUrl(CommandLine commandLine) {
+	protected String validateIvoryUrl(CommandLine commandLine) throws IvoryCLIException {
 		String url = commandLine.getOptionValue(URL_OPTION);
 		if (url == null) {
 			try {
 				InputStream input = IvoryCLI.class
 						.getResourceAsStream("/client.properties");
-				BufferedReader br = new BufferedReader(new InputStreamReader(
-						new DataInputStream(input)));
-				String brline;
-				brline = br.readLine();
-				url = brline.substring(brline.indexOf('=') + 1).trim();
-			} catch (IOException e) {
-				System.err.println("IvoryURL.properties file does not exist");
-				e.printStackTrace();
-			}
+				if (input == null) {
+					System.err
+							.println("client.properties file does not exist, Ivory URL is "
+									+ "neither available in command option nor in the client.properties file");
+					throw new IvoryCLIException("Ivory URL not specified");
 
-			if (url == null) {
-				throw new IllegalArgumentException(
-						"Ivory URL is neither available in command option nor in the client.properties file");
+				}
+				Properties prop = new Properties();
+				prop.load(input);
+				if(prop.containsKey("ivory.url"))
+				url = prop.getProperty("ivory.url");
+				else{
+					throw new IvoryCLIException("ivory.url property not present in client.properties");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return url;
