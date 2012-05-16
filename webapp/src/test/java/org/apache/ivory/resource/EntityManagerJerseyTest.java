@@ -155,7 +155,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
         System.out.println(status);
-    	Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    	Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
   
     }
     @Test

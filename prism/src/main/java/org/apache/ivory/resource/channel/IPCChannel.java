@@ -5,17 +5,17 @@ import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.service.Services;
-import org.apache.ivory.util.ApplicationProperties;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 public class IPCChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(IPCChannel.class);
 
     private IvoryService service;
 
-    public void init(ApplicationProperties ignore, String serviceName)
+    public void init(Properties ignore, String serviceName)
             throws IvoryException{
         this.service = Services.get().init(serviceName);
     }

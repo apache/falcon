@@ -307,7 +307,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             if (entityObj == null) {
                 throw IvoryWebException.newException(new IvoryException(entity + "(" + 
-                		type + ") is not present") , Response.Status.NOT_FOUND);
+                		type + ") is not present") , Response.Status.BAD_REQUEST);
             }
             if (entityType.isSchedulable()) {
                 if (workflowEngine.isActive(entityObj)) {

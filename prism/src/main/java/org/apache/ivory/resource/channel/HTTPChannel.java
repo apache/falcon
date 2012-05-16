@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 public class HTTPChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
@@ -29,7 +30,7 @@ public class HTTPChannel extends AbstractChannel {
     private Class service;
     private String urlPrefix;
 
-    public void init(ApplicationProperties deploymentProperties,
+    public void init(Properties deploymentProperties,
                      String serviceName) throws IvoryException {
         String prefixPath = deploymentProperties.
                 getProperty(serviceName + ".path");

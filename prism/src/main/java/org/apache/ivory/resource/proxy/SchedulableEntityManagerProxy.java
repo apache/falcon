@@ -11,6 +11,7 @@ import org.apache.ivory.resource.AbstractSchedulableEntityManager;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
+import org.apache.ivory.util.DeploymentProperties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -21,13 +22,19 @@ import javax.ws.rs.core.Response;
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
 
+    private static final String INTEGRATED = "integrated";
+    private static final String DEPLOY_MODE = "deploy.mode";
     private final Channel entityManagerChannel;
     private final Channel configSyncChannel;
+
+    private final boolean integratedMode;
 
     public SchedulableEntityManagerProxy() {
         try {
             entityManagerChannel = ChannelFactory.get("SchedulableEntityManager");
             configSyncChannel = ChannelFactory.get("ConfigSyncService");
+            integratedMode = DeploymentProperties.get().
+                    getProperty(DEPLOY_MODE, INTEGRATED).equals(INTEGRATED);
         } catch (IvoryException e) {
             throw new IvoryRuntimException("Unable to initialize channels", e);
         }
@@ -47,7 +54,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult submit(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type) {
         try {
-            //TODO: Add back super.submit(request, type);
+            if (!integratedMode) {
+                super.submit(request, type);
+            }
             return configSyncChannel.invoke("submit", request, type);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -73,7 +82,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entity) {
         try {
-            //super.delete(request, type, entity);
+            if (!integratedMode) {
+                super.delete(request, type, entity);;
+            }
             return configSyncChannel.invoke("delete", request, type, entity);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -89,7 +100,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entityName) {
         try {
-            //super.update(request, type, entityName);
+            if (!integratedMode) {
+                super.update(request, type, entityName);
+            }
             return configSyncChannel.invoke("update", request, type, entityName);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -159,8 +172,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                        @Dimension("entityType") @PathParam("type") String type) {
 
          try {
-             Entity entity = submitInternal(request, type);
-             return entityManagerChannel.invoke("schedule", request, type, entity.getName());
+             if (!integratedMode) {
+                 Entity entity = submitInternal(request, type);
+                 return entityManagerChannel.invoke("schedule", request, type, entity.getName());
+             } else {
+                 return entityManagerChannel.invoke("submitAndSchedule", request, type);
+             }
          } catch (Exception e) {
              throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
          }
