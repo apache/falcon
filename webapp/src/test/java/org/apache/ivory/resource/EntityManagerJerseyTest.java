@@ -190,6 +190,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", "testuser")
                 .post(ClientResponse.class, stream);
         assertSuccessful(clientRepsonse);
+        assertRequestId(clientRepsonse);
     }
 
 	@Test
