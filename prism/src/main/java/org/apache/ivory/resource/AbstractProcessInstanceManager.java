@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.jms.TextMessage;
+import javax.jms.MapMessage;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.PathParam;
@@ -88,7 +88,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 			Map<String, Map<String, String>> instances = wfEngine.getStatus(
 					process, start, end);
 			ProcessInstancesResult result = new ProcessInstancesResult(
-					"getStatus is successful", instances.values().iterator().next());
+					"getStatus is successful", instances.values().iterator()
+							.next());
 			return getProcessInstanceWithLog(process,
 					Tag.valueOf(type == null ? Tag.DEFAULT.name() : type),
 					runId == null ? "0" : runId, result);
@@ -128,8 +129,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> killedInstances = wfEngine.killInstances(process, start, end);
-            ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next(),
-                    TransactionManager.getTransactionId());
+            ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -155,8 +155,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
-            ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next(),
-                    TransactionManager.getTransactionId());
+            ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -181,8 +180,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> resumedInstances = wfEngine.resumeInstances(process, start, end);
-            ProcessInstancesResult result = new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next(),
-                    TransactionManager.getTransactionId());
+            ProcessInstancesResult result = new ProcessInstancesResult("resumeProcessInstance is successful", resumedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -216,8 +214,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
-            ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next(),
-                    TransactionManager.getTransactionId());
+            ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Exception e) {
@@ -298,13 +295,15 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
+			@Dimension(value = "runId") String runId, long msgReceivedTime)
+			throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
-			new RetryHandler().retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
+			new RetryHandler().retry(process, nominalTime, runId, workflowId,
+					getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		return "DONE";
 
-	}	
+	}
 
 }

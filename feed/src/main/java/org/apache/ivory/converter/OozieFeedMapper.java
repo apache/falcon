@@ -38,7 +38,8 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
-import org.apache.ivory.messaging.EntityInstanceMessage;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
+import org.apache.ivory.messaging.EntityInstanceMessage.entityOperation;
 import org.apache.ivory.oozie.coordinator.ACTION;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
@@ -107,9 +108,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put("timeZone", feedCluster.getValidity().getTimezone());
             props.put("frequency", feed.getFrequency());
             props.put("limit", feedCluster.getRetention().getLimit());
-            props.put(EntityInstanceMessage.ARG.OPERATION.NAME(), EntityInstanceMessage.entityOperation.DELETE.name());
-            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), feed.getName());
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), "IGNORE");
+            props.put(ARG.operation.getPropName(), entityOperation.DELETE.name());
+            props.put(ARG.feedNames.getPropName(), feed.getName());
+            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
 
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);

@@ -22,6 +22,7 @@ import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -29,6 +30,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.messaging.EntityInstanceMessage;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.mortbay.log.Log;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -64,14 +66,18 @@ public class IvoryTopicSubscriberTest {
 				.createProducer(destination);
 		producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 		for (int i = 0; i < 10; i++) {
-			String ivoryMessage = getMockIvoryMessage(i).toString();
-			TextMessage message = session.createTextMessage(ivoryMessage);
-			Log.debug("Sending:"+message);
+			EntityInstanceMessage ivoryMessage = getMockIvoryMessage(i);
+			MapMessage message = session.createMapMessage();
+			for (ARG arg : ARG.values()) {
+				message.setString(arg.getPropName(), ivoryMessage
+						.getKeyValueMap().get(arg));
+			}
+			Log.debug("Sending:" + message);
 			producer.send(message);
 		}
 
 		EntityInstanceMessage message = getMockIvoryMessage(15);
-		message.setStatus("FAILED");
+		message.getKeyValueMap().put(ARG.status, "FAILED");
 		TextMessage textMessage = session.createTextMessage(message.toString());
 		producer.send(textMessage);
 
@@ -79,20 +85,21 @@ public class IvoryTopicSubscriberTest {
 
 	private EntityInstanceMessage getMockIvoryMessage(int i) {
 		EntityInstanceMessage message = new EntityInstanceMessage();
-		message.setBrokerImplClass(BROKER_IMPL_CLASS);
-		message.setBrokerUrl(BROKER_URL);
-		message.setProcessName("process1");
-		message.setEntityType("PROCESS");
-		message.setFeedInstancePath("/clicks/hour/00/0" + i);
-		message.setFeedName("clicks");
-		message.setLogFile("/logfile");
-		message.setNominalTime("2012-10-10-10-10");
-		message.setOperation("GENERATE");
-		message.setRunId("0");
-		message.setTimeStamp("2012-10-10-10-1" + i);
-		message.setWorkflowId("workflow-" + i);
-		message.setTopicName(TOPIC_NAME);
-		message.setStatus("SUCCEEDED");
+		message.getKeyValueMap().put(ARG.brokerImplClass, BROKER_IMPL_CLASS);
+		message.getKeyValueMap().put(ARG.brokerUrl, BROKER_URL);
+		message.getKeyValueMap().put(ARG.entityName, "process1");
+		message.getKeyValueMap().put(ARG.entityType, "PROCESS");
+		message.getKeyValueMap().put(ARG.feedInstancePaths,
+				"/clicks/hour/00/0" + i);
+		message.getKeyValueMap().put(ARG.feedNames, "clicks");
+		message.getKeyValueMap().put(ARG.logFile, "/logfile");
+		message.getKeyValueMap().put(ARG.nominalTime, "2012-10-10-10-10");
+		message.getKeyValueMap().put(ARG.operation, "GENERATE");
+		message.getKeyValueMap().put(ARG.runId, "0");
+		message.getKeyValueMap().put(ARG.timeStamp, "2012-10-10-10-1" + i);
+		message.getKeyValueMap().put(ARG.workflowId, "workflow-" + i);
+		message.getKeyValueMap().put(ARG.topicName, TOPIC_NAME);
+		message.getKeyValueMap().put(ARG.status, "SUCCEEDED");
 		return message;
 	}
 
