@@ -22,7 +22,7 @@ management on hadoop clusters.
 ---+ Getting Started
 
 Start with these simple steps to install an ivory instance [[InstallationSteps][Simple setup]]. Also refer
-to Ivory architecture and documentation in [[IvoryDocumentation][Documentation]].
+to Ivory architecture and documentation in [[IvoryDocumentation][Documentation]]. [[OnBoarding][On boarding]] describes steps to on-board a pipeline to Ivory. It also gives a sample pipeline for reference.
 
 #LicenseInfo
 ---+ Licensing Information
