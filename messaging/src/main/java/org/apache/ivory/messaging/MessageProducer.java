@@ -27,13 +27,18 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.Topic;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.log4j.Logger;
 
-/**
- * Default Ivory Message Producer The configuration are loaded from
- * jms-beans.xml
- */
-public class MessageProducer {
+public class MessageProducer extends Configured implements Tool {
 
 	private Connection connection;
 	private static final Logger LOG = Logger.getLogger(MessageProducer.class);
@@ -64,7 +69,7 @@ public class MessageProducer {
 			messageTTL = messageTTLinMins * 60 * 1000;
 		} catch (NumberFormatException e) {
 			LOG.error("Error in parsing broker.ttl, setting TTL to:"
-					+ DEFAULT_TTL+ " milli-seconds");
+					+ DEFAULT_TTL + " milli-seconds");
 		}
 		producer.setTimeToLive(messageTTL);
 		producer.send(new EntityInstanceMessageCreator(entityInstanceMessage)
@@ -72,51 +77,8 @@ public class MessageProducer {
 
 	}
 
-	/**
-	 * 
-	 * @param args
-	 *            - array of Strings, which will be used to create TextMessage
-	 */
-	public static void main(String[] args) {
-		debug(args);
-		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
-				.argsToMessage(args);
-		if (entityInstanceMessage.length == 0) {
-			LOG.warn("No operation on output feed");
-			return;
-		}
-
-		MessageProducer ivoryMessageProducer = new MessageProducer();
-		try {
-			ivoryMessageProducer.createAndStartConnection(
-					args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()],
-					"", "", entityInstanceMessage[0].getBrokerUrl());
-			for (EntityInstanceMessage processMessage : entityInstanceMessage) {
-				ivoryMessageProducer.sendMessage(processMessage);
-			}
-		} catch (JMSException e) {
-			LOG.error(e);
-			e.printStackTrace();
-		} catch (Exception e) {
-			LOG.error(e);
-			e.printStackTrace();
-		} finally {
-			try {
-				ivoryMessageProducer.connection.close();
-			} catch (JMSException e) {
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	private static void debug(String[] args) {
-		if (LOG.isDebugEnabled()) {
-			for (int i = 0; i < args.length; i++) {
-				LOG.debug(args[i] + "::");
-			}
-		}
-
+	public static void main(String[] args) throws Exception {
+		ToolRunner.run(new MessageProducer(), args);
 	}
 
 	private void createAndStartConnection(String implementation,
@@ -134,6 +96,86 @@ public class MessageProducer {
 
 		connection = connectionFactory.createConnection();
 		connection.start();
+	}
+
+	private static CommandLine getCommand(String[] arguments)
+			throws ParseException {
+		Options options = new Options();
+		addOption(options, new Option(ARG.brokerImplClass.getArgName(), true,
+				"message broker Implementation class"));
+		addOption(options, new Option(ARG.brokerTTL.getArgName(), true,
+				"message time-to-live"));
+		addOption(options, new Option(ARG.brokerUrl.getArgName(), true,
+				"message broker url"));
+		addOption(options, new Option(ARG.entityName.getArgName(), true,
+				"name of the entity"));
+		addOption(options, new Option(ARG.entityType.getArgName(), true,
+				"type of the entity"));
+		addOption(options, new Option(ARG.feedInstancePaths.getArgName(),
+				true, "feed instance paths"));
+		addOption(options, new Option(ARG.feedNames.getArgName(), true,
+				"feed names"));
+		addOption(options, new Option(ARG.logFile.getArgName(), true,
+				"log file path"));
+		addOption(options, new Option(ARG.nominalTime.getArgName(), true,
+				"instance time"));
+		addOption(options, new Option(ARG.operation.getArgName(), true,
+				"operation like generate, delete, archive"));
+		addOption(options, new Option(ARG.runId.getArgName(), true,
+				"current run-id of the instance"));
+		addOption(options, new Option(ARG.status.getArgName(), true,
+				"status of workflow instance"));
+		addOption(options, new Option(ARG.timeStamp.getArgName(), true,
+				"current timestamp"));
+		addOption(options, new Option(ARG.topicName.getArgName(), true,
+				"name of the topic to be used to send message"));
+		addOption(options, new Option(ARG.workflowId.getArgName(), true,
+				"workflow id"));
+
+		return new GnuParser().parse(options, arguments);
+	}
+
+	private static void addOption(Options options, Option opt) {
+		opt.setRequired(true);
+		options.addOption(opt);
+	}
+
+	@Override
+	public int run(String[] args) throws Exception {
+		CommandLine cmd;
+		try {
+			cmd = getCommand(args);
+		} catch (ParseException e) {
+			throw new Exception("Unable to parse arguments: ", e);
+		}
+		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
+				.getMessages(cmd);
+		if (entityInstanceMessage.length == 0) {
+			LOG.warn("No operation on output feed");
+			return 0;
+		}
+
+		MessageProducer ivoryMessageProducer = new MessageProducer();
+		try {
+			ivoryMessageProducer.createAndStartConnection(
+					cmd.getOptionValue(ARG.brokerImplClass.name()), "",
+					"", cmd.getOptionValue(ARG.brokerUrl.name()));
+			for (EntityInstanceMessage message : entityInstanceMessage) {
+				LOG.info("Sending message:" + message.getKeyValueMap());
+				ivoryMessageProducer.sendMessage(message);
+			}
+		} catch (JMSException e) {
+			LOG.error("Error in getConnection:", e);
+		} catch (Exception e) {
+			LOG.error("Error in getConnection:", e);
+		} finally {
+			try {
+				ivoryMessageProducer.connection.close();
+			} catch (JMSException e) {
+				LOG.error("Error in closing connection:", e);
+			}
+		}
+		return 0;
 	}
 
 }

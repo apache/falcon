@@ -1,5 +1,6 @@
 package org.apache.ivory.resource;
 
+import static org.testng.AssertJUnit.assertNotNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -219,6 +220,17 @@ public class AbstractTestBase {
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
     }
 
+    protected void assertRequestId(ClientResponse clientRepsonse) {
+        String response = clientRepsonse.getEntity(String.class);
+        try {
+            APIResult result = (APIResult)unmarshaller.
+                    unmarshal(new StringReader(response));
+            assertNotNull(result.getRequestId());
+        } catch (JAXBException e) {
+            Assert.fail("Reponse " + response + " is not valid");
+        }        
+    }
+    
     protected void assertSuccessful(ClientResponse clientRepsonse) {
         String response = clientRepsonse.getEntity(String.class);
         try {

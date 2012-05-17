@@ -45,7 +45,7 @@ import org.apache.ivory.entity.v0.process.LateProcess;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.latedata.LateDataUtils;
-import org.apache.ivory.messaging.EntityInstanceMessage;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.oozie.coordinator.CONTROLS;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.DATAIN;
@@ -194,8 +194,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
             }
             // Output feed name and path for parent workflow
-            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
+            props.put(ARG.feedNames.getPropName(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
+            props.put(ARG.feedInstancePaths.getPropName(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
         }
 
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
@@ -282,7 +282,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Long millis = LateDataUtils.getDurationFromOffset(offsetExpr);
         long offset = -millis / (60000);
         String nominalTime = LATE_NOMINAL_TIME_EL.replace("#VAL#", String.valueOf(offset));
-        props.put(EntityInstanceMessage.ARG.NOMINAL_TIME.NAME(), nominalTime);       
+        props.put(ARG.nominalTime.getPropName(), nominalTime);       
         
         String nominalTimeForExtId = "${coord:dateOffset(coord:nominalTime(), #VAL#, 'MINUTE')}";
         nominalTimeForExtId = nominalTimeForExtId.replace("#VAL#", String.valueOf(offset));
@@ -342,8 +342,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
             }
             // Output feed name and path for parent workflow
-            props.put(EntityInstanceMessage.ARG.FEED_NAME.NAME(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
-            props.put(EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.NAME(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
+            props.put(ARG.feedNames.getPropName(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
+            props.put(ARG.feedInstancePaths.getPropName(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
         }
 
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);

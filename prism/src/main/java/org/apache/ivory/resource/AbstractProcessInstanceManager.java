@@ -36,7 +36,6 @@ import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-import javax.jms.TextMessage;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -292,13 +291,15 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
+			@Dimension(value = "runId") String runId, long msgReceivedTime)
+			throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
-			new RetryHandler().retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
+			new RetryHandler().retry(process, nominalTime, runId, workflowId,
+					getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		return "DONE";
 
-	}	
+	}
 
 }

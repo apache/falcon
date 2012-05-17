@@ -1,0 +1,415 @@
+---++ Contents
+   * <a href="#Cluster_Specification">Cluster Specification</a>
+   * <a href="#Feed_Specification">Feed Specification</a>
+   * <a href="#Process_Specification">Process Specification</a>
+   
+---++ Cluster Specification
+The cluster XSD specification is available here:
+A cluster contains different interfaces which are used by Ivory like readonly, write, workflow and messaging.
+A cluster is referenced by feeds and processes which are on-boarded to Ivory by its name.
+
+Following are the tags defined in a cluster.xml:
+<verbatim>
+<cluster colo="gs" description="" name="corp" xmlns="uri:ivory:cluster:0.1" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+The colo specifies the colo to which this cluster belongs to and name is the name of the cluster which has to 
+be unique.
+
+
+A cluster has varies interfaces as described below:
+<verbatim>
+    <interface type="readonly" endpoint="hftp://localhost:50010" version="0.20.2" />
+</verbatim>
+A readonly interface specifies the endpoint for Hadoop's HFTP protocol, 
+this would be used in the context of feed replication.
+
+<verbatim>
+<interface type="write" endpoint="hdfs://localhost:8020" version="0.20.2" />
+</verbatim>
+A write interface specifies the interface to write to hdfs, it's endpoint is the value of fs.default.name.
+Ivory uses this interface to write system data to hdfs and feeds referencing this cluster are written to hdfs
+using the same write interface.
+
+<verbatim>
+<interface type="execute" endpoint="localhost:8021" version="0.20.2" />
+</verbatim>
+An execute interface specifies the interface for job tracker, it's endpoint is the value of mapred.job.tracker. 
+Ivory uses this interface to submit the processes as jobs on JobTracker defined here.
+
+<verbatim>
+<interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.1" />
+</verbatim>
+A workflow interface specifies the interface for workflow engine, example of its endpoint is the value for OOZIE_URL.
+Ivory uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
+
+<verbatim>
+<interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
+</verbatim>
+A messaging interface specifies the interface for sending feed availability messages, it's endpoint is broker url with tcp address.
+
+A cluster has a list of locations defined:
+<verbatim>
+<location name="staging" path="/projects/ivory/staging" />
+</verbatim>
+Location has the name and the path, name is the type of locations like staging, temp and working.
+and path is the hdfs path for each location.
+Ivory would use the location to do intermediate processing of entities in hdfs and hence Ivory 
+should have read/write/execute permission on these locations.
+
+A cluster has a list of properties:
+A key-value pair, which are propagated to the workflow engine.
+<verbatim>
+<property name="brokerImplClass" value="org.apache.activemq.ActiveMQConnectionFactory" />
+</verbatim>
+Ideally the Mapred's job queue name (queueName) and JMS impl class name of messaging engine (brokerImplClass) 
+should be defined here.
+
+---++ Feed Specification
+The Feed XSD specification is available here.
+a Feed defines various attributes of feed like feed location, frequency, late-arrival handling
+and retention policies.
+<verbatim>
+<feed description="clicks log" name="clicks" xmlns="uri:ivory:feed:0.1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+A feed should have a unique name and this name is referenced by processes as input or output feed.
+
+<verbatim>
+   <partitions>
+        <partition name="fraud" />
+        <partition name="good" />
+    </partitions>
+</verbatim>
+A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be same here as cluster partitions.
+
+<verbatim>
+    <groups>online,bi</groups>
+</verbatim>
+A feed specifies a list of comma separated groups, a group is a logical grouping of feeds and a group is said to be
+available if all the feeds belonging to a group are available. The frequency of all the feed which belong to the same group
+must be same.
+
+<verbatim>
+    <availabilityFlag>_SUCCESS</availabilityFlag>
+</verbatim>
+An availabilityFlag specifies the name of a file which when present/created in a feeds data directory, 
+the feed is termed as available. ex: _SUCCESS, if this element is ignored then Ivory would consider the presence of feed's 
+data directory as feed availability.
+
+<verbatim>
+    <frequency>hours</frequency>
+    <periodicity>1</periodicity>
+</verbatim>
+A feed has a frequency and a periodicity which specifies the frequency by which this feed is generated. 
+ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
+valid frequency type for a feed are minutes, hours, days, months
+
+<verbatim>
+    <late-arrival cut-off="hours(6)" />
+</verbatim>
+A late-arrival specifies the cut-off period till which the feed is expected to arrive late and should be honored be processes referring to it as input feed by rerunning the instances in case the data arrives late with in a cut-off period.
+The cut-off period is specified by expression frequency(times), ex: if the feed can arrive late
+upto 8 hours then late-arrival's cut-off="hours(8)"
+
+<verbatim>
+        <cluster name="testCluster" type="source" partitionExp="*/${cluster.colo}">
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
+                      timezone="UTC" />
+            <retention limit="hours(48)" action="delete" /> 
+        </cluster>
+</verbatim>
+Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Ivory.
+type: specifies whether the referenced cluster should be treated as a source or target for a feed.
+Validity of a feed on cluster specifies duration for which this feed is valid on this cluster.
+Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
+The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
+The field partitionExp contains partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema. A partition tag can be a wildcard(*), a static string or an expression. Atleast one of the strings has to be an expression.
+
+<verbatim>
+ <location type="data" path="/projects/ivory/clicks" /> 
+</verbatim>
+A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
+A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is generated
+periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
+The granularity of date pattern in the path should be atleast that of a frequency of a feed.
+
+<verbatim>
+    <properties>
+        <property name="tmpFeedPath" value="tmpFeedPathValue" />
+        <property name="field2" value="value2" />
+    </properties>
+</verbatim>
+A key-value pair, which are propagated to the workflow engine.
+
+---++ Process Specification
+A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
+
+The different details of process are:
+---++++ Name
+Each process is identified with a unique name.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+</process>
+</verbatim>
+
+---++++ Cluster
+The cluster on which the workflow should run. A process can contain just one cluster. Cluster definition for the cluster name gives the end points for workflow execution, name node, job tracker, messaging and so on.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+   <cluster name=[cluster name]/>
+...
+</process>
+</verbatim>
+
+---++++ Concurrency
+Concurrency defines how many instances of the workflow can run concurrently. Concurrency should be a positive interger > 0. For example, concurrency of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+   <concurrency>[concurrency]</concurrency>
+...
+</process>
+</verbatim>
+
+---++++ Order
+Order defines the order in which the the ready instances are picked up. The possible values are FIFO(First In First Out), LIFO(Last In First Out), and ONLYLAST(Last Only).
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+   <order>[order]</order>
+...
+</process>
+</verbatim>
+
+---++++ Frequency
+Frequency defines how frequently the workflow job should run. For example, hours(1) defines the frequency as hourly, days(7) defines weekly frequency. The values for timeunit can be minutes/hours/days/months and the frequency number should be a positive integer > 0. 
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+   <frequency>[timeunit]([frequency])</order>
+...
+</process>
+</verbatim>
+
+---++++ Validity
+Validity defines how long the workflow should run. It has 3 components - start time, end time and timezone. Start time and end time are timestamps defined in yyyy-MM-dd'T'HH:mm'Z' format and should always be in UTC. Timezone is used to compute the next instances starting from start time. The workflow will start at start time and end before end time specified. So, there will not be a workflow instance at end time.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+   <validity start=[start time] end=[end time] timezone=[timezone]/>
+...
+</process>
+</verbatim>
+
+Examples:
+<verbatim>
+<process name="sample-process">
+...
+    <frequency>days(1)</frequency>
+    <validity start="2012-01-01T00:40Z" end="2012-04-01T00:00" timezone="UTC"/>
+...
+</process>
+</verbatim>
+The daily workflow will start on Jan 1st 2012 at 00:40 UTC, it will run at 40th minute of every hour and the last instance will be at March 31st 2012 at 23:40 UTC.
+                                                                                               
+<verbatim>
+<process name="sample-process">
+...
+    <frequency>hours(1)</frequency>
+    <validity start="2012-03-11T08:40Z" end="2012-03-12T08:00" timezone="PST8PDT"/>
+...
+</process>
+</verbatim>
+The hourly workflow will start on March 11th 2012 at 00:40 PST, the next instances will be at 01:40 PST, 03:40 PDT, 04:40 PDT and so on till 23:40 PDT. So, there will be just 23 instances of the workflow for March 11th 2012 because of DST switch.
+
+---++++ Inputs
+Inputs define the input data for the workflow. The workflow job will start executing only after the schedule time and when all the inputs are available. There can be 0 or more inputs and each of the input maps to a feed. The path and frequency of input data is picked up from feed definition. Each input should also define start and end instances in terms of EL expressions and can optionally specify specific partition of input that the workflow requires. The components in partition should be subset of partitions defined in the feed. 
+
+For each input, Ivory will create a property with the input name that contains the comma separated list of input paths. This proprty can be used in workflow actions like pig scripts and so on.
+
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+    <inputs>
+        <input name=[input name] feed=[feed name] start=[start el] end=[end el] partition=[partition]/>
+        ...
+    </inputs>
+...
+</process>
+</verbatim>
+
+Example:
+<verbatim>
+<feed name="feed1">
+...
+    <partition name="isFraud"/>
+    <partition name="country"/>
+    <frequency>hours(1)</frequency>
+    <locations>
+        <location type="data" path="/projects/bootcamp/feed1/${YEAR}-${MONTH}-${DAY}-${HOUR}"/>
+        ...
+    </locations>
+...
+</feed>
+<process name="sample-process">
+...
+    <inputs>
+        <input name="input1" feed="feed1" start="today(0,0)" end="today(1,0)" partition="*/US"/>
+        ...
+    </inputs>
+...
+</process>
+</verbatim>
+The input for the workflow is a hourly feed and takes 0th and 1st hour data of today(the day when the workflow runs). If the workflow is running for 2012-03-01T06:40Z, the inputs are /projects/bootcamp/feed1/2012-03-01-00/*/US and /projects/bootcamp/feed1/2012-03-01-01/*/US. The property for this input is
+input1=/projects/bootcamp/feed1/2012-03-01-00/*/US,/projects/bootcamp/feed1/2012-03-01-01/*/US
+
+---++++ Outputs
+Outputs define the output data that is generated by the workflow. A process can define 0 or more outputs. Each output is mapped to a feed and the output path is picked up from feed definition. The output instance that should be generated is specified in terms of EL expression.
+
+For each output, Ivory creates a property with output name that contains the path of output data. This can be used in workflows to store in the path.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+    <outputs>
+        <output name=[input name] feed=[feed name] instance=[instance el]/>
+        ...
+    </outputs>
+...
+</process>
+</verbatim>
+
+Example:
+<verbatim>
+<feed name="feed2">
+...
+    <frequency>days(1)</frequency>
+    <locations>
+        <location type="data" path="/projects/bootcamp/feed2/${YEAR}-${MONTH}-${DAY}"/>
+        ...
+    </locations>
+...
+</feed>
+<process name="sample-process">
+...
+    <outputs>
+        <output name="output1" feed="feed2" instance="today(0,0)"/>
+        ...
+    </outputs>
+...
+</process>
+</verbatim>
+The output of the workflow is feed instance for today. If the workflow is running for 2012-03-01T06:40Z, the workflow generates output /projects/bootcamp/feed2/2012-03-01. The property for this output that is available for workflow is:
+output1=/projects/bootcamp/feed2/2012-03-01
+
+---++++ Properties
+The properties are key value pairs that are passed to the workflow. These properties are optional and can be used in workflow to parameterize the workflow.
+Synatx:
+<verbatim>
+<process name="[process name]">
+...
+    <properties>
+        <propery name=[key] value=[value]/>
+        ...
+    </properties>
+...
+</process>
+</verbatim>
+
+---++++ Workflow
+The workflow defines the workflow engine that should be used and the path to the workflow on hdfs. The workflow definition on hdfs contains the actual job that should run and it should confirm to the workflow specification of the engine specified. The libraries required by the workflow should be in lib folder inside the workflow path.
+
+The properties defined in the cluster and cluster properties(nameNode and jobTracker) will also be available for the workflow.
+
+As of now, only oozie workflow engine is supported. Refer to oozie [[http://incubator.apache.org/oozie/overview.html][workflow overview]] and [[http://incubator.apache.org/oozie/docs/3.1.3/docs/WorkflowFunctionalSpec.html][workflow specification]] for details.  
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+    <workflow engine=[workflow engine] path=[workflow path]/>
+...
+</process>
+</verbatim>
+
+Example:
+<verbatim>
+<process name="sample-process">
+...
+    <workflow engine="oozie" path="/projects/bootcamp/workflow"/>
+...
+</process>
+</verbatim>
+This defines the workflow engine to be oozie and the workflow xml is defined at /projects/bootcamp/workflow/workflow.xml. The libraries are at /projects/bootcamp/workflow/lib.
+
+---++++ Retry
+Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+    <retry policy=[retry policy] delay=[retry delay] attempts=[retry attempts]/>
+...
+</process>
+</verbatim>
+
+Examples:
+<verbatim>
+<process name="sample-process">
+...
+    <retry policy="backoff" delay="minutes(10)" attempts="3"/>
+...
+</process>
+</verbatim>
+The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
+
+---++++ Late data
+Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.
+
+Late data policy defines how frequently check is done to detect late data. The policies supported are: backoff, exp-backoff(exponention backoff) and final(at feed's late cut-off). The policy along with delay defines the interval at which late data check is done.
+
+Late input specification for each input defines the workflow that should run when late data is detected for that input. 
+
+Syntax:
+<verbatim>
+<process name="[process name]">
+...
+    <late-process policy=[late handling policy] delay=[delay]>
+        <late-input input=[input name] workflow-path=[workflow path]/>
+        ...
+    </late-process>
+...
+</process>
+</verbatim>
+
+Example:
+<verbatim>
+<feed name="feed1">
+...
+    <frequency>hours(1)</frequency>
+    <late-arrival cut-off="hours(6)"/>
+...
+</feed>
+<process name="sample-process">
+...
+    <inputs>
+        <input name="input1" feed="feed1" start="today(0,0)" end="today(1,0)"/>
+        ...
+    </inputs>
+    <late-process policy="final">
+        <late-input input="input1" workflow-path="/projects/bootcamp/workflow/lateinput1" />
+        ...
+    </late-process>
+...
+</process>
+</verbatim>
+This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Ivory should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml

@@ -1,7 +1,6 @@
 ---++ Contents
    * <a href="#Architecture">Architecture</a>
    * <a href="#Control_flow">Control flow</a>
-   * <a href="#Entity_Specification">Entity Specification</a>
    * <a href="#Entity_Management_actions">Entity Management actions</a>
    * <a href="#Instance_Management_actions">Instance Management actions</a>
    * <a href="#Retention">Retention</a>
@@ -57,7 +56,6 @@ individual operations performed are recorded into a transaction journal. This jo
 the overall user action. In some cases, it is not possible to undo the action. In such cases, Ivory attempts
 to keep the system in an consistent state.
 
----++ Entity Specification
 ---++ Entity Management actions
 
 ---+++ Submit:
@@ -428,16 +426,17 @@ The implementation class and the broker url of the JMS engine are read from the 
 Users may register consumers on the required topic to check the availability or status of feed instances.
  
 For a given process that is scheduled, the name of the topic is same as the process name.
-Ivory sends a text message for every feed produced by the instance of a process to the JMS topic.
-The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$workflowId$runId$nominalTime$timeStamp
-Ex:aggregator$clicks$/clicks/hour/00/00$workflow-0$0$2012-10-10-10-10$2012-10-10-10-10
+Ivory sends a Map message for every feed produced by the instance of a process to the JMS topic.
+The JMS MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
 For a given feed that is scheduled, the name of the topic is same as the feed name.
-Ivory sends a text message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
-The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$retentionAction$workflowId$runId$nominalTime$timeStamp
-Ex:aggregatedLogs$aggregatedLogs$/retention/testFolders/2012/05/08/07$DELETE$0000042-120506235551389-oozie-oozi-W$0$2012-05-06-20-17$2012-05-06-20-17
+Ivory sends a map message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
+The JMS MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
-The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.
+The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.TTL (Time-to-live) for JMS message
+can be configured in the Ivory's startup.properties file.
 
 ---++ Ivory EL Expressions
 

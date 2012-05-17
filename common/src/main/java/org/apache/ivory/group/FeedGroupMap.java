@@ -75,7 +75,11 @@ public class FeedGroupMap implements ConfigurationChangeListener {
 			String[] groups = feed.getGroups().split(",");
 			for (String group : groups) {
 				groupsMapping.get(group).getFeeds().remove(entity.getName());
+				if (groupsMapping.get(group).getFeeds().size() == 0) {
+					groupsMapping.remove(group);
+				}
 			}
+
 		}
 
 	}

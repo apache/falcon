@@ -21,59 +21,63 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class IvoryTopicProducerTest {
-	private String [] args = new String[15];
-	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-	//private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
-	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
+	private String[] args;
+	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
+	// private static final String BROKER_URL =
+	// "tcp://localhost:61616?daemon=true";
+	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 	private static final String TOPIC_NAME = "IVORY.PROCESS.TOPIC";
 	private BrokerService broker;
-	
+
 	private volatile AssertionError error;
 
 	@BeforeClass
 	public void setup() throws Exception {
-		args[EntityInstanceMessage.ARG.PROCESS_NAME.ORDER()]="agg-coord";
-		args[EntityInstanceMessage.ARG.FEED_NAME.ORDER()]="click-logs,raw-logs";
-		args[EntityInstanceMessage.ARG.FEED_INSTANCE_PATH.ORDER()]="/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20";
-		args[EntityInstanceMessage.ARG.WORKFLOW_ID.ORDER()]="workflow-01-00";
-		args[EntityInstanceMessage.ARG.RUN_ID.ORDER()]="1";
-		args[EntityInstanceMessage.ARG.NOMINAL_TIME.ORDER()]="2011-01-01";
-		args[EntityInstanceMessage.ARG.TIME_STAMP.ORDER()]="2012-01-01";
-		args[EntityInstanceMessage.ARG.BROKER_URL.ORDER()]=BROKER_URL;
-		args[EntityInstanceMessage.ARG.BROKER_IMPL_CLASS.ORDER()]=(BROKER_IMPL_CLASS);
-		args[EntityInstanceMessage.ARG.ENTITY_TYPE.ORDER()]=("process");
-		args[EntityInstanceMessage.ARG.OPERATION.ORDER()]=("GENERATE");
-		args[EntityInstanceMessage.ARG.LOG_FILE.ORDER()]=("/logFile");
-		args[EntityInstanceMessage.ARG.TOPIC_NAME.ORDER()]=(TOPIC_NAME);
-		args[EntityInstanceMessage.ARG.STATUS.ORDER()]=("SUCCEEDED");
-		args[EntityInstanceMessage.ARG.BROKER_TTL.ORDER()]="3600000";
+		args = new String[] { "-" + ARG.entityName.getArgName(), "agg-coord",
+				"-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
+				"-" + ARG.feedInstancePaths.getArgName(),
+				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
+				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
+				"-" + ARG.runId.getArgName(), "1",
+				"-" + ARG.nominalTime.getArgName(), "2011-01-01",
+				"-" + ARG.timeStamp.getArgName(), "2012-01-01",
+				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
+				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
+				"-" + ARG.entityType.getArgName(), ("process"),
+				"-" + ARG.operation.getArgName(), ("GENERATE"),
+				"-" + ARG.logFile.getArgName(), ("/logFile"),
+				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
+				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
+				"-" + ARG.brokerTTL.getArgName(), "10" };
 		broker = new BrokerService();
 		broker.setUseJmx(true);
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
+		broker.setBrokerName("localhost");
 		broker.start();
 	}
 
 	@AfterClass
 	public void tearDown() throws Exception {
+		broker.deleteAllMessages();
 		broker.stop();
 	}
 
 	@Test
-	public void testProcessMessageCreator() throws JMSException,
-			InterruptedException {
+	public void testProcessMessageCreator() throws Exception {
 
 		Thread t = new Thread() {
 			@Override
@@ -89,7 +93,7 @@ public class IvoryTopicProducerTest {
 		};
 		t.start();
 		Thread.sleep(1500);
-		MessageProducer.main( this.args );
+		new MessageProducer().run(this.args);
 		t.join();
 		if (error != null) {
 			throw error;
@@ -108,25 +112,30 @@ public class IvoryTopicProducerTest {
 		MessageConsumer consumer = session.createConsumer(destination);
 
 		// wait till you get atleast one message
-		TextMessage m;
+		MapMessage m;
 		for (m = null; m == null;)
-			m = (TextMessage)consumer.receive();
-		System.out.println("Consumed: " + m.getText());
-		String[] items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1], "click-logs,raw-logs");
-		Assert.assertEquals(items[2], "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
+			m = (MapMessage) consumer.receive();
+		System.out.println("Consumed: " + m.toString());
+
+		assertMessage(m);
+		Assert.assertEquals(m.getString(ARG.feedNames.getArgName()),
+				"click-logs,raw-logs");
+		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
 
 		connection.close();
 	}
-	
-	private void assertMessage(String [] items) throws JMSException {
-		Assert.assertEquals(items.length, 8);
-		Assert.assertEquals(items[0], "agg-coord");
-		Assert.assertEquals(items[3], "workflow-01-00");
-		Assert.assertEquals(items[4],"1");
-		Assert.assertEquals(items[5],"2011-01-01");
-		Assert.assertEquals(items[6],"2012-01-01");
-		Assert.assertEquals(items[7], "SUCCEEDED");
+
+	private void assertMessage(MapMessage m) throws JMSException {
+		Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
+				"agg-coord");
+		Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
+				"workflow-01-00");
+		Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
+		Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
+				"2011-01-01");
+		Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
+				"2012-01-01");
+		Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
 	}
 }

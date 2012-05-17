@@ -27,13 +27,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.DelayQueue;
 
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
-
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.retry.policy.RetryPolicy;
 import org.apache.ivory.util.GenericAlert;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
@@ -42,22 +40,13 @@ import org.apache.log4j.Logger;
 public final class RetryHandler {
 
 	private static final Logger LOG = Logger.getLogger(RetryHandler.class);
-	private static final long MINUTES = 60 * 1000L;
-	private static final long HOURS = 60 * MINUTES;
-	private static final long DAYS = 24 * HOURS;
-	private static final long MONTHS = 31 * DAYS;
-
-	private static enum DELAYS {
-		minutes, hours, days, months
-	};
 
 	private static final DelayQueue<RetryEvent> QUEUE = new DelayQueue<RetryEvent>();
 
 	private static File basePath;
 
 	public void retry(String processName, String nominalTime, String runId,
-			TextMessage textMessage, String wfId,
-			WorkflowEngine workflowEngine, long msgReceivedTime)
+			String wfId, WorkflowEngine workflowEngine, long msgReceivedTime)
 			throws IvoryException {
 
 		try {
@@ -74,17 +63,13 @@ public final class RetryHandler {
 			String ivoryDate = getIvoryDate(nominalTime);
 
 			if (attempts > intRunId) {
-				if (policy.equals("backoff")) {
-					retryBackoff(delayUnit, delay, workflowEngine, processObj
-							.getCluster().getName(), wfId, processName,
-							ivoryDate, textMessage, intRunId, attempts,
-							msgReceivedTime);
-				} else if (policy.equals("exp-backoff")) {
-					retryExpBackoff(delayUnit, delay, workflowEngine,
-							processObj.getCluster().getName(), wfId,
-							processName, ivoryDate, textMessage, intRunId,
-							attempts, msgReceivedTime);
-				}
+				RetryPolicy retryPolicy = RetryPolicyFactory
+						.getRetryPolicy(policy);
+				RetryEvent event = retryPolicy.getRetryEvent(delayUnit, delay,
+						workflowEngine, processObj.getCluster().getName(),
+						wfId, processName, ivoryDate, Integer.parseInt(runId),
+						attempts, msgReceivedTime);
+				offerToQueue(event);
 			} else {
 				LOG.warn("All retry attempt failed out of configured: "
 						+ attempts + " attempt for process instance::"
@@ -94,7 +79,8 @@ public final class RetryHandler {
 				GenericAlert.alertWFfailed(processName, nominalTime);
 			}
 		} catch (Exception e) {
-			LOG.error(e);
+			LOG.error("Error during retry of processInstance " + processName
+					+ ":" + nominalTime, e);
 			GenericAlert.alertRetryFailed(processName, nominalTime,
 					Integer.parseInt(runId), e.getMessage());
 			throw new IvoryException(e);
@@ -116,49 +102,6 @@ public final class RetryHandler {
 			return false;
 		}
 		return true;
-	}
-
-	private void retryBackoff(String delayUnit, int delay,
-			WorkflowEngine workflowEngine, String clusterName, String wfId,
-			String processName, String ivoryDate, TextMessage textMessage,
-			int runId, int attempts, long msgReceivedTime)
-			throws IvoryException, JMSException {
-		long endOfDelay = getEndOfDealy(delayUnit, delay);
-		RetryEvent event = new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
-				attempts, 0);
-		offerToQueue(event);
-
-	}
-
-	private void retryExpBackoff(String delayUnit, int delay,
-			WorkflowEngine workflowEngine, String clusterName, String wfId,
-			String processName, String ivoryDate, TextMessage textMessage,
-			int runId, int attempts, long msgReceivedTime)
-			throws IvoryException, JMSException {
-
-		long endOfDelay = (long) (getEndOfDealy(delayUnit, delay) * Math.pow(2,
-				runId));
-		RetryEvent event = new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
-				attempts, 0);
-		offerToQueue(event);
-	}
-
-	private long getEndOfDealy(String delayUnit, int delay)
-			throws IvoryException {
-
-		if (delayUnit.equals(DELAYS.minutes.name())) {
-			return MINUTES * delay;
-		} else if (delayUnit.equals(DELAYS.hours.name())) {
-			return HOURS * delay;
-		} else if (delayUnit.equals(DELAYS.days.name())) {
-			return DAYS * delay;
-		} else if (delayUnit.equals(DELAYS.months.name())) {
-			return MONTHS * delay;
-		} else {
-			throw new IvoryException("Unknown delayUnit:" + delayUnit);
-		}
 	}
 
 	public String getIvoryDate(String nominalTime) throws ParseException {
@@ -207,7 +150,7 @@ public final class RetryHandler {
 							+ getTZdate(new Date(System.currentTimeMillis())));
 					message.getWfEngine().reRun(message.getClusterName(),
 							message.getWfId(), null);
-				} catch (IvoryException e) {
+				} catch (Throwable e) {
 					int maxFailRetryCount = Integer.parseInt(StartupProperties
 							.get().getProperty("max.retry.failure.count", "1"));
 					if (message.getFailRetryCount() < maxFailRetryCount) {
@@ -223,6 +166,10 @@ public final class RetryHandler {
 						message.setFailRetryCount(message.getFailRetryCount() + 1);
 						offerToQueue(message);
 					} else {
+						LOG.warn(
+								"Failure retry attempts exhausted for processInstance: "
+										+ message.getProcessName() + ":"
+										+ message.getProcessInstance(), e);
 						GenericAlert.alertRetryFailed(message.getProcessName(),
 								message.getProcessInstance(),
 								message.getRunId(), e.getMessage());
