@@ -33,7 +33,6 @@ import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.resource.AbstractProcessInstanceManager;
-import org.apache.ivory.resource.proxy.ProcessInstanceManagerProxy;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {

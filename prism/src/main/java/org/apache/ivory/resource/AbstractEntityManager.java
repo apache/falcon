@@ -25,10 +25,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -53,10 +50,8 @@ import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.service.IvoryService;
-import org.apache.ivory.service.Services;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
@@ -104,7 +99,8 @@ public abstract class AbstractEntityManager implements IvoryService {
             TransactionManager.startTransaction();
             audit(request, "STREAMED_DATA", type, "SUBMIT");
             Entity entity = submitInternal(request, type);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName(), 
+                    TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -160,7 +156,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             }
             configStore.remove(entityType, entity);
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
-                    + removedFromEngine);
+                    + removedFromEngine, TransactionManager.getTransactionId());
             TransactionManager.commit();
           
             return result;
@@ -190,7 +186,8 @@ public abstract class AbstractEntityManager implements IvoryService {
                 configStore.update(entityType, newEntity);
             }
             
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully", 
+                    TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
