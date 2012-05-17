@@ -143,6 +143,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         String status = response.getEntity(String.class);
         Assert.assertEquals(status, "SUBMITTED");
+        
     }
     @Test
     public void testNotFoundStatus() throws IvoryWebException
@@ -158,6 +159,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     	Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
   
     }
+    
     @Test
     public void testValidate() throws IOException {
 

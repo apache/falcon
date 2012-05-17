@@ -184,7 +184,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Feed feed = (Feed) parser
 				.parseAndValidate(ProcessEntityParserTest.class
 						.getResourceAsStream(FEED_XML));
-		feed.getClusters().getCluster().get(0).setPartitionExp(null);
+		feed.setPartitions(null);
 		parser.validate(feed);
 	}
 

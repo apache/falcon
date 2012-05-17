@@ -76,14 +76,13 @@ public class IvoryCLITest {
 		}
 		this.ivoryServer.start();
 		this.cluster = EmbeddedCluster.newCluster("test-cluster", false);
-
+		
 		broker = new BrokerService();
 		broker.setUseJmx(true);
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
 		broker.setBrokerName("localhost");
 		broker.start();
-
 	}
 
 	@Test(enabled = enableTest)
@@ -100,7 +99,7 @@ public class IvoryCLITest {
 		filePath = overlayParametersOverTemplate(FEED_INPUT, overlay);
 		Assert.assertEquals(0,
 				executeWithURL("entity -submit -type feed -file " + filePath));
-
+		
 		filePath = overlayParametersOverTemplate(FEED_OUTPUT, overlay);
 		Assert.assertEquals(0,
 				executeWithURL("entity -submit -type feed -file " + filePath));
@@ -109,6 +108,8 @@ public class IvoryCLITest {
 		Assert.assertEquals(
 				0,
 				executeWithURL("entity -submit -type process -file " + filePath));
+
+
 
 	}
 
@@ -302,6 +303,13 @@ public class IvoryCLITest {
 	}
 
 	@Test(enabled = enableTest)
+	public void testSubCommandPresence() throws Exception {
+		Assert.assertEquals(
+				-1,
+				executeWithURL("entity -type cluster "));
+	}
+	
+	@Test(enabled = enableTest)
 	public void testDeleteEntityValidCommands() throws Exception {
 
 		Map<String, String> overlay = getUniqueOverlay();
@@ -454,7 +462,7 @@ public class IvoryCLITest {
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 		Thread.sleep(2000);
-
+		System.out.println(System.getProperties().getProperty("java.class.path", null));
 		Map<String, String> newEnv = new HashMap<String, String>();
 		newEnv.put("IVORY_URL", BASE_URL);
 		setEnv(newEnv);
@@ -549,7 +557,8 @@ public class IvoryCLITest {
 		this.cluster.shutdown();
 		ivoryServer.stop();
 	}
-
+	
+	
 	public void submitTestFiles(Map<String, String> overlay) throws Exception {
 
 		String filePath = overlayParametersOverTemplate(CLUSTER, overlay);
