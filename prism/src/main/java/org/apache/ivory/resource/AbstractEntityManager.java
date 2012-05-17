@@ -105,14 +105,17 @@ public abstract class AbstractEntityManager implements IvoryService {
 
         APIResult.Status status = APIResult.Status.SUCCEEDED;
         StringBuilder buffer = new StringBuilder();
+        StringBuilder requestIds = new StringBuilder();
         for (int index = 0; index < results.length; index++) {
             buffer.append(colos[index]).append('/')
                     .append(results[index].getMessage()).append('\n');
+            buffer.append(colos[index]).append('/')
+                    .append(results[index].getRequestId()).append('\n');
             if (status.ordinal() < results[index].getStatus().ordinal()) {
                 status = results[index].getStatus();
             }
         }
-        return new APIResult(status, buffer.toString());
+        return new APIResult(status, buffer.toString(), requestIds.toString());
     }
 
     protected ProcessInstancesResult consolidatedResult(ProcessInstancesResult[] results,

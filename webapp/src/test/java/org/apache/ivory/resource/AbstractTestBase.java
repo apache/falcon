@@ -55,7 +55,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 public class AbstractTestBase {
     protected static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     protected static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    protected static final String CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
+    protected static final String CLUSTER_FILE_TEMPLATE = "cluster-template.xml";
 
     protected static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     protected static final String PROCESS_TEMPLATE = "/process-template.xml";

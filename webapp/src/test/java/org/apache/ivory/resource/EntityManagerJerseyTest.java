@@ -176,7 +176,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     }
 
     @Test
-    public void testClusterSubmit() throws Exception {
+    public void testClusterValidate() throws Exception {
         ClientResponse clientRepsonse;
         Map<String, String> overlay = new HashMap<String, String>();
 
@@ -190,7 +190,6 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", "testuser")
                 .post(ClientResponse.class, stream);
         assertSuccessful(clientRepsonse);
-        assertRequestId(clientRepsonse);
     }
 
 	@Test
