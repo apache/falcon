@@ -5,7 +5,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.security.CurrentUser;
-import org.apache.ivory.util.ApplicationProperties;
+import org.apache.ivory.util.DeploymentProperties;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.log4j.Logger;
 
@@ -27,15 +27,16 @@ public class HTTPChannel extends AbstractChannel {
     private static final HttpServletRequest DEFAULT_NULL_REQUEST =
             new NullServletRequest();
 
+    private static final Properties deploymentProperties = DeploymentProperties.get();
+
     private Class service;
     private String urlPrefix;
 
-    public void init(Properties deploymentProperties,
-                     String serviceName) throws IvoryException {
+    public void init(String colo, String serviceName) throws IvoryException {
         String prefixPath = deploymentProperties.
                 getProperty(serviceName + ".path");
         String ivoryEndPoint = RuntimeProperties.get().
-                getProperty("ivory.standalone.endpoint");
+                getProperty("ivory." + colo + ".endpoint");
         urlPrefix = ivoryEndPoint + "/" + prefixPath;
 
         try {

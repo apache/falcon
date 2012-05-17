@@ -37,6 +37,12 @@ public class IvoryWebException extends WebApplicationException {
                 type(MediaType.TEXT_PLAIN_TYPE).build());
     }
 
+    public static IvoryWebException newException(String message,
+                                                 Response.Status status) {
+        return new IvoryWebException(Response.status(status).
+                entity(message).type(MediaType.TEXT_PLAIN_TYPE).build());
+    }
+
     private static String getMessage(Throwable e) {
         if(StringUtils.isEmpty(e.getMessage()))
             return e.getClass().getName();

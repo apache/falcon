@@ -15,7 +15,7 @@ public class IPCChannel extends AbstractChannel {
 
     private IvoryService service;
 
-    public void init(Properties ignore, String serviceName)
+    public void init(String ignoreColo, String serviceName)
             throws IvoryException{
         this.service = Services.get().init(serviceName);
     }

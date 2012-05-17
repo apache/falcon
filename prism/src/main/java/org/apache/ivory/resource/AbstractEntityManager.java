@@ -18,24 +18,6 @@
 
 package org.apache.ivory.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -52,20 +34,34 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.service.IvoryService;
-import org.apache.ivory.service.Services;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.util.DeploymentProperties;
+import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 public abstract class AbstractEntityManager implements IvoryService {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
+    protected static final String DEFAULT_COLO = "default";
+    protected static final String INTEGRATED = "integrated";
+    protected static final String DEPLOY_MODE = "deploy.mode";
+    private static final String[] DEFAULT_ALL_COLOS = new String[] {DEFAULT_COLO};
+
+    private final String currentColo;
+    protected final boolean integratedMode;
 
     private WorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
@@ -73,6 +69,16 @@ public abstract class AbstractEntityManager implements IvoryService {
     public AbstractEntityManager() {
         try {
             workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
+            integratedMode = DeploymentProperties.get().
+                    getProperty(DEPLOY_MODE, INTEGRATED).equals(INTEGRATED);
+            if (integratedMode) {
+                currentColo = DEFAULT_COLO;
+            } else {
+                currentColo = StartupProperties.get().
+                    getProperty("current.colo", DEFAULT_COLO);
+            }
+            LOG.info("Running in integrated mode? " + integratedMode);
+            LOG.info("Current colo: " + currentColo);
         } catch (IvoryException e) {
             throw new IvoryRuntimException(e);
         }
@@ -86,6 +92,67 @@ public abstract class AbstractEntityManager implements IvoryService {
     public void destroy() throws IvoryException {
     }
 
+    protected void checkColo(String colo) throws IvoryWebException {
+        if (!currentColo.equals(colo)) {
+            throw IvoryWebException.newException("Current colo is not " + colo,
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
+    protected APIResult consolidatedResult(APIResult[] results, String[] colos) {
+        if (results == null || results.length == 0) return null;
+        if (results.length == 1) return results[0];
+
+        APIResult.Status status = APIResult.Status.SUCCEEDED;
+        StringBuilder buffer = new StringBuilder();
+        for (int index = 0; index < results.length; index++) {
+            buffer.append(colos[index]).append('/')
+                    .append(results[index].getMessage()).append('\n');
+            if (status.ordinal() < results[index].getStatus().ordinal()) {
+                status = results[index].getStatus();
+            }
+        }
+        return new APIResult(status, buffer.toString());
+    }
+
+    protected ProcessInstancesResult consolidatedResult(ProcessInstancesResult[] results,
+                                                        String[] colos) {
+        if (results == null || results.length == 0) return null;
+        if (results.length == 1) return results[0];
+
+        List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
+        for (int index = 0; index < results.length; index++) {
+            for (ProcessInstance instance: results[index].getInstances()) {
+                ProcessInstance instClone = new ProcessInstance(colos[index] +
+                        "/" + instance.getInstance(), instance.getStatus());
+                instances.add(new ProcessInstance(instClone,
+                        instance.logFile, instance.actions));
+            }
+        }
+        ProcessInstance[] arrInstances = new ProcessInstance[instances.size()];
+        return new ProcessInstancesResult("CONSOLIDATED",
+                instances.toArray(arrInstances));
+    }
+
+    protected String[] getAllColos() {
+        if (integratedMode) {
+            return DEFAULT_ALL_COLOS;
+        } else {
+            return RuntimeProperties.get().
+                    getProperty("all.colos", DEFAULT_COLO).split(",");
+        }
+    }
+
+    protected String[] getColosToApply(String colo) {
+        String[] colos;
+        if ( colo == null || colo.equals("*") || colo.isEmpty()) {
+            colos = getAllColos();
+        } else {
+            colos = colo.split(",");
+        }
+        return colos;
+    }
+
     /**
      * Submit a new entity. Entities can be of type feed, process or data end
      * points. Entity definitions are validated structurally against schema and
@@ -94,17 +161,21 @@ public abstract class AbstractEntityManager implements IvoryService {
      * Entity name acts as the key and an entity once added, can't be added
      * again unless deleted.
      * 
-     * @param type
+     * @param request - Servlet Request
+     * @param type - entity type
      *            - feed, process or data end point
+     * @param colo - applicable colo
      * @return result of the operation
      */
-    public APIResult submit(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type) {
+    public APIResult submit(HttpServletRequest request, String type, String colo) {
 
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, "STREAMED_DATA", type, "SUBMIT");
             Entity entity = submitInternal(request, type);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    "Submit successful (" + type + ") " + entity.getName());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -121,12 +192,13 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param type
      * @return APIResule -Succeeded or Failed
      */
-    public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
+    public APIResult validate(HttpServletRequest request, String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity entity = deserializeEntity(request, entityType);
             validate(entity);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully (" + entityType + ") " + entity.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Validation failed for entity (" + type + ") ", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -141,8 +213,10 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param entity
      * @return APIResult
      */
-    public APIResult delete(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+    public APIResult delete(HttpServletRequest request, String type,
+                            String entity, String colo) {
+
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -159,7 +233,8 @@ public abstract class AbstractEntityManager implements IvoryService {
                 }
             }
             configStore.remove(entityType, entity);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    entity + "(" + type + ") removed successfully "
                     + removedFromEngine);
             TransactionManager.commit();
           
@@ -173,8 +248,10 @@ public abstract class AbstractEntityManager implements IvoryService {
 
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(@Context HttpServletRequest request,
-            @Dimension("entityType") @PathParam("type") String type, @Dimension("entityName") @PathParam("entity") String entityName) {
+    public synchronized APIResult update(HttpServletRequest request, String type,
+                                         String entityName, String colo) {
+
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -190,7 +267,8 @@ public abstract class AbstractEntityManager implements IvoryService {
                 configStore.update(entityType, newEntity);
             }
             
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    entityName + " updated successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -202,7 +280,8 @@ public abstract class AbstractEntityManager implements IvoryService {
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
         if(oldEntity.getEntityType() != newEntity.getEntityType())
-            throw new IvoryException(oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString()); 
+            throw new IvoryException(oldEntity.toShortString() +
+                    " can't be updated with " + newEntity.toShortString());
             
         if(oldEntity.getEntityType() == EntityType.CLUSTER)
             throw new IvoryException("Update not supported for clusters");
@@ -217,7 +296,8 @@ public abstract class AbstractEntityManager implements IvoryService {
                 throw new IvoryException(e);
             }
             if (!ObjectUtils.equals(oldProp, newProp))
-                throw new ValidationException(oldEntity.toShortString() + ": " + prop + " can't be changed");
+                throw new ValidationException(oldEntity.toShortString() +
+                        ": " + prop + " can't be changed");
         }
     }
 
@@ -228,18 +308,21 @@ public abstract class AbstractEntityManager implements IvoryService {
         	for(Pair<String, EntityType> ref: referencedBy){
         		messages.append(ref).append("\n");
         	}
-            throw new IvoryException(entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
-                    + messages);
+            throw new IvoryException(entity.getName() + "(" + entity.getEntityType() +
+                    ") cant " + "be removed as it is referred by " + messages);
         }
     }
 
-    protected Entity submitInternal(HttpServletRequest request, String type) throws IOException, IvoryException {
+    protected Entity submitInternal(HttpServletRequest request, String type)
+            throws IOException, IvoryException {
+
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
         
         ConfigurationStore configStore = ConfigurationStore.get();
         if(configStore.get(entityType, entity.getName()) != null)
-            throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
+            throw new EntityAlreadyExistsException(entity.toShortString() +
+                    " already registered with configuration store. "
                     + "Can't be submitted again. Try removing before submitting.");
 
         validate(entity);
@@ -248,7 +331,9 @@ public abstract class AbstractEntityManager implements IvoryService {
         return entity;
     }
 
-    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType) throws IOException, IvoryException {
+    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType)
+            throws IOException, IvoryException {
+
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         InputStream xmlStream = request.getInputStream();
         if (xmlStream.markSupported()) {
@@ -299,8 +384,8 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param entity
      * @return String
      */
-    public String getStatus(@Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) throws IvoryWebException{
+    public String getStatus(String type, String entity) {
+
     	Entity entityObj = null;
         try {
             entityObj = getEntity(entity, type);
@@ -338,8 +423,8 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param entity
      * @return String
      */
-    public EntityList getDependencies(@Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+    public EntityList getDependencies(String type, String entity) {
+
         try {
             Entity entityObj = getEntity(entity, type);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
@@ -357,7 +442,7 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param type
      * @return String
      */
-    public EntityList getDependencies(@PathParam("type") String type) {
+    public EntityList getDependencies(String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Collection<String> entityNames = configStore.getEntities(entityType);
@@ -384,20 +469,19 @@ public abstract class AbstractEntityManager implements IvoryService {
      * @param entityName
      * @return String
      */
-    @GET
-    @Path("definition/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    public String getEntityDefinition(@PathParam("type") String type, @PathParam("entity") String entityName) {
+    public String getEntityDefinition(String type, String entityName) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             ConfigurationStore configStore = ConfigurationStore.get();
             Entity entity = configStore.get(entityType, entityName);
             if (entity == null) {
-                throw new NoSuchElementException(entityName + " (" + type + ") not found");
+                throw new NoSuchElementException(entityName +
+                        " (" + type + ") not found");
             }
             return entity.toString();
         } catch (Throwable e) {
-            LOG.error("Unable to get entity definition from config store for (" + type + ") " + entityName, e);
+            LOG.error("Unable to get entity definition from config " +
+                    "store for (" + type + ") " + entityName, e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
 
         }

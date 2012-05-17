@@ -41,17 +41,19 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @GET
     @Path("list/{type}")
     @Produces(MediaType.TEXT_XML)
+    @Monitored(event = "dependencies")
     @Override
-    public EntityList getDependencies(@PathParam("type") String type) {
+    public EntityList getDependencies(@Dimension("type") @PathParam("type") String type) {
         return super.getDependencies(type);
     }
 
     @GET
     @Path("definition/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "definition")
     @Override
-    public String getEntityDefinition(@PathParam("type") String type,
-                                      @PathParam("entity") String entityName) {
+    public String getEntityDefinition(@Dimension("type") @PathParam("type") String type,
+                                      @Dimension("entity") @PathParam("entity") String entityName) {
         return super.getEntityDefinition(type, entityName);
     }
 
@@ -62,8 +64,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult schedule(@Context HttpServletRequest request,
                               @Dimension("entityType") @PathParam("type") String type,
-                              @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.schedule(request, type, entity);
+                              @Dimension("entityName") @PathParam("entity") String entity,
+                              @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.schedule(request, type, entity, colo);
     }
 
     @POST
@@ -73,8 +76,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Monitored(event = "submitAndSchedule")
     @Override
     public APIResult submitAndSchedule(@Context HttpServletRequest request,
-                                       @Dimension("entityType") @PathParam("type") String type) {
-        return super.submitAndSchedule(request, type);
+                                       @Dimension("entityType") @PathParam("type") String type,
+                                       @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.submitAndSchedule(request, type, colo);
     }
 
     @POST
@@ -84,8 +88,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult suspend(@Context HttpServletRequest request,
                              @Dimension("entityType") @PathParam("type") String type,
-                             @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.suspend(request, type, entity);
+                             @Dimension("entityName") @PathParam("entity") String entity,
+                             @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.suspend(request, type, entity, colo);
     }
 
     @POST
@@ -95,7 +100,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult resume(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.resume(request, type, entity);
+                            @Dimension("entityName") @PathParam("entity") String entity,
+                            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.resume(request, type, entity, colo);
     }
 }

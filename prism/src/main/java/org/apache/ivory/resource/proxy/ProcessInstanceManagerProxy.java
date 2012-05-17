@@ -15,18 +15,35 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Map;
 
 @Path("processinstance")
 public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager {
 
-    private final Channel processInstanceManagerChannel;
+    private final Map<String, Channel> processInstanceManagerChannels = new HashMap<String, Channel>();
 
     public ProcessInstanceManagerProxy() {
         try {
-            processInstanceManagerChannel = ChannelFactory.get("ProcessInstanceManager");
+            String[] colos = getAllColos();
+
+            for (String colo : colos) {
+                initializeFor(colo);
+            }
         } catch (IvoryException e) {
-            throw new IvoryRuntimException("Unable to initialize channel", e);
+            throw new IvoryRuntimException("Unable to initialize channels", e);
         }
+    }
+
+    private void initializeFor(String colo) throws IvoryException {
+        processInstanceManagerChannels.put(colo, ChannelFactory.get("ProcessInstanceManager", colo));
+    }
+
+    private Channel getInstanceManager(String colo) throws IvoryException {
+        if (!processInstanceManagerChannels.containsKey(colo)) {
+            initializeFor(colo);
+        }
+        return processInstanceManagerChannels.get(colo);
     }
 
     @Override
@@ -37,10 +54,20 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @GET
     @Path("running/{process}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event="running")
     @Override
-    public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName) {
+    public ProcessInstancesResult getRunningInstances(@Dimension("process") @PathParam("process") String processName,
+                                                      @Dimension("colo") @QueryParam("colo") String colo) {
+        checkColo(colo);
         try {
-            return processInstanceManagerChannel.invoke("getRunningInstances", processName);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).
+                        invoke("getRunningInstances", processName, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -49,15 +76,23 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @GET
     @Path("status/{process}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event="instance-status")
     @Override
-    public ProcessInstancesResult getStatus(@PathParam("process") String processName,
-                                            @QueryParam("start") String startStr,
-                                            @QueryParam("end") String endStr,
-                                            @QueryParam("type") String type,
-                                            @QueryParam("runid") String runId) {
+    public ProcessInstancesResult getStatus(@Dimension("process") @PathParam("process") String processName,
+                                            @Dimension("start") @QueryParam("start") String startStr,
+                                            @Dimension("end") @QueryParam("end") String endStr,
+                                            @Dimension("type") @QueryParam("type") String type,
+                                            @Dimension("runid") @QueryParam("runid") String runId,
+                                            @Dimension("colo") @QueryParam("colo") String colo) {
         try {
-            return processInstanceManagerChannel.invoke("getStatus", processName,
-                    startStr, endStr, type, runId);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).invoke("getStatus",
+                        processName, startStr, endStr, type, runId, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -71,10 +106,18 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
                                                       @Dimension("processName") @PathParam("process") String processName,
                                                       @Dimension("start-time") @QueryParam("start") String startStr,
-                                                      @Dimension("end-time") @QueryParam("end") String endStr) {
+                                                      @Dimension("end-time") @QueryParam("end") String endStr,
+                                                      @Dimension("colo") @QueryParam("colo") String colo) {
+
         try {
-            return processInstanceManagerChannel.invoke("killProcessInstance",
-                    request, processName, startStr, endStr);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).invoke("killProcessInstance",
+                    request, processName, startStr, endStr, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -88,10 +131,17 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
                                                          @Dimension("processName") @PathParam("process") String processName,
                                                          @Dimension("start-time") @QueryParam("start") String startStr,
-                                                         @Dimension("end-time") @QueryParam("end") String endStr) {
+                                                         @Dimension("end-time") @QueryParam("end") String endStr,
+                                                         @Dimension("colo") @QueryParam("colo") String colo) {
         try {
-            return processInstanceManagerChannel.invoke("suspendProcessInstance",
-                    request, processName, startStr, endStr);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).invoke("suspendProcessInstance",
+                    request, processName, startStr, endStr, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -105,10 +155,17 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
                                                         @Dimension("processName") @PathParam("process") String processName,
                                                         @Dimension("start-time") @QueryParam("start") String startStr,
-                                                        @Dimension("end-time") @QueryParam("end") String endStr) {
+                                                        @Dimension("end-time") @QueryParam("end") String endStr,
+                                                        @Dimension("colo") @QueryParam("colo") String colo) {
         try {
-            return processInstanceManagerChannel.invoke("resumeProcessInstance",
-                    request, processName, startStr, endStr);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).invoke("resumeProcessInstance",
+                    request, processName, startStr, endStr, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -122,10 +179,18 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     public ProcessInstancesResult reRunInstance(@Dimension("processName") @PathParam("process") String processName,
                                                 @Dimension("start-time") @QueryParam("start") String startStr,
                                                 @Dimension("end-time") @QueryParam("end") String endStr,
-                                                @Context HttpServletRequest request) {
+                                                @Context HttpServletRequest request,
+                                                @Dimension("colo") @QueryParam("colo") String colo) {
+
         try {
-            return processInstanceManagerChannel.invoke("reRunInstance",
-                    processName, startStr, endStr, request);
+            String[] colos = getColosToApply(colo);
+
+            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
+            for (int index = 0; index < colos.length; index++) {
+                results[index] = getInstanceManager(colos[index]).invoke("reRunInstance",
+                    processName, startStr, endStr, request, colos[index]);
+            }
+            return consolidatedResult(results, colos);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }

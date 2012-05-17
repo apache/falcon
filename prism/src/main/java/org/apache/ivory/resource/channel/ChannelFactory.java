@@ -13,14 +13,14 @@ public class ChannelFactory {
     private static final String INTEGRATED = "integrated";
     private static final String MODE = "deploy.mode";
 
-    public synchronized static Channel get(String serviceName)
+    public synchronized static Channel get(String serviceName, String colo)
             throws IvoryException {
 
         Channel channel;
-        if ((channel = channels.get(serviceName)) == null) {
+        if ((channel = channels.get(colo + "/" + serviceName)) == null) {
             channel = getChannel(DeploymentProperties.get().getProperty(MODE));
-            channel.init(DeploymentProperties.get(), serviceName);
-            channels.put(serviceName, channel);
+            channel.init(colo, serviceName);
+            channels.put(colo + "/" + serviceName, channel);
         }
         return channel;
     }
