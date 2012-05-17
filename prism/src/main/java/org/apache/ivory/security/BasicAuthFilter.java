@@ -79,7 +79,6 @@ public class BasicAuthFilter implements Filter {
                         httpRequest.getPathInfo() + ", query=" +
                         httpRequest.getQueryString());
                 chain.doFilter(request, response);
-                ((HttpServletResponse) response).setHeader("colo", colo);
             } finally {
                 NDC.pop();
             }

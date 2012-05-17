@@ -94,8 +94,8 @@ public abstract class AbstractEntityManager implements IvoryService {
 
     protected void checkColo(String colo) throws IvoryWebException {
         if (!currentColo.equals(colo)) {
-            throw IvoryWebException.newException("Current colo is not " + colo,
-                    Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newException("Current colo (" +
+                    currentColo + ") is not " + colo, Response.Status.BAD_REQUEST);
         }
     }
 
