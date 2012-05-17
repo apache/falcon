@@ -58,6 +58,145 @@ the overall user action. In some cases, it is not possible to undo the action. I
 to keep the system in an consistent state.
 
 ---++ Entity Specification
+---+++Cluster definition
+The cluster XSD specification is available here:
+A cluster contains different interfaces which are used by Ivory like readonly, write, workflow and messaging.
+A cluster is referenced by feeds and processes which are on-boarded to Ivory by its name.
+
+Following are the tags defined in a cluster.xml:
+<verbatim>
+<cluster colo="gs" description="" name="corp" xmlns="uri:ivory:cluster:0.1" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+The colo specifies the colo to which this cluster belongs to and name is the name of the cluster which has to 
+be unique.
+
+
+A cluster has varies interfaces as described below:
+<verbatim>
+	<interface type="readonly" endpoint="hftp://localhost:50010" version="0.20.2" />
+</verbatim>
+A readonly interface specifies the endpoint for Hadoop's HFTP protocol, 
+this would be used in the context of feed replication.
+
+<verbatim>
+<interface type="write" endpoint="hdfs://localhost:8020" version="0.20.2" />
+</verbatim>
+A write interface specifies the interface to write to hdfs, it's endpoint is the value of fs.default.name.
+Ivory uses this interface to write system data to hdfs and feeds referencing this cluster are written to hdfs
+using the same write interface.
+
+<verbatim>
+<interface type="execute" endpoint="localhost:8021" version="0.20.2" />
+</verbatim>
+An execute interface specifies the interface for job tracker, it's endpoint is the value of mapred.job.tracker. 
+Ivory uses this interface to submit the processes as jobs on JobTracker defined here.
+
+<verbatim>
+<interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.1" />
+</verbatim>
+A workflow interface specifies the interface for workflow engine, example of its endpoint is the value for OOZIE_URL.
+Ivory uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
+
+<verbatim>
+<interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
+</verbatim>
+A messaging interface specifies the interface for sending feed availability messages, it's endpoint is broker url with tcp address.
+
+A cluster has a list of locations defined:
+<verbatim>
+<location name="staging" path="/projects/ivory/staging" />
+</verbatim>
+Location has the name and the path, name is the type of locations like staging, temp and working.
+and path is the hdfs path for each location.
+Ivory would use the location to do intermediate processing of entities in hdfs and hence Ivory 
+should have read/write/execute permission on these locations.
+
+A cluster has a list of properties:
+A key-value pair, which are propagated to the workflow engine.
+<verbatim>
+<property name="brokerImplClass" value="org.apache.activemq.ActiveMQConnectionFactory" />
+</verbatim>
+Ideally the Mapred's job queue name (queueName) and JMS impl class name of messaging engine (brokerImplClass) 
+should be defined here.
+
+---+++Feed definition
+The Feed XSD specification is available here.
+a Feed defines various attributes of feed like feed location, frequency, late-arrival handling
+and retention policies.
+<verbatim>
+<feed description="clicks log" name="clicks" xmlns="uri:ivory:feed:0.1" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</verbatim>
+A feed should have a unique name and this name is referenced by processes as input or output feed.
+
+<verbatim>
+   <partitions>
+        <partition name="fraud" />
+        <partition name="good" />
+    </partitions>
+</verbatim>
+A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be same here as cluster partitions.
+
+<verbatim>
+    <groups>online,bi</groups>
+</verbatim>
+A feed specifies a list of comma separated groups, a group is a logical grouping of feeds and a group is said to be
+available if all the feeds belonging to a group are available. The frequency of all the feed which belong to the same group
+must be same.
+
+<verbatim>
+    <availabilityFlag>_SUCCESS</availabilityFlag>
+</verbatim>
+An availabilityFlag specifies the name of a file which when present/created in a feeds data directory, 
+the feed is termed as available. ex: _SUCCESS, if this element is ignored then Ivory would consider the presence of feed's 
+data directory as feed availability.
+
+<verbatim>
+    <frequency>hours</frequency>
+    <periodicity>1</periodicity>
+</verbatim>
+A feed has a frequency and a periodicity which specifies the frequency by which this feed is generated. 
+ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
+valid frequency type for a feed are minutes, hours, days, months
+
+<verbatim>
+    <late-arrival cut-off="hours(6)" />
+</verbatim>
+A late-arrival specifies the cut-off period till which the feed is expected to arrive late and should be honored be processes referring to it as input feed by rerunning the instances in case the data arrives late with in a cut-off period.
+The cut-off period is specified by expression frequency(times), ex: if the feed can arrive late
+upto 8 hours then late-arrival's cut-off="hours(8)"
+
+<verbatim>
+        <cluster name="testCluster" type="source" partitionExp="*/${cluster.colo}">
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
+                      timezone="UTC" />
+            <retention limit="hours(48)" action="delete" /> 
+        </cluster>
+</verbatim>
+Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Ivory.
+type: specifies whether the referenced cluster should be treated as a source or target for a feed.
+Validity of a feed on cluster specifies duration for which this feed is valid on this cluster.
+Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
+The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
+The field partitionExp contains partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema. A partition tag can be a wildcard(*), a static string or an expression. Atleast one of the strings has to be an expression.
+
+<verbatim>
+ <location type="data" path="/projects/ivory/clicks" />	
+</verbatim>
+A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
+A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is generated
+periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
+The granularity of date pattern in the path should be atleast that of a frequency of a feed.
+
+<verbatim>
+    <properties>
+        <property name="tmpFeedPath" value="tmpFeedPathValue" />
+        <property name="field2" value="value2" />
+    </properties>
+</verbatim>
+A key-value pair, which are propagated to the workflow engine.
+
 ---++ Entity Management actions
 
 ---+++ Submit:
@@ -428,16 +567,17 @@ The implementation class and the broker url of the JMS engine are read from the 
 Users may register consumers on the required topic to check the availability or status of feed instances.
  
 For a given process that is scheduled, the name of the topic is same as the process name.
-Ivory sends a text message for every feed produced by the instance of a process to the JMS topic.
-The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$workflowId$runId$nominalTime$timeStamp
-Ex:aggregator$clicks$/clicks/hour/00/00$workflow-0$0$2012-10-10-10-10$2012-10-10-10-10
+Ivory sends a Map message for every feed produced by the instance of a process to the JMS topic.
+The JMS MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
 For a given feed that is scheduled, the name of the topic is same as the feed name.
-Ivory sends a text message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
-The JMS TextMessage sent to a topic has the follows pattern with $ separator; processName$feedName$feedInstancePath$retentionAction$workflowId$runId$nominalTime$timeStamp
-Ex:aggregatedLogs$aggregatedLogs$/retention/testFolders/2012/05/08/07$DELETE$0000042-120506235551389-oozie-oozi-W$0$2012-05-06-20-17$2012-05-06-20-17
+Ivory sends a map message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
+The JMS MapMessage sent to a topic has the following properties:
+entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
-The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.
+The JMS messages are automatically purged after a certain period (default 3 days) by the Ivory JMS house-keeping service.TTL (Time-to-live) for JMS message
+can be configured in the Ivory's startup.properties file.
 
 ---++ Ivory EL Expressions
 
