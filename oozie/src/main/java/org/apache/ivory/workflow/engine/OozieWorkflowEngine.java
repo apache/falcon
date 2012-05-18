@@ -308,16 +308,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                             List<ExternalId> mappedExtIds = builder.getMappedExternalIds(entity, extId);
                             for (ExternalId mapExtId : mappedExtIds) {
                                 WorkflowJob mapJobInfo = getJobInfoByExternalId(cluster, mapExtId);
-                                if (mapJobInfo != null && mapJobInfo.getStatus() == Status.RUNNING) {
-                                    status = "LATE_RUNNING";
-                                    break;
-                                }
                             }
-
-                            if (!status.equals("LATE_RUNNING")) {
-                                reRun(cluster, jobInfo.getId(), props);
-                                status = Status.RUNNING.name();
-                            }
+                            reRun(cluster, jobInfo.getId(), props);
+                            status = Status.RUNNING.name();
                         }
                     }
                     instStatusMap.put(extId.getDateAsString(), status);

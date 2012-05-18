@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
 	public static enum WorkflowStatus {
-		WAITING, LATE_RUNNING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
 	}
 
 	@XmlRootElement(name = "pinstance")

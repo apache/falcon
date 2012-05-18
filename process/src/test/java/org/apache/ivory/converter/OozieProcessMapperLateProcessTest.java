@@ -101,26 +101,9 @@ public class OozieProcessMapperLateProcessTest {
 
 	}
 
-	@Test
-	public void testEmptyLateProcess() throws IvoryException {
-		Process process = store.get(EntityType.PROCESS, "late-process1");
-		Cluster cluster = store.get(EntityType.CLUSTER, "late-cluster");
-		OozieProcessMapper mapper = new OozieProcessMapper(process);
-		COORDINATORAPP coord = mapper.createLateCoordinator(cluster, new Path(
-				hdfsUrl + "/late-coord1"));
-		Assert.assertEquals(coord, null);
-	}
 	
-	@Test
-	public void testNonEmptyLateProcess() throws IvoryException, IOException {
-		Process process = store.get(EntityType.PROCESS, "late-process2");
-		Cluster cluster = store.get(EntityType.CLUSTER, "late-cluster");
-		OozieProcessMapper mapper = new OozieProcessMapper(process);
-		FileSystem.mkdirs(FileSystem.get(conf), new Path("/user/guest/workflow"), FsPermission.getDefault());
-		COORDINATORAPP coord = mapper.createLateCoordinator(cluster, new Path(
-				hdfsUrl + "/late-coord2"));
-		Assert.assertEquals(coord.getName(), "IVORY_PROCESS_LATE1_late-process2");
-	}
+	
+	
 
 	@AfterClass
 	public void tearDown() throws Exception {
