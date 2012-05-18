@@ -353,6 +353,9 @@ created would result in a WAITING state unless data is actually provided in the 
 
 
 ---++ Updating process and feed definition
+Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated. Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates feed workflows like retention, replication etc and also updates the processes that reference the feed.
+
+
 ---++ Handling late input data
 Ivory system can handle late arrival of input data and appropriately re-trigger processing for the affected
 instance. From the perspective of late handling, there are two main configuration parameters late-arrival cut-off
