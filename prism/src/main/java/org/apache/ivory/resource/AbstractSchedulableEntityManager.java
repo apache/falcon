@@ -48,13 +48,17 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult schedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+    public APIResult schedule(@Context HttpServletRequest request,
+                              @Dimension("entityType") @PathParam("type") String type,
+                              @Dimension("entityName") @PathParam("entity") String entity,
+                              @Dimension("colo") @PathParam("colo") String colo) {
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity +
+                    "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -79,14 +83,18 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param type
      * @return
      */
-    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type) {
+    public APIResult submitAndSchedule(@Context HttpServletRequest request,
+                                       @Dimension("entityType") @PathParam("type") String type,
+                                       @Dimension("colo") @PathParam("colo") String colo) {
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    entity.getName() + "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -103,8 +111,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult suspend(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+    public APIResult suspend(@Context HttpServletRequest request,
+                             @Dimension("entityType") @PathParam("type") String type,
+                             @Dimension("entityName") @PathParam("entity") String entity,
+                             @Dimension("entityName") @PathParam("entity") String colo) {
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
@@ -114,7 +125,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
                 getWorkflowEngine().suspend(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    entity + "(" + type + ") suspended successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -131,9 +143,12 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult resume(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+    public APIResult resume(@Context HttpServletRequest request,
+                            @Dimension("entityType") @PathParam("type") String type,
+                            @Dimension("entityName") @PathParam("entity") String entity,
+                            @Dimension("colo") @PathParam("colo") String colo) {
 
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
@@ -143,7 +158,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
                 getWorkflowEngine().resume(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not suspended");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
+                    entity + "(" + type + ") resumed successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {

@@ -548,8 +548,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         // schedule new entity
         Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);
-        builder.setStartDate(newEntity, cluster, newStartTime);
-        schedule(newEntity);
+        Entity clonedNewEntity = newEntity.clone();
+        builder.setStartDate(clonedNewEntity, cluster, newStartTime);
+        schedule(clonedNewEntity);
     }
 
     private Date addOffest(Date target, Date globalTime, Date localTime) {

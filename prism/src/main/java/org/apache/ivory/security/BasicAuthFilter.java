@@ -36,11 +36,14 @@ public class BasicAuthFilter implements Filter {
 
     private boolean secure;
 
+    private String colo;
+
     @Override
     public void init(FilterConfig filterConfig)
             throws ServletException {
         String secure = StartupProperties.get().getProperty("security.enabled",
                 "true");
+        colo = StartupProperties.get().getProperty("current.colo", "default");
         this.secure = Boolean.parseBoolean(secure);
     }
 

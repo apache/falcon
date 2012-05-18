@@ -19,21 +19,25 @@ public class ProcessInstanceManager extends AbstractProcessInstanceManager {
     @GET
     @Path("running/{process}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event="running")
     @Override
-    public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName) {
-        return super.getRunningInstances(processName);
+    public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName,
+                                                      @QueryParam("colo") String colo) {
+        return super.getRunningInstances(processName, colo);
     }
 
     @GET
     @Path("status/{process}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event="instance-status")
     @Override
-    public ProcessInstancesResult getStatus(@PathParam("process") String processName,
-                                            @QueryParam("start") String startStr,
-                                            @QueryParam("end") String endStr,
-                                            @QueryParam("type") String type,
-                                            @QueryParam("runid") String runId) {
-        return super.getStatus(processName, startStr, endStr, type, runId);
+    public ProcessInstancesResult getStatus(@Dimension("process") @PathParam("process") String processName,
+                                            @Dimension("process") @QueryParam("start") String startStr,
+                                            @Dimension("process") @QueryParam("end") String endStr,
+                                            @Dimension("process") @QueryParam("type") String type,
+                                            @Dimension("process") @QueryParam("runid") String runId,
+                                            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.getStatus(processName, startStr, endStr, type, runId, colo);
     }
 
     @POST
@@ -44,8 +48,9 @@ public class ProcessInstanceManager extends AbstractProcessInstanceManager {
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
                                                       @Dimension("processName") @PathParam("process") String processName,
                                                       @Dimension("start-time") @QueryParam("start") String startStr,
-                                                      @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.killProcessInstance(request, processName, startStr, endStr);
+                                                      @Dimension("end-time") @QueryParam("end") String endStr,
+                                                      @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.killProcessInstance(request, processName, startStr, endStr, colo);
     }
 
     @POST
@@ -56,8 +61,9 @@ public class ProcessInstanceManager extends AbstractProcessInstanceManager {
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
                                                          @Dimension("processName") @PathParam("process") String processName,
                                                          @Dimension("start-time") @QueryParam("start") String startStr,
-                                                         @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.suspendProcessInstance(request, processName, startStr, endStr);
+                                                         @Dimension("end-time") @QueryParam("end") String endStr,
+                                                         @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.suspendProcessInstance(request, processName, startStr, endStr, colo);
     }
 
     @POST
@@ -68,8 +74,9 @@ public class ProcessInstanceManager extends AbstractProcessInstanceManager {
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
                                                         @Dimension("processName") @PathParam("process") String processName,
                                                         @Dimension("start-time") @QueryParam("start") String startStr,
-                                                        @Dimension("end-time") @QueryParam("end") String endStr) {
-        return super.resumeProcessInstance(request, processName, startStr, endStr);
+                                                        @Dimension("end-time") @QueryParam("end") String endStr,
+                                                        @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.resumeProcessInstance(request, processName, startStr, endStr, colo);
     }
 
     @POST
@@ -80,7 +87,8 @@ public class ProcessInstanceManager extends AbstractProcessInstanceManager {
     public ProcessInstancesResult reRunInstance(@Dimension("processName") @PathParam("process") String processName,
                                                 @Dimension("start-time") @QueryParam("start") String startStr,
                                                 @Dimension("end-time") @QueryParam("end") String endStr,
-                                                @Context HttpServletRequest request) {
-        return super.reRunInstance(processName, startStr, endStr, request);
+                                                @Context HttpServletRequest request,
+                                                @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.reRunInstance(processName, startStr, endStr, request, colo);
     }
 }

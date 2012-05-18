@@ -18,24 +18,6 @@
 
 package org.apache.ivory.resource;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.jms.TextMessage;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
@@ -54,6 +36,14 @@ import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
 public abstract class AbstractProcessInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractProcessInstanceManager.class);
 
@@ -62,14 +52,15 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
         return (Process) entity;
     }
     
-    public ProcessInstancesResult getRunningInstances(@PathParam("process") String processName) {
+    public ProcessInstancesResult getRunningInstances(String processName, String colo) {
+        checkColo(colo);
         try {
             validateNotEmpty("process", processName);
             WorkflowEngine wfEngine = getWorkflowEngine();
             Process process = getProcess(processName);
             Map<String, Set<String>> runInstances = wfEngine.getRunningInstances(process);
-            return new ProcessInstancesResult("getRunningInstances is successful", runInstances.values().iterator().next(),
-                    WorkflowStatus.RUNNING);
+            return new ProcessInstancesResult("getRunningInstances is successful",
+                    runInstances.values().iterator().next(), WorkflowStatus.RUNNING);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -77,12 +68,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
     }
 
 
-	public ProcessInstancesResult getStatus(
-			@PathParam("process") String processName,
-			@QueryParam("start") String startStr,
-			@QueryParam("end") String endStr, @QueryParam("type") String type,
-			@QueryParam("runid") String runId) {
-		try {
+	public ProcessInstancesResult getStatus(String processName, String startStr, String endStr,
+                                            String type, String runId, String colo) {
+        checkColo(colo);
+        try {
 			validateParams(processName, startStr, endStr, type, runId);
 
 			Date start = EntityUtil.parseDateUTC(startStr);
@@ -119,10 +108,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 		return new ProcessInstancesResult(result.getMessage(), processInstances);
 	}
 
-    public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName,
-            @Dimension("start-time")@QueryParam("start") String startStr,
-            @Dimension("end-time")@QueryParam("end") String endStr) {
+    public ProcessInstancesResult killProcessInstance(HttpServletRequest request,
+            String processName, String startStr, String endStr, String colo) {
+
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
@@ -134,7 +123,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> killedInstances = wfEngine.killInstances(process, start, end);
-            ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful", killedInstances.values().iterator().next());
+            ProcessInstancesResult result = new ProcessInstancesResult("killProcessInstance is successful",
+                    killedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -144,11 +134,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
         }
     }
 
-    public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName,
-            @Dimension("start-time")@QueryParam("start") String startStr,
-            @Dimension("end-time")@QueryParam("end") String endStr) {
+    public ProcessInstancesResult suspendProcessInstance(HttpServletRequest request,
+            String processName, String startStr, String endStr, String colo) {
 
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
@@ -160,7 +149,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> suspendedInstances = wfEngine.suspendInstances(process, start, end);
-            ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful", suspendedInstances.values().iterator().next());
+            ProcessInstancesResult result = new ProcessInstancesResult("suspendProcessInstance is successful",
+                    suspendedInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -170,10 +160,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
         }
     }
 
-    public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
-            @Dimension("processName")@PathParam("process") String processName,
-            @Dimension("start-time")@QueryParam("start") String startStr,
-            @Dimension("end-time")@QueryParam("end") String endStr) {
+    public ProcessInstancesResult resumeProcessInstance(HttpServletRequest request,
+            String processName, String startStr, String endStr, String colo) {
+
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
@@ -195,10 +185,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
         }
     }
 
-    public ProcessInstancesResult reRunInstance(@Dimension("processName")@PathParam("process") String processName,
-                                                @Dimension("start-time")@QueryParam("start") String startStr,
-                                                @Dimension("end-time")@QueryParam("end") String endStr,
-                                                @Context HttpServletRequest request) {
+    public ProcessInstancesResult reRunInstance(String processName, String startStr, String endStr,
+                                                HttpServletRequest request, String colo) {
+
+        checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
@@ -219,7 +209,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
             WorkflowEngine wfEngine = getWorkflowEngine();
             Map<String, Map<String, String>> runInstances = wfEngine.reRunInstances(process, start, end, props);
-            ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful", runInstances.values().iterator().next());
+            ProcessInstancesResult result = new ProcessInstancesResult("reRunProcessInstance is successful",
+                    runInstances.values().iterator().next());
             TransactionManager.commit();
             return result;
         } catch (Exception e) {
@@ -300,13 +291,15 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 			@Dimension(value = "timeStamp") String timeStamp,
 			@Dimension(value = "status") String status,
 			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId, TextMessage textMessage, long msgReceivedTime) throws Exception {
+			@Dimension(value = "runId") String runId, long msgReceivedTime)
+			throws Exception {
 		if (status.equalsIgnoreCase("FAILED")) {
-			new RetryHandler().retry( process,  nominalTime, runId, textMessage, workflowId, getWorkflowEngine(), msgReceivedTime);
+			new RetryHandler().retry(process, nominalTime, runId, workflowId,
+					getWorkflowEngine(), msgReceivedTime);
 			throw new Exception(process + ":" + nominalTime + " Failed");
 		}
 		return "DONE";
 
-	}	
+	}
 
 }

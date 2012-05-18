@@ -20,7 +20,7 @@
             <arg>${limit}</arg>
             <arg>${timeZone}</arg>
             <arg>${frequency}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
+			<arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
         </java>
         <ok to="jms-messaging"/>
         <error to="fail"/>
@@ -31,21 +31,21 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
-			<arg>${entityName}</arg>
-			<arg>${feedNames}</arg>
-			<arg>${feedInstancePaths}</arg>
-			<arg>${wf:id()}</arg>
-			<arg>${wf:run()}</arg>
-			<arg>${nominalTime}</arg>
-			<arg>${timeStamp}</arg>
-			<arg>${brokerUrl}</arg>
-			<arg>${brokerImplClass}</arg>
-			<arg>${entityType}</arg>
-			<arg>${operation}</arg>
-			<arg>${logDir}/instacePaths-${nominalTime}.csv</arg>
-			<arg>IVORY.${entityName}</arg>
-			<arg>SUCCEEDED</arg>
-			<arg>${wf:conf("broker.ttl")}</arg>
+			<arg>-entityName</arg><arg>${entityName}</arg>
+			<arg>-feedNames</arg><arg>${feedNames}</arg>
+			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>
+			<arg>-workflowId</arg><arg>${wf:id()}</arg>
+			<arg>-runId</arg><arg>${wf:run()}</arg>
+			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
+			<arg>-timeStamp</arg><arg>${timeStamp}</arg>
+			<arg>-brokerUrl</arg><arg>${userBrokerUrl}</arg>
+			<arg>-brokerImplClass</arg><arg>${userBrokerImplClass}</arg>
+			<arg>-entityType</arg><arg>${entityType}</arg>
+			<arg>-operation</arg><arg>${operation}</arg>
+			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+			<arg>-topicName</arg><arg>IVORY.${entityName}</arg>
+			<arg>-status</arg><arg>SUCCEEDED</arg>
+			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />

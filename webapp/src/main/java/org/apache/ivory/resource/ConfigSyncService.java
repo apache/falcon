@@ -23,8 +23,9 @@ public class ConfigSyncService extends AbstractEntityManager {
     @Monitored(event = "submit")
     @Override
     public APIResult submit(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type) {
-        return super.submit(request, type);
+                            @Dimension("entityType") @PathParam("type") String type,
+                            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.submit(request, type, colo);
     }
 
     @DELETE
@@ -34,8 +35,9 @@ public class ConfigSyncService extends AbstractEntityManager {
     @Override
     public APIResult delete(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity) {
-        return super.delete(request, type, entity);
+                            @Dimension("entityName") @PathParam("entity") String entity,
+                            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.delete(request, type, entity, colo);
     }
 
     @POST
@@ -45,8 +47,9 @@ public class ConfigSyncService extends AbstractEntityManager {
     @Override
     public APIResult update(@Context HttpServletRequest request,
                             @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entityName) {
-        return super.update(request, type, entityName);
+                            @Dimension("entityName") @PathParam("entity") String entityName,
+                            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.update(request, type, entityName, colo);
     }
 
 }

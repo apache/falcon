@@ -67,7 +67,8 @@ public class FeedGroupMapTest {
 		location.setType("data");
 		feed1.getLocations().put(LocationType.DATA, location);
 		store.publish(EntityType.FEED, feed1);
-		Map<String, FeedGroup> groupMapping = FeedGroupMap.get().getGroupsMapping();
+		Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
+				.getGroupsMapping();
 
 		FeedGroup group = groupMapping.get("group1");
 		Assert.assertEquals(group.getName(), "group1");
@@ -82,7 +83,7 @@ public class FeedGroupMapTest {
 		group = groupMapping.get("group3");
 		Assert.assertEquals(group.getName(), "group3");
 		Assert.assertEquals(group.getFeeds().size(), 1);
-		assertFields(group, feed1);		
+		assertFields(group, feed1);
 
 		Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
 				FeedGroupMapTest.class
@@ -125,7 +126,7 @@ public class FeedGroupMapTest {
 						.getResourceAsStream("/config/feed/feed-0.1.xml"));
 		feed1.setName("f1");
 		store.publish(EntityType.CLUSTER, cluster);
-		feed1.setGroups("group1,group2,group3");
+		feed1.setGroups("group7,group8,group9");
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
 		location.setType("data");
@@ -136,49 +137,38 @@ public class FeedGroupMapTest {
 				FeedGroupMapTest.class
 						.getResourceAsStream("/config/feed/feed-0.1.xml"));
 		feed2.setName("f2");
-		feed2.setGroups("group1,group5,group3");
+		feed2.setGroups("group7,group8,group10");
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/${MONTH}/${DAY}/ad2");
 		location.setType("data");
 		feed2.getLocations().put(LocationType.DATA, location);
 		store.publish(EntityType.FEED, feed2);
 
-		Map<String, FeedGroup> groupMapping = FeedGroupMap.get().getGroupsMapping();
+		Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
+				.getGroupsMapping();
 
 		store.remove(EntityType.FEED, "f2");
 
-		FeedGroup group = groupMapping.get("group1");
-		Assert.assertEquals(group.getName(), "group1");
+		FeedGroup group = groupMapping.get("group7");
+		Assert.assertEquals(group.getName(), "group7");
 		Assert.assertEquals(group.getFeeds().size(), 1);
 
-		group = groupMapping.get("group2");
-		Assert.assertEquals(group.getName(), "group2");
+		group = groupMapping.get("group8");
+		Assert.assertEquals(group.getName(), "group8");
 		Assert.assertEquals(group.getFeeds().size(), 1);
 
-		group = groupMapping.get("group3");
-		Assert.assertEquals(group.getName(), "group3");
-		Assert.assertEquals(group.getFeeds().size(), 1);
-
-		group = groupMapping.get("group5");
-		Assert.assertEquals(group.getName(), "group5");
-		Assert.assertEquals(group.getFeeds().size(), 0);
+		group = groupMapping.get("group10");
+		Assert.assertEquals(null, group);
 
 		store.remove(EntityType.FEED, "f1");
 
-		group = groupMapping.get("group1");
-		Assert.assertEquals(group.getName(), "group1");
-		Assert.assertEquals(group.getFeeds().size(), 0);
+		group = groupMapping.get("group7");
+		Assert.assertEquals(null, group);
 
-		group = groupMapping.get("group2");
-		Assert.assertEquals(group.getName(), "group2");
-		Assert.assertEquals(group.getFeeds().size(), 0);
+		group = groupMapping.get("group8");
+		Assert.assertEquals(null, group);
 
-		group = groupMapping.get("group3");
-		Assert.assertEquals(group.getName(), "group3");
-		Assert.assertEquals(group.getFeeds().size(), 0);
-
-		group = groupMapping.get("group5");
-		Assert.assertEquals(group.getName(), "group5");
-		Assert.assertEquals(group.getFeeds().size(), 0);
+		group = groupMapping.get("group9");
+		Assert.assertEquals(null, group);
 
 	}
 

@@ -68,7 +68,11 @@ public class ProcessInstancesResult extends APIResult {
 
     
     public ProcessInstancesResult(String message, Map<String, String> instMap) {
-        super(Status.SUCCEEDED, message);
+        this(message, instMap, null);
+    }
+    
+    public ProcessInstancesResult(String message, Map<String, String> instMap, String requestId) {
+        super(Status.SUCCEEDED, message, requestId);
         if(instMap != null) {
             instances = new ProcessInstance[instMap.size()];
             List<String> sortedInstances = new ArrayList<String>(instMap.keySet());
@@ -144,5 +148,4 @@ public class ProcessInstancesResult extends APIResult {
 					+ "}";
 		}
 	}
-
 }

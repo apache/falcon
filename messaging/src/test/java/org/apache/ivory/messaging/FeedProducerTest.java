@@ -25,9 +25,9 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -44,8 +45,8 @@ import org.testng.annotations.Test;
 
 public class FeedProducerTest {
 
-	private EntityInstanceMessage msgArgs;
-	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+	private String[] args;
+	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
@@ -53,7 +54,6 @@ public class FeedProducerTest {
 	private BrokerService broker;
 
 	private Path logFile;
-	private Path emptyLogFile;
 
 	private volatile AssertionError error;
 	private MiniDFSCluster dfsCluster;
@@ -61,39 +61,27 @@ public class FeedProducerTest {
 
 	@BeforeClass
 	public void setup() throws Exception {
-		this.msgArgs = new EntityInstanceMessage();
-		this.msgArgs.setProcessName(TOPIC_NAME);
-		this.msgArgs.setFeedName("click-logs");
-		this.msgArgs.setFeedInstancePath("/click-logs/10/05/05/00/20");
-		this.msgArgs.setWorkflowId("workflow-01-00");
-		this.msgArgs.setRunId("1");
-		this.msgArgs.setNominalTime("2011-01-01");
-		this.msgArgs.setTimeStamp("2012-01-01");
-		this.msgArgs.setBrokerUrl(BROKER_URL);
-		this.msgArgs.setBrokerImplClass(BROKER_IMPL_CLASS);
-		this.msgArgs.setEntityType("FEED");
-		this.msgArgs.setOperation("DELETE");
-		this.msgArgs.setTopicName(TOPIC_NAME);
-		this.msgArgs.setBrokerTTL("3600000");
-		this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
 
+		this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
 		logFile = new Path(conf.get("fs.default.name"),
 				"/ivory/feed/agg-logs/instance-2012-01-01-10-00.csv");
-		FileSystem fs = dfsCluster.getFileSystem();
-		OutputStream out = fs.create(logFile);
-		InputStream in = new ByteArrayInputStream(
-				("instancePaths=/ivory/feed/agg-logs/path1/2010/10/10/20,"
-						+ "/ivory/feed/agg-logs/path1/2010/10/10/21,"
-						+ "/ivory/feed/agg-logs/path1/2010/10/10/22,"
-						+ "/ivory/feed/agg-logs/path1/2010/10/10/23")
-						.getBytes());
-		IOUtils.copyBytes(in, out, conf);
 
-		emptyLogFile = new Path(conf.get("fs.default.name"),
-				"/ivory/feed/agg-logs/instance-2012-01-02-10-00.csv");
-		out = fs.create(emptyLogFile);
-		in = new ByteArrayInputStream(("instancePaths=").getBytes());
-		IOUtils.copyBytes(in, out, conf);
+		args = new String[] { "-" + ARG.entityName.getArgName(), TOPIC_NAME,
+				"-" + ARG.feedNames.getArgName(), "click-logs",
+				"-" + ARG.feedInstancePaths.getArgName(),
+				"/click-logs/10/05/05/00/20",
+				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
+				"-" + ARG.runId.getArgName(), "1",
+				"-" + ARG.nominalTime.getArgName(), "2011-01-01",
+				"-" + ARG.timeStamp.getArgName(), "2012-01-01",
+				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
+				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
+				"-" + ARG.entityType.getArgName(), ("FEED"),
+				"-" + ARG.operation.getArgName(), ("DELETE"),
+				"-" + ARG.logFile.getArgName(), (logFile.toString()),
+				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
+				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
+				"-" + ARG.brokerTTL.getArgName(), "10" };
 
 		broker = new BrokerService();
 		broker.setUseJmx(true);
@@ -104,25 +92,36 @@ public class FeedProducerTest {
 
 	@AfterClass
 	public void tearDown() throws Exception {
+		broker.deleteAllMessages();
 		broker.stop();
 		this.dfsCluster.shutdown();
 	}
 
 	@Test
 	public void testLogFile() throws Exception {
-		this.msgArgs.setLogFile(logFile.toString());
+		FileSystem fs = dfsCluster.getFileSystem();
+		OutputStream out = fs.create(logFile);
+		InputStream in = new ByteArrayInputStream(
+				("instancePaths=/ivory/feed/agg-logs/path1/2010/10/10/20,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/21,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/22,"
+						+ "/ivory/feed/agg-logs/path1/2010/10/10/23")
+						.getBytes());
+		IOUtils.copyBytes(in, out, conf);
 		testProcessMessageCreator();
 	}
 
 	@Test
 	public void testEmptyLogFile() throws Exception {
-		this.msgArgs.setLogFile(emptyLogFile.toString());
-		MessageProducer.main(EntityInstanceMessage
-				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
+		FileSystem fs = dfsCluster.getFileSystem();
+		OutputStream out = fs.create(logFile);
+		InputStream in = new ByteArrayInputStream(("instancePaths=").getBytes());
+		IOUtils.copyBytes(in, out, conf);
+
+		new MessageProducer().run(this.args);
 	}
 
-	private void testProcessMessageCreator() throws JMSException,
-			InterruptedException {
+	private void testProcessMessageCreator() throws Exception {
 
 		Thread t = new Thread() {
 			@Override
@@ -138,8 +137,7 @@ public class FeedProducerTest {
 		};
 		t.start();
 		Thread.sleep(1500);
-		MessageProducer.main(EntityInstanceMessage
-				.messageToArgs(new EntityInstanceMessage[] { this.msgArgs }));
+		new MessageProducer().run(this.args);
 		t.join();
 		if (error != null) {
 			throw error;
@@ -158,47 +156,50 @@ public class FeedProducerTest {
 		MessageConsumer consumer = session.createConsumer(destination);
 
 		// wait till you get atleast one message
-		TextMessage m;
+		MapMessage m;
 		for (m = null; m == null;)
-			m = (TextMessage) consumer.receive();
-		System.out.println("Consumed: " + m.getText());
-		String[] items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1],
+			m = (MapMessage) consumer.receive();
+		System.out.println("Consumed: " + m.toString());
+		assertMessage(m);
+		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
 				"/ivory/feed/agg-logs/path1/2010/10/10/20");
 
 		for (m = null; m == null;)
-			m = (TextMessage) consumer.receive();
-		items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1],
+			m = (MapMessage) consumer.receive();
+		System.out.println("Consumed: " + m.toString());
+		assertMessage(m);
+		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
 				"/ivory/feed/agg-logs/path1/2010/10/10/21");
 
 		for (m = null; m == null;)
-			m = (TextMessage) consumer.receive();
-		items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1],
+			m = (MapMessage) consumer.receive();
+		System.out.println("Consumed: " + m.toString());
+		assertMessage(m);
+		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
 				"/ivory/feed/agg-logs/path1/2010/10/10/22");
 
 		for (m = null; m == null;)
-			m = (TextMessage) consumer.receive();
-		items = m.getText().split("\\$");
-		assertMessage(items);
-		Assert.assertEquals(items[1],
+			m = (MapMessage) consumer.receive();
+		System.out.println("Consumed: " + m.toString());
+		assertMessage(m);
+		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
 				"/ivory/feed/agg-logs/path1/2010/10/10/23");
 
 		connection.close();
 	}
 
-	private void assertMessage(String[] items) throws JMSException {
-		Assert.assertEquals(items.length, 7);
-		Assert.assertEquals(items[0], "click-logs");
-		Assert.assertEquals(items[2], "DELETE");
-		Assert.assertEquals(items[3], "workflow-01-00");
-		Assert.assertEquals(items[4], "1");
-		Assert.assertEquals(items[5], "2011-01-01");
-		Assert.assertEquals(items[6], "2012-01-01");
-
+	private void assertMessage(MapMessage m) throws JMSException {
+		Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
+				TOPIC_NAME);
+		Assert.assertEquals(m.getString(ARG.operation.getArgName()), "DELETE");
+		Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
+				"workflow-01-00");
+		Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
+		Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
+				"2011-01-01");
+		Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
+				"2012-01-01");
+		Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
 	}
+
 }

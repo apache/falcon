@@ -180,6 +180,7 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <version>2.1.1</version>
                         <configuration>
+                            <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
                             <webResources>
                                 <resource>
                                     <directory>src/main/webapp/WEB-INF/standalone</directory>

@@ -1,8 +1,7 @@
 package org.apache.ivory.resource.channel;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.IvoryRuntimException;
-import org.apache.ivory.util.ApplicationProperties;
+import org.apache.ivory.util.DeploymentProperties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,33 +10,17 @@ public class ChannelFactory {
 
     private static Map<String, Channel> channels = new HashMap<String, Channel>();
 
-    private static final ApplicationProperties deploymentProperties;
     private static final String INTEGRATED = "integrated";
     private static final String MODE = "deploy.mode";
 
-    static {
-        try {
-            deploymentProperties = new ApplicationProperties() {
-
-                        @Override
-                        protected String getPropertyFile() {
-                            return "deploy.properties";
-                        }
-                    };
-        } catch (IvoryException e) {
-            throw new IvoryRuntimException(e);
-        }
-
-    }
-
-    public synchronized static Channel get(String serviceName)
+    public synchronized static Channel get(String serviceName, String colo)
             throws IvoryException {
 
         Channel channel;
-        if ((channel = channels.get(serviceName)) == null) {
-            channel = getChannel(deploymentProperties.getProperty(MODE));
-            channel.init(deploymentProperties, serviceName);
-            channels.put(serviceName, channel);
+        if ((channel = channels.get(colo + "/" + serviceName)) == null) {
+            channel = getChannel(DeploymentProperties.get().getProperty(MODE));
+            channel.init(colo, serviceName);
+            channels.put(colo + "/" + serviceName, channel);
         }
         return channel;
     }

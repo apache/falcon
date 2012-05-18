@@ -18,45 +18,42 @@
 
 package org.apache.ivory.messaging;
 
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import org.apache.ivory.messaging.EntityInstanceMessage;
+import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.Session;
+
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 
 /**
  * Ivory JMS message creator- creates JMS TextMessage
  */
-public class EntityInstanceMessageCreator  {
+public class EntityInstanceMessageCreator {
 
-	private static final Logger LOG = Logger
-			.getLogger(EntityInstanceMessageCreator.class);
+	private MapMessage mapMessage;
 
-	private TextMessage textMessage;
+	private final EntityInstanceMessage instanceMessage;
 
-	private final EntityInstanceMessage args;
-
-	public EntityInstanceMessageCreator(EntityInstanceMessage args) {
-		this.args = args;
+	public EntityInstanceMessageCreator(EntityInstanceMessage instanceMessage) {
+		this.instanceMessage = instanceMessage;
 	}
 
-	public TextMessage createMessage(Session session) throws JMSException {
-		this.textMessage = session.createTextMessage();
-		this.textMessage.setText(this.args.toString());
-		LOG.debug("Sending Message: " + this.textMessage.getText());
-		// System.out.println("Sending Message: " + this.textMessage);
-		return this.textMessage;
+	public Message createMessage(Session session) throws JMSException {
+		mapMessage = session.createMapMessage();
+		for (Entry<ARG, String> entry : instanceMessage.getKeyValueMap()
+				.entrySet()) {
+			mapMessage.setString(entry.getKey().getArgName(), instanceMessage
+					.getKeyValueMap().get(entry.getKey()));
+		}
+		return mapMessage;
+
 	}
 
 	@Override
 	public String toString() {
-		try {
-			return this.textMessage.getText();
-		} catch (JMSException e) {
-			return e.getMessage();
-		}
-
+		return this.mapMessage.toString();
 	}
 
 }

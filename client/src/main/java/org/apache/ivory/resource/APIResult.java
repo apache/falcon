@@ -40,6 +40,8 @@ public class APIResult {
 
 	private String message;
 
+	private String requestId;
+	
 	private static final JAXBContext jc;
 	
 	static {
@@ -60,18 +62,27 @@ public class APIResult {
 		this.message = message;
 	}
 
+    public APIResult(Status status, String message, String requestId) {
+        this(status, message);
+        this.requestId = requestId;
+    }
+
 	protected APIResult() {
 		// private default constructor for JAXB
 	}
 
 	public Status getStatus() {
-		return this.status;
+		return status;
 	}
 
 	public String getMessage() {
-		return this.message;
+		return message;
 	}
 
+	public String getRequestId() {
+	    return requestId;
+	}
+	
 	@Override
 	public String toString() {
 		try {

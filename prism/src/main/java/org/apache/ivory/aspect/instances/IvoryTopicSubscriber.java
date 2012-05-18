@@ -23,24 +23,22 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.resource.AbstractProcessInstanceManager;
-import org.apache.ivory.resource.proxy.ProcessInstanceManagerProxy;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
 	private static final Logger LOG = Logger
 			.getLogger(IvoryTopicSubscriber.class);
-
-	private static final String MSG_SEPERATOR = "\\$";
 
 	private TopicSubscriber subscriber;
 	private String implementation;
@@ -50,11 +48,11 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String topicName;
 	private Connection connection;
 	private AbstractProcessInstanceManager processInstanceManager = new AbstractProcessInstanceManager() {
-        @Override
-        public String getName() {
-            return "Test";
-        }
-    };
+		@Override
+		public String getName() {
+			return "Test";
+		}
+	};
 
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {
@@ -85,24 +83,26 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 
 	// @Override
 	public void onMessage(Message message) {
-		TextMessage textmessage = (TextMessage) message;
+		MapMessage mapMessage = (MapMessage) message;
 		try {
-			LOG.debug("Received: " + textmessage.getText());
-			String[] items = textmessage.getText().split(MSG_SEPERATOR);
-			String processName = items[0];
-			String feedName = items[1];
-			String feedpath = items[2];
-			String workflowId = items[3];
-			String runId = items[4];
-			String nominalTime = items[5];
-			String timeStamp = items[6];
-			String status = items[7];
+			debug(mapMessage);
+			String processName = mapMessage.getString(ARG.entityName
+					.getArgName());
+			String feedName = mapMessage.getString(ARG.feedNames.getArgName());
+			String feedpath = mapMessage.getString(ARG.feedInstancePaths
+					.getArgName());
+			String workflowId = mapMessage.getString(ARG.workflowId
+					.getArgName());
+			String runId = mapMessage.getString(ARG.runId.getArgName());
+			String nominalTime = mapMessage.getString(ARG.nominalTime
+					.getArgName());
+			String timeStamp = mapMessage.getString(ARG.timeStamp.getArgName());
+			String status = mapMessage.getString(ARG.status.getArgName());
 
 			try {
 				processInstanceManager.instrumentWithAspect(processName,
 						feedName, feedpath, nominalTime, timeStamp, status,
-						workflowId, runId, textmessage,
-						System.currentTimeMillis());
+						workflowId, runId, System.currentTimeMillis());
 			} catch (Exception ignore) {
 				// mocked exception
 			}
@@ -113,6 +113,19 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 							+ this.toString(), ignore);
 		}
 
+	}
+
+	private void debug(MapMessage mapMessage) throws JMSException {
+		StringBuffer buff = new StringBuffer();
+		buff.append("Received:{");
+		for (ARG arg : ARG.values()) {
+			buff.append(
+					arg.getArgName() + "="
+							+ mapMessage.getString(arg.getArgName())).append(
+					", ");
+		}
+		buff.append("}");
+		LOG.debug(buff);
 	}
 
 	// @Override
