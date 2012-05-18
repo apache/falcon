@@ -158,7 +158,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		System.out.println(stringWriter.toString());
 	}
 
-	@Test(expectedExceptions = NullPointerException.class)
+	@Test(expectedExceptions = ValidationException.class)
 	public void applyValidationInvalidFeed() throws Exception {
 		Feed feed = (Feed) parser
 				.parseAndValidate(ProcessEntityParserTest.class

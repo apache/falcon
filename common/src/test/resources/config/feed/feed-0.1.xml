@@ -31,7 +31,7 @@
     <late-arrival cut-off="hours(6)" />
 
     <clusters>
-        <cluster name="testCluster" type="source" partitionExp="*/${cluster.colo}">
+        <cluster name="testCluster" type="source" partition="*/${cluster.colo}">
             <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
                       timezone="UTC" />
             <retention limit="hours(48)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->

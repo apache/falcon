@@ -53,7 +53,7 @@ public class Cluster {
     @XmlAttribute(required = true)
     protected ClusterType type;
     @XmlAttribute(required = true)
-    protected String partitionExp;
+    protected String partition;
 
 
 	/**
@@ -153,27 +153,27 @@ public class Cluster {
     }
     
     /**
-     * Gets the value of the partitionExp property.
+     * Gets the value of the partition property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getPartitionExp() {
-		return partitionExp;
+    public String getPartition() {
+		return partition;
 	}
 
     /**
-     * Sets the value of the partitionExp property.
+     * Sets the value of the partition property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-	public void setPartitionExp(String partitionExp) {
-		this.partitionExp = partitionExp;
+	public void setPartitionExp(String partition) {
+		this.partition = partition;
 	}
 
 }

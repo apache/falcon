@@ -255,8 +255,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 		if (cluster.getType().value() == "source"
 				&& feed.getPartitions() != null
 				&& feed.getPartitions().getPartition().size() != 0
-				&& cluster.getPartitionExp() != null) {
-			String[] tokens = cluster.getPartitionExp().split("/");
+				&& cluster.getPartition() != null && numSourceClusters != 1) {
+			String[] tokens = cluster.getPartition().split("/");
 			if (tokens.length != feed.getPartitions().getPartition().size()) {
 				throw new ValidationException(
 						"Number of expressions in Partition Expression are not equal to number of partions");
@@ -280,18 +280,18 @@ public class FeedEntityParser extends EntityParser<Feed> {
 							"Alteast one of the partition tags has to be an expression");
 			}
 		} else {
-			if (cluster.getPartitionExp() != null
+			if (cluster.getPartition() != null
 					&& cluster.getType().value() == "target")
 				throw new ValidationException(
 						"Target Cluster do not have Partition Expression");
 			else if (feed.getPartitions() != null
 					&& feed.getPartitions().getPartition().size() != 0
-					&& cluster.getPartitionExp() == null && cluster.getType().value() == "source" && numSourceClusters > 1)
+					&& cluster.getPartition() == null && cluster.getType().value() == "source" && numSourceClusters > 1)
 				throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
 			else if (feed.getPartitions() == null
-					&& cluster.getPartitionExp() != null)
+					&& cluster.getPartition() != null)
 				throw new ValidationException(
-						"Partition Expression not expected");
+						"Partition Expression not expected for the cluster:" + cluster.getName());
 		}
 
 	}
