@@ -62,7 +62,7 @@ public class HTTPChannel extends AbstractChannel {
         HttpServletRequest incomingRequest = getIncomingRequest(args);
         String httpMethod = getHttpMethod(method);
         String mimeType = getConsumes(method);
-        String accept = getProduces(method);
+        String accept = MediaType.WILDCARD;
         String user = CurrentUser.getUser();
 
         try {
