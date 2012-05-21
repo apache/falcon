@@ -99,7 +99,12 @@ public class ProcessInstancesResult extends APIResult {
 
     public ProcessInstancesResult(String message,
     		ProcessInstance[] processInstanceExs) {
-    	super(Status.SUCCEEDED, message);
+    	this(Status.SUCCEEDED, message, processInstanceExs);
+    }
+
+    public ProcessInstancesResult(Status status, String message,
+    		ProcessInstance[] processInstanceExs) {
+    	super(status, message);
     	this.instances = processInstanceExs;
     }
 

@@ -60,7 +60,7 @@ public abstract class AbstractEntityManager implements IvoryService {
     protected static final String DEPLOY_MODE = "deploy.mode";
     private static final String[] DEFAULT_ALL_COLOS = new String[] {DEFAULT_COLO};
 
-    private final String currentColo;
+    protected final String currentColo;
     protected final boolean integratedMode;
 
     private WorkflowEngine workflowEngine;
@@ -101,39 +101,47 @@ public abstract class AbstractEntityManager implements IvoryService {
 
     protected APIResult consolidatedResult(APIResult[] results, String[] colos) {
         if (results == null || results.length == 0) return null;
-        if (results.length == 1) return results[0];
 
-        APIResult.Status status = APIResult.Status.SUCCEEDED;
         StringBuilder buffer = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();
+        int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             buffer.append(colos[index]).append('/')
-                    .append(results[index].getMessage()).append('\n');
-            buffer.append(colos[index]).append('/')
+                    .append(results[index].getMessage())
+                    .append(',').append(", REQ. ID is ")
                     .append(results[index].getRequestId()).append('\n');
-            if (status.ordinal() < results[index].getStatus().ordinal()) {
-                status = results[index].getStatus();
-            }
+            statusCount += results[index].getStatus().ordinal();
         }
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED :
+                ((statusCount == results.length * 2) ? APIResult.Status.FAILED :
+                        APIResult.Status.PARTIAL);
         return new APIResult(status, buffer.toString(), requestIds.toString());
     }
 
-    protected ProcessInstancesResult consolidatedResult(ProcessInstancesResult[] results,
+    protected ProcessInstancesResult consolidatedInstanceResult(APIResult[] results,
                                                         String[] colos) {
         if (results == null || results.length == 0) return null;
-        if (results.length == 1) return results[0];
 
+        StringBuilder message = new StringBuilder("CONSOLIDATED");
         List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
+        int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
-            for (ProcessInstance instance: results[index].getInstances()) {
+            APIResult result = results[index];
+            message.append('\n').append(colos[index]).append(": ").append(result.getMessage());
+            if (!(result instanceof ProcessInstancesResult)) continue;
+            for (ProcessInstance instance: ((ProcessInstancesResult) result).getInstances()) {
                 ProcessInstance instClone = new ProcessInstance(colos[index] +
                         "/" + instance.getInstance(), instance.getStatus());
                 instances.add(new ProcessInstance(instClone,
                         instance.logFile, instance.actions));
             }
+            statusCount += results[index].getStatus().ordinal();
         }
         ProcessInstance[] arrInstances = new ProcessInstance[instances.size()];
-        return new ProcessInstancesResult("CONSOLIDATED",
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED :
+                ((statusCount == results.length * 2) ? APIResult.Status.FAILED :
+                        APIResult.Status.PARTIAL);
+        return new ProcessInstancesResult(status, message.toString(),
                 instances.toArray(arrInstances));
     }
 

@@ -19,6 +19,7 @@
 package org.apache.ivory;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ivory.resource.APIResult;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -31,16 +32,23 @@ public class IvoryWebException extends WebApplicationException {
 
     public static IvoryWebException newException(Throwable e,
                                                  Response.Status status) {
-        LOG.error("Action failed: " + status, e);
+        return newException(e.getMessage() + "\n" + getAddnInfo(e), status);
+    }
+
+
+    public static IvoryWebException newException(APIResult result,
+                                                 Response.Status status) {
+        LOG.error("Action failed: " + status + "\nError:" + result.getMessage());
         return new IvoryWebException(Response.status(status).
-                entity(getMessage(e)+ "\n" + getAddnInfo(e)).
-                type(MediaType.TEXT_PLAIN_TYPE).build());
+                entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static IvoryWebException newException(String message,
                                                  Response.Status status) {
+        LOG.error("Action failed: " + status + "\nError:" + message);
+        APIResult result = new APIResult(APIResult.Status.FAILED, message);
         return new IvoryWebException(Response.status(status).
-                entity(message).type(MediaType.TEXT_PLAIN_TYPE).build());
+                entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     private static String getMessage(Throwable e) {
@@ -52,7 +60,8 @@ public class IvoryWebException extends WebApplicationException {
     private static String getAddnInfo(Throwable e) {
         String addnInfo = "";
         Throwable cause = e.getCause();
-        if (cause != null && cause.getMessage() != null && !getMessage(e).contains(cause.getMessage())) {
+        if (cause != null && cause.getMessage() != null &&
+                !getMessage(e).contains(cause.getMessage())) {
             addnInfo = cause.getMessage();
         }
         return addnInfo;

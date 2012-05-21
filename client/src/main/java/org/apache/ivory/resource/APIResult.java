@@ -53,7 +53,7 @@ public class APIResult {
 	}
 	
 	public static enum Status {
-		SUCCEEDED, FAILED
+		SUCCEEDED, PARTIAL, FAILED
 	}
 
 	public APIResult(Status status, String message) {

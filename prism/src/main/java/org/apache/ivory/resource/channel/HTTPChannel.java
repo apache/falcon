@@ -4,6 +4,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.util.DeploymentProperties;
 import org.apache.ivory.util.RuntimeProperties;
@@ -55,32 +56,33 @@ public class HTTPChannel extends AbstractChannel {
     public <T> T invoke(String methodName, Object... args)
             throws IvoryException {
 
-        Method method = getMethod(service, methodName, args);
-        String url = urlPrefix + "/" + pathValue(method, args);
-        LOG.debug("Executing " + url);
-
-        HttpServletRequest incomingRequest = getIncomingRequest(args);
-        String httpMethod = getHttpMethod(method);
-        String mimeType = getConsumes(method);
-        String accept = MediaType.WILDCARD;
-        String user = CurrentUser.getUser();
-
         try {
+            Method method = getMethod(service, methodName, args);
+            String url = urlPrefix + "/" + pathValue(method, args);
+            LOG.debug("Executing " + url);
+
+            HttpServletRequest incomingRequest = getIncomingRequest(args);
+            incomingRequest.getInputStream().reset();
+            String httpMethod = getHttpMethod(method);
+            String mimeType = getConsumes(method);
+            String accept = MediaType.WILDCARD;
+            String user = CurrentUser.getUser();
+
             ClientResponse response = Client.create(new DefaultClientConfig())
                     .resource(UriBuilder.fromUri(url).build())
                     .header(REMOTE_USER, user).accept(accept)
                     .type(mimeType).method(httpMethod, ClientResponse.class,
-                            incomingRequest.getInputStream());
+                            (httpMethod.equals("DELETE") ? null :
+                                    incomingRequest.getInputStream()));
 
             Family status = response.getClientResponseStatus().getFamily();
-            if (status == Family.INFORMATIONAL || status == Family.REDIRECTION ||
-                    status == Family.SUCCESSFUL) {
+            if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
                 return (T)response.getEntity(method.getReturnType());
             } else {
                 LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
-                throw new IvoryException(response.getEntity(String.class));
+                return (T) response.getEntity(method.getReturnType());
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             LOG.error("Request failed", e);
             throw new IvoryException(e);
         }
@@ -154,7 +156,7 @@ public class HTTPChannel extends AbstractChannel {
 
     private String getConsumes(Method method) {
         Consumes consumes = method.getAnnotation(Consumes.class);
-        if (consumes.value() == null) {
+        if (consumes == null || consumes.value() == null) {
             return MediaType.TEXT_PLAIN;
         }
         return consumes.value()[0];

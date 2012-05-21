@@ -27,11 +27,11 @@ public class IvoryException extends Exception {
 	 * 
 	 * @param e Exception
 	 */
-	public IvoryException(Exception e) {
+	public IvoryException(Throwable e) {
 		super(e);
 	}
 
-	public IvoryException(String message, Exception e) {
+	public IvoryException(String message, Throwable e) {
 		super(message, e);
 	}
 

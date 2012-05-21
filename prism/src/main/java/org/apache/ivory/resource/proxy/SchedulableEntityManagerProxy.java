@@ -17,6 +17,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
     private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
+    private static final int MB = 1024 * 1024;
 
     public SchedulableEntityManagerProxy() {
         try {
@@ -69,23 +71,20 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Monitored(event = "submit")
     @Override
     public APIResult submit(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            if (!integratedMode) {
-                super.submit(request, type, DEFAULT_COLO);
-            }
-            String[] colos = getAllColos();
-            APIResult[] results = new APIResult[colos.length];
+                            @Dimension("entityType") @PathParam("type") final String type,
+                            @Dimension("colo") @QueryParam("colo") final String colo) {
 
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getConfigSyncChannel(colos[index]).
-                        invoke("submit", request, type, colos[index]);
-            }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        if (!integratedMode) {
+            super.submit(bufferedRequest, type, currentColo);
         }
+        return new EntityProxy() {
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getConfigSyncChannel(colo).
+                        invoke("submit", bufferedRequest, type, colo);
+            }
+        }.execute();
     }
 
     @POST
@@ -104,24 +103,21 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Monitored(event = "delete")
     @Override
     public APIResult delete(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity,
+                            @Dimension("entityType") @PathParam("type") final String type,
+                            @Dimension("entityName") @PathParam("entity") final String entity,
                             @Dimension("colo") @QueryParam("colo") String ignore) {
-        try {
-            if (!integratedMode) {
-                super.delete(request, type, entity, DEFAULT_COLO);
-            }
-            String[] colos = getAllColos();
-            APIResult[] results = new APIResult[colos.length];
 
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getConfigSyncChannel(colos[index]).
-                        invoke("delete", request, type, entity, colos[index]);
-            }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        if (!integratedMode) {
+            super.delete(request, type, entity, currentColo);
         }
+        return new EntityProxy() {
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getConfigSyncChannel(colo).
+                    invoke("delete", bufferedRequest, type, entity, colo);
+            }
+        }.execute();
     }
 
     @POST
@@ -130,24 +126,21 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Monitored(event = "update")
     @Override
     public APIResult update(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entityName,
+                            @Dimension("entityType") @PathParam("type") final String type,
+                            @Dimension("entityName") @PathParam("entity") final String entityName,
                             @Dimension("colo") @QueryParam("colo") String ignore) {
-        try {
-            if (!integratedMode) {
-                super.update(request, type, entityName, DEFAULT_COLO);
-            }
-            String[] colos = getAllColos();
-            APIResult[] results = new APIResult[colos.length];
 
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getConfigSyncChannel(colos[index]).
-                        invoke("update", request, type, entityName, colos[index]);
-            }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        if (!integratedMode) {
+            super.update(request, type, entityName, currentColo);
         }
+        return new EntityProxy() {
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getConfigSyncChannel(colo).
+                    invoke("update", bufferedRequest, type, entityName, colo);
+            }
+        }.execute();
     }
 
     @GET
@@ -193,22 +186,24 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "schedule")
     @Override
-    public APIResult schedule(@Context HttpServletRequest request,
-                              @Dimension("entityType") @PathParam("type") String type,
-                              @Dimension("entityName") @PathParam("entity") String entity,
-                              @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            String[] colos = getColosToApply(colo);
+    public APIResult schedule(@Context final HttpServletRequest request,
+                              @Dimension("entityType") @PathParam("type") final String type,
+                              @Dimension("entityName") @PathParam("entity") final String entity,
+                              @Dimension("colo") @QueryParam("colo") final String colo) {
 
-            APIResult[] results = new APIResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getEntityManager(colos[index]).
-                        invoke("schedule", request, type, entity, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new EntityProxy() {
+            @Override
+            protected String[] getColos() {
+                return getColosToApply(colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getEntityManager(colo).
+                        invoke("schedule", bufferedRequest, type, entity, colo);
+            }
+        }.execute();
     }
 
     @POST
@@ -229,7 +224,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                          invoke("submitAndSchedule", request, type, DEFAULT_COLO);
              }
          } catch (Exception e) {
-             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+             throw IvoryWebException.newException(
+                     new APIResult(APIResult.Status.FAILED, e.getMessage()),
+                     Response.Status.BAD_REQUEST);
          }
     }
 
@@ -238,23 +235,24 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "suspend")
     @Override
-    public APIResult suspend(@Context HttpServletRequest request,
-                             @Dimension("entityType") @PathParam("type") String type,
-                             @Dimension("entityName") @PathParam("entity") String entity,
-                             @Dimension("colo") @QueryParam("colo") String colo) {
+    public APIResult suspend(@Context final HttpServletRequest request,
+                             @Dimension("entityType") @PathParam("type") final String type,
+                             @Dimension("entityName") @PathParam("entity") final String entity,
+                             @Dimension("colo") @QueryParam("colo") final String colo) {
 
-        try {
-            String[] colos = getColosToApply(colo);
-
-            APIResult[] results = new APIResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getEntityManager(colos[index]).
-                        invoke("suspend", request, type, entity, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new EntityProxy() {
+            @Override
+            protected String[] getColos() {
+                return getColosToApply(colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getEntityManager(colo).
+                        invoke("suspend", bufferedRequest, type, entity, colo);
+            }
+        }.execute();
     }
 
     @POST
@@ -262,21 +260,52 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "resume")
     @Override
-    public APIResult resume(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity,
-                            @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            String[] colos = getColosToApply(colo);
+    public APIResult resume(@Context final HttpServletRequest request,
+                            @Dimension("entityType") @PathParam("type") final String type,
+                            @Dimension("entityName") @PathParam("entity") final String entity,
+                            @Dimension("colo") @QueryParam("colo") final String colo) {
 
-            APIResult[] results = new APIResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getEntityManager(colos[index]).
-                        invoke("resume", request, type, entity, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new EntityProxy() {
+            @Override
+            protected String[] getColos() {
+                return getColosToApply(colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+
+            @Override
+            protected APIResult doExecute(String colo) throws IvoryException {
+                return getEntityManager(colo).
+                        invoke("resume", bufferedRequest, type, entity, colo);
+            }
+        }.execute();
+    }
+
+    private abstract class EntityProxy {
+
+        public APIResult execute() {
+            String[] colos = getColos();
+            APIResult[] results = new APIResult[colos.length];
+
+            for (int index = 0; index < colos.length; index++) {
+                try {
+                    results[index] = doExecute(colos[index]);
+                } catch (IvoryException e) {
+                    results[index] = new APIResult(APIResult.Status.FAILED,
+                            e.getClass().getName() + "::" + e.getMessage());
+                }
+            }
+            APIResult finalResult = consolidatedResult(results, colos);
+            if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                throw IvoryWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+            } else {
+                return finalResult;
+            }
         }
+
+        protected String[] getColos() {
+            return getAllColos();
+        }
+
+        protected abstract APIResult doExecute(String colo) throws IvoryException;
     }
 }
