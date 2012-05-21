@@ -18,13 +18,22 @@
 
 package org.apache.ivory.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.ProcessInstancesResult;
 
 /**
  * Exception thrown by IvoryClient
  */
 public class IvoryCLIException extends Exception {
+
+    private static final int MB = 1024 * 1024;
 
     public IvoryCLIException(String msg) {
         super(msg);
@@ -34,16 +43,32 @@ public class IvoryCLIException extends Exception {
         super(msg, throwable);
     }
 
-	public IvoryCLIException(ClientResponse clientResponse) {
-		super(convertStreamToString(clientResponse.getEntityInputStream()));
-	}
-	
-	public static String convertStreamToString(InputStream is) {
-	    try {
-	        return new java.util.Scanner(is).useDelimiter("\\A").next();
-	    } catch (java.util.NoSuchElementException e) {
-	        return "";
-	    }
+	public static IvoryCLIException fromReponse(ClientResponse clientResponse) {
+        return new IvoryCLIException(getMessage(clientResponse));
 	}
 
+    private static String getMessage(ClientResponse clientResponse) {
+        String message;
+        clientResponse.bufferEntity();
+        InputStream in = clientResponse.getEntityInputStream();
+        try {
+            in.mark(MB);
+            try {
+                message = clientResponse.getEntity(APIResult.class).getMessage();
+            } catch (Throwable e) {
+                in.reset();
+                message = clientResponse.getEntity(ProcessInstancesResult.class).getMessage();
+            }
+        } catch (Throwable t) {
+            byte[] data = new byte[MB];
+            try {
+                in.reset();
+                int len = in.read(data);
+                message = new String(data, 0, len);
+            } catch (IOException e) {
+                message = e.getMessage();
+            }
+        }
+        return message;
+    }
 }

@@ -344,12 +344,7 @@ public class IvoryClient {
 
 		checkIfSuccessfull(clientResponse);
 
-		if (entities.method == HttpMethod.GET) {
-			return parseStringResult(clientResponse);
-		} else {
-			return parseAPIResult(clientResponse);
-		}
-
+        return parseAPIResult(clientResponse);
 	}
 
 	private String sendDependencyRequest(Entities entities, String entityType,
@@ -478,8 +473,8 @@ public class IvoryClient {
 		StringBuffer sb = new StringBuffer();
 		for (ProcessInstancesResult.ProcessInstance instance : result
 				.getInstances()) {
-			sb.append("instance=" + instance.getInstance() + ";status="
-					+ instance.getStatus());
+			sb.append("instance=").append(instance.getInstance()).append(";status=")
+					.append(instance.getStatus());
 			if (instance.logFile != null) {
 				sb.append(";log=").append(instance.logFile);
 			}
@@ -498,7 +493,7 @@ public class IvoryClient {
 			throws IvoryCLIException {
 		if (clientResponse.getStatus() == Response.Status.BAD_REQUEST
 				.getStatusCode()) {
-			throw new IvoryCLIException(clientResponse);
+			throw IvoryCLIException.fromReponse(clientResponse);
 		}
 
 	}

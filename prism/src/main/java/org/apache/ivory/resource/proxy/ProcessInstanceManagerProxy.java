@@ -5,6 +5,7 @@ import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.AbstractProcessInstanceManager;
 import org.apache.ivory.resource.ProcessInstancesResult;
 import org.apache.ivory.resource.channel.Channel;
@@ -56,21 +57,15 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event="running")
     @Override
-    public ProcessInstancesResult getRunningInstances(@Dimension("process") @PathParam("process") String processName,
+    public ProcessInstancesResult getRunningInstances(@Dimension("process") @PathParam("process") final String processName,
                                                       @Dimension("colo") @QueryParam("colo") String colo) {
-        checkColo(colo);
-        try {
-            String[] colos = getColosToApply(colo);
-
-            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).
-                        invoke("getRunningInstances", processName, colos[index]);
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).
+                        invoke("getRunningInstances", processName, colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        }.execute(colo);
     }
 
     @GET
@@ -78,24 +73,19 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event="instance-status")
     @Override
-    public ProcessInstancesResult getStatus(@Dimension("process") @PathParam("process") String processName,
-                                            @Dimension("start") @QueryParam("start") String startStr,
-                                            @Dimension("end") @QueryParam("end") String endStr,
-                                            @Dimension("type") @QueryParam("type") String type,
-                                            @Dimension("runid") @QueryParam("runid") String runId,
-                                            @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            String[] colos = getColosToApply(colo);
-
-            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).invoke("getStatus",
-                        processName, startStr, endStr, type, runId, colos[index]);
+    public ProcessInstancesResult getStatus(@Dimension("process") @PathParam("process") final String processName,
+                                            @Dimension("start") @QueryParam("start") final String startStr,
+                                            @Dimension("end") @QueryParam("end") final String endStr,
+                                            @Dimension("type") @QueryParam("type") final String type,
+                                            @Dimension("runid") @QueryParam("runid") final String runId,
+                                            @Dimension("colo") @QueryParam("colo") final String colo) {
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("getStatus",
+                        processName, startStr, endStr, type, runId, colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        }.execute(colo);
     }
 
     @POST
@@ -104,23 +94,19 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @Monitored(event="kill-instance")
     @Override
     public ProcessInstancesResult killProcessInstance(@Context HttpServletRequest request,
-                                                      @Dimension("processName") @PathParam("process") String processName,
-                                                      @Dimension("start-time") @QueryParam("start") String startStr,
-                                                      @Dimension("end-time") @QueryParam("end") String endStr,
-                                                      @Dimension("colo") @QueryParam("colo") String colo) {
+                                                      @Dimension("processName") @PathParam("process") final String processName,
+                                                      @Dimension("start-time") @QueryParam("start") final String startStr,
+                                                      @Dimension("end-time") @QueryParam("end") final String endStr,
+                                                      @Dimension("colo") @QueryParam("colo") final String colo) {
 
-        try {
-            String[] colos = getColosToApply(colo);
-
-            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).invoke("killProcessInstance",
-                    request, processName, startStr, endStr, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("killProcessInstance",
+                    bufferedRequest, processName, startStr, endStr, colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        }.execute(colo);
     }
 
     @POST
@@ -129,22 +115,18 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
 	@Monitored(event="suspend-instance")
     @Override
     public ProcessInstancesResult suspendProcessInstance(@Context HttpServletRequest request,
-                                                         @Dimension("processName") @PathParam("process") String processName,
-                                                         @Dimension("start-time") @QueryParam("start") String startStr,
-                                                         @Dimension("end-time") @QueryParam("end") String endStr,
+                                                         @Dimension("processName") @PathParam("process") final String processName,
+                                                         @Dimension("start-time") @QueryParam("start") final String startStr,
+                                                         @Dimension("end-time") @QueryParam("end") final String endStr,
                                                          @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            String[] colos = getColosToApply(colo);
-
-            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).invoke("suspendProcessInstance",
-                    request, processName, startStr, endStr, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("suspendProcessInstance",
+                    bufferedRequest, processName, startStr, endStr, colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        }.execute(colo);
     }
 
     @POST
@@ -153,22 +135,19 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
 	@Monitored(event="resume-instance")
     @Override
     public ProcessInstancesResult resumeProcessInstance(@Context HttpServletRequest request,
-                                                        @Dimension("processName") @PathParam("process") String processName,
-                                                        @Dimension("start-time") @QueryParam("start") String startStr,
-                                                        @Dimension("end-time") @QueryParam("end") String endStr,
+                                                        @Dimension("processName") @PathParam("process") final String processName,
+                                                        @Dimension("start-time") @QueryParam("start") final String startStr,
+                                                        @Dimension("end-time") @QueryParam("end") final String endStr,
                                                         @Dimension("colo") @QueryParam("colo") String colo) {
-        try {
-            String[] colos = getColosToApply(colo);
 
-            ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).invoke("resumeProcessInstance",
-                    request, processName, startStr, endStr, colos[index]);
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("resumeProcessInstance",
+                    bufferedRequest, processName, startStr, endStr, colo);
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
+        }.execute(colo);
     }
 
     @POST
@@ -176,23 +155,45 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="re-run-instance")
     @Override
-    public ProcessInstancesResult reRunInstance(@Dimension("processName") @PathParam("process") String processName,
-                                                @Dimension("start-time") @QueryParam("start") String startStr,
-                                                @Dimension("end-time") @QueryParam("end") String endStr,
+    public ProcessInstancesResult reRunInstance(@Dimension("processName") @PathParam("process") final String processName,
+                                                @Dimension("start-time") @QueryParam("start") final String startStr,
+                                                @Dimension("end-time") @QueryParam("end") final String endStr,
                                                 @Context HttpServletRequest request,
                                                 @Dimension("colo") @QueryParam("colo") String colo) {
 
-        try {
+        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        return new InstanceProxy() {
+            @Override
+            protected ProcessInstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("reRunInstance",
+                    processName, startStr, endStr, bufferedRequest, colo);
+            }
+        }.execute(colo);
+    }
+
+    private abstract class InstanceProxy {
+
+        public ProcessInstancesResult execute(String colo) {
             String[] colos = getColosToApply(colo);
 
             ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
             for (int index = 0; index < colos.length; index++) {
-                results[index] = getInstanceManager(colos[index]).invoke("reRunInstance",
-                    processName, startStr, endStr, request, colos[index]);
+                try {
+                    results[index] = doExecute(colos[index]);
+                } catch (IvoryException e) {
+                    results[index] = new ProcessInstancesResult(APIResult.Status.FAILED,
+                            e.getClass().getName() + "::" + e.getMessage(),
+                            new ProcessInstancesResult.ProcessInstance[0]);
+                }
             }
-            return consolidatedResult(results, colos);
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            ProcessInstancesResult finalResult = consolidatedInstanceResult(results, colos);
+            if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                throw IvoryWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+            } else {
+                return finalResult;
+            }
         }
+
+        protected abstract ProcessInstancesResult doExecute(String colo) throws IvoryException;
     }
 }
