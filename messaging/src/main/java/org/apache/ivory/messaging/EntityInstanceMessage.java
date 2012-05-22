@@ -21,6 +21,10 @@ package org.apache.ivory.messaging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -113,7 +117,13 @@ public class EntityInstanceMessage {
 		return this.keyValueMap.get(ARG.brokerTTL);
 	}
 
-	public static EntityInstanceMessage[] getMessages(CommandLine cmd) {
+	public void convertDateFormat() throws ParseException {
+		String date = this.keyValueMap.remove(ARG.nominalTime);
+		this.keyValueMap.put(ARG.nominalTime, getIvoryDate(date));
+		date = this.keyValueMap.remove(ARG.timeStamp);
+		this.keyValueMap.put(ARG.timeStamp, getIvoryDate(date));
+	}
+	public static EntityInstanceMessage[] getMessages(CommandLine cmd) throws ParseException {
 
 		String[] feedNames = getFeedNames(cmd);
 		String[] feedPaths;
@@ -135,8 +145,10 @@ public class EntityInstanceMessage {
 				message.setFeedName(message.getFeedName());
 			}
 			message.setFeedInstancePath(feedPaths[i]);
+			message.convertDateFormat();
 			messages[i] = message;
 		}
+
 		return messages;
 	}
 
@@ -187,6 +199,16 @@ public class EntityInstanceMessage {
 			LOG.debug("Returning instance paths for feed " + instancePaths[1]);
 			return instancePaths[1].split(",");
 		}
+
+	}
+	
+	public String getIvoryDate(String nominalTime) throws ParseException {
+		DateFormat nominalFormat = new SimpleDateFormat(
+				"yyyy'-'MM'-'dd'-'HH'-'mm");
+		Date nominalDate = nominalFormat.parse(nominalTime);
+		DateFormat ivoryFormat = new SimpleDateFormat(
+				"yyyy'-'MM'-'dd'T'HH':'mm'Z'");
+		return ivoryFormat.format(nominalDate);
 
 	}
 

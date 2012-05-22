@@ -26,8 +26,8 @@
 		<artifactId>ivory-main</artifactId>
 		<version>0.2-SNAPSHOT</version>
 	</parent>
-	<artifactId>ivory-retry</artifactId>
-	<description>Ivory Retry Handler</description>
+	<artifactId>ivory-rerun</artifactId>
+	<description>Ivory Rerun Handler</description>
 	<name>Ivory Retry</name>
 	<packaging>jar</packaging>
 	<repositories>
@@ -47,6 +47,17 @@
 			<groupId>javax.jms</groupId>
 			<artifactId>jms</artifactId>
 			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-core</artifactId>
+			<version>5.4.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.ibm.icu</groupId>
+                    <artifactId>icu4j</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 	</dependencies>
 </project>

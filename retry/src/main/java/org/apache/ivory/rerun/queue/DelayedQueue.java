@@ -15,28 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.retry.policy;
+package org.apache.ivory.rerun.queue;
 
-import javax.jms.JMSException;
+import java.util.List;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.retry.RetryEvent;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.rerun.event.RerunEvent;
+import org.apache.log4j.Logger;
 
-public class RetryExpBackoffPolicy extends RetryPolicy {
+public abstract class  DelayedQueue<T extends RerunEvent> {
+	public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
+	public abstract boolean offer(T event);
 
-	@Override
-	public RetryEvent getRetryEvent(String delayUnit, int delay,
-			WorkflowEngine workflowEngine, String clusterName, String wfId,
-			String processName, String ivoryDate, int runId, int attempts,
-			long msgReceivedTime) throws IvoryException, JMSException {
-
-		long endOfDelay = (long) (getEndOfDealy(delayUnit, delay) * Math.pow(2,
-				runId));
-		return new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
-				attempts, 0);
-
-	}
+	public abstract T take() throws IvoryException;
+	
+	public abstract void populateQueue(List<T> events);
+	
+	public abstract void init();
 
 }

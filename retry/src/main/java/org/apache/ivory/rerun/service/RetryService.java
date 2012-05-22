@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.retry;
+package org.apache.ivory.rerun.service;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.IvoryRuntimException;
+import org.apache.ivory.rerun.event.RerunEvent.RerunType;
+import org.apache.ivory.rerun.event.RetryEvent;
+import org.apache.ivory.rerun.handler.AbstractRerunHandler;
+import org.apache.ivory.rerun.handler.RerunHandlerFactory;
+import org.apache.ivory.rerun.queue.InMemoryQueue;
 import org.apache.ivory.service.IvoryService;
-import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
 public class RetryService implements IvoryService {
@@ -39,45 +40,27 @@ public class RetryService implements IvoryService {
 
 	@Override
 	public void init() throws IvoryException {
-		Thread daemon = new RetryHandler.Consumer();
-		daemon.setName("RetryHandler");
-		daemon.setDaemon(true);
-		daemon.start();
-		LOG.info("RetryHandler  thread started");
-		RetryHandler.setBasePath();
-		bootstrap();
-	}
-
-	private void bootstrap() {
-		WorkflowEngine workflowEngine;
-		try {
-			workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
-		} catch (IvoryException e) {
-			throw new IvoryRuntimException(e);
-		}
-		for (File retryFile : RetryHandler.getBasePath().listFiles()) {
-			try {
-				BufferedReader reader = new BufferedReader(new FileReader(
-						retryFile));
-				String line;
-				while ((line = reader.readLine()) != null) {
-					RetryEvent event = RetryEvent.fromString(workflowEngine,
-							line);
-					RetryHandler.enqueue(event);
-				}
-			} catch (Exception e) {
-				LOG.warn(
-						"Not able to read retry entry "
-								+ retryFile.getAbsolutePath(), e);
-			}
-		}
-
+		AbstractRerunHandler<RetryEvent, InMemoryQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
+				.getRerunHandler(RerunType.RETRY);
+		 InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(
+		 getBasePath());
+		rerunHandler.init(queue);
 	}
 
 	@Override
 	public void destroy() throws IvoryException {
 		LOG.info("RetryHandler  thread destroyed");
+	}
 
+	private File getBasePath() {
+		File basePath = new File(StartupProperties.get().getProperty(
+				"retry.recorder.path", "/tmp/ivory/retry"));
+		if ((!basePath.exists() && !basePath.mkdirs())
+				|| (basePath.exists() && !basePath.canWrite())) {
+			throw new RuntimeException("Unable to initialize retry recorder @"
+					+ basePath);
+		}
+		return basePath;
 	}
 
 }

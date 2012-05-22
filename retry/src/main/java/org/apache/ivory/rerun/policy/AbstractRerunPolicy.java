@@ -15,15 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.retry.policy;
-
-import javax.jms.JMSException;
+package org.apache.ivory.rerun.policy;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.retry.RetryEvent;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-public abstract class RetryPolicy {
+public abstract class AbstractRerunPolicy {
 
 	private static final long MINUTES = 60 * 1000L;
 	private static final long HOURS = 60 * MINUTES;
@@ -33,13 +29,8 @@ public abstract class RetryPolicy {
 	private static enum DELAYS {
 		minutes, hours, days, months
 	};
-
-	public abstract RetryEvent getRetryEvent(String delayUnit, int delay,
-			WorkflowEngine workflowEngine, String clusterName, String wfId,
-			String processName, String ivoryDate, int runId, int attempts,
-			long msgReceivedTime) throws IvoryException, JMSException;
-
-	protected long getEndOfDealy(String delayUnit, int delay)
+	
+	public long getDurationInMilliSec(String delayUnit, int delay)
 			throws IvoryException {
 
 		if (delayUnit.equals(DELAYS.minutes.name())) {
@@ -54,5 +45,8 @@ public abstract class RetryPolicy {
 			throw new IvoryException("Unknown delayUnit:" + delayUnit);
 		}
 	}
+	
+	public abstract long getDelay(String delayUnit, int delay, int eventNumber) throws IvoryException;
+
 
 }
