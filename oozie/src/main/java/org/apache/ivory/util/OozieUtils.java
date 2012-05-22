@@ -88,5 +88,4 @@ public final class OozieUtils {
         }
         return jobprops;
     }
-
 }

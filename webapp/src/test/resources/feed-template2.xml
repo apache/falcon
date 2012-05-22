@@ -17,20 +17,15 @@
   ~ limitations under the License.
   -->
 <feed description="clicks log" name="##name##" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <partitions>
-        <partition name="fraud" />
-        <partition name="good" />
-    </partitions>
+    <groups>output</groups>
 
-    <groups>online,bi</groups>
-
-    <frequency>minutes</frequency>
-    <periodicity>20</periodicity>
+    <frequency>days</frequency>
+    <periodicity>1</periodicity>
 
     <late-arrival cut-off="hours(6)" />
 
     <clusters>
-        <cluster name="##cluster##" type="source" partition="*/${cluster.colo}">
+        <cluster name="##cluster##" type="source">
             <validity start="2010-01-01T01:00Z" end="2099-01-01T00:00Z"
                       timezone="UTC" />
             <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
@@ -38,16 +33,11 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/examples/output-data/aggregator/aggregatedLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
+        <location type="data" path="/ivory/test/output/${YEAR}/${MONTH}/${DAY}" />
         <location type="stats" path="/projects/ivory/clicksStats" />
         <location type="meta" path="/projects/ivory/clicksMetaData" />
     </locations>
     
     <ACL owner="testuser" group="group" permission="0x755" />
     <schema location="/schema/clicks" provider="protobuf" />
-
-    <properties>
-        <property name="field1" value="value1" />
-        <property name="field2" value="value2" />
-    </properties>
 </feed>

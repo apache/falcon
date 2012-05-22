@@ -42,13 +42,13 @@ public class EmbeddedCluster {
 
     private static Logger LOG = Logger.getLogger(EmbeddedCluster.class);
 
-    private EmbeddedCluster() {
+    protected EmbeddedCluster() {
     }
 
     private Configuration conf = new Configuration();
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
-    private Cluster clusterEntity;
+    protected Cluster clusterEntity;
 
     public Configuration getConf() {
         return conf;

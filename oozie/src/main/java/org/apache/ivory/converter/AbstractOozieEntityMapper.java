@@ -18,6 +18,7 @@
 
 package org.apache.ivory.converter;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
@@ -50,6 +52,7 @@ import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.service.SharedLibraryHostingService;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
@@ -59,14 +62,23 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
-    
+
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-    protected static final Long DEFAULT_BROKER_MSG_TTL = 3*24*60L;
+    protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
 
     protected static final JAXBContext workflowJaxbContext;
     protected static final JAXBContext coordJaxbContext;
     protected static final JAXBContext bundleJaxbContext;
+
+    protected static final PathFilter ivoryJarFilter = new PathFilter() {
+        @Override
+        public boolean accept(Path path) {
+            if (path.getName().startsWith("ivory"))
+                return true;
+            return false;
+        }
+    };
 
     static {
         try {
@@ -112,9 +124,25 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             bundleCoord.setAppPath(getHDFSPath(coordPath));
             bundleCoord.setConfiguration(bundleConf);
             bundleApp.getCoordinator().add(bundleCoord);
+
+            copySharedLibs(cluster, coordPath);
         }
 
         marshal(cluster, bundleApp, bundlePath);
+    }
+
+    private void copySharedLibs(Cluster cluster, Path coordPath) throws IvoryException {
+        try {
+            Path libPath = new Path(coordPath, "lib");
+            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+            if (!fs.exists(libPath))
+                fs.mkdirs(libPath);
+
+            SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, ivoryJarFilter);
+        } catch (IOException e) {
+            LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
+            throw new IvoryException(e);
+        }
     }
 
     protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException;
@@ -130,29 +158,25 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected Map<String, String> createCoordDefaultConfiguration(Cluster cluster, Path coordPath, String coordName) {
         Map<String, String> props = new HashMap<String, String>();
         props.put(ARG.entityName.getPropName(), entity.getName());
-		props.put(ARG.nominalTime.getPropName(), NOMINAL_TIME_EL);
-		props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
-		props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
-		String userBrokerImplClass = cluster.getProperties().get(
-				"brokerImplClass") == null ? DEFAULT_BROKER_IMPL_CLASS
-				: cluster.getProperties().get("brokerImplClass").getValue();
-		props.put("userBrokerImplClass", userBrokerImplClass);
-		String ivoryBrokerUrl = StartupProperties.get().getProperty(
-				ARG.brokerUrl.getPropName(),
-				"tcp://localhost:61616?daemon=true");
-		props.put(ARG.brokerUrl.getPropName(), ivoryBrokerUrl);
-		String ivoryBrokerImplClass = StartupProperties.get().getProperty(
-				ARG.brokerImplClass.getPropName(), DEFAULT_BROKER_IMPL_CLASS);
-		props.put(ARG.brokerImplClass.getPropName(), ivoryBrokerImplClass);
-		String jmsMessageTTL = StartupProperties.get().getProperty(
-				"broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
-		props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
-		props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
-		props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
-		props.put(ARG.operation.getPropName(), entityOperation.GENERATE.name());
+        props.put(ARG.nominalTime.getPropName(), NOMINAL_TIME_EL);
+        props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
+        props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
+        String userBrokerImplClass = cluster.getProperties().get("brokerImplClass") == null ? DEFAULT_BROKER_IMPL_CLASS : cluster
+                .getProperties().get("brokerImplClass").getValue();
+        props.put("userBrokerImplClass", userBrokerImplClass);
+        String ivoryBrokerUrl = StartupProperties.get().getProperty(ARG.brokerUrl.getPropName(), "tcp://localhost:61616?daemon=true");
+        props.put(ARG.brokerUrl.getPropName(), ivoryBrokerUrl);
+        String ivoryBrokerImplClass = StartupProperties.get().getProperty(ARG.brokerImplClass.getPropName(),
+                DEFAULT_BROKER_IMPL_CLASS);
+        props.put(ARG.brokerImplClass.getPropName(), ivoryBrokerImplClass);
+        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
+        props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
+        props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
+        props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
+        props.put(ARG.operation.getPropName(), entityOperation.GENERATE.name());
 
-		props.put(OozieClient.EXTERNAL_ID,
-                new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName), "${coord:nominalTime()}").getId());
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
+                "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
 
         props.putAll(getEntityProperties());

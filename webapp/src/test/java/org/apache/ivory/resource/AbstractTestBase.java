@@ -25,10 +25,13 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
+import org.apache.ivory.cluster.util.StandAloneCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -55,7 +58,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 public class AbstractTestBase {
     protected static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     protected static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    protected static final String CLUSTER_FILE_TEMPLATE = "cluster-template.xml";
+    protected static String CLUSTER_FILE_TEMPLATE = "/cluster-template.xml";
 
     protected static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     protected static final String PROCESS_TEMPLATE = "/process-template.xml";
@@ -150,19 +153,34 @@ public class AbstractTestBase {
         Client client = Client.create(config);
         this.service = client.resource(UriBuilder.fromUri(BASE_URL).build());
         this.server.start();
-        
-        this.cluster = EmbeddedCluster.newCluster("##name##", false);
-        Cluster clusterEntity = this.cluster.getCluster();
-        FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
-        marshaller.marshal(clusterEntity, out);
-        out.close();
 
+        if(System.getProperty("ivory.test.hadoop.embedded", "true").equals("true")) {
+            CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
+            this.cluster = EmbeddedCluster.newCluster("##name##", false);
+            Cluster clusterEntity = this.cluster.getCluster();
+            FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
+            marshaller.marshal(clusterEntity, out);
+            out.close();            
+        } else {
+            Map<String, String> overlay = new HashMap<String, String>();
+            overlay.put("name", RandomStringUtils.randomAlphabetic(5));
+            String file = overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay);
+            this.cluster = StandAloneCluster.newCluster(file);
+        }
+        
         cleanupStore();
 
         //setup dependent workflow and lipath in hdfs
         FileSystem fs = FileSystem.get(this.cluster.getConf());
-        fs.mkdirs(new Path("/examples/apps/aggregator"));
-        fs.mkdirs(new Path("/examples/apps/aggregator/lib"));
+        Path wfParent = new Path("/ivory/test");
+        fs.delete(wfParent, true);
+        Path wfPath = new Path(wfParent, "workflow");
+        fs.mkdirs(wfPath);
+        fs.copyFromLocalFile(false, true, new Path(this.getClass().getResource("/fs-workflow.xml").getPath()), new Path(wfPath, "workflow.xml"));
+        fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
+        Path outPath = new Path(wfParent, "output");
+        fs.mkdirs(outPath);
+        fs.setPermission(outPath, new FsPermission((short) 511));
     }
 
     /**
