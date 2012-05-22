@@ -52,7 +52,7 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.ivory.resource.provider.ErrorResponse,org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.ProcessInstanceManager</param-value>
+            <param-value>org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.ProcessInstanceManager</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -66,7 +66,7 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.ivory.resource.provider.ErrorResponse,org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.ConfigSyncService</param-value>
+            <param-value>org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.ConfigSyncService</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

@@ -78,9 +78,12 @@ public class HTTPChannel extends AbstractChannel {
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
                 return (T)response.getEntity(method.getReturnType());
-            } else {
+            } else if (status != Family.SERVER_ERROR) {
                 LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
                 return (T) response.getEntity(method.getReturnType());
+            } else {
+                LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
+                throw new IvoryException(response.getEntity(String.class));
             }
         } catch (Throwable e) {
             LOG.error("Request failed", e);

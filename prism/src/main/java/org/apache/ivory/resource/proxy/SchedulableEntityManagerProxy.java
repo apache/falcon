@@ -17,7 +17,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +25,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
     private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
-    private static final int MB = 1024 * 1024;
 
     public SchedulableEntityManagerProxy() {
         try {
