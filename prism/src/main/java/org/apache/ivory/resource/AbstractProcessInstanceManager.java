@@ -30,10 +30,10 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.logging.LogProvider;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.rerun.event.RerunEvent.RerunType;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
-import org.apache.ivory.rerun.handler.RerunHandlerFactory.Handler;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.transaction.TransactionManager;
@@ -51,7 +51,7 @@ import java.util.Set;
 public abstract class AbstractProcessInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractProcessInstanceManager.class);
 	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler =  RerunHandlerFactory
-			.getRerunHandler(Handler.RETRY);
+			.getRerunHandler(RerunType.RETRY);
 
     protected Process getProcess(String processName) throws IvoryException {
         Entity entity = getEntityObject(processName, EntityType.PROCESS.name());
