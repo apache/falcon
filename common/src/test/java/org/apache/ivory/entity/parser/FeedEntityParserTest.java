@@ -179,7 +179,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		}
 	}
 	
-	@Test(expectedExceptions = ValidationException.class)
+	@Test
 	public void testPartitionExpression() throws IvoryException {
 		Feed feed = (Feed) parser
 				.parseAndValidate(ProcessEntityParserTest.class
