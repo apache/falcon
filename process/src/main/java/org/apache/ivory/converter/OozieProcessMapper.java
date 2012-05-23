@@ -18,13 +18,6 @@
 
 package org.apache.ivory.converter;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,34 +25,27 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ExternalId;
-import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
-import org.apache.ivory.entity.v0.process.LateProcess;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.latedata.LateDataUtils;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.oozie.coordinator.CONTROLS;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-import org.apache.ivory.oozie.coordinator.DATAIN;
-import org.apache.ivory.oozie.coordinator.DATAOUT;
-import org.apache.ivory.oozie.coordinator.DATASETS;
-import org.apache.ivory.oozie.coordinator.INPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.OUTPUTEVENTS;
-import org.apache.ivory.oozie.coordinator.SYNCDATASET;
-import org.apache.ivory.oozie.coordinator.WORKFLOW;
+import org.apache.ivory.oozie.coordinator.*;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
@@ -71,7 +57,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
-    private static final String LATE_WF_TEMPLATE = "/config/workflow/process-late1-workflow.xml";
 
     public OozieProcessMapper(Process entity) {
         super(entity);

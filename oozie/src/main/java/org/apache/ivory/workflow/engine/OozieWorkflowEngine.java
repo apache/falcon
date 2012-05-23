@@ -20,12 +20,17 @@ package org.apache.ivory.workflow.engine;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Pair;
+import org.apache.ivory.Tag;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ExternalId;
+import org.apache.ivory.entity.common.TimeUnit;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
+import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.update.UpdateHelper;
 import org.apache.ivory.util.OozieUtils;
@@ -157,7 +162,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private Map<String, List<BundleJob>> findActiveBundles(Entity entity) throws IvoryException {
         try {
-            WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             String name = entity.getWorkflowName();
 
             String[] clusters = entity.getClustersDefined();
@@ -260,81 +264,91 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     @Override
-    public Map<String, Set<String>> getRunningInstances(Entity entity) throws IvoryException {
-        Map<String, Set<String>> runInstancesMap = new HashMap<String, Set<String>>();
+    public ProcessInstancesResult getRunningInstances(Entity entity) throws IvoryException {
 
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-        String[] clusters = entity.getClustersDefined();
-        for (String cluster : clusters) {
-            Set<String> runInstances = new HashSet<String>();
-            List<WorkflowJob> wfs = getRunningWorkflows(cluster);
-            if (wfs != null) {
-                for (WorkflowJob wf : wfs) {
-                    if (StringUtils.isEmpty(wf.getExternalId()))
-                        continue;
-                    ExternalId extId = new ExternalId(wf.getExternalId());
-                    if (extId.getName().equals(entity.getName()))
-                        runInstances.add(extId.getDateAsString());
+        try {
+            String[] clusters = entity.getClustersDefined();
+            List<ProcessInstance> runInstances = new ArrayList<ProcessInstance>();
+            for (String cluster : clusters) {
+                OozieClient client = OozieClientFactory.get(cluster);
+                List<WorkflowJob> wfs = getRunningWorkflows(cluster);
+                if (wfs != null) {
+                    for (WorkflowJob job : wfs) {
+                        Tag workflowNameTag = entity.getWorkflowNameTag(job.getAppName());
+                        if (!job.getAppName().equals(entity.getWorkflowName(workflowNameTag))) continue;
+                        WorkflowJob wf = client.getJobInfo(job.getId());
+                        if (StringUtils.isEmpty(wf.getParentId())) continue;
+
+                        CoordinatorAction action = client.getCoordActionInfo(wf.getParentId());
+                        String nominalTimeStr = EntityUtil.formatDateUTC(action.getNominalTime());
+                        ProcessInstance instance = new ProcessInstance(cluster,
+                                nominalTimeStr, WorkflowStatus.RUNNING);
+                        instance.startTime = EntityUtil.formatDateUTC(wf.getStartTime());
+                        runInstances.add(instance);
+                    }
                 }
             }
-            runInstancesMap.put(cluster, runInstances);
+            return new ProcessInstancesResult("Running Instances",
+                            runInstances.toArray(new ProcessInstance[runInstances.size()]));
+
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
         }
-        return runInstancesMap;
     }
 
     @Override
-    public Map<String, Map<String, String>> killInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public ProcessInstancesResult killInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.KILL, entity, start, end);
     }
 
     @Override
-    public Map<String, Map<String, String>> reRunInstances(Entity entity, Date start, Date end, Properties props)
+    public ProcessInstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props)
             throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
         String[] clusters = entity.getClustersDefined();
-        Map<String, Map<String, String>> instMap = new HashMap<String, Map<String, String>>();
 
         try {
+            List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
             for (String cluster : clusters) {
-                List<ExternalId> extIds = builder.getExternalIdsForRerun(entity, start, end);
-                Map<String, String> instStatusMap = new HashMap<String, String>();
+                OozieClient client = OozieClientFactory.get(cluster);
+                List<CoordinatorAction> coordinatorActions =
+                        getCoordActions(cluster, entity, start, end);
 
-                for (ExternalId extId : extIds) {
+                for (CoordinatorAction coordinatorAction : coordinatorActions) {
                     String status = NOT_STARTED;
-                    WorkflowJob jobInfo = getJobInfoByExternalId(cluster, extId);
+                    WorkflowJob jobInfo = null;
+                    if (coordinatorAction.getExternalId() != null) {
+                        jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
+                    }
                     if (jobInfo != null) {
                         status = jobInfo.getStatus().name();
                         if (WF_RERUN_PRECOND.contains(jobInfo.getStatus())) {
-                            List<ExternalId> mappedExtIds = builder.getMappedExternalIds(entity, extId);
-                            for (ExternalId mapExtId : mappedExtIds) {
-                                WorkflowJob mapJobInfo = getJobInfoByExternalId(cluster, mapExtId);
-                            }
                             reRun(cluster, jobInfo.getId(), props);
                             status = Status.RUNNING.name();
                         }
                     }
-                    instStatusMap.put(extId.getDateAsString(), status);
+                    String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
+                    instances.add(new ProcessInstance(cluster, nominalTimeStr, WorkflowStatus.valueOf(status)));
                 }
-                instMap.put(cluster, instStatusMap);
             }
+            return new ProcessInstancesResult("Rerun executed",
+                    instances.toArray(new ProcessInstance[instances.size()]));
         } catch (Exception e) {
             throw new IvoryException(e);
         }
-        return instMap;
     }
 
     @Override
-    public Map<String, Map<String, String>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public ProcessInstancesResult suspendInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.SUSPEND, entity, start, end);
     }
 
     @Override
-    public Map<String, Map<String, String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException {
+    public ProcessInstancesResult resumeInstances(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.RESUME, entity, start, end);
     }
 
     @Override
-    public Map<String, Map<String, String>> getStatus(Entity entity, Date start, Date end) throws IvoryException {
+    public ProcessInstancesResult getStatus(Entity entity, Date start, Date end) throws IvoryException {
         return doJobAction(JobAction.STATUS, entity, start, end);
     }
 
@@ -342,18 +356,22 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         KILL, SUSPEND, RESUME, STATUS
     }
 
-    private Map<String, Map<String, String>> doJobAction(JobAction action, Entity entity, Date start, Date end) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-        String[] clusters = entity.getClustersDefined();
-        Map<String, Map<String, String>> instMap = new HashMap<String, Map<String, String>>();
+    private ProcessInstancesResult doJobAction(JobAction action, Entity entity,
+                                               Date start, Date end) throws IvoryException {
 
+        String[] clusters = entity.getClustersDefined();
         try {
+            List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
             for (String cluster : clusters) {
-                List<ExternalId> extIds = builder.getExternalIds(entity, start, end);
-                Map<String, String> instStatusMap = new HashMap<String, String>();
-                for (ExternalId extId : extIds) {
-                    String status = NOT_STARTED;
-                    WorkflowJob jobInfo = getJobInfoByExternalId(cluster, extId);
+                OozieClient client = OozieClientFactory.get(cluster);
+                List<CoordinatorAction> coordinatorActions =
+                        getCoordActions(cluster, entity, start, end);
+                for (CoordinatorAction coordinatorAction : coordinatorActions) {
+                    String status;
+                    WorkflowJob jobInfo = null;
+                    if (coordinatorAction.getExternalId() != null) {
+                        jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
+                    }
                     if (jobInfo != null) {
                         status = jobInfo.getStatus().name();
                         switch (action) {
@@ -384,51 +402,155 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                             case STATUS:
                                 break;
                         }
-                    }
+                        if (action != OozieWorkflowEngine.JobAction.STATUS) {
+                            jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
+                        }
 
-                    instStatusMap.put(extId.getDateAsString(), consolidateStatus(status, instStatusMap.get(extId.getDateAsString())));
+                        String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
+
+                        ProcessInstance instance = new ProcessInstance(cluster, nominalTimeStr,
+                                WorkflowStatus.valueOf(status));
+                        instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
+                        instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());
+                        instances.add(instance);
+                    }
                 }
-                instMap.put(cluster, instStatusMap);
             }
+            return new ProcessInstancesResult(action.name(),
+                    instances.toArray(new ProcessInstance[instances.size()]));
         } catch (Exception e) {
             throw new IvoryException(e);
         }
-        return instMap;
     }
 
-    private WorkflowJob getJobInfoByExternalId(String cluster, ExternalId extId) throws IvoryException {
+    private List<CoordinatorAction> getCoordActions(String cluster, Entity entity, Date start, Date end)
+            throws IvoryException {
+        List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
+
+        String name = entity.getWorkflowName();
+        OozieClient client = OozieClientFactory.get(cluster);
         try {
-            OozieClient client = OozieClientFactory.get(cluster);
-            String jobId = client.getJobId(extId.getId());
-            if (StringUtils.isNotEmpty(jobId)) {
-                return client.getJobInfo(jobId);
+            List<BundleJob> bundles = client.
+                    getBundleJobsInfo(OozieClient.FILTER_NAME + "=" + name + ";", 0, 1000);
+            if (bundles == null) return actions;
+
+            List<CoordinatorJob> applicableCoords = getApplicableCoords(client, start, end, bundles);
+
+            sortCoordsByStartTime(applicableCoords);
+            List<CoordinatorJob> consideredCoords = getActiveCoords(applicableCoords);
+
+            for (CoordinatorJob coord : consideredCoords) {
+                TimeUnit timeUnit = TimeUnit.valueOf(coord.getTimeUnit().name());
+                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(),
+                        timeUnit, coord.getFrequency(),
+                        coord.getTimeZone(), start);
+                final Date iterEnd = (coord.getEndTime().before(end) ? coord.getEndTime() : end);
+                while (!iterStart.after(iterEnd)) {
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(),
+                            timeUnit, coord.getFrequency(),
+                            coord.getTimeZone(), iterStart);
+                    String actionId = coord.getId() + "@" + sequence;
+                    CoordinatorAction coordActionInfo = client.getCoordActionInfo(actionId);
+                    if (coordActionInfo != null) {
+                        actions.add(coordActionInfo);
+                    }
+                    Calendar startCal = Calendar.getInstance(EntityUtil
+                            .getTimeZone(coord.getTimeZone()));
+                    startCal.setTime(iterStart);
+                    startCal.add(timeUnit.getCalendarUnit(), coord.getFrequency());
+                    iterStart = startCal.getTime();
+                }
             }
-            return null;
+            return actions;
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }
+
+    }
+
+    private List<CoordinatorJob> getApplicableCoords(OozieClient client, Date start,
+                                                     Date end, List<BundleJob> bundles)
+            throws IvoryException {
+        List<CoordinatorJob> applicableCoords = new ArrayList<CoordinatorJob>();
+        try {
+            for (BundleJob bundle : bundles) {
+                List<CoordinatorJob> coords = client.
+                        getBundleJobInfo(bundle.getId()).getCoordinators();
+                for (CoordinatorJob coord : coords) {
+                    if (!coord.getStartTime().before(end) || !coord.getEndTime().after(start)) {
+                        applicableCoords.add(coord);
+                    }
+                }
+            }
+            return applicableCoords;
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
     }
 
-    private String consolidateStatus(String newStatus, String oldStatus) {
-        if (oldStatus == null || oldStatus.equals(NOT_STARTED)
-                || (WF_RERUN_PRECOND.contains(Status.valueOf(oldStatus)) && !newStatus.equals(NOT_STARTED)))
-            return newStatus;
-        return oldStatus;
+    protected void sortCoordsByStartTime(List<CoordinatorJob> consideredCoords) {
+        Collections.sort(consideredCoords, new Comparator<CoordinatorJob>() {
+            @Override
+            public int compare(CoordinatorJob left, CoordinatorJob right) {
+                Date leftStart = left.getStartTime();
+                Date rightStart = right.getStartTime();
+                return leftStart.compareTo(rightStart);
+            }
+        });
+    }
+
+    protected List<CoordinatorJob> getActiveCoords(List<CoordinatorJob> applicableCoords) {
+        List<CoordinatorJob> consideredCoords = new ArrayList<CoordinatorJob>();
+        List<CoordinatorJob> killedCoords = new ArrayList<CoordinatorJob>();
+        List<Pair<Date, Date>> ranges = new ArrayList<Pair<Date, Date>>();
+        Pair<Date, Date> range = null;
+        for (CoordinatorJob coord : applicableCoords) {
+            if (coord.getStatus() != Job.Status.KILLED) {
+                if (range == null) {
+                        range = new Pair<Date, Date>(coord.getStartTime(), coord.getEndTime());
+                }
+                if (coord.getStartTime().after(range.second)) {
+                    ranges.add(range);
+                    range = new Pair<Date, Date>(coord.getStartTime(), coord.getEndTime());
+                } else {
+                    range = new Pair<Date, Date>(range.first, coord.getEndTime());
+                }
+                consideredCoords.add(coord);
+            } else {
+                killedCoords.add(coord);
+            }
+        }
+        if (range != null) ranges.add(range);
+
+        for (CoordinatorJob coord : killedCoords) {
+            boolean add = true;
+            for (Pair<Date, Date> rangeVal : ranges) {
+                if (!coord.getStartTime().before(rangeVal.first) &&
+                        !coord.getEndTime().after(rangeVal.second)) {
+                    add = false;
+                    break;
+                }
+            }
+            if (add) {
+                consideredCoords.add(coord);
+            }
+        }
+
+        sortCoordsByStartTime(consideredCoords);
+        return consideredCoords;
     }
 
     private boolean canUpdateBundle(String cluster, Entity oldEntity, Entity newEntity) throws IvoryException {
-        OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
+        int oldConcurrency = EntityUtil.getConcurrency(oldEntity);
+        int newConcurrency = EntityUtil.getConcurrency(newEntity);
 
-        int oldConcurrency = builder.getConcurrency(oldEntity);
-        int newConcurrency = builder.getConcurrency(newEntity);
-
-        Date oldEndTime = builder.getEndTime(oldEntity, cluster);
-        Date newEndTime = builder.getEndTime(newEntity, cluster);
+        Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
+        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
 
         if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
             Entity clonedOldEntity = oldEntity.clone();
-            builder.setConcurrency(clonedOldEntity, newConcurrency);
-            builder.setEndTime(clonedOldEntity, cluster, newEndTime);
+            EntityUtil.setConcurrency(clonedOldEntity, newConcurrency);
+            EntityUtil.setEndTime(clonedOldEntity, cluster, newEndTime);
             if (clonedOldEntity.deepEquals(newEntity))
                 // only concurrency and end time are changed
                 return true;
@@ -442,7 +564,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             return;
         
         Map<String, BundleJob> bundleMap = findLatestBundle(oldEntity);
-        OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
         LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
         for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
@@ -451,7 +572,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
             String cluster = entry.getKey();
             BundleJob bundle = entry.getValue();
-            Date newEndTime = builder.getEndTime(newEntity, cluster);
+            Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
             if (newEndTime.before(now())) {
                 throw new IvoryException("New end time for " + newEntity.getName()
                         + " is past current time. Entity can't be updated. Use remove and add");
@@ -462,7 +583,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             if (canUpdateBundle(cluster, oldEntity, newEntity)) {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
-                updateCoords(cluster, bundle.getId(), builder.getConcurrency(newEntity), builder.getEndTime(newEntity, cluster));
+                updateCoords(cluster, bundle.getId(), EntityUtil.getConcurrency(newEntity),
+                        EntityUtil.getEndTime(newEntity, cluster));
                 return;
             }
 
@@ -543,13 +665,13 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         // Change end time of coords and schedule new bundle
         suspendEntity(cluster, bundle.getId());
         Date endTime = getNextMin(getNextMin(now()));
-        updateCoords(cluster, bundle.getId(), builder.getConcurrency(oldEntity), endTime);
+        updateCoords(cluster, bundle.getId(), EntityUtil.getConcurrency(oldEntity), endTime);
         resumeEntity(cluster, bundle.getId());
 
         // schedule new entity
         Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);
         Entity clonedNewEntity = newEntity.clone();
-        builder.setStartDate(clonedNewEntity, cluster, newStartTime);
+        EntityUtil.setStartDate(clonedNewEntity, cluster, newStartTime);
         schedule(clonedNewEntity);
     }
 

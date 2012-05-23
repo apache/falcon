@@ -1,6 +1,5 @@
 package org.apache.ivory.resource;
 
-import static org.testng.AssertJUnit.assertNotNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +26,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -163,6 +163,7 @@ public class AbstractTestBase {
         FileSystem fs = FileSystem.get(this.cluster.getConf());
         fs.mkdirs(new Path("/examples/apps/aggregator"));
         fs.mkdirs(new Path("/examples/apps/aggregator/lib"));
+        fs.mkdirs(new Path("/ivory"), new FsPermission((short)511));
     }
 
     /**
@@ -225,7 +226,7 @@ public class AbstractTestBase {
         try {
             APIResult result = (APIResult)unmarshaller.
                     unmarshal(new StringReader(response));
-            assertNotNull(result.getRequestId());
+            Assert.assertNotNull(result.getRequestId());
         } catch (JAXBException e) {
             Assert.fail("Reponse " + response + " is not valid");
         }        

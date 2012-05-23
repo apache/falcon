@@ -130,7 +130,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             message.append('\n').append(colos[index]).append(": ").append(result.getMessage());
             if (!(result instanceof ProcessInstancesResult)) continue;
             for (ProcessInstance instance: ((ProcessInstancesResult) result).getInstances()) {
-                ProcessInstance instClone = new ProcessInstance(colos[index] +
+                ProcessInstance instClone = new ProcessInstance(instance.cluster, colos[index] +
                         "/" + instance.getInstance(), instance.getStatus());
                 instances.add(new ProcessInstance(instClone,
                         instance.logFile, instance.actions));

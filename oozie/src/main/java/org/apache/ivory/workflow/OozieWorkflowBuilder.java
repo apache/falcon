@@ -72,16 +72,5 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         return map;
     }
     
-    public abstract int getConcurrency(T entity);
-
-    public abstract void setConcurrency(T entity, int concurrency);
-
-    public abstract Date getEndTime(T entity, String cluster) throws IvoryException;
-
-    public abstract void setEndTime(T entity, String cluster, Date endDate);
-
-    public abstract void setStartDate(T entity, String cluster, Date startDate);
-    
     public abstract Date getNextStartTime(T entity, String cluster, Date now) throws IvoryException;
-    
 }

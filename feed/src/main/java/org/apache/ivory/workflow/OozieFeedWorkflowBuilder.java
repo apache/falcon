@@ -61,51 +61,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public int getConcurrency(Feed feed) {
-        return 1;
-    }
-
-    @Override
-    public Date getEndTime(Feed feed, String cluster) throws IvoryException {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
-        return EntityUtil.parseDateUTC(clusterDef.getValidity().getEnd());
-    }
-
-    @Override
-    public void setStartDate(Feed feed, String cluster, Date startDate) {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
-        clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
-    }
-
-    @Override
-    public void setEndTime(Feed feed, String cluster, Date endDate) {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
-        clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
-    }
-
-    @Override
-    public void setConcurrency(Feed feed, int concurrency) {
-    }
-
-    @Override
     public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
                 Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
-    }
-
-    @Override
-    public List<ExternalId> getExternalIds(Feed feed, Date start, Date end) throws IvoryException {
-        throw new IvoryException("getExternalIds is not supported for Feeds!");
-    }
-
-    @Override
-    public List<ExternalId> getExternalIdsForRerun(Feed entity, Date start, Date end) throws IvoryException {
-        throw new IvoryException("getExternalIds is not supported for Feeds!");
-    }
-
-    @Override
-    public List<ExternalId> getMappedExternalIds(Entity entity, ExternalId extId) throws IvoryException {
-        throw new IvoryException("getExternalIds is not supported for Feeds!");
     }
 }

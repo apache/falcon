@@ -35,8 +35,6 @@ import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
-    private static final Tag[] COORD_TAGS = { Tag.DEFAULT, Tag.LATE1 };
-
     @Override
     public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
         if (!EntityUtil.parseDateUTC(process.getValidity().getStart())
@@ -59,69 +57,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     @Override
-    public List<ExternalId> getExternalIds(Process process, Date start, Date end) throws IvoryException {
-        return getExternalIds(process, start, end, COORD_TAGS);
-    }
-
-    @Override
-    public List<ExternalId> getExternalIdsForRerun(Process entity, Date start, Date end) throws IvoryException {
-        return getExternalIds(entity, start, end, Tag.DEFAULT);
-    }
-
-    private List<ExternalId> getExternalIds(Process process, Date start, Date end, Tag... tags) throws IvoryException {
-        TimeZone timezone = EntityUtil.getTimeZone(process.getValidity().getTimezone());
-
-        Calendar instance = Calendar.getInstance(timezone);
-        instance.setTime(getNextStartTime(process, process.getCluster().getName(), start));
-        Date procEnd = EntityUtil.parseDateUTC(process.getValidity().getEnd());
-
-        Frequency freq = Frequency.valueOf(process.getFrequency());
-        List<ExternalId> extIds = new ArrayList<ExternalId>();
-        while (instance.getTime().compareTo(end) <= 0 && instance.getTime().before(procEnd)) {
-            for (Tag tag : tags)
-                extIds.add(new ExternalId(process.getName(), tag, instance.getTime()));
-            instance.add(freq.getTimeUnit().getCalendarUnit(), process.getPeriodicity());
-        }
-        return extIds;
-    }
-
-    @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
                 Frequency.valueOf(process.getFrequency()), process.getPeriodicity(), process.getValidity().getTimezone(), now);
-    }
-
-    @Override
-    public int getConcurrency(Process process) {
-        return process.getConcurrency();
-    }
-
-    @Override
-    public Date getEndTime(Process process, String cluster) throws IvoryException {
-        return EntityUtil.parseDateUTC(process.getValidity().getEnd());
-    }
-
-    @Override
-    public void setStartDate(Process process, String cluster, Date startDate) {
-        process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
-    }
-
-    @Override
-    public void setConcurrency(Process process, int concurrency) {
-        process.setConcurrency(concurrency);
-    }
-
-    @Override
-    public void setEndTime(Process process, String cluster, Date endDate) {
-        process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
-    }
-
-    @Override
-    public List<ExternalId> getMappedExternalIds(Entity entity, ExternalId extId) throws IvoryException {
-        List<ExternalId> extIds = new ArrayList<ExternalId>();
-        if (extId.getTag().equals(Tag.DEFAULT)) {
-            extIds.add(new ExternalId(extId.getName(), Tag.LATE1, extId.getDate()));
-        }
-        return extIds;
     }
 }

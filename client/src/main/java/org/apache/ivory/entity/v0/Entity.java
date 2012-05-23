@@ -72,8 +72,9 @@ public abstract class Entity {
         if (!equals(entity))
             return false;
 
-        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
-                "utf-8"));
+        XStream xstream = new XStream(new Sun14ReflectionProvider(
+                new FieldDictionary(new ImmutableFieldKeySorter())),
+                new DomDriver("utf-8"));
         String thisStr = xstream.toXML(this);
         String entityStr = xstream.toXML(entity);
         return thisStr.equals(entityStr);
@@ -117,8 +118,8 @@ public abstract class Entity {
     public String getStagingPath() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return "ivory/workflows/" + getEntityType().name().toLowerCase() + "/" + getName() + "/" + dateFormat.format(new Date())
-                + "/";
+        return "ivory/workflows/" + getEntityType().name().toLowerCase() + "/" +
+                getName() + "/" + dateFormat.format(new Date()) + "/";
     }
 
     public String getWorkflowName() {
@@ -126,9 +127,11 @@ public abstract class Entity {
     }
 
     public String getWorkflowName(Tag tag) {
-        if (tag != null)
-            return PREFIX + getEntityType().name().toUpperCase() + "_" + tag.name() + "_" + getName();
-        return PREFIX + getEntityType().name().toUpperCase() + "_" + getName();
+        String tagName = "";
+        if (tag != null) {
+            tagName = tag.name() + "_";
+        }
+        return PREFIX + getEntityType().name().toUpperCase() + "_" + tagName + getName();
     }
 
     public Tag getWorkflowNameTag(String workflowName) {

@@ -21,10 +21,10 @@ package org.apache.ivory.workflow.engine;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.resource.ProcessInstancesResult;
 
 /**
  * Workflow engine should minimally support the
@@ -50,17 +50,17 @@ public interface WorkflowEngine {
 
     boolean isRunning(Entity entity) throws IvoryException;
     
-    Map<String, Set<String>> getRunningInstances(Entity entity) throws IvoryException;
+    ProcessInstancesResult getRunningInstances(Entity entity) throws IvoryException;
     
-    Map<String, Map<String, String>> killInstances(Entity entity, Date start, Date end) throws IvoryException;
+    ProcessInstancesResult killInstances(Entity entity, Date start, Date end) throws IvoryException;
     
-    Map<String, Map<String, String>> reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
+    ProcessInstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
 
-    Map<String, Map<String, String>> suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
+    ProcessInstancesResult suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
 
-    Map<String, Map<String, String>> resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
+    ProcessInstancesResult resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
 
-    Map<String, Map<String, String>> getStatus(Entity entity, Date start, Date end) throws IvoryException;
+    ProcessInstancesResult getStatus(Entity entity, Date start, Date end) throws IvoryException;
 
 	void update(Entity oldEntity, Entity newEntity) throws IvoryException;
 

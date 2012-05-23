@@ -12,17 +12,28 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
 	public static enum WorkflowStatus {
-		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+		NOT_STARTED, WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
 	}
 
 	@XmlRootElement(name = "pinstance")
 	public static class ProcessInstance {
 		@XmlElement
 		public String instance;
+
 		@XmlElement
 		public WorkflowStatus status;
-		@XmlElement
+
+        @XmlElement
 		public String logFile;
+
+        @XmlElement
+        public String cluster;
+
+        @XmlElement
+        public String startTime;
+
+        @XmlElement
+        public String endTime;
 
 		@XmlElement
 		public InstanceAction[] actions;
@@ -30,7 +41,8 @@ public class ProcessInstancesResult extends APIResult {
 		public ProcessInstance() {
 		}
 
-		public ProcessInstance(String instance, WorkflowStatus status) {
+		public ProcessInstance(String cluster, String instance, WorkflowStatus status) {
+			this.cluster = cluster;
 			this.instance = instance;
 			this.status = status;
 		}
@@ -67,43 +79,12 @@ public class ProcessInstancesResult extends APIResult {
     }
 
     
-    public ProcessInstancesResult(String message, Map<String, String> instMap) {
-        this(message, instMap, null);
-    }
-    
-    public ProcessInstancesResult(String message, Map<String, String> instMap, String requestId) {
-        super(Status.SUCCEEDED, message, requestId);
-        if(instMap != null) {
-            instances = new ProcessInstance[instMap.size()];
-            List<String> sortedInstances = new ArrayList<String>(instMap.keySet());
-            Collections.sort(sortedInstances);
-            int index = 0;
-            for(String instance:sortedInstances) {
-                instances[index++] = new ProcessInstance(instance, WorkflowStatus.valueOf(instMap.get(instance)));
-            }
-        }
-    }
-
-    public ProcessInstancesResult(String message, Set<String> insts, WorkflowStatus status) {
-        super(Status.SUCCEEDED, message);
-        if(insts != null) {
-            instances = new ProcessInstance[insts.size()];
-            List<String> sortedInstances = new ArrayList<String>(insts);
-            Collections.sort(sortedInstances);
-            int index = 0;
-            for(String instance:sortedInstances) {
-                instances[index++] = new ProcessInstance(instance, status);
-            }
-        }
-    }
-
-    public ProcessInstancesResult(String message,
-    		ProcessInstance[] processInstanceExs) {
-    	this(Status.SUCCEEDED, message, processInstanceExs);
+    public ProcessInstancesResult(String message, ProcessInstance[] processInstances) {
+    	this(Status.SUCCEEDED, message, processInstances);
     }
 
     public ProcessInstancesResult(Status status, String message,
-    		ProcessInstance[] processInstanceExs) {
+                                  ProcessInstance[] processInstanceExs) {
     	super(status, message);
     	this.instances = processInstanceExs;
     }

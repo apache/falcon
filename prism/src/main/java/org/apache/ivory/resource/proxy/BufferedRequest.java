@@ -21,10 +21,19 @@ public class BufferedRequest implements HttpServletRequest {
 
     private final ServletInputStream stream;
 
+    private final ThreadLocal<ByteArrayOutputStream> streams =
+            new ThreadLocal<ByteArrayOutputStream>() {
+                @Override
+                protected ByteArrayOutputStream initialValue() {
+                    return new ByteArrayOutputStream(2 * 1024);
+                }
+            };
+
     public BufferedRequest(HttpServletRequest request) throws IvoryWebException {
         try {
             this.request = request;
-            ByteArrayOutputStream copyBuffer = new ByteArrayOutputStream(10 * 1024 * 1024);
+            ByteArrayOutputStream copyBuffer = streams.get();
+            copyBuffer.reset();
             IOUtils.copyBytes(request.getInputStream(), copyBuffer, 4096, false);
             final ByteArrayInputStream buffer =
                     new ByteArrayInputStream(copyBuffer.toByteArray(), 0, copyBuffer.size());
