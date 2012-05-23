@@ -9,12 +9,12 @@ import java.util.TimeZone;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.common.TimeUnit;
+import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.common.DateValidator;
-import org.apache.ivory.entity.parser.Frequency;
 
 public class EntityUtil {
 	

@@ -15,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.util;
+package org.apache.ivory.rerun.policy;
 
-import java.io.ByteArrayInputStream;
-import java.util.*;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
+public class RerunPolicyFactory {
 
-public final class OozieUtils {
+	private RerunPolicyFactory() {
+		//factory
+	}
 
-    public static Properties toProperties(String properties) {
-        Configuration conf = new Configuration(false);
-        conf.addResource(new ByteArrayInputStream(properties.getBytes()));
-        Properties jobprops = new Properties();
-        for (Map.Entry<String, String> entry : conf) {
-            jobprops.put(entry.getKey(), entry.getValue());
-        }
-        return jobprops;
-    }
+	public static AbstractRerunPolicy getRetryPolicy(String policy) {
+		if (policy.equals("backoff")) {
+			return new PeriodicPolicy();
+		} else if (policy.equals("exp-backoff")) {
+			return new BackoffPolicy();
+		} else {
+			throw new IllegalArgumentException("Unhandled Retry policy: "
+					+ policy);
+		}
+	}
 }

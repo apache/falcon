@@ -52,8 +52,8 @@ public class IvoryTopicProducerTest {
 				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
 				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
 				"-" + ARG.runId.getArgName(), "1",
-				"-" + ARG.nominalTime.getArgName(), "2011-01-01",
-				"-" + ARG.timeStamp.getArgName(), "2012-01-01",
+				"-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
+				"-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
 				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
 				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
 				"-" + ARG.entityType.getArgName(), ("process"),
@@ -133,9 +133,9 @@ public class IvoryTopicProducerTest {
 				"workflow-01-00");
 		Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
 		Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
-				"2011-01-01");
+				"2011-01-01T01:00Z");
 		Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
-				"2012-01-01");
+				"2012-01-01T01:00Z");
 		Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
 	}
 }

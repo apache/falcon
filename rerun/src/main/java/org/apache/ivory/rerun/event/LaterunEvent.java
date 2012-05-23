@@ -15,24 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.util;
+package org.apache.ivory.rerun.event;
 
-import java.io.ByteArrayInputStream;
-import java.util.*;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
+public class LaterunEvent extends RerunEvent{
 
-public final class OozieUtils {
+	public LaterunEvent(WorkflowEngine wfEngine, String clusterName,
+			String wfId, long msgInsertTime, long delay, String processName,
+			String processInstance, int runId) {
+		super(wfEngine, clusterName, wfId, msgInsertTime, delay, processName,
+				processInstance, runId);
+		// TODO Auto-generated constructor stub
+	}
 
-    public static Properties toProperties(String properties) {
-        Configuration conf = new Configuration(false);
-        conf.addResource(new ByteArrayInputStream(properties.getBytes()));
-        Properties jobprops = new Properties();
-        for (Map.Entry<String, String> entry : conf) {
-            jobprops.put(entry.getKey(), entry.getValue());
-        }
-        return jobprops;
-    }
 }

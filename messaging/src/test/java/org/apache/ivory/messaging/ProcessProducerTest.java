@@ -38,9 +38,9 @@ public class ProcessProducerTest {
 
 	private String [] args;
 	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
-	//private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
+//	private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
-	private static final String TOPIC_NAME = "Ivory.process1.click-logs";
+	private static final String TOPIC_NAME = "IVORY.PROCESS";
 	private BrokerService broker;
 	
 	private volatile AssertionError error;
@@ -53,8 +53,8 @@ public class ProcessProducerTest {
 				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
 				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
 				"-" + ARG.runId.getArgName(), "1",
-				"-" + ARG.nominalTime.getArgName(), "2011-01-01",
-				"-" + ARG.timeStamp.getArgName(), "2012-01-01",
+				"-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
+				"-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
 				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
 				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
 				"-" + ARG.entityType.getArgName(), ("process"),
@@ -64,10 +64,10 @@ public class ProcessProducerTest {
 				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
 				"-" + ARG.brokerTTL.getArgName(), "10" };
 		broker = new BrokerService();
-		broker.setUseJmx(true);
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
 		broker.setBrokerName("localhost");
+		broker.setSchedulerSupport(true);
 		broker.start();
 	}
 
@@ -141,9 +141,9 @@ public class ProcessProducerTest {
 				"workflow-01-00");
 		Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
 		Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
-				"2011-01-01");
+				"2011-01-01T01:00Z");
 		Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
-				"2012-01-01");
+				"2012-01-01T01:00Z");
 		Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
 	}
 }

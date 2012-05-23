@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -47,8 +48,16 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
 
     private final ConfigurationStore store = ConfigurationStore.get();
 
-    private static final String SYS_LIB_PATH =
-            "oozie.service.WorkflowAppService.system.libpath";
+    private static final String SYS_LIB_PATH = "oozie.service.WorkflowAppService.system.libpath";
+
+    private static final PathFilter nonIvoryJarFilter = new PathFilter() {
+        @Override
+        public boolean accept(Path path) {
+            if(!path.getName().startsWith("ivory"))
+                return true;
+            return false;
+        }
+    };
 
     @Override
     public String getName() {
@@ -71,7 +80,7 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
             CustomOozieClient customClient = (CustomOozieClient) oozieClient;
             try {
                 String path = getSystemLibPath(customClient);
-                pushLibsToHDFS(path, cluster);
+                pushLibsToHDFS(path, cluster, nonIvoryJarFilter);
             } catch (Exception e) {
                 LOG.error("Unable to load shared libraries to " + cluster.getName(), e);
             }
@@ -86,7 +95,7 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
         return ExpressionHelper.substitute(allProps.getProperty(SYS_LIB_PATH), allProps);
     }
 
-    private void pushLibsToHDFS(String path, Cluster cluster) throws IOException {
+    public static void pushLibsToHDFS(String path, Cluster cluster, PathFilter pathFilter) throws IOException {
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         FileSystem fs = FileSystem.get(conf);
         String localPaths = StartupProperties.get().getProperty("system.lib.location");
@@ -97,43 +106,48 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
         }
         for (File localFile : new File(localPaths).listFiles()) {
             Path clusterFile = new Path(path, localFile.getName());
+            if (!pathFilter.accept(clusterFile))
+                continue;
+
             if (fs.exists(clusterFile)) {
                 FileStatus fstat = fs.getFileStatus(clusterFile);
-                if (fstat.getLen() == localFile.length() &&
-                        fstat.getModificationTime() == localFile.lastModified()) continue;
+                if (fstat.getLen() == localFile.length() && fstat.getModificationTime() == localFile.lastModified())
+                    continue;
             }
             fs.copyFromLocalFile(false, true, new Path(localFile.getAbsolutePath()), clusterFile);
-            fs.setTimes(clusterFile,  localFile.lastModified(), System.currentTimeMillis());
+            fs.setTimes(clusterFile, localFile.lastModified(), System.currentTimeMillis());
             LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
         }
     }
 
     @Override
     public void destroy() throws IvoryException {
-        //Do Nothing
+        // Do Nothing
     }
 
     @Override
     public void onAdd(Entity entity) throws IvoryException {
-        if (entity.getEntityType() != EntityType.CLUSTER) return;
+        if (entity.getEntityType() != EntityType.CLUSTER)
+            return;
         Cluster cluster = (Cluster) entity;
         addLibsTo(cluster);
     }
 
     @Override
     public void onRemove(Entity entity) throws IvoryException {
-        //Do Nothing
+        // Do Nothing
     }
 
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws IvoryException {
-        if (oldEntity.getEntityType() != EntityType.CLUSTER) return;
+        if (oldEntity.getEntityType() != EntityType.CLUSTER)
+            return;
         Cluster oldCluster = (Cluster) oldEntity;
         Cluster newCluster = (Cluster) newEntity;
-        if (!oldCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint().
-                equals(newCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint()) ||
-                !oldCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint().
-                        equals(newCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint())) {
+        if (!oldCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint()
+                .equals(newCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint())
+                || !oldCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint()
+                        .equals(newCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint())) {
             addLibsTo(newCluster);
         }
     }

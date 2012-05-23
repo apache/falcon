@@ -15,27 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.retry.policy;
-
-import javax.jms.JMSException;
+package org.apache.ivory.rerun.policy;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.retry.RetryEvent;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-public class RetryBackoffPolicy extends RetryPolicy {
+public class PeriodicPolicy extends AbstractRerunPolicy {
 
 	@Override
-	public RetryEvent getRetryEvent(String delayUnit, int delay,
-			WorkflowEngine workflowEngine, String clusterName, String wfId,
-			String processName, String ivoryDate, int runId, int attempts,
-			long msgReceivedTime) throws IvoryException, JMSException {
-
-		long endOfDelay = getEndOfDealy(delayUnit, delay);
-		return new RetryEvent(workflowEngine, clusterName, wfId,
-				msgReceivedTime, endOfDelay, processName, ivoryDate, runId,
-				attempts, 0);
-
+	public long getDelay(String delayUnit, int delay, int eventNumber) throws IvoryException {
+		return getDurationInMilliSec(delayUnit, delay)*1;
 	}
 
 }

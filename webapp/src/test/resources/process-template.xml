@@ -7,22 +7,21 @@
     <frequency>days</frequency>
     <periodicity>1</periodicity>
 	
-	<validity timezone="UTC" end="2013-03-20T00:00Z" start="2012-04-20T00:00Z" />
+	<validity timezone="UTC" end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
 	<inputs>
-		<input end-instance="today(0,40)" start-instance="today(0,20)"
-			feed="##f1##" name="inputData"/>
+		<input end-instance="today(0,0)" start-instance="today(0,0)"
+			feed="##f1##" name="input"/>
 	</inputs>
 	<outputs>
 		<output instance="now(0,0)" feed="##f2##"
-			name="outputData" />
+			name="output" />
 	</outputs>
 	<properties>
 	</properties>
-	<workflow engine="oozie" path="/examples/apps/aggregator" />
+	<workflow engine="oozie" path="/ivory/test/workflow" />
 	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
 
     <late-process policy="exp-backoff" delay="1" delayUnit="hours">
-        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+        <late-input feed="input" workflow-path="/ivory/test/workflow" />
     </late-process>
 </process>

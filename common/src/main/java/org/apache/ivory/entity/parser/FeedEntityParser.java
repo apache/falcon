@@ -288,10 +288,15 @@ public class FeedEntityParser extends EntityParser<Feed> {
 					&& feed.getPartitions().getPartition().size() != 0
 					&& cluster.getPartition() == null && cluster.getType().value() == "source" && numSourceClusters > 1)
 				throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
-			else if (feed.getPartitions() == null
-					&& cluster.getPartition() != null)
+			else if( cluster.getPartition() != null && numSourceClusters  == 1)
 				throw new ValidationException(
 						"Partition Expression not expected for the cluster:" + cluster.getName());
+			else if ((feed.getPartitions() == null
+					|| feed.getPartitions().getPartition().size() != 0)
+					&& cluster.getPartition() != null && cluster.getType().value() == "source" && numSourceClusters > 1)
+				throw new ValidationException(
+						"Feed Partitions not specified for feed: " + feed.getName());
+			
 		}
 
 	}

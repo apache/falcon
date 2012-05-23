@@ -15,26 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.retry;
+package org.apache.ivory.rerun.policy;
 
-import org.apache.ivory.retry.policy.RetryBackoffPolicy;
-import org.apache.ivory.retry.policy.RetryExpBackoffPolicy;
-import org.apache.ivory.retry.policy.RetryPolicy;
+import org.apache.ivory.IvoryException;
 
-public class RetryPolicyFactory {
+public class BackoffPolicy extends AbstractRerunPolicy {
 
-	private RetryPolicyFactory() {
-		//factory
+	@Override
+	public long getDelay(String delayUnit, int delay, int eventNumber)
+			throws IvoryException {
+		return (long) (getDurationInMilliSec(delayUnit, delay) * Math.pow(2,
+				eventNumber));
 	}
 
-	public static RetryPolicy getRetryPolicy(String policy) {
-		if (policy.equals("backoff")) {
-			return new RetryBackoffPolicy();
-		} else if (policy.equals("exp-backoff")) {
-			return new RetryExpBackoffPolicy();
-		} else {
-			throw new IllegalArgumentException("Unhandled Retry policy: "
-					+ policy);
-		}
-	}
 }

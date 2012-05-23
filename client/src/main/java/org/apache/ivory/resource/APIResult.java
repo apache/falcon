@@ -82,6 +82,10 @@ public class APIResult {
 	public String getRequestId() {
 	    return requestId;
 	}
+
+	public void setRequestId(String reqId) {
+	    this.requestId = reqId;
+	}
 	
 	@Override
 	public String toString() {
