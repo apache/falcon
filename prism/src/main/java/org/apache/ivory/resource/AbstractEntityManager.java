@@ -18,6 +18,17 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -44,12 +55,6 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
 
 public abstract class AbstractEntityManager implements IvoryService {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
@@ -107,8 +112,8 @@ public abstract class AbstractEntityManager implements IvoryService {
         int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             buffer.append(colos[index]).append('/')
-                    .append(results[index].getMessage())
-                    .append(',').append(", REQ. ID is ")
+                    .append(results[index].getMessage()).append('\n');
+            requestIds.append(colos[index]).append('/')
                     .append(results[index].getRequestId()).append('\n');
             statusCount += results[index].getStatus().ordinal();
         }
@@ -123,11 +128,14 @@ public abstract class AbstractEntityManager implements IvoryService {
         if (results == null || results.length == 0) return null;
 
         StringBuilder message = new StringBuilder("CONSOLIDATED");
+        StringBuilder requestIds = new StringBuilder();
         List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
         int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             APIResult result = results[index];
             message.append('\n').append(colos[index]).append(": ").append(result.getMessage());
+            requestIds.append(colos[index]).append('/')
+                    .append(results[index].getRequestId()).append('\n');
             if (!(result instanceof ProcessInstancesResult)) continue;
             for (ProcessInstance instance: ((ProcessInstancesResult) result).getInstances()) {
                 ProcessInstance instClone = new ProcessInstance(colos[index] +
@@ -141,8 +149,10 @@ public abstract class AbstractEntityManager implements IvoryService {
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED :
                 ((statusCount == results.length * 2) ? APIResult.Status.FAILED :
                         APIResult.Status.PARTIAL);
-        return new ProcessInstancesResult(status, message.toString(),
+        ProcessInstancesResult result = new ProcessInstancesResult(status, message.toString(),
                 instances.toArray(arrInstances));
+        result.setRequestId(requestIds.toString());
+        return result;
     }
 
     protected String[] getAllColos() {
