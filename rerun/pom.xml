@@ -28,7 +28,7 @@
 	</parent>
 	<artifactId>ivory-rerun</artifactId>
 	<description>Ivory Rerun Handler</description>
-	<name>Ivory Retry</name>
+	<name>Ivory Rerun</name>
 	<packaging>jar</packaging>
 	<repositories>
 		<repository>
