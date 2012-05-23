@@ -161,7 +161,7 @@
                 <configuration>
                     <webResources>
                         <resource>
-                            <directory>src/main/webapp/WEB-INF/integrated</directory>
+                            <directory>src/main/webapp/WEB-INF/embedded</directory>
                             <targetPath>WEB-INF</targetPath>
                         </resource>
                     </webResources>
@@ -172,7 +172,7 @@
 
     <profiles>
         <profile>
-            <id>standalone</id>
+            <id>distributed</id>
             <build>
                 <plugins>
                     <plugin>
@@ -183,7 +183,7 @@
                             <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
                             <webResources>
                                 <resource>
-                                    <directory>src/main/webapp/WEB-INF/standalone</directory>
+                                    <directory>src/main/webapp/WEB-INF/distributed</directory>
                                     <targetPath>WEB-INF</targetPath>
                                 </resource>
                             </webResources>

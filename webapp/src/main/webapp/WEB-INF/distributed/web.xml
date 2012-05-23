@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Standalone Server</display-name>
-    <description>Ivory Standalone Server</description>
+    <display-name>Ivory Distributed Server</display-name>
+    <description>Ivory Distributed Server</description>
 
     <filter>
         <filter-name>auth</filter-name>

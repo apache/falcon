@@ -21,8 +21,8 @@
 
 <web-app>
 
-    <display-name>Ivory Integrated Server</display-name>
-    <description>Ivory Integrated Server</description>
+    <display-name>Ivory Embedded Server</display-name>
+    <description>Ivory Embedded Server</description>
 
   <filter>
     <filter-name>auth</filter-name>

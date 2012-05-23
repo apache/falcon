@@ -73,7 +73,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             @Dimension("colo") @QueryParam("colo") final String colo) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        if (!integratedMode) {
+        if (!embeddedMode) {
             super.submit(bufferedRequest, type, currentColo);
         }
         return new EntityProxy() {
@@ -106,7 +106,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        if (!integratedMode) {
+        if (!embeddedMode) {
             super.delete(request, type, entity, currentColo);
         }
         return new EntityProxy() {
@@ -129,7 +129,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        if (!integratedMode) {
+        if (!embeddedMode) {
             super.update(request, type, entityName, currentColo);
         }
         return new EntityProxy() {
@@ -214,7 +214,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                                        @Dimension("entityType") @PathParam("type") String type,
                                        @Dimension("colo") @QueryParam("colo") String colo) {
          try {
-             if (!integratedMode) {
+             if (!embeddedMode) {
                  Entity entity = submitInternal(request, type);
                  return schedule(request, type, entity.getName(), colo);
              } else {

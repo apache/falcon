@@ -10,7 +10,7 @@ public class ChannelFactory {
 
     private static Map<String, Channel> channels = new HashMap<String, Channel>();
 
-    private static final String INTEGRATED = "integrated";
+    private static final String EMBEDDED = "embedded";
     private static final String MODE = "deploy.mode";
 
     public synchronized static Channel get(String serviceName, String colo)
@@ -27,7 +27,7 @@ public class ChannelFactory {
 
     private static Channel getChannel(String mode) {
         Channel channel;
-        if (mode.equals(INTEGRATED)) {
+        if (mode.equals(EMBEDDED)) {
             channel = new IPCChannel();
         } else {
             channel = new HTTPChannel();

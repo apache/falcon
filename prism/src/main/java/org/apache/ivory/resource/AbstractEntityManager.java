@@ -61,12 +61,12 @@ public abstract class AbstractEntityManager implements IvoryService {
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     protected static final String DEFAULT_COLO = "default";
-    protected static final String INTEGRATED = "integrated";
+    protected static final String EMBEDDED = "embedded";
     protected static final String DEPLOY_MODE = "deploy.mode";
     private static final String[] DEFAULT_ALL_COLOS = new String[] {DEFAULT_COLO};
 
     protected final String currentColo;
-    protected final boolean integratedMode;
+    protected final boolean embeddedMode;
 
     private WorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
@@ -74,15 +74,15 @@ public abstract class AbstractEntityManager implements IvoryService {
     public AbstractEntityManager() {
         try {
             workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
-            integratedMode = DeploymentProperties.get().
-                    getProperty(DEPLOY_MODE, INTEGRATED).equals(INTEGRATED);
-            if (integratedMode) {
+            embeddedMode = DeploymentProperties.get().
+                    getProperty(DEPLOY_MODE, EMBEDDED).equals(EMBEDDED);
+            if (embeddedMode) {
                 currentColo = DEFAULT_COLO;
             } else {
                 currentColo = StartupProperties.get().
                     getProperty("current.colo", DEFAULT_COLO);
             }
-            LOG.info("Running in integrated mode? " + integratedMode);
+            LOG.info("Running in embedded mode? " + embeddedMode);
             LOG.info("Current colo: " + currentColo);
         } catch (IvoryException e) {
             throw new IvoryRuntimException(e);
@@ -156,7 +156,7 @@ public abstract class AbstractEntityManager implements IvoryService {
     }
 
     protected String[] getAllColos() {
-        if (integratedMode) {
+        if (embeddedMode) {
             return DEFAULT_ALL_COLOS;
         } else {
             return RuntimeProperties.get().
