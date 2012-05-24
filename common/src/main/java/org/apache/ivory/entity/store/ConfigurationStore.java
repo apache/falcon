@@ -23,7 +23,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBException;
@@ -35,15 +40,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStoreAction.Action;
 import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.group.FeedGroupMap;
 import org.apache.ivory.service.ConfigurationChangeListener;
+import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.transaction.TransactionManager;
+import org.apache.ivory.util.ReflectionUtils;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
-public class ConfigurationStore {
+public class ConfigurationStore implements IvoryService {
 
     private static final Logger LOG = Logger.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
@@ -91,14 +96,13 @@ public class ConfigurationStore {
         storePath = new Path(uri);
         try {
             fs = FileSystem.get(storePath.toUri(), new Configuration());
-
-            bootstrap();
         } catch (Exception e) {
             throw new RuntimeException("Unable to bring up config store", e);
         }
     }
 
-    private void bootstrap() throws IvoryException {
+    @Override
+    public void init() throws IvoryException {
         try {
             for (EntityType type : EntityType.values()) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
@@ -116,20 +120,15 @@ public class ConfigurationStore {
         } catch (IOException e) {
             throw new IvoryException("Unable to restore configurations", e);
         }
-        EntityGraph graph = EntityGraph.get();
-        FeedGroupMap feedGroupMap = FeedGroupMap.get();
-        for (Entity cluster : dictionary.get(EntityType.CLUSTER).values()) {
-            graph.onAdd(cluster);
+        
+        String listenerClassNames = StartupProperties.get().
+                getProperty("configstore.listeners", "org.apache.ivory.entity.v0.EntityGraph");
+        for(String listenerClassName:listenerClassNames.split(",")) {
+            listenerClassName = listenerClassName.trim();
+            if (listenerClassName.isEmpty()) continue;
+            ConfigurationChangeListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+            registerListener(listener);
         }
-        for (Entity feed : dictionary.get(EntityType.FEED).values()) {
-            graph.onAdd(feed);
-            feedGroupMap.onAdd(feed);
-        }
-        for (Entity process : dictionary.get(EntityType.PROCESS).values()) {
-            graph.onAdd(process);
-        }      
-        registerListener(graph);
-        registerListener(feedGroupMap);
     }
 
     public void registerListener(ConfigurationChangeListener listener) {
@@ -387,4 +386,12 @@ public class ConfigurationStore {
     public void cleanupUpdateInit() {
         updatesInProgress.set(null);
     }
+
+    @Override
+    public String getName() {
+        return this.getClass().getName();
+    }
+
+    @Override
+    public void destroy() throws IvoryException { }
 }

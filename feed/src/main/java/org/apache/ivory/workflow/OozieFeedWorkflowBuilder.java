@@ -29,13 +29,10 @@ import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.Frequency;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.util.OozieUtils;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
@@ -44,12 +41,14 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
         List<Cluster> clusters = new ArrayList<Cluster>();
         List<Path> paths = new ArrayList<Path>();
-        for (org.apache.ivory.entity.v0.feed.Cluster feedCluster : feed.getClusters().getCluster()) {
+        
+        for (String clusterName: getClustersDefined(feed)) {
+            org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(clusterName);
             if (!EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()).before(
                     EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd())))
                 // start time >= end time
                 continue;
-            
+
             Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
             Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), feed.getStagingPath());
 

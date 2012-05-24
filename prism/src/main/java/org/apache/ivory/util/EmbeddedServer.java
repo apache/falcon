@@ -18,16 +18,12 @@
 
 package org.apache.ivory.util;
 
-import org.apache.log4j.Logger;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 public class EmbeddedServer {
-
-  private static final Logger LOG = Logger.getLogger(EmbeddedServer.class);
-
   private Server server = new Server();
   private Connector connector = new SocketConnector();
 

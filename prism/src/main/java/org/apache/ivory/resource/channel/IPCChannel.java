@@ -1,14 +1,13 @@
 package org.apache.ivory.resource.channel;
 
+import java.lang.reflect.Method;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.service.Services;
 import org.apache.log4j.Logger;
-
-import java.lang.reflect.Method;
-import java.util.Properties;
 
 public class IPCChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(IPCChannel.class);

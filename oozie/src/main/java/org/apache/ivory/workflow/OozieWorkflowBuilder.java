@@ -42,6 +42,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 
     protected static final ConfigurationStore configStore = ConfigurationStore.get();
 
+    
     protected Map<String, Object> createAppProperties(List<Cluster> clusters,
                                                       List<Path> paths) throws IvoryException {
 

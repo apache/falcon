@@ -24,29 +24,23 @@ import javax.xml.bind.JAXBException;
 import junit.framework.Assert;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
-import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class FeedGroupMapTest {
-	private ConfigurationStore store;
+public class FeedGroupMapTest extends AbstractTestBase{
+	private ConfigurationStore store = ConfigurationStore.get();
 	private static Cluster cluster;
 
-	@BeforeMethod
-	@AfterMethod
-	public void cleanupStore() throws Exception {
-		store = ConfigurationStore.get();
-		for (EntityType type : EntityType.values()) {
-			for (String name : store.getEntities(type)) {
-				store.remove(type, name);
-			}
-		}
+	@BeforeClass
+	public void setUp() throws Exception {
 		cluster = (Cluster) EntityType.CLUSTER
 				.getUnmarshaller()
 				.unmarshal(
@@ -54,6 +48,11 @@ public class FeedGroupMapTest {
 								.getResourceAsStream("/config/cluster/cluster-0.1.xml"));
 	}
 
+	@BeforeMethod
+	public void cleanup() throws Exception {
+	    cleanupStore();
+	}
+	
 	@Test
 	public void testOnAdd() throws IvoryException, JAXBException {
 		store.publish(EntityType.CLUSTER, cluster);

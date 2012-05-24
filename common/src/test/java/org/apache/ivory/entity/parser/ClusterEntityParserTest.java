@@ -77,12 +77,5 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
         marshaller.marshal(cluster, stringWriter);
         System.out.println(stringWriter.toString());
-
-    }
-
-    // TODO
-    @Test
-    public void applyValidations() {
-        // throw new RuntimeException("Test not implemented");
     }
 }

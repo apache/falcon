@@ -18,21 +18,20 @@
 
 package org.apache.ivory.workflow;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.Frequency;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.util.OozieUtils;
-
-import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
@@ -43,17 +42,16 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             // start time >= end time
             return null;
 
-        String clusterName = process.getCluster().getName();
-        Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), process.getStagingPath());
-
-        OozieProcessMapper mapper = new OozieProcessMapper(process);
-        mapper.map(cluster, bundlePath);
-
         List<Cluster> clusters = new ArrayList<Cluster>();
         List<Path> paths = new ArrayList<Path>();
-        clusters.add(cluster);
-        paths.add(bundlePath);
+        for(String clusterName:getClustersDefined(process)) {
+            Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
+            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), process.getStagingPath());
+            OozieProcessMapper mapper = new OozieProcessMapper(process);
+            mapper.map(cluster, bundlePath);
+            clusters.add(cluster);
+            paths.add(bundlePath);            
+        }
         return createAppProperties(clusters, paths);
     }
 

@@ -3,6 +3,7 @@ package org.apache.ivory.resource.proxy;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
@@ -65,7 +66,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).
                         invoke("getRunningInstances", processName, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     @GET
@@ -85,7 +86,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).invoke("getStatus",
                         processName, startStr, endStr, type, runId, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     @POST
@@ -106,7 +107,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).invoke("killProcessInstance",
                     bufferedRequest, processName, startStr, endStr, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     @POST
@@ -126,7 +127,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).invoke("suspendProcessInstance",
                     bufferedRequest, processName, startStr, endStr, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     @POST
@@ -147,7 +148,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).invoke("resumeProcessInstance",
                     bufferedRequest, processName, startStr, endStr, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     @POST
@@ -168,13 +169,13 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                 return getInstanceManager(colo).invoke("reRunInstance",
                     processName, startStr, endStr, bufferedRequest, colo);
             }
-        }.execute(colo);
+        }.execute(colo, processName);
     }
 
     private abstract class InstanceProxy {
 
-        public ProcessInstancesResult execute(String colo) {
-            String[] colos = getColosToApply(colo);
+        public ProcessInstancesResult execute(String coloExpr, String name) {
+            String[] colos = getColosFromExpression(coloExpr, EntityType.PROCESS.name(), name);
 
             ProcessInstancesResult[] results = new ProcessInstancesResult[colos.length];
             for (int index = 0; index < colos.length; index++) {
@@ -186,7 +187,7 @@ public class ProcessInstanceManagerProxy extends AbstractProcessInstanceManager 
                             new ProcessInstancesResult.ProcessInstance[0]);
                 }
             }
-            ProcessInstancesResult finalResult = consolidatedInstanceResult(results, colos);
+            ProcessInstancesResult finalResult = consolidateInstanceResult(results, colos);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
                 throw IvoryWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {

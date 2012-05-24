@@ -20,7 +20,6 @@ package org.apache.ivory.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
@@ -30,7 +29,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -42,11 +40,8 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
 
-public class SharedLibraryHostingService implements IvoryService, ConfigurationChangeListener {
-
+public class SharedLibraryHostingService implements ConfigurationChangeListener {
     private static Logger LOG = Logger.getLogger(SharedLibraryHostingService.class);
-
-    private final ConfigurationStore store = ConfigurationStore.get();
 
     private static final String SYS_LIB_PATH = "oozie.service.WorkflowAppService.system.libpath";
 
@@ -58,21 +53,6 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
             return false;
         }
     };
-
-    @Override
-    public String getName() {
-        return "workflow-libs";
-    }
-
-    @Override
-    public void init() throws IvoryException {
-        store.registerListener(this);
-        Collection<String> clusterNames = store.getEntities(EntityType.CLUSTER);
-        for (String clusterName : clusterNames) {
-            Cluster cluster = store.get(EntityType.CLUSTER, clusterName);
-            addLibsTo(cluster);
-        }
-    }
 
     private void addLibsTo(Cluster cluster) throws IvoryException {
         OozieClient oozieClient = OozieClientFactory.get(cluster);
@@ -118,11 +98,6 @@ public class SharedLibraryHostingService implements IvoryService, ConfigurationC
             fs.setTimes(clusterFile, localFile.lastModified(), System.currentTimeMillis());
             LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
         }
-    }
-
-    @Override
-    public void destroy() throws IvoryException {
-        // Do Nothing
     }
 
     @Override

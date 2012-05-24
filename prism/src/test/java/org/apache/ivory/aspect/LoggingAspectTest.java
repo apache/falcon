@@ -24,8 +24,8 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.AbstractEntityManager;
-import org.apache.ivory.resource.proxy.SchedulableEntityManagerProxy;
 import org.testng.annotations.Test;
 
 public class LoggingAspectTest {
@@ -44,13 +44,13 @@ public class LoggingAspectTest {
 	@Test(expectedExceptions=IvoryWebException.class)
 	public void testBeanLoading() {
 
-		String result = em.getStatus("cluster", "corp");
+		APIResult result = em.getStatus("type", "entity", "colo");
 	}
 
 	@Test
 	public void testExceptionBeanLoading() {
 		try {
-			em.getStatus("cluster123", "corp");
+			em.getStatus("type", "entity", "colo");
 			System.out.println();
 			
 		} catch (Exception e) {

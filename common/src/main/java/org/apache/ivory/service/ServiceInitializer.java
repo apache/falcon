@@ -30,8 +30,9 @@ public class ServiceInitializer {
 
     public void initialize() throws IvoryException {
         String serviceClassNames = StartupProperties.get().
-                getProperty("application.services", "org.apache.ivory.entity.v0.EntityGraph");
+                getProperty("application.services", "org.apache.ivory.entity.store.ConfigurationStore");
         for (String serviceClassName : serviceClassNames.split(",")) {
+            serviceClassName = serviceClassName.trim();
             if (serviceClassName.isEmpty()) continue;
             IvoryService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
             services.register(service);

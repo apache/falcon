@@ -19,13 +19,14 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("status/{type}/{entity}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "status")
     @Override
-    public String getStatus(@Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity)
+    public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
+                            @Dimension("entityName") @PathParam("entity") String entity,
+                            @Dimension("colo") @QueryParam("colo") final String colo)
             throws IvoryWebException {
-        return super.getStatus(type, entity);
+        return super.getStatus(type, entity, colo);
     }
 
     @GET

@@ -73,8 +73,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
         Entity entityObj = getEntityObject(entity, type);
         if (getWorkflowEngine().isActive(entityObj))
             throw new EntityAlreadyExistsException(entity + "(" + type + ") is already scheduled with " + "workflow engine");
-        getWorkflowEngine().schedule(entityObj);
-        
+        getWorkflowEngine().schedule(entityObj);       
     }
     
     /**

@@ -18,6 +18,8 @@
 
 package org.apache.ivory.util;
 
+import java.lang.reflect.Method;
+
 import org.apache.ivory.IvoryException;
 
 public final class ReflectionUtils {
@@ -34,14 +36,15 @@ public final class ReflectionUtils {
     @SuppressWarnings("unchecked")
     public static <T> T getInstanceByClassName(String clazzName) throws IvoryException {
         try {
-            Class<T> clazz = (Class<T>)
-                    ReflectionUtils.class.getClassLoader().loadClass(clazzName);
-            return clazz.newInstance();
+            Class<T> clazz = (Class<T>) ReflectionUtils.class.getClassLoader().loadClass(clazzName);
+            try {
+                return clazz.newInstance();
+            } catch (IllegalAccessException e) {
+                Method method = clazz.getMethod("get");
+                return (T) method.invoke(null);
+            }
         } catch (Exception e) {
-            throw new IvoryException("Unable to get instance for " +
-                    clazzName, e);
+            throw new IvoryException("Unable to get instance for " + clazzName, e);
         }
     }
-
-
 }

@@ -18,6 +18,12 @@
 
 package org.apache.ivory.entity.v0;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -25,17 +31,9 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
-import org.apache.ivory.service.IvoryService;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-public class EntityGraph implements
-        ConfigurationChangeListener, IvoryService {
+public class EntityGraph implements ConfigurationChangeListener {
 
     private static Logger LOG = Logger.getLogger(EntityGraph.class);
 
@@ -44,6 +42,8 @@ public class EntityGraph implements
     private Map<Node, Set<Node>> graph =
             new ConcurrentHashMap<Node, Set<Node>>();
 
+    private EntityGraph() { }
+    
     public static EntityGraph get() {
         return instance;
     }
@@ -169,19 +169,6 @@ public class EntityGraph implements
             clusterEdges.add(feedNode);
         }
         return nodeEdges;
-    }
-
-    @Override
-    public String getName() {
-        return "graph";
-    }
-
-    @Override
-    public void init() throws IvoryException {
-    }
-
-    @Override
-    public void destroy() throws IvoryException {
     }
 
     private static class Node {

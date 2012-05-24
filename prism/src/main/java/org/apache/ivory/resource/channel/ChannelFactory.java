@@ -14,8 +14,7 @@ public class ChannelFactory {
     private static final String MODE = "deploy.mode";
 
     public synchronized static Channel get(String serviceName, String colo)
-            throws IvoryException {
-
+            throws IvoryException {     
         Channel channel;
         if ((channel = channels.get(colo + "/" + serviceName)) == null) {
             channel = getChannel(DeploymentProperties.get().getProperty(MODE));

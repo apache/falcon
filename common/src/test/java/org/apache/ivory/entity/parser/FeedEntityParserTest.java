@@ -56,13 +56,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		ConfigurationStore store = ConfigurationStore.get();
-		for (EntityType type : EntityType.values()) {
-			for (String name : store.getEntities(type)) {
-				store.remove(type, name);
-			}
-		}
-
+	    cleanupStore();
+	    ConfigurationStore store = ConfigurationStore.get();
+	    
 		Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
 		Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
 				.getResourceAsStream(CLUSTER_XML));
@@ -359,6 +355,5 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		} catch (IvoryException e) {
 
 		}
-
 	}
 }

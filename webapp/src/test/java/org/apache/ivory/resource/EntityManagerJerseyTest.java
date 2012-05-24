@@ -17,8 +17,6 @@
  */
 package org.apache.ivory.resource;
 
-import static org.testng.AssertJUnit.assertNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,7 +116,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         overlay.put("f2", feed2);
         response = submitAndSchedule(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         checkIfBadRequest(response);
-        assertNull(ConfigurationStore.get().get(EntityType.PROCESS, processName));
+        Assert.assertNull(ConfigurationStore.get().get(EntityType.PROCESS, processName));
     }
     
     @Test
@@ -132,7 +130,6 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
 
         String feed1 = "f1" + System.currentTimeMillis();
-        String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed1);
         overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -141,10 +138,11 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         response = this.service
                 .path("api/entities/status/feed/" + feed1)
                 .header("Remote-User", "testuser")
-                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
-        String status = response.getEntity(String.class);
-        Assert.assertEquals(status, "SUBMITTED");
+        APIResult result = (APIResult)unmarshaller.
+                unmarshal(new StringReader(response.getEntity(String.class)));
+        Assert.assertTrue(result.getMessage().contains("SUBMITTED"));
         
     }
     @Test
@@ -341,7 +339,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        List<Path> validInstances = createTestData();
+        createTestData();
         ClientResponse clientRepsonse = this.service
         		.path("api/entities/schedule/feed/" + feed1)
                 .header("Remote-User", "guest")

@@ -18,27 +18,38 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.ReflectionUtils;
 
 public abstract class WorkflowBuilder<T extends Entity> {
 
     public static final String PROPS = "PROPS";
     public static final String CLUSTERS = "CLUSTERS";
-    
-    public static WorkflowBuilder getBuilder(String engine, Entity entity)
-            throws IvoryException {
-        String classKey = engine + "." + entity.getEntityType().name().toLowerCase() +
-                ".workflow.builder";
+
+    public static WorkflowBuilder getBuilder(String engine, Entity entity) throws IvoryException {
+        String classKey = engine + "." + entity.getEntityType().name().toLowerCase() + ".workflow.builder";
         return ReflectionUtils.getInstance(classKey);
     }
 
-    public abstract Map<String, Object> newWorkflowSchedule(T entity)
-            throws IvoryException;
+    public abstract Map<String, Object> newWorkflowSchedule(T entity) throws IvoryException;
+
+    public String[] getClustersDefined(T entity) {
+        String[] entityClusters = entity.getClustersDefined();
+        if (DeploymentUtil.isEmbeddedMode())
+            return entityClusters;
+
+        Set<String> myClusters = DeploymentUtil.getCurrentClusters();
+        Set<String> applicableClusters = new HashSet<String>();
+        for (String cluster : entityClusters)
+            if (myClusters.contains(cluster))
+                applicableClusters.add(cluster);
+        return applicableClusters.toArray(new String[] {});
+
+    }
 }
