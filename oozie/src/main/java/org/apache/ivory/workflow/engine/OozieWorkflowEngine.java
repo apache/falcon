@@ -663,10 +663,21 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
         // Change end time of coords and schedule new bundle
-        suspendEntity(cluster, bundle.getId());
+        Job.Status bundleStatus = bundle.getStatus();
+        if (bundleStatus != Job.Status.SUSPENDED &&
+                bundleStatus != Job.Status.SUSPENDEDWITHERROR &&
+                bundleStatus != Job.Status.PREPSUSPENDED) {
+            suspendEntity(cluster, bundle.getId());
+        }
+
         Date endTime = getNextMin(getNextMin(now()));
         updateCoords(cluster, bundle.getId(), EntityUtil.getConcurrency(oldEntity), endTime);
-        resumeEntity(cluster, bundle.getId());
+
+        if (bundleStatus != Job.Status.SUSPENDED &&
+                bundleStatus != Job.Status.SUSPENDEDWITHERROR &&
+                bundleStatus != Job.Status.PREPSUSPENDED) {
+            resumeEntity(cluster, bundle.getId());
+        }
 
         // schedule new entity
         Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);

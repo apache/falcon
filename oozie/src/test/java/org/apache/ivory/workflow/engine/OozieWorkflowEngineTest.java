@@ -73,23 +73,6 @@ public class OozieWorkflowEngineTest extends OozieWorkflowEngine {
         Assert.assertTrue(finalJobs.contains(good2));
     }
 
-    @Test (enabled =  false)
-    public void getParentId() throws Exception {
-        OozieClient client = new OozieClient("http://oozie.red.ua2.inmobi.com:11000/oozie");
-        List<WorkflowJob> jobs = client.getJobsInfo("status=" + Job.Status.RUNNING, 1, 1000);
-        for (WorkflowJob job : jobs) {
-            WorkflowJob wf = client.getJobInfo(job.getId());
-            if (StringUtils.isEmpty(wf.getParentId()))
-                continue;
-            if (!wf.getAppName().equals("IVORY_PROCESS_DEFAULT_download-summary")) continue;
-            CoordinatorAction action = client.getCoordActionInfo(wf.getParentId());
-            System.out.println(action.getJobId());
-            System.out.println(action.getMissingDependencies());
-            System.out.println(action.getRunConf());
-            //System.out.println(action.getCreatedConf());
-        }
-    }
-
     private class MockCoordJob implements CoordinatorJob {
 
         private final Date start;
