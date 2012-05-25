@@ -20,7 +20,6 @@ package org.apache.ivory.transaction;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.util.GenericAlert;
 import org.apache.log4j.Logger;
-import org.apache.log4j.NDC;
 
 public class TransactionManager {
     private static final Logger LOG = Logger.getLogger(TransactionManager.class);
@@ -34,7 +33,6 @@ public class TransactionManager {
 
     public static void startTransaction() throws IvoryException {
         trans.set(new AtomicActions());
-        NDC.push(getTransactionId());
         trans.get().begin();
     }
 
@@ -48,17 +46,13 @@ public class TransactionManager {
     }
 
     public static void rollback() {
+        if (trans.get().isFinalized())
+            throw new IllegalStateException("Invalid transaction " + getTransactionId());
         try {
-            if (trans.get().isFinalized())
-                throw new IllegalStateException("Invalid transaction " + getTransactionId());
-            try {
-                trans.get().rollback();
-            } catch (Throwable e) {
-                LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
-                GenericAlert.alertRollbackFailure(getTransactionId());
-            }
-        } finally {
-            NDC.pop();
+            trans.get().rollback();
+        } catch (Throwable e) {
+            LOG.error("Transaction " + getTransactionId() + " rollback failed!", e);
+            GenericAlert.alertRollbackFailure(getTransactionId());
         }
     }
 
@@ -66,6 +60,5 @@ public class TransactionManager {
         if (trans.get().isFinalized())
             throw new IllegalStateException("Invalid transaction " + getTransactionId());
         trans.get().commit();
-        NDC.pop();
     }
 }

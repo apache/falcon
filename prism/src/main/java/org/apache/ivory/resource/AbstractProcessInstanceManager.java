@@ -18,6 +18,13 @@
 
 package org.apache.ivory.resource;
 
+import java.util.Date;
+import java.util.Properties;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
@@ -38,12 +45,6 @@ import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.util.Date;
-import java.util.Properties;
 
 public abstract class AbstractProcessInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractProcessInstanceManager.class);
@@ -126,9 +127,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             return result;
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -152,9 +152,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             return result;
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -178,9 +177,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             return result;
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -213,9 +211,8 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             return result;
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
     

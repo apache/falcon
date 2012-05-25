@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.UUID;
 
 public class BasicAuthFilter implements Filter {
 
@@ -61,7 +62,8 @@ public class BasicAuthFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String user;
-
+        String requestId = UUID.randomUUID().toString();
+        
         if (!secure) {
             user = GUEST;
         } else {
@@ -75,11 +77,13 @@ public class BasicAuthFilter implements Filter {
             CurrentUser.authenticate(user);
             try {
                 NDC.push(user + ":" + httpRequest.getPathInfo());
+                NDC.push(requestId);
                 LOG.info("Request from user: " + user + ", path=" +
                         httpRequest.getPathInfo() + ", query=" +
                         httpRequest.getQueryString());
                 chain.doFilter(request, response);
             } finally {
+                NDC.pop();
                 NDC.pop();
             }
         }

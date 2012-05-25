@@ -25,7 +25,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.entity.store.EntityAlreadyExistsException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.UnschedulableEntityException;
@@ -48,44 +47,38 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult schedule(@Context HttpServletRequest request,
-                              @Dimension("entityType") @PathParam("type") String type,
-                              @Dimension("entityName") @PathParam("entity") String entity,
-                              @Dimension("colo") @PathParam("colo") String colo) {
+    public APIResult schedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
             TransactionManager.startTransaction();
             audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity +
-                    "(" + type + ") scheduled successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
     private void scheduleInternal(String type, String entity) throws IvoryException {
         checkSchedulableEntity(type);
         Entity entityObj = getEntityObject(entity, type);
-        if (getWorkflowEngine().isActive(entityObj))
-            throw new EntityAlreadyExistsException(entity + "(" + type + ") is already scheduled with " + "workflow engine");
-        getWorkflowEngine().schedule(entityObj);       
+        if (!getWorkflowEngine().isActive(entityObj))
+            getWorkflowEngine().schedule(entityObj);
     }
-    
+
     /**
      * Submits a new entity and schedules it immediately
      * 
      * @param type
      * @return
      */
-    public APIResult submitAndSchedule(@Context HttpServletRequest request,
-                                       @Dimension("entityType") @PathParam("type") String type,
-                                       @Dimension("colo") @PathParam("colo") String colo) {
+    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
             TransactionManager.startTransaction();
@@ -93,15 +86,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity.getName() + "(" + type + ") scheduled successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -112,29 +103,25 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult suspend(@Context HttpServletRequest request,
-                             @Dimension("entityType") @PathParam("type") String type,
-                             @Dimension("entityName") @PathParam("entity") String entity,
-                             @Dimension("entityName") @PathParam("entity") String colo) {
+    public APIResult suspend(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("entityName") @PathParam("entity") String colo) {
         checkColo(colo);
         try {
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
             Entity entityObj = getEntityObject(entity, type);
-            if(getWorkflowEngine().isActive(entityObj))
+            if (getWorkflowEngine().isActive(entityObj))
                 getWorkflowEngine().suspend(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") suspended successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -145,10 +132,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
      * @param entity
      * @return APIResult
      */
-    public APIResult resume(@Context HttpServletRequest request,
-                            @Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity,
-                            @Dimension("colo") @PathParam("colo") String colo) {
+    public APIResult resume(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("colo") @PathParam("colo") String colo) {
 
         checkColo(colo);
         try {
@@ -156,19 +141,17 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
             Entity entityObj = getEntityObject(entity, type);
-            if(getWorkflowEngine().isSuspended(entityObj))
+            if (getWorkflowEngine().isSuspended(entityObj))
                 getWorkflowEngine().resume(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not suspended");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") resumed successfully");
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to resume entity", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 

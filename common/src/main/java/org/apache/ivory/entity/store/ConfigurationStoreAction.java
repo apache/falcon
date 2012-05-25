@@ -36,7 +36,7 @@ public class ConfigurationStoreAction extends Action {
     private static final String ENTITY_KEY = "entity";
 
     public static enum Action {
-        PUBLISH, REMOVE, UPDATE, UPDATEINIT
+        PUBLISH, REMOVE, UPDATE
     }
 
     protected ConfigurationStoreAction() {
@@ -45,9 +45,6 @@ public class ConfigurationStoreAction extends Action {
 
     public ConfigurationStoreAction(ConfigurationStoreAction.Action action, Entity entity) {
         super(action.name());
-        if (action == Action.UPDATEINIT)
-            return;
-
         Payload payload = new Payload(ENTITY_TYPE_KEY, entity.getEntityType().name());
         switch (action) {
             case PUBLISH:
@@ -83,10 +80,6 @@ public class ConfigurationStoreAction extends Action {
                 entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
                 ConfigurationStore.get().rollbackUpdate(entityType, Entity.fromString(entityType, getPayload().get(ENTITY_KEY)));
                 break;
-
-            case UPDATEINIT:
-                ConfigurationStore.get().cleanupUpdateInit();
-                break;
         }
     }
 
@@ -94,10 +87,6 @@ public class ConfigurationStoreAction extends Action {
     public void commit() throws IvoryException{
         Action action = Action.valueOf(getCategory());
         switch (action) {
-            case UPDATEINIT:
-                ConfigurationStore.get().cleanupUpdateInit();
-                break;
-
             case REMOVE:
                 EntityType entityType = EntityType.valueOf(getPayload().get(ENTITY_TYPE_KEY));
                 Entity entity = Entity.fromString(entityType, getPayload().get(ENTITY_KEY));

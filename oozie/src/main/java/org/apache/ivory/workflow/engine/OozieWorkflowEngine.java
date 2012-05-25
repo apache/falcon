@@ -76,7 +76,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     private static final BundleJob MISSING = new NullBundleJob();
 
     private static final WorkflowEngineActionListener listener = new OozieHouseKeepingService();
-    private static final String NOT_STARTED = "WAITING";
 
     private static List<Status> WF_KILL_PRECOND = Arrays.asList(Status.PREP, Status.RUNNING, Status.SUSPENDED, Status.FAILED);
     private static List<Status> WF_SUSPEND_PRECOND = Arrays.asList(Status.RUNNING);

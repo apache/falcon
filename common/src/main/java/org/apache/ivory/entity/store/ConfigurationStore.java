@@ -213,7 +213,6 @@ public class ConfigurationStore implements IvoryService {
             throw new IvoryException("An update for " + entity.toShortString() + " is already in progress or doesn't exist");
         }
         updatesInProgress.set(entity);
-        TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATEINIT, entity));
     }
 
     /**

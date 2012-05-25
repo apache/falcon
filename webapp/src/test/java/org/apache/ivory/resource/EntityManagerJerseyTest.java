@@ -145,6 +145,21 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         Assert.assertTrue(result.getMessage().contains("SUBMITTED"));
         
     }
+    
+    @Test
+    public void testIdempotentSubmit() throws Exception {
+        ClientResponse response;
+        Map<String, String> overlay = new HashMap<String, String>();
+
+        String cluster = "local" + System.currentTimeMillis();
+        overlay.put("name", cluster);
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);
+
+        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);        
+    }
+        
     @Test
     public void testNotFoundStatus() throws IvoryWebException
     {

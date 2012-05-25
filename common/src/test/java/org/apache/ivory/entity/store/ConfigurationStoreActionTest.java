@@ -100,6 +100,7 @@ public class ConfigurationStoreActionTest extends AbstractTestBase {
         store.initiateUpdate(newEntity);
         store.update(entity.getEntityType(), newEntity);
         TransactionManager.rollback();
+        store.cleanupUpdateInit();
         
         assertEquals(entity, store.get(entity.getEntityType(), newEntity.getName()));
     }
@@ -114,6 +115,7 @@ public class ConfigurationStoreActionTest extends AbstractTestBase {
         store.initiateUpdate(newEntity);
         store.update(entity.getEntityType(), newEntity);
         TransactionManager.commit();
+        store.cleanupUpdateInit();
         
         assertEquals(newEntity, store.get(entity.getEntityType(), newEntity.getName()));
     }

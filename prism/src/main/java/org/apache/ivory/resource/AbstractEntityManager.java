@@ -207,9 +207,8 @@ public abstract class AbstractEntityManager implements IvoryService {
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -248,17 +247,20 @@ public abstract class AbstractEntityManager implements IvoryService {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
-            Entity entityObj = getEntityObject(entity, type);
+            try {
+                Entity entityObj = getEntityObject(entity, type);
+                canRemove(entityObj);
 
-            canRemove(entityObj);
-
-            if (entityType.isSchedulable()) {
-                if (getWorkflowEngine().isActive(entityObj)) {
-                    getWorkflowEngine().delete(entityObj);
-                    removedFromEngine = "(KILLED in ENGINE)";
+                if (entityType.isSchedulable()) {
+                    if (getWorkflowEngine().isActive(entityObj)) {
+                        getWorkflowEngine().delete(entityObj);
+                        removedFromEngine = "(KILLED in ENGINE)";
+                    }
                 }
+                configStore.remove(entityType, entity);
+            } catch (NoSuchElementException e) { // already removed
             }
-            configStore.remove(entityType, entity);
+
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
                     + removedFromEngine);
             TransactionManager.commit();
@@ -266,9 +268,8 @@ public abstract class AbstractEntityManager implements IvoryService {
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -297,9 +298,10 @@ public abstract class AbstractEntityManager implements IvoryService {
             return result;
         } catch (Throwable e) {
             LOG.error("Updation failed", e);
-            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw ex;
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        } finally {
+            ConfigurationStore.get().cleanupUpdateInit();
         }
     }
 
@@ -342,9 +344,14 @@ public abstract class AbstractEntityManager implements IvoryService {
         Entity entity = deserializeEntity(request, entityType);
 
         ConfigurationStore configStore = ConfigurationStore.get();
-        if (configStore.get(entityType, entity.getName()) != null)
+        Entity existingEntity = configStore.get(entityType, entity.getName());
+        if (existingEntity != null) {
+            if (existingEntity.deepEquals(entity))
+                return existingEntity;
+
             throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
                     + "Can't be submitted again. Try removing before submitting.");
+        }
 
         validate(entity);
         configStore.publish(entityType, entity);
@@ -518,7 +525,12 @@ public abstract class AbstractEntityManager implements IvoryService {
     }
 
     private Entity getEntity(String entity, String type) throws IvoryException {
-        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        EntityType entityType;
+        try {
+            entityType = EntityType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IvoryException("Invalid entity type: " + type, e);
+        }
         ConfigurationStore configStore = ConfigurationStore.get();
         return configStore.get(entityType, entity);
     }
