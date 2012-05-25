@@ -66,6 +66,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         return getClass().getName();
     }
 
+    private BufferedRequest getBufferedRequest(HttpServletRequest request) {
+        if (request instanceof BufferedRequest)
+            return (BufferedRequest) request;
+        return new BufferedRequest(request);
+    }
+
     @POST
     @Path("submit/{type}")
     @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
@@ -123,11 +129,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("entityName") @PathParam("entity") final String entity, @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        final String[] applicableColos = getApplicableColos(type, entity);
         if (!embeddedMode) {
             super.delete(request, type, entity, currentColo);
         }
 
-        final String[] applicableColos = getApplicableColos(type, entity);
         return new EntityProxy(type, entity) {
             @Override
             protected String[] getColosToApply() {
@@ -247,7 +253,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("entityName") @PathParam("entity") final String entity,
             @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
-        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        final HttpServletRequest bufferedRequest = getBufferedRequest(request);
         return new EntityProxy(type, entity) {
             @Override
             protected String[] getColosToApply() {
@@ -278,15 +284,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     private APIResult consolidateResult(APIResult result1, APIResult result2) {
-        Status finalStatus;
-        if (result1.getStatus() == Status.SUCCEEDED && result2.getStatus() == Status.SUCCEEDED)
-            finalStatus = Status.SUCCEEDED;
-        else if (result1.getStatus() == Status.FAILED && result2.getStatus() == Status.FAILED)
-            finalStatus = Status.FAILED;
-        else
-            finalStatus = Status.PARTIAL;
-        return new APIResult(finalStatus, result1.getMessage() + result2.getMessage(), result1.getRequestId()
-                + result2.getRequestId());
+        int statusCnt = result1.getStatus().ordinal() + result2.getStatus().ordinal();
+        APIResult result = new APIResult(statusCnt == 0 ? Status.SUCCEEDED : (statusCnt == 4 ? Status.FAILED : Status.PARTIAL),
+                result1.getMessage() + result2.getMessage());
+        result.setRequestId(result1.getRequestId() + result2.getRequestId());
+        return result;
     }
 
     @POST

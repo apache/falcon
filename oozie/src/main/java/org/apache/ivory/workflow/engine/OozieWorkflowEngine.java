@@ -402,9 +402,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                         if (action != OozieWorkflowEngine.JobAction.STATUS) {
                             jobInfo = client.getJobInfo(coordinatorAction.getExternalId());
                         }
-
+                        
                         String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
-
                         ProcessInstance instance = new ProcessInstance(cluster, nominalTimeStr, WorkflowStatus.valueOf(status));
                         instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
                         instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());

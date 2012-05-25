@@ -58,13 +58,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity +
-                    "(" + type + ") scheduled successfully", TransactionManager.getTransactionId());
+                    "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Unable to schedule workflow", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -93,13 +94,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity.getName() + "(" + type + ") scheduled successfully", TransactionManager.getTransactionId());
+                    entity.getName() + "(" + type + ") scheduled successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Unable to submit and schedule ", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -125,13 +127,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") suspended successfully", TransactionManager.getTransactionId());
+                    entity + "(" + type + ") suspended successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Unable to suspend entity", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -158,13 +161,14 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             else
                 throw new IvoryException(entity + "(" + type + ") is not suspended");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") resumed successfully", TransactionManager.getTransactionId());
+                    entity + "(" + type + ") resumed successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Unable to resume entity", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 

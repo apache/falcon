@@ -115,7 +115,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitAndSchedule(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        checkIfBadRequest(response);
+        assertFailure(response);
         Assert.assertNull(ConfigurationStore.get().get(EntityType.PROCESS, processName));
     }
     
@@ -172,7 +172,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, stream);
 
-        checkIfBadRequest(clientRepsonse);
+        assertFailure(clientRepsonse);
     }
 
     @Test
@@ -208,21 +208,21 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
-		checkIfBadRequest(clientRepsonse);
+		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/suspend/cluster/" + cluster)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
-		checkIfBadRequest(clientRepsonse);
+		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/resume/cluster/" + cluster)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
-		checkIfBadRequest(clientRepsonse);
+		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/delete/cluster/" + cluster)
@@ -298,12 +298,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .path("api/entities/definition/process/sample1")
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-        checkIfBadRequest(clientRepsonse);
-    }
-
-    private void checkIfBadRequest(ClientResponse clientRepsonse) {
-        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
-                BAD_REQUEST.getStatusCode());
+        assertFailure(clientRepsonse);
     }
 
     @Test
@@ -444,7 +439,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .path("api/entities/delete/cluster/" + cluster)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        checkIfBadRequest(response);
+        assertFailure(response);
 
         String feed2 = "f2" + System.currentTimeMillis();
         overlay.put("name", feed2);
@@ -463,7 +458,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .path("api/entities/delete/feed/" + feed1)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        checkIfBadRequest(response);
+        assertFailure(response);
 
         //Delete a submitted process
         response = this.service

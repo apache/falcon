@@ -125,9 +125,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Failed to kill instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -150,9 +151,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Failed to suspend instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -175,9 +177,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Failed to resume instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -209,9 +212,10 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             TransactionManager.commit();
             return result;
         } catch (Exception e) {
-            TransactionManager.rollback();
             LOG.error("Failed to rerun instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
     
@@ -296,5 +300,4 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 		return "DONE";
 
 	}
-
 }

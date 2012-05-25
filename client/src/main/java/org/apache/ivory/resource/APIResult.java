@@ -19,6 +19,7 @@
 package org.apache.ivory.resource;
 
 import java.io.StringWriter;
+import java.util.UUID;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,6 +27,8 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.log4j.NDC;
 
 /**
  * 
@@ -36,66 +39,67 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class APIResult {
 
-	private Status status;
+    private Status status;
 
-	private String message;
+    private String message;
 
-	private String requestId;
-	
-	private static final JAXBContext jc;
-	
-	static {
-	    try {
+    private String requestId;
+
+    private static final JAXBContext jc;
+
+    static {
+        try {
             jc = JAXBContext.newInstance(APIResult.class);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
-	}
-	
-	public static enum Status {
-		SUCCEEDED, PARTIAL, FAILED
-	}
-
-	public APIResult(Status status, String message) {
-		super();
-		this.status = status;
-		this.message = message;
-	}
-
-    public APIResult(Status status, String message, String requestId) {
-        this(status, message);
-        this.requestId = requestId;
     }
 
-	protected APIResult() {
-		// private default constructor for JAXB
-	}
+    public static enum Status {
+        SUCCEEDED, PARTIAL, FAILED
+    }
 
-	public Status getStatus() {
-		return status;
-	}
+    public APIResult(Status status, String message) {
+        super();
+        this.status = status;
+        this.message = message;
+        requestId = NDC.peek();
+        try {
+            UUID.fromString(requestId);
+        } catch (IllegalArgumentException e) {
+            requestId = null;
+        }
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    protected APIResult() {
+        // private default constructor for JAXB
+    }
 
-	public String getRequestId() {
-	    return requestId;
-	}
+    public Status getStatus() {
+        return status;
+    }
 
-	public void setRequestId(String reqId) {
-	    this.requestId = reqId;
-	}
-	
-	@Override
-	public String toString() {
-		try {
-			StringWriter stringWriter = new StringWriter();
-			Marshaller marshaller = jc.createMarshaller();
-			marshaller.marshal(this, stringWriter);
-			return stringWriter.toString();
-		} catch (JAXBException e) {
-			return e.getMessage();
-		}
-	}
+    public String getMessage() {
+        return message;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String reqId) {
+        this.requestId = reqId;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            StringWriter stringWriter = new StringWriter();
+            Marshaller marshaller = jc.createMarshaller();
+            marshaller.marshal(this, stringWriter);
+            return stringWriter.toString();
+        } catch (JAXBException e) {
+            return e.getMessage();
+        }
+    }
 }

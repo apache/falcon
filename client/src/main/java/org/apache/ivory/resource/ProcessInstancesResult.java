@@ -1,18 +1,12 @@
 package org.apache.ivory.resource;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ProcessInstancesResult extends APIResult {
 	public static enum WorkflowStatus {
-		NOT_STARTED, WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
 	}
 
 	@XmlRootElement(name = "pinstance")

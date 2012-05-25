@@ -31,6 +31,7 @@ import org.testng.annotations.BeforeClass;
 
 import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -241,17 +242,29 @@ public class AbstractTestBase {
         }        
     }
     
-    protected void assertSuccessful(ClientResponse clientRepsonse) {
+    protected void assertStatus(ClientResponse clientRepsonse, APIResult.Status status) {
         String response = clientRepsonse.getEntity(String.class);
         try {
             APIResult result = (APIResult)unmarshaller.
                     unmarshal(new StringReader(response));
-            Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+            Assert.assertEquals(result.getStatus(), status);
         } catch (JAXBException e) {
             Assert.fail("Reponse " + response + " is not valid");
         }
     }
 
+    protected void assertFailure(ClientResponse clientRepsonse) {
+        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
+                BAD_REQUEST.getStatusCode());
+        assertStatus(clientRepsonse, APIResult.Status.FAILED);
+    }
+
+    protected void assertSuccessful(ClientResponse clientRepsonse) {
+        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
+                OK.getStatusCode());
+        assertStatus(clientRepsonse, APIResult.Status.SUCCEEDED);        
+    }
+    
     protected String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();
         OutputStream out = new FileOutputStream(tmpFile);

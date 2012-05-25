@@ -18,8 +18,6 @@
 package org.apache.ivory.transaction;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.util.GenericAlert;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
@@ -65,12 +63,9 @@ public class TransactionManager {
     }
 
     public static void commit() throws IvoryException {
-        try {
-            if (trans.get().isFinalized())
-                throw new IllegalStateException("Invalid transaction " + getTransactionId());
-            trans.get().commit();
-        } finally {
-            NDC.pop();
-        }
+        if (trans.get().isFinalized())
+            throw new IllegalStateException("Invalid transaction " + getTransactionId());
+        trans.get().commit();
+        NDC.pop();
     }
 }

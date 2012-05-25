@@ -112,20 +112,22 @@ public abstract class AbstractEntityManager implements IvoryService {
 
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
                 : ((statusCount == colos.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        return new APIResult(status, buffer.toString(), requestIds.toString());
+        APIResult result = new APIResult(status, buffer.toString());
+        result.setRequestId(requestIds.toString());
+        return result;
     }
 
     protected ProcessInstancesResult consolidateInstanceResult(APIResult[] results, String[] colos) {
         if (results == null || results.length == 0)
             return null;
 
-        StringBuilder message = new StringBuilder("CONSOLIDATED");
+        StringBuilder message = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();
         List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
         int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             APIResult result = results[index];
-            message.append('\n').append(colos[index]).append(": ").append(result.getMessage());
+            message.append(colos[index]).append(": ").append(result.getMessage()).append('\n');
             requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
             if (!(result instanceof ProcessInstancesResult))
                 continue;
@@ -200,14 +202,14 @@ public abstract class AbstractEntityManager implements IvoryService {
             TransactionManager.startTransaction();
             audit(request, "STREAMED_DATA", type, "SUBMIT");
             Entity entity = submitInternal(request, type);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName(),
-                    TransactionManager.getTransactionId());
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw ex;
         }
     }
 
@@ -258,14 +260,15 @@ public abstract class AbstractEntityManager implements IvoryService {
             }
             configStore.remove(entityType, entity);
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
-                    + removedFromEngine, TransactionManager.getTransactionId());
+                    + removedFromEngine);
             TransactionManager.commit();
 
             return result;
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
             TransactionManager.rollback();
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw ex;
         }
     }
 
@@ -289,14 +292,14 @@ public abstract class AbstractEntityManager implements IvoryService {
                 configStore.update(entityType, newEntity);
             }
 
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully",
-                    TransactionManager.getTransactionId());
+            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
-            TransactionManager.rollback();
             LOG.error("Updation failed", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            IvoryWebException ex = IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            TransactionManager.rollback();
+            throw ex;
         }
     }
 
@@ -371,6 +374,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void validate(Entity entity) throws IvoryException {
         EntityParser entityParser = EntityParserFactory.getParser(entity.getEntityType());
         entityParser.validate(entity);
