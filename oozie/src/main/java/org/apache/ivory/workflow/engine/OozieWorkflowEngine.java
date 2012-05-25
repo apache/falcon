@@ -416,7 +416,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    private List<CoordinatorAction> getCoordActions(String cluster, Entity entity, Date start, Date end) throws IvoryException {
+    protected List<CoordinatorAction> getCoordActions(String cluster, Entity entity, Date start, Date end) throws IvoryException {
         List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
 
         String name = entity.getWorkflowName();
@@ -440,7 +440,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), timeUnit, coord.getFrequency(),
                             coord.getTimeZone(), iterStart);
                     String actionId = coord.getId() + "@" + sequence;
-                    CoordinatorAction coordActionInfo = client.getCoordActionInfo(actionId);
+                    CoordinatorAction coordActionInfo = null;
+                    try {
+                        coordActionInfo = client.getCoordActionInfo(actionId);
+                    } catch (OozieClientException e) {
+                        LOG.debug("Unable to get action for " + actionId + " " + e.getMessage());
+                    }
                     if (coordActionInfo != null) {
                         actions.add(coordActionInfo);
                     }
@@ -464,7 +469,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             for (BundleJob bundle : bundles) {
                 List<CoordinatorJob> coords = client.getBundleJobInfo(bundle.getId()).getCoordinators();
                 for (CoordinatorJob coord : coords) {
-                    if (!coord.getStartTime().before(end) || !coord.getEndTime().after(start)) {
+                    if ((start.compareTo(coord.getStartTime()) >= 0 && start.compareTo(coord.getEndTime()) <= 0) ||
+                            (end.compareTo(coord.getStartTime()) >= 0 && end.compareTo(coord.getEndTime()) <= 0)) {
                         applicableCoords.add(coord);
                     }
                 }

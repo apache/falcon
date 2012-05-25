@@ -250,8 +250,8 @@ public class EntityUtil {
 
         if (count > 2) {
             startCal.add(timeUnit.getCalendarUnit(),
-                    ((count - 2) / periodicity) * periodicity);
-            count = ((count - 2) / periodicity) * periodicity;
+                    (count / periodicity) * periodicity);
+            count = (count / periodicity);
         }
         while (startCal.getTime().before(instanceTime)) {
             startCal.add(timeUnit.getCalendarUnit(), periodicity);
