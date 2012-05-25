@@ -121,6 +121,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             ProcessInstancesResult result = wfEngine.killInstances(process, start, end);
+            result.setRequestId(TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -145,6 +146,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             ProcessInstancesResult result = wfEngine.suspendInstances(process, start, end);
+            result.setRequestId(TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -169,6 +171,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             
             WorkflowEngine wfEngine = getWorkflowEngine();
             ProcessInstancesResult result = wfEngine.resumeInstances(process, start, end);
+            result.setRequestId(TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -202,6 +205,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
             WorkflowEngine wfEngine = getWorkflowEngine();
             ProcessInstancesResult result = wfEngine.reRunInstances(process, start, end, props);
+            result.setRequestId(TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Exception e) {

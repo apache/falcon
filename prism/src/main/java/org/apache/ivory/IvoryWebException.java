@@ -32,6 +32,7 @@ public class IvoryWebException extends WebApplicationException {
 
     public static IvoryWebException newException(Throwable e,
                                                  Response.Status status) {
+        LOG.error("Failure reason", e);
         return newException(e.getMessage() + "\n" + getAddnInfo(e), status);
     }
 

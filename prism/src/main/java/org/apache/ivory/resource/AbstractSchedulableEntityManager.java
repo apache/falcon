@@ -58,7 +58,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity +
-                    "(" + type + ") scheduled successfully");
+                    "(" + type + ") scheduled successfully", TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -93,7 +93,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity.getName() + "(" + type + ") scheduled successfully");
+                    entity.getName() + "(" + type + ") scheduled successfully", TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -125,7 +125,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") suspended successfully");
+                    entity + "(" + type + ") suspended successfully", TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {
@@ -158,7 +158,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             else
                 throw new IvoryException(entity + "(" + type + ") is not suspended");
             APIResult result = new APIResult(APIResult.Status.SUCCEEDED,
-                    entity + "(" + type + ") resumed successfully");
+                    entity + "(" + type + ") resumed successfully", TransactionManager.getTransactionId());
             TransactionManager.commit();
             return result;
         } catch (Throwable e) {

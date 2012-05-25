@@ -1,25 +1,5 @@
 package org.apache.ivory.resource.proxy;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
@@ -34,6 +14,13 @@ import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
 import org.apache.ivory.util.DeploymentUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.*;
 
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
@@ -94,12 +81,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         String entity = getEntityName(bufferedRequest, type);
-        try {
-            bufferedRequest.getInputStream().reset();
-        } catch (IOException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-
         return new EntityProxy(type, entity) {
             @Override
             protected String[] getColosToApply() {
@@ -115,10 +96,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private String getEntityName(HttpServletRequest request, String type) {
         try {
+            request.getInputStream().reset();
             Entity entity = deserializeEntity(request, EntityType.valueOf(type.toUpperCase()));
+            request.getInputStream().reset();
             return entity.getName();
         } catch (Exception e) {
-            throw IvoryWebException.newException(e, javax.ws.rs.core.Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -204,7 +187,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             Collections.addAll(colos, oldColos);
         if (newColos != null)
             Collections.addAll(colos, newColos);
-        return colos.toArray(new String[] {});
+        return colos.toArray(new String[colos.size()]);
     }
 
     @GET
@@ -288,11 +271,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") String coloExpr) {
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         String entity = getEntityName(bufferedRequest, type);
-        try {
-            bufferedRequest.getInputStream().reset();
-        } catch (IOException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
 
         APIResult submitResult = submit(request, type, coloExpr);
         APIResult schedResult = schedule(request, type, entity, coloExpr);
