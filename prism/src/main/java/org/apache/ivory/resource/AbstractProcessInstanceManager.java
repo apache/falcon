@@ -52,7 +52,7 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 			.getRerunHandler(RerunType.RETRY);
 
     protected Process getProcess(String processName) throws IvoryException {
-        Entity entity = getEntityObject(processName, EntityType.PROCESS.name());
+        Entity entity = getEntity(processName, EntityType.PROCESS.name());
         return (Process) entity;
     }
     

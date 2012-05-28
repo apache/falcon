@@ -127,7 +127,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             APIResult result = results[index];
-            message.append(colos[index]).append(": ").append(result.getMessage()).append('\n');
+            message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
             requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
             if (!(result instanceof ProcessInstancesResult))
                 continue;
@@ -166,11 +166,11 @@ public abstract class AbstractEntityManager implements IvoryService {
         if (DeploymentUtil.isEmbeddedMode())
             return DeploymentUtil.getDefaultColos();
         try {
-            Entity entity = ConfigurationStore.get().get(EntityType.valueOf(type.toUpperCase()), name);
+            Entity entity = getEntity(name, type);
             String[] clusters = entity.getClustersDefined();
             Set<String> colos = new HashSet<String>();
             for (String cluster : clusters) {
-                Cluster clusterEntity = (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+                Cluster clusterEntity = (Cluster) getEntity(cluster, EntityType.CLUSTER.name());
                 colos.add(clusterEntity.getColo());
             }
             return colos.toArray(new String[] {});
@@ -248,7 +248,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             try {
-                Entity entityObj = getEntityObject(entity, type);
+                Entity entityObj = getEntity(entity, type);
                 canRemove(entityObj);
 
                 if (entityType.isSchedulable()) {
@@ -282,7 +282,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             TransactionManager.startTransaction();
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entityName, type, "UPDATE");
-            Entity oldEntity = getEntityObject(entityName, type);
+            Entity oldEntity = getEntity(entityName, type);
             Entity newEntity = deserializeEntity(request, entityType);
             validate(newEntity);
 
@@ -419,12 +419,8 @@ public abstract class AbstractEntityManager implements IvoryService {
         try {
             entityObj = getEntity(entity, type);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            if (entityObj == null) {
-                throw IvoryWebException.newException(new IvoryException(entity + "(" + type + ") is not present"),
-                        Response.Status.BAD_REQUEST);
-            }
-
             String status;
+            
             if (entityType.isSchedulable()) {
                 if (workflowEngine.isActive(entityObj)) {
                     if (workflowEngine.isSuspended(entityObj)) {
@@ -516,15 +512,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         }
     }
 
-    protected Entity getEntityObject(String entity, String type) throws IvoryException {
-        Entity entityObj = getEntity(entity, type);
-        if (entityObj == null) {
-            throw new NoSuchElementException(entity + " (" + type + ") not found");
-        }
-        return entityObj;
-    }
-
-    private Entity getEntity(String entity, String type) throws IvoryException {
+    protected Entity getEntity(String entity, String type) throws IvoryException {
         EntityType entityType;
         try {
             entityType = EntityType.valueOf(type.toUpperCase());
@@ -532,7 +520,11 @@ public abstract class AbstractEntityManager implements IvoryService {
             throw new IvoryException("Invalid entity type: " + type, e);
         }
         ConfigurationStore configStore = ConfigurationStore.get();
-        return configStore.get(entityType, entity);
+        Entity entityObj = configStore.get(entityType, entity);
+        if (entityObj == null) {
+            throw new NoSuchElementException(entity + " (" + type + ") not found");
+        }
+        return entityObj;
     }
 
     protected WorkflowEngine getWorkflowEngine() {

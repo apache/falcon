@@ -81,7 +81,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult submit(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("colo") @QueryParam("colo") final String ignore) {
 
-        final HttpServletRequest bufferedRequest = new BufferedRequest(request);
+        final HttpServletRequest bufferedRequest = getBufferedRequest(request);
         if (!embeddedMode) {
             super.submit(bufferedRequest, type, currentColo);
         }
@@ -278,8 +278,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         String entity = getEntityName(bufferedRequest, type);
 
-        APIResult submitResult = submit(request, type, coloExpr);
-        APIResult schedResult = schedule(request, type, entity, coloExpr);
+        APIResult submitResult = submit(bufferedRequest, type, coloExpr);
+        APIResult schedResult = schedule(bufferedRequest, type, entity, coloExpr);
         return consolidateResult(submitResult, schedResult);
     }
 

@@ -66,7 +66,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     private void scheduleInternal(String type, String entity) throws IvoryException {
         checkSchedulableEntity(type);
-        Entity entityObj = getEntityObject(entity, type);
+        Entity entityObj = getEntity(entity, type);
         if (!getWorkflowEngine().isActive(entityObj))
             getWorkflowEngine().schedule(entityObj);
     }
@@ -110,7 +110,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
-            Entity entityObj = getEntityObject(entity, type);
+            Entity entityObj = getEntity(entity, type);
             if (getWorkflowEngine().isActive(entityObj))
                 getWorkflowEngine().suspend(entityObj);
             else
@@ -140,7 +140,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
-            Entity entityObj = getEntityObject(entity, type);
+            Entity entityObj = getEntity(entity, type);
             if (getWorkflowEngine().isSuspended(entityObj))
                 getWorkflowEngine().resume(entityObj);
             else
