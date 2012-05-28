@@ -320,7 +320,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public ProcessInstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException {
-        return doJobAction(JobAction.KILL, entity, start, end, props);
+        return doJobAction(JobAction.RERUN, entity, start, end, props);
     }
 
     @Override

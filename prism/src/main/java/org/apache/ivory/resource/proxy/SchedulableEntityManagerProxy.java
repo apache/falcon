@@ -287,7 +287,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         int statusCnt = result1.getStatus().ordinal() + result2.getStatus().ordinal();
         APIResult result = new APIResult(statusCnt == 0 ? Status.SUCCEEDED : (statusCnt == 4 ? Status.FAILED : Status.PARTIAL),
                 result1.getMessage() + result2.getMessage());
-        result.setRequestId(result1.getRequestId() + result2.getRequestId());
+        result.setRequestId(result1.getRequestId().equals(result2.getRequestId()) ? result1.getRequestId() : 
+                                result1.getRequestId() + result2.getRequestId());
         return result;
     }
 

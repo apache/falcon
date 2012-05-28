@@ -166,6 +166,8 @@ public abstract class AbstractEntityManager implements IvoryService {
         if (DeploymentUtil.isEmbeddedMode())
             return DeploymentUtil.getDefaultColos();
         try {
+            if(EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+                return getAllColos();
             Entity entity = getEntity(name, type);
             String[] clusters = entity.getClustersDefined();
             Set<String> colos = new HashSet<String>();
@@ -175,7 +177,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             }
             return colos.toArray(new String[] {});
         } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, javax.ws.rs.core.Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -522,7 +524,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         ConfigurationStore configStore = ConfigurationStore.get();
         Entity entityObj = configStore.get(entityType, entity);
         if (entityObj == null) {
-            throw new NoSuchElementException(entity + " (" + type + ") not found");
+            throw new IvoryException(entity + " (" + type + ") not found");
         }
         return entityObj;
     }

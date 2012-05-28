@@ -19,7 +19,6 @@
 package org.apache.ivory.workflow.engine;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.ivory.IvoryException;
