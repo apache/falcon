@@ -356,4 +356,16 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
 		}
 	}
+	
+	@Test
+	public void testClusterPartitionExp() throws IvoryException {
+		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
+				"testCluster");
+		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+				"/*/${cluster.colo}"), "/*/" + cluster.getColo());
+		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+				"/*/${cluster.name}/Local"), "/*/" + cluster.getName()+"/Local");
+		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+				"/*/${cluster.field1}/Local"), "/*/value1/Local");
+	}
 }

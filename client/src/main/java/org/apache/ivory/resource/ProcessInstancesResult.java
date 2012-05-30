@@ -114,7 +114,7 @@ public class ProcessInstancesResult extends APIResult {
 		}
 
 		public String getStatus() {
-			return action;
+			return status;
 		}
 
 		public String getLogFile() {

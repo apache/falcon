@@ -70,7 +70,7 @@
 			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
 			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-operation</arg><arg>${operation}</arg>
+			<arg>-operation</arg><arg>GENERATE</arg>
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>-topicName</arg><arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>-status</arg><arg>SUCCEEDED</arg>
@@ -124,7 +124,7 @@
 			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
 			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-operation</arg><arg>${operation}</arg>
+			<arg>-operation</arg><arg>GENERATE</arg>
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>-topicName</arg><arg>IVORY.PROCESS.TOPIC</arg>
 			<arg>-status</arg><arg>FAILED</arg>
@@ -148,7 +148,7 @@
 			<arg>-brokerUrl</arg><arg>${userBrokerUrl}</arg>
 			<arg>-brokerImplClass</arg><arg>${userBrokerImplClass}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-operation</arg><arg>${operation}</arg>
+			<arg>-operation</arg><arg>GENERATE</arg>
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>-topicName</arg><arg>IVORY.${entityName}</arg>
 			<arg>-status</arg><arg>SUCCEEDED</arg>

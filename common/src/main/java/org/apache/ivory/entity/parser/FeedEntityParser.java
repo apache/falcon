@@ -234,42 +234,39 @@ public class FeedEntityParser extends EntityParser<Feed> {
 		}
 	}
 	
-	private void loadClusterProperties(Properties prop, org.apache.ivory.entity.v0.cluster.Cluster cluster)
-	{
-		prop.put("${cluster.colo}", cluster.getColo());
-		prop.put("${cluster.name}", cluster.getName());
+	private static void loadClusterProperties(Properties prop, org.apache.ivory.entity.v0.cluster.Cluster cluster)
+	{		
+		Map<String,String> clusterVars = new HashMap<String, String>();
+		clusterVars.put("colo", cluster.getColo());
+		clusterVars.put("name", cluster.getName());
 		Set<String> keyset = cluster.getProperties().keySet();
 		for(String propName : keyset)
 		{
-			prop.put("${cluster." + propName + "}", cluster.getProperties().get(propName).getValue());
+			clusterVars.put(propName, cluster.getProperties().get(propName).getValue());
 		}
+		prop.put("cluster", clusterVars);
 	}
 	
 	private void validateFeedPartitionExpression(Feed feed, Cluster cluster)
 			throws IvoryException {
 		int expressions = 0 , numSourceClusters = 0;
 		for(Cluster cl : feed.getClusters().getCluster()){
-			if(cl.getType().value().equals("source"))
+			if(cl.getType().equals(ClusterType.SOURCE))
 				numSourceClusters++;
 		}
-		if (cluster.getType().value() == "source"
+		if (cluster.getType().equals(ClusterType.SOURCE)
 				&& feed.getPartitions() != null
 				&& feed.getPartitions().getPartition().size() != 0
 				&& cluster.getPartition() != null && numSourceClusters != 1) {
 			String[] tokens = cluster.getPartition().split("/");
 			if (tokens.length != feed.getPartitions().getPartition().size()) {
 				throw new ValidationException(
-						"Number of expressions in Partition Expression are not equal to number of partions");
+						"Number of expressions in Partition Expression are not equal to number of feed partitions");
 			} else {
 				org.apache.ivory.entity.v0.cluster.Cluster clusterEntity = ConfigurationStore
 						.get().get(EntityType.CLUSTER, cluster.getName());
-				Properties properties = new Properties();
-				loadClusterProperties(properties, clusterEntity);
-				ExpressionHelper expHelp = ExpressionHelper.get();
-				expHelp.setPropertiesForVariable(properties);
 				for (String token : tokens) {
-					String val = expHelp.evaluateFullExpression(token,
-							String.class);
+					String val = getPartitionExpValue(clusterEntity, token);
 					if (!val.equals(token)) {
 						expressions++;
 						break;
@@ -281,23 +278,32 @@ public class FeedEntityParser extends EntityParser<Feed> {
 			}
 		} else {
 			if (cluster.getPartition() != null
-					&& cluster.getType().value() == "target")
+					&& cluster.getType().equals(ClusterType.TARGET))
 				throw new ValidationException(
-						"Target Cluster do not have Partition Expression");
+						"Target Cluster should not have Partition Expression");
 			else if (feed.getPartitions() != null
 					&& feed.getPartitions().getPartition().size() != 0
-					&& cluster.getPartition() == null && cluster.getType().value() == "source" && numSourceClusters > 1)
+					&& cluster.getPartition() == null && cluster.getType().equals(ClusterType.SOURCE) && numSourceClusters > 1)
 				throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
 			else if( cluster.getPartition() != null && numSourceClusters  == 1)
 				throw new ValidationException(
 						"Partition Expression not expected for the cluster:" + cluster.getName());
 			else if ((feed.getPartitions() == null
 					|| feed.getPartitions().getPartition().size() != 0)
-					&& cluster.getPartition() != null && cluster.getType().value() == "source" && numSourceClusters > 1)
+					&& cluster.getPartition() != null &&cluster.getType().equals(ClusterType.SOURCE) && numSourceClusters > 1)
 				throw new ValidationException(
 						"Feed Partitions not specified for feed: " + feed.getName());
 			
 		}
 
+	}
+	
+	public static String getPartitionExpValue(
+			org.apache.ivory.entity.v0.cluster.Cluster clusterEntity, String exp) throws IvoryException {
+		Properties properties = new Properties();
+		loadClusterProperties(properties, clusterEntity);
+		ExpressionHelper expHelp = ExpressionHelper.get();
+		expHelp.setPropertiesForVariable(properties);
+		return expHelp.evaluateFullExpression(exp, String.class);
 	}
 }

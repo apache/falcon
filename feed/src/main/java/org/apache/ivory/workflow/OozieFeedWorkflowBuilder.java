@@ -51,8 +51,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
             Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
 
-            AbstractOozieEntityMapper mapper = new OozieFeedMapper(feed);
-            mapper.map(cluster, bundlePath);
+            AbstractOozieEntityMapper<Feed> mapper = new OozieFeedMapper(feed);
+            if(mapper.map(cluster, bundlePath)==false){
+            	continue;
+            }
             pathsMap.put(clusterName, bundlePath);
         }
         return createAppProperties(pathsMap);
@@ -65,8 +67,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
     }
 
-    @Override
-    public String[] getWorkflowNames(Feed entity) {
-        return new String[] { entity.getWorkflowName(Tag.RETENTION)};
-    }
+	@Override
+	public String[] getWorkflowNames(Feed entity) {
+		return new String[] {
+				EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString(),
+				EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString() };
+	}
 }

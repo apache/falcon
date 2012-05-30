@@ -5,11 +5,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
+import org.apache.ivory.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.ivory.entity.common.DateValidator;
 import org.apache.ivory.entity.common.TimeUnit;
 import org.apache.ivory.entity.parser.Frequency;
@@ -271,4 +274,33 @@ public class EntityUtil {
             throw new IvoryException(e);
         }
     }
+    
+	public static WorkflowName getWorkflowName(Tag tag, List<String> suffixes,
+			Entity entity) {
+		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
+				entity);
+		builder.setTag(tag);
+		builder.setSuffixes(suffixes);
+		return builder.getWorkflowName();
+	}
+
+	public static WorkflowName getWorkflowName(Tag tag, Entity entity) {
+		return getWorkflowName(tag, null, entity);
+	}
+
+	public static WorkflowName getWorkflowName(Entity entity) {
+		return getWorkflowName(null, null, entity);
+	}
+
+	public static String getWorkflowNameSuffixes(String workflowName, Entity entity) {
+		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
+				entity);
+		return builder.getWorkflowSuffixes(workflowName);
+	}
+
+	public static Tag getWorkflowNameTag(String workflowName, Entity entity) {
+		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
+				entity);
+		return builder.getWorkflowTag(workflowName);
+	}
 }

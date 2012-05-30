@@ -110,11 +110,6 @@ public class RerunEvent implements Delayed {
 		this.msgInsertTime = msgInsertTime;
 	}
 
-	public RerunEvent fromString(WorkflowEngine workflowEngine, String line) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public RerunType getType() {
 		if (this instanceof RetryEvent) {
 			return RerunType.RETRY;

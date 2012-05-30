@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -101,7 +102,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             return null;
 
         COORDINATORAPP coord = new COORDINATORAPP();
-        String coordName = process.getWorkflowName(Tag.DEFAULT);
+        String coordName = EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString();
         Path coordPath = getCoordPath(bundlePath, coordName);
 
         // coord attributes

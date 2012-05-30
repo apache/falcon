@@ -117,23 +117,6 @@ public abstract class Entity {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }
 
-    public String getWorkflowName() {
-        return getWorkflowName(null);
-    }
-
-    public String getWorkflowName(Tag tag) {
-        String tagName = "";
-        if (tag != null) {
-            tagName = tag.name() + "_";
-        }
-        return PREFIX + getEntityType().name().toUpperCase() + "_" + tagName + getName();
-    }
-
-    public Tag getWorkflowNameTag(String workflowName) {
-        String[] parts = workflowName.split("_");
-        return Tag.valueOf(parts[parts.length - 2]);
-    }
-
     @Override
     public Entity clone() {
         return fromString(getEntityType(), toString());

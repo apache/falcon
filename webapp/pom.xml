@@ -87,6 +87,12 @@
             <artifactId>ivory-rerun</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-replication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>

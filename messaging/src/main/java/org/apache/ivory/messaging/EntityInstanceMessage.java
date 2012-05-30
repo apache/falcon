@@ -46,7 +46,7 @@ public class EntityInstanceMessage {
 			.getLogger(EntityInstanceMessage.class);
 	private static final String IVORY_PROCESS_TOPIC_NAME = "IVORY.PROCESS.TOPIC";
 
-	public enum entityOperation {
+	public enum EntityOps {
 		GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
 	}
 
@@ -123,7 +123,9 @@ public class EntityInstanceMessage {
 		date = this.keyValueMap.remove(ARG.timeStamp);
 		this.keyValueMap.put(ARG.timeStamp, getIvoryDate(date));
 	}
-	public static EntityInstanceMessage[] getMessages(CommandLine cmd) throws ParseException {
+
+	public static EntityInstanceMessage[] getMessages(CommandLine cmd)
+			throws ParseException {
 
 		String[] feedNames = getFeedNames(cmd);
 		String[] feedPaths;
@@ -169,8 +171,8 @@ public class EntityInstanceMessage {
 	}
 
 	private static String[] getFeedPaths(CommandLine cmd) throws IOException {
-		String entityType = cmd.getOptionValue(ARG.entityType.getArgName());
 		String topicName = cmd.getOptionValue(ARG.topicName.getArgName());
+		String operation = cmd.getOptionValue(ARG.operation.getArgName());
 
 		if (topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
 			LOG.debug("Returning instance paths for Ivory Topic: "
@@ -179,13 +181,14 @@ public class EntityInstanceMessage {
 					.getArgName()) };
 		}
 
-		if (entityType.equalsIgnoreCase("PROCESS")) {
-			LOG.debug("Returning instance paths for process: "
+		if (operation.equals(EntityOps.GENERATE.name())
+				|| operation.equals(EntityOps.REPLICATE.name())) {
+			LOG.debug("Returning instance paths: "
 					+ cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
 			return cmd.getOptionValue(ARG.feedInstancePaths.getArgName())
 					.split(",");
 		}
-		//
+		//else case of feed retention
 		Path logFile = new Path(cmd.getOptionValue(ARG.logFile.getArgName()));
 		FileSystem fs = FileSystem.get(logFile.toUri(), new Configuration());
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
@@ -201,7 +204,7 @@ public class EntityInstanceMessage {
 		}
 
 	}
-	
+
 	public String getIvoryDate(String nominalTime) throws ParseException {
 		DateFormat nominalFormat = new SimpleDateFormat(
 				"yyyy'-'MM'-'dd'-'HH'-'mm");

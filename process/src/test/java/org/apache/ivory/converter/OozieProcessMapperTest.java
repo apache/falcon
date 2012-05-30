@@ -135,9 +135,9 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(fs, bundlePath);
-        assertEquals(process.getWorkflowName(), bundle.getName());
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
-        assertEquals(process.getWorkflowName(Tag.DEFAULT), bundle.getCoordinator().get(0).getName());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString(), bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
@@ -149,7 +149,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
-    		Assert.assertEquals(process.getWorkflowName(Tag.DEFAULT), parentWorkflow.getName());
+    		Assert.assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString(), parentWorkflow.getName());
     		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
@@ -165,7 +165,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
-        String bundleStr = readFile(fs, new Path(path, "coordinator.xml"));
+        String bundleStr = readFile(fs, path);
         
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");

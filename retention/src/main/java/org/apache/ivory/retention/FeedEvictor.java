@@ -40,6 +40,10 @@ import java.util.regex.Pattern;
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -92,19 +96,14 @@ public class FeedEvictor extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        if (args.length != 6) {
-            printUsage();
-            for(int i=0;i<args.length;i++){
-            	System.out.println("Args: "+args[i]);
-            }
-            return -1;
-        }
-        String feedBasePath = args[0].replaceAll("\\?\\{", "\\$\\{");
-        String retentionType = args[1];
-        String retentionLimit = args[2];
-        String timeZone = args[3];
-        String frequency = args[4]; //to write out smart path filters
-        String logFile=args[5];
+        
+    	CommandLine cmd = getCommand(args);
+        String feedBasePath = cmd.getOptionValue("feedBasePath").replaceAll("\\?\\{", "\\$\\{");
+        String retentionType = cmd.getOptionValue("retentionType");
+        String retentionLimit = cmd.getOptionValue("retentionLimit");
+        String timeZone = cmd.getOptionValue("timeZone");
+        String frequency = cmd.getOptionValue("frequency"); //to write out smart path filters
+        String logFile=cmd.getOptionValue("logFile");
 
         Path normalizedPath = new Path(feedBasePath);
         fs = normalizedPath.getFileSystem(getConf());
@@ -153,17 +152,6 @@ public class FeedEvictor extends Configured implements Tool {
 			debug(path, fs);
 		}
 	}
-
-	private void printUsage() {
-        LOG.info("Usage: org.apache.ivory.retention.FeedEvictor " +
-                "<feedBasePath> <instance|age> <limit> <timezone> <frequency> <logDir> <timeStamp>");
-        LOG.info("\tfeedBasePath: ex /data/feed/${YEAR}-${MONTH}");
-        LOG.info("\tlimit: ex hours(5), months(2), days(90)");
-        LOG.info("\ttimezone: ex UTC");
-        LOG.info("\tfrequency: ex hourly, daily, monthly, minute, weekly, yearly");
-        LOG.info("\tlogDir: ex /ivory/staging/feed");
-        LOG.info("\ttimeStamp: ex 2012-11-28-14-00");
-    }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
         Long duration = (Long) EVALUATOR.evaluate("${" + period + "}",
@@ -293,4 +281,34 @@ public class FeedEvictor extends Configured implements Tool {
 		LOG.debug("Instance Paths copied to " + outPath );
 		LOG.debug("Written "+writer);
 	}
+	
+	private CommandLine getCommand(String[] args)
+			throws org.apache.commons.cli.ParseException {
+		Options options = new Options();
+		Option opt;
+		opt = new Option("feedBasePath", true,
+				"base path for feed, ex /data/feed/${YEAR}-${MONTH}");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("retentionType", true,
+				"type of retention policy like delete, archive etc");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("retentionLimit", true,
+				"time limit for retention, ex hours(5), months(2), days(90)");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("timeZone", true, "timezone for feed, ex UTC");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("frequency", true,
+				"frequency of feed,  ex hourly, daily, monthly, minute, weekly, yearly");
+		opt.setRequired(true);
+		options.addOption(opt);
+		opt = new Option("logFile", true, "log file for capturing size of feed");
+		opt.setRequired(true);
+		options.addOption(opt);
+		return new GnuParser().parse(options, args);
+	}
+
 }

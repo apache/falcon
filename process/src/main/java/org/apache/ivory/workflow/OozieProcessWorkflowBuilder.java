@@ -49,7 +49,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
             Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
             OozieProcessMapper mapper = new OozieProcessMapper(process);
-            mapper.map(cluster, bundlePath);
+            if(mapper.map(cluster, bundlePath)==false){
+            	continue;
+            }           
             pathMap.put(clusterName, bundlePath);
         }
         return createAppProperties(pathMap);
@@ -63,6 +65,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public String[] getWorkflowNames(Process process) {
-        return new String[] { process.getWorkflowName(Tag.DEFAULT) };
+        return new String[] { EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString() };
     }
 }

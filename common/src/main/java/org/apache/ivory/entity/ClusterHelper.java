@@ -19,6 +19,7 @@
 package org.apache.ivory.entity;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.v0.cluster.*;
 
 import java.util.Map;
@@ -44,11 +45,11 @@ public final class ClusterHelper {
     }
 
     public static String getHdfsUrl(Cluster cluster) {
-        return getInterfaceFor(cluster, Interfacetype.WRITE);
+        return getNormalizedUrl(cluster, Interfacetype.WRITE);
     }
 
     public static String getReadOnlyHdfsUrl(Cluster cluster) {
-        return getInterfaceFor(cluster, Interfacetype.READONLY);
+        return getNormalizedUrl(cluster, Interfacetype.READONLY);
     }
 
     public static String getMREndPoint(Cluster cluster) {
@@ -73,6 +74,12 @@ public final class ClusterHelper {
                 cluster.getName();
 
         return interfaceRef.getEndpoint();
+    }
+
+    private static String getNormalizedUrl(Cluster cluster, Interfacetype type) {
+    	String normalizedUrl = getInterfaceFor(cluster, type);
+    	String normalizedPath = new Path(normalizedUrl + "/").toString();
+    	return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
 
     public static String getCompleteLocation(Cluster cluster, String locationKey) {

@@ -90,11 +90,12 @@ public class FeedEvictorTest {
 			pair = createTestData("feed1", "yyyy-MM-dd", 10, TimeUnit.DAYS);
 			String dataPath = "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-01-00.csv";
+
 			FeedEvictor.main(new String[] {
-					cluster.getConf().get("fs.default.name")
+					"-feedBasePath",cluster.getConf().get("fs.default.name")
 					+ dataPath,
-					"instance", "days(10)", "UTC", "daily",
-					logFile});
+					"-retentionType","instance", "-retentionLimit","days(10)", "-timeZone","UTC", "-frequency","daily",
+					"-logFile",logFile});
 
 			assertFailures(fs, pair);
 			compare(map.get("feed1"), stream.getBuffer());
@@ -168,9 +169,11 @@ public class FeedEvictorTest {
 			String dataPath = "/data/YYYY/feed2/mmHH/dd/MM/" +
 					"?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-02-00.csv";
-			FeedEvictor.main(new String[]{cluster.getConf().
-					get("fs.default.name") + dataPath, "instance",
-					"hours(5)", "UTC", "hourly",logFile});
+			FeedEvictor.main(new String[] {
+					"-feedBasePath",cluster.getConf().get("fs.default.name")
+					+ dataPath,
+					"-retentionType","instance", "-retentionLimit","hours(5)", "-timeZone","UTC", "-frequency","hourly",
+					"-logFile",logFile});
 			assertFailures(fs, pair);
 
 			compare(map.get("feed2"), stream.getBuffer());
@@ -193,19 +196,25 @@ public class FeedEvictorTest {
 
 			Pair<List<String>, List<String>>  pair;
 			pair = createTestData();
-			FeedEvictor.main(new String[]{cluster.getConf().
-					get("fs.default.name") + "/data/YYYY/feed3/dd/MM/" +
-					"?{MONTH}/more/?{HOUR}", "instance",
-					"months(5)", "UTC", "hourly","/ivory/staging/feed/2012-01-01-04-00"});
+			FeedEvictor.main(new String[] {
+					"-feedBasePath",
+					cluster.getConf().get("fs.default.name")
+							+ "/data/YYYY/feed3/dd/MM/"
+							+ "?{MONTH}/more/?{HOUR}", "-retentionType",
+					"instance", "-retentionLimit", "months(5)", "-timeZone",
+					"UTC", "-frequency", "hourly", "-logFile",
+					"/ivory/staging/feed/2012-01-01-04-00" });
 			Assert.assertEquals("instances=NULL", stream.getBuffer());
 
 			stream.clear();
 			String dataPath="/data/YYYY/feed4/dd/MM/" +
 					"02/more/hello";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-02-00.csv";
-			FeedEvictor.main(new String[]{cluster.getConf().
-					get("fs.default.name") + dataPath, "instance",
-					"hours(5)", "UTC", "hourly",logFile});
+			FeedEvictor.main(new String[] { "-feedBasePath",
+					cluster.getConf().get("fs.default.name") + dataPath,
+					"-retentionType", "instance", "-retentionLimit",
+					"hours(5)", "-timeZone", "UTC", "-frequency", "hourly",
+					"-logFile", logFile });
 			Assert.assertEquals("instances=NULL", stream.getBuffer());     
 			
 			Assert.assertEquals(readLogFile(new Path(logFile)), getExpectedInstancePaths(dataPath));

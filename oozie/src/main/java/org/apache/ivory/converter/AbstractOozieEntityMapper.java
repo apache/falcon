@@ -40,12 +40,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.messaging.EntityInstanceMessage.entityOperation;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.bundle.CONFIGURATION;
 import org.apache.ivory.oozie.bundle.COORDINATOR;
@@ -101,34 +101,40 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected Path getCoordPath(Path bundlePath, String coordName) {
-        Tag tag = getEntity().getWorkflowNameTag(coordName);
+        Tag tag = EntityUtil.getWorkflowNameTag(coordName,getEntity());
         return new Path(bundlePath, tag.name());
     }
 
     protected abstract Map<String, String> getEntityProperties();
 
-    public void map(Cluster cluster, Path bundlePath) throws IvoryException {
+    public boolean map(Cluster cluster, Path bundlePath) throws IvoryException {
         BUNDLEAPP bundleApp = new BUNDLEAPP();
-        bundleApp.setName(entity.getWorkflowName());
+        bundleApp.setName(EntityUtil.getWorkflowName(entity).toString());
         // all the properties are set prior to bundle and coordinators creation
         CONFIGURATION bundleConf = createBundleConf(cluster);
 
-        List<COORDINATORAPP> coordinators = getCoordinators(cluster, bundlePath);
-
+		List<COORDINATORAPP> coordinators = getCoordinators(cluster, bundlePath);
+		if (coordinators.size() == 0) {
+			return false;
+		}
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-            marshal(cluster, coordinatorapp, coordPath);
-            createTempDir(cluster, coordPath);
-            COORDINATOR bundleCoord = new COORDINATOR();
-            bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getHDFSPath(coordPath));
+			marshal(cluster, coordinatorapp, coordPath, entity.getName()
+					+ EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(),entity) + ".xml");
+			createTempDir(cluster, coordPath);
+			COORDINATOR bundleCoord = new COORDINATOR();
+			bundleCoord.setName(coordinatorapp.getName());
+			bundleCoord.setAppPath(getHDFSPath(coordPath) + "/"
+					+ entity.getName()
+					+ EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(),entity) + ".xml");
             bundleCoord.setConfiguration(bundleConf);
             bundleApp.getCoordinator().add(bundleCoord);
 
             copySharedLibs(cluster, coordPath);
         }
-
+        
         marshal(cluster, bundleApp, bundlePath);
+        return true;
     }
 
     private void copySharedLibs(Cluster cluster, Path coordPath) throws IvoryException {
@@ -173,9 +179,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
         props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
         props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
-        props.put(ARG.operation.getPropName(), entityOperation.GENERATE.name());
-
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), entity.getWorkflowNameTag(coordName),
+        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName,entity),
                 "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
 
@@ -243,10 +247,10 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             throw new IvoryException("Unable to create temp dir in " + coordPath, e);
         }
     }
+    
+    protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws IvoryException {
 
-    protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath) throws IvoryException {
-
-        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, "coordinator.xml"));
+        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, name));
     }
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws IvoryException {
@@ -286,4 +290,18 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             throw new IvoryException(e);
         }
     }
+    
+	protected COORDINATORAPP getCoordinatorTemplate(String template)
+			throws IvoryException {
+		try {
+			Unmarshaller unmarshaller = coordJaxbContext.createUnmarshaller();
+			@SuppressWarnings("unchecked")
+			JAXBElement<COORDINATORAPP> jaxbElement = (JAXBElement<COORDINATORAPP>) unmarshaller
+					.unmarshal(AbstractOozieEntityMapper.class
+							.getResourceAsStream(template));
+			return jaxbElement.getValue();
+		} catch (JAXBException e) {
+			throw new IvoryException(e);
+		}
+	}
 }

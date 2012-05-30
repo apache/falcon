@@ -18,40 +18,42 @@
 
 package org.apache.ivory.converter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.parser.FeedEntityParser;
+import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.messaging.EntityInstanceMessage.entityOperation;
+import org.apache.ivory.messaging.EntityInstanceMessage.EntityOps;
 import org.apache.ivory.oozie.coordinator.ACTION;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
+import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.OozieClient;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private static Logger LOG = Logger.getLogger(OozieFeedMapper.class);
 
-    private static final String RETENTION_WF_TEMPLATE = "/config/workflow/feed-parent-workflow.xml";
+	private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
+	private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
+	private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -59,20 +61,30 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     @Override
     protected List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException {
-        return Arrays.asList(getRetentionCoordinator(cluster, bundlePath));
-    }
+		List<COORDINATORAPP> coords = new ArrayList<COORDINATORAPP>();
+		COORDINATORAPP retentionCoord = getRetentionCoordinator(cluster, bundlePath);
+		if(retentionCoord!=null){
+			coords.add(retentionCoord);
+		}
+		List<COORDINATORAPP> replicationCoords = getReplicationCoordinators(cluster,
+				bundlePath);
+		coords.addAll(replicationCoords);
+		return coords;
+	}
 
-    private COORDINATORAPP getRetentionCoordinator(Cluster cluster, Path bundlePath) throws IvoryException {
+	private COORDINATORAPP getRetentionCoordinator(Cluster cluster, Path bundlePath) throws IvoryException {
 
         Feed feed = getEntity();
-        COORDINATORAPP retentionApp = new COORDINATORAPP();
-        String coordName = feed.getWorkflowName(Tag.RETENTION);
-        retentionApp.setName(coordName);
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
 
-        if (EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd()).before(new Date()))
-            throw new IvoryException("Feed's end time for cluster " + cluster.getName() + " should be in the future");
-
+        if (EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd()).before(new Date())){
+			LOG.warn("Feed Retention is not applicable as Feed's end time for cluster "
+					+ cluster.getName() + " is not in the future");
+			return null;
+		}
+        COORDINATORAPP retentionApp = new COORDINATORAPP();
+        String coordName = EntityUtil.getWorkflowName(Tag.RETENTION,feed).toString();
+        retentionApp.setName(coordName);
         retentionApp.setEnd(feedCluster.getValidity().getEnd());
         retentionApp.setStart(EntityUtil.formatDateUTC(new Date()));
         retentionApp.setTimezone(feedCluster.getValidity().getTimezone());
@@ -86,8 +98,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         retentionApp.setAction(getRetentionWorkflowAction(cluster, wfPath, coordName));
         return retentionApp;
     }
-
-    private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath, String wfName) throws IvoryException {
+	
+	private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath, String wfName) throws IvoryException {
         Feed feed = getEntity();
         ACTION retentionAction = new ACTION();
         WORKFLOW retentionWorkflow = new WORKFLOW();
@@ -103,12 +115,11 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
             String feedPathMask = feed.getLocations().get(LocationType.DATA).getPath();
 
-            props.put(OozieClient.LIBPATH, getRetentionWorkflowPath(cluster) + "/lib");
             props.put("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{"));
             props.put("timeZone", feedCluster.getValidity().getTimezone());
             props.put("frequency", feed.getFrequency());
             props.put("limit", feedCluster.getRetention().getLimit());
-            props.put(ARG.operation.getPropName(), entityOperation.DELETE.name());
+            props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
             props.put(ARG.feedNames.getPropName(), feed.getName());
             props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
 
@@ -120,35 +131,145 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
     }
 
-    private WORKFLOWAPP createRetentionWorkflow(Cluster cluster) throws IOException, IvoryException {
-        Path retentionWorkflowAppPath = new Path(getRetentionWorkflowPath(cluster));
-        FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-        Path workflowPath = new Path(retentionWorkflowAppPath, "workflow.xml");
-        if (!fs.exists(workflowPath)) {
-            InputStream in = getClass().getResourceAsStream("/retention-workflow.xml");
-            OutputStream out = fs.create(workflowPath);
-            IOUtils.copyBytes(in, out, 4096, true);
-            if (LOG.isDebugEnabled()) {
-                debug(retentionWorkflowAppPath, fs);
-            }
-            Path libLoc = new Path(retentionWorkflowAppPath, "lib");
-            fs.mkdirs(libLoc);
-        }
+	private List<COORDINATORAPP> getReplicationCoordinators(
+			Cluster targetCluster, Path bundlePath) throws IvoryException {
+		Feed feed = getEntity();
+		List<COORDINATORAPP> replicationCoords = new ArrayList<COORDINATORAPP>();
+		if (feed.getCluster(targetCluster.getName()).getType()
+				.equals(ClusterType.TARGET)) {
+			String coordName = EntityUtil.getWorkflowName(Tag.REPLICATION,feed).toString();
+			Path basePath = getCoordPath(bundlePath, coordName);
+			createReplicatonWorkflow(targetCluster, basePath, coordName);
+			for (org.apache.ivory.entity.v0.feed.Cluster feedCluster : feed
+					.getClusters().getCluster()) {
+				if (feedCluster.getType().equals(ClusterType.SOURCE)) {
+					COORDINATORAPP coord = createAndGetCoord(
+							feed,
+							(Cluster) ConfigurationStore.get().get(
+									EntityType.CLUSTER, feedCluster.getName()),
+							targetCluster, bundlePath);
+					replicationCoords.add(coord);
 
-        return getWorkflowTemplate(RETENTION_WF_TEMPLATE);
-    }
+				}
+			}
 
-    private void debug(Path outPath, FileSystem fs) throws IOException {
-        ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        InputStream xmlData = fs.open(new Path(outPath, "workflow.xml"));
-        IOUtils.copyBytes(xmlData, writer, 4096, true);
-        LOG.debug("Workflow xml copied to " + outPath + "/workflow.xml");
-        LOG.debug(writer);
-    }
+		}
+		return replicationCoords;
+	}
+	
+	private COORDINATORAPP createAndGetCoord(Feed feed,
+			Cluster srcCluster, Cluster trgCluster, Path bundlePath)
+			throws IvoryException {
+		COORDINATORAPP replicationCoord;
+		String coordName;
+		try {
+			replicationCoord = getCoordinatorTemplate(REPLICATION_COORD_TEMPLATE);
+			coordName = EntityUtil.getWorkflowName(Tag.REPLICATION,
+					Arrays.asList(srcCluster.getName()),feed).toString();
+			replicationCoord.setName(coordName);
+			replicationCoord.setFrequency("${coord:" + feed.getFrequency()
+					+ "(" + feed.getPeriodicity() + ")}");
+			Date srcStartDate = EntityUtil.parseDateUTC(feed
+					.getCluster(srcCluster.getName()).getValidity().getStart());
+			Date srcEndDate = EntityUtil.parseDateUTC(feed
+					.getCluster(srcCluster.getName()).getValidity().getEnd());
+			Date trgStartDate = EntityUtil.parseDateUTC(feed
+					.getCluster(trgCluster.getName()).getValidity().getStart());
+			Date trgEndDate = EntityUtil.parseDateUTC(feed
+					.getCluster(trgCluster.getName()).getValidity().getEnd());
+			replicationCoord
+					.setStart(srcStartDate.after(trgStartDate) ? EntityUtil
+							.formatDateUTC(srcStartDate) : EntityUtil
+							.formatDateUTC(trgStartDate));
+			replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? EntityUtil
+					.formatDateUTC(srcEndDate) : EntityUtil
+					.formatDateUTC(trgEndDate));
+			replicationCoord.setTimezone(feed.getCluster(srcCluster.getName())
+					.getValidity().getTimezone());
+			SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord
+					.getDatasets().getDatasetOrAsyncDataset().get(0);
+			SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord
+					.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-    private String getRetentionWorkflowPath(Cluster cluster) {
-        return ClusterHelper.getLocation(cluster, "staging") + "/ivory/system/retention";
-    }
+			// TODO check for double slash, should target cluster have validity
+			// on it?
+			inputDataset.setUriTemplate(ClusterHelper.getHdfsUrl(srcCluster)
+					+ feed.getLocations().get(LocationType.DATA).getPath());
+			outputDataset.setUriTemplate(getHDFSPath(feed.getLocations()
+					.get(LocationType.DATA).getPath()));
+			setDatasetValues(inputDataset, feed, srcCluster);
+			setDatasetValues(outputDataset, feed, srcCluster);
+			if (feed.getAvailabilityFlag() == null) {
+				inputDataset.setDoneFlag("");
+			} else {
+				inputDataset.setDoneFlag(feed.getAvailabilityFlag());
+			}
+
+		} catch (IvoryException e) {
+			throw new IvoryException(
+					"Cannot unmarshall replication coordinator template", e);
+		}
+
+		Path wfPath = getCoordPath(bundlePath, coordName);
+		replicationCoord.setAction(getReplicationWorkflowAction(srcCluster,
+				wfPath, coordName));
+		return replicationCoord;
+	}
+
+	
+	private void setDatasetValues(SYNCDATASET dataset, Feed feed, Cluster cluster) {
+		dataset.setInitialInstance(feed.getCluster(cluster.getName())
+				.getValidity().getStart());
+		dataset.setTimezone(feed.getCluster(cluster.getName())
+				.getValidity().getTimezone());
+		dataset.setFrequency("${coord:" + feed.getFrequency() + "("
+				+ feed.getPeriodicity() + ")}");
+	}
+
+	private ACTION getReplicationWorkflowAction(Cluster srcCluster,
+			Path wfPath, String wfName) throws IvoryException {
+		ACTION replicationAction = new ACTION();
+		WORKFLOW replicationWF = new WORKFLOW();
+		try {
+			replicationWF.setAppPath(getHDFSPath(wfPath.toString()));
+			Feed feed = getEntity();
+			StringBuilder pathsWithPartitions = new StringBuilder();
+			pathsWithPartitions.append("${coord:dataIn('input')}")
+					.append(feed.getCluster(srcCluster.getName())
+							.getPartition() == null ? "" : FeedEntityParser
+							.getPartitionExpValue(srcCluster,
+									feed.getCluster(srcCluster.getName())
+											.getPartition()));
+
+			Map<String, String> props = createCoordDefaultConfiguration(
+					srcCluster, wfPath, wfName);
+			props.put("srcClusterName", srcCluster.getName());
+			props.put("srcClusterColo", srcCluster.getColo());
+			props.put(ARG.feedNames.getPropName(), feed.getName());
+			props.put(ARG.feedInstancePaths.getPropName(),
+					pathsWithPartitions.toString());
+			props.put("distcpSourcePaths",
+					pathsWithPartitions.toString());
+			props.put("distcpTargetPaths", "${coord:dataOut('output')}");
+			replicationWF.setConfiguration(getCoordConfig(props));
+			replicationAction.setWorkflow(replicationWF);
+		} catch (Exception e) {
+			throw new IvoryException("Unable to create replication workflow", e);
+		}
+		return replicationAction;
+
+	}
+
+	private void createReplicatonWorkflow(Cluster cluster, Path wfPath,
+			String wfName) throws IvoryException {
+		WORKFLOWAPP repWFapp = getWorkflowTemplate(REPLICATION_WF_TEMPLATE);
+		repWFapp.setName(wfName);
+		marshal(cluster, repWFapp, wfPath);
+	}
+
+	private WORKFLOWAPP createRetentionWorkflow(Cluster cluster) throws IOException, IvoryException {
+		return getWorkflowTemplate(RETENTION_WF_TEMPLATE);
+	}
 
     @Override
     protected Map<String, String> getEntityProperties() {
@@ -160,4 +281,5 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
         return props;
     }
+
 }

@@ -185,4 +185,5 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
       }
       return originalValue;
     }
+
 }

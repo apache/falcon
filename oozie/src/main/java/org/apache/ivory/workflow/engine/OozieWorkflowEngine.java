@@ -90,11 +90,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public void schedule(Entity entity) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
+        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
         Map<String, Properties> newFlows = builder.newWorkflowSchedule(entity);
         for (String cluster : newFlows.keySet()) {
-            if (findBundle(entity, cluster) == MISSING)
-                scheduleEntity(cluster, newFlows.get(cluster), entity);
+			if (findBundle(entity, cluster) == MISSING) {
+				scheduleEntity(cluster, newFlows.get(cluster), entity);
+			} else {
+				LOG.info("Not scheduling the entity as bundle is present:"
+						+ entity);
+			}
         }
     }
 
@@ -139,7 +143,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private Map<String, BundleJob> findBundle(Entity entity) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
+        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
         String[] clusters = builder.getClustersDefined(entity);
         Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
         for (String cluster : clusters) {
@@ -160,7 +164,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     private List<BundleJob> findBundles(Entity entity, String cluster) throws IvoryException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
-            List<BundleJob> jobs = client.getBundleJobsInfo(OozieClient.FILTER_NAME + "=" + entity.getWorkflowName() + ";", 0, 100);
+            List<BundleJob> jobs = client.getBundleJobsInfo(OozieClient.FILTER_NAME + "=" + EntityUtil.getWorkflowName(entity) + ";", 0, 100);
             if (jobs != null)
                 return jobs;
             return new ArrayList<BundleJob>();
@@ -170,7 +174,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private Map<String, List<BundleJob>> findBundles(Entity entity) throws IvoryException {
-        WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
+        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
         String[] clusters = builder.getClustersDefined(entity);
         Map<String, List<BundleJob>> jobMap = new HashMap<String, List<BundleJob>>();
 
@@ -244,7 +248,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     @Override
     public ProcessInstancesResult getRunningInstances(Entity entity) throws IvoryException {
         try {
-            WorkflowBuilder builder = WorkflowBuilder.getBuilder(ENGINE, entity);
+            WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             String[] clusters = builder.getClustersDefined(entity);
             List<ProcessInstance> runInstances = new ArrayList<ProcessInstance>();
             String[] wfNames = builder.getWorkflowNames(entity);
