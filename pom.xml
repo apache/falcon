@@ -91,6 +91,10 @@
             <url>http://maven.scm.corp.inmobi.com/content/repositories/data-snapshot</url>
         </repository>
         <repository>
+            <id>internal.snapshots.tmp</id>
+            <url>http://maven.scm.corp.inmobi.com/content/repositories/data-snapshot</url>
+        </repository>
+        <repository>
             <id>internal.releases</id>
             <url>http://maven.scm.corp.inmobi.com/content/repositories/data-release</url>
         </repository>
