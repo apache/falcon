@@ -59,7 +59,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
         }
     }
 
-    private void scheduleInternal(String type, String entity) throws IvoryException {
+    private synchronized void scheduleInternal(String type, String entity) throws IvoryException {
         checkSchedulableEntity(type);
         Entity entityObj = getEntity(entity, type);
         if (!getWorkflowEngine().isActive(entityObj))

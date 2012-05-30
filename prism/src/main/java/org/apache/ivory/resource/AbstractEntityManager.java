@@ -333,7 +333,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         }
     }
 
-    protected Entity submitInternal(HttpServletRequest request, String type) throws IOException, IvoryException {
+    protected synchronized Entity submitInternal(HttpServletRequest request, String type) throws IOException, IvoryException {
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
