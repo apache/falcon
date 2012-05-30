@@ -18,13 +18,14 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
@@ -37,10 +38,8 @@ import org.apache.ivory.entity.v0.feed.Feed;
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Feed feed) throws IvoryException {
-
-        List<Cluster> clusters = new ArrayList<Cluster>();
-        List<Path> paths = new ArrayList<Path>();
+    public Map<String, Properties> newWorkflowSchedule(Feed feed) throws IvoryException {
+        Map<String, Path> pathsMap = new HashMap<String, Path>();
         
         for (String clusterName: getClustersDefined(feed)) {
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(clusterName);
@@ -50,14 +49,13 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 continue;
 
             Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
-            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), feed.getStagingPath());
+            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
 
             AbstractOozieEntityMapper mapper = new OozieFeedMapper(feed);
             mapper.map(cluster, bundlePath);
-            clusters.add(cluster);
-            paths.add(bundlePath);
+            pathsMap.put(clusterName, bundlePath);
         }
-        return createAppProperties(clusters, paths);
+        return createAppProperties(pathsMap);
     }
 
     @Override
@@ -65,5 +63,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
                 Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
+    }
+
+    @Override
+    public String[] getWorkflowNames(Feed entity) {
+        return new String[] { entity.getWorkflowName(Tag.RETENTION)};
     }
 }

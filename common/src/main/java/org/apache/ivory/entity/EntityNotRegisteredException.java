@@ -16,21 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.transaction;
+package org.apache.ivory.entity;
 
 import org.apache.ivory.IvoryException;
 
-import java.util.List;
-
-public interface Journal {
-
-    void begin(AtomicActions id) throws IvoryException;
-
-    void commit(AtomicActions id) throws IvoryException;
-
-    void rollback(AtomicActions id) throws IvoryException;
-
-    void onAction(AtomicActions id, Action action) throws IvoryException;
-
-    List<AtomicActions> getUncommittedActions() throws IvoryException;
+public class EntityNotRegisteredException extends IvoryException{
+    
+    public EntityNotRegisteredException(String message) {
+        super(message);
+    }
 }

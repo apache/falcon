@@ -42,7 +42,6 @@ import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -112,7 +111,6 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_KILL");
             validateParams(processName, startStr, endStr);
             
@@ -121,13 +119,9 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            ProcessInstancesResult result = wfEngine.killInstances(process, start, end);
-            result.setRequestId(TransactionManager.getTransactionId());
-            TransactionManager.commit();
-            return result;
+            return wfEngine.killInstances(process, start, end);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -137,7 +131,6 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_SUSPEND");
             validateParams(processName, startStr, endStr);
             
@@ -146,13 +139,9 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            ProcessInstancesResult result = wfEngine.suspendInstances(process, start, end);
-            result.setRequestId(TransactionManager.getTransactionId());
-            TransactionManager.commit();
-            return result;
+            return wfEngine.suspendInstances(process, start, end);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -162,7 +151,6 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RESUME");
             validateParams(processName, startStr, endStr);
             
@@ -171,13 +159,9 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             Process process = getProcess(processName);
             
             WorkflowEngine wfEngine = getWorkflowEngine();
-            ProcessInstancesResult result = wfEngine.resumeInstances(process, start, end);
-            result.setRequestId(TransactionManager.getTransactionId());
-            TransactionManager.commit();
-            return result;
+            return wfEngine.resumeInstances(process, start, end);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -187,7 +171,6 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, processName, EntityType.PROCESS.name(), "INSTANCE_RERUN");
             validateParams(processName, startStr, endStr);
             
@@ -205,13 +188,9 @@ public abstract class AbstractProcessInstanceManager extends AbstractEntityManag
             }
 
             WorkflowEngine wfEngine = getWorkflowEngine();
-            ProcessInstancesResult result = wfEngine.reRunInstances(process, start, end, props);
-            result.setRequestId(TransactionManager.getTransactionId());
-            TransactionManager.commit();
-            return result;
+            return wfEngine.reRunInstances(process, start, end, props);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }

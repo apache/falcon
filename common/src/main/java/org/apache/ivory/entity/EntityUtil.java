@@ -7,29 +7,51 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.common.DateValidator;
 import org.apache.ivory.entity.common.TimeUnit;
 import org.apache.ivory.entity.parser.Frequency;
+import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.entity.common.DateValidator;
 
 public class EntityUtil {
-	
-	private static final DateValidator DateValidator = new DateValidator();
+
+    private static final DateValidator DateValidator = new DateValidator();
     private static final long MINUTE_IN_MS = 60000L;
     private static final long HOUR_IN_MS = 3600000L;
     private static final long DAY_IN_MS = 86400000L;
     private static final long MONTH_IN_MS = 2592000000L;
+
+    public static Entity getEntity(EntityType type, String entityName) throws IvoryException {
+        ConfigurationStore configStore = ConfigurationStore.get();
+        Entity entity = configStore.get(type, entityName);
+        if (entity == null) {
+            throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
+        }
+        return entity;        
+    }
+    
+    public static Entity getEntity(String type, String entityName) throws IvoryException {
+        EntityType entityType;
+        try {
+            entityType = EntityType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IvoryException("Invalid entity type: " + type, e);
+        }
+        return getEntity(entityType, entityName);
+    }
 
     private static DateFormat getDateFormat() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat;
     }
-    
+
     public static TimeZone getTimeZone(String tzId) {
         if (tzId == null) {
             throw new IllegalArgumentException("Invalid TimeZone: " + tzId);
@@ -52,9 +74,9 @@ public class EntityUtil {
     public static String formatDateUTC(Date d) {
         return (d != null) ? getDateFormat().format(d) : null;
     }
-    
-    public static boolean isValidUTCDate(String date){
-    		return DateValidator.validate(date);
+
+    public static boolean isValidUTCDate(String date) {
+        return DateValidator.validate(date);
     }
 
     public static Date getEndTime(Entity entity, String cluster) throws IvoryException {
@@ -156,47 +178,31 @@ public class EntityUtil {
     public static void setConcurrency(Feed feed, int concurrency) {
     }
 
-    @Deprecated
-    public static Date getNextStartTimeOld(Date startTime, Frequency frequency,
-            int periodicity, String timzone, Date now) {
-        Calendar startCal = Calendar.getInstance(EntityUtil
-                .getTimeZone(timzone));
-        startCal.setTime(startTime);
-
-        while (startCal.getTime().before(now)) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(), periodicity);
-        }
-        return startCal.getTime();
-    }
-    
-    public static Date getNextStartTime(Date startTime, Frequency frequency,
-            int periodicity, String timezone, Date now) {
-        return getNextStartTime(startTime, frequency.getTimeUnit(),
-                periodicity, timezone, now);
+    public static Date getNextStartTime(Date startTime, Frequency frequency, int periodicity, String timezone, Date now) {
+        return getNextStartTime(startTime, frequency.getTimeUnit(), periodicity, timezone, now);
     }
 
-    public static Date getNextStartTime(Date startTime, TimeUnit timeUnit,
-            int periodicity, String timezone, Date now) {
+    public static Date getNextStartTime(Date startTime, TimeUnit timeUnit, int periodicity, String timezone, Date now) {
 
-        if (startTime.after(now)) return startTime;
+        if (startTime.after(now))
+            return startTime;
 
-        Calendar startCal = Calendar.getInstance(EntityUtil
-                .getTimeZone(timezone));
+        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timezone));
         startCal.setTime(startTime);
 
         int count = 0;
         switch (timeUnit) {
             case MONTH:
-                count = (int)((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
+                count = (int) ((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
                 break;
             case DAY:
-                count = (int)((now.getTime() - startTime.getTime()) / DAY_IN_MS);
+                count = (int) ((now.getTime() - startTime.getTime()) / DAY_IN_MS);
                 break;
             case HOUR:
-                count = (int)((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
+                count = (int) ((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
                 break;
             case MINUTE:
-                count = (int)((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
+                count = (int) ((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
                 break;
             case END_OF_MONTH:
             case END_OF_DAY:
@@ -205,8 +211,7 @@ public class EntityUtil {
         }
 
         if (count > 2) {
-            startCal.add(timeUnit.getCalendarUnit(),
-                    ((count - 2) / periodicity) * periodicity);
+            startCal.add(timeUnit.getCalendarUnit(), ((count - 2) / periodicity) * periodicity);
         }
         while (startCal.getTime().before(now)) {
             startCal.add(timeUnit.getCalendarUnit(), periodicity);
@@ -214,33 +219,31 @@ public class EntityUtil {
         return startCal.getTime();
     }
 
-    public static int getInstanceSequence(Date startTime, Frequency frequency,
-                                          int periodicity, String timezone, Date instanceTime) {
+    public static int getInstanceSequence(Date startTime, Frequency frequency, int periodicity, String timezone, Date instanceTime) {
         return getInstanceSequence(startTime, frequency.getTimeUnit(), periodicity, timezone, instanceTime);
     }
 
-    public static int getInstanceSequence(Date startTime, TimeUnit timeUnit,
-                                          int periodicity, String timezone, Date instanceTime) {
+    public static int getInstanceSequence(Date startTime, TimeUnit timeUnit, int periodicity, String timezone, Date instanceTime) {
 
-        if (startTime.after(instanceTime)) return -1;
+        if (startTime.after(instanceTime))
+            return -1;
 
-        Calendar startCal = Calendar.getInstance(EntityUtil
-                .getTimeZone(timezone));
+        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timezone));
         startCal.setTime(startTime);
 
         int count = 0;
         switch (timeUnit) {
             case MONTH:
-                count = (int)((instanceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
+                count = (int) ((instanceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
                 break;
             case DAY:
-                count = (int)((instanceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
+                count = (int) ((instanceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
                 break;
             case HOUR:
-                count = (int)((instanceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
+                count = (int) ((instanceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
                 break;
             case MINUTE:
-                count = (int)((instanceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
+                count = (int) ((instanceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
                 break;
             case END_OF_MONTH:
             case END_OF_DAY:
@@ -249,8 +252,7 @@ public class EntityUtil {
         }
 
         if (count > 2) {
-            startCal.add(timeUnit.getCalendarUnit(),
-                    (count / periodicity) * periodicity);
+            startCal.add(timeUnit.getCalendarUnit(), (count / periodicity) * periodicity);
             count = (count / periodicity);
         }
         while (startCal.getTime().before(instanceTime)) {
@@ -258,5 +260,15 @@ public class EntityUtil {
             count++;
         }
         return count + 1;
+    }
+
+    public static String getStagingPath(Entity entity) throws IvoryException {
+        try {
+            byte[] digest = DigestUtils.md5(entity.toString());
+            return "ivory/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName() + "/"
+                    + new String(Hex.encodeHex(digest));
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
     }
 }

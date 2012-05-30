@@ -33,8 +33,6 @@ public interface WorkflowEngine {
 
     void schedule(Entity entity) throws IvoryException;
 
-    String dryRun(Entity entity) throws IvoryException;
-
     String suspend(Entity entity) throws IvoryException;
 
     String resume(Entity entity) throws IvoryException;
@@ -47,8 +45,6 @@ public interface WorkflowEngine {
 
     boolean isSuspended(Entity entity) throws IvoryException;
 
-    boolean isRunning(Entity entity) throws IvoryException;
-    
     ProcessInstancesResult getRunningInstances(Entity entity) throws IvoryException;
     
     ProcessInstancesResult killInstances(Entity entity, Date start, Date end) throws IvoryException;

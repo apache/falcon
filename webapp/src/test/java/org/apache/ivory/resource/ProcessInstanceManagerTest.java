@@ -8,6 +8,7 @@ import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
 import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.OozieClient;
@@ -15,12 +16,12 @@ import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-@Test (enabled = false)
+@Test(enabled=false)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
-
+    private static final String START_INSTANCE = "2012-04-20T00:00Z";
     protected void schedule() throws Exception {
         scheduleProcess();
-        waitForProcessStart();
+        waitForWorkflowStart();
     }
 
     public void testGetRunningInstances() throws Exception {
@@ -30,78 +31,80 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+    }
+
+    private void assertInstance(ProcessInstance processInstance, String instance, WorkflowStatus status) {
+        Assert.assertNotNull(processInstance);
+        Assert.assertNotNull(processInstance.getInstance());
+        Assert.assertTrue(processInstance.getInstance().endsWith(instance));
+        Assert.assertEquals(processInstance.getStatus(), status);
     }
 
     public void testGetInstanceStatus() throws Exception {
         schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/status/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .get(ProcessInstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
-        Assert.assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
     public void testReRunInstances() throws Exception {
         testKillInstances();
 
         ProcessInstancesResult response = this.service.path("api/processinstance/rerun/" + processName)
-                .queryParam("start", "2012-04-12T05:30Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
 
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2012-04-12T05:30Z", response.getInstances()[0].getInstance());
-        Assert.assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
 
-        waitForWorkflow("2012-04-12T05:30Z", WorkflowJob.Status.RUNNING);
+        waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);
     }
 
     public void testKillInstances() throws Exception {
         schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/kill/" + processName)
-                .queryParam("start", "2012-04-12T05:30Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2012-04-12T05:30Z", response.getInstances()[0].getInstance());
-        Assert.assertEquals(WorkflowStatus.KILLED, response.getInstances()[0].getStatus());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
 
-        waitForWorkflow("2012-04-12T05:30Z", WorkflowJob.Status.KILLED);
+        waitForWorkflow(START_INSTANCE, WorkflowJob.Status.KILLED);
     }
 
     public void testSuspendInstances() throws Exception {
         schedule();
         ProcessInstancesResult response = this.service.path("api/processinstance/suspend/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
-        Assert.assertEquals(WorkflowStatus.SUSPENDED, response.getInstances()[0].getStatus());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.SUSPENDED);
 
-        waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.SUSPENDED);
+        waitForWorkflow(START_INSTANCE, WorkflowJob.Status.SUSPENDED);
     }
 
     public void testResumesInstances() throws Exception {
         testSuspendInstances();
         
         ProcessInstancesResult response = this.service.path("api/processinstance/resume/" + processName)
-                .queryParam("start", "2010-01-01T01:00Z").header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(ProcessInstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
-        Assert.assertEquals("2010-01-01T01:00Z", response.getInstances()[0].getInstance());
-        Assert.assertEquals(WorkflowStatus.RUNNING, response.getInstances()[0].getStatus());
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
 
-        waitForWorkflow("2010-01-01T01:00Z", WorkflowJob.Status.RUNNING);
+        waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);
     }
     
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {

@@ -40,6 +40,8 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.Pair;
+import org.apache.ivory.entity.EntityNotRegisteredException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.EntityParser;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.ValidationException;
@@ -54,7 +56,6 @@ import org.apache.ivory.resource.APIResult.Status;
 import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.service.IvoryService;
-import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
@@ -166,7 +167,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         if (DeploymentUtil.isEmbeddedMode())
             return DeploymentUtil.getDefaultColos();
         try {
-            if(EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
                 return getAllColos();
             Entity entity = getEntity(name, type);
             String[] clusters = entity.getClustersDefined();
@@ -179,6 +180,10 @@ public abstract class AbstractEntityManager implements IvoryService {
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+    }
+
+    protected Entity getEntity(String name, String type) throws IvoryException {
+        return EntityUtil.getEntity(type, name);
     }
 
     /**
@@ -201,15 +206,11 @@ public abstract class AbstractEntityManager implements IvoryService {
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, "STREAMED_DATA", type, "SUBMIT");
             Entity entity = submitInternal(request, type);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
-            TransactionManager.commit();
-            return result;
+            return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Unable to persist entity object", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -245,32 +246,28 @@ public abstract class AbstractEntityManager implements IvoryService {
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             try {
                 Entity entityObj = getEntity(entity, type);
-                canRemove(entityObj);
 
+                canRemove(entityObj);
                 if (entityType.isSchedulable()) {
                     if (getWorkflowEngine().isActive(entityObj)) {
                         getWorkflowEngine().delete(entityObj);
                         removedFromEngine = "(KILLED in ENGINE)";
                     }
                 }
+
                 configStore.remove(entityType, entity);
-            } catch (NoSuchElementException e) { // already removed
+            } catch (EntityNotRegisteredException e) {    //already deleted
             }
-
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
+            
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
                     + removedFromEngine);
-            TransactionManager.commit();
-
-            return result;
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -281,7 +278,6 @@ public abstract class AbstractEntityManager implements IvoryService {
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entityName, type, "UPDATE");
             Entity oldEntity = getEntity(entityName, type);
@@ -295,12 +291,9 @@ public abstract class AbstractEntityManager implements IvoryService {
                 configStore.update(entityType, newEntity);
             }
 
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
-            TransactionManager.commit();
-            return result;
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
         } catch (Throwable e) {
             LOG.error("Updation failed", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
@@ -422,7 +415,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             entityObj = getEntity(entity, type);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             String status;
-            
+
             if (entityType.isSchedulable()) {
                 if (workflowEngine.isActive(entityObj)) {
                     if (workflowEngine.isSuspended(entityObj)) {
@@ -512,21 +505,6 @@ public abstract class AbstractEntityManager implements IvoryService {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
 
         }
-    }
-
-    protected Entity getEntity(String entity, String type) throws IvoryException {
-        EntityType entityType;
-        try {
-            entityType = EntityType.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IvoryException("Invalid entity type: " + type, e);
-        }
-        ConfigurationStore configStore = ConfigurationStore.get();
-        Entity entityObj = configStore.get(entityType, entity);
-        if (entityObj == null) {
-            throw new IvoryException(entity + " (" + type + ") not found");
-        }
-        return entityObj;
     }
 
     protected WorkflowEngine getWorkflowEngine() {

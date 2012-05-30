@@ -1,10 +1,30 @@
 package org.apache.ivory.resource;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.ServletInputStream;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -21,28 +41,20 @@ import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 
-import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class AbstractTestBase {
     protected static final String FEED_TEMPLATE1 = "/feed-template1.xml";
@@ -91,23 +103,43 @@ public class AbstractTestBase {
         overlay.put("f1", feed1);
         overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
-        assertSuccessful(response);        
+        assertSuccessful(response);
         ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
                 .header("Remote-User", "guest").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
-        assertSuccessful(clientRepsonse);    
+        assertSuccessful(clientRepsonse);
     }
-    
-    protected void waitForProcessStart() throws Exception {
+
+    private List<WorkflowJob> getRunningJobs() throws Exception {
+        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
+        StringBuilder builder = new StringBuilder();
+        builder.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING).append(';');
+        builder.append(OozieClient.FILTER_NAME).append('=').append("IVORY_PROCESS_DEFAULT_").append(processName);
+        return ozClient.getJobsInfo(builder.toString());
+    }
+
+    protected void waitForWorkflowStart() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            List<WorkflowJob> jobs = getRunningJobs();
+            if (jobs != null && !jobs.isEmpty())
+                return;
+
+            System.out.println("Waiting for workflow to start");
+            Thread.sleep(1000);
+        }
+        throw new Exception("Process " + processName + " hasn't started in oozie");
+    }
+
+    protected void waitForBundleStart() throws Exception {
         OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         String bundleId = getBundleId(ozClient);
 
         for (int i = 0; i < 10; i++) {
             Thread.sleep(1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (bundle.getStatus() == Status.RUNNING) {
+            if (bundle.getStatus() == Job.Status.RUNNING) {
                 boolean done = false;
                 for (CoordinatorJob coord : bundle.getCoordinators())
-                    if (coord.getStatus() == Status.RUNNING)
+                    if (coord.getStatus() == Job.Status.RUNNING)
                         done = true;
                 if (done == true)
                     return;
@@ -115,10 +147,11 @@ public class AbstractTestBase {
         }
         throw new Exception("Bundle " + bundleId + " is not RUNNING in oozie");
     }
-    
+
     public AbstractTestBase() {
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(APIResult.class, Feed.class, Process.class, Cluster.class, ProcessInstancesResult.class);
+            JAXBContext jaxbContext = JAXBContext.newInstance(APIResult.class, Feed.class, Process.class, Cluster.class,
+                    ProcessInstancesResult.class);
             unmarshaller = jaxbContext.createUnmarshaller();
             marshaller = jaxbContext.createMarshaller();
 
@@ -129,8 +162,10 @@ public class AbstractTestBase {
 
     @BeforeClass
     public void configure() throws Exception {
-        StartupProperties.get().setProperty("application.services", 
-                StartupProperties.get().getProperty("application.services").replace("org.apache.ivory.aspect.instances.ProcessSubscriberService", ""));
+        StartupProperties.get().setProperty(
+                "application.services",
+                StartupProperties.get().getProperty("application.services")
+                        .replace("org.apache.ivory.aspect.instances.ProcessSubscriberService", ""));
         if (new File("webapp/src/main/webapp").exists()) {
             this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
         } else if (new File("src/main/webapp").exists()) {
@@ -143,33 +178,34 @@ public class AbstractTestBase {
         this.service = client.resource(UriBuilder.fromUri(BASE_URL).build());
         this.server.start();
 
-        if(System.getProperty("ivory.test.hadoop.embedded", "true").equals("true")) {
+        if (System.getProperty("ivory.test.hadoop.embedded", "true").equals("true")) {
             CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
             this.cluster = EmbeddedCluster.newCluster("##name##", false);
             Cluster clusterEntity = this.cluster.getCluster();
             FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
             marshaller.marshal(clusterEntity, out);
-            out.close();            
+            out.close();
         } else {
             Map<String, String> overlay = new HashMap<String, String>();
             overlay.put("name", RandomStringUtils.randomAlphabetic(5));
             String file = overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay);
             this.cluster = StandAloneCluster.newCluster(file);
         }
-        
+
         cleanupStore();
 
-        //setup dependent workflow and lipath in hdfs
+        // setup dependent workflow and lipath in hdfs
         FileSystem fs = FileSystem.get(this.cluster.getConf());
         fs.mkdirs(new Path("/examples/apps/aggregator"));
         fs.mkdirs(new Path("/examples/apps/aggregator/lib"));
-        fs.mkdirs(new Path("/ivory"), new FsPermission((short)511));
+        fs.mkdirs(new Path("/ivory"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/ivory/test");
         fs.delete(wfParent, true);
         Path wfPath = new Path(wfParent, "workflow");
         fs.mkdirs(wfPath);
-        fs.copyFromLocalFile(false, true, new Path(this.getClass().getResource("/fs-workflow.xml").getPath()), new Path(wfPath, "workflow.xml"));
+        fs.copyFromLocalFile(false, true, new Path(this.getClass().getResource("/fs-workflow.xml").getPath()), new Path(wfPath,
+                "workflow.xml"));
         fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
         Path outPath = new Path(wfParent, "output");
         fs.mkdirs(outPath);
@@ -211,13 +247,14 @@ public class AbstractTestBase {
     }
 
     protected ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType) throws Exception {
-        String tmpFile = overlayParametersOverTemplate(template, overlay);        
+        String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase()).header("Remote-User", "testuser")
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
+        return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase())
+                .header("Remote-User", "testuser").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class, rawlogStream);
     }
-    
+
     protected ClientResponse submitToIvory(String template, Map<String, String> overlay, EntityType entityType) throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         return submitFileToIvory(entityType, tmpFile);
@@ -234,19 +271,17 @@ public class AbstractTestBase {
     protected void assertRequestId(ClientResponse clientRepsonse) {
         String response = clientRepsonse.getEntity(String.class);
         try {
-            APIResult result = (APIResult)unmarshaller.
-                    unmarshal(new StringReader(response));
+            APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
             Assert.assertNotNull(result.getRequestId());
         } catch (JAXBException e) {
             Assert.fail("Reponse " + response + " is not valid");
-        }        
+        }
     }
-    
+
     protected void assertStatus(ClientResponse clientRepsonse, APIResult.Status status) {
         String response = clientRepsonse.getEntity(String.class);
         try {
-            APIResult result = (APIResult)unmarshaller.
-                    unmarshal(new StringReader(response));
+            APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
             Assert.assertEquals(result.getStatus(), status);
         } catch (JAXBException e) {
             Assert.fail("Reponse " + response + " is not valid");
@@ -254,17 +289,15 @@ public class AbstractTestBase {
     }
 
     protected void assertFailure(ClientResponse clientRepsonse) {
-        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
-                BAD_REQUEST.getStatusCode());
+        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
         assertStatus(clientRepsonse, APIResult.Status.FAILED);
     }
 
     protected void assertSuccessful(ClientResponse clientRepsonse) {
-        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.
-                OK.getStatusCode());
-        assertStatus(clientRepsonse, APIResult.Status.SUCCEEDED);        
+        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.OK.getStatusCode());
+        assertStatus(clientRepsonse, APIResult.Status.SUCCEEDED);
     }
-    
+
     protected String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();
         OutputStream out = new FileOutputStream(tmpFile);
@@ -291,7 +324,7 @@ public class AbstractTestBase {
         out.close();
         return tmpFile.getAbsolutePath();
     }
-    
+
     protected File getTempFile() throws IOException {
         File target = new File("webapp/target");
         if (!target.exists()) {
@@ -300,10 +333,10 @@ public class AbstractTestBase {
 
         return File.createTempFile("test", ".xml", target);
     }
-    
+
     protected String getBundleId(OozieClient ozClient) throws Exception {
         List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
-        if(bundles != null)
+        if (bundles != null)
             return bundles.get(0).getId();
         return null;
     }
@@ -316,17 +349,17 @@ public class AbstractTestBase {
 
     @AfterMethod
     public boolean killOozieJobs() throws IvoryException, OozieClientException {
-        if(clusterName == null)
+        if (clusterName == null)
             return true;
 
         Cluster cluster = (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
-        if(cluster == null)
+        if (cluster == null)
             return true;
 
         OozieClient ozClient = OozieClientFactory.get(cluster);
         List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
-        if(bundles != null) {
-            for(BundleJob bundle:bundles)
+        if (bundles != null) {
+            for (BundleJob bundle : bundles)
                 ozClient.kill(bundle.getId());
         }
         return false;

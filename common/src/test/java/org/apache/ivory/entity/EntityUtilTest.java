@@ -24,8 +24,6 @@ public class EntityUtilTest {
         Frequency frequency = Frequency.hours;
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
                 frequency, 1, "UTC", now));
-        Assert.assertEquals(EntityUtil.getNextStartTime(start, frequency, 1, "UTC", now),
-                EntityUtil.getNextStartTimeOld(start, frequency, 1, "UTC", now));
     }
 
     @Test
@@ -37,8 +35,6 @@ public class EntityUtilTest {
         Frequency frequency = Frequency.days;
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
                 frequency, 7, "UTC", now));
-        Assert.assertEquals(EntityUtil.getNextStartTime(start, frequency, 7, "UTC", now),
-                EntityUtil.getNextStartTimeOld(start, frequency, 7, "UTC", now));
     }
 
     @Test
@@ -50,8 +46,6 @@ public class EntityUtilTest {
         Frequency frequency = Frequency.days;
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
                 frequency, 7, "UTC", now));
-        Assert.assertEquals(EntityUtil.getNextStartTime(start, frequency, 7, "UTC", now),
-                EntityUtil.getNextStartTimeOld(start, frequency, 7, "UTC", now));
     }
 
     @Test
@@ -63,8 +57,6 @@ public class EntityUtilTest {
         Frequency frequency = Frequency.days;
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
                 frequency, 7, "UTC", now));
-        Assert.assertEquals(newStart,
-                EntityUtil.getNextStartTimeOld(start, frequency, 7, "UTC", now));
     }
 
 

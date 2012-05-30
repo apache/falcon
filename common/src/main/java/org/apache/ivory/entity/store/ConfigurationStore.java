@@ -38,12 +38,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.store.ConfigurationStoreAction.Action;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.service.IvoryService;
-import org.apache.ivory.transaction.TransactionManager;
 import org.apache.ivory.util.ReflectionUtils;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -149,7 +147,6 @@ public class ConfigurationStore implements IvoryService {
                 persist(type, entity);
                 dictionary.get(type).put(entity.getName(), entity);
                 onAdd(entity);
-                TransactionManager.performAction(new ConfigurationStoreAction(Action.PUBLISH, entity));
             } else {
                 throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
                         + "Can't be submitted again. Try removing before submitting.");
@@ -166,7 +163,6 @@ public class ConfigurationStore implements IvoryService {
                 persist(type, entity);
                 Entity oldEntity = dictionary.get(type).put(entity.getName(), entity);
                 onChange(oldEntity, entity);
-                TransactionManager.performAction(new ConfigurationStoreAction(Action.UPDATE, oldEntity));
             } else {
                 throw new IvoryException(entity.toShortString() + " doesn't exist");
             }
@@ -276,7 +272,6 @@ public class ConfigurationStore implements IvoryService {
                 Entity entity = entityMap.get(name);
                 archive(type, name);
                 onRemove(entityMap.remove(name));
-                TransactionManager.performAction(new ConfigurationStoreAction(Action.REMOVE, entity));
             } catch (IOException e) {
                 throw new StoreAccessException(e);
             }

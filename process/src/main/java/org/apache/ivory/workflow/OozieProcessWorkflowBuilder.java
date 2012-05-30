@@ -18,13 +18,14 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
@@ -36,28 +37,32 @@ import org.apache.ivory.entity.v0.process.Process;
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
-    public Map<String, Object> newWorkflowSchedule(Process process) throws IvoryException {
+    public Map<String, Properties> newWorkflowSchedule(Process process) throws IvoryException {
+        Map<String, Path> pathMap = new HashMap<String, Path>();
+        
         if (!EntityUtil.parseDateUTC(process.getValidity().getStart())
                 .before(EntityUtil.parseDateUTC(process.getValidity().getEnd())))
             // start time >= end time
-            return null;
+            return new HashMap<String, Properties>();
 
-        List<Cluster> clusters = new ArrayList<Cluster>();
-        List<Path> paths = new ArrayList<Path>();
         for(String clusterName:getClustersDefined(process)) {
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), process.getStagingPath());
+            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
             OozieProcessMapper mapper = new OozieProcessMapper(process);
             mapper.map(cluster, bundlePath);
-            clusters.add(cluster);
-            paths.add(bundlePath);            
+            pathMap.put(clusterName, bundlePath);
         }
-        return createAppProperties(clusters, paths);
+        return createAppProperties(pathMap);
     }
 
     @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
                 Frequency.valueOf(process.getFrequency()), process.getPeriodicity(), process.getValidity().getTimezone(), now);
+    }
+
+    @Override
+    public String[] getWorkflowNames(Process process) {
+        return new String[] { process.getWorkflowName(Tag.DEFAULT) };
     }
 }

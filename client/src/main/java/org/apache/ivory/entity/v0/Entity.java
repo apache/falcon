@@ -20,6 +20,9 @@ package org.apache.ivory.entity.v0;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -72,9 +75,8 @@ public abstract class Entity {
         if (!equals(entity))
             return false;
 
-        XStream xstream = new XStream(new Sun14ReflectionProvider(
-                new FieldDictionary(new ImmutableFieldKeySorter())),
-                new DomDriver("utf-8"));
+        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
+                "utf-8"));
         String thisStr = xstream.toXML(this);
         String entityStr = xstream.toXML(entity);
         return thisStr.equals(entityStr);
@@ -115,13 +117,6 @@ public abstract class Entity {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }
 
-    public String getStagingPath() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm.ss.SSS");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return "ivory/workflows/" + getEntityType().name().toLowerCase() + "/" +
-                getName() + "/" + dateFormat.format(new Date()) + "/";
-    }
-
     public String getWorkflowName() {
         return getWorkflowName(null);
     }
@@ -143,6 +138,6 @@ public abstract class Entity {
     public Entity clone() {
         return fromString(getEntityType(), toString());
     }
-    
+
     public abstract String[] getClustersDefined();
 }

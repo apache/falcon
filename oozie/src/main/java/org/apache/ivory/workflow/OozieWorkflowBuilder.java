@@ -18,18 +18,18 @@
 
 package org.apache.ivory.workflow;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
@@ -43,34 +43,26 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     protected static final ConfigurationStore configStore = ConfigurationStore.get();
 
     
-    protected Map<String, Object> createAppProperties(List<Cluster> clusters,
-                                                      List<Path> paths) throws IvoryException {
+    protected Map<String, Properties> createAppProperties(Map<String, Path> pathMap) throws IvoryException {
 
-        Map<String, Object> map = new HashMap<String, Object>();
-        List<Properties> propList = new ArrayList<Properties>();
-
-        assert clusters.size() == paths.size() : "Cluster list and path list must be equal in size";
-        for (int index = 0; index < clusters.size(); index++) {
-            Path path = paths.get(index);
+        Map<String, Properties> propsMap = new HashMap<String, Properties>();
+        for (String clusterName:pathMap.keySet()) {
+            Path path = pathMap.get(clusterName);
+            Cluster cluster = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
             Properties properties = new Properties();
             properties.setProperty(OozieWorkflowEngine.NAME_NODE,
-                    ClusterHelper.getHdfsUrl(clusters.get(index)));
+                    ClusterHelper.getHdfsUrl(cluster));
             properties.setProperty(OozieWorkflowEngine.JOB_TRACKER,
-                    ClusterHelper.getMREndPoint(clusters.get(index)));
+                    ClusterHelper.getMREndPoint(cluster));
             properties.setProperty(OozieClient.BUNDLE_APP_PATH,
                     "${" + OozieWorkflowEngine.NAME_NODE + "}" + path.toString());
 
             properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
-            
-            //Ivory common jars to be used.
             properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
-
-            propList.add(properties);
-            LOG.info("Cluster: " + clusters.get(index).getName() + ", PROPS: " + properties);
+            propsMap.put(clusterName, properties);
+            LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
         }
-        map.put(PROPS, propList);
-        map.put(CLUSTERS, clusters);
-        return map;
+        return propsMap;
     }
     
     public abstract Date getNextStartTime(T entity, String cluster, Date now) throws IvoryException;

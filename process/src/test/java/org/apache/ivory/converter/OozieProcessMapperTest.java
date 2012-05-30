@@ -39,6 +39,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.Tag;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -127,7 +128,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path("/", process.getStagingPath());
+        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
         mapper.map(cluster, bundlePath);
         
         FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());

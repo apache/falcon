@@ -29,7 +29,6 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.UnschedulableEntityException;
 import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.transaction.TransactionManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -51,15 +50,11 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             @Dimension("entityName") @PathParam("entity") String entity, @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
-            TransactionManager.commit();
-            return result;
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to schedule workflow", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -81,17 +76,13 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
-            TransactionManager.commit();
-            return result;
+            return new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -107,7 +98,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             @Dimension("entityName") @PathParam("entity") String entity, @Dimension("entityName") @PathParam("entity") String colo) {
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
             Entity entityObj = getEntity(entity, type);
@@ -115,12 +105,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
                 getWorkflowEngine().suspend(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
-            TransactionManager.commit();
-            return result;
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -137,20 +124,16 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
         checkColo(colo);
         try {
-            TransactionManager.startTransaction();
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
             Entity entityObj = getEntity(entity, type);
-            if (getWorkflowEngine().isSuspended(entityObj))
+            if(getWorkflowEngine().isActive(entityObj))
                 getWorkflowEngine().resume(entityObj);
             else
-                throw new IvoryException(entity + "(" + type + ") is not suspended");
-            APIResult result = new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
-            TransactionManager.commit();
-            return result;
+                throw new IvoryException(entity + "(" + type + ") is not scheduled");
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
         } catch (Throwable e) {
             LOG.error("Unable to resume entity", e);
-            TransactionManager.rollback();
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
