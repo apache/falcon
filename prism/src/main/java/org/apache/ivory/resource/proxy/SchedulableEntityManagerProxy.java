@@ -131,7 +131,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         final String[] applicableColos = getApplicableColos(type, entity);
         if (!embeddedMode) {
-            super.delete(request, type, entity, currentColo);
+            super.delete(bufferedRequest, type, entity, currentColo);
         }
 
         return new EntityProxy(type, entity) {
@@ -164,7 +164,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         String[] oldColos = getApplicableColos(type, entityName);
         if (!embeddedMode) {
-            super.update(request, type, entityName, currentColo);
+            super.update(bufferedRequest, type, entityName, currentColo);
         }
         String[] newColos = getApplicableColos(type, entityName);
         final String[] mergedColos = addColos(oldColos, newColos);
