@@ -22,26 +22,50 @@ import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestEntity {
-    @Test
-    public void testDeepEquals() {
-        Process process1 = createProcess("process", "cluster");        
-        Process process2 = createProcess("process", "cluster");
-        
-        assertTrue(process1.deepEquals(process2));
-        
-        process2.getCluster().setName("cluster2");
-        assertFalse(process1.deepEquals(process2));
-    }
-    
-    private Process createProcess(String name, String clusterName) {
-        Process process = new Process();
-        process.setName(name);
-        Cluster cluster = new Cluster();
-        cluster.setName(clusterName);
-        process.setCluster(cluster);
-        return process;
-    }
+	@Test
+	public void testDeepEquals() {
+		Process process1 = createProcess("process", "cluster");
+		Process process2 = createProcess("process", "cluster");
+
+		assertTrue(process1.deepEquals(process2));
+
+		process2.getCluster().setName("cluster2");
+		assertFalse(process1.deepEquals(process2));
+	}
+
+	private Process createProcess(String name, String clusterName) {
+		Process process = new Process();
+		process.setName(name);
+		Cluster cluster = new Cluster();
+		cluster.setName(clusterName);
+		process.setCluster(cluster);
+		return process;
+	}
+
+	@Test
+	public void testEntityNullEquals() {
+		Entity entity = new Entity() {
+
+			@Override
+			public String getName() {
+				return "Entity";
+			}
+
+			@Override
+			public String[] getClustersDefined() {
+				return new String[] {};
+			}
+		};
+		Entity nullEntity = null;
+		try {
+			if (entity.equals(nullEntity)) {
+			}
+		} catch (Exception e) {
+			Assert.fail("Not expecting exception:"+e);
+		}
+	}
 }

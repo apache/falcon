@@ -24,6 +24,7 @@ import org.apache.ivory.rerun.event.RerunEvent.RerunType;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
+import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.rerun.queue.InMemoryQueue;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.StartupProperties;
@@ -40,7 +41,7 @@ public class RetryService implements IvoryService {
 
 	@Override
 	public void init() throws IvoryException {
-		AbstractRerunHandler<RetryEvent, InMemoryQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
+		AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
 				.getRerunHandler(RerunType.RETRY);
 		 InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(
 		 getBasePath());

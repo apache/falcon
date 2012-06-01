@@ -20,12 +20,6 @@ package org.apache.ivory.entity.v0;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -35,11 +29,9 @@ import com.thoughtworks.xstream.converters.reflection.FieldDictionary;
 import com.thoughtworks.xstream.converters.reflection.ImmutableFieldKeySorter;
 import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.DomDriver;
-import org.apache.ivory.Tag;
 
 public abstract class Entity {
-    private static final String PREFIX = "IVORY_";
-
+	
     public abstract String getName();
 
     public EntityType getEntityType() {
@@ -55,7 +47,7 @@ public abstract class Entity {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!o.getClass().equals(this.getClass()))
+        if (o==null || !o.getClass().equals(this.getClass()))
             return false;
 
         Entity entity = (Entity) o;

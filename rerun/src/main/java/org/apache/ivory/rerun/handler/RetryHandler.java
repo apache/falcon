@@ -17,10 +17,6 @@
  */
 package org.apache.ivory.rerun.handler;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.rerun.event.RetryEvent;
@@ -28,11 +24,10 @@ import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.util.GenericAlert;
-import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-public class RetryHandler<T extends RetryEvent, M extends DelayedQueue<RetryEvent>>
-		extends AbstractRerunHandler<RetryEvent, M> {
+public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
+		AbstractRerunHandler<RetryEvent, M> {
 
 	@Override
 	public void handleRerun(String processName, String nominalTime,
@@ -81,7 +76,7 @@ public class RetryHandler<T extends RetryEvent, M extends DelayedQueue<RetryEven
 	@Override
 	public void init(M queue) throws IvoryException {
 		super.init(queue);
-		Thread daemon = new RetryHandler.Consumer();
+		Thread daemon = new Thread(new RetryConsumer(this));
 		daemon.setName("RetryHandler");
 		daemon.setDaemon(true);
 		daemon.start();
@@ -100,75 +95,4 @@ public class RetryHandler<T extends RetryEvent, M extends DelayedQueue<RetryEven
 		return true;
 	}
 
-	private final class Consumer extends Thread {
-		@Override
-		public void run() {
-			while (true) {
-				RetryEvent message = null;
-				try {
-					message = takeFromQueue();
-				} catch (IvoryException e) {
-					LOG.error("Error while reading message from the queue: ", e);
-					continue;
-				}
-				try {
-					Process processObj = getProcess(message.getProcessName());
-					if (!validate(message.getProcessName(), processObj)) {
-						continue;
-					}
-					String jobStatus = message.getWfEngine().instanceStatus(
-							message.getClusterName(), message.getWfId());
-					if (!jobStatus.equals("KILLED")) {
-						LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
-								+ message.getWfId());
-						message.setMsgInsertTime(System.currentTimeMillis());
-						offerToQueue(message);
-						continue;
-					}
-					LOG.info("Retrying attempt:" + (message.getRunId() + 1)
-							+ " out of configured: " + message.getAttempts()
-							+ " attempt for process instance::"
-							+ message.getProcessName() + ":"
-							+ message.getProcessInstance()
-							+ " And WorkflowId: " + message.getWfId()
-							+ " At time: "
-							+ getTZdate(new Date(System.currentTimeMillis())));
-					message.getWfEngine().reRun(message.getClusterName(),
-							message.getWfId(), null);
-				} catch (Throwable e) {
-					int maxFailRetryCount = Integer.parseInt(StartupProperties
-							.get().getProperty("max.retry.failure.count", "1"));
-					if (message.getFailRetryCount() < maxFailRetryCount) {
-						LOG.warn(
-								"Retrying again for process instance "
-										+ message.getProcessName()
-										+ ":"
-										+ message.getProcessInstance()
-										+ " after "
-										+ message.getDelayInMilliSec()
-										+ " seconds as Retry failed with message:",
-								e);
-						message.setFailRetryCount(message.getFailRetryCount() + 1);
-						offerToQueue(message);
-					} else {
-						LOG.warn(
-								"Failure retry attempts exhausted for processInstance: "
-										+ message.getProcessName() + ":"
-										+ message.getProcessInstance(), e);
-						GenericAlert.alertRetryFailed(message.getProcessName(),
-								message.getProcessInstance(),
-								message.getRunId(), e.getMessage());
-					}
-
-				}
-			}
-		}
-
-		private String getTZdate(Date date) {
-			DateFormat ivoryFormat = new SimpleDateFormat(
-					"yyyy'-'MM'-'dd'T'HH':'mm'Z'");
-			return ivoryFormat.format(date);
-		}
-
-	}
 }
