@@ -18,13 +18,8 @@
 
 package org.apache.ivory.cli;
 
-import java.io.BufferedReader;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.ConnectException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -66,14 +61,12 @@ public class IvoryCLI {
 	public static final String LIST_OPT = "list";
 
 	public static final String INSTANCE_CMD = "instance";
-	public static final String PROCESS_OPT = "processName";
 	public static final String START_OPT = "start";
 	public static final String END_OPT = "end";
 	public static final String RUNNING_OPT = "running";
 	public static final String KILL_OPT = "kill";
 	public static final String RERUN_OPT = "rerun";
 	public static final String RUNID_OPT = "runid";
-	public static final String INSTANCE_TYPE_OPT = "type";
 
 	/**
 	 * Entry point for the Ivory CLI when invoked from the command line. Upon
@@ -171,28 +164,27 @@ public class IvoryCLI {
 		}
 
 		String result = null;
-		String processName = commandLine.getOptionValue(PROCESS_OPT);
+		String type = commandLine.getOptionValue(ENTITY_TYPE_OPT);
+		String entity = commandLine.getOptionValue(ENTITY_NAME_OPT);
 		String start = commandLine.getOptionValue(START_OPT);
 		String end = commandLine.getOptionValue(END_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
-		String type = commandLine.getOptionValue(INSTANCE_TYPE_OPT);
 		String runid = commandLine.getOptionValue(RUNID_OPT);
 
-		validateInstanceCommands(optionsList, processName, start, end, filePath);
+		validateInstanceCommands(optionsList, entity, start, end, filePath);
 
 		if (optionsList.contains(RUNNING_OPT)) {
-			result = client.getRunningInstances(processName);
+			result = client.getRunningInstances(type, entity);
 		} else if (optionsList.contains(STATUS_OPT)) {
-			result = client.getStatusOfInstances(processName, start, end, type,
-					runid);
+			result = client.getStatusOfInstances(type, entity, start, end, runid);
 		} else if (optionsList.contains(KILL_OPT)) {
-			result = client.killInstances(processName, start, end);
+			result = client.killInstances(type, entity, start, end);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
-			result = client.suspendInstances(processName, start, end);
+			result = client.suspendInstances(type, entity, start, end);
 		} else if (optionsList.contains(RESUME_OPT)) {
-			result = client.resumeInstances(processName, start, end);
+			result = client.resumeInstances(type, entity, start, end);
 		} else if (optionsList.contains(RERUN_OPT)) {
-			result = client.rerunInstances(processName, start, end, filePath);
+			result = client.rerunInstances(type, entity, start, end, filePath);
 		} else {
 			throw new IvoryCLIException("Invalid command");
 		}
@@ -201,11 +193,11 @@ public class IvoryCLI {
 	}
 
 	private void validateInstanceCommands(Set<String> optionsList,
-			String processName, String start, String end, String filePath)
+			String entity, String start, String end, String filePath)
 			throws IvoryCLIException {
 
-		if (processName == null || processName.equals("")) {
-			throw new IvoryCLIException("Missing argument: processName");
+		if (entity == null || entity.equals("")) {
+			throw new IvoryCLIException("Missing argument: entityName");
 		}
 
 		if (!optionsList.contains(RUNNING_OPT)) {
@@ -425,26 +417,24 @@ public class IvoryCLI {
 				END_OPT,
 				true,
 				"End time is optional for commands, status, kill, suspend, resume and re-run; if not specified then current time is considered as end time");
-		Option type = new Option(
-				INSTANCE_TYPE_OPT,
-				true,
-				"Instance type is optional and user can provide type of instance, valid values are DEFAULT and LATE1");
 		Option runid = new Option(RUNID_OPT, true,
 				"Instance runid  is optional and user can specify the runid, defaults to 0");
 		Option filePath = new Option(
 				FILE_PATH_OPT,
 				true,
 				"Path to job.properties file is required for rerun command, it should contain name=value pair for properties to override for rerun");
-		Option processName = new Option(PROCESS_OPT, true,
-				"Name of the process is required for all process instance commands");
+        Option entityType = new Option(ENTITY_TYPE_OPT, true,
+                "Entity type, can be feed or process xml");
+        Option entityName = new Option(ENTITY_NAME_OPT, true,
+                "Entity type, can be feed or process xml");
 
 		instanceOptions.addOption(url);
 		instanceOptions.addOptionGroup(group);
 		instanceOptions.addOption(start);
 		instanceOptions.addOption(end);
 		instanceOptions.addOption(filePath);
-		instanceOptions.addOption(processName);
-		instanceOptions.addOption(type);
+		instanceOptions.addOption(entityType);
+		instanceOptions.addOption(entityName);
 		instanceOptions.addOption(runid);
 
 		return instanceOptions;

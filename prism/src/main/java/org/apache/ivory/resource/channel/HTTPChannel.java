@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -78,7 +79,8 @@ public class HTTPChannel extends AbstractChannel {
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
                 return (T)response.getEntity(method.getReturnType());
-            } else if (status != Family.SERVER_ERROR) {
+            } else if (response.getClientResponseStatus().getStatusCode() ==
+                    Response.Status.BAD_REQUEST.getStatusCode()) {
                 LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
                 return (T) response.getEntity(method.getReturnType());
             } else {

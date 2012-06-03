@@ -151,7 +151,7 @@ public class AbstractTestBase {
     public AbstractTestBase() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(APIResult.class, Feed.class, Process.class, Cluster.class,
-                    ProcessInstancesResult.class);
+                    InstancesResult.class);
             unmarshaller = jaxbContext.createUnmarshaller();
             marshaller = jaxbContext.createMarshaller();
 

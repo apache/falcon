@@ -33,7 +33,7 @@ import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.resource.AbstractProcessInstanceManager;
+import org.apache.ivory.resource.AbstractInstanceManager;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -47,7 +47,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String url;
 	private String topicName;
 	private Connection connection;
-	private AbstractProcessInstanceManager processInstanceManager = new AbstractProcessInstanceManager() {
+	private AbstractInstanceManager instanceManager = new AbstractInstanceManager() {
 		@Override
 		public String getName() {
 			return "Test";
@@ -100,7 +100,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String status = mapMessage.getString(ARG.status.getArgName());
 
 			try {
-				processInstanceManager.instrumentWithAspect(processName,
+				instanceManager.instrumentWithAspect(processName,
 						feedName, feedpath, nominalTime, timeStamp, status,
 						workflowId, runId, System.currentTimeMillis());
 			} catch (Exception ignore) {

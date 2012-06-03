@@ -31,7 +31,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.EntityList;
-import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.InstancesResult;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -128,16 +128,16 @@ public class IvoryClient {
 	 * Methods allowed on Process Instance Resources
 	 */
 	protected static enum Instances {
-		RUNNING("api/processinstance/running/", HttpMethod.GET,
+		RUNNING("api/instance/running/", HttpMethod.GET,
 				MediaType.APPLICATION_JSON), STATUS(
-				"api/processinstance/status/", HttpMethod.GET,
-				MediaType.APPLICATION_JSON), KILL("api/processinstance/kill/",
+				"api/instance/status/", HttpMethod.GET,
+				MediaType.APPLICATION_JSON), KILL("api/instance/kill/",
 				HttpMethod.POST, MediaType.APPLICATION_JSON), SUSPEND(
-				"api/processinstance/suspend/", HttpMethod.POST,
+				"api/instance/suspend/", HttpMethod.POST,
 				MediaType.APPLICATION_JSON), RESUME(
-				"api/processinstance/resume/", HttpMethod.POST,
+				"api/instance/resume/", HttpMethod.POST,
 				MediaType.APPLICATION_JSON), RERUN(
-				"api/processinstance/rerun/", HttpMethod.POST,
+				"api/instance/rerun/", HttpMethod.POST,
 				MediaType.APPLICATION_JSON);
 		private String path;
 		private String method;
@@ -256,46 +256,46 @@ public class IvoryClient {
 		return sendListRequest(Entities.LIST, entityType);
 	}
 
-	public String getRunningInstances(String processName)
+	public String getRunningInstances(String type, String entity)
 			throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.RUNNING, processName, null,
-				null, null, null, null);
+		return sendInstanceRequest(Instances.RUNNING, type, entity, null,
+                null, null, null);
 	}
 
-	public String getStatusOfInstances(String processName, String start,
-			String end, String type, String runid) throws IvoryCLIException {
+	public String getStatusOfInstances(String type, String entity, String start,
+			String end, String runid) throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.STATUS, processName, start,
-				end, null, type, runid);
+		return sendInstanceRequest(Instances.STATUS, type, entity, start,
+                end, null, runid);
 	}
 
-	public String killInstances(String processName, String start, String end)
+	public String killInstances(String type, String entity, String start, String end)
 			throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.KILL, processName, start,
-				end, null, null, null);
+		return sendInstanceRequest(Instances.KILL, type, entity, start,
+                end, null, null);
 	}
 
-	public String suspendInstances(String processName, String start, String end)
+	public String suspendInstances(String type, String entity, String start, String end)
 			throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.SUSPEND, processName,
-				start, end, null, null, null);
+		return sendInstanceRequest(Instances.SUSPEND, type, entity,
+                start, end, null, null);
 	}
 
-	public String resumeInstances(String processName, String start, String end)
+	public String resumeInstances(String type, String entity, String start, String end)
 			throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.RESUME, processName, start,
-				end, null, null, null);
+		return sendInstanceRequest(Instances.RESUME, type, entity, start,
+                end, null, null);
 	}
 
-	public String rerunInstances(String processName, String start, String end,
+	public String rerunInstances(String type, String entity, String start, String end,
 			String filePath) throws IvoryCLIException {
 
-		return sendProcessInstanceRequest(Instances.RERUN, processName, start,
-				end, getServletInputStream(filePath), null, null);
+		return sendInstanceRequest(Instances.RERUN, type, entity, start,
+                end, getServletInputStream(filePath), null);
 	}
 
 	/**
@@ -404,18 +404,15 @@ public class IvoryClient {
 
 	}
 
-	private String sendProcessInstanceRequest(Instances instances,
-			String processName, String start, String end, InputStream props,
-			String type, String runid) throws IvoryCLIException {
-		WebResource resource = service.path(instances.path).path(processName);
+	private String sendInstanceRequest(Instances instances,
+                                       String type, String entity, String start, String end,
+                                       InputStream props, String runid) throws IvoryCLIException {
+		WebResource resource = service.path(instances.path).path(type).path(entity);
 		if (start != null) {
 			resource = resource.queryParam("start", start);
 		}
 		if (end != null) {
 			resource = resource.queryParam("end", end);
-		}
-		if (type != null) {
-			resource = resource.queryParam("type", type);
 		}
 		if (runid != null) {
 			resource = resource.queryParam("runid", runid);
@@ -463,15 +460,15 @@ public class IvoryClient {
 	}
 
 	private String parseProcessInstanceResult(ClientResponse clientResponse) {
-		ProcessInstancesResult result = clientResponse
-				.getEntity(ProcessInstancesResult.class);
+		InstancesResult result = clientResponse
+				.getEntity(InstancesResult.class);
 
 		if (result.getInstances() == null) {
 			return "";
 		}
 
 		StringBuffer sb = new StringBuffer();
-		for (ProcessInstancesResult.ProcessInstance instance : result
+		for (InstancesResult.Instance instance : result
 				.getInstances()) {
 			sb.append("instance=").append(instance.getInstance()).append(";status=")
 					.append(instance.getStatus());
@@ -481,7 +478,7 @@ public class IvoryClient {
 			sb.append("\n");
 			if (instance.actions != null) {
 				sb.append("actions:\n");
-				for (ProcessInstancesResult.InstanceAction action : instance.actions) {
+				for (InstancesResult.InstanceAction action : instance.actions) {
 					sb.append("    ").append(action).append("\n");
 				}
 			}

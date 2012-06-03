@@ -18,15 +18,12 @@
 
 package org.apache.ivory.client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.ivory.resource.APIResult;
-import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.InstancesResult;
 
 /**
  * Exception thrown by IvoryClient
@@ -57,7 +54,7 @@ public class IvoryCLIException extends Exception {
                 message = clientResponse.getEntity(APIResult.class).getMessage();
             } catch (Throwable e) {
                 in.reset();
-                message = clientResponse.getEntity(ProcessInstancesResult.class).getMessage();
+                message = clientResponse.getEntity(InstancesResult.class).getMessage();
             }
         } catch (Throwable t) {
             byte[] data = new byte[MB];

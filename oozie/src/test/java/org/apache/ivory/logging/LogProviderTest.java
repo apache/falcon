@@ -20,8 +20,8 @@ package org.apache.ivory.logging;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.resource.ProcessInstancesResult;
-import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
+import org.apache.ivory.resource.InstancesResult;
+import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
 import org.testng.annotations.Test;
 
 public class LogProviderTest {
@@ -29,12 +29,12 @@ public class LogProviderTest {
 	@Test(enabled=false)
 	public void testLogProvider() throws IvoryException {
 
-		ProcessInstancesResult.ProcessInstance processInstance = new ProcessInstancesResult.ProcessInstance();
-		processInstance.instance = "2012-04-26T07:01Z";
-		processInstance.status = WorkflowStatus.RUNNING;
+		InstancesResult.Instance instance = new InstancesResult.Instance();
+		instance.instance = "2012-04-26T07:01Z";
+		instance.status = WorkflowStatus.RUNNING;
 		Process process = new Process();
 		process.setName("agg-coord");
 		System.out
-				.println(LogProvider.getLogUrl(process, processInstance, Tag.DEFAULT, "0"));
+				.println(LogProvider.getLogUrl(process, instance, Tag.DEFAULT, "0"));
 	}
 }

@@ -53,7 +53,7 @@ import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.resource.APIResult.Status;
-import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
+import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.DeploymentUtil;
@@ -118,31 +118,31 @@ public abstract class AbstractEntityManager implements IvoryService {
         return result;
     }
 
-    protected ProcessInstancesResult consolidateInstanceResult(APIResult[] results, String[] colos) {
+    protected InstancesResult consolidateInstanceResult(APIResult[] results, String[] colos) {
         if (results == null || results.length == 0)
             return null;
 
         StringBuilder message = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();
-        List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
+        List<Instance> instances = new ArrayList<Instance>();
         int statusCount = 0;
         for (int index = 0; index < results.length; index++) {
             APIResult result = results[index];
             message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
             requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
-            if (!(result instanceof ProcessInstancesResult))
+            if (!(result instanceof InstancesResult))
                 continue;
-            for (ProcessInstance instance : ((ProcessInstancesResult) result).getInstances()) {
-                ProcessInstance instClone = new ProcessInstance(instance.cluster, colos[index] + "/" + instance.getInstance(),
+            for (Instance instance : ((InstancesResult) result).getInstances()) {
+                Instance instClone = new Instance(instance.cluster, colos[index] + "/" + instance.getInstance(),
                         instance.getStatus());
-                instances.add(new ProcessInstance(instClone, instance.logFile, instance.actions));
+                instances.add(new Instance(instClone, instance.logFile, instance.actions));
             }
             statusCount += results[index].getStatus().ordinal();
         }
-        ProcessInstance[] arrInstances = new ProcessInstance[instances.size()];
+        Instance[] arrInstances = new Instance[instances.size()];
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
                 : ((statusCount == results.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        ProcessInstancesResult result = new ProcessInstancesResult(status, message.toString(), instances.toArray(arrInstances));
+        InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
         result.setRequestId(requestIds.toString());
         return result;
     }
@@ -176,7 +176,7 @@ public abstract class AbstractEntityManager implements IvoryService {
                 Cluster clusterEntity = (Cluster) getEntity(cluster, EntityType.CLUSTER.name());
                 colos.add(clusterEntity.getColo());
             }
-            return colos.toArray(new String[] {});
+            return colos.toArray(new String[colos.size()]);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -435,6 +435,29 @@ public abstract class AbstractEntityManager implements IvoryService {
         } catch (Exception e) {
 
             LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Returns the status of requested entity.
+     *
+     * @param type
+     * @param entity
+     * @param colo
+     * @return APIResult
+     */
+    public APIResult isMissing(String type, String entity, String colo) {
+
+        checkColo(colo);
+        try {
+            EntityUtil.getEntity(entity, type);
+            throw IvoryWebException.newException(
+                    new APIResult(Status.FAILED, entity + "(" + type + ") is present"),
+                    Response.Status.BAD_REQUEST);
+        } catch (EntityNotRegisteredException e) {
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") is missing");
+        } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }

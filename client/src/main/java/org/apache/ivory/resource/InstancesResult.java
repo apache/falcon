@@ -4,13 +4,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ProcessInstancesResult extends APIResult {
+public class InstancesResult extends APIResult {
 	public static enum WorkflowStatus {
 		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
 	}
 
 	@XmlRootElement(name = "pinstance")
-	public static class ProcessInstance {
+	public static class Instance {
 		@XmlElement
 		public String instance;
 
@@ -32,19 +32,19 @@ public class ProcessInstancesResult extends APIResult {
 		@XmlElement
 		public InstanceAction[] actions;
 
-		public ProcessInstance() {
+		public Instance() {
 		}
 
-		public ProcessInstance(String cluster, String instance, WorkflowStatus status) {
+		public Instance(String cluster, String instance, WorkflowStatus status) {
 			this.cluster = cluster;
 			this.instance = instance;
 			this.status = status;
 		}
 
-		public ProcessInstance(ProcessInstance processInstance, String logFile,
-				InstanceAction[] actions) {
-			this.instance = processInstance.instance;
-			this.status = processInstance.status;
+		public Instance(Instance instance, String logFile,
+                        InstanceAction[] actions) {
+			this.instance = instance.instance;
+			this.status = instance.status;
 			this.logFile = logFile;
 			this.actions = actions;
 		}
@@ -66,28 +66,28 @@ public class ProcessInstancesResult extends APIResult {
     }
     
 	@XmlElement
-    private ProcessInstance[] instances;
+    private Instance[] instances;
 
-    private ProcessInstancesResult() { // for jaxb
+    private InstancesResult() { // for jaxb
         super();
     }
 
     
-    public ProcessInstancesResult(String message, ProcessInstance[] processInstances) {
-    	this(Status.SUCCEEDED, message, processInstances);
+    public InstancesResult(String message, Instance[] instances) {
+    	this(Status.SUCCEEDED, message, instances);
     }
 
-    public ProcessInstancesResult(Status status, String message,
-                                  ProcessInstance[] processInstanceExs) {
+    public InstancesResult(Status status, String message,
+                           Instance[] instanceExes) {
     	super(status, message);
-    	this.instances = processInstanceExs;
+    	this.instances = instanceExes;
     }
 
-	public ProcessInstance[] getInstances() {
+	public Instance[] getInstances() {
         return instances;
     }
 
-	public void setInstances(ProcessInstance[] instances) {
+	public void setInstances(Instance[] instances) {
 		this.instances = instances;
 	}
 

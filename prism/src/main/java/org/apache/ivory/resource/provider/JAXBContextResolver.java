@@ -28,14 +28,14 @@ import javax.xml.bind.JAXBException;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.api.json.JSONJAXBContext;
 import org.apache.ivory.resource.APIResult;
-import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.InstancesResult;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
 public class JAXBContextResolver implements ContextResolver<JAXBContext>{
     private static JAXBContext context;
-    private static Class<?>[] types = { ProcessInstancesResult.class, APIResult.class, ProcessInstancesResult.ProcessInstance.class,
-            ProcessInstancesResult.WorkflowStatus.class };
+    private static Class<?>[] types = { InstancesResult.class, APIResult.class, InstancesResult.Instance.class,
+            InstancesResult.WorkflowStatus.class };
     static {
         try {
             context = new JSONJAXBContext(JSONConfiguration.natural().build(), types);

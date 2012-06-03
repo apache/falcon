@@ -130,11 +130,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         final String[] applicableColos = getApplicableColos(type, entity);
-        if (!embeddedMode) {
-            super.delete(bufferedRequest, type, entity, currentColo);
-        }
-
-        return new EntityProxy(type, entity) {
+        APIResult result = new EntityProxy(type, entity) {
             @Override
             protected String[] getColosToApply() {
                 return getAllColos();
@@ -147,9 +143,19 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
             @Override
             protected APIResult doExecute(String colo) throws IvoryException {
-                return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entity, colo);
+                APIResult result = getConfigSyncChannel(colo).invoke("isMissing", type, entity, colo);
+                if (embeddedMode || result.getStatus() != APIResult.Status.SUCCEEDED) {
+                    return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entity, colo);
+                } else {
+                    return result;
+                }
             }
         }.execute();
+        if (!embeddedMode && result.getStatus() == APIResult.Status.SUCCEEDED) {
+            APIResult prismResult = super.delete(bufferedRequest, type, entity, currentColo);
+            result = consolidateResult(result, prismResult);
+        }
+        return result;
     }
 
     @POST
@@ -218,6 +224,18 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     @GET
+    @Path("missing/{type}/{entity}")
+    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Monitored(event = "isMissing")
+    @Override
+    public APIResult isMissing(@Dimension("entityType") @PathParam("type") String type,
+                               @Dimension("entityName") @PathParam("entity") String entity,
+                               @Dimension("colo") @QueryParam("colo") final String colo)
+            throws IvoryWebException {
+        throw IvoryWebException.newException("Action not supported", Response.Status.BAD_REQUEST);
+    }
+
+    @GET
     @Path("dependencies/{type}/{entity}")
     @Produces(MediaType.TEXT_XML)
     @Monitored(event = "dependencies")
@@ -273,8 +291,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "submitAndSchedule")
     @Override
-    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("colo") @QueryParam("colo") String coloExpr) {
+    public APIResult submitAndSchedule(@Context HttpServletRequest request,
+                                       @Dimension("entityType") @PathParam("type") String type,
+                                       @Dimension("colo") @QueryParam("colo") String coloExpr) {
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         String entity = getEntityName(bufferedRequest, type);
 
@@ -285,7 +304,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     private APIResult consolidateResult(APIResult result1, APIResult result2) {
         int statusCnt = result1.getStatus().ordinal() + result2.getStatus().ordinal();
-        APIResult result = new APIResult(statusCnt == 0 ? Status.SUCCEEDED : (statusCnt == 4 ? Status.FAILED : Status.PARTIAL),
+        APIResult result = new APIResult(statusCnt == 0 ? Status.SUCCEEDED :
+                (statusCnt == 4 ? Status.FAILED : Status.PARTIAL),
                 result1.getMessage() + result2.getMessage());
         result.setRequestId(result1.getRequestId().equals(result2.getRequestId()) ? result1.getRequestId() : 
                                 result1.getRequestId() + result2.getRequestId());

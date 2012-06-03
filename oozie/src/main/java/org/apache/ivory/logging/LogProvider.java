@@ -23,13 +23,14 @@ import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.ExternalId;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.resource.ProcessInstancesResult;
-import org.apache.ivory.resource.ProcessInstancesResult.InstanceAction;
-import org.apache.ivory.resource.ProcessInstancesResult.ProcessInstance;
-import org.apache.ivory.resource.ProcessInstancesResult.WorkflowStatus;
+import org.apache.ivory.resource.InstancesResult;
+import org.apache.ivory.resource.InstancesResult.InstanceAction;
+import org.apache.ivory.resource.InstancesResult.Instance;
+import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -41,23 +42,22 @@ import java.util.List;
 public final class LogProvider {
 	private static final Logger LOG = Logger.getLogger(LogProvider.class);
 
-	public static ProcessInstancesResult.ProcessInstance getLogUrl(
-			Process process,
-			ProcessInstancesResult.ProcessInstance processInstance,
+	public static Instance getLogUrl(Entity entity, Instance Instance,
 			Tag type, String runId) throws IvoryException {
+        Process process = (Process) entity;
 		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
 				process.getCluster().getName());
 		ExternalId externalId = getExternalId(process.getName(), type,
-				processInstance.instance);
+				Instance.instance);
 		try {
 			// if parent wf is running/suspend return oozie's console url of
 			// parent wf
-			if (processInstance.status.equals(WorkflowStatus.RUNNING)
-					|| processInstance.status.equals(WorkflowStatus.SUSPENDED)) {
+			if (Instance.status.equals(WorkflowStatus.RUNNING)
+					|| Instance.status.equals(WorkflowStatus.SUSPENDED)) {
 				String parentWFUrl = getConsoleURL(
 						ClusterHelper.getOozieUrl(cluster), externalId.getId());
-				return new ProcessInstancesResult.ProcessInstance(
-						processInstance, parentWFUrl, null);
+				return new InstancesResult.Instance(
+						Instance, parentWFUrl, null);
 			}
 
 			OozieClient client = new OozieClient(
@@ -76,22 +76,22 @@ public final class LogProvider {
 							.equals(WorkflowAction.Status.OK)
 					|| (actions.size() == 5 && !actions.get(4).getStatus()
 							.equals(WorkflowAction.Status.OK))) {
-				return new ProcessInstancesResult.ProcessInstance(
-						processInstance, jobInfo.getConsoleUrl(), null);
+				return new InstancesResult.Instance(
+						Instance, jobInfo.getConsoleUrl(), null);
 			}
 
-			return getActionsUrl(cluster, process, processInstance, externalId,
+			return getActionsUrl(cluster, process, Instance, externalId,
 					runId);
 		} catch (Exception e) {
 			LOG.error("Exception in LogProvider while getting job id", e);
-			return new ProcessInstancesResult.ProcessInstance(processInstance,
+			return new InstancesResult.Instance(Instance,
 					"-", null);
 		}
 
 	}
 
-	private static ProcessInstance getActionsUrl(Cluster cluster,
-			Process process, ProcessInstance processInstance,
+	private static Instance getActionsUrl(Cluster cluster,
+			Process process, Instance Instance,
 			ExternalId externalId, String runId) throws IvoryException,
 			OozieClientException {
 		OozieClient client = new OozieClient(ClusterHelper.getOozieUrl(cluster));
@@ -118,7 +118,7 @@ public final class LogProvider {
 		}
 		String oozieLogFile = getDFSbrowserUrl(cluster, process, externalId,
 				runId, "oozie");
-		return new ProcessInstance(processInstance, oozieLogFile,
+		return new Instance(Instance, oozieLogFile,
 				instanceActions);
 
 	}

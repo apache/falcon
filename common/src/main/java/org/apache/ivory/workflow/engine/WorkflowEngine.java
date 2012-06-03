@@ -23,7 +23,7 @@ import java.util.Properties;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
-import org.apache.ivory.resource.ProcessInstancesResult;
+import org.apache.ivory.resource.InstancesResult;
 
 /**
  * Workflow engine should minimally support the
@@ -45,17 +45,17 @@ public interface WorkflowEngine {
 
     boolean isSuspended(Entity entity) throws IvoryException;
 
-    ProcessInstancesResult getRunningInstances(Entity entity) throws IvoryException;
+    InstancesResult getRunningInstances(Entity entity) throws IvoryException;
     
-    ProcessInstancesResult killInstances(Entity entity, Date start, Date end) throws IvoryException;
+    InstancesResult killInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
     
-    ProcessInstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
+    InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
 
-    ProcessInstancesResult suspendInstances(Entity entity, Date start, Date end) throws IvoryException;
+    InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
 
-    ProcessInstancesResult resumeInstances(Entity entity, Date start, Date end) throws IvoryException;
+    InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props) throws IvoryException;
 
-    ProcessInstancesResult getStatus(Entity entity, Date start, Date end) throws IvoryException;
+    InstancesResult getStatus(Entity entity, Date start, Date end) throws IvoryException;
 
 	void update(Entity oldEntity, Entity newEntity) throws IvoryException;
 
