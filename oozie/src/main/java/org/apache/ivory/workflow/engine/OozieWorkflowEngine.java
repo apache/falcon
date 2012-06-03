@@ -311,7 +311,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throws IvoryException {
 
         Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end);
-        String clusters = props.getProperty(IVORY_INSTANCE_ACTION_CLUSTERS);
+        String clusters = props==null?"":props.getProperty(IVORY_INSTANCE_ACTION_CLUSTERS,"");
         List<String> clusterList = new ArrayList<String>();
         if (StringUtils.isEmpty(clusters)) {
             clusterList.addAll(actionsMap.keySet());

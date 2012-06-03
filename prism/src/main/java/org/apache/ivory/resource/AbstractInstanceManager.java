@@ -82,7 +82,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkColo(colo);
         checkType(type);
         try {
-			validateParams(type, entity, startStr, runId);
+			validateParams(type, entity, startStr, endStr);
 
 			Date start = EntityUtil.parseDateUTC(startStr);
 			Date end = getEndDate(start, endStr);
