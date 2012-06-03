@@ -94,6 +94,6 @@ public class InstanceManager extends AbstractInstanceManager {
                                                 @Dimension("end-time") @QueryParam("end") String endStr,
                                                 @Context HttpServletRequest request,
                                                 @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.reRunInstance(entity, type, startStr, endStr, request, colo);
+        return super.reRunInstance(type, entity, startStr, endStr, request, colo);
     }
 }
