@@ -61,7 +61,7 @@ public class IvoryCLITest {
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 	private BrokerService broker;
 
-	private static final boolean enableTest = false;
+	private static final boolean enableTest = true;
 
 	@BeforeClass
 	public void setup() throws Exception {
@@ -372,15 +372,15 @@ public class IvoryCLITest {
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
-		Thread.sleep(5000);
+		Thread.sleep(2000);
 
-		Assert.assertEquals(0, executeWithURL("instance -running -processName "
+		Assert.assertEquals(0, executeWithURL("instance -running -type process -name "
 				+ overlay.get("processName")));
 
-		Assert.assertEquals(0, executeWithURL("instance -status -processName "
+		Assert.assertEquals(0, executeWithURL("instance -status -type process -name "
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"));
 		
-		Assert.assertEquals(0, executeWithURL("instance -status -processName "
+		Assert.assertEquals(0, executeWithURL("instance -status -type process -name "
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"
 				+ " -type DEFAULT -runid 0"));
 	}
@@ -396,11 +396,11 @@ public class IvoryCLITest {
 
 		Thread.sleep(5000);
 
-		Assert.assertEquals(0, executeWithURL("instance -suspend -processName "
+		Assert.assertEquals(0, executeWithURL("instance -suspend -type process -name "
 				+ overlay.get("processName")
 				+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z"));
 		Thread.sleep(2000);
-		Assert.assertEquals(0, executeWithURL("instance -resume -processName "
+		Assert.assertEquals(0, executeWithURL("instance -resume -type process -name "
 				+ overlay.get("processName") + " -start 2010-01-01T01:00Z"));
 	}
 
@@ -415,11 +415,11 @@ public class IvoryCLITest {
 
 		Thread.sleep(5000);
 
-		Assert.assertEquals(0, executeWithURL("instance -kill -processName "
+		Assert.assertEquals(0, executeWithURL("instance -kill -type process -name "
 				+ overlay.get("processName")
 				+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z"));
 		Thread.sleep(2000);
-		Assert.assertEquals(0, executeWithURL("instance -rerun -processName "
+		Assert.assertEquals(0, executeWithURL("instance -rerun -type process -name "
 				+ overlay.get("processName")
 				+ " -start 2010-01-01T01:00Z -file "
 				+ createTempJobPropertiesFile()));
@@ -428,16 +428,16 @@ public class IvoryCLITest {
 	@Test(enabled = enableTest)
 	public void testInvalidCLIInstanceCommands() throws Exception {
 		// no command
-		Assert.assertEquals(-1, executeWithURL(" -kill -processName " + "name"
+		Assert.assertEquals(-1, executeWithURL(" -kill -type process -name " + "name"
 				+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z"));
 
 		Assert.assertEquals(-1, executeWithURL("instance -kill  " + "name"
 				+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z"));
 
-		Assert.assertEquals(-1, executeWithURL("instance -kill -processName "
+		Assert.assertEquals(-1, executeWithURL("instance -kill -type process -name "
 				+ "name" + " -end 2011-01-01T01:00Z"));
 
-		Assert.assertEquals(-1, executeWithURL("instance -kill -processName "
+		Assert.assertEquals(-1, executeWithURL("instance -kill -type process -name "
 				+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z"));
 
 	}
@@ -445,12 +445,12 @@ public class IvoryCLITest {
 	@Test(enabled = enableTest)
 	public void testIvoryURL() throws Exception {
 		Assert.assertEquals(-1, new IvoryCLI()
-				.run(("instance -status -processName " + "processName"
+				.run(("instance -status -type process -name " + "processName"
 						+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z")
 						.split("\\s")));
 
 		Assert.assertEquals(-1, new IvoryCLI()
-				.run(("instance -status -processName "
+				.run(("instance -status -type process -name "
 						+ "processName -url http://unknownhost:1234/"
 						+ " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z")
 						.split("\\s")));
@@ -469,7 +469,7 @@ public class IvoryCLITest {
 
 		Assert.assertEquals(
 				0,
-				new IvoryCLI().run(("instance -status -processName "
+				new IvoryCLI().run(("instance -status -type process -name "
 						+ overlay.get("processName") + " -start 2010-01-01T01:00Z  -end 2011-01-01T01:00Z")
 						.split("\\s")));
 
@@ -491,7 +491,7 @@ public class IvoryCLITest {
 	}
 
 	private int executeWithURL(String command) throws Exception {
-		return new IvoryCLI().run((command + " -url " + BASE_URL).split("\\s"));
+		return new IvoryCLI().run((command + " -url " + BASE_URL).split("\\s+"));
 	}
 
 	private Map<String, String> getUniqueOverlay() {

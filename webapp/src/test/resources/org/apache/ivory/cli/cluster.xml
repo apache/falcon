@@ -36,7 +36,6 @@
 		<location name="working" path="/projects/ivory/working" />
 	</locations>
 	<properties>
-		<property name="field1" value="value1" />
-		<property name="field2" value="value2" />
+		<property name="queueName" value="default" />
 	</properties>
 </cluster>

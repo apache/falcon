@@ -171,7 +171,7 @@ public class IvoryCLI {
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
 		String runid = commandLine.getOptionValue(RUNID_OPT);
 
-		validateInstanceCommands(optionsList, entity, start, end, filePath);
+		validateInstanceCommands(optionsList, entity, type, start, end, filePath);
 
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(type, entity);
@@ -193,11 +193,15 @@ public class IvoryCLI {
 	}
 
 	private void validateInstanceCommands(Set<String> optionsList,
-			String entity, String start, String end, String filePath)
+			String entity, String type, String start, String end, String filePath)
 			throws IvoryCLIException {
 
 		if (entity == null || entity.equals("")) {
-			throw new IvoryCLIException("Missing argument: entityName");
+			throw new IvoryCLIException("Missing argument: name");
+		}
+		
+		if (type == null || entity.equals("")) {
+			throw new IvoryCLIException("Missing argument: type");
 		}
 
 		if (!optionsList.contains(RUNNING_OPT)) {
