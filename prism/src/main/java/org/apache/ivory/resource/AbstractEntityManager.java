@@ -21,7 +21,6 @@ package org.apache.ivory.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -93,26 +92,23 @@ public abstract class AbstractEntityManager implements IvoryService {
         }
     }
 
-    protected APIResult consolidateResult(Map<String, APIResult> results, String[] colos) {
+    protected APIResult consolidateResult(Map<String, APIResult> results) {
         if (results == null || results.size() == 0)
             return null;
 
         StringBuilder buffer = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();
         int statusCount = 0;
-        List<String> applicableColos = Arrays.asList(colos);
         for (Entry<String, APIResult> entry : results.entrySet()) {
             String colo = entry.getKey();
-            if (applicableColos.contains(colo)) {
-                APIResult result = entry.getValue();
-                buffer.append(colo).append('/').append(result.getMessage()).append('\n');
-                requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
-                statusCount += result.getStatus().ordinal();
-            }
+            APIResult result = entry.getValue();
+            buffer.append(colo).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
+            statusCount += result.getStatus().ordinal();
         }
 
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == colos.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
         APIResult result = new APIResult(status, buffer.toString());
         result.setRequestId(requestIds.toString());
         return result;
@@ -133,8 +129,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             if (!(result instanceof InstancesResult))
                 continue;
             for (Instance instance : ((InstancesResult) result).getInstances()) {
-                Instance instClone = new Instance(instance.cluster, colos[index] + "/" + instance.getInstance(),
-                        instance.getStatus());
+                Instance instClone = new Instance(instance.cluster, colos[index] + "/" + instance.getInstance(), instance.getStatus());
                 instances.add(new Instance(instClone, instance.logFile, instance.actions));
             }
             statusCount += results[index].getStatus().ordinal();
@@ -169,6 +164,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         try {
             if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
                 return getAllColos();
+            
             Entity entity = getEntity(name, type);
             String[] clusters = entity.getClustersDefined();
             Set<String> colos = new HashSet<String>();
@@ -261,11 +257,10 @@ public abstract class AbstractEntityManager implements IvoryService {
                 }
 
                 configStore.remove(entityType, entity);
-            } catch (EntityNotRegisteredException e) {    //already deleted
+            } catch (EntityNotRegisteredException e) { // already deleted
             }
-            
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully "
-                    + removedFromEngine);
+
+            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully " + removedFromEngine);
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -440,34 +435,11 @@ public abstract class AbstractEntityManager implements IvoryService {
     }
 
     /**
-     * Returns the status of requested entity.
-     *
-     * @param type
-     * @param entity
-     * @param colo
-     * @return APIResult
-     */
-    public APIResult isMissing(String type, String entity, String colo) {
-
-        checkColo(colo);
-        try {
-            EntityUtil.getEntity(entity, type);
-            throw IvoryWebException.newException(
-                    new APIResult(Status.FAILED, entity + "(" + type + ") is present"),
-                    Response.Status.BAD_REQUEST);
-        } catch (EntityNotRegisteredException e) {
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") is missing");
-        } catch (IvoryException e) {
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * Returns the status of requested entity.
+     * Returns dependencies.
      * 
      * @param type
      * @param entity
-     * @return String
+     * @return EntityList
      */
     public EntityList getDependencies(String type, String entity) {
 

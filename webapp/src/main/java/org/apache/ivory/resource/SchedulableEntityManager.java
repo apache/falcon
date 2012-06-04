@@ -30,18 +30,6 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     }
 
     @GET
-    @Path("missing/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "isMissing")
-    @Override
-    public APIResult isMissing(@Dimension("entityType") @PathParam("type") String type,
-                               @Dimension("entityName") @PathParam("entity") String entity,
-                               @Dimension("colo") @QueryParam("colo") final String colo)
-            throws IvoryWebException {
-        return super.isMissing(type, entity, colo);
-    }
-
-    @GET
     @Path("dependencies/{type}/{entity}")
     @Produces(MediaType.TEXT_XML)
     @Monitored(event = "dependencies")
