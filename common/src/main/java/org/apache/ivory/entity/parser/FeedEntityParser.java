@@ -191,9 +191,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
 		if (i == 0)
 			throw new ValidationException(
 					"Feed should have atleast one source cluster");
-		if (i > 1)
-			throw new ValidationException(
-					"Feed should not have more than one source cluster");
 	}
 
 	private void validateClusterValidity(String start, String end,
