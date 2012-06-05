@@ -59,238 +59,281 @@ import org.apache.oozie.client.OozieClient;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
-    private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
+	private static Logger LOG = Logger
+			.getLogger(AbstractOozieEntityMapper.class);
 
-    protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
+	protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
 
-    protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
-    protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-    protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
+	protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
+	protected static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+	protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
 
-    protected static final JAXBContext workflowJaxbContext;
-    protected static final JAXBContext coordJaxbContext;
-    protected static final JAXBContext bundleJaxbContext;
+	protected static final JAXBContext workflowJaxbContext;
+	protected static final JAXBContext coordJaxbContext;
+	protected static final JAXBContext bundleJaxbContext;
 
-    protected static final PathFilter ivoryJarFilter = new PathFilter() {
-        @Override
-        public boolean accept(Path path) {
-            if (path.getName().startsWith("ivory"))
-                return true;
-            return false;
-        }
-    };
+	protected static final PathFilter ivoryJarFilter = new PathFilter() {
+		@Override
+		public boolean accept(Path path) {
+			if (path.getName().startsWith("ivory"))
+				return true;
+			return false;
+		}
+	};
 
-    static {
-        try {
-            workflowJaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-            coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
-            bundleJaxbContext = JAXBContext.newInstance(BUNDLEAPP.class);
-        } catch (JAXBException e) {
-            throw new RuntimeException("Unable to create JAXB context", e);
-        }
-    }
+	static {
+		try {
+			workflowJaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+			coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
+			bundleJaxbContext = JAXBContext.newInstance(BUNDLEAPP.class);
+		} catch (JAXBException e) {
+			throw new RuntimeException("Unable to create JAXB context", e);
+		}
+	}
 
-    private final T entity;
+	private final T entity;
 
-    protected AbstractOozieEntityMapper(T entity) {
-        this.entity = entity;
-    }
+	protected AbstractOozieEntityMapper(T entity) {
+		this.entity = entity;
+	}
 
-    protected T getEntity() {
-        return entity;
-    }
+	protected T getEntity() {
+		return entity;
+	}
 
-    protected Path getCoordPath(Path bundlePath, String coordName) {
-        Tag tag = EntityUtil.getWorkflowNameTag(coordName,getEntity());
-        return new Path(bundlePath, tag.name());
-    }
+	protected Path getCoordPath(Path bundlePath, String coordName) {
+		Tag tag = EntityUtil.getWorkflowNameTag(coordName, getEntity());
+		return new Path(bundlePath, tag.name());
+	}
 
-    protected abstract Map<String, String> getEntityProperties();
+	protected abstract Map<String, String> getEntityProperties();
 
-    public boolean map(Cluster cluster, Path bundlePath) throws IvoryException {
-        BUNDLEAPP bundleApp = new BUNDLEAPP();
-        bundleApp.setName(EntityUtil.getWorkflowName(entity).toString());
-        // all the properties are set prior to bundle and coordinators creation
-        CONFIGURATION bundleConf = createBundleConf(cluster);
+	public boolean map(Cluster cluster, Path bundlePath) throws IvoryException {
+		BUNDLEAPP bundleApp = new BUNDLEAPP();
+		bundleApp.setName(EntityUtil.getWorkflowName(entity).toString());
+		// all the properties are set prior to bundle and coordinators creation
+		CONFIGURATION bundleConf = createBundleConf(cluster);
 
 		List<COORDINATORAPP> coordinators = getCoordinators(cluster, bundlePath);
 		if (coordinators.size() == 0) {
 			return false;
 		}
-        for (COORDINATORAPP coordinatorapp : coordinators) {
-            Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-			marshal(cluster, coordinatorapp, coordPath, entity.getName()
-					+ EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(),entity) + ".xml");
+		for (COORDINATORAPP coordinatorapp : coordinators) {
+			Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
+			marshal(cluster,
+					coordinatorapp,
+					coordPath,
+					entity.getName()
+							+ EntityUtil.getWorkflowNameSuffixes(
+									coordinatorapp.getName(), entity) + ".xml");
 			createTempDir(cluster, coordPath);
 			COORDINATOR bundleCoord = new COORDINATOR();
 			bundleCoord.setName(coordinatorapp.getName());
-			bundleCoord.setAppPath(getHDFSPath(coordPath) + "/"
+			bundleCoord.setAppPath(getHDFSPath(coordPath)
+					+ "/"
 					+ entity.getName()
-					+ EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(),entity) + ".xml");
-            bundleCoord.setConfiguration(bundleConf);
-            bundleApp.getCoordinator().add(bundleCoord);
+					+ EntityUtil.getWorkflowNameSuffixes(
+							coordinatorapp.getName(), entity) + ".xml");
+			bundleCoord.setConfiguration(bundleConf);
+			bundleApp.getCoordinator().add(bundleCoord);
 
-            copySharedLibs(cluster, coordPath);
-        }
-        
-        marshal(cluster, bundleApp, bundlePath);
-        return true;
-    }
+			copySharedLibs(cluster, coordPath);
+		}
 
-    private void copySharedLibs(Cluster cluster, Path coordPath) throws IvoryException {
-        try {
-            Path libPath = new Path(coordPath, "lib");
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-            if (!fs.exists(libPath))
-                fs.mkdirs(libPath);
+		marshal(cluster, bundleApp, bundlePath);
+		return true;
+	}
 
-            SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, ivoryJarFilter);
-        } catch (IOException e) {
-            LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
-            throw new IvoryException(e);
-        }
-    }
+	private void copySharedLibs(Cluster cluster, Path coordPath)
+			throws IvoryException {
+		try {
+			Path libPath = new Path(coordPath, "lib");
+			FileSystem fs = FileSystem.get(ClusterHelper
+					.getConfiguration(cluster));
+			if (!fs.exists(libPath))
+				fs.mkdirs(libPath);
 
-    protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws IvoryException;
+			SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(),
+					cluster, ivoryJarFilter);
+		} catch (IOException e) {
+			LOG.error(
+					"Failed to copy shared libs on cluster "
+							+ cluster.getName(), e);
+			throw new IvoryException(e);
+		}
+	}
 
-    protected org.apache.ivory.oozie.coordinator.CONFIGURATION getCoordConfig(Map<String, String> propMap) {
-        org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
-        List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
-        for (Entry<String, String> prop : propMap.entrySet())
-            props.add(createCoordProperty(prop.getKey(), prop.getValue()));
-        return conf;
-    }
+	protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster,
+			Path bundlePath) throws IvoryException;
 
-    protected Map<String, String> createCoordDefaultConfiguration(Cluster cluster, Path coordPath, String coordName) {
-        Map<String, String> props = new HashMap<String, String>();
-        props.put(ARG.entityName.getPropName(), entity.getName());
-        props.put(ARG.nominalTime.getPropName(), NOMINAL_TIME_EL);
-        props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
-        props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
-        String userBrokerImplClass = cluster.getProperties().get("brokerImplClass") == null ? DEFAULT_BROKER_IMPL_CLASS : cluster
-                .getProperties().get("brokerImplClass").getValue();
-        props.put("userBrokerImplClass", userBrokerImplClass);
-        String ivoryBrokerUrl = StartupProperties.get().getProperty(ARG.brokerUrl.getPropName(), "tcp://localhost:61616?daemon=true");
-        props.put(ARG.brokerUrl.getPropName(), ivoryBrokerUrl);
-        String ivoryBrokerImplClass = StartupProperties.get().getProperty(ARG.brokerImplClass.getPropName(),
-                DEFAULT_BROKER_IMPL_CLASS);
-        props.put(ARG.brokerImplClass.getPropName(), ivoryBrokerImplClass);
-        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
-        props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
-        props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
-        props.put("logDir", getHDFSPath(new Path(coordPath, "../tmp")));
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName,entity),
-                "${coord:nominalTime()}").getId());
-        props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
+	protected org.apache.ivory.oozie.coordinator.CONFIGURATION getCoordConfig(
+			Map<String, String> propMap) {
+		org.apache.ivory.oozie.coordinator.CONFIGURATION conf = new org.apache.ivory.oozie.coordinator.CONFIGURATION();
+		List<org.apache.ivory.oozie.coordinator.CONFIGURATION.Property> props = conf
+				.getProperty();
+		for (Entry<String, String> prop : propMap.entrySet())
+			props.add(createCoordProperty(prop.getKey(), prop.getValue()));
+		return conf;
+	}
 
-        props.putAll(getEntityProperties());
-        return props;
-    }
+	protected Map<String, String> createCoordDefaultConfiguration(
+			Cluster cluster, Path coordPath, String coordName) {
+		Map<String, String> props = new HashMap<String, String>();
+		props.put(ARG.entityName.getPropName(), entity.getName());
+		props.put(ARG.nominalTime.getPropName(), NOMINAL_TIME_EL);
+		props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
+		props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
+		String userBrokerImplClass = cluster.getProperties().get(
+				"brokerImplClass") == null ? DEFAULT_BROKER_IMPL_CLASS
+				: cluster.getProperties().get("brokerImplClass").getValue();
+		props.put("userBrokerImplClass", userBrokerImplClass);
+		String ivoryBrokerUrl = StartupProperties.get().getProperty(
+				ARG.brokerUrl.getPropName(),
+				"tcp://localhost:61616?daemon=true");
+		props.put(ARG.brokerUrl.getPropName(), ivoryBrokerUrl);
+		String ivoryBrokerImplClass = StartupProperties.get().getProperty(
+				ARG.brokerImplClass.getPropName(), DEFAULT_BROKER_IMPL_CLASS);
+		props.put(ARG.brokerImplClass.getPropName(), ivoryBrokerImplClass);
+		String jmsMessageTTL = StartupProperties.get().getProperty(
+				"broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
+		props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
+		props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
+		props.put("logDir", getHDFSPath(new Path(coordPath, "../../logs")));
+		props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(),
+				EntityUtil.getWorkflowNameTag(coordName, entity),
+				"${coord:nominalTime()}").getId());
+		props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
 
-    protected CONFIGURATION createBundleConf(Cluster cluster) {
-        CONFIGURATION conf = new CONFIGURATION();
-        List<CONFIGURATION.Property> props = conf.getProperty();
-        props.add(createBundleProperty("entityName", entity.getName()));
-        props.add(createBundleProperty("entityType", entity.getEntityType().name().toLowerCase()));
+		props.putAll(getEntityProperties());
+		return props;
+	}
 
-        for (Property property : cluster.getProperties().values()) {
-            props.add(createBundleProperty(property.getName(), property.getValueAttribute()));
-        }
-        return conf;
-    }
+	protected CONFIGURATION createBundleConf(Cluster cluster) {
+		CONFIGURATION conf = new CONFIGURATION();
+		List<CONFIGURATION.Property> props = conf.getProperty();
+		props.add(createBundleProperty("entityName", entity.getName()));
+		props.add(createBundleProperty("entityType", entity.getEntityType()
+				.name().toLowerCase()));
 
-    protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name, String value) {
-        org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
-    }
+		for (Property property : cluster.getProperties().values()) {
+			props.add(createBundleProperty(property.getName(),
+					property.getValueAttribute()));
+		}
+		return conf;
+	}
 
-    protected org.apache.ivory.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
-        org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop = new org.apache.ivory.oozie.bundle.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
-    }
+	protected org.apache.ivory.oozie.coordinator.CONFIGURATION.Property createCoordProperty(
+			String name, String value) {
+		org.apache.ivory.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.ivory.oozie.coordinator.CONFIGURATION.Property();
+		prop.setName(name);
+		prop.setValue(value);
+		return prop;
+	}
 
-    protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath) throws IvoryException {
-        try {
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            FileSystem fs = outPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
-            OutputStream out = fs.create(outPath);
-            try {
-                marshaller.marshal(jaxbElement, out);
-            } finally {
-                out.close();
-            }
-            if (LOG.isDebugEnabled()) {
-                StringWriter writer = new StringWriter();
-                marshaller.marshal(jaxbElement, writer);
-                LOG.debug("Writing definition to " + outPath + " on cluster " + cluster.getName());
-                LOG.debug(writer.getBuffer());
-            }
+	protected org.apache.ivory.oozie.bundle.CONFIGURATION.Property createBundleProperty(
+			String name, String value) {
+		org.apache.ivory.oozie.bundle.CONFIGURATION.Property prop = new org.apache.ivory.oozie.bundle.CONFIGURATION.Property();
+		prop.setName(name);
+		prop.setValue(value);
+		return prop;
+	}
 
-            LOG.info("Marshalled " + jaxbElement.getDeclaredType() + " to " + outPath);
-        } catch (Exception e) {
-            throw new IvoryException("Unable to marshall app object", e);
-        }
-    }
+	protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement,
+			JAXBContext jaxbContext, Path outPath) throws IvoryException {
+		try {
+			Marshaller marshaller = jaxbContext.createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,
+					Boolean.TRUE);
+			FileSystem fs = outPath.getFileSystem(ClusterHelper
+					.getConfiguration(cluster));
+			OutputStream out = fs.create(outPath);
+			try {
+				marshaller.marshal(jaxbElement, out);
+			} finally {
+				out.close();
+			}
+			if (LOG.isDebugEnabled()) {
+				StringWriter writer = new StringWriter();
+				marshaller.marshal(jaxbElement, writer);
+				LOG.debug("Writing definition to " + outPath + " on cluster "
+						+ cluster.getName());
+				LOG.debug(writer.getBuffer());
+			}
 
-    private void createTempDir(Cluster cluster, Path coordPath) throws IvoryException {
-        try {
-            FileSystem fs = coordPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
-            Path tempDir = new Path(coordPath, "../tmp");
-            fs.mkdirs(tempDir);
-            fs.setPermission(tempDir, new FsPermission((short) 511));
-        } catch (Exception e) {
-            throw new IvoryException("Unable to create temp dir in " + coordPath, e);
-        }
-    }
-    
-    protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws IvoryException {
+			LOG.info("Marshalled " + jaxbElement.getDeclaredType() + " to "
+					+ outPath);
+		} catch (Exception e) {
+			throw new IvoryException("Unable to marshall app object", e);
+		}
+	}
 
-        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, name));
-    }
+	private void createTempDir(Cluster cluster, Path coordPath)
+			throws IvoryException {
+		try {
+			FileSystem fs = coordPath.getFileSystem(ClusterHelper
+					.getConfiguration(cluster));
+			Path tempDir = new Path(coordPath, "../tmp");
+			fs.mkdirs(tempDir);
+			fs.setPermission(tempDir, new FsPermission((short) 511));
+		} catch (Exception e) {
+			throw new IvoryException("Unable to create temp dir in "
+					+ coordPath, e);
+		}
+	}
 
-    protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws IvoryException {
+	protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath,
+			String name) throws IvoryException {
 
-        marshal(cluster, new org.apache.ivory.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext, new Path(
-                outPath, "bundle.xml"));
-    }
+		marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
+				coordJaxbContext, new Path(outPath, name));
+	}
 
-    protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws IvoryException {
+	protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath)
+			throws IvoryException {
 
-        marshal(cluster, new org.apache.ivory.oozie.workflow.ObjectFactory().createWorkflowApp(workflow), workflowJaxbContext,
-                new Path(outPath, "workflow.xml"));
-    }
+		marshal(cluster,
+				new org.apache.ivory.oozie.bundle.ObjectFactory()
+						.createBundleApp(bundle), bundleJaxbContext, new Path(
+						outPath, "bundle.xml"));
+	}
 
-    protected String getHDFSPath(Path path) {
-        if (path != null)
-            return getHDFSPath(path.toString());
-        return null;
-    }
+	protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath)
+			throws IvoryException {
 
-    protected String getHDFSPath(String path) {
-        if (StringUtils.isNotEmpty(path)) {
-            if (!path.startsWith("${nameNode}"))
-                path = "${nameNode}" + path;
-        }
-        return path;
-    }
+		marshal(cluster,
+				new org.apache.ivory.oozie.workflow.ObjectFactory()
+						.createWorkflowApp(workflow), workflowJaxbContext,
+				new Path(outPath, "workflow.xml"));
+	}
 
-    protected WORKFLOWAPP getWorkflowTemplate(String template) throws IvoryException {
-        try {
-            Unmarshaller unmarshaller = workflowJaxbContext.createUnmarshaller();
-            @SuppressWarnings("unchecked")
-            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(this.getClass()
-                    .getResourceAsStream(template));
-            return jaxbElement.getValue();
-        } catch (JAXBException e) {
-            throw new IvoryException(e);
-        }
-    }
-    
+	protected String getHDFSPath(Path path) {
+		if (path != null)
+			return getHDFSPath(path.toString());
+		return null;
+	}
+
+	protected String getHDFSPath(String path) {
+		if (StringUtils.isNotEmpty(path)) {
+			if (!path.startsWith("${nameNode}"))
+				path = "${nameNode}" + path;
+		}
+		return path;
+	}
+
+	protected WORKFLOWAPP getWorkflowTemplate(String template)
+			throws IvoryException {
+		try {
+			Unmarshaller unmarshaller = workflowJaxbContext
+					.createUnmarshaller();
+			@SuppressWarnings("unchecked")
+			JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller
+					.unmarshal(this.getClass().getResourceAsStream(template));
+			return jaxbElement.getValue();
+		} catch (JAXBException e) {
+			throw new IvoryException(e);
+		}
+	}
+
 	protected COORDINATORAPP getCoordinatorTemplate(String template)
 			throws IvoryException {
 		try {

@@ -17,13 +17,6 @@
  */
 package org.apache.ivory.rerun.policy;
 
-import org.apache.ivory.IvoryException;
-
-public class PeriodicPolicy extends AbstractRerunPolicy {
-
-	@Override
-	public long getDelay(String delayUnit, int delay, int eventNumber) throws IvoryException {
-		return getDurationInMilliSec(delayUnit, delay)*1;
-	}
-
+public class PeriodicPolicy extends ExpBackoffPolicy {
+	protected int power = 1;
 }

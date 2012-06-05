@@ -44,10 +44,27 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-test-util</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-oozie-adaptor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>jms</artifactId>
 			<version>1.1</version>
 		</dependency>
+		<dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.5</version>
+            <scope>provided</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-core</artifactId>

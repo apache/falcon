@@ -32,8 +32,17 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
+import org.apache.ivory.rerun.event.LaterunEvent;
+import org.apache.ivory.rerun.event.RetryEvent;
+import org.apache.ivory.rerun.event.RerunEvent.RerunType;
+import org.apache.ivory.rerun.handler.AbstractRerunHandler;
+import org.apache.ivory.rerun.handler.RerunHandlerFactory;
+import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.resource.AbstractInstanceManager;
+import org.apache.ivory.workflow.WorkflowEngineFactory;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -47,13 +56,12 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String url;
 	private String topicName;
 	private Connection connection;
-	private AbstractInstanceManager instanceManager = new AbstractInstanceManager() {
-		@Override
-		public String getName() {
-			return "Test";
-		}
-	};
-
+	
+	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler =  RerunHandlerFactory
+			.getRerunHandler(RerunType.RETRY);
+	private AbstractRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> latedataHandler =  RerunHandlerFactory
+			                       .getRerunHandler(RerunType.LATE);
+	
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {
 		this.implementation = implementation;
@@ -98,11 +106,22 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 					.getArgName());
 			String timeStamp = mapMessage.getString(ARG.timeStamp.getArgName());
 			String status = mapMessage.getString(ARG.status.getArgName());
-
+			WorkflowEngine engine;
+		        try {
+		            engine = WorkflowEngineFactory.getWorkflowEngine();
+		        } catch (IvoryException e) {
+		            throw new IvoryRuntimException(e);
+		        }
+		    
 			try {
-				instanceManager.instrumentWithAspect(processName,
-						feedName, feedpath, nominalTime, timeStamp, status,
-						workflowId, runId, System.currentTimeMillis());
+				if (status.equalsIgnoreCase("FAILED")) {
+					retryHandler.handleRerun(processName, nominalTime, runId, workflowId,
+		                    engine, System.currentTimeMillis());
+					throw new Exception(processName + ":" + nominalTime + " Failed");
+				} else if (status.equalsIgnoreCase("SUCCEEDED")) {
+					latedataHandler.handleRerun(processName, nominalTime, runId,
+							workflowId, engine, System.currentTimeMillis());
+				}
 			} catch (Exception ignore) {
 				// mocked exception
 			}

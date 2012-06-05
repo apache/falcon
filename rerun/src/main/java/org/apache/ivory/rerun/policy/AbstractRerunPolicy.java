@@ -17,6 +17,9 @@
  */
 package org.apache.ivory.rerun.policy;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import org.apache.ivory.IvoryException;
 
 public abstract class AbstractRerunPolicy {
@@ -29,7 +32,7 @@ public abstract class AbstractRerunPolicy {
 	private static enum DELAYS {
 		minutes, hours, days, months
 	};
-	
+
 	public long getDurationInMilliSec(String delayUnit, int delay)
 			throws IvoryException {
 
@@ -45,8 +48,17 @@ public abstract class AbstractRerunPolicy {
 			throw new IvoryException("Unknown delayUnit:" + delayUnit);
 		}
 	}
-	
-	public abstract long getDelay(String delayUnit, int delay, int eventNumber) throws IvoryException;
 
+	public static Date addTime(Date date, int milliSecondsToAdd) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		cal.add(Calendar.MILLISECOND, milliSecondsToAdd);
+		return cal.getTime();
+	}
 
+	public abstract long getDelay(String delayUnit, int delay, int eventNumber)
+			throws IvoryException;
+
+	public abstract long getDelay(String delayUnit, int delay,
+			Date nominaltime, Date cutOffTime) throws IvoryException;
 }

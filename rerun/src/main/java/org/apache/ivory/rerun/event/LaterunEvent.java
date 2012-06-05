@@ -26,7 +26,6 @@ public class LaterunEvent extends RerunEvent{
 			String processInstance, int runId) {
 		super(wfEngine, clusterName, wfId, msgInsertTime, delay, processName,
 				processInstance, runId);
-		// TODO Auto-generated constructor stub
 	}
 
 }

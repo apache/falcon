@@ -28,7 +28,9 @@ public class RerunPolicyFactory {
 		if (policy.equals("backoff")) {
 			return new PeriodicPolicy();
 		} else if (policy.equals("exp-backoff")) {
-			return new BackoffPolicy();
+			return new ExpBackoffPolicy();
+		} else if(policy.equals("final")){
+			return new FinalPolicy();
 		} else {
 			throw new IllegalArgumentException("Unhandled Retry policy: "
 					+ policy);

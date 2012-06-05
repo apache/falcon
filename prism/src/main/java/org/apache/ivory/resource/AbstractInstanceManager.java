@@ -46,9 +46,7 @@ import java.util.Properties;
 
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractInstanceManager.class);
-	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler =  RerunHandlerFactory
-			.getRerunHandler(RerunType.RETRY);
-
+	
     protected void checkType(String type) {
         if (StringUtils.isEmpty(type)) {
             throw IvoryWebException.newException("entity type is empty",
@@ -290,11 +288,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 			@Dimension(value = "workflowId") String workflowId,
 			@Dimension(value = "runId") String runId, long msgReceivedTime)
 			throws Exception {
-		if (status.equalsIgnoreCase("FAILED")) {
-			retryHandler.handleRerun(process, nominalTime, runId, workflowId,
-                    getWorkflowEngine(), msgReceivedTime);
-			throw new Exception(process + ":" + nominalTime + " Failed");
-		}
+		
 		return "DONE";
 
 	}

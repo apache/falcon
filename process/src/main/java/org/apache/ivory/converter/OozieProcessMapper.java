@@ -32,6 +32,7 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
@@ -124,6 +125,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // inputs
         if (process.getInputs() != null) {
             StringBuffer ivoryInPaths = new StringBuffer();
+            StringBuffer ivoryInputFeeds = new StringBuffer();
             for (Input input : process.getInputs().getInput()) {
                 SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
                 if (coord.getDatasets() == null)
@@ -145,10 +147,19 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 } else {
                     inputExpr = "${coord:dataIn('" + input.getName() + "')}";
                 }
+                
                 props.put(input.getName(), inputExpr);
-                ivoryInPaths.append(inputExpr).append('#');
-                props.put("ivoryInPaths", ivoryInPaths.substring(0, ivoryInPaths.length() - 1));
+                if(process.getLateProcess() != null){
+                	for(LateInput li : process.getLateProcess().getLateInput()){
+                    	if(input.getName().equals(li.getFeed())){
+                    		ivoryInPaths.append(inputExpr).append('#');
+                            ivoryInputFeeds.append(input.getName()).append("#");
+                    	}
+                    }
+                }
             }
+            props.put("ivoryInPaths", ivoryInPaths.substring(0, ivoryInPaths.length() - 1));
+            props.put("ivoryInputFeeds",ivoryInputFeeds.substring(0, ivoryInputFeeds.length() - 1));
         }
 
         // outputs

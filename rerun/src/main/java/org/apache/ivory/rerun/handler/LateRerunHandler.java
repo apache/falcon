@@ -17,43 +17,118 @@
  */
 package org.apache.ivory.rerun.handler;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.expression.ExpressionHelper;
+import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.util.StartupProperties;
+import org.apache.ivory.util.GenericAlert;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
+import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 
-public class LateRerunHandler<T extends LaterunEvent, M extends DelayedQueue<LaterunEvent>>
+public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		extends AbstractRerunHandler<LaterunEvent, M> {
 
 	@Override
 	public void handleRerun(String processName, String nominalTime,
 			String runId, String wfId, WorkflowEngine wfEngine,
 			long msgReceivedTime) throws IvoryException {
-		// TODO Auto-generated method stub
+
+		Process processObj = getProcess(processName);
+		int intRunId = Integer.parseInt(runId);
+		Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
+		Long wait = getEventDelay(processObj, nominalTime);
+		if (wait == -1)
+			return;
+
+		LOG.debug("Scheduling the late rerun for process instance : "
+				+ processName + ":" + nominalTime + " And WorkflowId: " + wfId);
+		LaterunEvent event = new LaterunEvent(wfEngine, processObj.getCluster()
+				.getName(), wfId, msgInsertTime.getTime(), wait, processName,
+				nominalTime, intRunId);
+		offerToQueue(event);
 
 	}
 
-	@Override
-	public boolean offerToQueue(LaterunEvent event) {
-		return false;
-		// TODO Auto-generated method stub
+	public static long getEventDelay(Process processObj, String nominalTime)
+			throws IvoryException {
 
+		Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
+		if (processObj.getLateProcess() == null) {
+			return -1;
+		}
+
+		String latePolicy = processObj.getLateProcess().getPolicy();
+		Date cutOffTime = getCutOffTime(processObj, nominalTime);
+		Date now = new Date(System.currentTimeMillis());
+		Long wait = null;
+
+		if (now.after(cutOffTime)) {
+			LOG.warn("Feed Cut Off time: " + now.toString()
+					+ " has expired, Late Rerun can not be scheduled");
+			return -1;
+		} else {
+			AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
+					.getRetryPolicy(latePolicy);
+			wait = rerunPolicy.getDelay(processObj.getLateProcess()
+					.getDelayUnit(), processObj.getLateProcess().getDelay(),
+					instanceDate, cutOffTime);
+		}
+		return wait;
 	}
 
-	@Override
-	public LaterunEvent takeFromQueue() {
-		// TODO Auto-generated method stub
-		return null;
+	public static Date addTime(Date date, int milliSecondsToAdd) {
+		return new Date(date.getTime() + milliSecondsToAdd);
+	}
+
+	public static Date getCutOffTime(Process process, String nominalTime)
+			throws IvoryException {
+		ConfigurationStore store = ConfigurationStore.get();
+		ExpressionHelper evaluator = ExpressionHelper.get();
+		Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
+		ExpressionHelper.setReferenceDate(instanceStart);
+
+		Date endTime = new Date();
+		Date feedCutOff = new Date(0);
+		for (LateInput lp : process.getLateProcess().getLateInput()) {
+			Feed feed = null;
+			String endInstanceTime = "";
+			for (Input input : process.getInputs().getInput()) {
+				if (input.getName().equals(lp.getFeed())) {
+					endInstanceTime = input.getEndInstance();
+					feed = store.get(EntityType.FEED, input.getFeed());
+					break;
+				}
+			}
+			String lateCutOff = feed.getLateArrival().getCutOff();
+			endTime = evaluator.evaluate(endInstanceTime, Date.class);
+			long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
+			endTime = addTime(endTime, (int) feedCutOffPeriod);
+
+			if (endTime.after(feedCutOff))
+				feedCutOff = endTime;
+		}
+		return feedCutOff;
 	}
 
 	@Override
 	public void init(M delayQueue) throws IvoryException {
 		super.init(delayQueue);
-		Thread daemon = new LateRerunHandler.Consumer();
+		Thread daemon = new Thread(new LateRerunConsumer(this));
 		daemon.setName("LaterunHandler");
 		daemon.setDaemon(true);
 		daemon.start();
@@ -61,67 +136,6 @@ public class LateRerunHandler<T extends LaterunEvent, M extends DelayedQueue<Lat
 	}
 
 	public Process getProcess(String processName) throws IvoryException {
-		return ConfigurationStore.get().get(EntityType.PROCESS, processName);
+		return (Process) EntityUtil.getEntity(EntityType.PROCESS, processName);
 	}
-
-	private final class Consumer extends Thread {
-		@Override
-		public void run() {
-			while (true) {
-				LaterunEvent message = null;
-				message = takeFromQueue();
-				try {
-					Process processObj = getProcess(message.getProcessName());
-					if (!validate(message.getProcessName(), processObj)) {
-						continue;
-					}
-					String jobStatus = message.getWfEngine().instanceStatus(
-							message.getClusterName(), message.getWfId());
-					if (!jobStatus.equals("KILLED")) {
-						LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
-								+ message.getWfId());
-						message.setMsgInsertTime(System.currentTimeMillis());
-						offerToQueue(message);
-						continue;
-					}
-					// LOG.info("Retrying attempt:" + (message.getRunId() + 1)
-					// + " out of configured: " + message.getAttempts()
-					// + " attempt for process instance::"
-					// + message.getProcessName() + ":"
-					// + message.getProcessInstance()
-					// + " And WorkflowId: " + message.getWfId()
-					// + " At time: "
-					// + getTZdate(new Date(System.currentTimeMillis())));
-					message.getWfEngine().reRun(message.getClusterName(),
-							message.getWfId(), null);
-				} catch (Throwable e) {
-					int maxFailRetryCount = Integer.parseInt(StartupProperties
-							.get().getProperty("max.retry.failure.count", "1"));
-					// if (message.getFailRetryCount() < maxFailRetryCount) {
-					// LOG.warn(
-					// "Retrying again for process instance "
-					// + message.getProcessName()
-					// + ":"
-					// + message.getProcessInstance()
-					// + " after "
-					// + message.getDelayInMilliSec()
-					// + " seconds as Retry failed with message:",
-					// e);
-					// message.setFailRetryCount(message.getFailRetryCount() +
-					// 1);
-					// offerToQueue(message);
-					// } else {
-					// LOG.warn(
-					// "Failure retry attempts exhausted for processInstance: "
-					// + message.getProcessName() + ":"
-					// + message.getProcessInstance(), e);
-					// GenericAlert.alertRetryFailed(message.getProcessName(),
-					// message.getProcessInstance(),
-					// message.getRunId(), e.getMessage());
-					// }
-				}
-			}
-		}
-	}
-
 }

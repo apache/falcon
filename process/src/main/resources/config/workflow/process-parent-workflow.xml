@@ -22,11 +22,9 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
-			<arg>-mode</arg><arg>record</arg>
-			<arg>-out</arg><arg>${logDir}/latedata-${nominalTime}</arg>
+			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}</arg>
 			<arg>-paths</arg><arg>${ivoryInPaths}</arg>
-			<arg>-oozie</arg><arg>${workflowEngineUrl}</arg>
-			<arg>-extid</arg><arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-ivoryInputFeeds</arg><arg>${ivoryInputFeeds}</arg>
 			<capture-output />
 		</java>
 		<ok to="user-workflow" />

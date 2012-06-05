@@ -25,7 +25,7 @@ import org.apache.ivory.rerun.queue.DelayedQueue;
 public class RerunHandlerFactory {
 
 	private static final RetryHandler<DelayedQueue<RetryEvent>> retryHandler = new RetryHandler<DelayedQueue<RetryEvent>>();
-	private static final LateRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> lateHandler = new LateRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>>();
+	private static final LateRerunHandler<DelayedQueue<LaterunEvent>> lateHandler = new LateRerunHandler<DelayedQueue<LaterunEvent>>();
 
 	private RerunHandlerFactory() {
 

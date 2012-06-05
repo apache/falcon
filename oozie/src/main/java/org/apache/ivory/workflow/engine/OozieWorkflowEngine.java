@@ -811,4 +811,18 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         change(cluster, id, changeValueStr);
     }
+    
+    @Override
+	public String getWorkflowProperty(String cluster, String jobId,
+			String property) throws IvoryException {
+		OozieClient client = new CustomOozieClient(cluster);
+		try {
+			WorkflowJob jobInfo = client.getJobInfo(jobId);
+			String conf = jobInfo.getConf();
+			Properties props = OozieUtils.toProperties(conf);
+			return props.getProperty(property);
+		} catch (Exception e) {
+			throw new IvoryException(e);
+		}
+	}
 }

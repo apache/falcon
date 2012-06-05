@@ -18,6 +18,7 @@
 package org.apache.ivory.rerun.queue;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -59,9 +60,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 			TextMessage msg = session.createTextMessage(event.toString());
 			msg.setLongProperty(
 					ScheduledMessage.AMQ_SCHEDULED_DELAY,
-					event.getDelayInMilliSec()
-							- (System.currentTimeMillis() - event
-									.getMsgInsertTime()));
+					event.getDelay(TimeUnit.MILLISECONDS));
 			msg.setStringProperty("TYPE", event.getType().name());
 			producer.send(msg);
 			LOG.debug("Enqueued Message:" + event.toString());

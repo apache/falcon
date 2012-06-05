@@ -60,4 +60,6 @@ public interface WorkflowEngine {
 	void update(Entity oldEntity, Entity newEntity) throws IvoryException;
 
 	String instanceStatus(String cluster, String jobId) throws IvoryException;
+	
+	String getWorkflowProperty(String cluster, String jobId , String property) throws IvoryException;
 }

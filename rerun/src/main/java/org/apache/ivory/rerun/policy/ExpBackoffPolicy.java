@@ -17,15 +17,40 @@
  */
 package org.apache.ivory.rerun.policy;
 
+import java.util.Date;
+
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.expression.ExpressionHelper;
 
-public class BackoffPolicy extends AbstractRerunPolicy {
-
+public class ExpBackoffPolicy extends AbstractRerunPolicy {
+	
+	protected int power = 2;
 	@Override
 	public long getDelay(String delayUnit, int delay, int eventNumber)
 			throws IvoryException {
-		return (long) (getDurationInMilliSec(delayUnit, delay) * Math.pow(2,
+		return (long) (getDurationInMilliSec(delayUnit, delay) * Math.pow(power,
 				eventNumber));
+	}
+
+	@Override
+	public long getDelay(String delayUnit, int delay, Date nominalTime, Date cutOffTime)
+			throws IvoryException {
+		String delayTime = delayUnit + "(" + delay + ")";
+		ExpressionHelper evaluator = ExpressionHelper.get();
+		Date now = new Date(System.currentTimeMillis());
+		Date lateTime = new Date();
+		lateTime = nominalTime;
+		long delayMilliSeconds = evaluator.evaluate(delayTime, Long.class);
+		int factor = 1;
+		while(lateTime.before(now)){
+			lateTime = addTime(lateTime , (int) (factor * delayMilliSeconds));
+			factor*= power;
+		}
+		if(lateTime.after(cutOffTime))
+			lateTime = cutOffTime;
+		
+		return  (lateTime.getTime() - nominalTime.getTime());
+		
 	}
 
 }
