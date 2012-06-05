@@ -159,27 +159,28 @@ public abstract class AbstractEntityManager implements IvoryService {
     }
 
     protected String[] getApplicableColos(String type, String name) throws IvoryWebException {
-        if (DeploymentUtil.isEmbeddedMode())
-            return DeploymentUtil.getDefaultColos();
         try {
-            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
-                return getAllColos();
-            
-            Entity entity = getEntity(name, type);
-            String[] clusters = entity.getClustersDefined();
-            Set<String> colos = new HashSet<String>();
-            for (String cluster : clusters) {
-                Cluster clusterEntity = (Cluster) getEntity(cluster, EntityType.CLUSTER.name());
-                colos.add(clusterEntity.getColo());
-            }
-            return colos.toArray(new String[colos.size()]);
+            return getApplicableColosInternal(type, name);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
 
-    protected Entity getEntity(String name, String type) throws IvoryException {
-        return EntityUtil.getEntity(type, name);
+    protected String[] getApplicableColosInternal(String type, String name) throws IvoryException {
+        if (DeploymentUtil.isEmbeddedMode())
+            return DeploymentUtil.getDefaultColos();
+
+        if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+            return getAllColos();
+
+        Entity entity = EntityUtil.getEntity(type, name);
+        String[] clusters = entity.getClustersDefined();
+        Set<String> colos = new HashSet<String>();
+        for (String cluster : clusters) {
+            Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+            colos.add(clusterEntity.getColo());
+        }
+        return colos.toArray(new String[colos.size()]);
     }
 
     /**
@@ -246,14 +247,12 @@ public abstract class AbstractEntityManager implements IvoryService {
             audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             try {
-                Entity entityObj = getEntity(entity, type);
+                Entity entityObj = EntityUtil.getEntity(type, entity);
 
                 canRemove(entityObj);
-                if (entityType.isSchedulable()) {
-                    if (getWorkflowEngine().isActive(entityObj)) {
-                        getWorkflowEngine().delete(entityObj);
-                        removedFromEngine = "(KILLED in ENGINE)";
-                    }
+                if (entityType.isSchedulable() && getWorkflowEngine().isActive(entityObj)) {
+                    getWorkflowEngine().delete(entityObj);
+                    removedFromEngine = "(KILLED in ENGINE)";
                 }
 
                 configStore.remove(entityType, entity);
@@ -275,7 +274,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             audit(request, entityName, type, "UPDATE");
-            Entity oldEntity = getEntity(entityName, type);
+            Entity oldEntity = EntityUtil.getEntity(type, entityName);
             Entity newEntity = deserializeEntity(request, entityType);
             validate(newEntity);
 
@@ -407,7 +406,7 @@ public abstract class AbstractEntityManager implements IvoryService {
         checkColo(colo);
         Entity entityObj = null;
         try {
-            entityObj = getEntity(entity, type);
+            entityObj = EntityUtil.getEntity(type, entity);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             String status;
 
@@ -444,7 +443,7 @@ public abstract class AbstractEntityManager implements IvoryService {
     public EntityList getDependencies(String type, String entity) {
 
         try {
-            Entity entityObj = getEntity(entity, type);
+            Entity entityObj = EntityUtil.getEntity(type, entity);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
             Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
             return new EntityList(entities == null ? new Entity[] {} : entities);

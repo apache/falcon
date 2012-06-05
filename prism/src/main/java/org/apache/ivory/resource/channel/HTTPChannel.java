@@ -1,25 +1,34 @@
 package org.apache.ivory.resource.channel;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
+import javax.ws.rs.core.UriBuilder;
+
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.proxy.BufferedRequest;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.util.DeploymentProperties;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.log4j.Logger;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status.Family;
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Properties;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class HTTPChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
@@ -143,7 +152,7 @@ public class HTTPChannel extends AbstractChannel {
                 return (HttpServletRequest) arg;
             }
         }
-        return DEFAULT_NULL_REQUEST;
+        return new BufferedRequest(DEFAULT_NULL_REQUEST);
     }
 
     private String getHttpMethod(Method method) {

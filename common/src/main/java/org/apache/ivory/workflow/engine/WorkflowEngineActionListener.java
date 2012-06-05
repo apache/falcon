@@ -23,19 +23,19 @@ import org.apache.ivory.entity.v0.Entity;
 
 public interface WorkflowEngineActionListener {
 
-    void beforeSchedule(String cluster, Entity entity) throws IvoryException;
+    void beforeSchedule(Entity entity, String cluster) throws IvoryException;
 
-    void afterSchedule(String cluster, String wfId) throws IvoryException;
+    void afterSchedule(Entity entity, String cluster) throws IvoryException;
 
-    void beforeDelete(String cluster, String wfId) throws IvoryException;
+    void beforeDelete(Entity entity, String cluster) throws IvoryException;
 
-    void afterDelete(String cluster, String wfId) throws IvoryException;
+    void afterDelete(Entity entity, String cluster) throws IvoryException;
 
-    void beforeSuspend(String cluster, String wfId) throws IvoryException;
+    void beforeSuspend(Entity entity, String cluster) throws IvoryException;
 
-    void afterSuspend(String cluster, String wfId) throws IvoryException;
+    void afterSuspend(Entity entity, String cluster) throws IvoryException;
 
-    void beforeResume(String cluster, String wfId) throws IvoryException;
+    void beforeResume(Entity entity, String cluster) throws IvoryException;
 
-    void afterResume(String cluster, String wfId) throws IvoryException;
+    void afterResume(Entity entity, String cluster) throws IvoryException;
 }

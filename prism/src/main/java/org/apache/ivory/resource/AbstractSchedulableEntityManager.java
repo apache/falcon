@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.UnschedulableEntityException;
@@ -61,9 +62,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     private synchronized void scheduleInternal(String type, String entity) throws IvoryException {
         checkSchedulableEntity(type);
-        Entity entityObj = getEntity(entity, type);
-        if (!getWorkflowEngine().isActive(entityObj))
-            getWorkflowEngine().schedule(entityObj);
+        Entity entityObj = EntityUtil.getEntity(type, entity);
+        getWorkflowEngine().schedule(entityObj);
     }
 
     /**
@@ -100,7 +100,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
         try {
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
-            Entity entityObj = getEntity(entity, type);
+            Entity entityObj = EntityUtil.getEntity(type, entity);
             if (getWorkflowEngine().isActive(entityObj))
                 getWorkflowEngine().suspend(entityObj);
             else
@@ -126,8 +126,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
         try {
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
-            Entity entityObj = getEntity(entity, type);
-            if(getWorkflowEngine().isActive(entityObj))
+            Entity entityObj = EntityUtil.getEntity(type, entity);
+            if (getWorkflowEngine().isActive(entityObj))
                 getWorkflowEngine().resume(entityObj);
             else
                 throw new IvoryException(entity + "(" + type + ") is not scheduled");

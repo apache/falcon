@@ -22,60 +22,59 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.ClusterHelper;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.OozieClient;
 
 public class OozieHouseKeepingService implements WorkflowEngineActionListener {
 
     private static Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
 
     @Override
-    public void beforeSchedule(String cluster, Entity entity) throws IvoryException {
+    public void beforeSchedule(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void afterSchedule(String cluster, String jobId) throws IvoryException {
+    public void afterSchedule(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void beforeDelete(String cluster, String jobId) throws IvoryException {
+    public void beforeDelete(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void afterDelete(String cluster, String jobId) throws IvoryException {
-        if(!jobId.endsWith("-B"))
-            return;
-        
-        //clean up bundle workflow
+    public void afterDelete(Entity entity, String clusterName) throws IvoryException {
         try {
-            OozieClient client = OozieClientFactory.get(cluster);
-            BundleJob bundle = client.getBundleJobInfo(jobId);
-            Path bundlePath = new Path(bundle.getAppPath());
-            FileSystem fs = bundlePath.getFileSystem(new Configuration());
-            LOG.info("Deleting workflow " + bundlePath);
-            if (fs.exists(bundlePath) && !fs.delete(bundlePath, true)) {
-                throw new IvoryException("Unable to cleanup workflow xml; " + "delete failed " + bundlePath);
+            Cluster cluster = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+            Path entityPath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(entity)).getParent();
+            LOG.info("Deleting entity path " + entityPath + " on cluster " + clusterName);
+            
+            Configuration conf = ClusterHelper.getConfiguration(cluster);
+            FileSystem fs = FileSystem.get(conf);
+            if (fs.exists(entityPath) && !fs.delete(entityPath, true)) {
+                throw new IvoryException("Unable to cleanup entity path: " + entityPath);
             }
         } catch (Exception e) {
-            throw new IvoryException("Unable to cleanup workflow xml", e);
+            throw new IvoryException("Failed to cleanup entity path for " + entity.toShortString() + " on cluster " + clusterName, e);
         }
     }
 
     @Override
-    public void beforeSuspend(String cluster, String jobId) throws IvoryException {
+    public void beforeSuspend(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void afterSuspend(String cluster, String jobId) throws IvoryException {
+    public void afterSuspend(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void beforeResume(String cluster, String jobId) throws IvoryException {
+    public void beforeResume(Entity entity, String cluster) throws IvoryException {
     }
 
     @Override
-    public void afterResume(String cluster, String jobId) throws IvoryException {
+    public void afterResume(Entity entity, String cluster) throws IvoryException {
     }
 }

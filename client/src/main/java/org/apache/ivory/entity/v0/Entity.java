@@ -31,6 +31,8 @@ import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
 public abstract class Entity {
+    private static XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
+            "utf-8"));
 	
     public abstract String getName();
 
@@ -67,11 +69,13 @@ public abstract class Entity {
         if (!equals(entity))
             return false;
 
-        XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
-                "utf-8"));
-        String thisStr = xstream.toXML(this);
-        String entityStr = xstream.toXML(entity);
+        String thisStr = toComparableString();
+        String entityStr = entity.toComparableString();
         return thisStr.equals(entityStr);
+    }
+    
+    public String toComparableString() {
+        return xstream.toXML(this);
     }
 
     @Override
