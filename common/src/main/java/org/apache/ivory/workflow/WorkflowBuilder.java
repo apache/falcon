@@ -19,6 +19,7 @@
 package org.apache.ivory.workflow;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -38,7 +39,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
         return ReflectionUtils.getInstance(classKey);
     }
 
-    public abstract Map<String, Properties> newWorkflowSchedule(T entity) throws IvoryException;
+    public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws IvoryException;
 
     public String[] getClustersDefined(T entity) {
         String[] entityClusters = entity.getClustersDefined();

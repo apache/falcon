@@ -68,7 +68,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         try {
             validateNotEmpty("entityName", entity);
             WorkflowEngine wfEngine = getWorkflowEngine();
-            Entity entityObject = getEntity(entity, type);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
             return wfEngine.getRunningInstances(entityObject);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
@@ -86,7 +86,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
 			Date start = EntityUtil.parseDateUTC(startStr);
 			Date end = getEndDate(start, endStr);
-			Entity entityObject = getEntity(entity, type);
+			Entity entityObject = EntityUtil.getEntity(type, entity);
 
 			WorkflowEngine wfEngine = getWorkflowEngine();
 			InstancesResult result = wfEngine.getStatus(
@@ -125,7 +125,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = getEndDate(start, endStr);            
-            Entity entityObject = getEntity(entity, type);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
             WorkflowEngine wfEngine = getWorkflowEngine();
@@ -147,7 +147,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = getEndDate(start, endStr);            
-            Entity entityObject = getEntity(entity, type);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
             WorkflowEngine wfEngine = getWorkflowEngine();
@@ -169,7 +169,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = getEndDate(start, endStr);            
-            Entity entityObject = getEntity(entity, type);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
             WorkflowEngine wfEngine = getWorkflowEngine();
@@ -191,7 +191,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             
             Date start = EntityUtil.parseDateUTC(startStr);
             Date end = getEndDate(start, endStr);            
-            Entity entityObject = getEntity(entity, type);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
 
             Properties props = getProperties(request);
             WorkflowEngine wfEngine = getWorkflowEngine();

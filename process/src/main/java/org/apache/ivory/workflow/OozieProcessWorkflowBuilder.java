@@ -20,6 +20,7 @@ package org.apache.ivory.workflow;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -37,7 +38,7 @@ import org.apache.ivory.entity.v0.process.Process;
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
-    public Map<String, Properties> newWorkflowSchedule(Process process) throws IvoryException {
+    public Map<String, Properties> newWorkflowSchedule(Process process, List<String> clusters) throws IvoryException {
         Map<String, Path> pathMap = new HashMap<String, Path>();
         
         if (!EntityUtil.parseDateUTC(process.getValidity().getStart())
@@ -45,7 +46,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             // start time >= end time
             return new HashMap<String, Properties>();
 
-        for(String clusterName:getClustersDefined(process)) {
+        for(String clusterName:clusters) {
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
             Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
             OozieProcessMapper mapper = new OozieProcessMapper(process);

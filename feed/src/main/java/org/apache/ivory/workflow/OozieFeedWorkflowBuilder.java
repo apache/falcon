@@ -20,6 +20,7 @@ package org.apache.ivory.workflow;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,10 +39,10 @@ import org.apache.ivory.entity.v0.feed.Feed;
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
-    public Map<String, Properties> newWorkflowSchedule(Feed feed) throws IvoryException {
+    public Map<String, Properties> newWorkflowSchedule(Feed feed, List<String> clusters) throws IvoryException {
         Map<String, Path> pathsMap = new HashMap<String, Path>();
         
-        for (String clusterName: getClustersDefined(feed)) {
+        for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(clusterName);
             if (!EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()).before(
                     EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd())))

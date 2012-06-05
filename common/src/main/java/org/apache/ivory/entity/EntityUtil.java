@@ -10,6 +10,7 @@ import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.WorkflowNameBuilder.WorkflowName;
@@ -267,7 +268,7 @@ public class EntityUtil {
 
     public static String getStagingPath(Entity entity) throws IvoryException {
         try {
-            byte[] digest = DigestUtils.md5(entity.toString());
+            byte[] digest = DigestUtils.md5(entity.toComparableString());
             return "ivory/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName() + "/"
                     + new String(Hex.encodeHex(digest));
         } catch (Exception e) {
@@ -275,7 +276,7 @@ public class EntityUtil {
         }
     }
     
-	public static WorkflowName getWorkflowName(Tag tag, List<String> suffixes,
+    public static WorkflowName getWorkflowName(Tag tag, List<String> suffixes,
 			Entity entity) {
 		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
 				entity);
