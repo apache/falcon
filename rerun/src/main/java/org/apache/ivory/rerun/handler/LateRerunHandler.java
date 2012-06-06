@@ -132,7 +132,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		daemon.setName("LaterunHandler");
 		daemon.setDaemon(true);
 		daemon.start();
-		LOG.info("LaterunHandler  thread started");
+		LOG.info("Laterun Handler  thread started");
 	}
 
 	public Process getProcess(String processName) throws IvoryException {

@@ -22,11 +22,9 @@ import java.io.File;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
-import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.ActiveMQueue;
-import org.apache.ivory.rerun.queue.InMemoryQueue;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -43,7 +41,7 @@ public class LateRunService implements IvoryService {
 	@Override
 	public void init() throws IvoryException {
 		AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler = RerunHandlerFactory
-				.getRerunHandler(RerunType.RETRY);
+				.getRerunHandler(RerunType.LATE);
 		ActiveMQueue<LaterunEvent> queue = new ActiveMQueue<LaterunEvent>(
 				StartupProperties
 						.get()
@@ -55,7 +53,7 @@ public class LateRunService implements IvoryService {
 
 	@Override
 	public void destroy() throws IvoryException {
-		LOG.info("RetryHandler  thread destroyed");
+		LOG.info("LateRun  thread destroyed");
 	}
 
 	private File getBasePath() {
@@ -63,7 +61,7 @@ public class LateRunService implements IvoryService {
 				"rerun.recorder.path", "/tmp/ivory/rerun"));
 		if ((!basePath.exists() && !basePath.mkdirs())
 				|| (basePath.exists() && !basePath.canWrite())) {
-			throw new RuntimeException("Unable to initialize retry recorder @"
+			throw new RuntimeException("Unable to initialize late recorder @"
 					+ basePath);
 		}
 		return basePath;
