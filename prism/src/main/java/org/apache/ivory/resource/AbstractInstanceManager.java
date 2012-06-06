@@ -18,6 +18,14 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.Properties;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
@@ -36,13 +44,6 @@ import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.Date;
-import java.util.Properties;
 
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractInstanceManager.class);
@@ -233,7 +234,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private void validateDateRange(Entity entity, String start, String end) throws IvoryException {
         IvoryException firstException = null;
         boolean valid = false;
-        for (String cluster : entity.getClustersDefined()) {
+        for (String cluster : EntityUtil.getClustersDefined(entity)) {
             try {
                 validateDateRangeFor(entity, cluster, start, end);
                 valid = true;

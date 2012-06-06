@@ -24,7 +24,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.common.FeedDataPath;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.feed.LocationType;
 
 /**
@@ -33,11 +35,9 @@ import org.apache.ivory.entity.v0.feed.LocationType;
  */
 public class FeedGroup {
 	
-	public FeedGroup(String group, String frequency, int periodicity, String path) {
+	public FeedGroup(String group, Frequency frequency, String path) {
 		this.name = group;
 		this.frequency = frequency;
-		this.periodicity = periodicity;
-		this.path = path;
 		this.datePattern = getDatePattern(path);
 		this.feeds = Collections
 				.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
@@ -55,9 +55,8 @@ public class FeedGroup {
 	}
 
 	private String name;
-	private String frequency;
+	private Frequency frequency;
 	private int periodicity;
-	private String path;
 	private String datePattern;
 	private Set<String> feeds;
 
@@ -88,7 +87,7 @@ public class FeedGroup {
 		return name;
 	}
 
-	public String getFrequency() {
+	public Frequency getFrequency() {
 		return frequency;
 	}
 
@@ -102,9 +101,7 @@ public class FeedGroup {
 
 	public boolean canContainFeed(org.apache.ivory.entity.v0.feed.Feed feed) {
 		if (this.frequency.equals(feed.getFrequency())
-				&& this.periodicity == feed.getPeriodicity()
-				&& this.datePattern.equals(getDatePattern(feed.getLocations()
-						.get(LocationType.DATA).getPath()))) {
+				&& this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()))) {
 			return true;
 		}
 		return false;

@@ -16,13 +16,12 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<process name="##processName##">
+<process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<cluster name="##clusterName##" />
 	<concurrency>2</concurrency>
 	<execution>LIFO</execution>
-	<frequency>minutes</frequency>
-	<periodicity>60</periodicity>
+	<frequency>minutes(60)</frequency>
 
 	<validity timezone="UTC" end="2011-01-03T03:00Z" start="2010-01-01T01:00Z" />
 	<inputs>
@@ -38,9 +37,9 @@
 		<property name="field7" value="value7" />
 	</properties>
 	<workflow path="/examples/apps/aggregator" />
-	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
+	<retry policy="backoff" delay="minutes(10)" attempts="3" />
 
-	<late-process policy="exp-backoff" delay="1" delayUnit="hours">
+	<late-process policy="exp-backoff" delay="hours(1)">
 		<late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
 		<late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
 	</late-process>

@@ -22,10 +22,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.common.TimeUnit;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.Frequency.TimeUnit;
+import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.ivory.resource.InstancesResult;
 import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
@@ -176,16 +178,18 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return jobMap;
     }
 
-    //During update, a new bundle may not be created if next start time >= end time
-    //In this case, there will not be a bundle with the latest entity md5
-    //So, pick last created bundle
+    // During update, a new bundle may not be created if next start time >= end
+    // time
+    // In this case, there will not be a bundle with the latest entity md5
+    // So, pick last created bundle
     private Map<String, BundleJob> findLatestBundle(Entity entity) throws IvoryException {
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
         Map<String, BundleJob> bundleMap = new HashMap<String, BundleJob>();
-        for(String cluster:bundlesMap.keySet()) {
+        for (String cluster : bundlesMap.keySet()) {
             Date latest = null;
-            for(BundleJob job:bundlesMap.get(cluster))
-                if(latest == null || latest.before(job.getCreatedTime())) {
+            bundleMap.put(cluster, MISSING);
+            for (BundleJob job : bundlesMap.get(cluster))
+                if (latest == null || latest.before(job.getCreatedTime())) {
                     bundleMap.put(cluster, job);
                     latest = job.getCreatedTime();
                 }
@@ -257,15 +261,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private void beforeAction(Entity entity, BundleAction action, String cluster) throws IvoryException {
-        switch(action) {
+        switch (action) {
             case SUSPEND:
                 listener.beforeSuspend(entity, cluster);
                 break;
-                
+
             case RESUME:
                 listener.beforeResume(entity, cluster);
                 break;
-                
+
             case KILL:
                 listener.beforeDelete(entity, cluster);
                 break;
@@ -273,15 +277,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private void afterAction(Entity entity, BundleAction action, String cluster) throws IvoryException {
-        switch(action) {
+        switch (action) {
             case SUSPEND:
                 listener.afterSuspend(entity, cluster);
                 break;
-                
+
             case RESUME:
                 listener.afterResume(entity, cluster);
                 break;
-                
+
             case KILL:
                 listener.afterDelete(entity, cluster);
                 break;
@@ -454,13 +458,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
 
             for (CoordinatorJob coord : applicableCoords) {
-                TimeUnit timeUnit = TimeUnit.valueOf(coord.getTimeUnit().name());
-                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), timeUnit, coord.getFrequency(),
-                        coord.getTimeZone(), start);
+                Frequency freq = createFrequency(coord.getFrequency(), coord.getTimeUnit());
+                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, coord.getTimeZone(), start);
                 final Date iterEnd = (coord.getEndTime().before(end) ? coord.getEndTime() : end);
                 while (!iterStart.after(iterEnd)) {
-                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), timeUnit, coord.getFrequency(),
-                            coord.getTimeZone(), iterStart);
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, coord.getTimeZone(), iterStart);
                     String actionId = coord.getId() + "@" + sequence;
                     CoordinatorAction coordActionInfo = null;
                     try {
@@ -473,13 +475,34 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     }
                     Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                     startCal.setTime(iterStart);
-                    startCal.add(timeUnit.getCalendarUnit(), coord.getFrequency());
+                    startCal.add(freq.getTimeUnit().getCalendarUnit(), coord.getFrequency());
                     iterStart = startCal.getTime();
                 }
             }
             actionsMap.put(cluster, actions);
         }
         return actionsMap;
+    }
+
+    private Frequency createFrequency(int frequency, Timeunit timeUnit) {
+        return new Frequency(frequency, OozieTimeUnit.valueOf(timeUnit.name()).getIvoryTimeUnit());
+    }
+
+    private enum OozieTimeUnit {
+        MINUTE(TimeUnit.minutes), HOUR(TimeUnit.hours), DAY(TimeUnit.days), WEEK(null), MONTH(TimeUnit.months), END_OF_DAY(null), END_OF_MONTH(
+                null), NONE(null);
+
+        private TimeUnit ivoryTimeUnit;
+
+        private OozieTimeUnit(TimeUnit ivoryTimeUnit) {
+            this.ivoryTimeUnit = ivoryTimeUnit;
+        }
+
+        public TimeUnit getIvoryTimeUnit() {
+            if (ivoryTimeUnit == null)
+                throw new IllegalStateException("Invalid coord frequency: " + name());
+            return ivoryTimeUnit;
+        }
     }
 
     private List<CoordinatorJob> getApplicableCoords(Entity entity, OozieClient client, Date start, Date end, List<BundleJob> bundles)
@@ -605,7 +628,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         if (coord.getNextMaterializedTime() != null) {
             Calendar cal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
             cal.setTime(coord.getLastActionTime());
-            cal.add(TimeUnit.valueOf(coord.getTimeUnit().name()).getCalendarUnit(), -1);
+            Frequency freq = createFrequency(coord.getFrequency(), coord.getTimeUnit());
+            cal.add(freq.getTimeUnit().getCalendarUnit(), -1);
             return cal.getTime();
         }
         return null;
@@ -811,18 +835,17 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         change(cluster, id, changeValueStr);
     }
-    
+
     @Override
-	public String getWorkflowProperty(String cluster, String jobId,
-			String property) throws IvoryException {
-		OozieClient client = new CustomOozieClient(cluster);
-		try {
-			WorkflowJob jobInfo = client.getJobInfo(jobId);
-			String conf = jobInfo.getConf();
-			Properties props = OozieUtils.toProperties(conf);
-			return props.getProperty(property);
-		} catch (Exception e) {
-			throw new IvoryException(e);
-		}
-	}
+    public String getWorkflowProperty(String cluster, String jobId, String property) throws IvoryException {
+        OozieClient client = new CustomOozieClient(cluster);
+        try {
+            WorkflowJob jobInfo = client.getJobInfo(jobId);
+            String conf = jobInfo.getConf();
+            Properties props = OozieUtils.toProperties(conf);
+            return props.getProperty(property);
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
 }

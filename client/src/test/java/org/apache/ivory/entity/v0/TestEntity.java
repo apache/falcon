@@ -54,11 +54,6 @@ public class TestEntity {
 			public String getName() {
 				return "Entity";
 			}
-
-			@Override
-			public String[] getClustersDefined() {
-				return new String[] {};
-			}
 		};
 		Entity nullEntity = null;
 		try {

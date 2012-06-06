@@ -31,6 +31,7 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.feed.Locations;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -63,8 +64,9 @@ public class FeedGroupMapTest extends AbstractTestBase{
 		feed1.setGroups("group1,group2,group3");
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location.setType("data");
-		feed1.getLocations().put(LocationType.DATA, location);
+		location.setType(LocationType.DATA);
+		feed1.setLocations(new Locations());
+		feed1.getLocations().getLocations().add(location);
 		store.publish(EntityType.FEED, feed1);
 		Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
 				.getGroupsMapping();
@@ -91,8 +93,9 @@ public class FeedGroupMapTest extends AbstractTestBase{
 		feed2.setName("f2");
 		feed2.setGroups("group1,group5,group3");
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/${MONTH}/${DAY}/ad2");
-		location.setType("data");
-		feed2.getLocations().put(LocationType.DATA, location);
+        location.setType(LocationType.DATA);
+        feed2.setLocations(new Locations());
+        feed2.getLocations().getLocations().add(location);
 		store.publish(EntityType.FEED, feed2);
 		groupMapping = FeedGroupMap.get().getGroupsMapping();
 
@@ -128,8 +131,9 @@ public class FeedGroupMapTest extends AbstractTestBase{
 		feed1.setGroups("group7,group8,group9");
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location.setType("data");
-		feed1.getLocations().put(LocationType.DATA, location);
+        location.setType(LocationType.DATA);
+        feed1.setLocations(new Locations());
+        feed1.getLocations().getLocations().add(location);
 		store.publish(EntityType.FEED, feed1);
 
 		Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
@@ -138,8 +142,9 @@ public class FeedGroupMapTest extends AbstractTestBase{
 		feed2.setName("f2");
 		feed2.setGroups("group7,group8,group10");
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/${MONTH}/${DAY}/ad2");
-		location.setType("data");
-		feed2.getLocations().put(LocationType.DATA, location);
+        location.setType(LocationType.DATA);
+        feed2.setLocations(new Locations());
+        feed2.getLocations().getLocations().add(location);
 		store.publish(EntityType.FEED, feed2);
 
 		Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
@@ -181,15 +186,15 @@ public class FeedGroupMapTest extends AbstractTestBase{
 		feed1.setGroups(null);
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location.setType("data");
-		feed1.getLocations().put(LocationType.DATA, location);
+        location.setType(LocationType.DATA);
+        feed1.setLocations(new Locations());
+        feed1.getLocations().getLocations().add(location);
 		store.publish(EntityType.FEED, feed1);
 
 	}
 
 	private void assertFields(FeedGroup group, Feed feed) {
 		Assert.assertEquals(group.getFrequency(), feed.getFrequency());
-		Assert.assertEquals(group.getPeriodicity(), feed.getPeriodicity());
 		Assert.assertEquals(group.getDatePattern(),
 				"[${DAY}, ${MONTH}, ${YEAR}]");
 	}

@@ -29,6 +29,7 @@ import javax.xml.bind.Marshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
@@ -50,28 +51,24 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Assert.assertNotNull(cluster);
         assertEquals(cluster.getName(), "testCluster");
 
-        Interface execute = cluster.getInterfaces().get(Interfacetype.EXECUTE);
+        Interface execute = ClusterHelper.getInterface(cluster, Interfacetype.EXECUTE);
 
         assertEquals(execute.getEndpoint(), "localhost:8021");
         assertEquals(execute.getVersion(), "0.20.2");
 
-        Interface readonly = cluster.getInterfaces().get(Interfacetype.READONLY);
+        Interface readonly = ClusterHelper.getInterface(cluster, Interfacetype.READONLY);
         assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
         assertEquals(readonly.getVersion(), "0.20.2");
 
-        Interface write = cluster.getInterfaces().get(Interfacetype.WRITE);
+        Interface write = ClusterHelper.getInterface(cluster, Interfacetype.WRITE);
         assertEquals(write.getEndpoint(), "hdfs://localhost:8020");
         assertEquals(write.getVersion(), "0.20.2");
 
-        Interface workflow = cluster.getInterfaces().get(Interfacetype.WORKFLOW);
+        Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
         assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
         assertEquals(workflow.getVersion(), "3.1");
 
-        assertEquals(cluster.getLocations().get("staging").getName(), "staging");
-        assertEquals(cluster.getLocations().get("staging").getPath(), "/projects/ivory/staging");
-
-        assertEquals(cluster.getProperties().get("field1").getName(), "field1");
-        assertEquals(cluster.getProperties().get("field1").getValue(), "value1");
+        assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/ivory/staging");
 
         StringWriter stringWriter = new StringWriter();
         Marshaller marshaller = EntityType.CLUSTER.getMarshaller();

@@ -68,12 +68,10 @@ public class OozieFeedMapperTest {
 		cleanupStore();
 
 		srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH);
-		srcCluster.getInterfaces().get(Interfacetype.WRITE)
-				.setEndpoint(srcHdfsUrl);
+		ClusterHelper.getInterface(srcCluster, Interfacetype.WRITE).setEndpoint(srcHdfsUrl);
 
 		trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH);
-		trgCluster.getInterfaces().get(Interfacetype.WRITE)
-				.setEndpoint(trgHdfsUrl);
+        ClusterHelper.getInterface(trgCluster, Interfacetype.WRITE).setEndpoint(trgHdfsUrl);
 
 		feed = (Feed) storeEntity(EntityType.FEED, FEED);
 

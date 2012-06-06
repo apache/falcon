@@ -41,6 +41,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.service.IvoryService;
@@ -73,11 +74,6 @@ public class ConfigurationStore implements IvoryService {
         @Override
         public String getName() {
             return "NULL";
-        }
-
-        @Override
-        public String[] getClustersDefined() {
-            return null;
         }
     };
 
@@ -200,13 +196,22 @@ public class ConfigurationStore implements IvoryService {
 
     private void getProperties(Entity entity) {
         switch(entity.getEntityType()) {
+            case CLUSTER:
+                Cluster cluster = (Cluster) entity;
+                if(cluster.getProperties() != null)
+                    cluster.getProperties().getProperties();
+                break;
+                
+            case FEED:
+                Feed feed = (Feed) entity;
+                if(feed.getProperties() != null)
+                    feed.getProperties().getProperties();
+                break;
+                
             case PROCESS:
                 Process process = (Process) entity;
                 if(process.getProperties() != null)
-                    process.getProperties().getProperty();
-                break;
-
-            default:
+                    process.getProperties().getProperties();
                 break;
         }
     }
@@ -288,7 +293,6 @@ public class ConfigurationStore implements IvoryService {
         Map<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             try {
-                Entity entity = entityMap.get(name);
                 archive(type, name);
                 onRemove(entityMap.remove(name));
             } catch (IOException e) {

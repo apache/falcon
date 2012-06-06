@@ -24,8 +24,7 @@
 
     <groups>online,bi</groups>
 
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>hours(1)</frequency>
 
     <late-arrival cut-off="hours(6)" />
 
@@ -50,9 +49,4 @@
 
     <ACL owner="testuser" group="group" permission="0x755" />
     <schema location="/schema/clicks" provider="protobuf" />
-
-    <properties>
-        <property name="field1" value="value1" />
-        <property name="field2" value="value2" />
-    </properties>
 </feed>

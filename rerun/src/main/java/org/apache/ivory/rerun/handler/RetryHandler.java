@@ -18,6 +18,8 @@
 package org.apache.ivory.rerun.handler;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
@@ -40,15 +42,14 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 			}
 
 			int attempts = processObj.getRetry().getAttempts();
-			int delay = processObj.getRetry().getDelay();
-			String delayUnit = processObj.getRetry().getDelayUnit();
-			String policy = processObj.getRetry().getPolicy();
+            Frequency delay = processObj.getRetry().getDelay();
+			PolicyType policy = processObj.getRetry().getPolicy();
 			int intRunId = Integer.parseInt(runId);
 
 			if (attempts > intRunId) {
 				AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
 						.getRetryPolicy(policy);
-				long delayTime = rerunPolicy.getDelay(delayUnit, delay,
+                long delayTime = rerunPolicy.getDelay(delay,
 						Integer.parseInt(runId));
 				RetryEvent event = new RetryEvent(wfEngine, processObj
 						.getCluster().getName(), wfId, msgReceivedTime,

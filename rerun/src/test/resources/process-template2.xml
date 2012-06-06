@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<process name="sample2">
+<process name="sample2" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<cluster name="testCluster" />
 	<concurrency>1</concurrency>
 	<execution>FIFO</execution>
-	<frequency>minutes</frequency>
-	<periodicity>5</periodicity>
+	<frequency>minutes(5)</frequency>
 
 	<validity timezone="UTC" end="2013-01-01T01:20Z" start="2010-01-01T01:00Z" />
 	<inputs>
@@ -24,10 +23,9 @@
 		<property name="field7" value="value7" />
 	</properties>
 	<workflow path="/examples/apps/aggregator" />
-	<retry policy="exp-backoff" delay="2" delayUnit="minutes"
-		attempts="2" />
+	<retry policy="exp-backoff" delay="minutes(2)"	attempts="2" />
 
-	<late-process policy="exp-backoff" delay="1" delayUnit="hours">
+	<late-process policy="exp-backoff" delay="hours(1)">
 		<late-input feed="inputData" workflow-path="hdfs://impression/late/workflow" />
 		<late-input feed="inputData2" workflow-path="hdfs://impression/late/workflow" />
 	</late-process>

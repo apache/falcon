@@ -21,8 +21,6 @@ package org.apache.ivory.cluster.util;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,9 +31,10 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
+import org.apache.ivory.entity.v0.cluster.Interfaces;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.cluster.Location;
-import org.apache.ivory.entity.v0.cluster.Property;
+import org.apache.ivory.entity.v0.cluster.Locations;
 import org.apache.log4j.Logger;
 
 public class EmbeddedCluster {
@@ -125,30 +124,23 @@ public class EmbeddedCluster {
         clusterEntity.setColo("local");
         clusterEntity.setDescription("Embeded cluster: " + name);
 
-        Map<Interfacetype, Interface> interfaces = new
-                HashMap<Interfacetype, Interface>();
-        interfaces.put(Interfacetype.WORKFLOW, newInterface(Interfacetype.WORKFLOW,
+        Interfaces interfaces = new Interfaces();
+        interfaces.getInterfaces().add(newInterface(Interfacetype.WORKFLOW,
                 "http://localhost:11000/oozie", "0.1"));
         String fsUrl = conf.get("fs.default.name");
-        interfaces.put(Interfacetype.READONLY,
-                newInterface(Interfacetype.READONLY, fsUrl, "0.1"));
-        interfaces.put(Interfacetype.WRITE,
-                newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
-        interfaces.put(Interfacetype.EXECUTE,
-                newInterface(Interfacetype.EXECUTE,
+        interfaces.getInterfaces().add(newInterface(Interfacetype.READONLY, fsUrl, "0.1"));
+        interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
+        interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
                         conf.get("mapred.job.tracker"), "0.1"));
-        interfaces.put(Interfacetype.MESSAGING,
-                newInterface(Interfacetype.MESSAGING, "N/A", "0.1"));
+        interfaces.getInterfaces().add(newInterface(Interfacetype.MESSAGING, "N/A", "0.1"));
         clusterEntity.setInterfaces(interfaces);
 
-        Map<String, Location> locations = new HashMap<String, Location>();
         Location location = new Location();
         location.setName("staging");
         location.setPath("/workflow/staging");
-        locations.put("staging", location);
-        clusterEntity.setLocations(locations);
-
-        clusterEntity.setProperties(new HashMap<String, Property>());
+        Locations locs = new Locations();
+        locs.getLocations().add(location);
+        clusterEntity.setLocations(locs);
     }
 
     private Interface newInterface(Interfacetype type,

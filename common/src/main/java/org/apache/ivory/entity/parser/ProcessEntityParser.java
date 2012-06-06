@@ -60,8 +60,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
         validateProcessValidity(process.getValidity().getStart(), process.getValidity().getEnd());
         validateHDFSpaths(process);
 
-        if (process.getInputs() != null && process.getInputs().getInput() != null) {
-            for (Input input : process.getInputs().getInput()) {
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInputs()) {
                 validateEntityExists(EntityType.FEED, input.getFeed());
                 Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
                 CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
@@ -73,8 +73,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
         }
 
-        if (process.getOutputs() != null && process.getOutputs().getOutput() != null) {
-            for (Output output : process.getOutputs().getOutput()) {
+        if (process.getOutputs() != null) {
+            for (Output output : process.getOutputs().getOutputs()) {
                 validateEntityExists(EntityType.FEED, output.getFeed());
                 Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
                 CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
@@ -144,12 +144,12 @@ public class ProcessEntityParser extends EntityParser<Process> {
     
     private void validateDatasetName(Inputs inputs, Outputs outputs) throws ValidationException {
     	Set<String> datasetNames = new HashSet<String>();
-    	for(Input input:inputs.getInput()){
+    	for(Input input:inputs.getInputs()){
     		if(!datasetNames.add(input.getName())){
     			throw new ValidationException("Input name: "+input.getName() +" is already used");
     		}
     	}
-    	for(Output output:outputs.getOutput()){
+    	for(Output output:outputs.getOutputs()){
     		if(!datasetNames.add(output.getName())){
     			throw new ValidationException("Output name: "+output.getName() +" is already used");
     		}
@@ -159,11 +159,11 @@ public class ProcessEntityParser extends EntityParser<Process> {
     private void validateLateInputs(Process process) throws ValidationException
     {
     	List<String> feedName = new ArrayList<String>();
-    	for(Input in : process.getInputs().getInput()){
+    	for(Input in : process.getInputs().getInputs()){
     		feedName.add(in.getName());
     	}
     	if(process.getLateProcess() != null){
-    		for(LateInput lp : process.getLateProcess().getLateInput()){
+    		for(LateInput lp : process.getLateProcess().getLateInputs()){
     			if(!feedName.contains(lp.getFeed()))
     				throw new ValidationException("Late Input: "+lp.getFeed() +" is not specified in the inputs");
     		}

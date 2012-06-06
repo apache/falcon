@@ -3,6 +3,7 @@ package org.apache.ivory.entity;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -15,11 +16,11 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.ivory.entity.common.DateValidator;
-import org.apache.ivory.entity.common.TimeUnit;
-import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 
@@ -108,12 +109,12 @@ public class EntityUtil {
     }
 
     public static Date getEndTime(Feed feed, String cluster) throws IvoryException {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
         return EntityUtil.parseDateUTC(clusterDef.getValidity().getEnd());
     }
 
     public static Date getStartTime(Feed feed, String cluster) throws IvoryException {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
         return EntityUtil.parseDateUTC(clusterDef.getValidity().getStart());
     }
 
@@ -170,24 +171,19 @@ public class EntityUtil {
     }
 
     public static void setStartDate(Feed feed, String cluster, Date startDate) {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
         clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 
     public static void setEndTime(Feed feed, String cluster, Date endDate) {
-        org.apache.ivory.entity.v0.feed.Cluster clusterDef = feed.getCluster(cluster);
+        org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
         clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
     }
 
     public static void setConcurrency(Feed feed, int concurrency) {
     }
 
-    public static Date getNextStartTime(Date startTime, Frequency frequency, int periodicity, String timezone, Date now) {
-        return getNextStartTime(startTime, frequency.getTimeUnit(), periodicity, timezone, now);
-    }
-
-    public static Date getNextStartTime(Date startTime, TimeUnit timeUnit, int periodicity, String timezone, Date now) {
-
+    public static Date getNextStartTime(Date startTime, Frequency frequency, String timezone, Date now) {
         if (startTime.after(now))
             return startTime;
 
@@ -195,40 +191,32 @@ public class EntityUtil {
         startCal.setTime(startTime);
 
         int count = 0;
-        switch (timeUnit) {
-            case MONTH:
+        switch (frequency.getTimeUnit()) {
+            case months:
                 count = (int) ((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
                 break;
-            case DAY:
+            case days:
                 count = (int) ((now.getTime() - startTime.getTime()) / DAY_IN_MS);
                 break;
-            case HOUR:
+            case hours:
                 count = (int) ((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
                 break;
-            case MINUTE:
+            case minutes:
                 count = (int) ((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
                 break;
-            case END_OF_MONTH:
-            case END_OF_DAY:
-            case NONE:
             default:
         }
 
         if (count > 2) {
-            startCal.add(timeUnit.getCalendarUnit(), ((count - 2) / periodicity) * periodicity);
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), ((count - 2) / frequency.getFrequency()) * frequency.getFrequency());
         }
         while (startCal.getTime().before(now)) {
-            startCal.add(timeUnit.getCalendarUnit(), periodicity);
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
         }
         return startCal.getTime();
     }
 
-    public static int getInstanceSequence(Date startTime, Frequency frequency, int periodicity, String timezone, Date instanceTime) {
-        return getInstanceSequence(startTime, frequency.getTimeUnit(), periodicity, timezone, instanceTime);
-    }
-
-    public static int getInstanceSequence(Date startTime, TimeUnit timeUnit, int periodicity, String timezone, Date instanceTime) {
-
+    public static int getInstanceSequence(Date startTime, Frequency frequency, String timezone, Date instanceTime) {
         if (startTime.after(instanceTime))
             return -1;
 
@@ -236,31 +224,28 @@ public class EntityUtil {
         startCal.setTime(startTime);
 
         int count = 0;
-        switch (timeUnit) {
-            case MONTH:
+        switch (frequency.getTimeUnit()) {
+            case months:
                 count = (int) ((instanceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
                 break;
-            case DAY:
+            case days:
                 count = (int) ((instanceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
                 break;
-            case HOUR:
+            case hours:
                 count = (int) ((instanceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
                 break;
-            case MINUTE:
+            case minutes:
                 count = (int) ((instanceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
                 break;
-            case END_OF_MONTH:
-            case END_OF_DAY:
-            case NONE:
             default:
         }
 
         if (count > 2) {
-            startCal.add(timeUnit.getCalendarUnit(), (count / periodicity) * periodicity);
-            count = (count / periodicity);
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), (count / frequency.getFrequency()) * frequency.getFrequency());
+            count = (count / frequency.getFrequency());
         }
         while (startCal.getTime().before(instanceTime)) {
-            startCal.add(timeUnit.getCalendarUnit(), periodicity);
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
             count++;
         }
         return count + 1;
@@ -303,5 +288,24 @@ public class EntityUtil {
 		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
 				entity);
 		return builder.getWorkflowTag(workflowName);
+	}
+	
+	public static String[] getClustersDefined(Entity entity) {
+	    switch(entity.getEntityType()) {
+	        case CLUSTER:
+	            return new String[] { entity.getName() };
+	            
+	        case FEED:
+	            Feed feed = (Feed) entity;
+	            List<String> clusters = new ArrayList<String>();
+	            for(Cluster cluster:feed.getClusters().getClusters())
+	                clusters.add(cluster.getName());
+	            return clusters.toArray(new String[clusters.size()]);
+	            
+	        case PROCESS:
+	            Process process = (Process) entity;
+	            return new String[] { process.getCluster().getName() };
+	    }  
+	    throw new IllegalArgumentException("Unhandled entity type: " + entity.getEntityType());
 	}
 }

@@ -1,6 +1,7 @@
 package org.apache.ivory.update;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.*;
@@ -45,22 +46,19 @@ public final class UpdateHelper {
                 equals(newFeed.getLateArrival().getCutOff())) return true;
         LOG.debug(oldFeed.toShortString() + ": late-cutoff identical. Ignoring...");
 
-        if (!oldFeed.getLocations().get(LocationType.DATA).getPath().
-                equals(newFeed.getLocations().get(LocationType.DATA).getPath())) return true;
+        if (!FeedHelper.getLocation(oldFeed, LocationType.DATA).getPath().
+                equals(FeedHelper.getLocation(newFeed, LocationType.DATA).getPath())) return true;
         LOG.debug(oldFeed.toShortString() + ": Location identical. Ignoring...");
 
         if (!oldFeed.getFrequency().equals(newFeed.getFrequency())) return true;
         LOG.debug(oldFeed.toShortString() + ": Frequency identical. Ignoring...");
-
-        if (oldFeed.getPeriodicity() != newFeed.getPeriodicity()) return true;
-        LOG.debug(oldFeed.toShortString() + ": Periodicity identical. Ignoring...");
 
         //it is not possible to have oldFeed partitions as non empty and
         //new being empty. validator should have gated this.
         //Also if new partitions are added and old is empty, then there is nothing
         //to update in process
         boolean partitionApplicable = false;
-        for (Input input : affectedProcess.getInputs().getInput()) {
+        for (Input input : affectedProcess.getInputs().getInputs()) {
             if (input.getFeed().equals(oldFeed.getName())) {
                 if (input.getPartition() != null && !input.getPartition().isEmpty()) {
                     partitionApplicable = true;
@@ -70,8 +68,8 @@ public final class UpdateHelper {
         if (partitionApplicable) {
             LOG.debug("Partitions are applicable. Checking ...");
             if (newFeed.getPartitions() != null && oldFeed.getPartitions() != null) {
-                List<String> newParts = getParts(newFeed.getPartitions());
-                List<String> oldParts = getParts(oldFeed.getPartitions());
+                List<String> newParts = getPartitions(newFeed.getPartitions());
+                List<String> oldParts = getPartitions(oldFeed.getPartitions());
                 if (newParts.size() != oldParts.size()) return true;
                 if (!newParts.containsAll(oldParts)) return true;
             }
@@ -88,8 +86,8 @@ public final class UpdateHelper {
         LOG.debug(oldFeed.toShortString() + ": Properties identical. Ignoring...");
 
         String clusterName = affectedProcess.getCluster().getName();
-        if (!oldFeed.getCluster(clusterName).getValidity().getStart().
-                equals(newFeed.getCluster(clusterName).getValidity().getStart())) return true;
+        if (!FeedHelper.getCluster(oldFeed, clusterName).getValidity().getStart().
+                equals(FeedHelper.getCluster(newFeed, clusterName).getValidity().getStart())) return true;
         LOG.debug(oldFeed.toShortString() + ": Feed start on cluster" + clusterName +
                 " identical. Ignoring...");
 
@@ -99,15 +97,15 @@ public final class UpdateHelper {
     private static Map<String, String> getProperties(Feed feed) {
         Map<String, String> props = new HashMap<String, String>();
         if (feed.getProperties() == null) return props;
-        for (Map.Entry<String, Property> prop : feed.getProperties().entrySet()) {
-            props.put(prop.getKey(), prop.getValue().getValue());
+        for (Property prop : feed.getProperties().getProperties()) {
+            props.put(prop.getName(), prop.getValue());
         }
         return props;
     }
 
-    private static List<String> getParts(Partitions partitions) {
+    private static List<String> getPartitions(Partitions partitions) {
         List<String> parts = new ArrayList<String>();
-        for (Partition partition : partitions.getPartition()) {
+        for (Partition partition : partitions.getPartitions()) {
             parts.add(partition.getName());
         }
         return parts;

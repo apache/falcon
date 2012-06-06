@@ -19,8 +19,7 @@
 <feed description="clicks log" name="##name##" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <groups>input</groups>
 
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>hours(1)</frequency>
 
     <late-arrival cut-off="hours(6)" />
 

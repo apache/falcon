@@ -16,30 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.entity.parser;
+package org.apache.ivory.entity;
 
-import org.apache.ivory.entity.common.TimeUnit;
+import org.apache.ivory.entity.v0.feed.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.Location;
+import org.apache.ivory.entity.v0.feed.LocationType;
 
-public enum Frequency {
-
-    minutes(TimeUnit.MINUTE, TimeUnit.NONE), hours(TimeUnit.HOUR, TimeUnit.NONE), days(TimeUnit.DAY, TimeUnit.NONE), months(
-            TimeUnit.MONTH, TimeUnit.NONE), endOfDays(TimeUnit.DAY, TimeUnit.END_OF_DAY), endOfMonths(TimeUnit.MONTH,
-            TimeUnit.END_OF_MONTH);
-
-    private TimeUnit timeUnit;
-    private TimeUnit endOfDuration;
-
-    private Frequency(TimeUnit timeUnit, TimeUnit endOfDuration) {
-        this.timeUnit = timeUnit;
-        this.endOfDuration = endOfDuration;
+public class FeedHelper {
+    public static Cluster getCluster(Feed feed, String clusterName) {
+        for(Cluster cluster:feed.getClusters().getClusters())
+            if(cluster.getName().equals(clusterName))
+                return cluster;
+        return null;
     }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
+    
+    public static Location getLocation(Feed feed, LocationType type) {
+        for(Location loc:feed.getLocations().getLocations())
+            if(loc.getType() == type)
+                return loc;
+        return null;
     }
-
-    public TimeUnit getEndOfDuration() {
-        return endOfDuration;
-    }
-
 }

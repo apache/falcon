@@ -39,11 +39,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.Tag;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
@@ -77,9 +78,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         ConfigurationStore store = ConfigurationStore.get();
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
-        Interface inter = new Interface();
-        inter.setEndpoint(hdfsUrl);
-        cluster.getInterfaces().put(Interfacetype.WRITE, inter);
+        ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
 
         Process process = store.get(EntityType.PROCESS, "clicksummary");
         Path wfpath = new Path(process.getWorkflow().getPath());
@@ -90,37 +89,37 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals("IVORY_PROCESS_DEFAULT_" + process.getName(), coord.getName());
         assertEquals(process.getValidity().getStart(), coord.getStart());
         assertEquals(process.getValidity().getEnd(), coord.getEnd());
-        assertEquals("${coord:"+process.getFrequency()+"("+process.getPeriodicity()+")}", coord.getFrequency());
+        assertEquals("${coord:"+process.getFrequency().toString()+"}", coord.getFrequency());
         assertEquals(process.getValidity().getTimezone(), coord.getTimezone());
         
         assertEquals(process.getConcurrency()+"", coord.getControls().getConcurrency());
-        assertEquals(process.getExecution(), coord.getControls().getExecution());
+        assertEquals(process.getExecution().name(), coord.getControls().getExecution());
         
-        assertEquals(process.getInputs().getInput().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getName());
-        assertEquals(process.getInputs().getInput().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getDataset());
-        assertEquals("${elext:"+process.getInputs().getInput().get(0).getStartInstance()+"}", coord.getInputEvents().getDataIn().get(0).getStartInstance());
-        assertEquals("${elext:"+process.getInputs().getInput().get(0).getEndInstance()+"}", coord.getInputEvents().getDataIn().get(0).getEndInstance());
+        assertEquals(process.getInputs().getInputs().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getName());
+        assertEquals(process.getInputs().getInputs().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getDataset());
+        assertEquals("${elext:"+process.getInputs().getInputs().get(0).getStartInstance()+"}", coord.getInputEvents().getDataIn().get(0).getStartInstance());
+        assertEquals("${elext:"+process.getInputs().getInputs().get(0).getEndInstance()+"}", coord.getInputEvents().getDataIn().get(0).getEndInstance());
         
-        assertEquals(process.getInputs().getInput().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getName());
-        assertEquals(process.getInputs().getInput().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getDataset());
-        assertEquals("${elext:"+process.getInputs().getInput().get(1).getStartInstance()+"}", coord.getInputEvents().getDataIn().get(1).getStartInstance());
+        assertEquals(process.getInputs().getInputs().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getName());
+        assertEquals(process.getInputs().getInputs().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getDataset());
+        assertEquals("${elext:"+process.getInputs().getInputs().get(1).getStartInstance()+"}", coord.getInputEvents().getDataIn().get(1).getStartInstance());
         //TODO remove after EL fix for oozie el support
-        assertEquals("${coord:"+process.getInputs().getInput().get(1).getEndInstance()+"}", coord.getInputEvents().getDataIn().get(1).getEndInstance());
+        assertEquals("${coord:"+process.getInputs().getInputs().get(1).getEndInstance()+"}", coord.getInputEvents().getDataIn().get(1).getEndInstance());
 
-        assertEquals(process.getOutputs().getOutput().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getName());
-        assertEquals("${elext:"+process.getOutputs().getOutput().get(0).getInstance()+"}", coord.getOutputEvents().getDataOut().get(0).getInstance());
-        assertEquals(process.getOutputs().getOutput().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getDataset());
+        assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getName());
+        assertEquals("${elext:"+process.getOutputs().getOutputs().get(0).getInstance()+"}", coord.getOutputEvents().getDataOut().get(0).getInstance());
+        assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getDataset());
 
         assertEquals(3, coord.getDatasets().getDatasetOrAsyncDataset().size());
         
         ConfigurationStore store = ConfigurationStore.get();
-        Feed feed = store.get(EntityType.FEED, process.getInputs().getInput().get(0).getFeed());
+        Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());
         SYNCDATASET ds = (SYNCDATASET) coord.getDatasets().getDatasetOrAsyncDataset().get(0);
-        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getStart(), ds.getInitialInstance());
-        assertEquals(feed.getClusters().getCluster().get(0).getValidity().getTimezone(), ds.getTimezone());
-        assertEquals("${coord:"+feed.getFrequency()+"("+feed.getPeriodicity()+")}", ds.getFrequency());
+        assertEquals(feed.getClusters().getClusters().get(0).getValidity().getStart(), ds.getInitialInstance());
+        assertEquals(feed.getClusters().getClusters().get(0).getValidity().getTimezone(), ds.getTimezone());
+        assertEquals("${coord:"+feed.getFrequency().toString()+"}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());
-        assertEquals("${nameNode}" +feed.getLocations().get(LocationType.DATA).getPath(), ds.getUriTemplate());        
+        assertEquals("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath(), ds.getUriTemplate());        
     }
     
     @Test

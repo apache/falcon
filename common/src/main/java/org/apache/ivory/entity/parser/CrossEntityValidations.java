@@ -2,6 +2,7 @@ package org.apache.ivory.entity.parser;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
@@ -16,7 +17,7 @@ public final class CrossEntityValidations {
         String clusterName = process.getCluster().getName();
 
         try {
-            org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
+            org.apache.ivory.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed, clusterName).getValidity();
             Date feedStart = EntityUtil.parseDateUTC(feedValidity.getStart());
             Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
 
@@ -53,7 +54,7 @@ public final class CrossEntityValidations {
     public static void validateFeedRetentionPeriod(String startInstance, Feed feed,
                                                    String clusterName) throws IvoryException {
 
-        String feedRetention = feed.getCluster(clusterName).getRetention().getLimit();
+        String feedRetention = FeedHelper.getCluster(feed, clusterName).getRetention().getLimit().toString();
         ExpressionHelper evaluator = ExpressionHelper.get();
 
         Date now = new Date();
@@ -73,7 +74,7 @@ public final class CrossEntityValidations {
         String clusterName = process.getCluster().getName();
 
         try {
-            org.apache.ivory.entity.v0.feed.Validity feedValidity = feed.getCluster(clusterName).getValidity();
+            org.apache.ivory.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed, clusterName).getValidity();
             Date feedStart = EntityUtil.parseDateUTC(feedValidity.getStart());
             Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
 
@@ -97,14 +98,13 @@ public final class CrossEntityValidations {
 
     public static void validateInputPartition(Input input, Feed feed) throws ValidationException {
         String[] parts = input.getPartition().split("/");
-        if (feed.getPartitions() == null || feed.getPartitions().getPartition() == null
-                || feed.getPartitions().getPartition().size() == 0
-                || feed.getPartitions().getPartition().size() < parts.length)
+        if (feed.getPartitions() == null || feed.getPartitions().getPartitions().isEmpty()
+                || feed.getPartitions().getPartitions().size() < parts.length)
             throw new ValidationException("Partition specification in input " + input.getName() + " is wrong");
     }
 
     public static void validateFeedDefinedForCluster(Feed feed, String clusterName) throws IvoryException {
-        if (feed.getCluster(clusterName) == null)
+        if (FeedHelper.getCluster(feed, clusterName) == null)
             throw new ValidationException("Feed " + feed.getName() + " is not defined for cluster " + clusterName);
     }
 }

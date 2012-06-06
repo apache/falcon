@@ -30,6 +30,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.LateInput;
+import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.ivory.latedata.LateDataHandler;
@@ -72,7 +73,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 			return -1;
 		}
 
-		String latePolicy = processObj.getLateProcess().getPolicy();
+		PolicyType latePolicy = processObj.getLateProcess().getPolicy();
 		Date cutOffTime = getCutOffTime(processObj, nominalTime);
 		Date now = new Date(System.currentTimeMillis());
 		Long wait = null;
@@ -84,8 +85,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		} else {
 			AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
 					.getRetryPolicy(latePolicy);
-			wait = rerunPolicy.getDelay(processObj.getLateProcess()
-					.getDelayUnit(), processObj.getLateProcess().getDelay(),
+			wait = rerunPolicy.getDelay(processObj.getLateProcess().getDelay(),
 					instanceDate, cutOffTime);
 		}
 		return wait;
@@ -104,17 +104,17 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 
 		Date endTime = new Date();
 		Date feedCutOff = new Date(0);
-		for (LateInput lp : process.getLateProcess().getLateInput()) {
+		for (LateInput lp : process.getLateProcess().getLateInputs()) {
 			Feed feed = null;
 			String endInstanceTime = "";
-			for (Input input : process.getInputs().getInput()) {
+			for (Input input : process.getInputs().getInputs()) {
 				if (input.getName().equals(lp.getFeed())) {
 					endInstanceTime = input.getEndInstance();
 					feed = store.get(EntityType.FEED, input.getFeed());
 					break;
 				}
 			}
-			String lateCutOff = feed.getLateArrival().getCutOff();
+			String lateCutOff = feed.getLateArrival().getCutOff().toString();
 			endTime = evaluator.evaluate(endInstanceTime, Date.class);
 			long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
 			endTime = addTime(endTime, (int) feedCutOffPeriod);

@@ -18,15 +18,14 @@
  * limitations under the License.
  */
  -->
-<process name="sample" >
+<process name="sample"  xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <!-- where -->
     <cluster name="testCluster" />
 
     <!-- when -->
     <concurrency>1</concurrency>
     <execution>LIFO</execution>
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>hours(1)</frequency>
     <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z" timezone="UTC"/>
 
     <!-- what -->
@@ -48,9 +47,9 @@
     
     <workflow engine="oozie" path="hdfs://path/to/workflow" />
 
-    <retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
+    <retry policy="backoff" delay="minutes(10)" attempts="3" />
 
-    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
+    <late-process policy="exp-backoff" delay="hours(1)">
         <late-input feed="impression" workflow-path="/impression/late/workflow" />
         <late-input feed="clicks" workflow-path="/clicks/late/workflow" />
     </late-process>

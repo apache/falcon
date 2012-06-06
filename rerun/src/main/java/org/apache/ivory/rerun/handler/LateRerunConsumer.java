@@ -116,7 +116,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		List<String> lateFeed = new ArrayList<String>();
 		if(process.getLateProcess() != null)
 		{
-			for(LateInput li : process.getLateProcess().getLateInput())
+			for(LateInput li : process.getLateProcess().getLateInputs())
 			{
 				lateFeed.add(li.getFeed());
 			}

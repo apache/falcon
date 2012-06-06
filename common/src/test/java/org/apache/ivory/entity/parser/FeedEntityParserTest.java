@@ -32,15 +32,16 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
 import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.entity.v0.feed.LateArrival;
 import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.feed.Locations;
 import org.apache.ivory.entity.v0.feed.Validity;
 import org.apache.ivory.group.FeedGroupMapTest;
 import org.testng.Assert;
@@ -89,51 +90,44 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Assert.assertNotNull(feed);
 		assertEquals(feed.getName(), "clicks");
 		assertEquals(feed.getDescription(), "clicks log");
-		assertEquals(feed.getFrequency(), "hours");
-		assertEquals(feed.getPeriodicity(), 1);
+		assertEquals(feed.getFrequency().toString(), "hours(1)");
 		assertEquals(feed.getGroups(), "online,bi");
 
-		assertEquals(feed.getClusters().getCluster().get(0).getName(),
+		assertEquals(feed.getClusters().getClusters().get(0).getName(),
 				"testCluster");
-		assertEquals(feed.getClusters().getCluster().get(0).getType(),
+		assertEquals(feed.getClusters().getClusters().get(0).getType(),
 				ClusterType.SOURCE);
-		assertEquals(feed.getClusters().getCluster().get(0).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
 				.getStart(), "2011-11-01T00:00Z");
-		assertEquals(feed.getClusters().getCluster().get(0).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
 				.getEnd(), "2011-12-31T00:00Z");
-		assertEquals(feed.getClusters().getCluster().get(0).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
 				.getTimezone(), "UTC");
-		assertEquals(feed.getClusters().getCluster().get(0).getRetention()
+		assertEquals(feed.getClusters().getClusters().get(0).getRetention()
 				.getAction(), ActionType.DELETE);
-		assertEquals(feed.getClusters().getCluster().get(0).getRetention()
-				.getLimit(), "hours(48)");
+		assertEquals(feed.getClusters().getClusters().get(0).getRetention()
+				.getLimit().toString(), "hours(48)");
 
-		assertEquals(feed.getClusters().getCluster().get(1).getName(),
+		assertEquals(feed.getClusters().getClusters().get(1).getName(),
 				"backupCluster");
-		assertEquals(feed.getClusters().getCluster().get(1).getType(),
+		assertEquals(feed.getClusters().getClusters().get(1).getType(),
 				ClusterType.TARGET);
-		assertEquals(feed.getClusters().getCluster().get(1).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
 				.getStart(), "2011-11-01T00:00Z");
-		assertEquals(feed.getClusters().getCluster().get(1).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
 				.getEnd(), "2011-12-31T00:00Z");
-		assertEquals(feed.getClusters().getCluster().get(1).getValidity()
+		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
 				.getTimezone(), "UTC");
-		assertEquals(feed.getClusters().getCluster().get(1).getRetention()
+		assertEquals(feed.getClusters().getClusters().get(1).getRetention()
 				.getAction(), ActionType.ARCHIVE);
-		assertEquals(feed.getClusters().getCluster().get(1).getRetention()
-				.getLimit(), "hours(6)");
+		assertEquals(feed.getClusters().getClusters().get(1).getRetention()
+				.getLimit().toString(), "hours(6)");
 
-		assertEquals(feed.getLocations().get(LocationType.DATA).getType(),
-				"data");
-		assertEquals(feed.getLocations().get(LocationType.DATA).getPath(),
+		assertEquals(FeedHelper.getLocation(feed, LocationType.DATA).getPath(),
 				"/projects/ivory/clicks");
-		assertEquals(feed.getLocations().get(LocationType.META).getType(),
-				"meta");
-		assertEquals(feed.getLocations().get(LocationType.META).getPath(),
+		assertEquals(FeedHelper.getLocation(feed, LocationType.META).getPath(),
 				"/projects/ivory/clicksMetaData");
-		assertEquals(feed.getLocations().get(LocationType.STATS).getType(),
-				"stats");
-		assertEquals(feed.getLocations().get(LocationType.STATS).getPath(),
+		assertEquals(FeedHelper.getLocation(feed, LocationType.STATS).getPath(),
 				"/projects/ivory/clicksStats");
 
 		assertEquals(feed.getACL().getGroup(), "group");
@@ -142,11 +136,6 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
 		assertEquals(feed.getSchema().getLocation(), "/schema/clicks");
 		assertEquals(feed.getSchema().getProvider(), "protobuf");
-
-		assertEquals(feed.getProperties().get("field1").getName(), "field1");
-		assertEquals(feed.getProperties().get("field1").getValue(), "value1");
-		assertEquals(feed.getProperties().get("field2").getName(), "field2");
-		assertEquals(feed.getProperties().get("field2").getValue(), "value2");
 
 		StringWriter stringWriter = new StringWriter();
 		Marshaller marshaller = EntityType.FEED.getMarshaller();
@@ -159,21 +148,10 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Feed feed = (Feed) parser
 				.parseAndValidate(ProcessEntityParserTest.class
 						.getResourceAsStream(FEED_XML));
-		feed.getClusters().getCluster().get(0).setName("invalid cluster");
+		feed.getClusters().getClusters().get(0).setName("invalid cluster");
 		parser.validate(feed);
 	}
 
-	@Test
-	public void testInvalidFrequency() {
-		try {
-			modifiableFeed.setFrequency("hour");
-			parser.parseAndValidate(marshallEntity(modifiableFeed));
-			Assert.fail("Frequency validation failed");
-		} catch (Exception e) {
-			modifiableFeed.setFrequency("hours");
-			System.out.println(e.getMessage());
-		}
-	}
 	
 	@Test
 	public void testPartitionExpression() throws IvoryException {
@@ -185,61 +163,33 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	}
 
 	@Test
-	public void testInvalidPeriodicity() throws IvoryException, JAXBException {
-		try {
-			modifiableFeed.setPeriodicity(-1);
-			parser.parseAndValidate(marshallEntity(modifiableFeed));
-			Assert.fail("Periodicity validation failed");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			modifiableFeed.setPeriodicity(1);
-		}
-	}
-
-	@Test
 	public void testInvalidClusterValidityTime() {
-		Validity validity = modifiableFeed.getClusters().getCluster().get(0)
+		Validity validity = modifiableFeed.getClusters().getClusters().get(0)
 				.getValidity();
 		try {
 			validity.setStart("2007-02-29T00:00Z");
-			modifiableFeed.getClusters().getCluster().get(0)
+			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 			parser.parseAndValidate(marshallEntity(modifiableFeed));
 			Assert.fail("Cluster validity failed");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			validity.setStart("2011-11-01T00:00Z");
-			modifiableFeed.getClusters().getCluster().get(0)
+			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 		}
 
 		try {
 			validity.setEnd("2010-04-31T00:00Z");
-			modifiableFeed.getClusters().getCluster().get(0)
+			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 			parser.parseAndValidate(marshallEntity(modifiableFeed));
 			Assert.fail("Cluster validity failed");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			validity.setEnd("2011-12-31T00:00Z");
-			modifiableFeed.getClusters().getCluster().get(0)
+			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
-		}
-	}
-
-	@Test
-	public void testInvalidLateArrival() throws IvoryException, JAXBException {
-		try {
-			LateArrival lateArrival = modifiableFeed.getLateArrival();
-			lateArrival.setCutOff("hourss(6)");
-			modifiableFeed.setLateArrival(lateArrival);
-			parser.parseAndValidate(marshallEntity(modifiableFeed));
-			Assert.fail("Periodicity validation failed");
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-			LateArrival lateArrival = new LateArrival();
-			lateArrival.setCutOff("hours(6)");
-			modifiableFeed.setLateArrival(lateArrival);
 		}
 	}
 
@@ -247,16 +197,8 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	public void testInvalidProcessValidity() throws Exception {
 		Feed feed = parser.parseAndValidate((FeedEntityParserTest.class
 				.getResourceAsStream(FEED_XML)));
-		feed.getClusters().getCluster().get(0).getValidity()
+		feed.getClusters().getClusters().get(0).getValidity()
 				.setStart("2012-11-01T00:00Z");
-		parser.validate(feed);
-	}
-
-	@Test(expectedExceptions = ValidationException.class)
-	public void testInvalidFeedLateCutoffPeriod() throws IvoryException {
-		Feed feed = parser.parseAndValidate((FeedEntityParserTest.class
-				.getResourceAsStream(FEED_XML)));
-		feed.getLateArrival().setCutOff("hours(7)");
 		parser.validate(feed);
 	}
 
@@ -266,10 +208,11 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				(FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
 		feed1.setName("f1" + System.currentTimeMillis());
 		feed1.setGroups("group1,group2,group3");
+		feed1.setLocations(new Locations());
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location.setType("data");
-		feed1.getLocations().put(LocationType.DATA, location);
+		location.setType(LocationType.DATA);
+		feed1.getLocations().getLocations().add(location);
 		parser.parseAndValidate(feed1.toString());
 		ConfigurationStore.get().publish(EntityType.FEED, feed1);
 
@@ -277,11 +220,12 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				(FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
 		feed2.setName("f2" + System.currentTimeMillis());
 		feed2.setGroups("group1,group2,group5");
+		feed2.setLocations(new Locations());
 		Location location2 = new Location();
 		location2
 				.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location2.setType("data");
-		feed2.getLocations().put(LocationType.DATA, location2);
+		location2.setType(LocationType.DATA);
+		feed2.getLocations().getLocations().add(location2);
 		parser.parseAndValidate(feed2.toString());
 	}
 
@@ -291,10 +235,11 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				(FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
 		feed1.setName("f1" + System.currentTimeMillis());
 		feed1.setGroups("group1,group2,group3");
+		feed1.setLocations(new Locations());
 		Location location = new Location();
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
-		location.setType("data");
-		feed1.getLocations().put(LocationType.DATA, location);
+		location.setType(LocationType.DATA);
+		feed1.getLocations().getLocations().add(location);
 		parser.parseAndValidate(feed1.toString());
 		ConfigurationStore.get().publish(EntityType.FEED, feed1);
 
@@ -302,11 +247,12 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				(FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
 		feed2.setName("f2" + System.currentTimeMillis());
 		feed2.setGroups("group1,group2,group5");
+		feed2.setLocations(new Locations());
 		Location location2 = new Location();
 		location2
 				.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}/${HOUR}/ad");
-		location2.setType("data");
-		feed2.getLocations().put(LocationType.DATA, location2);
+		location2.setType(LocationType.DATA);
+		feed2.getLocations().getLocations().add(location2);
 		parser.parseAndValidate(feed2.toString());
 	}
 

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<process name="##name##">
+<process name="##name##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <cluster name="##cluster##" />
 	
 	<concurrency>1</concurrency>
 	<execution>FIFO</execution>
-    <frequency>days</frequency>
-    <periodicity>1</periodicity>
+    <frequency>days(1)</frequency>
 	
 	<validity timezone="UTC" end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
 	<inputs>
@@ -19,9 +18,9 @@
 	<properties>
 	</properties>
 	<workflow engine="oozie" path="/ivory/test/workflow" />
-	<retry policy="backoff" delay="10" delayUnit="minutes" attempts="3" />
+	<retry policy="backoff" delay="minutes(10)" attempts="3" />
 
-    <late-process policy="exp-backoff" delay="1" delayUnit="hours">
+    <late-process policy="exp-backoff" delay="hours(1)">
         <late-input feed="input" workflow-path="/ivory/test/workflow" />
     </late-process>
 </process>

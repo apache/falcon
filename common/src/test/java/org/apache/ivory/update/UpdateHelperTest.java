@@ -20,13 +20,16 @@ package org.apache.ivory.update;
 
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.entity.AbstractTestBase;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.parser.EntityParserFactory;
 import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.feed.Partition;
+import org.apache.ivory.entity.v0.feed.Properties;
 import org.apache.ivory.entity.v0.feed.Property;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
@@ -69,49 +72,45 @@ public class UpdateHelperTest extends AbstractTestBase {
 
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getLateArrival().setCutOff("hours(1)");
+        newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(1)"));
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.getLateArrival().setCutOff(oldFeed.getLateArrival().getCutOff());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getLocations().get(LocationType.DATA).setPath("/test");
+        FeedHelper.getLocation(newFeed, LocationType.DATA).setPath("/test");
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getLocations().get(LocationType.DATA).setPath(
-                oldFeed.getLocations().get(LocationType.DATA).getPath());
+        FeedHelper.getLocation(newFeed, LocationType.DATA).setPath(
+                FeedHelper.getLocation(oldFeed, LocationType.DATA).getPath());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.setFrequency("year");
+        newFeed.setFrequency(Frequency.fromString("months(1)"));
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.setFrequency(oldFeed.getFrequency());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.setPeriodicity(500);
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
-
-        newFeed.setPeriodicity(oldFeed.getPeriodicity());
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
-
-        Partition partition = new Partition("1");
-        newFeed.getPartitions().getPartition().add(partition);
+        Partition partition = new Partition();
+        partition.setName("1");
+        newFeed.getPartitions().getPartitions().add(partition);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         Property property = new Property();
         property.setName("1");
         property.setValue("1");
-        newFeed.getProperties().put("1", property);
+        newFeed.setProperties(new Properties());
+        newFeed.getProperties().getProperties().add(property);
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getProperties().remove("1");
+        newFeed.getProperties().getProperties().remove(0);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getCluster(process.getCluster().getName()).getValidity().setStart("123");
+        FeedHelper.getCluster(newFeed, process.getCluster().getName()).getValidity().setStart("123");
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        newFeed.getCluster(process.getCluster().getName()).getValidity().
-                setStart(oldFeed.getCluster(process.getCluster().getName()).getValidity().getStart());
+        FeedHelper.getCluster(newFeed, process.getCluster().getName()).getValidity().
+                setStart(FeedHelper.getCluster(oldFeed, process.getCluster().getName()).getValidity().getStart());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
     }
 }

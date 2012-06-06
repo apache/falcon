@@ -78,7 +78,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         input.setName("inputData2");
         input.setStartInstance("today(20,0)");
         input.setEndInstance("today(20,20)");
-        process.getInputs().getInput().add(input);
+        process.getInputs().getInputs().add(input);
 
         process.getValidity().setEnd(EntityUtil.formatDateUTC(new Date(new Date().getTime() + 60 * 60 * 1000)));
         File tmpFile = getTempFile();

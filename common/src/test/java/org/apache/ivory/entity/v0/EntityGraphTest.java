@@ -102,7 +102,7 @@ public class EntityGraphTest extends AbstractTestBase{
         Inputs inputs = process.getInputs();
         Input input = new Input();
         input.setFeed(feed);
-        inputs.getInput().add(input);
+        inputs.getInputs().add(input);
         Feed f1 = new Feed();
         f1.setName(feed);
         Clusters clusters = new Clusters();
@@ -110,7 +110,7 @@ public class EntityGraphTest extends AbstractTestBase{
         org.apache.ivory.entity.v0.feed.Cluster feedCluster =
                 new org.apache.ivory.entity.v0.feed.Cluster();
         feedCluster.setName(cluster.getName());
-        clusters.getCluster().add(feedCluster);
+        clusters.getClusters().add(feedCluster);
         return f1; 
     }
 
@@ -119,7 +119,7 @@ public class EntityGraphTest extends AbstractTestBase{
         Inputs inputs = process.getInputs();
         Input input = new Input();
         input.setFeed(feed.getName());
-        inputs.getInput().add(input);
+        inputs.getInputs().add(input);
     }
 
     private Feed addOutput(Process process, String feed, Cluster cluster) {
@@ -127,7 +127,7 @@ public class EntityGraphTest extends AbstractTestBase{
         Outputs Outputs = process.getOutputs();
         Output Output = new Output();
         Output.setFeed(feed);
-        Outputs.getOutput().add(Output);
+        Outputs.getOutputs().add(Output);
         Feed f1 = new Feed();
         f1.setName(feed);
         Clusters clusters = new Clusters();
@@ -135,7 +135,7 @@ public class EntityGraphTest extends AbstractTestBase{
         org.apache.ivory.entity.v0.feed.Cluster feedCluster =
                 new org.apache.ivory.entity.v0.feed.Cluster();
         feedCluster.setName(cluster.getName());
-        clusters.getCluster().add(feedCluster);
+        clusters.getClusters().add(feedCluster);
         return f1;
     }
 

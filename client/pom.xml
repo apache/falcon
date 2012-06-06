@@ -68,6 +68,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>0.8.0</version>
+                <executions>
+                    <execution>
+                        <id>1</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <args>
+                        <arg>-extension</arg>
+                        <arg>-Xinheritance</arg>
+                    </args>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.jvnet.jaxb2_commons</groupId>
+                            <artifactId>jaxb2-basics</artifactId>
+                            <version>0.6.3</version>
+                        </plugin>
+                    </plugins>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

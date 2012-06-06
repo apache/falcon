@@ -117,6 +117,4 @@ public abstract class Entity {
     public Entity clone() {
         return fromString(getEntityType(), toString());
     }
-
-    public abstract String[] getClustersDefined();
 }

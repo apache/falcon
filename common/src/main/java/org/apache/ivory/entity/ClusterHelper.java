@@ -20,12 +20,14 @@ package org.apache.ivory.entity;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.ivory.entity.v0.cluster.*;
-
-import java.util.Map;
+import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.cluster.Interface;
+import org.apache.ivory.entity.v0.cluster.Interfacetype;
+import org.apache.ivory.entity.v0.cluster.Location;
+import org.apache.ivory.entity.v0.cluster.Property;
 
 public final class ClusterHelper {
-	private static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+	public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {}
 
@@ -33,15 +35,15 @@ public final class ClusterHelper {
         Configuration conf = new Configuration();
         conf.set("fs.default.name", getHdfsUrl(cluster));
         conf.set("mapred.job.tracker", getMREndPoint(cluster));
-        for (Map.Entry<String, Property> property : cluster.
-                getProperties().entrySet()) {
-            conf.set(property.getKey(), property.getValue().getValue());
-        }
+        if(cluster.getProperties() != null)
+            for(Property prop:cluster.getProperties().getProperties()) {
+                conf.set(prop.getName(), prop.getValue());
+            }
         return conf;
     }
 
     public static String getOozieUrl(Cluster cluster) {
-        return getInterfaceFor(cluster, Interfacetype.WORKFLOW);
+        return getInterface(cluster, Interfacetype.WORKFLOW).getEndpoint();
     }
 
     public static String getHdfsUrl(Cluster cluster) {
@@ -53,31 +55,30 @@ public final class ClusterHelper {
     }
 
     public static String getMREndPoint(Cluster cluster) {
-        return getInterfaceFor(cluster, Interfacetype.EXECUTE);
+        return getInterface(cluster, Interfacetype.EXECUTE).getEndpoint();
     }
     
     public static String getMessageBrokerUrl(Cluster cluster) {
-        return getInterfaceFor(cluster, Interfacetype.MESSAGING);
+        return getInterface(cluster, Interfacetype.MESSAGING).getEndpoint();
     }
     
     public static String getMessageBrokerImplClass(Cluster cluster) {
-        Property property = cluster.getProperties().get("brokerImplClass");
-        return property==null?DEFAULT_BROKER_IMPL_CLASS:property.getValue();
+        if(cluster.getProperties() != null)
+            for(Property prop:cluster.getProperties().getProperties())
+                if(prop.getName().equals("brokerImplClass"))
+                    return prop.getValue();
+        return DEFAULT_BROKER_IMPL_CLASS;
     }
 
-    private static String getInterfaceFor(Cluster cluster, Interfacetype type) {
-        assert cluster != null : "Cluster object can't be null";
-        Map<Interfacetype,Interface> interfaces = cluster.getInterfaces();
-        assert interfaces != null : "No interfaces for cluster " + cluster.getName() ;
-        Interface interfaceRef = interfaces.get(type);
-        assert interfaceRef != null : type + " interface not set for cluster " +
-                cluster.getName();
-
-        return interfaceRef.getEndpoint();
+    public static Interface getInterface(Cluster cluster, Interfacetype type) {
+        for(Interface interf:cluster.getInterfaces().getInterfaces())
+            if(interf.getType() == type)
+                return interf;
+        return null;
     }
 
     private static String getNormalizedUrl(Cluster cluster, Interfacetype type) {
-    	String normalizedUrl = getInterfaceFor(cluster, type);
+    	String normalizedUrl = getInterface(cluster, type).getEndpoint();
     	String normalizedPath = new Path(normalizedUrl + "/").toString();
     	return normalizedPath.substring(0, normalizedPath.length() - 1);
     }
@@ -87,13 +88,10 @@ public final class ClusterHelper {
     }
     
     public static String getLocation(Cluster cluster, String locationKey) {
-        assert cluster != null : "Cluster object can't be null";
-        Map<String, Location> locations = cluster.getLocations();
-        assert locations != null : "No locations configured for cluster " +
-                cluster.getName() ;
-        Location location = locations.get(locationKey);
-        assert location != null : "Location " + locationKey +
-                " not configured for cluster " + cluster.getName() ;
-        return location.getPath();
+        for(Location loc:cluster.getLocations().getLocations()) {
+            if(loc.getName().equals(locationKey))
+                return loc.getPath();
+        }
+        return null;
     }
 }

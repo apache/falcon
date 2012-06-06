@@ -17,23 +17,25 @@
  */
 package org.apache.ivory.rerun.policy;
 
+import org.apache.ivory.entity.v0.process.PolicyType;
 
 public class RerunPolicyFactory {
 
-	private RerunPolicyFactory() {
-		//factory
-	}
+    private RerunPolicyFactory() {
+        // factory
+    }
 
-	public static AbstractRerunPolicy getRetryPolicy(String policy) {
-		if (policy.equals("backoff")) {
-			return new PeriodicPolicy();
-		} else if (policy.equals("exp-backoff")) {
-			return new ExpBackoffPolicy();
-		} else if(policy.equals("final")){
-			return new FinalPolicy();
-		} else {
-			throw new IllegalArgumentException("Unhandled Retry policy: "
-					+ policy);
-		}
-	}
+    public static AbstractRerunPolicy getRetryPolicy(PolicyType latePolicy) {
+        switch (latePolicy) {
+            case BACKOFF:
+                return new PeriodicPolicy();
+
+            case EXP_BACKOFF:
+                return new ExpBackoffPolicy();
+
+            case FINAL:
+                return new FinalPolicy();
+        }
+        throw new IllegalArgumentException("Unhandled Retry policy: " + latePolicy);
+    }
 }

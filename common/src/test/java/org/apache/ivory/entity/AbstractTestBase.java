@@ -74,8 +74,7 @@ public class AbstractTestBase {
 		case CLUSTER:
                 Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
                 cluster.setName(name);
-                cluster.getInterfaces().put(Interfacetype.WRITE,
-                        newInterface(Interfacetype.WRITE, conf.get("fs.default.name"), "0.1"));
+                ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
                 store.publish(type, cluster);
                 break;
 

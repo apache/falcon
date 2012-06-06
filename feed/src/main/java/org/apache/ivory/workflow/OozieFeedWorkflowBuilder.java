@@ -31,7 +31,7 @@ import org.apache.ivory.converter.AbstractOozieEntityMapper;
 import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -43,7 +43,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         Map<String, Path> pathsMap = new HashMap<String, Path>();
         
         for (String clusterName: clusters) {
-            org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(clusterName);
+            org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
             if (!EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()).before(
                     EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd())))
                 // start time >= end time
@@ -63,9 +63,9 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
     public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
-        org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster);
+        org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster);
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
-                Frequency.valueOf(feed.getFrequency()), feed.getPeriodicity(), feedCluster.getValidity().getTimezone(), now);
+                feed.getFrequency(), feedCluster.getValidity().getTimezone(), now);
     }
 
 	@Override

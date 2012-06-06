@@ -17,27 +17,18 @@
  */
 package org.apache.ivory.converter;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 public class OozieProcessMapperLateProcessTest {
 
@@ -63,11 +54,7 @@ public class OozieProcessMapperLateProcessTest {
 
 		Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller()
 				.unmarshal(this.getClass().getResource(CLUSTER_XML));
-		Interface inter = new Interface();
-		inter.setEndpoint(hdfsUrl);
-		inter.setType(Interfacetype.WRITE);
-		inter.setVersion("1.2");
-		cluster.getInterfaces().put(Interfacetype.WRITE, inter);
+		ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
 
 		store.publish(EntityType.CLUSTER, cluster);
 

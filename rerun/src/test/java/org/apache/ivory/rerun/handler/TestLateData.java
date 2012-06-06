@@ -1,45 +1,27 @@
 package org.apache.ivory.rerun.handler;
 
-import static org.mockito.Mockito.when;
-import org.mockito.Matchers;
-import java.io.File;
 import java.io.StringWriter;
 import java.util.Collection;
-import java.util.Date;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import junit.framework.Assert;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.EntityParserFactory;
-import org.apache.ivory.entity.parser.ProcessEntityParser;
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.rerun.event.LaterunEvent;
-import org.apache.ivory.rerun.event.RerunEvent;
-import org.apache.ivory.rerun.event.RerunEvent.RerunType;
-import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.rerun.queue.InMemoryQueue;
 import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import com.sun.jersey.api.client.WebResource;
 
@@ -58,15 +40,7 @@ public class TestLateData {
     protected String clusterName;
     protected String processName;
     protected MiniDFSCluster dfsCluster;
-    protected Configuration conf= new Configuration();
-    private final ProcessEntityParser processParser = (ProcessEntityParser)
-            EntityParserFactory.getParser(EntityType.PROCESS);
-    private static final Pattern varPattern = Pattern.compile("##[A-Za-z0-9_]*##");
-    
-    private AbstractRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> latedataHandler =  RerunHandlerFactory
-			.getRerunHandler(RerunType.LATE);
-    
-	
+    protected Configuration conf= new Configuration();	
 	
     @BeforeClass
     public void initConfigStore() throws Exception {
@@ -96,8 +70,7 @@ public class TestLateData {
 		case CLUSTER:
                 Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
                 cluster.setName(name);
-                cluster.getInterfaces().put(Interfacetype.WRITE,
-                        newInterface(Interfacetype.WRITE, conf.get("fs.default.name"), "0.1"));
+                ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
                 store.publish(type, cluster);
                 break;
 
@@ -138,15 +111,6 @@ public class TestLateData {
 		StringWriter stringWriter = new StringWriter();
 		marshaller.marshal(entity, stringWriter);
 		return stringWriter.toString();
-	}
-	
-	private Interface newInterface(Interfacetype type, String endPoint,
-			String version) {
-		Interface iface = new Interface();
-		iface.setType(type);
-		iface.setEndpoint(endPoint);
-		iface.setVersion(version);
-		return iface;
 	}
 	
 //	@Test

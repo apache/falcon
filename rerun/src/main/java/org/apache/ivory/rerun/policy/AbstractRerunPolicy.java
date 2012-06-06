@@ -21,44 +21,40 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.Frequency;
 
 public abstract class AbstractRerunPolicy {
 
-	private static final long MINUTES = 60 * 1000L;
-	private static final long HOURS = 60 * MINUTES;
-	private static final long DAYS = 24 * HOURS;
-	private static final long MONTHS = 31 * DAYS;
+    private static final long MINUTES = 60 * 1000L;
+    private static final long HOURS = 60 * MINUTES;
+    private static final long DAYS = 24 * HOURS;
+    private static final long MONTHS = 31 * DAYS;
 
-	private static enum DELAYS {
-		minutes, hours, days, months
-	};
+    public long getDurationInMilliSec(Frequency delay) throws IvoryException {
+        switch (delay.getTimeUnit()) {
+            case minutes:
+                return MINUTES * delay.getFrequency();
 
-	public long getDurationInMilliSec(String delayUnit, int delay)
-			throws IvoryException {
+            case hours:
+                return HOURS * delay.getFrequency();
 
-		if (delayUnit.equals(DELAYS.minutes.name())) {
-			return MINUTES * delay;
-		} else if (delayUnit.equals(DELAYS.hours.name())) {
-			return HOURS * delay;
-		} else if (delayUnit.equals(DELAYS.days.name())) {
-			return DAYS * delay;
-		} else if (delayUnit.equals(DELAYS.months.name())) {
-			return MONTHS * delay;
-		} else {
-			throw new IvoryException("Unknown delayUnit:" + delayUnit);
-		}
-	}
+            case days:
+                return DAYS * delay.getFrequency();
 
-	public static Date addTime(Date date, int milliSecondsToAdd) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		cal.add(Calendar.MILLISECOND, milliSecondsToAdd);
-		return cal.getTime();
-	}
+            case months:
+                return MONTHS * delay.getFrequency();
+        }
+        throw new IvoryException("Unknown delayUnit:" + delay.getTimeUnit());
+    }
 
-	public abstract long getDelay(String delayUnit, int delay, int eventNumber)
-			throws IvoryException;
+    public static Date addTime(Date date, int milliSecondsToAdd) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.MILLISECOND, milliSecondsToAdd);
+        return cal.getTime();
+    }
 
-	public abstract long getDelay(String delayUnit, int delay,
-			Date nominaltime, Date cutOffTime) throws IvoryException;
+    public abstract long getDelay(Frequency delay, int eventNumber) throws IvoryException;
+
+    public abstract long getDelay(Frequency delay, Date nominaltime, Date cutOffTime) throws IvoryException;
 }

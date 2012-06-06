@@ -119,10 +119,10 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             return;
         Cluster oldCluster = (Cluster) oldEntity;
         Cluster newCluster = (Cluster) newEntity;
-        if (!oldCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint()
-                .equals(newCluster.getInterfaces().get(Interfacetype.WRITE).getEndpoint())
-                || !oldCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint()
-                        .equals(newCluster.getInterfaces().get(Interfacetype.WORKFLOW).getEndpoint())) {
+        if (!ClusterHelper.getInterface(oldCluster, Interfacetype.WRITE).getEndpoint()
+                .equals(ClusterHelper.getInterface(newCluster, Interfacetype.WRITE).getEndpoint())
+                || !ClusterHelper.getInterface(oldCluster, Interfacetype.WORKFLOW).getEndpoint()
+                        .equals(ClusterHelper.getInterface(newCluster, Interfacetype.WORKFLOW).getEndpoint())) {
             addLibsTo(newCluster);
         }
     }

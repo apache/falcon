@@ -30,7 +30,6 @@ import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
@@ -61,7 +60,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
-                Frequency.valueOf(process.getFrequency()), process.getPeriodicity(), process.getValidity().getTimezone(), now);
+                process.getFrequency(), process.getValidity().getTimezone(), now);
     }
 
     @Override

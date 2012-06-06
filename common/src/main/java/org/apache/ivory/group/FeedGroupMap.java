@@ -25,8 +25,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.service.ConfigurationChangeListener;
@@ -102,19 +104,17 @@ public class FeedGroupMap implements ConfigurationChangeListener {
 		}
 	}
 
-	public Set<FeedGroup> getGroups(String groups, String frequency,
-			int periodicity, String path) {
+	public Set<FeedGroup> getGroups(String groups, Frequency frequency, String path) {
 		Set<FeedGroup> groupSet = new HashSet<FeedGroup>();
 		String[] groupArray = groups.split(",");
 		for (String group : groupArray) {
-			groupSet.add(new FeedGroup(group, frequency, periodicity, path));
+			groupSet.add(new FeedGroup(group, frequency, path));
 		}
 		return groupSet;
 	}
 
 	public Set<FeedGroup> getGroups(org.apache.ivory.entity.v0.feed.Feed feed) {
 		return getGroups(feed.getGroups(), feed.getFrequency(),
-				feed.getPeriodicity(),
-				feed.getLocations().get(LocationType.DATA).getPath());
+				FeedHelper.getLocation(feed, LocationType.DATA).getPath());
 	}
 }

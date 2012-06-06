@@ -18,11 +18,10 @@
 package org.apache.ivory.util;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.parser.Frequency;
 
 public final class OozieUtils {
 

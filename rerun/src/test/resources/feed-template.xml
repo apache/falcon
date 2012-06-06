@@ -1,8 +1,7 @@
 <feed description="clicks log" name="raw-logs" xmlns="uri:ivory:feed:0.1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<frequency>minutes</frequency>
-	<periodicity>20</periodicity>
+	<frequency>minutes(20)</frequency>
 
 	<late-arrival cut-off="minutes(6)" />
 	<clusters>

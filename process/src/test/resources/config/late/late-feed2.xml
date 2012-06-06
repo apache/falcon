@@ -24,8 +24,7 @@
 
     <groups>online,bi</groups>
 
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>hours(1)</frequency>
 
     <late-arrival cut-off="minutes(5)"/>
 

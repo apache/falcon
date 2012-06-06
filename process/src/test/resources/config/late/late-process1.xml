@@ -16,15 +16,14 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<process name="late-process1" >
+<process name="late-process1" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
 	<!-- where -->
 	<cluster name="late-cluster"/>
 
 	<!-- when -->
     <concurrency>1</concurrency>
     <execution>LIFO</execution>
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>hours(1)</frequency>
     <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" timezone="UTC"/>
 
     <!-- what -->
@@ -44,6 +43,6 @@
     
     <workflow engine="oozie" path="/user/guest/workflow" />
 
-    <retry policy="backoff" delay="10" delayUnit="hours" attempts="3" />
+    <retry policy="backoff" delay="hours(10)" attempts="3" />
 
 </process>

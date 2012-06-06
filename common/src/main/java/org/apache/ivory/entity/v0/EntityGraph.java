@@ -124,7 +124,7 @@ public class EntityGraph implements ConfigurationChangeListener {
         nodeEdges.put(processNode, new HashSet<Node>());
         Set<Node> processEdges = nodeEdges.get(processNode);
         if (process.getInputs() != null) {
-            for (Input input : process.getInputs().getInput()) {
+            for (Input input : process.getInputs().getInputs()) {
                 Node feedNode = new Node(EntityType.FEED, input.getFeed());
                 if (!nodeEdges.containsKey(feedNode)) {
                     nodeEdges.put(feedNode, new HashSet<Node>());
@@ -135,7 +135,7 @@ public class EntityGraph implements ConfigurationChangeListener {
             }
         }
         if (process.getOutputs() != null) {
-            for (Output output : process.getOutputs().getOutput()) {
+            for (Output output : process.getOutputs().getOutputs()) {
                 Node feedNode = new Node(EntityType.FEED, output.getFeed());
                 if (!nodeEdges.containsKey(feedNode)) {
                     nodeEdges.put(feedNode, new HashSet<Node>());
@@ -159,7 +159,7 @@ public class EntityGraph implements ConfigurationChangeListener {
         nodeEdges.put(feedNode, feedEdges);
 
         for (org.apache.ivory.entity.v0.feed.Cluster cluster :
-                feed.getClusters().getCluster()) {
+                feed.getClusters().getClusters()) {
             Node clusterNode = new Node(EntityType.CLUSTER, cluster.getName());
             if (!nodeEdges.containsKey(clusterNode)) {
                 nodeEdges.put(clusterNode, new HashSet<Node>());

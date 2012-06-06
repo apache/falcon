@@ -18,6 +18,12 @@
 
 package org.apache.ivory.converter;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,6 +32,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -35,19 +42,21 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Property;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.oozie.coordinator.*;
+import org.apache.ivory.oozie.coordinator.CONTROLS;
+import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
+import org.apache.ivory.oozie.coordinator.DATAIN;
+import org.apache.ivory.oozie.coordinator.DATAOUT;
+import org.apache.ivory.oozie.coordinator.DATASETS;
+import org.apache.ivory.oozie.coordinator.INPUTEVENTS;
+import org.apache.ivory.oozie.coordinator.OUTPUTEVENTS;
+import org.apache.ivory.oozie.coordinator.SYNCDATASET;
+import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
@@ -56,8 +65,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     //TODO Hack for Adroit to use oozie's latest expression, to remove after el fix
     private static final String LATEST="latest";
     
-    private static Logger LOG = Logger.getLogger(OozieProcessMapper.class);
-
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
 
     public OozieProcessMapper(Process entity) {
@@ -111,12 +118,12 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         coord.setStart(process.getValidity().getStart());
         coord.setEnd(process.getValidity().getEnd());
         coord.setTimezone(process.getValidity().getTimezone());
-        coord.setFrequency("${coord:" + process.getFrequency() + "(" + process.getPeriodicity() + ")}");
+        coord.setFrequency("${coord:" + process.getFrequency().toString() + "}");
 
         // controls
         CONTROLS controls = new CONTROLS();
         controls.setConcurrency(String.valueOf(process.getConcurrency()));
-        controls.setExecution(process.getExecution());
+        controls.setExecution(process.getExecution().name());
         coord.setControls(controls);
 
         // Configuration
@@ -126,7 +133,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         if (process.getInputs() != null) {
             StringBuffer ivoryInPaths = new StringBuffer();
             StringBuffer ivoryInputFeeds = new StringBuffer();
-            for (Input input : process.getInputs().getInput()) {
+            for (Input input : process.getInputs().getInputs()) {
                 SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
@@ -150,7 +157,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 
                 props.put(input.getName(), inputExpr);
                 if(process.getLateProcess() != null){
-                	for(LateInput li : process.getLateProcess().getLateInput()){
+                	for(LateInput li : process.getLateProcess().getLateInputs()){
                     	if(input.getName().equals(li.getFeed())){
                     		ivoryInPaths.append(inputExpr).append('#');
                             ivoryInputFeeds.append(input.getName()).append("#");
@@ -166,7 +173,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         if (process.getOutputs() != null) {
             StringBuilder outputFeedPaths = new StringBuilder();
             StringBuilder outputFeedNames = new StringBuilder();
-            for (Output output : process.getOutputs().getOutput()) {
+            for (Output output : process.getOutputs().getOutputs()) {
                 SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
@@ -244,10 +251,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
-        syncdataset.setUriTemplate("${nameNode}" + feed.getLocations().get(LocationType.DATA).getPath());
-        syncdataset.setFrequency("${coord:" + feed.getFrequency() + "(" + feed.getPeriodicity() + ")}");
+        syncdataset.setUriTemplate("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath());
+        syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
-        org.apache.ivory.entity.v0.feed.Cluster feedCluster = feed.getCluster(cluster.getName());
+        org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
         syncdataset.setTimezone(feedCluster.getValidity().getTimezone());
 		if (feed.getAvailabilityFlag() == null) {
@@ -275,7 +282,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Process process = getEntity();
         Map<String, String> props = new HashMap<String, String>();
         if (process.getProperties() != null) {
-            for (org.apache.ivory.entity.v0.process.Property prop : process.getProperties().getProperty())
+            for (Property prop : process.getProperties().getProperties())
                 props.put(prop.getName(), prop.getValue());
         }
         return props;

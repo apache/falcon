@@ -174,7 +174,7 @@ public abstract class AbstractEntityManager implements IvoryService {
             return getAllColos();
 
         Entity entity = EntityUtil.getEntity(type, name);
-        String[] clusters = entity.getClustersDefined();
+        String[] clusters = EntityUtil.getClustersDefined(entity);
         Set<String> colos = new HashSet<String>();
         for (String cluster : clusters) {
             Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);

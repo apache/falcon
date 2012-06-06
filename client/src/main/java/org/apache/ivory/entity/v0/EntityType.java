@@ -33,9 +33,9 @@ import org.apache.ivory.entity.v0.process.Process;
  * Enum for types of entities in Ivory Process, Feed and Cluster
  */
 public enum EntityType {
-    FEED(Feed.class, "/schema/feed/feed-0.1.xsd", "name"), 
-    PROCESS(Process.class, "/schema/process/process-0.1.xsd", "name", "validity.start"), 
-    CLUSTER(Cluster.class, "/schema/cluster/cluster-0.1.xsd", "name");
+    FEED(Feed.class, "/feed-0.1.xsd", "name"), 
+    PROCESS(Process.class, "/process-0.1.xsd", "name", "validity.start"), 
+    CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name");
 
     private static final String NS = "http://www.w3.org/2001/XMLSchema";
 

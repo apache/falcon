@@ -22,13 +22,16 @@ package org.apache.ivory.entity.parser;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
@@ -52,14 +55,13 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
 		validateXMLelements(feed);
 
-		if (feed.getClusters() == null
-				|| feed.getClusters().getCluster() == null)
+		if (feed.getClusters() == null)
 			throw new ValidationException(
 					"Feed should have atleast one cluster");
 
 		// validate on dependent clusters
 		List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType, String>>();
-		for (Cluster cluster : feed.getClusters().getCluster()) {
+		for (Cluster cluster : feed.getClusters().getClusters()) {
 			validateClusterValidity(cluster.getValidity().getStart(), cluster
 					.getValidity().getEnd(), cluster.getName());
 			validateFeedCutOffPeriod(feed, cluster);
@@ -108,9 +110,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 				continue;
 			} else {
 				throw new ValidationException("Feed " + feed.getName()
-						+ "'s frequency: " + feed.getFrequency()
-						+ ", periodicity: " + feed.getPeriodicity()
-						+ ", path pattern: " + feed.getDataPath()
+						+ "'s frequency: " + feed.getFrequency().toString()
+						+ ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
 						+ " does not match with group: " + group.getName()
 						+ "'s frequency: " + group.getFrequency()
 						+ ", periodicity: " + group.getPeriodicity()
@@ -139,8 +140,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void ensureValidityFor(Feed newFeed, Process process) throws IvoryException {
         String clusterName = process.getCluster().getName();
-        if (process.getInputs() != null && process.getInputs().getInput() != null) {
-            for (Input input : process.getInputs().getInput()) {
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInputs()) {
                 if (!input.getFeed().equals(newFeed.getName())) continue;
                 CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
                 CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(),
@@ -153,8 +154,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
         }
 
-        if (process.getOutputs() != null && process.getOutputs().getOutput() != null) {
-            for (Output output : process.getOutputs().getOutput()) {
+        if (process.getOutputs() != null) {
+            for (Output output : process.getOutputs().getOutputs()) {
                 if (!output.getFeed().equals(newFeed.getName())) continue;
                 CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
                 CrossEntityValidations.validateInstance(process, output, newFeed);
@@ -166,7 +167,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
   	private void validateXMLelements(Feed feed) throws ValidationException {
 
-		for (Cluster cluster : feed.getClusters().getCluster()) {
+		for (Cluster cluster : feed.getClusters().getClusters()) {
 			if (!EntityUtil.isValidUTCDate(cluster.getValidity().getStart())) {
 				throw new ValidationException("Invalid start date: "
 						+ cluster.getValidity().getStart() + " for cluster: "
@@ -183,7 +184,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	private void validateFeedSourceCluster(Feed feed)
 			throws ValidationException {
 		int i = 0;
-		for (Cluster cluster : feed.getClusters().getCluster()) {
+		for (Cluster cluster : feed.getClusters().getClusters()) {
 			if (cluster.getType().equals(ClusterType.SOURCE)) {
 				i++;
 			}
@@ -214,10 +215,10 @@ public class FeedEntityParser extends EntityParser<Feed> {
 			throws IvoryException {
 		ExpressionHelper evaluator = ExpressionHelper.get();
 
-		String feedRetention = cluster.getRetention().getLimit();
+		String feedRetention = cluster.getRetention().getLimit().toString();
 		long retentionPeriod = evaluator.evaluate(feedRetention, Long.class);
 
-		String feedCutoff = feed.getLateArrival().getCutOff();
+		String feedCutoff = feed.getLateArrival().getCutOff().toString();
 		long feedCutOffPeriod = evaluator.evaluate(feedCutoff, Long.class);
 
 		if (retentionPeriod < feedCutOffPeriod) {
@@ -236,10 +237,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
 		Map<String,String> clusterVars = new HashMap<String, String>();
 		clusterVars.put("colo", cluster.getColo());
 		clusterVars.put("name", cluster.getName());
-		Set<String> keyset = cluster.getProperties().keySet();
-		for(String propName : keyset)
-		{
-			clusterVars.put(propName, cluster.getProperties().get(propName).getValue());
+		if(cluster.getProperties() != null) {
+		    for(Property property:cluster.getProperties().getProperties())
+		        clusterVars.put(property.getName(), property.getValue());
 		}
 		prop.put("cluster", clusterVars);
 	}
@@ -247,17 +247,17 @@ public class FeedEntityParser extends EntityParser<Feed> {
 	private void validateFeedPartitionExpression(Feed feed, Cluster cluster)
 			throws IvoryException {
 		int expressions = 0 , numSourceClusters = 0;
-		for(Cluster cl : feed.getClusters().getCluster()){
+		for(Cluster cl : feed.getClusters().getClusters()){
 			if(cl.getType().equals(ClusterType.SOURCE))
 				numSourceClusters++;
 		}
 		if (cluster.getType().equals(ClusterType.SOURCE)
 				&& cluster.getPartition() != null && numSourceClusters != 1) {
 			String[] tokens = cluster.getPartition().split("/");
-			if(feed.getPartitions() == null || feed.getPartitions().getPartition() == null)
+			if(feed.getPartitions() == null)
 				throw new ValidationException(
 						"Feed Partitions not specified for feed: " + feed.getName());
-			if (tokens.length != feed.getPartitions().getPartition().size()) {
+			if (tokens.length != feed.getPartitions().getPartitions().size()) {
 				throw new ValidationException(
 						"Number of expressions in Partition Expression are not equal to number of feed partitions");
 			} else {

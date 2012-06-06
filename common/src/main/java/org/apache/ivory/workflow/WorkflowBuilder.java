@@ -25,6 +25,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.ReflectionUtils;
@@ -42,7 +43,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
     public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws IvoryException;
 
     public String[] getClustersDefined(T entity) {
-        String[] entityClusters = entity.getClustersDefined();
+        String[] entityClusters = EntityUtil.getClustersDefined(entity);
         if (DeploymentUtil.isEmbeddedMode())
             return entityClusters;
 

@@ -71,18 +71,6 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     }
 
     @POST
-    @Path("submitAndSchedule/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Monitored(event = "submitAndSchedule")
-    @Override
-    public APIResult submitAndSchedule(@Context HttpServletRequest request,
-                                       @Dimension("entityType") @PathParam("type") String type,
-                                       @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.submitAndSchedule(request, type, colo);
-    }
-
-    @POST
     @Path("suspend/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
     @Monitored(event = "suspend")
