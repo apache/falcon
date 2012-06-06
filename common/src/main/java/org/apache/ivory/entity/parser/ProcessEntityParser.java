@@ -30,13 +30,16 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Inputs;
+import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Outputs;
 import org.apache.ivory.entity.v0.process.Process;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -80,6 +83,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
         
         validateDatasetName(process.getInputs(),process.getOutputs());
+        validateLateInputs(process);
     }
 
 	private void validateHDFSpaths(Process process) throws IvoryException {
@@ -150,5 +154,19 @@ public class ProcessEntityParser extends EntityParser<Process> {
     			throw new ValidationException("Output name: "+output.getName() +" is already used");
     		}
     	}		
+    }
+    
+    private void validateLateInputs(Process process) throws ValidationException
+    {
+    	List<String> feedName = new ArrayList<String>();
+    	for(Input in : process.getInputs().getInput()){
+    		feedName.add(in.getName());
+    	}
+    	if(process.getLateProcess() != null){
+    		for(LateInput lp : process.getLateProcess().getLateInput()){
+    			if(!feedName.contains(lp.getFeed()))
+    				throw new ValidationException("Late Input: "+lp.getFeed() +" is not specified in the inputs");
+    		}
+    	}
     }
 }

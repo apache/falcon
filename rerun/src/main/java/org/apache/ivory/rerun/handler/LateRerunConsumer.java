@@ -49,18 +49,12 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 	protected void handleRerun(String jobStatus, LaterunEvent message) {
 		try{
 		Process processObj = handler.getProcess(message.getProcessName());
-		Date cutOffTime = handler.getCutOffTime(processObj,
-				message.getProcessInstance());
-		Date now = new Date();
-		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: " + now.toString()
-					+ " has expired, Late Rerun can not be scheduled");
-			return;
-		}
-
+		
 		if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")) {
-			LOG.debug("Process Instance already running, late rerun not scheduled for"
+			LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"
 					+ message.getWfId());
+			message.setMsgInsertTime(System.currentTimeMillis());
+			handler.offerToQueue(message);
 			return;
 		} else if (jobStatus.equals("SUSPENDED")) {
 			LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"

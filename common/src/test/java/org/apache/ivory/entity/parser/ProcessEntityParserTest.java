@@ -246,4 +246,13 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getRetry().setDelay(0);
 		parser.parseAndValidate(process.toString());
 	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testInvalidLateInputs() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getLateProcess().getLateInput().get(0).setFeed("invalidInput");
+		parser.parseAndValidate(process.toString());
+	}
 }
