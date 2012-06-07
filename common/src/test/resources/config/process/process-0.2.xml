@@ -13,18 +13,18 @@
 <process name="sample" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<cluster name="testCluster" />
 	<!-- when -->
-	<concurrency>1</concurrency>
-	<execution>LIFO</execution>
+	<parallel>1</parallel>
+	<order>LIFO</order>
 	<frequency>hours(1)</frequency>
 	<validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"
 		timezone="UTC" />
 
 	<!-- what -->
 	<inputs>
-		<input name="impression" feed="impressionFeed" start-instance="today(0,0)"
-			end-instance="today(2,0)" partition="*/US" />
-		<input name="clicks" feed="clicks" start-instance="yesterday(0,0)"
-			end-instance="yesterday(20,0)" />
+		<input name="impression" feed="impressionFeed" start="today(0,0)"
+			end="today(2,0)" partition="*/US" />
+		<input name="clicks" feed="clicks" start="yesterday(0,0)"
+			end="yesterday(20,0)" />
 	</inputs>
 
 	<outputs>
@@ -43,7 +43,7 @@
 	<retry policy="backoff" delay="minutes(10)" attempts="3" />
 
 	<late-process policy="exp-backoff" delay="hours(1)">
-		<late-input feed="impression" workflow-path="himpression/late/workflow" />
-		<late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+		<late-input input="impression" workflow-path="himpression/late/workflow" />
+		<late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
 	</late-process>
 </process>

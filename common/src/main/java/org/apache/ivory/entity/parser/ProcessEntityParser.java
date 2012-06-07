@@ -65,7 +65,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
                 validateEntityExists(EntityType.FEED, input.getFeed());
                 Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
                 CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(), feed, clusterName);
+                CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
                 CrossEntityValidations.validateInstanceRange(process, input, feed);
                 if (input.getPartition() != null) {
                     CrossEntityValidations.validateInputPartition(input, feed);
@@ -164,8 +164,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
     	}
     	if(process.getLateProcess() != null){
     		for(LateInput lp : process.getLateProcess().getLateInputs()){
-    			if(!feedName.contains(lp.getFeed()))
-    				throw new ValidationException("Late Input: "+lp.getFeed() +" is not specified in the inputs");
+    			if(!feedName.contains(lp.getInput()))
+    				throw new ValidationException("Late Input: "+lp.getInput() +" is not specified in the inputs");
     		}
     	}
     }

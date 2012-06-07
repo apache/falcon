@@ -27,7 +27,7 @@
   <validity end="" start="">validity</validity>
   <inputs>
     <somenode>somenode</somenode>
-    <input end-instance="" feed="" start-instance="">input</input>
+    <input end="" feed="" start="">input</input>
   </inputs>
   <outputs>
     <output feed="" instance="">output</output>
@@ -35,6 +35,6 @@
   <workflow engine="" path="">workflow</workflow>
   <retry attempts="" delay="" delayUnit="" policy="">retry</retry>
   <late-process delay="" delayUnit="" policy="">
-    <late-input feed="" workflow-path="">late-input</late-input>
+    <late-input input="" workflow-path="">late-input</late-input>
   </late-process>
 </Process>

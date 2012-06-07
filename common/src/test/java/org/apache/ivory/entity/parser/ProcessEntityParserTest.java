@@ -86,15 +86,15 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertNotNull(process);
         Assert.assertEquals(process.getName(), "sample");
 
-        Assert.assertEquals(process.getConcurrency(), 1);
-        Assert.assertEquals(process.getExecution().name(), "LIFO");
+        Assert.assertEquals(process.getParallel(), 1);
+        Assert.assertEquals(process.getOrder().name(), "LIFO");
         Assert.assertEquals(process.getFrequency().toString(), "hours(1)");
         Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
 
         Assert.assertEquals(process.getInputs().getInputs().get(0).getName(), "impression");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getFeed(), "impressionFeed");
-        Assert.assertEquals(process.getInputs().getInputs().get(0).getStartInstance(), "today(0,0)");
-        Assert.assertEquals(process.getInputs().getInputs().get(0).getEndInstance(), "today(2,0)");
+        Assert.assertEquals(process.getInputs().getInputs().get(0).getStart(), "today(0,0)");
+        Assert.assertEquals(process.getInputs().getInputs().get(0).getEnd(), "today(2,0)");
         assertEquals(process.getInputs().getInputs().get(0).getPartition(), "*/US");
 
         Assert.assertEquals(process.getOutputs().getOutputs().get(0).getName(), "impOutput");
@@ -122,21 +122,21 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @Test
     public void testELExpressions() throws Exception {
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
-        process.getInputs().getInputs().get(0).setStartInstance("lastMonth(0,0,0)");
+        process.getInputs().getInputs().get(0).setStart("lastMonth(0,0,0)");
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) { }
 
-        process.getInputs().getInputs().get(0).setStartInstance("today(0,0)");
-        process.getInputs().getInputs().get(0).setEndInstance("lastMonth(0,0,0)");
+        process.getInputs().getInputs().get(0).setStart("today(0,0)");
+        process.getInputs().getInputs().get(0).setEnd("lastMonth(0,0,0)");
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) { }
 
-        process.getInputs().getInputs().get(0).setStartInstance("today(2,0)");
-        process.getInputs().getInputs().get(0).setEndInstance("today(0,0)");
+        process.getInputs().getInputs().get(0).setStart("today(2,0)");
+        process.getInputs().getInputs().get(0).setEnd("today(0,0)");
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
@@ -200,7 +200,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		Process process = parser
 				.parseAndValidate((ProcessEntityParserTest.class
 						.getResourceAsStream(PROCESS_XML)));
-		process.getInputs().getInputs().get(0).setStartInstance("today(-48,0)");
+		process.getInputs().getInputs().get(0).setStart("today(-48,0)");
 		parser.validate(process);
 	}
 	
@@ -237,7 +237,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		Process process = parser
 				.parseAndValidate((ProcessEntityParserTest.class
 						.getResourceAsStream(PROCESS_XML)));
-		process.getLateProcess().getLateInputs().get(0).setFeed("invalidInput");
+		process.getLateProcess().getLateInputs().get(0).setInput("invalidInput");
 		parser.parseAndValidate(process.toString());
 	}
 }

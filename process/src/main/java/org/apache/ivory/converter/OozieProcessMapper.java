@@ -122,8 +122,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // controls
         CONTROLS controls = new CONTROLS();
-        controls.setConcurrency(String.valueOf(process.getConcurrency()));
-        controls.setExecution(process.getExecution().name());
+        controls.setConcurrency(String.valueOf(process.getParallel()));
+        controls.setExecution(process.getOrder().name());
         coord.setControls(controls);
 
         // Configuration
@@ -142,8 +142,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 DATAIN datain = new DATAIN();
                 datain.setName(input.getName());
                 datain.setDataset(input.getName());
-                datain.setStartInstance(getELExpression(input.getStartInstance()));
-                datain.setEndInstance(getELExpression(input.getEndInstance()));
+                datain.setStartInstance(getELExpression(input.getStart()));
+                datain.setEndInstance(getELExpression(input.getEnd()));
                 if (coord.getInputEvents() == null)
                     coord.setInputEvents(new INPUTEVENTS());
                 coord.getInputEvents().getDataIn().add(datain);
@@ -158,7 +158,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(input.getName(), inputExpr);
                 if(process.getLateProcess() != null){
                 	for(LateInput li : process.getLateProcess().getLateInputs()){
-                    	if(input.getName().equals(li.getFeed())){
+                    	if(input.getName().equals(li.getInput())){
                     		ivoryInPaths.append(inputExpr).append('#');
                             ivoryInputFeeds.append(input.getName()).append("#");
                     	}

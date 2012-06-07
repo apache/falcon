@@ -21,15 +21,15 @@
 	<cluster name="corp"/>
 
 	<!-- when -->
-    <concurrency>1</concurrency>
-    <execution>LIFO</execution>
+    <parallel>1</parallel>
+    <order>LIFO</order>
     <frequency>hours(1)</frequency>
     <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" timezone="UTC"/>
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressions" start-instance="today(0,0)" end-instance="today(0,2)" /> 
-        <input name="click" feed="clicks" start-instance="yesterday(0,0)" end-instance="latest(0)" partition="*/US"/>
+        <input name="impression" feed="impressions" start="today(0,0)" end="today(0,2)" /> 
+        <input name="click" feed="clicks" start="yesterday(0,0)" end="latest(0)" partition="*/US"/>
     </inputs>
 
     <outputs>
@@ -46,7 +46,7 @@
     <retry policy="backoff" delay="hours(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+        <late-input input="impression" workflow-path="hdfs://impression/late/workflow" />
+        <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
     </late-process>
 </process>

@@ -540,15 +540,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private boolean canUpdateBundle(String cluster, Entity oldEntity, Entity newEntity) throws IvoryException {
-        int oldConcurrency = EntityUtil.getConcurrency(oldEntity);
-        int newConcurrency = EntityUtil.getConcurrency(newEntity);
+        int oldConcurrency = EntityUtil.getParallel(oldEntity);
+        int newConcurrency = EntityUtil.getParallel(newEntity);
 
         Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
         Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
 
         if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
             Entity clonedOldEntity = oldEntity.clone();
-            EntityUtil.setConcurrency(clonedOldEntity, newConcurrency);
+            EntityUtil.setParallel(clonedOldEntity, newConcurrency);
             EntityUtil.setEndTime(clonedOldEntity, cluster, newEndTime);
             if (clonedOldEntity.deepEquals(newEntity))
                 // only concurrency and end time are changed
@@ -582,7 +582,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             if (canUpdateBundle(cluster, oldEntity, newEntity)) {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
-                updateCoords(cluster, bundle.getId(), EntityUtil.getConcurrency(newEntity),
+                updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
                         EntityUtil.getEndTime(newEntity, cluster), null);
                 return;
             }
@@ -688,7 +688,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             endTime = getMinStartTime(newBundle);
         }
         if (endTime != null)
-            updateCoords(cluster, bundle.getId(), EntityUtil.getConcurrency(oldEntity), endTime, oldBundleStatus);
+            updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(oldEntity), endTime, oldBundleStatus);
     }
 
     private Date getMinStartTime(BundleJob bundle) {

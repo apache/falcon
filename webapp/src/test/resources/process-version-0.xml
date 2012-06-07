@@ -23,15 +23,15 @@
     <cluster name="testCluster" />
 
     <!-- when -->
-    <concurrency>1</concurrency>
-    <execution>LIFO</execution>
+    <parallel>1</parallel>
+    <order>LIFO</order>
     <frequency>hours(1)</frequency>
     <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z" timezone="UTC"/>
 
     <!-- what -->
     <inputs>
-        <input name="input1" feed="inputFeed1" start-instance="$ptime-6" end-instance="$ptime" /> 
-        <input name="input2" feed="inputFeed2" start-instance="$ptime" end-instance="$ptime" />
+        <input name="input1" feed="inputFeed1" start="$ptime-6" end="$ptime" /> 
+        <input name="input2" feed="inputFeed2" start="$ptime" end="$ptime" />
     </inputs>
 
     <outputs>
@@ -50,7 +50,7 @@
     <retry policy="backoff" delay="minutes(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input feed="impression" workflow-path="/impression/late/workflow" />
-        <late-input feed="clicks" workflow-path="/clicks/late/workflow" />
+        <late-input input="impression" workflow-path="/impression/late/workflow" />
+        <late-input input="clicks" workflow-path="/clicks/late/workflow" />
     </late-process>
 </process>

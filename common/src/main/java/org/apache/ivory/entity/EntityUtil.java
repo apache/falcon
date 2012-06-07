@@ -118,11 +118,11 @@ public class EntityUtil {
         return EntityUtil.parseDateUTC(clusterDef.getValidity().getStart());
     }
 
-    public static int getConcurrency(Entity entity) {
+    public static int getParallel(Entity entity) {
         if (entity.getEntityType() == EntityType.PROCESS) {
-            return getConcurrency((Process) entity);
+            return getParallel((Process) entity);
         } else {
-            return getConcurrency((Feed) entity);
+            return getParallel((Feed) entity);
         }
     }
 
@@ -142,31 +142,31 @@ public class EntityUtil {
         }
     }
 
-    public static void setConcurrency(Entity entity, int concurrency) {
+    public static void setParallel(Entity entity, int parallel) {
         if (entity.getEntityType() == EntityType.PROCESS) {
-            setConcurrency((Process) entity, concurrency);
+            setParallel((Process) entity, parallel);
         } else {
-            setConcurrency((Feed) entity, concurrency);
+            setParallel((Feed) entity, parallel);
         }
     }
 
-    public static int getConcurrency(Process process) {
-        return process.getConcurrency();
+    public static int getParallel(Process process) {
+        return process.getParallel();
     }
 
     public static void setStartDate(Process process, String cluster, Date startDate) {
         process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 
-    public static void setConcurrency(Process process, int concurrency) {
-        process.setConcurrency(concurrency);
+    public static void setParallel(Process process, int parallel) {
+        process.setParallel(parallel);
     }
 
     public static void setEndTime(Process process, String cluster, Date endDate) {
         process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
     }
 
-    public static int getConcurrency(Feed feed) {
+    public static int getParallel(Feed feed) {
         return 1;
     }
 
@@ -180,7 +180,7 @@ public class EntityUtil {
         clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
     }
 
-    public static void setConcurrency(Feed feed, int concurrency) {
+    public static void setParallel(Feed feed, int parallel) {
     }
 
     public static Date getNextStartTime(Date startTime, Frequency frequency, String timezone, Date now) {

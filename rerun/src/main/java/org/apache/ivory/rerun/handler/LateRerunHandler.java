@@ -108,8 +108,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 			Feed feed = null;
 			String endInstanceTime = "";
 			for (Input input : process.getInputs().getInputs()) {
-				if (input.getName().equals(lp.getFeed())) {
-					endInstanceTime = input.getEndInstance();
+				if (input.getName().equals(lp.getInput())) {
+					endInstanceTime = input.getEnd();
 					feed = store.get(EntityType.FEED, input.getFeed());
 					break;
 				}

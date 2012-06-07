@@ -72,7 +72,7 @@
                     <xs:documentation>where</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="concurrency">
+            <xs:element name="parallel">
                 <xs:annotation>
                     <xs:documentation>Defines how many workflow instances can run concurrently
                     </xs:documentation>
@@ -84,7 +84,7 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element type="execution-type" name="execution">
+            <xs:element type="execution-type" name="order">
                 <xs:annotation>
                     <xs:documentation>Defines the order in which ready workflow instances should run
                     </xs:documentation>
@@ -208,8 +208,8 @@
     <xs:complexType name="input">
         <xs:attribute type="IDENTIFIER" name="name" use="required" />
         <xs:attribute type="IDENTIFIER" name="feed" use="required" />
-        <xs:attribute type="xs:string" name="start-instance" use="required" />
-        <xs:attribute type="xs:string" name="end-instance" use="required" />
+        <xs:attribute type="xs:string" name="start" use="required" />
+        <xs:attribute type="xs:string" name="end" use="required" />
         <xs:attribute type="xs:string" name="partition" use="optional" />
     </xs:complexType>
 
@@ -255,7 +255,7 @@
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
-
+	
     <xs:simpleType name="policy-type">
         <xs:restriction base="xs:string">
             <xs:enumeration value="backoff" />
@@ -275,11 +275,11 @@
             </xs:element>
         </xs:sequence>
         <xs:attribute type="policy-type" name="policy" use="required" />
-        <xs:attribute type="frequency-type" name="delay" use="optional" />
+        <xs:attribute type="frequency-type" name="delay" use="required" />
     </xs:complexType>
 
     <xs:complexType name="late-input">
-        <xs:attribute type="IDENTIFIER" name="feed" use="required" />
+        <xs:attribute type="IDENTIFIER" name="input" use="required" />
         <xs:attribute type="xs:string" name="workflow-path" use="required" />
     </xs:complexType>
 

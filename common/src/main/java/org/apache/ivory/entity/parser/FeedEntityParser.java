@@ -144,7 +144,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             for (Input input : process.getInputs().getInputs()) {
                 if (!input.getFeed().equals(newFeed.getName())) continue;
                 CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
-                CrossEntityValidations.validateFeedRetentionPeriod(input.getStartInstance(),
+                CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(),
                         newFeed, clusterName);
                 CrossEntityValidations.validateInstanceRange(process, input, newFeed);
 

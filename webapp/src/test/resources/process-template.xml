@@ -2,13 +2,13 @@
 <process name="##name##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <cluster name="##cluster##" />
 	
-	<concurrency>1</concurrency>
-	<execution>FIFO</execution>
+	<parallel>1</parallel>
+	<order>FIFO</order>
     <frequency>days(1)</frequency>
 	
 	<validity timezone="UTC" end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
 	<inputs>
-		<input end-instance="today(0,0)" start-instance="today(0,0)"
+		<input end="today(0,0)" start="today(0,0)"
 			feed="##f1##" name="input"/>
 	</inputs>
 	<outputs>
@@ -21,6 +21,6 @@
 	<retry policy="backoff" delay="minutes(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input feed="input" workflow-path="/ivory/test/workflow" />
+        <late-input input="input" workflow-path="/ivory/test/workflow" />
     </late-process>
 </process>

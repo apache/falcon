@@ -76,8 +76,8 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         Input input = new Input();
         input.setFeed(feed3);
         input.setName("inputData2");
-        input.setStartInstance("today(20,0)");
-        input.setEndInstance("today(20,20)");
+        input.setStart("today(20,0)");
+        input.setEnd("today(20,20)");
         process.getInputs().getInputs().add(input);
 
         process.getValidity().setEnd(EntityUtil.formatDateUTC(new Date(new Date().getTime() + 60 * 60 * 1000)));
@@ -401,7 +401,6 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
     }
 
-   
     @Test
     public void testDelete() throws Exception {
 

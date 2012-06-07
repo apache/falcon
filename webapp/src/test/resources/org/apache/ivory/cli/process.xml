@@ -19,13 +19,13 @@
 <process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<cluster name="##clusterName##" />
-	<concurrency>2</concurrency>
-	<execution>LIFO</execution>
+	<parallel>2</parallel>
+	<order>LIFO</order>
 	<frequency>minutes(60)</frequency>
 
 	<validity timezone="UTC" end="2011-01-03T03:00Z" start="2010-01-01T01:00Z" />
 	<inputs>
-		<input end-instance="now(0,20)" start-instance="now(0,-60)"
+		<input end="now(0,20)" start="now(0,-60)"
 			feed="##inputFeedName##" name="inputData" />
 	</inputs>
 	<outputs>
@@ -40,7 +40,7 @@
 	<retry policy="backoff" delay="minutes(10)" attempts="3" />
 
 	<late-process policy="exp-backoff" delay="hours(1)">
-		<late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
-		<late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+		<late-input input="impression" workflow-path="hdfs://impression/late/workflow" />
+		<late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
 	</late-process>
 </process>

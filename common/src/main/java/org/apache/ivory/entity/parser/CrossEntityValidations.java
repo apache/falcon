@@ -21,8 +21,8 @@ public final class CrossEntityValidations {
             Date feedStart = EntityUtil.parseDateUTC(feedValidity.getStart());
             Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
 
-            String instStartEL = input.getStartInstance();
-            String instEndEL = input.getEndInstance();
+            String instStartEL = input.getStart();
+            String instEndEL = input.getEnd();
             ExpressionHelper evaluator = ExpressionHelper.get();
 
             ExpressionHelper.setReferenceDate(EntityUtil.parseDateUTC(process.getValidity().getStart()));

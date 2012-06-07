@@ -118,7 +118,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		{
 			for(LateInput li : process.getLateProcess().getLateInputs())
 			{
-				lateFeed.add(li.getFeed());
+				lateFeed.add(li.getInput());
 			}
 			for (int index = 0; index < pathGroups.length; index++) {
 				if(lateFeed.contains(inputFeeds[index])){
