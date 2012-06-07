@@ -34,7 +34,7 @@ import org.apache.ivory.entity.v0.process.Process;
  */
 public enum EntityType {
     FEED(Feed.class, "/feed-0.1.xsd", "name"), 
-    PROCESS(Process.class, "/process-0.1.xsd", "name", "validity.start"), 
+    PROCESS(Process.class, "/process-0.1.xsd", "name"), //TODO how to check for start?? should it be supported?s 
     CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name");
 
     private static final String NS = "http://www.w3.org/2001/XMLSchema";

@@ -26,13 +26,13 @@
 	<groups>summary</groups>
 
 	<frequency>hours(1)</frequency>
-
+    <timezone>UTC</timezone>
+    
 	<late-arrival cut-off="hours(6)" />
 
 	<clusters>
 		<cluster name="##clusterName##" type="source">
-			<validity start="2009-01-01T01:00Z" end="2012-12-31T23:59Z"
-				timezone="UTC" />
+			<validity start="2009-01-01T01:00Z" end="2012-12-31T23:59Z"/>
 			<retention limit="hours(10)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
 		</cluster>
 	</clusters>

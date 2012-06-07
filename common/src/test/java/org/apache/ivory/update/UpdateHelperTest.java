@@ -106,11 +106,11 @@ public class UpdateHelperTest extends AbstractTestBase {
         newFeed.getProperties().getProperties().remove(0);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        FeedHelper.getCluster(newFeed, process.getCluster().getName()).getValidity().setStart("123");
+        FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().setStart("123");
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        FeedHelper.getCluster(newFeed, process.getCluster().getName()).getValidity().
-                setStart(FeedHelper.getCluster(oldFeed, process.getCluster().getName()).getValidity().getStart());
+        FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().
+                setStart(FeedHelper.getCluster(oldFeed, process.getClusters().getClusters().get(0).getName()).getValidity().getStart());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
     }
 }

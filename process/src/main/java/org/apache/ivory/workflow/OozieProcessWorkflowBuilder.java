@@ -30,6 +30,7 @@ import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
@@ -40,12 +41,13 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     public Map<String, Properties> newWorkflowSchedule(Process process, List<String> clusters) throws IvoryException {
         Map<String, Path> pathMap = new HashMap<String, Path>();
         
-        if (!EntityUtil.parseDateUTC(process.getValidity().getStart())
-                .before(EntityUtil.parseDateUTC(process.getValidity().getEnd())))
-            // start time >= end time
-            return new HashMap<String, Properties>();
-
         for(String clusterName:clusters) {
+            org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
+            // start time >= end time
+            if (!EntityUtil.parseDateUTC(processCluster.getValidity().getStart())
+                    .before(EntityUtil.parseDateUTC(processCluster.getValidity().getEnd())))
+                continue;
+            
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
             Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
             OozieProcessMapper mapper = new OozieProcessMapper(process);
@@ -59,8 +61,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
-        return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(process.getValidity().getStart()),
-                process.getFrequency(), process.getValidity().getTimezone(), now);
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
+        return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(processCluster.getValidity().getStart()),
+                process.getFrequency(), process.getTimezone(), now);
     }
 
     @Override

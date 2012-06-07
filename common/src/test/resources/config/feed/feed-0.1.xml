@@ -26,18 +26,17 @@
     <availabilityFlag>_SUCCESS</availabilityFlag>
 
     <frequency>hours(1)</frequency>
-
+    <timezone>UTC</timezone>
+    
     <late-arrival cut-off="hours(6)" />
 
     <clusters>
         <cluster name="testCluster" type="source">
-            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
-                      timezone="UTC" />
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
             <retention limit="hours(48)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
         <cluster name="backupCluster" type="target">
-            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
-                      timezone="UTC" />
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
             <retention limit="hours(6)" action="archive" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>

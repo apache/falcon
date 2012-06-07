@@ -17,7 +17,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 @Test(enabled=false)
-public class InstanceManagerTest extends AbstractTestBase {
+public class ProcessInstanceManagerTest extends AbstractTestBase {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
     protected void schedule() throws Exception {
         scheduleProcess();
@@ -26,7 +26,7 @@ public class InstanceManagerTest extends AbstractTestBase {
 
     public void testGetRunningInstances() throws Exception {
         schedule();
-        InstancesResult response = this.service.path("api/processinstance/running/" + processName)
+        InstancesResult response = this.service.path("api/instance/running/process/" + processName)
                 .header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON).get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -43,7 +43,7 @@ public class InstanceManagerTest extends AbstractTestBase {
 
     public void testGetInstanceStatus() throws Exception {
         schedule();
-        InstancesResult response = this.service.path("api/processinstance/status/" + processName)
+        InstancesResult response = this.service.path("api/instance/status/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -55,7 +55,7 @@ public class InstanceManagerTest extends AbstractTestBase {
     public void testReRunInstances() throws Exception {
         testKillInstances();
 
-        InstancesResult response = this.service.path("api/processinstance/rerun/" + processName)
+        InstancesResult response = this.service.path("api/instance/rerun/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
 
@@ -69,7 +69,7 @@ public class InstanceManagerTest extends AbstractTestBase {
 
     public void testKillInstances() throws Exception {
         schedule();
-        InstancesResult response = this.service.path("api/processinstance/kill/" + processName)
+        InstancesResult response = this.service.path("api/instance/kill/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -82,7 +82,7 @@ public class InstanceManagerTest extends AbstractTestBase {
 
     public void testSuspendInstances() throws Exception {
         schedule();
-        InstancesResult response = this.service.path("api/processinstance/suspend/" + processName)
+        InstancesResult response = this.service.path("api/instance/suspend/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -96,7 +96,7 @@ public class InstanceManagerTest extends AbstractTestBase {
     public void testResumesInstances() throws Exception {
         testSuspendInstances();
         
-        InstancesResult response = this.service.path("api/processinstance/resume/" + processName)
+        InstancesResult response = this.service.path("api/instance/resume/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());

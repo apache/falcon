@@ -65,7 +65,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     public Date getNextStartTime(Feed feed, String cluster, Date now) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster);
         return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(feedCluster.getValidity().getStart()),
-                feed.getFrequency(), feedCluster.getValidity().getTimezone(), now);
+                feed.getFrequency(), feed.getTimezone(), now);
     }
 
 	@Override

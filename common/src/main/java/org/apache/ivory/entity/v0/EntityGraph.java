@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
@@ -39,11 +40,11 @@ public class EntityGraph implements ConfigurationChangeListener {
 
     private static EntityGraph instance = new EntityGraph();
 
-    private Map<Node, Set<Node>> graph =
-            new ConcurrentHashMap<Node, Set<Node>>();
+    private Map<Node, Set<Node>> graph = new ConcurrentHashMap<Node, Set<Node>>();
 
-    private EntityGraph() { }
-    
+    private EntityGraph() {
+    }
+
     public static EntityGraph get() {
         return instance;
     }
@@ -53,7 +54,7 @@ public class EntityGraph implements ConfigurationChangeListener {
         if (graph.containsKey(entityNode)) {
             ConfigurationStore store = ConfigurationStore.get();
             Set<Entity> dependents = new HashSet<Entity>();
-            for (Node node: graph.get(entityNode)) {
+            for (Node node : graph.get(entityNode)) {
                 Entity dependentEntity = store.get(node.type, node.name);
                 assert dependentEntity != null : "Unable to find " + node;
                 dependents.add(dependentEntity);
@@ -75,7 +76,8 @@ public class EntityGraph implements ConfigurationChangeListener {
                 nodeEdges = getEdgesFor((Feed) entity);
                 break;
         }
-        if (nodeEdges == null) return;
+        if (nodeEdges == null)
+            return;
         LOG.debug("Adding edges for " + entity.getName() + ": " + nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
@@ -99,7 +101,8 @@ public class EntityGraph implements ConfigurationChangeListener {
                 nodeEdges = getEdgesFor((Feed) entity);
                 break;
         }
-        if (nodeEdges == null) return;
+        if (nodeEdges == null)
+            return;
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
@@ -112,8 +115,7 @@ public class EntityGraph implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onChange(Entity oldEntity, Entity newEntity)
-            throws IvoryException {
+    public void onChange(Entity oldEntity, Entity newEntity) throws IvoryException {
         onRemove(oldEntity);
         onAdd(newEntity);
     }
@@ -145,10 +147,14 @@ public class EntityGraph implements ConfigurationChangeListener {
                 feedEdges.add(processNode);
             }
         }
-        Node clusterNode = new Node(EntityType.CLUSTER, process.getCluster().getName());
-        processEdges.add(clusterNode);
-        nodeEdges.put(clusterNode, new HashSet<Node>());
-        nodeEdges.get(clusterNode).add(processNode);
+
+        for (Cluster cluster : process.getClusters().getClusters()) {
+            Node clusterNode = new Node(EntityType.CLUSTER, cluster.getName());
+            processEdges.add(clusterNode);
+            nodeEdges.put(clusterNode, new HashSet<Node>());
+            nodeEdges.get(clusterNode).add(processNode);
+        }
+        
         return nodeEdges;
     }
 
@@ -158,8 +164,7 @@ public class EntityGraph implements ConfigurationChangeListener {
         Set<Node> feedEdges = new HashSet<Node>();
         nodeEdges.put(feedNode, feedEdges);
 
-        for (org.apache.ivory.entity.v0.feed.Cluster cluster :
-                feed.getClusters().getClusters()) {
+        for (org.apache.ivory.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
             Node clusterNode = new Node(EntityType.CLUSTER, cluster.getName());
             if (!nodeEdges.containsKey(clusterNode)) {
                 nodeEdges.put(clusterNode, new HashSet<Node>());
@@ -183,16 +188,19 @@ public class EntityGraph implements ConfigurationChangeListener {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
 
             Node node = (Node) o;
 
-            boolean nameEqual = name != null ?
-                    !name.equals(node.name) : node.name != null;
+            boolean nameEqual = name != null ? !name.equals(node.name) : node.name != null;
 
-            if (nameEqual) return false;
-            if (type != node.type) return false;
+            if (nameEqual)
+                return false;
+            if (type != node.type)
+                return false;
 
             return true;
         }

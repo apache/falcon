@@ -49,6 +49,7 @@ import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Validity;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
@@ -87,10 +88,11 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {
         assertEquals("IVORY_PROCESS_DEFAULT_" + process.getName(), coord.getName());
-        assertEquals(process.getValidity().getStart(), coord.getStart());
-        assertEquals(process.getValidity().getEnd(), coord.getEnd());
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        assertEquals(processValidity.getStart(), coord.getStart());
+        assertEquals(processValidity.getEnd(), coord.getEnd());
         assertEquals("${coord:"+process.getFrequency().toString()+"}", coord.getFrequency());
-        assertEquals(process.getValidity().getTimezone(), coord.getTimezone());
+        assertEquals(process.getTimezone().getID(), coord.getTimezone());
         
         assertEquals(process.getParallel()+"", coord.getControls().getConcurrency());
         assertEquals(process.getOrder().name(), coord.getControls().getExecution());
@@ -116,7 +118,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());
         SYNCDATASET ds = (SYNCDATASET) coord.getDatasets().getDatasetOrAsyncDataset().get(0);
         assertEquals(feed.getClusters().getClusters().get(0).getValidity().getStart(), ds.getInitialInstance());
-        assertEquals(feed.getClusters().getClusters().get(0).getValidity().getTimezone(), ds.getTimezone());
+        assertEquals(feed.getTimezone().getID(), ds.getTimezone());
         assertEquals("${coord:"+feed.getFrequency().toString()+"}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());
         assertEquals("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath(), ds.getUriTemplate());        

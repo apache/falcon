@@ -459,10 +459,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
             for (CoordinatorJob coord : applicableCoords) {
                 Frequency freq = createFrequency(coord.getFrequency(), coord.getTimeUnit());
-                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, coord.getTimeZone(), start);
+                TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
+                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
                 final Date iterEnd = (coord.getEndTime().before(end) ? coord.getEndTime() : end);
                 while (!iterStart.after(iterEnd)) {
-                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, coord.getTimeZone(), iterStart);
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterStart);
                     String actionId = coord.getId() + "@" + sequence;
                     CoordinatorAction coordActionInfo = null;
                     try {

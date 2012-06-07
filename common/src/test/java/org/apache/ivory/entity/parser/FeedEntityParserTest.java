@@ -101,8 +101,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				.getStart(), "2011-11-01T00:00Z");
 		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
 				.getEnd(), "2011-12-31T00:00Z");
-		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
-				.getTimezone(), "UTC");
+		assertEquals(feed.getTimezone().getID(), "UTC");
 		assertEquals(feed.getClusters().getClusters().get(0).getRetention()
 				.getAction(), ActionType.DELETE);
 		assertEquals(feed.getClusters().getClusters().get(0).getRetention()
@@ -116,8 +115,6 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				.getStart(), "2011-11-01T00:00Z");
 		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
 				.getEnd(), "2011-12-31T00:00Z");
-		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
-				.getTimezone(), "UTC");
 		assertEquals(feed.getClusters().getClusters().get(1).getRetention()
 				.getAction(), ActionType.ARCHIVE);
 		assertEquals(feed.getClusters().getClusters().get(1).getRetention()

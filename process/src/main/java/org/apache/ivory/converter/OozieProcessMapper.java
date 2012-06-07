@@ -33,6 +33,7 @@ import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
+import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -115,9 +116,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         // coord attributes
         coord.setName(coordName);
-        coord.setStart(process.getValidity().getStart());
-        coord.setEnd(process.getValidity().getEnd());
-        coord.setTimezone(process.getValidity().getTimezone());
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster.getName());
+        coord.setStart(processCluster.getValidity().getStart());
+        coord.setEnd(processCluster.getValidity().getEnd());
+        coord.setTimezone(process.getTimezone().getID());
         coord.setFrequency("${coord:" + process.getFrequency().toString() + "}");
 
         // controls
@@ -256,7 +258,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
-        syncdataset.setTimezone(feedCluster.getValidity().getTimezone());
+        syncdataset.setTimezone(feed.getTimezone().getID());
 		if (feed.getAvailabilityFlag() == null) {
 			syncdataset.setDoneFlag("");
 		} else {

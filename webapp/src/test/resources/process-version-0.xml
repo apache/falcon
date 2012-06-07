@@ -20,14 +20,18 @@
  -->
 <process name="sample"  xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <!-- where -->
-    <cluster name="testCluster" />
+    <clusters>
+    <cluster name="testCluster">
+    <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z"/>
+    </cluster>
+    </clusters>
 
     <!-- when -->
     <parallel>1</parallel>
     <order>LIFO</order>
     <frequency>hours(1)</frequency>
-    <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z" timezone="UTC"/>
-
+    <timezone>UTC</timezone>
+    
     <!-- what -->
     <inputs>
         <input name="input1" feed="inputFeed1" start="$ptime-6" end="$ptime" /> 
@@ -41,10 +45,10 @@
 
     <!-- how -->
     <properties>
-    	<property name="name" value="value"/>
-    	<property name="name" value="value"/>
+        <property name="name" value="value" />
+        <property name="name" value="value" />
     </properties>
-    
+
     <workflow engine="oozie" path="hdfs://path/to/workflow" />
 
     <retry policy="backoff" delay="minutes(10)" attempts="3" />

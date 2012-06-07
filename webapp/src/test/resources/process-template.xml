@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <process name="##name##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <cluster name="##cluster##" />
-	
-	<parallel>1</parallel>
-	<order>FIFO</order>
+    <clusters>
+        <cluster name="##cluster##">
+            <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
+        </cluster>
+    </clusters>
+
+    <parallel>1</parallel>
+    <order>FIFO</order>
     <frequency>days(1)</frequency>
-	
-	<validity timezone="UTC" end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
-	<inputs>
-		<input end="today(0,0)" start="today(0,0)"
-			feed="##f1##" name="input"/>
-	</inputs>
-	<outputs>
-		<output instance="now(0,0)" feed="##f2##"
-			name="output" />
-	</outputs>
-	<properties>
-	</properties>
-	<workflow engine="oozie" path="/ivory/test/workflow" />
-	<retry policy="backoff" delay="minutes(10)" attempts="3" />
+    <timezone>UTC</timezone>
+    
+    <inputs>
+        <input end="today(0,0)" start="today(0,0)" feed="##f1##" name="input" />
+    </inputs>
+    <outputs>
+        <output instance="now(0,0)" feed="##f2##" name="output" />
+    </outputs>
+    <properties>
+    </properties>
+    <workflow engine="oozie" path="/ivory/test/workflow" />
+    <retry policy="backoff" delay="minutes(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
         <late-input input="input" workflow-path="/ivory/test/workflow" />

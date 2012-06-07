@@ -45,8 +45,9 @@ public final class LogProvider {
 	public static Instance getLogUrl(Entity entity, Instance Instance,
 			Tag type, String runId) throws IvoryException {
         Process process = (Process) entity;
+        //TODO Fix it for multiple clusters just like for feed
 		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
-				process.getCluster().getName());
+				process.getClusters().getClusters().get(0).getName());
 		ExternalId externalId = getExternalId(process.getName(), type,
 				Instance.instance);
 		try {

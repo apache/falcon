@@ -88,7 +88,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         retentionApp.setName(coordName);
         retentionApp.setEnd(feedCluster.getValidity().getEnd());
         retentionApp.setStart(EntityUtil.formatDateUTC(new Date()));
-        retentionApp.setTimezone(feedCluster.getValidity().getTimezone());
+        retentionApp.setTimezone(feed.getTimezone().getID());
         TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
         if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
             retentionApp.setFrequency("${coord:hours(6)}");
@@ -118,7 +118,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             String feedPathMask = FeedHelper.getLocation(feed, LocationType.DATA).getPath();
 
             props.put("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{"));
-            props.put("timeZone", feedCluster.getValidity().getTimezone());
+            props.put("timeZone", feed.getTimezone().getID());
             props.put("frequency", feed.getFrequency().getTimeUnit().name());
             props.put("limit", feedCluster.getRetention().getLimit().toString());
             props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
@@ -171,7 +171,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     .formatDateUTC(trgStartDate));
             replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? EntityUtil.formatDateUTC(srcEndDate) : EntityUtil
                     .formatDateUTC(trgEndDate));
-            replicationCoord.setTimezone(FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getTimezone());
+            replicationCoord.setTimezone(feed.getTimezone().getID());
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
@@ -198,7 +198,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private void setDatasetValues(SYNCDATASET dataset, Feed feed, Cluster cluster) {
         dataset.setInitialInstance(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getStart());
-        dataset.setTimezone(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getTimezone());
+        dataset.setTimezone(feed.getTimezone().getID());
         dataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
     }
 

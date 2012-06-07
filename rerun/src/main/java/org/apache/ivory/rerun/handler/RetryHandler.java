@@ -51,8 +51,9 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 						.getRetryPolicy(policy);
                 long delayTime = rerunPolicy.getDelay(delay,
 						Integer.parseInt(runId));
-				RetryEvent event = new RetryEvent(wfEngine, processObj
-						.getCluster().getName(), wfId, msgReceivedTime,
+                //TODO handle for multiple clusters
+				RetryEvent event = new RetryEvent(wfEngine, processObj.getClusters().getClusters().get(0).getName(), 
+				        wfId, msgReceivedTime,
 						delayTime, processName, nominalTime, intRunId,
 						attempts, 0);
 				offerToQueue(event);

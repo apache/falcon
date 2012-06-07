@@ -7,9 +7,11 @@ import org.testng.annotations.Test;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class EntityUtilTest {
-
+    private TimeZone tz = TimeZone.getTimeZone("UTC");
+    
     private Date getDate(String date) throws Exception {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm Z");
         return format.parse(date);
@@ -23,7 +25,7 @@ public class EntityUtilTest {
 
         Frequency frequency = new Frequency("hours(1)");
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
-                frequency, "UTC", now));
+                frequency, tz, now));
     }
 
     @Test
@@ -34,7 +36,7 @@ public class EntityUtilTest {
 
         Frequency frequency = new Frequency("days(7)");
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
-                frequency, "UTC", now));
+                frequency, tz, now));
     }
 
     @Test
@@ -45,7 +47,7 @@ public class EntityUtilTest {
 
         Frequency frequency = new Frequency("days(7)");
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
-                frequency, "UTC", now));
+                frequency, tz, now));
     }
 
     @Test
@@ -56,7 +58,7 @@ public class EntityUtilTest {
 
         Frequency frequency = new Frequency("days(7)");
         Assert.assertEquals(newStart, EntityUtil.getNextStartTime(start,
-                frequency, "UTC", now));
+                frequency, tz, now));
     }
 
 
@@ -67,7 +69,7 @@ public class EntityUtilTest {
 
         Frequency frequency = new Frequency("hours(1)");
         Assert.assertEquals(199, EntityUtil.getInstanceSequence(start,
-                frequency, "UTC", instance));
+                frequency, tz, instance));
     }
 
     @Test
@@ -77,7 +79,7 @@ public class EntityUtilTest {
 
         Frequency frequency = Frequency.fromString("hours(1)");
         Assert.assertEquals(198, EntityUtil.getInstanceSequence(start,
-                frequency,"UTC", instance));
+                frequency,tz, instance));
     }
 
     @Test
@@ -87,6 +89,6 @@ public class EntityUtilTest {
 
         Frequency frequency = Frequency.fromString("hours(1)");
         Assert.assertEquals(199, EntityUtil.getInstanceSequence(start,
-                frequency, "UTC", instance));
+                frequency, tz, instance));
     }
 }

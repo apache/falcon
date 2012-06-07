@@ -25,18 +25,16 @@
     <groups>online,bi</groups>
 
     <frequency>hours(1)</frequency>
-
+    <timezone>UTC</timezone>
     <late-arrival cut-off="hours(6)" />
 
     <clusters>
         <cluster name="corp" type="source">
-            <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"
-                      timezone="UTC" />
+            <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"/>
             <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
         <cluster name="backupCluster" type="target">
-            <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"
-                      timezone="UTC" />
+            <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"/>
             <retention limit="hours(6)" action="archive" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>

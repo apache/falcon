@@ -17,12 +17,8 @@
  */
 package org.apache.ivory.rerun.handler;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -33,13 +29,11 @@ import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.expression.ExpressionHelper;
-import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
-import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.util.GenericAlert;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
+import org.apache.ivory.rerun.queue.DelayedQueue;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		extends AbstractRerunHandler<LaterunEvent, M> {
@@ -58,8 +52,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 
 		LOG.debug("Scheduling the late rerun for process instance : "
 				+ processName + ":" + nominalTime + " And WorkflowId: " + wfId);
-		LaterunEvent event = new LaterunEvent(wfEngine, processObj.getCluster()
-				.getName(), wfId, msgInsertTime.getTime(), wait, processName,
+		//TODO handle for multiple clusters
+		LaterunEvent event = new LaterunEvent(wfEngine, processObj.getClusters().getClusters().get(0).getName(), 
+		        wfId, msgInsertTime.getTime(), wait, processName,
 				nominalTime, intRunId);
 		offerToQueue(event);
 

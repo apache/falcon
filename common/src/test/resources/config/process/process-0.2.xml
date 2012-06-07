@@ -11,13 +11,16 @@
 	License for the specific language governing permissions and ~ limitations
 	under the License. -->
 <process name="sample" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<cluster name="testCluster" />
+    <clusters>
+        <cluster name="testCluster">
+            <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" />
+        </cluster>
+    </clusters>
 	<!-- when -->
 	<parallel>1</parallel>
 	<order>LIFO</order>
 	<frequency>hours(1)</frequency>
-	<validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"
-		timezone="UTC" />
+    <timezone>UTC</timezone>
 
 	<!-- what -->
 	<inputs>

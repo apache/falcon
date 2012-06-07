@@ -11,7 +11,6 @@ import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.WorkflowNameBuilder.WorkflowName;
@@ -101,11 +100,13 @@ public class EntityUtil {
     }
 
     public static Date getEndTime(Process process, String cluster) throws IvoryException {
-        return EntityUtil.parseDateUTC(process.getValidity().getEnd());
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
+        return EntityUtil.parseDateUTC(processCluster.getValidity().getEnd());
     }
 
     public static Date getStartTime(Process process, String cluster) throws IvoryException {
-        return EntityUtil.parseDateUTC(process.getValidity().getStart());
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
+        return EntityUtil.parseDateUTC(processCluster.getValidity().getStart());
     }
 
     public static Date getEndTime(Feed feed, String cluster) throws IvoryException {
@@ -155,7 +156,8 @@ public class EntityUtil {
     }
 
     public static void setStartDate(Process process, String cluster, Date startDate) {
-        process.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
+        processCluster.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
     }
 
     public static void setParallel(Process process, int parallel) {
@@ -163,7 +165,8 @@ public class EntityUtil {
     }
 
     public static void setEndTime(Process process, String cluster, Date endDate) {
-        process.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
+        processCluster.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
     }
 
     public static int getParallel(Feed feed) {
@@ -183,11 +186,11 @@ public class EntityUtil {
     public static void setParallel(Feed feed, int parallel) {
     }
 
-    public static Date getNextStartTime(Date startTime, Frequency frequency, String timezone, Date now) {
+    public static Date getNextStartTime(Date startTime, Frequency frequency, TimeZone timezone, Date now) {
         if (startTime.after(now))
             return startTime;
 
-        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timezone));
+        Calendar startCal = Calendar.getInstance(timezone);
         startCal.setTime(startTime);
 
         int count = 0;
@@ -216,11 +219,11 @@ public class EntityUtil {
         return startCal.getTime();
     }
 
-    public static int getInstanceSequence(Date startTime, Frequency frequency, String timezone, Date instanceTime) {
+    public static int getInstanceSequence(Date startTime, Frequency frequency, TimeZone tz, Date instanceTime) {
         if (startTime.after(instanceTime))
             return -1;
 
-        Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(timezone));
+        Calendar startCal = Calendar.getInstance(tz);
         startCal.setTime(startTime);
 
         int count = 0;
@@ -304,7 +307,10 @@ public class EntityUtil {
 	            
 	        case PROCESS:
 	            Process process = (Process) entity;
-	            return new String[] { process.getCluster().getName() };
+                clusters = new ArrayList<String>();
+                for(org.apache.ivory.entity.v0.process.Cluster cluster:process.getClusters().getClusters())
+                    clusters.add(cluster.getName());
+                return clusters.toArray(new String[clusters.size()]);
 	    }  
 	    throw new IllegalArgumentException("Unhandled entity type: " + entity.getEntityType());
 	}

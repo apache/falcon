@@ -27,6 +27,7 @@ import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.Partition;
 import org.apache.ivory.entity.v0.feed.Partitions;
+import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -104,9 +105,10 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertEquals(process.getProperties().getProperties().get(0).getName(), "name1");
         Assert.assertEquals(process.getProperties().getProperties().get(0).getValue(), "value1");
 
-        Assert.assertEquals(process.getValidity().getStart(), "2011-11-02T00:00Z");
-        Assert.assertEquals(process.getValidity().getEnd(), "2011-12-30T00:00Z");
-        Assert.assertEquals(process.getValidity().getTimezone(), "UTC");
+        Cluster processCluster = process.getClusters().getClusters().get(0);
+        Assert.assertEquals(processCluster.getValidity().getStart(), "2011-11-02T00:00Z");
+        Assert.assertEquals(processCluster.getValidity().getEnd(), "2011-12-30T00:00Z");
+        Assert.assertEquals(process.getTimezone().getID(), "UTC");
 
         Assert.assertEquals(process.getWorkflow().getEngine().name().toLowerCase(), "oozie");
         Assert.assertEquals(process.getWorkflow().getPath(), "/path/to/workflow");
@@ -153,7 +155,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidProcess() throws Exception {
         Process process = (Process) parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
-        process.getCluster().setName("invalid cluster");
+        process.getClusters().getClusters().get(0).setName("invalid cluster");
         parser.validate(process);
     }
 
@@ -191,7 +193,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		Process process = parser
 				.parseAndValidate((ProcessEntityParserTest.class
 						.getResourceAsStream(PROCESS_XML)));
-		process.getValidity().setStart("2011-12-31T00:00Z");
+		process.getClusters().getClusters().get(0).getValidity().setStart("2011-12-31T00:00Z");
 		parser.validate(process);
 	}
 	

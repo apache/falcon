@@ -50,8 +50,10 @@ public class EntityGraphTest extends AbstractTestBase{
         Feed f2 = addInput(process, "f2", cluster);
         Feed f3 = addOutput(process, "f3", cluster);
         Feed f4 = addOutput(process, "f4", cluster);
-        process.setCluster(new org.apache.ivory.entity.v0.process.Cluster());
-        process.getCluster().setName("c1");
+        org.apache.ivory.entity.v0.process.Cluster processCluster = new org.apache.ivory.entity.v0.process.Cluster();
+        processCluster.setName("c1");
+        process.setClusters(new org.apache.ivory.entity.v0.process.Clusters());
+        process.getClusters().getClusters().add(processCluster);
 
         store.publish(EntityType.CLUSTER, cluster);
         store.publish(EntityType.FEED, f1);
@@ -145,8 +147,10 @@ public class EntityGraphTest extends AbstractTestBase{
         process.setName("rp1");
         Cluster cluster = new Cluster();
         cluster.setName("rc1");
-        process.setCluster(new org.apache.ivory.entity.v0.process.Cluster());
-        process.getCluster().setName("rc1");
+        org.apache.ivory.entity.v0.process.Cluster processCluster = new org.apache.ivory.entity.v0.process.Cluster();
+        processCluster.setName("rc1");
+        process.setClusters(new org.apache.ivory.entity.v0.process.Clusters());
+        process.getClusters().getClusters().add(processCluster);
 
         store.publish(EntityType.CLUSTER, cluster);
         store.publish(EntityType.PROCESS, process);
@@ -180,10 +184,14 @@ public class EntityGraphTest extends AbstractTestBase{
         Feed f3 = addOutput(p1, "af3", cluster);
         Feed f2 = addOutput(p2, "af2", cluster);
         attachInput(p2, f3);
-        p1.setCluster(new org.apache.ivory.entity.v0.process.Cluster());
-        p1.getCluster().setName("ac1");
-        p2.setCluster(new org.apache.ivory.entity.v0.process.Cluster());
-        p2.getCluster().setName("ac1");
+        org.apache.ivory.entity.v0.process.Cluster processCluster = new org.apache.ivory.entity.v0.process.Cluster();
+        processCluster.setName("ac1");
+        p1.setClusters(new org.apache.ivory.entity.v0.process.Clusters());
+        p1.getClusters().getClusters().add(processCluster);
+        processCluster = new org.apache.ivory.entity.v0.process.Cluster();
+        processCluster.setName("ac1");
+        p2.setClusters(new org.apache.ivory.entity.v0.process.Clusters());
+        p2.getClusters().getClusters().add(processCluster);
 
         store.publish(EntityType.CLUSTER, cluster);
         store.publish(EntityType.FEED, f1);

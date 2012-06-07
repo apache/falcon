@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -34,6 +35,7 @@ import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Outputs;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Validity;
 
 import java.net.ConnectException;
 import java.util.ArrayList;
@@ -55,42 +57,40 @@ public class ProcessEntityParser extends EntityParser<Process> {
     @Override
     public void validate(Process process) throws IvoryException {
         // check if dependent entities exists
-        String clusterName = process.getCluster().getName();
-        validateEntityExists(EntityType.CLUSTER, clusterName);
-        validateProcessValidity(process.getValidity().getStart(), process.getValidity().getEnd());
-        validateHDFSpaths(process);
+        for (org.apache.ivory.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
+            String clusterName = cluster.getName();
+            validateEntityExists(EntityType.CLUSTER, clusterName);
+            validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
+            validateHDFSpaths(process, clusterName);
 
-        if (process.getInputs() != null) {
-            for (Input input : process.getInputs().getInputs()) {
-                validateEntityExists(EntityType.FEED, input.getFeed());
-                Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
-                CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
-                CrossEntityValidations.validateInstanceRange(process, input, feed);
-                if (input.getPartition() != null) {
-                    CrossEntityValidations.validateInputPartition(input, feed);
+            if (process.getInputs() != null) {
+                for (Input input : process.getInputs().getInputs()) {
+                    validateEntityExists(EntityType.FEED, input.getFeed());
+                    Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                    CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
+                    CrossEntityValidations.validateInstanceRange(process, input, feed);
+                    if (input.getPartition() != null) {
+                        CrossEntityValidations.validateInputPartition(input, feed);
+                    }
+                }
+            }
+
+            if (process.getOutputs() != null) {
+                for (Output output : process.getOutputs().getOutputs()) {
+                    validateEntityExists(EntityType.FEED, output.getFeed());
+                    Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
+                    CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
+                    CrossEntityValidations.validateInstance(process, output, feed);
                 }
             }
         }
-
-        if (process.getOutputs() != null) {
-            for (Output output : process.getOutputs().getOutputs()) {
-                validateEntityExists(EntityType.FEED, output.getFeed());
-                Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
-                CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
-                CrossEntityValidations.validateInstance(process, output, feed);
-            }
-        }
-        
-        validateDatasetName(process.getInputs(),process.getOutputs());
+        validateDatasetName(process.getInputs(), process.getOutputs());
         validateLateInputs(process);
     }
 
-	private void validateHDFSpaths(Process process) throws IvoryException {
-
-        String clusterName = process.getCluster().getName();
-        org.apache.ivory.entity.v0.cluster.Cluster cluster =
-                ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+    private void validateHDFSpaths(Process process, String clusterName) throws IvoryException {
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String workflowPath = process.getWorkflow().getPath();
         String nameNode = getNameNode(cluster, clusterName);
         try {
@@ -141,32 +141,31 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException("Invalid end date: " + end);
         }
     }
-    
+
     private void validateDatasetName(Inputs inputs, Outputs outputs) throws ValidationException {
-    	Set<String> datasetNames = new HashSet<String>();
-    	for(Input input:inputs.getInputs()){
-    		if(!datasetNames.add(input.getName())){
-    			throw new ValidationException("Input name: "+input.getName() +" is already used");
-    		}
-    	}
-    	for(Output output:outputs.getOutputs()){
-    		if(!datasetNames.add(output.getName())){
-    			throw new ValidationException("Output name: "+output.getName() +" is already used");
-    		}
-    	}		
+        Set<String> datasetNames = new HashSet<String>();
+        for (Input input : inputs.getInputs()) {
+            if (!datasetNames.add(input.getName())) {
+                throw new ValidationException("Input name: " + input.getName() + " is already used");
+            }
+        }
+        for (Output output : outputs.getOutputs()) {
+            if (!datasetNames.add(output.getName())) {
+                throw new ValidationException("Output name: " + output.getName() + " is already used");
+            }
+        }
     }
-    
-    private void validateLateInputs(Process process) throws ValidationException
-    {
-    	List<String> feedName = new ArrayList<String>();
-    	for(Input in : process.getInputs().getInputs()){
-    		feedName.add(in.getName());
-    	}
-    	if(process.getLateProcess() != null){
-    		for(LateInput lp : process.getLateProcess().getLateInputs()){
-    			if(!feedName.contains(lp.getInput()))
-    				throw new ValidationException("Late Input: "+lp.getInput() +" is not specified in the inputs");
-    		}
-    	}
+
+    private void validateLateInputs(Process process) throws ValidationException {
+        List<String> feedName = new ArrayList<String>();
+        for (Input in : process.getInputs().getInputs()) {
+            feedName.add(in.getName());
+        }
+        if (process.getLateProcess() != null) {
+            for (LateInput lp : process.getLateProcess().getLateInputs()) {
+                if (!feedName.contains(lp.getInput()))
+                    throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
+            }
+        }
     }
 }

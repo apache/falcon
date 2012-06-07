@@ -67,9 +67,10 @@
     </xs:element>
     <xs:complexType name="process">
         <xs:sequence>
-            <xs:element type="cluster" name="cluster">
+            <xs:element type="clusters" name="clusters">
                 <xs:annotation>
-                    <xs:documentation>where</xs:documentation>
+                    <xs:documentation>Defines the clusters where the workflow should run
+                    </xs:documentation>
                 </xs:annotation>
             </xs:element>
             <xs:element name="parallel">
@@ -96,11 +97,15 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element type="validity" name="validity">
-                <xs:annotation>
-                    <xs:documentation>Defines how long the workflow should run
-                    </xs:documentation>
-                </xs:annotation>
+            <xs:element name="timezone">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" printMethod="org.apache.ivory.entity.v0.EntityHelper.getTimeZoneId" />
+                        </xs:appinfo>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string" />
+                </xs:simpleType>
             </xs:element>
             <xs:element type="inputs" name="inputs">
                 <xs:annotation>
@@ -150,18 +155,38 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:complexType name="cluster">
+    <xs:complexType name="clusters">
         <xs:annotation>
-            <xs:documentation>Defines the cluster where the workflow should run
+            <xs:documentation>
+                A list of clusters.
             </xs:documentation>
         </xs:annotation>
+        <xs:sequence>
+            <xs:element type="cluster" name="cluster" maxOccurs="unbounded" minOccurs="1">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="cluster">
+        <xs:annotation>
+            <xs:documentation>
+                Defines the cluster where the workflow should run. In addition, it also defines the validity of the workflow on this cluster
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="validity" name="validity" />
+        </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required" />
     </xs:complexType>
 
     <xs:complexType name="validity">
+        <xs:annotation>
+            <xs:documentation>
+                Defines the vailidity of the workflow as start and end time
+            </xs:documentation>
+        </xs:annotation>
         <xs:attribute type="date-time-type" name="start" use="required" />
         <xs:attribute type="date-time-type" name="end" use="required" />
-        <xs:attribute type="xs:string" name="timezone" use="required" />
     </xs:complexType>
 
     <xs:simpleType name="date-time-type">

@@ -18,13 +18,17 @@
   -->
 <process name="late-process2"  xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<!-- where -->
-	<cluster name="late-cluster"/>
+    <clusters>
+        <cluster name="late-cluster">
+            <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"/>
+        </cluster>
+    </clusters>
 
-	<!-- when -->
+    <!-- when -->
     <concurrency>1</concurrency>
     <execution>LIFO</execution>
     <frequency>hours(1)</frequency>
-    <validity start="2011-11-02T00:00Z" end="2999-12-30T00:00Z" timezone="UTC"/>
+    <timezone>UTC</timezone>
 
     <!-- what -->
     <inputs>

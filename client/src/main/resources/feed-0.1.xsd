@@ -68,6 +68,17 @@
             <xs:element type="group-type" name="groups" minOccurs="0" />
             <xs:element type="xs:string" name="availabilityFlag" minOccurs="0" />
             <xs:element type="frequency-type" name="frequency" />
+            <xs:element name="timezone">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" 
+                                        printMethod="org.apache.ivory.entity.v0.EntityHelper.getTimeZoneId" />
+                        </xs:appinfo>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string" />
+                </xs:simpleType>
+            </xs:element>
             <xs:element type="late-arrival" name="late-arrival" />
             <xs:element type="clusters" name="clusters" />
             <xs:element type="locations" name="locations" />
@@ -152,7 +163,6 @@
         </xs:annotation>
         <xs:attribute type="date-time-type" name="start" use="required" />
         <xs:attribute type="date-time-type" name="end" use="required" />
-        <xs:attribute type="xs:string" name="timezone" use="required" />
     </xs:complexType>
     <xs:complexType name="locations">
         <xs:annotation>
@@ -287,8 +297,7 @@
     <xs:simpleType name="frequency-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="org.apache.ivory.entity.v0.Frequency" 
-                            parseMethod="org.apache.ivory.entity.v0.Frequency.fromString" printMethod="org.apache.ivory.entity.v0.Frequency.toString" />
+                <jaxb:javaType name="org.apache.ivory.entity.v0.Frequency" parseMethod="org.apache.ivory.entity.v0.Frequency.fromString" printMethod="org.apache.ivory.entity.v0.Frequency.toString" />
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">

@@ -45,6 +45,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Validity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -80,7 +81,8 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         input.setEnd("today(20,20)");
         process.getInputs().getInputs().add(input);
 
-        process.getValidity().setEnd(EntityUtil.formatDateUTC(new Date(new Date().getTime() + 60 * 60 * 1000)));
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(EntityUtil.formatDateUTC(new Date(new Date().getTime() + 60 * 60 * 1000)));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)

@@ -18,6 +18,7 @@
 
 package org.apache.ivory.entity.parser;
 
+import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -32,7 +33,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     @Override
-    public void validate(Cluster entity) throws StoreAccessException, ValidationException {
-        //TODO
+    public void validate(Cluster cluster) throws StoreAccessException, ValidationException {
+        if (!ClusterHelper.getHdfsUrl(cluster).startsWith("hdfs://")) {
+            throw new ValidationException("Cannot get valid nameNode from write interface of cluster: " + cluster.getName());
+        }
     }
 }
