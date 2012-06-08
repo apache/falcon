@@ -17,6 +17,7 @@
  * -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-feed-parent-workflow'>
 	<start to='replication' />
+	<!--TODO Detect Late for feed -->
     <action name="replication">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
@@ -31,11 +32,105 @@
 			<arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
 			<arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
         </java>
-        <ok to="replication-jms-messaging"/>
-        <error to="fail"/>
+        <ok to="fork-for-succeeded"/>
+        <error to="fork-for-failed"/>
     </action>
+    <fork name="fork-for-succeeded">
+		<path start="ivory-succeeded-messaging" />
+		<path start="user-jms-messaging" />
+		<path start="ivory-succeeded-log-mover" />
+	</fork>
+	<join name="join-for-succeeded" to="end" />
+
+	<fork name="fork-for-failed">
+		<path start="ivory-failed-messaging" />
+		<path start="ivory-failed-log-mover" />
+	</fork>
+	<join name="join-for-failed" to="fail" />
+
+	<action name='ivory-succeeded-messaging'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+			<arg>-entityName</arg><arg>${entityName}</arg>
+			<arg>-feedNames</arg><arg>${feedNames}</arg>
+			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>
+			<arg>-workflowId</arg><arg>${wf:id()}</arg>
+			<arg>-runId</arg><arg>${wf:run()}</arg>
+			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
+			<arg>-timeStamp</arg><arg>${timeStamp}</arg>
+			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
+			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
+			<arg>-entityType</arg><arg>${entityType}</arg>
+			<arg>-operation</arg><arg>REPLICATE</arg>
+			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+			<arg>-topicName</arg><arg>IVORY.ENTITY.TOPIC</arg>
+			<arg>-status</arg><arg>SUCCEEDED</arg>
+			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
+			<arg>-cluster</arg><arg>${cluster}</arg>
+		</java>
+		<ok to="join-for-succeeded" />
+		<error to="fail" />
+	</action>
+	<action name='ivory-succeeded-log-mover'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.logging.LogMover</main-class>
+			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
+			<arg>-subflowid</arg> <arg>${wf:id()}</arg>
+			<arg>-runid</arg> <arg>${wf:run()}</arg>
+			<arg>-logdir</arg> <arg>${logDir}/joblogs/${nominalTime}</arg>
+			<arg>-externalid</arg> <arg>${wf:conf("oozie.wf.external.id")}</arg>
+			<arg>-status </arg> <arg>SUCCEEDED</arg>
+			<arg>-entityType</arg><arg>${entityType}</arg>
+		</java>
+		<ok to="join-for-succeeded" />
+		<error to="fail" />
+	</action>
+	<action name='ivory-failed-log-mover'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.logging.LogMover</main-class>
+			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
+			<arg>-subflowid</arg> <arg>${wf:id()}</arg>
+			<arg>-runid</arg> <arg>${wf:run()}</arg>
+			<arg>-logdir</arg> <arg>${logDir}/joblogs/${nominalTime}</arg>
+			<arg>-status </arg> <arg>FAILED</arg>
+			<arg>-entityType</arg><arg>${entityType}</arg>
+		</java>
+		<ok to="join-for-failed" />
+		<error to="fail" />
+	</action>
+	<action name='ivory-failed-messaging'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+			<arg>-entityName</arg><arg>${entityName}</arg>
+			<arg>-feedNames</arg><arg>${feedNames}</arg>
+			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>
+			<arg>-workflowId</arg><arg>${wf:id()}</arg>
+			<arg>-runId</arg><arg>${wf:run()}</arg>
+			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
+			<arg>-timeStamp</arg><arg>${timeStamp}</arg>
+			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
+			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
+			<arg>-entityType</arg><arg>${entityType}</arg>
+			<arg>-operation</arg><arg>REPLICATE</arg>
+			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+			<arg>-topicName</arg><arg>IVORY.ENTITY.TOPIC</arg>
+			<arg>-status</arg><arg>FAILED</arg>
+			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
+			<arg>-cluster</arg><arg>${cluster}</arg>
+		</java>
+		<ok to="join-for-failed" />
+		<error to="fail" />
+	</action>
 	
-	<action name='replication-jms-messaging'>
+	<action name='user-jms-messaging'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
@@ -55,8 +150,9 @@
 			<arg>-topicName</arg><arg>IVORY.${entityName}</arg>
 			<arg>-status</arg><arg>SUCCEEDED</arg>
 			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
+			<arg>-cluster</arg><arg>${cluster}</arg>
 		</java>
-		<ok to="end" />
+		<ok to="join-for-succeeded" />
 		<error to="fail" />
 	</action>	
 

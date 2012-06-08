@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
@@ -56,8 +57,8 @@ public class LogMover extends Configured implements Tool {
 		String subflowId;
 		String runId;
 		String logDir;
-		String externalId;
 		String status;
+		String entityType;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -74,49 +75,69 @@ public class LogMover extends Configured implements Tool {
 			try {
 				jobInfo = client.getJobInfo(args.subflowId);
 			} catch (OozieClientException e) {
-				LOG.error("Error getting jobinfo for: " + args.subflowId);
+				LOG.error("Error getting jobinfo for: " + args.subflowId, e);
 				return 0;
 			}
-			String subflowId = jobInfo.getExternalId();
-			WorkflowJob subflowInfo = client.getJobInfo(subflowId);
-			List<WorkflowAction> actions = subflowInfo.getActions();
-			Path path = new Path(args.logDir + "/" + args.externalId + "/"
-					+ args.runId);
-			FileSystem fs = path.getFileSystem(getConf());
-			for (WorkflowAction action : actions) {
+			Path path = new Path(args.logDir + "/"
+					+ String.format("%0" + 3 + "d", args.runId));
 
-				if (action.getType().equals("pig")
-						|| action.getType().equals("java")) {
-					String ttLogURL = getTTlogURL(action.getExternalId());
-					if (ttLogURL != null) {
-						LOG.info("Fetching log for action: "
-								+ action.getExternalId() + " from url: "
-								+ ttLogURL);
-						InputStream in = getURLinputStream(new URL(ttLogURL));
-						OutputStream out = fs.create(new Path(path, action
-								.getName() + ".log"));
-						IOUtils.copyBytes(in, out, 4096, true);
-						LOG.info("Copied log to " + path);
+			FileSystem fs = path.getFileSystem(getConf());
+
+			if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
+				// if replication wf
+				copyTTlogs(args, fs, path, jobInfo.getActions().get(0));
+				copyOozieLog(client, fs, path, jobInfo.getId());
+			} else {
+				// if process wf
+				String subflowId = jobInfo.getExternalId();
+				WorkflowJob subflowInfo = client.getJobInfo(subflowId);
+				List<WorkflowAction> actions = subflowInfo.getActions();
+				for (WorkflowAction action : actions) {
+
+					if (action.getType().equals("pig")
+							|| action.getType().equals("java")) {
+						copyTTlogs(args, fs, path, action);
+					} else {
+						LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
+								+ action.getName());
 					}
-				} else {
-					LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
-							+ action.getName());
 				}
+				copyOozieLog(client, fs, path, subflowId);
 			}
-			InputStream in = new StringInputStream(client.getJobLog(subflowId));
-			OutputStream out = fs.create(new Path(path, "oozie.log"));
-			IOUtils.copyBytes(in, out, 4096, true);
-			LOG.info("Copied oozie log to " + path);
+
 		} catch (Exception e) {
 			LOG.error("Exception in log mover:", e);
 		}
 		return 0;
 	}
 
+	private void copyOozieLog(OozieClient client, FileSystem fs, Path path,
+			String id) throws OozieClientException, IOException {
+		InputStream in = new StringInputStream(client.getJobLog(id));
+		OutputStream out = fs.create(new Path(path, "oozie.log"));
+		IOUtils.copyBytes(in, out, 4096, true);
+		LOG.info("Copied oozie log to " + path);
+	}
+
+	private void copyTTlogs(ARGS args, FileSystem fs, Path path,
+			WorkflowAction action) throws Exception {
+		String ttLogURL = getTTlogURL(action.getExternalId());
+		if (ttLogURL != null) {
+			LOG.info("Fetching log for action: " + action.getExternalId()
+					+ " from url: " + ttLogURL);
+			InputStream in = getURLinputStream(new URL(ttLogURL));
+			OutputStream out = fs.create(new Path(path, action.getName()
+					+ ".log"));
+			IOUtils.copyBytes(in, out, 4096, true);
+			LOG.info("Copied log to " + path);
+		}
+	}
+
 	private void setupArgs(String[] arguments, ARGS args) throws ParseException {
 		Options options = new Options();
 		Option opt;
-		opt = new Option("workflowengineurl", true, "url of workflow engine, ex:oozie");
+		opt = new Option("workflowengineurl", true,
+				"url of workflow engine, ex:oozie");
 		opt.setRequired(true);
 		options.addOption(opt);
 		opt = new Option("subflowid", true, "external id of userworkflow");
@@ -128,10 +149,10 @@ public class LogMover extends Configured implements Tool {
 		opt = new Option("logdir", true, "log dir where job logs are stored");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("externalid", true, "current workflow's externalid ");
+		opt = new Option("status", true, "user workflow status");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("status", true, "user workflow status");
+		opt = new Option("entityType", true, "entity type feed or process");
 		opt.setRequired(true);
 		options.addOption(opt);
 
@@ -141,8 +162,8 @@ public class LogMover extends Configured implements Tool {
 		args.subflowId = cmd.getOptionValue("subflowid");
 		args.runId = cmd.getOptionValue("runid");
 		args.logDir = cmd.getOptionValue("logdir");
-		args.externalId = cmd.getOptionValue("externalid").replaceAll(":", "-");
 		args.status = cmd.getOptionValue("status");
+		args.entityType = cmd.getOptionValue("entityType");
 
 	}
 

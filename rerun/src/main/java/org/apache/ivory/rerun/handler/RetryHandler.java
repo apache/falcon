@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,59 +19,60 @@
 package org.apache.ivory.rerun.handler;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.process.PolicyType;
-import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Retry;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.util.GenericAlert;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 		AbstractRerunHandler<RetryEvent, M> {
 
 	@Override
-	public void handleRerun(String processName, String nominalTime,
-			String runId, String wfId, WorkflowEngine wfEngine,
-			long msgReceivedTime) throws IvoryException {
+	public void handleRerun(String cluster, String entityType,
+			String entityName, String nominalTime, String runId, String wfId,
+			long msgReceivedTime) {
 		try {
-			Process processObj = getProcess(processName);
-			if (!validate(processName, processObj)) {
+			Entity entity = getEntity(entityType, entityName);
+			Retry retry = getRetry(entity);
+
+			if (retry == null) {
+				LOG.warn("Retry not configured for entity:" + entityType + "("
+						+ entity.getName() + "), ignoring failed retries");
 				return;
 			}
 
-			int attempts = processObj.getRetry().getAttempts();
-            Frequency delay = processObj.getRetry().getDelay();
-			PolicyType policy = processObj.getRetry().getPolicy();
+			int attempts = retry.getAttempts();
+			Frequency delay = retry.getDelay();
+			PolicyType policy = retry.getPolicy();
 			int intRunId = Integer.parseInt(runId);
 
 			if (attempts > intRunId) {
 				AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
 						.getRetryPolicy(policy);
-                long delayTime = rerunPolicy.getDelay(delay,
+				long delayTime = rerunPolicy.getDelay(delay,
 						Integer.parseInt(runId));
-                //TODO handle for multiple clusters
-				RetryEvent event = new RetryEvent(wfEngine, processObj.getClusters().getClusters().get(0).getName(), 
-				        wfId, msgReceivedTime,
-						delayTime, processName, nominalTime, intRunId,
-						attempts, 0);
+				RetryEvent event = new RetryEvent(cluster, wfId,
+						msgReceivedTime, delayTime, entityType, entityName,
+						nominalTime, intRunId, attempts, 0);
 				offerToQueue(event);
 			} else {
 				LOG.warn("All retry attempt failed out of configured: "
-						+ attempts + " attempt for process instance::"
-						+ processName + ":" + nominalTime + " And WorkflowId: "
+						+ attempts + " attempt for entity instance::"
+						+ entityName + ":" + nominalTime + " And WorkflowId: "
 						+ wfId);
 
-				GenericAlert.alertWFfailed(processName, nominalTime);
+				GenericAlert.alertWFfailed(entity.getName(), nominalTime);
 			}
 		} catch (Exception e) {
-			LOG.error("Error during retry of processInstance " + processName
+			LOG.error("Error during retry of entity instance " + entityName
 					+ ":" + nominalTime, e);
-			GenericAlert.alertRetryFailed(processName, nominalTime,
+			GenericAlert.alertRetryFailed(entityName, nominalTime,
 					Integer.parseInt(runId), e.getMessage());
-			throw new IvoryException(e);
 		}
 
 	}
@@ -84,17 +86,6 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 		daemon.start();
 		LOG.info("RetryHandler  thread started");
 
-	}
-
-	protected boolean validate(String processName, Process processObj) {
-		if (!super.validate(processName, processObj)) {
-			return false;
-		}
-		if (processObj.getRetry() == null) {
-			LOG.warn("Retry not configured for the process: " + processName);
-			return false;
-		}
-		return true;
 	}
 
 }

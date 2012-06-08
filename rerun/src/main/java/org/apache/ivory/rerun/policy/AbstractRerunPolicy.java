@@ -17,44 +17,28 @@
  */
 package org.apache.ivory.rerun.policy;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.expression.ExpressionHelper;
 
 public abstract class AbstractRerunPolicy {
 
-    private static final long MINUTES = 60 * 1000L;
-    private static final long HOURS = 60 * MINUTES;
-    private static final long DAYS = 24 * HOURS;
-    private static final long MONTHS = 31 * DAYS;
+	public long getDurationInMilliSec(Frequency frequency)
+			throws IvoryException {
+		ExpressionHelper helper = ExpressionHelper.get();
+		return helper.evaluate(frequency.toString(), Long.class);
 
-    public long getDurationInMilliSec(Frequency delay) throws IvoryException {
-        switch (delay.getTimeUnit()) {
-            case minutes:
-                return MINUTES * delay.getFrequency();
+	}
 
-            case hours:
-                return HOURS * delay.getFrequency();
+	public static Date addTime(Date date, int milliSecondsToAdd) {
+		return new Date(date.getTime() + milliSecondsToAdd);
+	}
 
-            case days:
-                return DAYS * delay.getFrequency();
+	public abstract long getDelay(Frequency delay, int eventNumber)
+			throws IvoryException;
 
-            case months:
-                return MONTHS * delay.getFrequency();
-        }
-        throw new IvoryException("Unknown delayUnit:" + delay.getTimeUnit());
-    }
-
-    public static Date addTime(Date date, int milliSecondsToAdd) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        cal.add(Calendar.MILLISECOND, milliSecondsToAdd);
-        return cal.getTime();
-    }
-
-    public abstract long getDelay(Frequency delay, int eventNumber) throws IvoryException;
-
-    public abstract long getDelay(Frequency delay, Date nominaltime, Date cutOffTime) throws IvoryException;
+	public abstract long getDelay(Frequency delay, Date nominaltime,
+			Date cutOffTime) throws IvoryException;
 }

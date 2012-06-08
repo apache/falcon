@@ -36,13 +36,14 @@ import org.testng.annotations.Test;
 
 public class ProcessProducerTest {
 
-	private String [] args;
+	private String[] args;
 	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
-//	private static final String BROKER_URL = "tcp://localhost:61616?daemon=true";
-	private static final String BROKER_IMPL_CLASS="org.apache.activemq.ActiveMQConnectionFactory";	
+	// private static final String BROKER_URL =
+	// "tcp://localhost:61616?daemon=true";
+	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 	private static final String TOPIC_NAME = "IVORY.PROCESS";
 	private BrokerService broker;
-	
+
 	private volatile AssertionError error;
 
 	@BeforeClass
@@ -62,7 +63,8 @@ public class ProcessProducerTest {
 				"-" + ARG.logFile.getArgName(), ("/logFile"),
 				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
 				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
-				"-" + ARG.brokerTTL.getArgName(), "10" };
+				"-" + ARG.brokerTTL.getArgName(), "10",
+				"-" + ARG.cluster.getArgName(), "corp" };
 		broker = new BrokerService();
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
@@ -115,7 +117,7 @@ public class ProcessProducerTest {
 		// wait till you get atleast one message
 		MapMessage m;
 		for (m = null; m == null;)
-			m = (MapMessage)consumer.receive();
+			m = (MapMessage) consumer.receive();
 		System.out.println("Consumed: " + m.toString());
 		assertMessage(m);
 		Assert.assertEquals(m.getString(ARG.feedNames.getArgName()),
@@ -124,16 +126,15 @@ public class ProcessProducerTest {
 				"/click-logs/10/05/05/00/20");
 
 		for (m = null; m == null;)
-			m = (MapMessage)consumer.receive();
+			m = (MapMessage) consumer.receive();
 		System.out.println("Consumed: " + m.toString());
 		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedNames.getArgName()),
-				"raw-logs");
+		Assert.assertEquals(m.getString(ARG.feedNames.getArgName()), "raw-logs");
 		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
 				"/raw-logs/10/05/05/00/20");
 		connection.close();
 	}
-	
+
 	private void assertMessage(MapMessage m) throws JMSException {
 		Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
 				TOPIC_NAME);

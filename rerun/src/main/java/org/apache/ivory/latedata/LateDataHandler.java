@@ -92,7 +92,7 @@ public class LateDataHandler extends Configured implements Tool {
 			long usage = 0;
 			for (String pathElement : pathGroups[index].split(",")) {
 				Path inPath = new Path(pathElement);
-				usage += usage(inPath);
+				usage += usage(inPath, getConf());
 			}
 			map.put(inputFeeds[index], usage);
 		}
@@ -107,12 +107,12 @@ public class LateDataHandler extends Configured implements Tool {
 		return 0;
 	}
 
-	public String detectChanges(Path file, Map<String, Long> map)
+	public String detectChanges(Path file, Map<String, Long> map, Configuration conf)
 			throws Exception {
 
 		StringBuffer buffer = new StringBuffer();
 		BufferedReader in = new BufferedReader(new InputStreamReader(file
-				.getFileSystem(getConf()).open(file)));
+				.getFileSystem(conf).open(file)));
 		String line;
 		try {
 			Map<String, Long> recorded = new LinkedHashMap<String, Long>();
@@ -147,8 +147,8 @@ public class LateDataHandler extends Configured implements Tool {
 
 	}
 
-	public long usage(Path inPath) throws IOException {
-		FileSystem fs = inPath.getFileSystem(getConf());
+	public long usage(Path inPath, Configuration conf) throws IOException {
+		FileSystem fs = inPath.getFileSystem(conf);
 		FileStatus status[] = fs.globStatus(inPath);
 		if (status == null || status.length == 0) {
 			return 0;

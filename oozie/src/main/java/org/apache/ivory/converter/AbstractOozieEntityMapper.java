@@ -178,6 +178,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         props.put("entityName", entity.getName());
         props.put("entityType", entity.getEntityType().name().toLowerCase());
+        props.put(ARG.cluster.getPropName(), cluster.getName());
         if(cluster.getProperties() != null)
             for(Property prop:cluster.getProperties().getProperties())
                 props.put(prop.getName(), prop.getValue());

@@ -35,13 +35,6 @@ import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.logging.LogProvider;
-import org.apache.ivory.monitors.Dimension;
-import org.apache.ivory.monitors.Monitored;
-import org.apache.ivory.rerun.event.RerunEvent.RerunType;
-import org.apache.ivory.rerun.event.RetryEvent;
-import org.apache.ivory.rerun.handler.AbstractRerunHandler;
-import org.apache.ivory.rerun.handler.RerunHandlerFactory;
-import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -272,25 +265,5 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private void validateNotEmpty(String field, String param) throws ValidationException {
         if (StringUtils.isEmpty(param))
             throw new ValidationException("Parameter " + field + " is empty");
-    }
-    
-	/*
-	 * Below method is a mock and gets automatically invoked by Aspect
-	 */
-	// TODO capture execution time
-	@Monitored(event = "process-instance")
-	public String instrumentWithAspect(
-			@Dimension(value = "process") String process,
-			@Dimension(value = "feed") String feedName,
-			@Dimension(value = "feedPath") String feedpath,
-			@Dimension(value = "nominalTime") String nominalTime,
-			@Dimension(value = "timeStamp") String timeStamp,
-			@Dimension(value = "status") String status,
-			@Dimension(value = "workflowId") String workflowId,
-			@Dimension(value = "runId") String runId, long msgReceivedTime)
-			throws Exception {
-		
-		return "DONE";
-
-	}
+    }    
 }

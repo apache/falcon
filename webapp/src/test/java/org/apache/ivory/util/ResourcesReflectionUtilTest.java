@@ -34,8 +34,6 @@ public class ResourcesReflectionUtilTest {
 		
 		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("InstanceManagerProxy.killInstance"));
 		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("InstanceManagerProxy.killInstance").get(1));
-	
-		Assert.assertEquals("process-instance",ResourcesReflectionUtil.getResourceMonitorName("AbstractInstanceManager.instrumentWithAspect"));
-		Assert.assertEquals("process", ResourcesReflectionUtil.getResourceDimensionsName("AbstractInstanceManager.instrumentWithAspect").get(0));
+
 	}
 }

@@ -41,4 +41,24 @@ public class GenericAlert {
 		return "IGNORE";
 
 	}
+	
+	/*
+	 * Below method is a mock and gets automatically invoked by Aspect
+	 */
+	// TODO capture execution time
+	@Monitored(event = "instance")
+	public String instrumentWithAspect(
+			@Dimension(value = "process") String process,
+			@Dimension(value = "feed") String feedName,
+			@Dimension(value = "feedPath") String feedpath,
+			@Dimension(value = "nominalTime") String nominalTime,
+			@Dimension(value = "timeStamp") String timeStamp,
+			@Dimension(value = "status") String status,
+			@Dimension(value = "workflowId") String workflowId,
+			@Dimension(value = "runId") String runId, long msgReceivedTime)
+			throws Exception {
+		
+		return "IGNORE";
+
+	}
 }

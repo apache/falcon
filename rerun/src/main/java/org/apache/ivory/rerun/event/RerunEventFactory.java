@@ -17,31 +17,53 @@
  */
 package org.apache.ivory.rerun.event;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class RerunEventFactory<T extends RerunEvent> {
 
-	public T getRerunEvent(String type, WorkflowEngine wfEngine, String line) {
+	public T getRerunEvent(String type, String line) {
 		if (type.startsWith(RerunType.RETRY.name())) {
-			return retryEventFromString(wfEngine, line);
+			return retryEventFromString(line);
 		} else if (type.startsWith(RerunType.LATE.name())) {
-			return lateEventFromString(wfEngine, line);
+			return lateEventFromString(line);
 		} else
 			return null;
 	}
 
-	private T lateEventFromString(WorkflowEngine wfEngine, String line) {
-		// TODO Auto-generated method stub
-		return null;
+	@SuppressWarnings("unchecked")
+	private T lateEventFromString(String line) {
+		Map<String, String> map = getMap(line);
+		return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"),
+				Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
+						.get("delayInMilliSec")), map.get("entityType"),
+				map.get("entityName"), map.get("instance"),
+				Integer.parseInt(map.get("runId")));
 	}
 
-	public T retryEventFromString(WorkflowEngine workflowEngine, String message) {
-		String[] items = message.split("\\" + RerunEvent.SEP);
-		T event = (T) new RetryEvent(workflowEngine, items[0], items[1],
-				Long.parseLong(items[2]), Long.parseLong(items[3]), items[4],
-				items[5], Integer.parseInt(items[6]),
-				Integer.parseInt(items[7]), Integer.parseInt(items[8]));
-		return event;
+	@SuppressWarnings("unchecked")
+	public T retryEventFromString(String line) {
+		Map<String, String> map = getMap(line);
+		return (T) new RetryEvent(map.get("clusterName"), map.get("wfId"),
+				Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
+						.get("delayInMilliSec")), map.get("entityType"),
+				map.get("entityName"), map.get("instance"),
+				Integer.parseInt(map.get("runId")), Integer.parseInt(map
+						.get("attempts")), Integer.parseInt(map
+						.get("failRetryCount")));
+
 	}
+
+	private Map<String, String> getMap(String message) {
+		String[] items = message.split("\\" + RerunEvent.SEP);
+		Map<String, String> map = new HashMap<String, String>();
+		for (String item : items) {
+			String[] pair = item.split("=");
+			map.put(pair[0], pair[1]);
+		}
+		return map;
+	}
+
 }

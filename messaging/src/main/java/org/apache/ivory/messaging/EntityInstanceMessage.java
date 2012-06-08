@@ -44,7 +44,7 @@ public class EntityInstanceMessage {
 	private final Map<ARG, String> keyValueMap = new LinkedHashMap<ARG, String>();
 	private static final Logger LOG = Logger
 			.getLogger(EntityInstanceMessage.class);
-	private static final String IVORY_PROCESS_TOPIC_NAME = "IVORY.PROCESS.TOPIC";
+	private static final String IVORY_PROCESS_TOPIC_NAME = "IVORY.ENTITY.TOPIC";
 
 	public enum EntityOps {
 		GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
@@ -56,7 +56,7 @@ public class EntityInstanceMessage {
 				"nominalTime"), timeStamp("timeStamp"), brokerUrl("broker.url"), brokerImplClass(
 				"broker.impl.class"), entityType("entityType"), operation(
 				"operation"), logFile("logFile"), topicName("topicName"), status(
-				"status"), brokerTTL("broker.ttlInMins");
+				"status"), brokerTTL("broker.ttlInMins"),cluster("cluster");
 
 		private String propName;
 

@@ -175,9 +175,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-            // TODO check for double slash, should target cluster have validity
-            // on it?
-            inputDataset.setUriTemplate(ClusterHelper.getHdfsUrl(srcCluster) + FeedHelper.getLocation(feed, LocationType.DATA).getPath());
+			inputDataset.setUriTemplate(new Path(ClusterHelper
+					.getHdfsUrl(srcCluster), FeedHelper.getLocation(feed,
+					LocationType.DATA).getPath()).toString());
             outputDataset.setUriTemplate(getHDFSPath(FeedHelper.getLocation(feed, LocationType.DATA).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
@@ -192,7 +192,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
 
         Path wfPath = getCoordPath(bundlePath, coordName);
-        replicationCoord.setAction(getReplicationWorkflowAction(srcCluster, wfPath, coordName));
+        replicationCoord.setAction(getReplicationWorkflowAction(srcCluster, trgCluster, wfPath, coordName));
         return replicationCoord;
     }
 
@@ -202,7 +202,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         dataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
     }
 
-    private ACTION getReplicationWorkflowAction(Cluster srcCluster, Path wfPath, String wfName) throws IvoryException {
+    private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath, String wfName) throws IvoryException {
         ACTION replicationAction = new ACTION();
         WORKFLOW replicationWF = new WORKFLOW();
         try {
@@ -210,10 +210,10 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Feed feed = getEntity();
             StringBuilder pathsWithPartitions = new StringBuilder();
             pathsWithPartitions.append("${coord:dataIn('input')}").append(
-                    FeedHelper.getCluster(feed, srcCluster.getName()).getPartition() == null ? "" : FeedEntityParser.getPartitionExpValue(
+                    FeedHelper.getCluster(feed, srcCluster.getName()).getPartition() == null ? "" : "/"+FeedEntityParser.getPartitionExpValue(
                             srcCluster, FeedHelper.getCluster(feed, srcCluster.getName()).getPartition()));
 
-            Map<String, String> props = createCoordDefaultConfiguration(srcCluster, wfPath, wfName);
+            Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
             props.put("srcClusterName", srcCluster.getName());
             props.put("srcClusterColo", srcCluster.getColo());
             props.put(ARG.feedNames.getPropName(), feed.getName());

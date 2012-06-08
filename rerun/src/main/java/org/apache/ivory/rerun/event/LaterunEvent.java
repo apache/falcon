@@ -17,15 +17,22 @@
  */
 package org.apache.ivory.rerun.event;
 
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+public class LaterunEvent extends RerunEvent {
 
-public class LaterunEvent extends RerunEvent{
+	public LaterunEvent(String clusterName, String wfId, long msgInsertTime,
+			long delay, String entityType, String entityName, String instance,
+			int runId) {
+		super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
+				instance, runId);
+	}
 
-	public LaterunEvent(WorkflowEngine wfEngine, String clusterName,
-			String wfId, long msgInsertTime, long delay, String processName,
-			String processInstance, int runId) {
-		super(wfEngine, clusterName, wfId, msgInsertTime, delay, processName,
-				processInstance, runId);
+	@Override
+	public String toString() {
+		return "clusterName=" + clusterName + SEP + "wfId=" + wfId + SEP
+				+ "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
+				+ delayInMilliSec + SEP + "entityType=" + entityType + SEP
+				+ "entityName=" + entityName + SEP + "instance=" + instance
+				+ SEP + "runId=" + runId;
 	}
 
 }

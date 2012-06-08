@@ -33,7 +33,8 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 	}
 
 	@Override
-	protected void handleRerun(String jobStatus, RetryEvent message) {
+	protected void handleRerun(String cluster, String jobStatus,
+			RetryEvent message) {
 		try {
 			if (!jobStatus.equals("KILLED")) {
 				LOG.debug("Re-enqueing message in RetryHandler for workflow with same delay as job status is running:"
@@ -46,16 +47,16 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 					+ (message.getRunId() + 1)
 					+ " out of configured: "
 					+ message.getAttempts()
-					+ " attempt for process instance::"
-					+ message.getProcessName()
+					+ " attempt for instance::"
+					+ message.getEntityName()
 					+ ":"
-					+ message.getProcessInstance()
+					+ message.getInstance()
 					+ " And WorkflowId: "
 					+ message.getWfId()
 					+ " At time: "
 					+ EntityUtil.formatDateUTC(new Date(System
 							.currentTimeMillis())));
-			message.getWfEngine().reRun(message.getClusterName(),
+			handler.getWfEngine().reRun(message.getClusterName(),
 					message.getWfId(), null);
 		} catch (Exception e) {
 			int maxFailRetryCount = Integer.parseInt(StartupProperties.get()
@@ -63,8 +64,8 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 			if (message.getFailRetryCount() < maxFailRetryCount) {
 				LOG.warn(
 						"Retrying again for process instance "
-								+ message.getProcessName() + ":"
-								+ message.getProcessInstance() + " after "
+								+ message.getEntityName() + ":"
+								+ message.getInstance() + " after "
 								+ message.getDelayInMilliSec()
 								+ " seconds as Retry failed with message:", e);
 				message.setFailRetryCount(message.getFailRetryCount() + 1);
@@ -72,17 +73,17 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 					handler.offerToQueue(message);
 				} catch (Exception ex) {
 					LOG.error("Unable to re-offer to queue:", ex);
-					GenericAlert.alertRetryFailed(message.getProcessName(),
-							message.getProcessInstance(), message.getRunId(),
+					GenericAlert.alertRetryFailed(message.getEntityName(),
+							message.getInstance(), message.getRunId(),
 							ex.getMessage());
 				}
 			} else {
 				LOG.warn(
 						"Failure retry attempts exhausted for processInstance: "
-								+ message.getProcessName() + ":"
-								+ message.getProcessInstance(), e);
-				GenericAlert.alertRetryFailed(message.getProcessName(),
-						message.getProcessInstance(), message.getRunId(),
+								+ message.getEntityName() + ":"
+								+ message.getInstance(), e);
+				GenericAlert.alertRetryFailed(message.getEntityName(),
+						message.getInstance(), message.getRunId(),
 						e.getMessage());
 			}
 

@@ -30,6 +30,9 @@ import org.apache.ivory.resource.InstancesResult;
  * following operations
  */
 public interface WorkflowEngine {
+	
+    public static final String NAME_NODE = "nameNode";
+    public static final String JOB_TRACKER = "jobTracker";
 
     void schedule(Entity entity) throws IvoryException;
 

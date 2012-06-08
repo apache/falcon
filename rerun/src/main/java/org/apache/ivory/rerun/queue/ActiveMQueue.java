@@ -34,15 +34,12 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.event.RerunEventFactory;
-import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
 	private ActiveMQConnection connection;
 	private String brokerUrl;
 	private String destinationName;
-	private WorkflowEngine wfEngine;
 	private Destination destination;
 	private MessageProducer producer;
 	private MessageConsumer consumer;
@@ -58,8 +55,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 		try {
 			session = getSession();
 			TextMessage msg = session.createTextMessage(event.toString());
-			msg.setLongProperty(
-					ScheduledMessage.AMQ_SCHEDULED_DELAY,
+			msg.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY,
 					event.getDelay(TimeUnit.MILLISECONDS));
 			msg.setStringProperty("TYPE", event.getType().name());
 			producer.send(msg);
@@ -85,7 +81,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 		try {
 			TextMessage textMessage = (TextMessage) consumer.receive();
 			T event = new RerunEventFactory<T>().getRerunEvent(
-					textMessage.getStringProperty("TYPE"), wfEngine,
+					textMessage.getStringProperty("TYPE"),
 					textMessage.getText());
 			LOG.debug("Dequeued Message:" + event.toString());
 			return event;
@@ -104,7 +100,6 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 	@Override
 	public void init() {
 		try {
-			wfEngine = WorkflowEngineFactory.getWorkflowEngine();
 			createAndStartConnection("", "", brokerUrl);
 			Session session = connection.createSession(false,
 					Session.AUTO_ACKNOWLEDGE);

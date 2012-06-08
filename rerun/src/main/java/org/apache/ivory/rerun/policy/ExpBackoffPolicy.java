@@ -37,11 +37,11 @@ public class ExpBackoffPolicy extends AbstractRerunPolicy {
 	public long getDelay(Frequency delay, Date nominalTime, Date cutOffTime)
 			throws IvoryException {
 		ExpressionHelper evaluator = ExpressionHelper.get();
-		Date now = new Date(System.currentTimeMillis());
-		Date lateTime = new Date();
-		lateTime = nominalTime;
+		Date now = new Date(         );
+		Date lateTime = nominalTime;
 		long delayMilliSeconds = evaluator.evaluate(delay.toString(), Long.class);
 		int factor = 1;
+		//TODO we can get rid of this using formula
 		while(lateTime.before(now)){
 			lateTime = addTime(lateTime , (int) (factor * delayMilliSeconds));
 			factor*= power;

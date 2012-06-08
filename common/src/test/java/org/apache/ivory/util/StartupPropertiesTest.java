@@ -33,6 +33,6 @@ public class StartupPropertiesTest {
         StartupProperties props = (StartupProperties) StartupProperties.get();
         assertEquals("debug", props.getDomain());
         assertEquals("/tmp/ivory/journal", props.get("fs.journal.path"));
-        assertEquals("IVORY.PROCESS.TOPIC", props.get("process.topic"));
+        assertEquals("IVORY.ENTITY.TOPIC", props.get("entity.topic"));
     }
 }

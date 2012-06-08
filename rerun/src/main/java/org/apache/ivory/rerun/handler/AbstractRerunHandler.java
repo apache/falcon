@@ -18,11 +18,12 @@
 package org.apache.ivory.rerun.handler;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.store.ConfigurationStore;
-import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.process.Retry;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
+import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -31,15 +32,21 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 	protected static final Logger LOG = Logger
 			.getLogger(LateRerunHandler.class);
 	protected M delayQueue;
+	private WorkflowEngine wfEngine;
 
 	public void init(M delayQueue) throws IvoryException {
+		this.wfEngine = WorkflowEngineFactory.getWorkflowEngine();
 		this.delayQueue = delayQueue;
 		this.delayQueue.init();
 	}
 
-	public abstract void handleRerun(String processName, String nominalTime,
-			String runId, String wfId, WorkflowEngine wfEngine,
-			long msgReceivedTime) throws IvoryException;
+	public abstract void handleRerun(String cluster, String entityType,
+			String entityName, String nominalTime, String runId, String wfId,
+			long msgReceivedTime);
+
+	public WorkflowEngine getWfEngine() {
+		return wfEngine;
+	}
 
 	public boolean offerToQueue(T event) {
 		return delayQueue.offer(event);
@@ -49,17 +56,13 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 		return delayQueue.take();
 	}
 
-	public Process getProcess(String processName) throws IvoryException {
-		return ConfigurationStore.get().get(EntityType.PROCESS, processName);
+	public Entity getEntity(String entityType, String entityName)
+			throws IvoryException {
+		return EntityUtil.getEntity(entityType, entityName);
 	}
 
-	protected boolean validate(String processName, Process processObj) {
-		if (processObj == null) {
-			LOG.warn("Ignoring rerun, as the process:" + processName
-					+ " does not exists in config store");
-			return false;
-		}
-		return true;
+	public Retry getRetry(Entity entity) throws IvoryException {
+		return EntityUtil.getRetry(entity);
 	}
 
 }
