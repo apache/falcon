@@ -81,7 +81,8 @@ public class FeedProducerTest {
 				"-" + ARG.logFile.getArgName(), (logFile.toString()),
 				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
 				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
-				"-" + ARG.brokerTTL.getArgName(), "10" };
+				"-" + ARG.brokerTTL.getArgName(), "10",
+				"-" + ARG.cluster.getArgName(), "corp" };
 
 		broker = new BrokerService();
 		broker.setUseJmx(true);

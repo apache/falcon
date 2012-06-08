@@ -28,12 +28,9 @@ import java.util.List;
 import java.util.concurrent.DelayQueue;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.event.RerunEventFactory;
 import org.apache.ivory.util.GenericAlert;
-import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
@@ -91,26 +88,24 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 		} catch (IOException e) {
 			LOG.warn(
 					"Unable to write entry for process-instance: "
-							+ event.getProcessName() + ":"
-							+ event.getProcessInstance(), e);
+							+ event.getEntityName() + ":"
+							+ event.getInstance(), e);
 		}
 	}
 
 	private File getRetryFile(File basePath, T event) {
-		return new File(basePath, (event.getType().name())
-				+ "-"
-				+ event.getProcessName()
-				+ "-"
-				+ event.getProcessInstance().replaceAll(":", "-"));
+		return new File(basePath, (event.getType().name()) + "-"
+				+ event.getEntityName() + "-"
+				+ event.getInstance().replaceAll(":", "-"));
 	}
 
 	private void afterRetry(T event) {
 		File retryFile = getRetryFile(serializeFilePath, event);
 		if (!retryFile.exists()) {
 			LOG.warn("Rerun file deleted or renamed for process-instance: "
-					+ event.getProcessName() + ":" + event.getProcessInstance());
-			GenericAlert.alertRetryFailed(event.getProcessName(),
-					event.getProcessInstance(), event.getRunId(),
+					+ event.getEntityName() + ":" + event.getInstance());
+			GenericAlert.alertRetryFailed(event.getEntityName(),
+					event.getInstance(), event.getRunId(),
 					"Rerun file deleted or renamed for process-instance");
 		} else {
 			if (!retryFile.delete()) {
@@ -122,12 +117,6 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
 	private List<T> bootstrap() {
 		List<T> rerunEvents = new ArrayList<T>();
-		WorkflowEngine workflowEngine;
-		try {
-			workflowEngine = WorkflowEngineFactory.getWorkflowEngine();
-		} catch (IvoryException e) {
-			throw new IvoryRuntimException(e);
-		}
 		for (File rerunFile : this.serializeFilePath.listFiles()) {
 			try {
 				BufferedReader reader = new BufferedReader(new FileReader(
@@ -136,7 +125,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 				while ((line = reader.readLine()) != null) {
 					line.split("");
 					T event = new RerunEventFactory<T>().getRerunEvent(
-							rerunFile.getName(), workflowEngine, line);
+							rerunFile.getName(), line);
 					rerunEvents.add(event);
 				}
 			} catch (Exception e) {

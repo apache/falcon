@@ -18,7 +18,6 @@
 package org.apache.ivory.rerun.handler;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.log4j.Logger;
@@ -46,14 +45,9 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
 					LOG.error("Error while reading message from the queue: ", e);
 					continue;
 				}
-				Process processObj = handler.getProcess(message
-						.getProcessName());
-				if (!handler.validate(message.getProcessName(), processObj)) {
-					continue;
-				}
-				String jobStatus = message.getWfEngine().instanceStatus(
+				String jobStatus = handler.getWfEngine().instanceStatus(
 						message.getClusterName(), message.getWfId());
-				handleRerun(jobStatus, message);
+				handleRerun(message.getClusterName(),jobStatus, message);
 
 			} catch (Throwable e) {
 				LOG.error("Error in rerun consumer:", e);
@@ -62,5 +56,5 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
 
 	}
 
-	protected abstract void handleRerun(String jobStatus, T message);
+	protected abstract void handleRerun(String cluster, String jobStatus, T message);
 }

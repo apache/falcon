@@ -51,9 +51,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
 
-    public static final String NAME_NODE = "nameNode";
-    public static final String JOB_TRACKER = "jobTracker";
-
     public static final String ENGINE = "oozie";
     private static final BundleJob MISSING = new NullBundleJob();
 
@@ -839,7 +836,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
     @Override
     public String getWorkflowProperty(String cluster, String jobId, String property) throws IvoryException {
-        OozieClient client = new CustomOozieClient(cluster);
+        OozieClient client =  OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             String conf = jobInfo.getConf();
@@ -849,4 +846,5 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
     }
+
 }

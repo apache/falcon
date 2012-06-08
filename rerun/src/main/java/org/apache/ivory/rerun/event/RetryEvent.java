@@ -17,18 +17,16 @@
  */
 package org.apache.ivory.rerun.event;
 
-import org.apache.ivory.workflow.engine.WorkflowEngine;
-
 public class RetryEvent extends RerunEvent {
 
 	private int attempts;
 	private int failRetryCount;
 
-	public RetryEvent(WorkflowEngine wfEngine, String clusterName, String wfId,
-			long msgInsertTime, long delay, String processName,
-			String processInstance, int runId, int attempts, int failRetryCount) {
-		super(wfEngine, clusterName, wfId, msgInsertTime, delay, processName,
-				processInstance, runId);
+	public RetryEvent(String clusterName, String wfId, long msgInsertTime,
+			long delay, String entityType, String entityName, String instance,
+			int runId, int attempts, int failRetryCount) {
+		super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
+				instance, runId);
 		this.attempts = attempts;
 		this.failRetryCount = failRetryCount;
 	}
@@ -47,9 +45,13 @@ public class RetryEvent extends RerunEvent {
 
 	@Override
 	public String toString() {
-		return clusterName + SEP + wfId + SEP + msgInsertTime + SEP
-				+ delayInMilliSec + SEP + processName + SEP + processInstance
-				+ SEP + runId + SEP + attempts + SEP + failRetryCount;
+
+		return "clusterName=" + clusterName + SEP + "wfId=" + wfId + SEP
+				+ "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
+				+ delayInMilliSec + SEP + "entityType=" + entityType + SEP
+				+ "entityName=" + entityName + SEP + "instance=" + instance
+				+ SEP + "runId=" + runId + SEP + "attempts=" + attempts + SEP
+				+ "failRetryCount=" + failRetryCount;
 	}
 
 }

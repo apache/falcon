@@ -42,7 +42,7 @@ public class IvoryTopicSubscriberTest {
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-	private static final String TOPIC_NAME = "IVORY.PROCESS.TOPIC";
+	private static final String TOPIC_NAME = "IVORY.ENTITY.TOPIC";
 	private BrokerService broker;
 
 	@BeforeClass

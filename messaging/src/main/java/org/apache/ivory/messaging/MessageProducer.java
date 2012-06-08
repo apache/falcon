@@ -131,6 +131,8 @@ public class MessageProducer extends Configured implements Tool {
 				"name of the topic to be used to send message"));
 		addOption(options, new Option(ARG.workflowId.getArgName(), true,
 				"workflow id"));
+		addOption(options, new Option(ARG.cluster.getArgName(), true,
+				"cluster name"));
 
 		return new GnuParser().parse(options, arguments);
 	}

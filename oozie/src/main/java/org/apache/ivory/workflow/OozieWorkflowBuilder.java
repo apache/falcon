@@ -65,5 +65,10 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         return propsMap;
     }
     
+	public Path getBundlePath(Cluster cluster, Entity entity)
+			throws IvoryException {
+		return EntityUtil.getStagingPath(cluster, entity);
+	}
+	
     public abstract Date getNextStartTime(T entity, String cluster, Date now) throws IvoryException;
 }

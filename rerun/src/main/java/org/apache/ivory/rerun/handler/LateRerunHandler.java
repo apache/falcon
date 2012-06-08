@@ -22,10 +22,12 @@ import java.util.Date;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.LateInput;
+import org.apache.ivory.entity.v0.process.LateProcess;
 import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.expression.ExpressionHelper;
@@ -33,55 +35,60 @@ import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 
-public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
-		extends AbstractRerunHandler<LaterunEvent, M> {
+public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
+		AbstractRerunHandler<LaterunEvent, M> {
 
 	@Override
-	public void handleRerun(String processName, String nominalTime,
-			String runId, String wfId, WorkflowEngine wfEngine,
-			long msgReceivedTime) throws IvoryException {
+	public void handleRerun(String cluster, String entityType,
+			String entityName, String nominalTime, String runId, String wfId,
+			long msgReceivedTime) {
 
-		Process processObj = getProcess(processName);
-		int intRunId = Integer.parseInt(runId);
-		Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
-		Long wait = getEventDelay(processObj, nominalTime);
-		if (wait == -1)
-			return;
+		try {
+			Entity entity = EntityUtil.getEntity(entityType, entityName);
+			int intRunId = Integer.parseInt(runId);
+			Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
+			Long wait = getEventDelay(entity, nominalTime);
+			if (wait == -1)
+				return;
 
-		LOG.debug("Scheduling the late rerun for process instance : "
-				+ processName + ":" + nominalTime + " And WorkflowId: " + wfId);
-		//TODO handle for multiple clusters
-		LaterunEvent event = new LaterunEvent(wfEngine, processObj.getClusters().getClusters().get(0).getName(), 
-		        wfId, msgInsertTime.getTime(), wait, processName,
-				nominalTime, intRunId);
-		offerToQueue(event);
-
+			LOG.debug("Scheduling the late rerun for process instance : "
+					+ entityName + ":" + nominalTime + " And WorkflowId: "
+					+ wfId);
+			LaterunEvent event = new LaterunEvent(cluster, wfId,
+					msgInsertTime.getTime(), wait, entityType, entityName,
+					nominalTime, intRunId);
+			offerToQueue(event);
+		} catch (Exception e) {
+			LOG.error("Unable to schedule late rerun for process instance : "
+					+ entityName + ":" + nominalTime + " And WorkflowId: "
+					+ wfId, e);
+		}
 	}
 
-	public static long getEventDelay(Process processObj, String nominalTime)
+	private long getEventDelay(Entity entity, String nominalTime)
 			throws IvoryException {
 
 		Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
-		if (processObj.getLateProcess() == null) {
+		LateProcess lateProcess = EntityUtil.getLateProcess(entity);
+		if (lateProcess == null) {
+			LOG.warn("Late run not applicable for entity:" + entity.getName());
 			return -1;
 		}
-
-		PolicyType latePolicy = processObj.getLateProcess().getPolicy();
-		Date cutOffTime = getCutOffTime(processObj, nominalTime);
-		Date now = new Date(System.currentTimeMillis());
+		PolicyType latePolicy = lateProcess.getPolicy();
+		Date cutOffTime = getCutOffTime(entity, nominalTime);
+		Date now = new Date();
 		Long wait = null;
 
 		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: " + now.toString()
+			LOG.warn("Feed Cut Off time: " +cutOffTime
 					+ " has expired, Late Rerun can not be scheduled");
 			return -1;
 		} else {
 			AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
 					.getRetryPolicy(latePolicy);
-			wait = rerunPolicy.getDelay(processObj.getLateProcess().getDelay(),
-					instanceDate, cutOffTime);
+			wait = rerunPolicy.getDelay(lateProcess.getDelay(), instanceDate,
+					cutOffTime);
 		}
 		return wait;
 	}
@@ -90,34 +97,48 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		return new Date(date.getTime() + milliSecondsToAdd);
 	}
 
-	public static Date getCutOffTime(Process process, String nominalTime)
+	public static Date getCutOffTime(Entity entity, String nominalTime)
 			throws IvoryException {
+
 		ConfigurationStore store = ConfigurationStore.get();
 		ExpressionHelper evaluator = ExpressionHelper.get();
 		Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
 		ExpressionHelper.setReferenceDate(instanceStart);
-
 		Date endTime = new Date();
 		Date feedCutOff = new Date(0);
-		for (LateInput lp : process.getLateProcess().getLateInputs()) {
-			Feed feed = null;
-			String endInstanceTime = "";
-			for (Input input : process.getInputs().getInputs()) {
-				if (input.getName().equals(lp.getInput())) {
-					endInstanceTime = input.getEnd();
-					feed = store.get(EntityType.FEED, input.getFeed());
-					break;
-				}
-			}
-			String lateCutOff = feed.getLateArrival().getCutOff().toString();
-			endTime = evaluator.evaluate(endInstanceTime, Date.class);
+		if (entity.getEntityType() == EntityType.FEED) {
+			String lateCutOff = ((Feed) entity).getLateArrival().getCutOff()
+					.toString();
+			endTime = EntityUtil.parseDateUTC(nominalTime);
 			long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
 			endTime = addTime(endTime, (int) feedCutOffPeriod);
+			return endTime;
+		} else if (entity.getEntityType() == EntityType.PROCESS) {
+			Process process = (Process) entity;
+			for (LateInput lp : process.getLateProcess().getLateInputs()) {
+				Feed feed = null;
+				String endInstanceTime = "";
+				for (Input input : process.getInputs().getInputs()) {
+					if (input.getName().equals(lp.getInput())) {
+						endInstanceTime = input.getEnd();
+						feed = store.get(EntityType.FEED, input.getFeed());
+						break;
+					}
+				}
+				String lateCutOff = feed.getLateArrival().getCutOff()
+						.toString();
+				endTime = evaluator.evaluate(endInstanceTime, Date.class);
+				long feedCutOffPeriod = evaluator.evaluate(lateCutOff,
+						Long.class);
+				endTime = addTime(endTime, (int) feedCutOffPeriod);
 
-			if (endTime.after(feedCutOff))
-				feedCutOff = endTime;
+				if (endTime.after(feedCutOff))
+					feedCutOff = endTime;
+			}
+			return feedCutOff;
+		} else {
+			throw new IvoryException("Invalid entity while getting cut-off time:" + entity.getName());
 		}
-		return feedCutOff;
 	}
 
 	@Override
@@ -130,7 +151,4 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>>
 		LOG.info("Laterun Handler  thread started");
 	}
 
-	public Process getProcess(String processName) throws IvoryException {
-		return (Process) EntityUtil.getEntity(EntityType.PROCESS, processName);
-	}
 }

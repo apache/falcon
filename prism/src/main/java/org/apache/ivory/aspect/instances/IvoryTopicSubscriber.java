@@ -32,17 +32,13 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.rerun.event.LaterunEvent;
-import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
+import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.resource.AbstractInstanceManager;
-import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -94,33 +90,31 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		MapMessage mapMessage = (MapMessage) message;
 		try {
 			debug(mapMessage);
-			String processName = mapMessage.getString(ARG.entityName
+			String cluster = mapMessage.getString(ARG.cluster
 					.getArgName());
-			String feedName = mapMessage.getString(ARG.feedNames.getArgName());
-			String feedpath = mapMessage.getString(ARG.feedInstancePaths
+			String entityName = mapMessage.getString(ARG.entityName
+					.getArgName());
+			String entityType = mapMessage.getString(ARG.entityType
 					.getArgName());
 			String workflowId = mapMessage.getString(ARG.workflowId
 					.getArgName());
 			String runId = mapMessage.getString(ARG.runId.getArgName());
 			String nominalTime = mapMessage.getString(ARG.nominalTime
 					.getArgName());
-			String timeStamp = mapMessage.getString(ARG.timeStamp.getArgName());
 			String status = mapMessage.getString(ARG.status.getArgName());
-			WorkflowEngine engine;
-		        try {
-		            engine = WorkflowEngineFactory.getWorkflowEngine();
-		        } catch (IvoryException e) {
-		            throw new IvoryRuntimException(e);
-		        }
 		    
 			try {
+
 				if (status.equalsIgnoreCase("FAILED")) {
-					retryHandler.handleRerun(processName, nominalTime, runId, workflowId,
-		                    engine, System.currentTimeMillis());
-					throw new Exception(processName + ":" + nominalTime + " Failed");
+					retryHandler.handleRerun(cluster, entityType, entityName,
+							nominalTime, runId, workflowId,
+							System.currentTimeMillis());
+					throw new Exception(entityName + ":" + nominalTime
+							+ " Failed");
 				} else if (status.equalsIgnoreCase("SUCCEEDED")) {
-					latedataHandler.handleRerun(processName, nominalTime, runId,
-							workflowId, engine, System.currentTimeMillis());
+					latedataHandler.handleRerun(cluster, entityType,
+							entityName, nominalTime, runId, workflowId,
+							System.currentTimeMillis());
 				}
 			} catch (Exception ignore) {
 				// mocked exception

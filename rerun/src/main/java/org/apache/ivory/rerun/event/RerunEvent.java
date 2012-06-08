@@ -20,8 +20,6 @@ package org.apache.ivory.rerun.event;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.ivory.workflow.engine.WorkflowEngine;
-
 public class RerunEvent implements Delayed {
 
 	protected static final String SEP = "*";
@@ -30,30 +28,26 @@ public class RerunEvent implements Delayed {
 		RETRY, LATE
 	}
 
-	protected WorkflowEngine wfEngine;
 	protected String clusterName;
 	protected String wfId;
 	protected long msgInsertTime;
 	protected long delayInMilliSec;
-	protected String processName;
-	protected String processInstance;
+	protected String entityType;
+	protected String entityName;
+	protected String instance;
 	protected int runId;
 
-	public RerunEvent(WorkflowEngine wfEngine, String clusterName, String wfId,
-			long msgInsertTime, long delay, String processName,
-			String processInstance, int runId) {
-		this.wfEngine = wfEngine;
+	public RerunEvent(String clusterName, String wfId,
+			long msgInsertTime, long delay, String entityType, String entityName,
+			String instance, int runId) {
 		this.clusterName = clusterName;
 		this.wfId = wfId;
 		this.msgInsertTime = msgInsertTime;
 		this.delayInMilliSec = delay;
-		this.processName = processName;
-		this.processInstance = processInstance;
+		this.entityName = entityName;
+		this.instance = instance;
 		this.runId = runId;
-	}
-
-	public WorkflowEngine getWfEngine() {
-		return wfEngine;
+		this.entityType=entityType;
 	}
 
 	public String getClusterName() {
@@ -68,16 +62,20 @@ public class RerunEvent implements Delayed {
 		return delayInMilliSec;
 	}
 
-	public String getProcessName() {
-		return processName;
+	public String getEntityName() {
+		return entityName;
 	}
 
-	public String getProcessInstance() {
-		return processInstance;
+	public String getInstance() {
+		return instance;
 	}
 
 	public int getRunId() {
 		return runId;
+	}
+	
+	public String getEntityType(){
+		return entityType;
 	}
 
 	@Override

@@ -23,20 +23,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
-import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.rerun.handler.LateRerunHandler;
-import org.apache.ivory.util.GenericAlert;
-import org.apache.ivory.util.StartupProperties;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 
 public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEvent>>>
 		extends AbstractRerunConsumer<LaterunEvent, T> {
@@ -46,93 +43,102 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 	}
 
 	@Override
-	protected void handleRerun(String jobStatus, LaterunEvent message) {
-		try{
-		Process processObj = handler.getProcess(message.getProcessName());
-		
-		if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")) {
-			LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"
-					+ message.getWfId());
-			message.setMsgInsertTime(System.currentTimeMillis());
-			handler.offerToQueue(message);
-			return;
-		} else if (jobStatus.equals("SUSPENDED")) {
-			LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"
-					+ message.getWfId());
-			message.setMsgInsertTime(System.currentTimeMillis());
-			handler.offerToQueue(message);
-			return;
-		}
+	protected void handleRerun(String cluster, String jobStatus,
+			LaterunEvent message) {
+		try {
+			if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
+					|| jobStatus.equals("SUSPENDED")) {
+				LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"
+						+ message.getWfId());
+				message.setMsgInsertTime(System.currentTimeMillis());
+				handler.offerToQueue(message);
+				return;
+			}
 
-		String detectLate = detectLate(message);
+			String detectLate = detectLate(message);
 
-		if (detectLate.equals("")) {
-			LOG.debug("No Late Data Detected, late rerun not scheduled for"
-					+ message.getWfId() + "at"
-					+ new Date(System.currentTimeMillis()).toString());
-			return;
-		}
-		
-		LOG.info("Late changes detected in the following feeds: " + detectLate);
-		LOG.info("LateRerun Scheduled for  "
-				+ message.getProcessName()
-				+ ":"
-				+ message.getProcessInstance()
-				+ " And WorkflowId: "
-				+ message.getWfId()
-				+ " At time: "
-				+ EntityUtil.formatDateUTC(new Date(System.currentTimeMillis())));
+			if (detectLate.equals("")) {
+				LOG.debug("No Late Data Detected, late rerun not scheduled for"
+						+ message.getWfId() + "at"
+						+ new Date(System.currentTimeMillis()).toString());
+				return;
+			}
 
-		message.getWfEngine().reRun(message.getClusterName(),
-				message.getWfId(), null);
-		}catch(Exception e){
-			
+			LOG.info("Late changes detected in the following feeds: "
+					+ detectLate);
+			LOG.info("LateRerun Scheduled for  "
+					+ message.getEntityName()
+					+ ":"
+					+ message.getInstance()
+					+ " And WorkflowId: "
+					+ message.getWfId()
+					+ " At time: "
+					+ EntityUtil.formatDateUTC(new Date(System
+							.currentTimeMillis())));
+
+			handler.getWfEngine().reRun(message.getClusterName(),
+					message.getWfId(), null);
+		} catch (Exception e) {
+
 			LOG.warn(
-					"Late Re-run failed for process instance "
-							+ message.getProcessName() + ":"
-							+ message.getProcessInstance() + " after "
-							+ message.getDelayInMilliSec()
-							+ " with message:", e);
+					"Late Re-run failed for instance "
+							+ message.getEntityName() + ":"
+							+ message.getInstance() + " after "
+							+ message.getDelayInMilliSec() + " with message:",
+					e);
 		}
 
 	}
 	
+
 	public String detectLate(LaterunEvent message) throws Exception {
 		LateDataHandler late = new LateDataHandler();
-		String ivoryInputFeeds = message.getWfEngine().getWorkflowProperty(
+		String ivoryInputFeeds = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "ivoryInputFeeds");
-		String logDir = message.getWfEngine().getWorkflowProperty(
+		String logDir = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "logDir");
-		String ivoryInPaths = message.getWfEngine().getWorkflowProperty(
+		String ivoryInPaths = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "ivoryInPaths");
+		String nominalTime = handler.getWfEngine().getWorkflowProperty(
+				message.getClusterName(), message.getWfId(), "nominalTime");
+		
+		Path lateLogPath = getLateLogPath(logDir, nominalTime);
 
-		Path lateLogPath = new Path(logDir + "/latedata/"
-				+ message.getProcessInstance());
 		Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
 
 		String[] pathGroups = ivoryInPaths.split("#");
 		String[] inputFeeds = ivoryInputFeeds.split("#");
-		Process process = (Process) EntityUtil.getEntity(EntityType.PROCESS, message.getProcessName());
+		Process process = (Process) EntityUtil.getEntity(EntityType.PROCESS,
+				message.getEntityName());
 		List<String> lateFeed = new ArrayList<String>();
-		if(process.getLateProcess() != null)
-		{
-			for(LateInput li : process.getLateProcess().getLateInputs())
-			{
+		Configuration conf = new Configuration();
+		conf.set(
+				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
+				handler.getWfEngine().getWorkflowProperty(message.getClusterName(),
+						message.getWfId(),
+						WorkflowEngine.NAME_NODE));
+		if (process.getLateProcess() != null) {
+			for (LateInput li : process.getLateProcess().getLateInputs()) {
 				lateFeed.add(li.getInput());
 			}
 			for (int index = 0; index < pathGroups.length; index++) {
-				if(lateFeed.contains(inputFeeds[index])){
+				if (lateFeed.contains(inputFeeds[index])) {
 					long usage = 0;
 					for (String pathElement : pathGroups[index].split(",")) {
 						Path inPath = new Path(pathElement);
-						usage += late.usage(inPath);
+						usage += late.usage(inPath, conf);
 					}
 					feedSizes.put(inputFeeds[index], usage);
 				}
 			}
 		}
 
-		String detectLate = late.detectChanges(lateLogPath, feedSizes);
+		String detectLate = late.detectChanges(lateLogPath, feedSizes,conf);
 		return detectLate;
+	}
+
+	private Path getLateLogPath(String logDir, String nominalTime) {
+		return new Path(logDir + "/latedata/" + nominalTime);
+
 	}
 }
