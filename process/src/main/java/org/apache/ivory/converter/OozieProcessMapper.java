@@ -61,11 +61,6 @@ import org.apache.oozie.client.OozieClient;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
-    private static final String EL_PREFIX = "elext:";
-    
-    //TODO Hack for Adroit to use oozie's latest expression, to remove after el fix
-    private static final String LATEST="latest";
-    
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
 
     public OozieProcessMapper(Process entity) {
@@ -267,17 +262,12 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return syncdataset;
     }
 
-	private String getELExpression(String expr) {
-		if (expr != null) {
-			//TODO remove this check for Adroit after el fix
-			if (expr.contains(LATEST)) {
-				expr = "${" + "coord:" + expr + "}";
-			} else {
-				expr = "${" + EL_PREFIX + expr + "}";
-			}
-		}
-		return expr;
-	}
+    private String getELExpression(String expr) {
+        if (expr != null) {
+            expr = "${" + expr + "}";
+        }
+        return expr;
+    }
 
     @Override
     protected Map<String, String> getEntityProperties() {

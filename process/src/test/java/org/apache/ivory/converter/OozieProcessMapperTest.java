@@ -99,17 +99,16 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         assertEquals(process.getInputs().getInputs().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getName());
         assertEquals(process.getInputs().getInputs().get(0).getName(), coord.getInputEvents().getDataIn().get(0).getDataset());
-        assertEquals("${elext:"+process.getInputs().getInputs().get(0).getStart()+"}", coord.getInputEvents().getDataIn().get(0).getStartInstance());
-        assertEquals("${elext:"+process.getInputs().getInputs().get(0).getEnd()+"}", coord.getInputEvents().getDataIn().get(0).getEndInstance());
+        assertEquals("${"+process.getInputs().getInputs().get(0).getStart()+"}", coord.getInputEvents().getDataIn().get(0).getStartInstance());
+        assertEquals("${"+process.getInputs().getInputs().get(0).getEnd()+"}", coord.getInputEvents().getDataIn().get(0).getEndInstance());
         
         assertEquals(process.getInputs().getInputs().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getName());
         assertEquals(process.getInputs().getInputs().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getDataset());
-        assertEquals("${elext:"+process.getInputs().getInputs().get(1).getStart()+"}", coord.getInputEvents().getDataIn().get(1).getStartInstance());
-        //TODO remove after EL fix for oozie el support
-        assertEquals("${coord:"+process.getInputs().getInputs().get(1).getEnd()+"}", coord.getInputEvents().getDataIn().get(1).getEndInstance());
+        assertEquals("${"+process.getInputs().getInputs().get(1).getStart()+"}", coord.getInputEvents().getDataIn().get(1).getStartInstance());
+        assertEquals("${" + process.getInputs().getInputs().get(1).getEnd()+"}", coord.getInputEvents().getDataIn().get(1).getEndInstance());
 
         assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getName());
-        assertEquals("${elext:"+process.getOutputs().getOutputs().get(0).getInstance()+"}", coord.getOutputEvents().getDataOut().get(0).getInstance());
+        assertEquals("${"+process.getOutputs().getOutputs().get(0).getInstance()+"}", coord.getOutputEvents().getDataOut().get(0).getInstance());
         assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getDataset());
 
         assertEquals(3, coord.getDatasets().getDatasetOrAsyncDataset().size());

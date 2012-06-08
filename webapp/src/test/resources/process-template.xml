@@ -18,6 +18,8 @@
         <output instance="now(0,0)" feed="##f2##" name="output" />
     </outputs>
     <properties>
+        <property name="fileTime" value="${formatTime(dateOffset(instanceTime(), 1, 'DAY'), 'yyyy-MMM-dd')}"/>
+        <property name="user" value="${user()}"/>
     </properties>
     <workflow engine="oozie" path="/ivory/test/workflow" />
     <retry policy="backoff" delay="minutes(10)" attempts="3" />

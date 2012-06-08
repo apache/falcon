@@ -18,13 +18,19 @@
 
 package org.apache.ivory.entity.parser;
 
+import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -35,14 +41,6 @@ import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Outputs;
 import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.entity.v0.process.Validity;
-
-import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.

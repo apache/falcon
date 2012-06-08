@@ -73,7 +73,7 @@
                     <xs:annotation>
                         <xs:appinfo>
                             <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" 
-                                        printMethod="org.apache.ivory.entity.v0.EntityHelper.getTimeZoneId" />
+                                        printMethod="org.apache.ivory.entity.v0.SchemaHelper.getTimeZoneId" />
                         </xs:appinfo>
                     </xs:annotation>
                     <xs:restriction base="xs:string" />
