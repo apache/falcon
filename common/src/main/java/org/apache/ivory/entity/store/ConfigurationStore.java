@@ -99,6 +99,15 @@ public class ConfigurationStore implements IvoryService {
 
     @Override
     public void init() throws IvoryException {
+        String listenerClassNames = StartupProperties.get().
+                getProperty("configstore.listeners", "org.apache.ivory.entity.v0.EntityGraph");
+        for(String listenerClassName:listenerClassNames.split(",")) {
+            listenerClassName = listenerClassName.trim();
+            if (listenerClassName.isEmpty()) continue;
+            ConfigurationChangeListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+            registerListener(listener);
+        }
+        
         try {
             for (EntityType type : EntityType.values()) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
@@ -109,21 +118,14 @@ public class ConfigurationStore implements IvoryService {
                         String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
                                                                                                  // ".xml"
                         String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
-                        entityMap.put(entityName, restore(type, entityName));
+                        Entity entity = restore(type, entityName);
+                        entityMap.put(entityName, entity);
+                        onAdd(entity);
                     }
                 }
             }
         } catch (IOException e) {
             throw new IvoryException("Unable to restore configurations", e);
-        }
-        
-        String listenerClassNames = StartupProperties.get().
-                getProperty("configstore.listeners", "org.apache.ivory.entity.v0.EntityGraph");
-        for(String listenerClassName:listenerClassNames.split(",")) {
-            listenerClassName = listenerClassName.trim();
-            if (listenerClassName.isEmpty()) continue;
-            ConfigurationChangeListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
-            registerListener(listener);
         }
     }
 

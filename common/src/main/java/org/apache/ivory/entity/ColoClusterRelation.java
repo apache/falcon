@@ -68,6 +68,8 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
 
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws IvoryException {
+        if (oldEntity.getEntityType() != EntityType.CLUSTER)
+            return;
         throw new IvoryException("change shouldn't be supported on cluster!");
     }
 }

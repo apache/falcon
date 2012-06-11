@@ -160,27 +160,23 @@ public abstract class AbstractEntityManager implements IvoryService {
 
     protected String[] getApplicableColos(String type, String name) throws IvoryWebException {
         try {
-            return getApplicableColosInternal(type, name);
+            if (DeploymentUtil.isEmbeddedMode())
+                return DeploymentUtil.getDefaultColos();
+
+            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+                return getAllColos();
+
+            Entity entity = EntityUtil.getEntity(type, name);
+            String[] clusters = EntityUtil.getClustersDefined(entity);
+            Set<String> colos = new HashSet<String>();
+            for (String cluster : clusters) {
+                Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                colos.add(clusterEntity.getColo());
+            }
+            return colos.toArray(new String[colos.size()]);
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
-    }
-
-    protected String[] getApplicableColosInternal(String type, String name) throws IvoryException {
-        if (DeploymentUtil.isEmbeddedMode())
-            return DeploymentUtil.getDefaultColos();
-
-        if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
-            return getAllColos();
-
-        Entity entity = EntityUtil.getEntity(type, name);
-        String[] clusters = EntityUtil.getClustersDefined(entity);
-        Set<String> colos = new HashSet<String>();
-        for (String cluster : clusters) {
-            Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);
-            colos.add(clusterEntity.getColo());
-        }
-        return colos.toArray(new String[colos.size()]);
     }
 
     /**

@@ -4,6 +4,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
 import org.apache.ivory.entity.EntityNotRegisteredException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
@@ -127,16 +128,17 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         APIResult result = new EntityProxy(type, entity) {
             @Override
-            protected String[] getColosToApply() {
+            public APIResult execute() {
                 try {
-                    return getApplicableColosInternal(type, entity);
+                    EntityUtil.getEntity(type, entity);
+                    return super.execute();
                 } catch (EntityNotRegisteredException e) {
-                    return new String[] { };
+                    return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully");
                 } catch (IvoryException e) {
                     throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
                 }
             }
-
+            
             @Override
             protected APIResult doExecute(String colo) throws IvoryException {
                 return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entity, colo);

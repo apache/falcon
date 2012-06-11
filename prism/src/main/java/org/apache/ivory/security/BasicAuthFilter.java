@@ -76,7 +76,7 @@ public class BasicAuthFilter implements Filter {
         } else {
             CurrentUser.authenticate(user);
             try {
-                NDC.push(user + ":" + httpRequest.getPathInfo());
+                NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
                 NDC.push(requestId);
                 LOG.info("Request from user: " + user + ", path=" +
                         httpRequest.getPathInfo() + ", query=" +

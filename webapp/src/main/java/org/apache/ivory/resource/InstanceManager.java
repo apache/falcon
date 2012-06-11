@@ -21,8 +21,8 @@ public class InstanceManager extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event="running")
     @Override
-    public InstancesResult getRunningInstances(@PathParam("entityType") String type,
-                                                      @PathParam("entityName") String entity,
+    public InstancesResult getRunningInstances(@PathParam("type") String type,
+                                                      @PathParam("entity") String entity,
                                                       @QueryParam("colo") String colo) {
         return super.getRunningInstances(type, entity, colo);
     }
@@ -32,8 +32,8 @@ public class InstanceManager extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event="instance-status")
     @Override
-    public InstancesResult getStatus(@Dimension("type") @PathParam("entityType") String type,
-                                            @Dimension("entity") @PathParam("entityName") String entity,
+    public InstancesResult getStatus(@Dimension("type") @PathParam("type") String type,
+                                            @Dimension("entity") @PathParam("entity") String entity,
                                             @Dimension("start-time") @QueryParam("start") String startStr,
                                             @Dimension("end-time") @QueryParam("end") String endStr,
                                             @Dimension("runid") @QueryParam("runid") String runId,
@@ -47,8 +47,8 @@ public class InstanceManager extends AbstractInstanceManager {
     @Monitored(event="kill-instance")
     @Override
     public InstancesResult killInstance(@Context HttpServletRequest request,
-                                        @Dimension("type") @PathParam("entityType") String type,
-                                        @Dimension("entity") @PathParam("entityName") String entity,
+                                        @Dimension("type") @PathParam("type") String type,
+                                        @Dimension("entity") @PathParam("entity") String entity,
                                         @Dimension("start-time") @QueryParam("start") String startStr,
                                         @Dimension("end-time") @QueryParam("end") String endStr,
                                         @Dimension("colo") @QueryParam("colo") String colo) {
@@ -61,8 +61,8 @@ public class InstanceManager extends AbstractInstanceManager {
 	@Monitored(event="suspend-instance")
     @Override
     public InstancesResult suspendInstance(@Context HttpServletRequest request,
-                                           @Dimension("type") @PathParam("entityType") String type,
-                                           @Dimension("entity") @PathParam("entityName") String entity,
+                                           @Dimension("type") @PathParam("type") String type,
+                                           @Dimension("entity") @PathParam("entity") String entity,
                                            @Dimension("start-time") @QueryParam("start") String startStr,
                                            @Dimension("end-time") @QueryParam("end") String endStr,
                                            @Dimension("colo") @QueryParam("colo") String colo) {
@@ -75,8 +75,8 @@ public class InstanceManager extends AbstractInstanceManager {
 	@Monitored(event="resume-instance")
     @Override
     public InstancesResult resumeInstance(@Context HttpServletRequest request,
-                                          @Dimension("type") @PathParam("entityType") String type,
-                                          @Dimension("entity") @PathParam("entityName") String entity,
+                                          @Dimension("type") @PathParam("type") String type,
+                                          @Dimension("entity") @PathParam("entity") String entity,
                                           @Dimension("start-time") @QueryParam("start") String startStr,
                                           @Dimension("end-time") @QueryParam("end") String endStr,
                                           @Dimension("colo") @QueryParam("colo") String colo) {
@@ -88,8 +88,8 @@ public class InstanceManager extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
 	@Monitored(event="re-run-instance")
     @Override
-    public InstancesResult reRunInstance(@Dimension("type") @PathParam("entityType") String type,
-                                                @Dimension("entity") @PathParam("entityName") String entity,
+    public InstancesResult reRunInstance(@Dimension("type") @PathParam("type") String type,
+                                                @Dimension("entity") @PathParam("entity") String entity,
                                                 @Dimension("start-time") @QueryParam("start") String startStr,
                                                 @Dimension("end-time") @QueryParam("end") String endStr,
                                                 @Context HttpServletRequest request,
