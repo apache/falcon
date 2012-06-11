@@ -126,10 +126,13 @@ public abstract class AbstractEntityManager implements IvoryService {
             APIResult result = results[index];
             message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
             requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
-            if (!(result instanceof InstancesResult))
-                continue;
+
+            if ((result instanceof InstancesResult)) continue;
+            if (((InstancesResult) result).getInstances() == null) continue;
+
             for (Instance instance : ((InstancesResult) result).getInstances()) {
-                Instance instClone = new Instance(instance.cluster, colos[index] + "/" + instance.getInstance(), instance.getStatus());
+                Instance instClone = new Instance(instance.cluster,
+                        colos[index] + "/" + instance.getInstance(), instance.getStatus());
                 instances.add(new Instance(instClone, instance.logFile, instance.actions));
             }
             statusCount += results[index].getStatus().ordinal();
