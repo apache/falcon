@@ -219,7 +219,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put(ARG.feedNames.getPropName(), feed.getName());
             props.put(ARG.feedInstancePaths.getPropName(), pathsWithPartitions.toString());
             props.put("sourceRelativePaths", pathsWithPartitions.toString());
-            props.put("distcpSourcePaths", "${coord:dataOut('input')}");
+            props.put("distcpSourcePaths", "${coord:dataIn('input')}");
             props.put("distcpTargetPaths", "${coord:dataOut('output')}");
             replicationWF.setConfiguration(getCoordConfig(props));
             replicationAction.setWorkflow(replicationWF);
