@@ -25,6 +25,7 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCp;
@@ -36,17 +37,16 @@ import org.apache.log4j.Logger;
 public class FeedReplicator extends Configured implements Tool {
 
 	private static Logger LOG = Logger.getLogger(FeedReplicator.class);
-	private DistCpOptions options;
 
-	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new FeedReplicator(), args);
+    public static void main(String[] args) throws Exception {
+		ToolRunner.run(new Configuration(), new FeedReplicator(), args);
 	}
 
 	@Override
 	public int run(String[] args) throws Exception {
 
-		options =getDistCpOptions(args);
-		DistCp distCp = new DistCp(this.getConf(), options);
+        DistCpOptions options = getDistCpOptions(args);
+		DistCp distCp = new CustomReplicator(this.getConf(), options);
 		LOG.info("Started DistCp");
 		distCp.execute();
 		LOG.info("Completed DistCp");
@@ -57,36 +57,27 @@ public class FeedReplicator extends Configured implements Tool {
 	public DistCpOptions getDistCpOptions(String[] args) throws ParseException {
 		Options options = new Options();
 		Option opt;
-		opt = new Option("atomicCommit", true,
-				"specify atomic commit, with optional tmp directory");
+		opt = new Option("update", false,
+				"specify update for synching folders");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("ignoreFailures", true,
-				"a failing map will not cause the job to fail before all splits are attempted");
-		opt.setRequired(true);
-		options.addOption(opt);
-		opt = new Option(
-				"overwrite",
-				true,
-				"if a map fails and overrite is not specified, all the files in the split, not only those that failed, will be recopied");
-		opt.setRequired(true);
-		options.addOption(opt);
-		opt = new Option("skipCRC", true, "skips CRC check after copying");
-		opt.setRequired(true);
-		options.addOption(opt);
+
 		opt = new Option("blocking", true,
 				"should DistCp be running in blocking mode");
 		opt.setRequired(true);
 		options.addOption(opt);
+
 		opt = new Option("maxMaps", true,
 				"max number of maps to use for this copy");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("sourcePaths", true,
+
+        opt = new Option("sourcePaths", true,
 				"comma separtated list of source paths to be copied");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("targetPath", true, "target path");
+
+        opt = new Option("targetPath", true, "target path");
 		opt.setRequired(true);
 		options.addOption(opt);
 
@@ -97,14 +88,7 @@ public class FeedReplicator extends Configured implements Tool {
 
 		DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(
 				trgPath));
-		distcpOptions.setAtomicCommit(Boolean.valueOf(cmd
-				.getOptionValue("atomicCommit")));
-		distcpOptions.setIgnoreFailures(Boolean.valueOf(cmd
-				.getOptionValue("ignoreFailures")));
-		distcpOptions.setOverwrite(Boolean.valueOf(cmd
-				.getOptionValue("overwrite")));
-		distcpOptions
-				.setSkipCRC(Boolean.valueOf(cmd.getOptionValue("skipCRC")));
+        distcpOptions.setSyncFolder(true);
 		distcpOptions.setBlocking(Boolean.valueOf(cmd
 				.getOptionValue("blocking")));
 		distcpOptions

@@ -17,41 +17,34 @@
  */
 package org.apache.ivory.repliation;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import junit.framework.Assert;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.ivory.replication.FeedReplicator;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FeedReplicatorTest {
 
-	@Test
-	public void testArguments() throws Exception {
-		/*
-		 * <arg>-atomicCommit</arg><arg>false</arg>
-		 * <arg>-ignoreFailures</arg><arg>false</arg>
-		 * <arg>-overwrite</arg><arg>false</arg>
-		 * <arg>-skipCRC</arg><arg>false</arg>
-		 * <arg>-blocking</arg><arg>true</arg> <arg>-maxMaps</arg><arg>20</arg>
-		 * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
-		 * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
-		 */
-		FeedReplicator replicator = new FeedReplicator();
-		DistCpOptions options = replicator.getDistCpOptions(new String[] { "-atomicCommit", "false",
-				"-ignoreFailures", "false", "-overwrite", "false", "-skipCRC",
-				"false", "-blocking", "true", "-maxMaps", "20", "-sourcePaths",
-				"hdfs://localhost:8020/tmp/", "-targetPath",
-				"hdfs://localhost1:8020/tmp/" });
-		
-		List<Path> srcPaths = new ArrayList<Path>(); 
-		srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
-		Assert.assertEquals(options.getSourcePaths(), srcPaths);
-		Assert.assertEquals(options.getTargetPath(), new Path("hdfs://localhost1:8020/tmp/"));
-	}
-	
+    @Test
+    public void testArguments() throws Exception {
+        /*
+         * <arg>-update</arg>
+         * <arg>-blocking</arg><arg>true</arg> <arg>-maxMaps</arg><arg>20</arg>
+         * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
+         * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
+         */
+        FeedReplicator replicator = new FeedReplicator();
+        DistCpOptions options = replicator.getDistCpOptions(new String[] { "-update",
+                "-blocking", "true", "-maxMaps", "5", "-sourcePaths",
+                "hdfs://localhost:8020/tmp/", "-targetPath",
+                "hdfs://localhost1:8020/tmp/" });
 
+        List<Path> srcPaths = new ArrayList<Path>();
+        srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        Assert.assertEquals(options.getSourcePaths(), srcPaths);
+        Assert.assertEquals(options.getTargetPath(), new Path("hdfs://localhost1:8020/tmp/"));
+    }
 }

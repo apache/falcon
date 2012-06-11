@@ -23,12 +23,10 @@
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
             <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
-            <arg>-atomicCommit</arg><arg>false</arg>
-            <arg>-ignoreFailures</arg><arg>false</arg>
-            <arg>-overwrite</arg><arg>false</arg>
-            <arg>-skipCRC</arg><arg>false</arg>
+            <arg>-Divory.include.path</arg><arg>${sourceRelativePaths}</arg>
+            <arg>-update</arg>
             <arg>-blocking</arg><arg>true</arg>
-			<arg>-maxMaps</arg><arg>20</arg>
+			<arg>-maxMaps</arg><arg>5</arg>
 			<arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
 			<arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
         </java>
