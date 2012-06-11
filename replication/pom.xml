@@ -34,23 +34,7 @@
 		<dependency>
 			<groupId>org.apache.hadoop.tools</groupId>
 			<artifactId>hadoop-distcp</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-feed</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-test-util</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
+			<version>0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
