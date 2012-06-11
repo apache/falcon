@@ -34,6 +34,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.expression.ExpressionHelper;
+import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.log4j.Logger;
@@ -104,8 +105,11 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     public void onAdd(Entity entity) throws IvoryException {
         if (entity.getEntityType() != EntityType.CLUSTER)
             return;
+        
         Cluster cluster = (Cluster) entity;
-        addLibsTo(cluster);
+        String currentColo = DeploymentUtil.getCurrentColo();
+        if(DeploymentUtil.isEmbeddedMode() || currentColo.equals(cluster.getColo()))
+            addLibsTo(cluster);
     }
 
     @Override
