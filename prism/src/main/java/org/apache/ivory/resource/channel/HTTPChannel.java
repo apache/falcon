@@ -82,8 +82,7 @@ public class HTTPChannel extends AbstractChannel {
                     .resource(UriBuilder.fromUri(url).build())
                     .header(REMOTE_USER, user).accept(accept)
                     .type(mimeType).method(httpMethod, ClientResponse.class,
-                            (httpMethod.equals("DELETE") ? null :
-                                    incomingRequest.getInputStream()));
+                            (isPost(httpMethod) ? incomingRequest.getInputStream() : null));
 
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
@@ -100,6 +99,12 @@ public class HTTPChannel extends AbstractChannel {
             LOG.error("Request failed", e);
             throw new IvoryException(e);
         }
+    }
+
+    private boolean isPost(String httpMethod) {
+        if(httpMethod.equals("POST") || httpMethod.equals("PUT"))
+            return true;
+        return false;
     }
 
     private String pathValue(Method method, Object... args)
