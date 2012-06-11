@@ -53,6 +53,7 @@
 			<arg>-topicName</arg><arg>IVORY.${entityName}</arg>
 			<arg>-status</arg><arg>SUCCEEDED</arg>
 			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
+			<arg>-cluster</arg><arg>${cluster}</arg>
 		</java>
 		<ok to="end" />
 		<error to="fail" />
