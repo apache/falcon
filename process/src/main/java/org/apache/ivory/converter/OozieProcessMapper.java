@@ -144,7 +144,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                     coord.setInputEvents(new INPUTEVENTS());
                 coord.getInputEvents().getDataIn().add(datain);
 
-                String inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
+                String inputExpr;
+                if(input.getPartition() != null)
+                    inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
+                else
+                    inputExpr = getELExpression("coord:dataIn('" + input.getName() + "')");
                 props.put(input.getName(), inputExpr);
                 inputFeeds.add(input.getName());
                 inputPaths.add(inputExpr);

@@ -641,10 +641,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         BundleJob bundle = getBundleInfo(cluster, bundleId);
         if (oldBundleStatus == null)
             oldBundleStatus = bundle.getStatus();
-        suspend(cluster, bundleId);
+        
+        suspend(cluster, bundle);
 
-        List<CoordinatorJob> coords = bundle.getCoordinators();
-        for (CoordinatorJob coord : coords) {
+        //change coords
+        for (CoordinatorJob coord : bundle.getCoordinators()) {
             LOG.debug("Updating endtime of coord " + coord.getId() + " to " + EntityUtil.formatDateUTC(endTime) + " on cluster "
                     + cluster);
             Date lastActionTime = getCoordLastActionTime(coord);
@@ -663,16 +664,27 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             }
         }
 
-        if (oldBundleStatus != Job.Status.SUSPENDED && oldBundleStatus != Job.Status.PREPSUSPENDED)
-            resume(cluster, bundleId);
+        if (oldBundleStatus != Job.Status.SUSPENDED && oldBundleStatus != Job.Status.PREPSUSPENDED) {
+            resume(cluster, bundle);
+        }
     }
 
+    private void suspend(String cluster, BundleJob bundle) throws IvoryException {
+        for(CoordinatorJob coord : bundle.getCoordinators())
+            suspend(cluster, coord.getId());
+    }
+
+    private void resume(String cluster, BundleJob bundle) throws IvoryException {
+        for(CoordinatorJob coord : bundle.getCoordinators())
+            resume(cluster, coord.getId());
+    }
+    
     private void updateInternal(Entity oldEntity, Entity newEntity, String cluster, BundleJob bundle) throws IvoryException {
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
         // Change end time of coords and schedule new bundle
         Job.Status oldBundleStatus = bundle.getStatus();
-        suspend(cluster, bundle.getId());
+        suspend(cluster, bundle);
 
         BundleJob newBundle = findBundle(newEntity, cluster);
         Date endTime;
@@ -737,11 +749,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             client.reRun(jobId, jobprops);
-            
-            jobInfo = client.getJobInfo(jobId);
-            if(jobInfo.getStatus() != WorkflowJob.Status.RUNNING)
-                throw new IvoryException("");
-            
+            assertStatus(cluster, jobId, WorkflowJob.Status.RUNNING);
             LOG.info("Rerun job " + jobId + " on cluster " + cluster);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
@@ -749,8 +757,14 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
+    private void assertStatus(String cluster, String jobId, Status status) throws IvoryException {
+        String actualStatus = getWorkflowStatus(cluster, jobId);
+        if (!actualStatus.equals(status.name()))
+            throw new IvoryException("For Job" + jobId + ", actual status: " + actualStatus + ", expected status: " + status);
+    }
+
     @Override
-    public String instanceStatus(String cluster, String jobId) throws IvoryException {
+    public String getWorkflowStatus(String cluster, String jobId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
@@ -769,7 +783,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return jobId;
     }
 
-    public String run(String cluster, Properties props) throws IvoryException {
+    private String run(String cluster, Properties props) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             String jobId = client.run(props);
@@ -781,37 +795,40 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    public void suspend(String cluster, String jobId) throws IvoryException {
+    private void suspend(String cluster, String jobId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.suspend(jobId);
+            assertStatus(cluster, jobId, Status.SUSPENDED);
             LOG.info("Suspended job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
     }
 
-    public void resume(String cluster, String jobId) throws IvoryException {
+    private void resume(String cluster, String jobId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.resume(jobId);
+            assertStatus(cluster, jobId, Status.RUNNING);
             LOG.info("Resumed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
     }
 
-    public void kill(String cluster, String jobId) throws IvoryException {
+    private void kill(String cluster, String jobId) throws IvoryException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.kill(jobId);
+            assertStatus(cluster, jobId, Status.KILLED);
             LOG.info("Killed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }
     }
 
-    public void change(String cluster, String jobId, String changeValue) throws IvoryException {
+    private void change(String cluster, String jobId, String changeValue) throws IvoryException {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             client.change(jobId, changeValue);
@@ -837,6 +854,17 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             changeValueStr = changeValue.substring(0, changeValueStr.length() - 1);
 
         change(cluster, id, changeValueStr);
+        
+        //assert that its really changed
+        try {
+            OozieClient client = OozieClientFactory.get(cluster);
+            CoordinatorJob coord = client.getCoordJobInfo(id);
+            if (coord.getConcurrency() != concurrency || coord.getEndTime() != coord.getEndTime() || pauseTime.equals("") ? coord
+                    .getPauseTime() != null : coord.getPauseTime() != EntityUtil.parseDateUTC(pauseTime))
+                throw new IvoryException("Failed to change coord " + id + " with change value " + changeValueStr);
+        } catch (OozieClientException e) {
+            throw new IvoryException(e);
+        }
     }
 
     @Override
@@ -851,5 +879,4 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
     }
-
 }

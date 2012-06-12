@@ -45,7 +45,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
 					LOG.error("Error while reading message from the queue: ", e);
 					continue;
 				}
-				String jobStatus = handler.getWfEngine().instanceStatus(
+				String jobStatus = handler.getWfEngine().getWorkflowStatus(
 						message.getClusterName(), message.getWfId());
 				handleRerun(message.getClusterName(),jobStatus, message);
 
