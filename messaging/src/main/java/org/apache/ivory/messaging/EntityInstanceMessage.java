@@ -126,8 +126,10 @@ public class EntityInstanceMessage {
 
 	public static EntityInstanceMessage[] getMessages(CommandLine cmd)
 			throws ParseException {
-
 		String[] feedNames = getFeedNames(cmd);
+		if(feedNames == null)
+		    return null;
+		
 		String[] feedPaths;
 		try {
 			feedPaths = getFeedPaths(cmd);
@@ -162,12 +164,15 @@ public class EntityInstanceMessage {
 	}
 
 	private static String[] getFeedNames(CommandLine cmd) {
-		String topicName = cmd.getOptionValue(ARG.topicName.getArgName());
+		String feedNameStr = cmd.getOptionValue(ARG.feedNames.getArgName());
+		if(feedNameStr.equals("null"))
+		    return null;
+		
+        String topicName = cmd.getOptionValue(ARG.topicName.getArgName());
 		if (topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
-			return new String[] { cmd
-					.getOptionValue(ARG.feedNames.getArgName()) };
+			return new String[] { feedNameStr };
 		}
-		return cmd.getOptionValue(ARG.feedNames.getArgName()).split(",");
+		return feedNameStr.split(",");
 	}
 
 	private static String[] getFeedPaths(CommandLine cmd) throws IOException {

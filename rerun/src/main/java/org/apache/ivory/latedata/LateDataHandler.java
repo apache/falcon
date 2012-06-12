@@ -19,15 +19,12 @@
 package org.apache.ivory.latedata;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -85,8 +82,12 @@ public class LateDataHandler extends Configured implements Tool {
 
 		Path file = new Path(command.getOptionValue("out"));
 		Map<String, Long> map = new LinkedHashMap<String, Long>();
-		String[] pathGroups = command.getOptionValue("paths").split("#");
-		String[] inputFeeds = command.getOptionValue("ivoryInputFeeds").split(
+		String pathStr = getOptionValue(command, "paths");
+		if(pathStr == null)
+		    return 0;
+		
+		String[] pathGroups = pathStr.split("#");
+		String[] inputFeeds = getOptionValue(command, "ivoryInputFeeds").split(
 				"#");
 		for (int index = 0; index < pathGroups.length; index++) {
 			long usage = 0;
@@ -107,6 +108,13 @@ public class LateDataHandler extends Configured implements Tool {
 		return 0;
 	}
 
+	private String getOptionValue(CommandLine command, String option) {
+	    String value = command.getOptionValue(option);
+	    if(value.equals("null"))
+	        return null;
+	    return value;
+	}
+	
 	public String detectChanges(Path file, Map<String, Long> map, Configuration conf)
 			throws Exception {
 

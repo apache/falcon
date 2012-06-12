@@ -142,23 +142,31 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     private void validateDatasetName(Inputs inputs, Outputs outputs) throws ValidationException {
         Set<String> datasetNames = new HashSet<String>();
-        for (Input input : inputs.getInputs()) {
-            if (!datasetNames.add(input.getName())) {
-                throw new ValidationException("Input name: " + input.getName() + " is already used");
+        if(inputs != null) {
+            for (Input input : inputs.getInputs()) {
+                if (!datasetNames.add(input.getName())) {
+                    throw new ValidationException("Input name: " + input.getName() + " is already used");
+                }
             }
         }
-        for (Output output : outputs.getOutputs()) {
-            if (!datasetNames.add(output.getName())) {
-                throw new ValidationException("Output name: " + output.getName() + " is already used");
+        
+        if(outputs != null) {
+            for (Output output : outputs.getOutputs()) {
+                if (!datasetNames.add(output.getName())) {
+                    throw new ValidationException("Output name: " + output.getName() + " is already used");
+                }
             }
         }
     }
 
     private void validateLateInputs(Process process) throws ValidationException {
         List<String> feedName = new ArrayList<String>();
-        for (Input in : process.getInputs().getInputs()) {
-            feedName.add(in.getName());
+        if(process.getInputs() != null) {
+            for (Input in : process.getInputs().getInputs()) {
+                feedName.add(in.getName());
+            }
         }
+        
         if (process.getLateProcess() != null) {
             for (LateInput lp : process.getLateProcess().getLateInputs()) {
                 if (!feedName.contains(lp.getInput()))

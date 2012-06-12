@@ -21,6 +21,7 @@ package org.apache.ivory.converter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,13 +35,11 @@ import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
-import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Property;
@@ -126,10 +125,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // Configuration
         Map<String, String> props = createCoordDefaultConfiguration(cluster, coordPath, coordName);
 
+        List<String> inputFeeds = new ArrayList<String>();
+        List<String> inputPaths = new ArrayList<String>();
         // inputs
         if (process.getInputs() != null) {
-            StringBuffer ivoryInPaths = new StringBuffer();
-            StringBuffer ivoryInputFeeds = new StringBuffer();
             for (Input input : process.getInputs().getInputs()) {
                 SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
                 if (coord.getDatasets() == null)
@@ -146,30 +145,22 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 coord.getInputEvents().getDataIn().add(datain);
 
                 String inputExpr;
-                if (StringUtils.isNotEmpty(input.getPartition())) {
+                if(input.getPartition() != null)
                     inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
-                } else {
-                    inputExpr = "${coord:dataIn('" + input.getName() + "')}";
-                }
-                
+                else
+                    inputExpr = getELExpression("coord:dataIn('" + input.getName() + "')");
                 props.put(input.getName(), inputExpr);
-                if(process.getLateProcess() != null){
-                	for(LateInput li : process.getLateProcess().getLateInputs()){
-                    	if(input.getName().equals(li.getInput())){
-                    		ivoryInPaths.append(inputExpr).append('#');
-                            ivoryInputFeeds.append(input.getName()).append("#");
-                    	}
-                    }
-                }
+                inputFeeds.add(input.getName());
+                inputPaths.add(inputExpr);
             }
-            props.put("ivoryInPaths", ivoryInPaths.substring(0, ivoryInPaths.length() - 1));
-            props.put("ivoryInputFeeds",ivoryInputFeeds.substring(0, ivoryInputFeeds.length() - 1));
         }
+        props.put("ivoryInPaths", join(inputPaths.iterator(), '#'));
+        props.put("ivoryInputFeeds", join(inputFeeds.iterator(), '#'));
 
         // outputs
+        List<String> outputFeeds = new ArrayList<String>();
+        List<String> outputPaths = new ArrayList<String>();
         if (process.getOutputs() != null) {
-            StringBuilder outputFeedPaths = new StringBuilder();
-            StringBuilder outputFeedNames = new StringBuilder();
             for (Output output : process.getOutputs().getOutputs()) {
                 SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
                 if (coord.getDatasets() == null)
@@ -184,15 +175,16 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                     coord.setOutputEvents(new OUTPUTEVENTS());
                 coord.getOutputEvents().getDataOut().add(dataout);
 
-                outputFeedNames.append(output.getName()).append(",");
-                outputFeedPaths.append("${coord:dataOut('" + output.getName() + "')}").append(",");
+                String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
+                props.put(output.getName(), outputExpr);
+                outputFeeds.add(output.getName());
+                outputPaths.add(outputExpr);
 
-                props.put(output.getName(), "${coord:dataOut('" + output.getName() + "')}");
             }
-            // Output feed name and path for parent workflow
-            props.put(ARG.feedNames.getPropName(), outputFeedNames.substring(0, outputFeedNames.length() - 1));
-            props.put(ARG.feedInstancePaths.getPropName(), outputFeedPaths.substring(0, outputFeedPaths.length() - 1));
         }
+        // Output feed name and path for parent workflow
+        props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
+        props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
 
         String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
         if (libDir != null)
@@ -215,6 +207,12 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return coord;
     }
 
+    private String join(Iterator<String> itr, char sep) {
+        String joinedStr = StringUtils.join(itr, sep);
+        if(joinedStr.isEmpty())
+            joinedStr = "null";
+        return joinedStr;
+    }
 
     private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
         Path path = new Path(wfpath.replace("${nameNode}", ""));
@@ -236,15 +234,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     }
 
     private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName) throws IvoryException {
-        Feed feed;
-        try {
-            feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
-        } catch (Exception e) {
-            throw new IvoryException(e);
-        }
-        if (feed == null) // This should never happen as its checked in process
-                          // validation
-            throw new RuntimeException("Referenced feed " + feedName + " is not registered!");
+        Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
