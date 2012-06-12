@@ -737,6 +737,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             client.reRun(jobId, jobprops);
+            
+            jobInfo = client.getJobInfo(jobId);
+            if(jobInfo.getStatus() != WorkflowJob.Status.RUNNING)
+                throw new IvoryException("");
+            
             LOG.info("Rerun job " + jobId + " on cluster " + cluster);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);

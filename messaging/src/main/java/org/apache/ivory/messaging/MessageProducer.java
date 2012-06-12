@@ -152,7 +152,7 @@ public class MessageProducer extends Configured implements Tool {
 		}
 		EntityInstanceMessage[] entityInstanceMessage = EntityInstanceMessage
 				.getMessages(cmd);
-		if (entityInstanceMessage.length == 0) {
+		if (entityInstanceMessage == null || entityInstanceMessage.length == 0) {
 			LOG.warn("No operation on output feed");
 			return 0;
 		}
