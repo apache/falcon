@@ -383,7 +383,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             List<CoordinatorAction> actions = actionsMap.get(cluster);
 
             for (CoordinatorAction coordinatorAction : actions) {
-                String status;
+                String status = coordinatorAction.getStatus().name();
                 WorkflowJob jobInfo = null;
                 if (coordinatorAction.getExternalId() != null) {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
@@ -426,19 +426,19 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                         case STATUS:
                             break;
                     }
-                    if (action != OozieWorkflowEngine.JobAction.STATUS && coordinatorAction.getExternalId() != null) {
-                        jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
-                    }
-
-                    String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
-                    InstancesResult.Instance instance = new InstancesResult.Instance(cluster, nominalTimeStr,
-                            WorkflowStatus.valueOf(status));
-                    if (jobInfo != null) {
-                        instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
-                        instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());
-                    }
-                    instances.add(instance);
                 }
+                if (action != OozieWorkflowEngine.JobAction.STATUS && coordinatorAction.getExternalId() != null) {
+                    jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
+                }
+
+                String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
+                InstancesResult.Instance instance = new InstancesResult.Instance(cluster, nominalTimeStr,
+                        WorkflowStatus.valueOf(status));
+                if (jobInfo != null) {
+                    instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
+                    instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());
+                }
+                instances.add(instance);
             }
         }
         return new InstancesResult(action.name(), instances.toArray(new Instance[instances.size()]));

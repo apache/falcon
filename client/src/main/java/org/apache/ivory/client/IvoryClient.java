@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.InstancesResult;
@@ -242,7 +243,7 @@ public class IvoryClient {
 	public String getDefinition(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.DEFINITION, entityType, entityName);
+		return sendDefinitionRequest(Entities.DEFINITION, entityType, entityName);
 
 	}
 
@@ -345,6 +346,18 @@ public class IvoryClient {
 		checkIfSuccessfull(clientResponse);
 
         return parseAPIResult(clientResponse);
+	}
+
+	private String sendDefinitionRequest(Entities entities, String entityType,
+			String entityName) throws IvoryCLIException {
+
+		ClientResponse clientResponse = service.path(entities.path)
+				.path(entityType).path(entityName).header(REMOTE_USER, USER)
+				.accept(entities.mimeType).type(MediaType.TEXT_XML)
+				.method(entities.method, ClientResponse.class);
+
+		checkIfSuccessfull(clientResponse);
+        return clientResponse.getEntity(String.class);
 	}
 
 	private String sendDependencyRequest(Entities entities, String entityType,

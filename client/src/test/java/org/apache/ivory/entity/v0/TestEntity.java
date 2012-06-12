@@ -18,8 +18,6 @@
 
 package org.apache.ivory.entity.v0;
 
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Clusters;
 import org.apache.ivory.entity.v0.process.Process;
@@ -32,10 +30,10 @@ public class TestEntity {
 		Process process1 = createProcess("process", "cluster");
 		Process process2 = createProcess("process", "cluster");
 
-		assertTrue(process1.deepEquals(process2));
+		Assert.assertTrue(process1.deepEquals(process2));
 
 		process2.getClusters().getClusters().get(0).setName("cluster2");
-		assertFalse(process1.deepEquals(process2));
+		Assert.assertFalse(process1.deepEquals(process2));
 	}
 
 	private Process createProcess(String name, String clusterName) {
