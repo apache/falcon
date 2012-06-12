@@ -29,14 +29,14 @@ public class ProcessSubscriberService implements IvoryService {
 
 	private String ivoryBrokerImplClass;
 	private String ivoryBrokerUrl;
-	private String ivoryProcessTopic;
+	private String ivoryEntityTopic;
 
 	private IvoryTopicSubscriber subscriber;
 
 	private static enum JMSprops {
 		IvoryBrokerImplClass("broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory"), 
 		IvoryBrokerUrl("broker.url", "tcp://localhost:61616?daemon=true"), 
-		IvoryProcessTopic("process.topic", "IVORY.ENTITY.TOPIC");
+		IvoryEntityTopic("entity.topic", "IVORY.ENTITY.TOPIC");
 
 		private String propName;
 		private String defaultPropValue;
@@ -57,10 +57,10 @@ public class ProcessSubscriberService implements IvoryService {
 	public void init() throws IvoryException {
 		this.ivoryBrokerImplClass = getPropertyValue(JMSprops.IvoryBrokerImplClass);
 		this.ivoryBrokerUrl = getPropertyValue(JMSprops.IvoryBrokerUrl);
-		this.ivoryProcessTopic = getPropertyValue(JMSprops.IvoryProcessTopic);
+		this.ivoryEntityTopic = getPropertyValue(JMSprops.IvoryEntityTopic);
 
 		subscriber = new IvoryTopicSubscriber(ivoryBrokerImplClass, "", "",
-				ivoryBrokerUrl, ivoryProcessTopic);
+				ivoryBrokerUrl, ivoryEntityTopic);
 		subscriber.startSubscriber();
 	}
 

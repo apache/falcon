@@ -59,7 +59,8 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 					event.getDelay(TimeUnit.MILLISECONDS));
 			msg.setStringProperty("TYPE", event.getType().name());
 			producer.send(msg);
-			LOG.debug("Enqueued Message:" + event.toString());
+			LOG.debug("Enqueued Message:" + event.toString() + "with delay "
+					+ event.getDelay(TimeUnit.MILLISECONDS) + " milli sec");
 			return true;
 		} catch (Exception e) {
 			LOG.error("Unable to offer event:" + event + " to activeMqueue", e);

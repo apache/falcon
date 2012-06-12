@@ -370,7 +370,12 @@ public class EntityUtil {
 					.getProperty("feed.late.frequency", "hours(3)")));
 			lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
 					.getProperty("feed.retry.policy", "exp-backoff")));
-			//TODO Late for feed needs to be coded
+			LateInput lateInput = new LateInput();
+			lateInput.setInput(entity.getName());
+			//TODO - Assuming the late workflow is not used
+			lateInput.setWorkflowPath("ignore.xml");
+			lateProcess.getLateInputs().add(lateInput);
+			return lateProcess;
 		case PROCESS:
 			Process process = (Process) entity;
 			return process.getLateProcess();

@@ -27,9 +27,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.process.LateInput;
-import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
@@ -58,26 +57,19 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 			String detectLate = detectLate(message);
 
 			if (detectLate.equals("")) {
-				LOG.debug("No Late Data Detected, late rerun not scheduled for"
-						+ message.getWfId() + "at"
-						+ new Date(System.currentTimeMillis()).toString());
+				LOG.debug("No Late Data Detected, late rerun not scheduled for "
+						+ message.getWfId() + " at "
+						+ EntityUtil.formatDateUTC(new Date()));
 				return;
 			}
 
 			LOG.info("Late changes detected in the following feeds: "
 					+ detectLate);
-			LOG.info("LateRerun Scheduled for  "
-					+ message.getEntityName()
-					+ ":"
-					+ message.getInstance()
-					+ " And WorkflowId: "
-					+ message.getWfId()
-					+ " At time: "
-					+ EntityUtil.formatDateUTC(new Date(System
-							.currentTimeMillis())));
 
 			handler.getWfEngine().reRun(message.getClusterName(),
 					message.getWfId(), null);
+			LOG.info("Scheduled late rerun for wf-id: " + message.getWfId()
+					+ " on cluster: " + message.getClusterName());
 		} catch (Exception e) {
 
 			LOG.warn(
@@ -89,7 +81,6 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		}
 
 	}
-	
 
 	public String detectLate(LaterunEvent message) throws Exception {
 		LateDataHandler late = new LateDataHandler();
@@ -101,24 +92,24 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 				message.getClusterName(), message.getWfId(), "ivoryInPaths");
 		String nominalTime = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "nominalTime");
-		
+
 		Path lateLogPath = getLateLogPath(logDir, nominalTime);
 
 		Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
 
 		String[] pathGroups = ivoryInPaths.split("#");
 		String[] inputFeeds = ivoryInputFeeds.split("#");
-		Process process = (Process) EntityUtil.getEntity(EntityType.PROCESS,
+		Entity entity =  EntityUtil.getEntity(message.getEntityType(),
 				message.getEntityName());
 		List<String> lateFeed = new ArrayList<String>();
 		Configuration conf = new Configuration();
 		conf.set(
 				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
-				handler.getWfEngine().getWorkflowProperty(message.getClusterName(),
-						message.getWfId(),
+				handler.getWfEngine().getWorkflowProperty(
+						message.getClusterName(), message.getWfId(),
 						WorkflowEngine.NAME_NODE));
-		if (process.getLateProcess() != null) {
-			for (LateInput li : process.getLateProcess().getLateInputs()) {
+		if (EntityUtil.getLateProcess(entity) != null) {
+			for (LateInput li : EntityUtil.getLateProcess(entity).getLateInputs()) {
 				lateFeed.add(li.getInput());
 			}
 			for (int index = 0; index < pathGroups.length; index++) {
@@ -131,9 +122,13 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 					feedSizes.put(inputFeeds[index], usage);
 				}
 			}
+		} else {
+			LOG.warn("Late process is not configured for entity: "
+					+ message.getEntityType() + "(" + message.getEntityName()
+					+ ")");
 		}
 
-		String detectLate = late.detectChanges(lateLogPath, feedSizes,conf);
+		String detectLate = late.detectChanges(lateLogPath, feedSizes, conf);
 		return detectLate;
 	}
 

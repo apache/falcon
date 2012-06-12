@@ -44,7 +44,7 @@ public class EntityInstanceMessage {
 	private final Map<ARG, String> keyValueMap = new LinkedHashMap<ARG, String>();
 	private static final Logger LOG = Logger
 			.getLogger(EntityInstanceMessage.class);
-	private static final String IVORY_PROCESS_TOPIC_NAME = "IVORY.ENTITY.TOPIC";
+	private static final String IVORY_ENTITY_TOPIC_NAME = "IVORY.ENTITY.TOPIC";
 
 	public enum EntityOps {
 		GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
@@ -169,7 +169,7 @@ public class EntityInstanceMessage {
 		    return null;
 		
         String topicName = cmd.getOptionValue(ARG.topicName.getArgName());
-		if (topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
+		if (topicName.equals(IVORY_ENTITY_TOPIC_NAME)) {
 			return new String[] { feedNameStr };
 		}
 		return feedNameStr.split(",");
@@ -179,7 +179,7 @@ public class EntityInstanceMessage {
 		String topicName = cmd.getOptionValue(ARG.topicName.getArgName());
 		String operation = cmd.getOptionValue(ARG.operation.getArgName());
 
-		if (topicName.equals(IVORY_PROCESS_TOPIC_NAME)) {
+		if (topicName.equals(IVORY_ENTITY_TOPIC_NAME)) {
 			LOG.debug("Returning instance paths for Ivory Topic: "
 					+ cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
 			return new String[] { cmd.getOptionValue(ARG.feedInstancePaths

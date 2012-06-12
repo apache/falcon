@@ -36,9 +36,8 @@ public class InstanceManager extends AbstractInstanceManager {
                                             @Dimension("entity") @PathParam("entity") String entity,
                                             @Dimension("start-time") @QueryParam("start") String startStr,
                                             @Dimension("end-time") @QueryParam("end") String endStr,
-                                            @Dimension("runid") @QueryParam("runid") String runId,
                                             @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.getStatus(type, entity, startStr, endStr, runId, colo);
+        return super.getStatus(type, entity, startStr, endStr, colo);
     }
 
     @POST
