@@ -86,7 +86,7 @@ public class HTTPChannel extends AbstractChannel {
 
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
-                return (T)response.getEntity(method.getReturnType());
+                return (T) response.getEntity(method.getReturnType());
             } else if (response.getClientResponseStatus().getStatusCode() ==
                     Response.Status.BAD_REQUEST.getStatusCode()) {
                 LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());

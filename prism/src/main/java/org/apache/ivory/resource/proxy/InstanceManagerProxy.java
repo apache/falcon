@@ -185,7 +185,12 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             InstancesResult[] results = new InstancesResult[colos.length];
             for (int index = 0; index < colos.length; index++) {
                 try {
-                    results[index] = doExecute(colos[index]);
+                    APIResult resultHolder = doExecute(colos[index]);
+                    if (resultHolder instanceof InstancesResult) {
+                        results[index] = (InstancesResult) resultHolder;
+                    } else {
+                        throw new IvoryException(resultHolder.getMessage());
+                    }
                 } catch (IvoryException e) {
                     results[index] = new InstancesResult(APIResult.Status.FAILED,
                             e.getClass().getName() + "::" + e.getMessage(),

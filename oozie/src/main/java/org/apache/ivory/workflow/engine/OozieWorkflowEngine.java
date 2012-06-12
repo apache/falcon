@@ -383,13 +383,13 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             List<CoordinatorAction> actions = actionsMap.get(cluster);
 
             for (CoordinatorAction coordinatorAction : actions) {
-                String status = coordinatorAction.getStatus().name();
+                String status = mapActionStatus(coordinatorAction.getStatus());
                 WorkflowJob jobInfo = null;
                 if (coordinatorAction.getExternalId() != null) {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                 }
                 if (jobInfo != null) {
-                    status = jobInfo.getStatus().name();
+                    status = mapWorkflowStatus(jobInfo.getStatus());
                     switch (action) {
                         case KILL:
                             if (!WF_KILL_PRECOND.contains(jobInfo.getStatus()))
@@ -442,6 +442,27 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             }
         }
         return new InstancesResult(action.name(), instances.toArray(new Instance[instances.size()]));
+    }
+
+    private String mapActionStatus(CoordinatorAction.Status status) {
+        if (status == CoordinatorAction.Status.READY ||
+                status == CoordinatorAction.Status.WAITING ||
+                status == CoordinatorAction.Status.TIMEDOUT ||
+                status == CoordinatorAction.Status.SUBMITTED) {
+            return InstancesResult.WorkflowStatus.WAITING.name();
+        } else if (status == CoordinatorAction.Status.DISCARDED) {
+            return InstancesResult.WorkflowStatus.KILLED.name();
+        } else {
+            return status.name();
+        }
+    }
+
+    private String mapWorkflowStatus(WorkflowJob.Status status) {
+        if (status == WorkflowJob.Status.PREP) {
+            return InstancesResult.WorkflowStatus.RUNNING.name();
+        } else {
+            return status.name();
+        }
     }
 
     protected Map<String, List<CoordinatorAction>> getCoordActions(Entity entity, Date start, Date end) throws IvoryException {
