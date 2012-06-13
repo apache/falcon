@@ -20,6 +20,7 @@ package org.apache.ivory;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.resource.APIResult;
+import org.apache.ivory.resource.InstancesResult;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -36,6 +37,11 @@ public class IvoryWebException extends WebApplicationException {
         return newException(e.getMessage() + "\n" + getAddnInfo(e), status);
     }
 
+    public static IvoryWebException newInstanceException(Throwable e, Response.Status status) {
+        LOG.error("Failure reason", e);
+        return newInstanceException(e.getMessage() + "\n" + getAddnInfo(e), status);
+    }
+
 
     public static IvoryWebException newException(APIResult result,
                                                  Response.Status status) {
@@ -50,6 +56,12 @@ public class IvoryWebException extends WebApplicationException {
         APIResult result = new APIResult(APIResult.Status.FAILED, message);
         return new IvoryWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
+    }
+
+    public static IvoryWebException newInstanceException(String message, Response.Status status) {
+        LOG.error("Action failed: " + status + "\nError:" + message);
+        APIResult result = new InstancesResult(APIResult.Status.FAILED, message);
+        return new IvoryWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     private static String getMessage(Throwable e) {

@@ -9,6 +9,7 @@ import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.AbstractInstanceManager;
 import org.apache.ivory.resource.InstancesResult;
+import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
 
@@ -17,7 +18,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Path("instance")
@@ -46,11 +50,6 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             initializeFor(colo);
         }
         return processInstanceManagerChannels.get(colo);
-    }
-
-    @Override
-    public String getName() {
-        return getClass().getName();
     }
 
     @GET
@@ -205,5 +204,35 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }
 
         protected abstract InstancesResult doExecute(String colo) throws IvoryException;
+    }
+    
+    private InstancesResult consolidateInstanceResult(InstancesResult[] results, String[] colos) {
+        if (results == null || results.length == 0)
+            return null;
+
+        StringBuilder message = new StringBuilder();
+        StringBuilder requestIds = new StringBuilder();
+        List<Instance> instances = new ArrayList<Instance>();
+        int statusCount = 0;
+        for (int index = 0; index < results.length; index++) {
+            InstancesResult result = results[index];
+            message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
+            statusCount += results[index].getStatus().ordinal();
+
+            if (result.getInstances() == null) continue;
+
+            for (Instance instance : result.getInstances()) {
+                Instance instClone = new Instance(instance.cluster,
+                        colos[index] + "/" + instance.getInstance(), instance.getStatus());
+                instances.add(new Instance(instClone, instance.logFile, instance.actions));
+            }
+        }
+        Instance[] arrInstances = new Instance[instances.size()];
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
+                : ((statusCount == results.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+        InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
+        result.setRequestId(requestIds.toString());
+        return result;
     }
 }

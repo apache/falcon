@@ -32,11 +32,6 @@ public class LoggingAspectTest {
 
 	
 	private AbstractEntityManager em = new AbstractEntityManager() {
-
-        @Override
-        public String getName() {
-            return "TestService";
-        }
     };
 
 	private volatile Exception threadException;

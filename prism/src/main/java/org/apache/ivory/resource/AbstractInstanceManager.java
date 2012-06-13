@@ -43,12 +43,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 	
     protected void checkType(String type) {
         if (StringUtils.isEmpty(type)) {
-            throw IvoryWebException.newException("entity type is empty",
+            throw IvoryWebException.newInstanceException("entity type is empty",
                     Response.Status.BAD_REQUEST);
         } else {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             if (entityType == EntityType.CLUSTER) {
-                throw IvoryWebException.newException("Instance management functions don't apply to Cluster entities",
+                throw IvoryWebException.newInstanceException("Instance management functions don't apply to Cluster entities",
                         Response.Status.BAD_REQUEST);
             }
         }
@@ -64,7 +64,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.getRunningInstances(entityObject);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -86,7 +86,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 		} catch (Throwable e) {
 			LOG.error("Failed to get instances status", e);
 			throw IvoryWebException
-					.newException(e, Response.Status.BAD_REQUEST);
+					.newInstanceException(e, Response.Status.BAD_REQUEST);
 		}
 	}
 
@@ -122,7 +122,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.killInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -144,7 +144,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.suspendInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -166,7 +166,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.resumeInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 
@@ -188,7 +188,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.reRunInstances(entityObject, start, end, props);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
-            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+            throw IvoryWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 

@@ -20,12 +20,8 @@ package org.apache.ivory.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -52,16 +48,14 @@ import org.apache.ivory.entity.v0.EntityIntegrityChecker;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.resource.APIResult.Status;
-import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.security.CurrentUser;
-import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
-public abstract class AbstractEntityManager implements IvoryService {
+public abstract class AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
@@ -77,73 +71,11 @@ public abstract class AbstractEntityManager implements IvoryService {
         }
     }
 
-    @Override
-    public void init() throws IvoryException {
-    }
-
-    @Override
-    public void destroy() throws IvoryException {
-    }
-
     protected void checkColo(String colo) throws IvoryWebException {
         if (!DeploymentUtil.getCurrentColo().equals(colo)) {
             throw IvoryWebException.newException("Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
                     Response.Status.BAD_REQUEST);
         }
-    }
-
-    protected APIResult consolidateResult(Map<String, APIResult> results) {
-        if (results == null || results.size() == 0)
-            return null;
-
-        StringBuilder buffer = new StringBuilder();
-        StringBuilder requestIds = new StringBuilder();
-        int statusCount = 0;
-        for (Entry<String, APIResult> entry : results.entrySet()) {
-            String colo = entry.getKey();
-            APIResult result = entry.getValue();
-            buffer.append(colo).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
-            statusCount += result.getStatus().ordinal();
-        }
-
-        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        APIResult result = new APIResult(status, buffer.toString());
-        result.setRequestId(requestIds.toString());
-        return result;
-    }
-
-    protected InstancesResult consolidateInstanceResult(APIResult[] results, String[] colos) {
-        if (results == null || results.length == 0)
-            return null;
-
-        StringBuilder message = new StringBuilder();
-        StringBuilder requestIds = new StringBuilder();
-        List<Instance> instances = new ArrayList<Instance>();
-        int statusCount = 0;
-        for (int index = 0; index < results.length; index++) {
-            APIResult result = results[index];
-            message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
-
-            if (!(result instanceof InstancesResult)) continue;
-            InstancesResult instancesResult = (InstancesResult) result;
-            if (instancesResult.getInstances() == null) continue;
-
-            for (Instance instance : instancesResult.getInstances()) {
-                Instance instClone = new Instance(instance.cluster,
-                        colos[index] + "/" + instance.getInstance(), instance.getStatus());
-                instances.add(new Instance(instClone, instance.logFile, instance.actions));
-            }
-            statusCount += results[index].getStatus().ordinal();
-        }
-        Instance[] arrInstances = new Instance[instances.size()];
-        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
-        result.setRequestId(requestIds.toString());
-        return result;
     }
 
     protected String[] getAllColos() {
