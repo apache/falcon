@@ -83,7 +83,12 @@ public class InstancesResult extends APIResult {
     	this.instances = instanceExes;
     }
 
-	public Instance[] getInstances() {
+	public InstancesResult(Status status, String message) {
+	    super(status, message);
+    }
+
+
+    public Instance[] getInstances() {
         return instances;
     }
 

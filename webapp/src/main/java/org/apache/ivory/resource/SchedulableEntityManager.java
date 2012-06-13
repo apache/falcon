@@ -12,11 +12,6 @@ import javax.ws.rs.core.MediaType;
 @Path("entities")
 public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
-    @Override
-    public String getName() {
-        return getClass().getName();
-    }
-
     @GET
     @Path("status/{type}/{entity}")
     @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })

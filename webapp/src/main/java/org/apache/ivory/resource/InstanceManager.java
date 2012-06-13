@@ -11,11 +11,6 @@ import javax.ws.rs.core.MediaType;
 @Path("instance")
 public class InstanceManager extends AbstractInstanceManager {
 
-    @Override
-    public String getName() {
-        return getClass().getName();
-    }
-
     @GET
     @Path("running/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)

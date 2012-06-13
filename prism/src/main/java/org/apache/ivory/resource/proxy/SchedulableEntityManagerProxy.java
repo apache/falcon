@@ -23,6 +23,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.Map.Entry;
 
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
@@ -61,11 +62,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             initializeFor(colo);
         }
         return entityManagerChannels.get(colo);
-    }
-
-    @Override
-    public String getName() {
-        return getClass().getName();
     }
 
     private BufferedRequest getBufferedRequest(HttpServletRequest request) {
@@ -368,5 +364,27 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         protected abstract APIResult doExecute(String colo) throws IvoryException;
+    }
+    
+    private APIResult consolidateResult(Map<String, APIResult> results) {
+        if (results == null || results.size() == 0)
+            return null;
+
+        StringBuilder buffer = new StringBuilder();
+        StringBuilder requestIds = new StringBuilder();
+        int statusCount = 0;
+        for (Entry<String, APIResult> entry : results.entrySet()) {
+            String colo = entry.getKey();
+            APIResult result = entry.getValue();
+            buffer.append(colo).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
+            statusCount += result.getStatus().ordinal();
+        }
+
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
+                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+        APIResult result = new APIResult(status, buffer.toString());
+        result.setRequestId(requestIds.toString());
+        return result;
     }
 }
