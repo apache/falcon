@@ -52,17 +52,17 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 			if (wait == -1)
 				return;
 
-			LOG.debug("Scheduling the late rerun for process instance : "
-					+ entityName + ":" + nominalTime + " And WorkflowId: "
-					+ wfId);
+			LOG.debug("Scheduling the late rerun for entity instance : "
+					+ entityType + "(" + entityName+ ")"
+					+ ":" + nominalTime + " And WorkflowId: " + wfId);
 			LaterunEvent event = new LaterunEvent(cluster, wfId,
 					msgInsertTime.getTime(), wait, entityType, entityName,
 					nominalTime, intRunId);
 			offerToQueue(event);
 		} catch (Exception e) {
-			LOG.error("Unable to schedule late rerun for process instance : "
-					+ entityName + ":" + nominalTime + " And WorkflowId: "
-					+ wfId, e);
+			LOG.error("Unable to schedule late rerun for entity instance : "
+					+ entityType + "(" + entityName + ")"
+					+ ":" + nominalTime + " And WorkflowId: " + wfId, e);
 		}
 	}
 
@@ -72,7 +72,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
 		LateProcess lateProcess = EntityUtil.getLateProcess(entity);
 		if (lateProcess == null) {
-			LOG.warn("Late run not applicable for entity:" + entity.getName());
+			LOG.warn("Late run not applicable for entity:"
+					+ entity.getEntityType() + "(" + entity.getName() + ")");
 			return -1;
 		}
 		PolicyType latePolicy = lateProcess.getPolicy();
@@ -81,7 +82,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		Long wait = null;
 
 		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: " +cutOffTime
+			LOG.warn("Feed Cut Off time: " +EntityUtil.formatDateUTC(cutOffTime)
 					+ " has expired, Late Rerun can not be scheduled");
 			return -1;
 		} else {

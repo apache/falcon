@@ -70,7 +70,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
 
     public InstancesResult getStatus(String type, String entity, String startStr, String endStr,
-                                            String runId, String colo) {
+                                           String colo) {
         checkColo(colo);
         checkType(type);
         try {
@@ -81,10 +81,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 			Entity entityObject = EntityUtil.getEntity(type, entity);
 
 			WorkflowEngine wfEngine = getWorkflowEngine();
-			InstancesResult result = wfEngine.getStatus(
+			return wfEngine.getStatus(
 					entityObject, start, end);
-			return getInstanceWithLog(entityObject, Tag.DEFAULT,
-                    runId == null ? "0" : runId, result);
 		} catch (Throwable e) {
 			LOG.error("Failed to get instances status", e);
 			throw IvoryWebException

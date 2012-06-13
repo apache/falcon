@@ -16,8 +16,20 @@
  * limitations under the License.
  * -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-feed-parent-workflow'>
-	<start to='replication' />
-	<!--TODO Detect Late for feed -->
+	<start to='recordsize' />
+	<action name='recordsize'>
+		<java>
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
+			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}</arg>
+			<arg>-paths</arg><arg>${ivoryInPaths}</arg>
+			<arg>-ivoryInputFeeds</arg><arg>${ivoryInputFeeds}</arg>
+			<capture-output />
+		</java>
+		<ok to="replication" />
+		<error to="fork-for-failed" />
+	</action>
     <action name="replication">
         <java>
             <job-tracker>${jobTracker}</job-tracker>

@@ -79,13 +79,12 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                                             @Dimension("entityName") @PathParam("entity") final String entity,
                                             @Dimension("start-time") @QueryParam("start") final String startStr,
                                             @Dimension("end-time") @QueryParam("end") final String endStr,
-                                            @Dimension("runid") @QueryParam("runid") final String runId,
                                             @Dimension("colo") @QueryParam("colo") final String colo) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws IvoryException {
                 return getInstanceManager(colo).invoke("getStatus",
-                        type, entity, startStr, endStr, runId, colo);
+                        type, entity, startStr, endStr, colo);
             }
         }.execute(colo, entity);
     }
