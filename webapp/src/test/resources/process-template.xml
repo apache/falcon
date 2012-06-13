@@ -22,7 +22,7 @@
         <property name="user" value="${user()}"/>
     </properties>
     <workflow engine="oozie" path="/ivory/test/workflow" />
-    <retry policy="backoff" delay="minutes(10)" attempts="3" />
+    <retry policy="periodic" delay="minutes(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
         <late-input input="input" workflow-path="/ivory/test/workflow" />
