@@ -44,7 +44,6 @@ public class ExpBackoffPolicy extends AbstractRerunPolicy {
 		// TODO we can get rid of this using formula
 		while (lateTime.compareTo(now)<=0) {
 			lateTime = addTime(lateTime, (int) (factor * delayMilliSeconds));
-			System.out.println(lateTime);
 			factor *= getPower();
 		}
 		if (lateTime.after(cutOffTime))
