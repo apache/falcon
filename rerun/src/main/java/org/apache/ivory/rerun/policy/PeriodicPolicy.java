@@ -18,5 +18,8 @@
 package org.apache.ivory.rerun.policy;
 
 public class PeriodicPolicy extends ExpBackoffPolicy {
-	protected int power = 1;
+	@Override
+	protected int getPower() {
+		return 1;
+	}
 }

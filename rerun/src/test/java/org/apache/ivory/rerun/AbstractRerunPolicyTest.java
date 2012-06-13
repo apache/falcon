@@ -23,6 +23,7 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.ExpBackoffPolicy;
+import org.apache.ivory.rerun.policy.PeriodicPolicy;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -59,10 +60,34 @@ public class AbstractRerunPolicyTest {
 	public void TestExpBackoffPolicy() throws IvoryException {
 		AbstractRerunPolicy backoff = new ExpBackoffPolicy();
 		long delay = backoff.getDelay(new Frequency("minutes(2)"), 2);
-		Assert.assertEquals(480000, delay);
+		Assert.assertEquals(delay, 480000);
 
 		long currentTime = System.currentTimeMillis();
-		delay = backoff.getDelay(new Frequency("minutes(2)"), new Date(currentTime-1*4*60*1000),new Date(currentTime+1*60*60*1000));
-		Assert.assertEquals(1*6*60*1000, delay);
+		delay = backoff.getDelay(new Frequency("minutes(2)"), new Date(
+				currentTime - 1 * 4 * 60 * 1000), new Date(currentTime + 1 * 60
+				* 60 * 1000));
+		Assert.assertEquals(delay, 1 * 6 * 60 * 1000);
+		
+		currentTime = System.currentTimeMillis();
+		delay = backoff.getDelay(new Frequency("minutes(1)"), new Date(
+				currentTime - 1 * 9 * 60 * 1000), new Date(currentTime + 1 * 60
+				* 60 * 1000));
+		Assert.assertEquals(delay, 900000);
+	}
+
+	@Test
+	public void TestPeriodicPolicy() throws IvoryException, InterruptedException {
+		AbstractRerunPolicy periodic = new PeriodicPolicy();
+		long delay = periodic.getDelay(new Frequency("minutes(2)"), 2);
+		Assert.assertEquals(delay, 120000);
+		delay = periodic.getDelay(new Frequency("minutes(2)"), 5);
+		Assert.assertEquals(delay, 120000);
+
+		long currentTime = System.currentTimeMillis();
+		//Thread.sleep(1000);
+		delay = periodic.getDelay(new Frequency("minutes(3)"), new Date(
+				currentTime), new Date(currentTime + 1 * 60
+				* 60 * 1000));
+		Assert.assertEquals(delay, 180000);
 	}
 }

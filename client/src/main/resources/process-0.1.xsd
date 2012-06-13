@@ -284,7 +284,7 @@
 	
     <xs:simpleType name="policy-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="backoff" />
+            <xs:enumeration value="periodic" />
             <xs:enumeration value="exp-backoff" />
             <xs:enumeration value="final" />
         </xs:restriction>
