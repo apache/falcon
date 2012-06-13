@@ -24,12 +24,11 @@ import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.expression.ExpressionHelper;
 
 public class ExpBackoffPolicy extends AbstractRerunPolicy {
-	
-	protected int power = 2;
+
 	@Override
 	public long getDelay(Frequency delay, int eventNumber)
 			throws IvoryException {
-		return (long) (getDurationInMilliSec(delay) * Math.pow(power,
+		return (long) (getDurationInMilliSec(delay) * Math.pow(getPower(),
 				eventNumber));
 	}
 
@@ -37,20 +36,25 @@ public class ExpBackoffPolicy extends AbstractRerunPolicy {
 	public long getDelay(Frequency delay, Date nominalTime, Date cutOffTime)
 			throws IvoryException {
 		ExpressionHelper evaluator = ExpressionHelper.get();
-		Date now = new Date(         );
+		Date now = new Date();
 		Date lateTime = nominalTime;
-		long delayMilliSeconds = evaluator.evaluate(delay.toString(), Long.class);
+		long delayMilliSeconds = evaluator.evaluate(delay.toString(),
+				Long.class);
 		int factor = 1;
-		//TODO we can get rid of this using formula
-		while(lateTime.before(now)){
-			lateTime = addTime(lateTime , (int) (factor * delayMilliSeconds));
-			factor*= power;
+		// TODO we can get rid of this using formula
+		while (lateTime.compareTo(now)<=0) {
+			lateTime = addTime(lateTime, (int) (factor * delayMilliSeconds));
+			System.out.println(lateTime);
+			factor *= getPower();
 		}
-		if(lateTime.after(cutOffTime))
+		if (lateTime.after(cutOffTime))
 			lateTime = cutOffTime;
-		
-		return  (lateTime.getTime() - nominalTime.getTime());
-		
+		return (lateTime.getTime() - nominalTime.getTime());
+
+	}
+
+	protected int getPower() {
+		return 2;
 	}
 
 }
