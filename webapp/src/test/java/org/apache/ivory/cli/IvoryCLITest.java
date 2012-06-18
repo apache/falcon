@@ -45,7 +45,6 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.logging.LogMoverTest;
 import org.apache.ivory.util.EmbeddedServer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
