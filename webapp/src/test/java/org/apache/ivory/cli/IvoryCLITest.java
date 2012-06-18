@@ -93,7 +93,7 @@ public class IvoryCLITest {
 		fs = FileSystem.get(cluster.getConf());
 		fs.mkdirs(new Path("/workflow/lib"));
 		fs.copyFromLocalFile(
-				new Path(LogMoverTest.class.getResource(
+				new Path(IvoryCLITest.class.getResource(
 						"/org/apache/ivory/cli/workflow.xml").toURI()),
 				new Path("/workflow/"));
 		fs.mkdirs(new Path("/workflow/static/in"));
