@@ -189,6 +189,7 @@ public abstract class AbstractEntityManager {
 
                 configStore.remove(entityType, entity);
             } catch (EntityNotRegisteredException e) { // already deleted
+                return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") doesn't exist. Nothing to do");
             }
 
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully " + removedFromEngine);
