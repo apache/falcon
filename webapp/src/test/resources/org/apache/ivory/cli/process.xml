@@ -6,31 +6,21 @@
     permissions and ~ limitations under the License. -->
 <process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <clusters>
-        <cluster name="##clusterName##">
-            <validity end="2011-01-03T03:00Z" start="2010-01-01T01:00Z" />
+        <cluster name="testCluster">
+            <validity end="2010-01-01T01:02Z" start="2010-01-01T01:00Z" />
         </cluster>
     </clusters>
-    <parallel>2</parallel>
+    <parallel>1</parallel>
     <order>LIFO</order>
-    <frequency>minutes(60)</frequency>
+    <frequency>minutes(1)</frequency>
     <timezone>UTC</timezone>
     
     <inputs>
-        <input end="now(0,20)" start="now(0,-60)" feed="##inputFeedName##" name="inputData" />
+        <input end="now(0,0)" start="now(0,-20)" feed="##inputFeedName##" name="inputData" />
     </inputs>
     <outputs>
         <output instance="now(0,0)" feed="##outputFeedName##" name="outputData" />
     </outputs>
-    <properties>
-        <property name="field1" value="value1" />
-        <property name="field3" value="value3" />
-        <property name="field7" value="value7" />
-    </properties>
-    <workflow path="/examples/apps/aggregator" />
+    <workflow path="/workflow/workflow.xml" />
     <retry policy="periodic" delay="minutes(10)" attempts="3" />
-
-    <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input input="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
-    </late-process>
 </process>
