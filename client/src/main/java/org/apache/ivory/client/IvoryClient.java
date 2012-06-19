@@ -268,7 +268,7 @@ public class IvoryClient {
 			String end, String runid) throws IvoryCLIException {
 
 		return sendInstanceRequest(Instances.STATUS, type, entity, start,
-                end, null, runid);
+                end, null, null);
 	}
 
 	public String killInstances(String type, String entity, String start, String end)

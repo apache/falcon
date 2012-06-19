@@ -91,10 +91,9 @@
 			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowid</arg> <arg>${wf:id()}</arg>
 			<arg>-runid</arg> <arg>${wf:run()}</arg>
-			<arg>-logdir</arg> <arg>${logDir}/joblogs/${nominalTime}</arg>
-			<arg>-externalid</arg> <arg>${wf:conf("oozie.wf.external.id")}</arg>
-			<arg>-status </arg> <arg>SUCCEEDED</arg>
+			<arg>-logdir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
+			<arg>-status </arg> <arg>SUCCEEDED</arg>
 		</java>
 		<ok to="join-for-succeeded" />
 		<error to="fail" />
@@ -107,9 +106,9 @@
 			<arg>-workflowengineurl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowid</arg> <arg>${wf:id()}</arg>
 			<arg>-runid</arg> <arg>${wf:run()}</arg>
-			<arg>-logdir</arg> <arg>${logDir}/joblogs/${nominalTime}</arg>
-			<arg>-status </arg> <arg>FAILED</arg>
+			<arg>-logdir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
+			<arg>-status </arg> <arg>FAILED</arg>
 		</java>
 		<ok to="join-for-failed" />
 		<error to="fail" />

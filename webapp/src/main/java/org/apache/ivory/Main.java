@@ -29,9 +29,9 @@ public class Main {
                 "target/ivory-webapp-0.2-SNAPSHOT");
         server.start();
         
-        BrokerService broker = new BrokerService();
-        broker.setUseJmx(true);
-        broker.addConnector("vm://localhost?broker.useJmx=false&broker.persistent=true");
-        broker.start();
+//        BrokerService broker = new BrokerService();
+//        broker.setUseJmx(true);
+//        broker.addConnector("vm://localhost?broker.useJmx=false&broker.persistent=true");
+//        broker.start();
     }
 }

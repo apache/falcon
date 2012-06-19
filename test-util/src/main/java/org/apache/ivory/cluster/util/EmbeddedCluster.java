@@ -158,8 +158,8 @@ public class EmbeddedCluster {
     }
 
     public void shutdown() {
-        dfsCluster.shutdown();
         if (mrCluster != null) mrCluster.shutdown();
+        dfsCluster.shutdown();
     }
 
     public Cluster getCluster() {

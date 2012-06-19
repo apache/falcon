@@ -395,8 +395,17 @@ public class IvoryCLITest {
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
+		
+		Assert.assertEquals(0,
+				executeWithURL("entity -schedule -type feed -name "
+						+ overlay.get("outputFeedName")));
 
 		Thread.sleep(2000);
+		
+		Assert.assertEquals(0,
+				executeWithURL("instance -status -type feed -name "
+						+ overlay.get("outputFeedName")
+						+ " -start 2010-01-01T01:00Z"));
 
 		Assert.assertEquals(0,
 				executeWithURL("instance -running -type process -name "
@@ -406,13 +415,11 @@ public class IvoryCLITest {
 				executeWithURL("instance -status -type process -name "
 						+ overlay.get("processName")
 						+ " -start 2010-01-01T01:00Z"));
+		
 
-		Assert.assertEquals(0,
-				executeWithURL("instance -status -type process -name "
-						+ overlay.get("processName")
-						+ " -start 2010-01-01T01:00Z"
-						+ " -type DEFAULT -runid 0"));
 	}
+	
+	
 
 	@Test(enabled = enableTest)
 	public void testInstanceSuspendAndResume() throws Exception {
@@ -422,14 +429,14 @@ public class IvoryCLITest {
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
-
-		Thread.sleep(5000);
-
+		Thread.sleep(2000);
+		
 		Assert.assertEquals(0,
 				executeWithURL("instance -suspend -type process -name "
 						+ overlay.get("processName")
 						+ " -start 2010-01-01T01:00Z  -end 2010-01-01T01:00Z"));
 		Thread.sleep(2000);
+		
 		Assert.assertEquals(0,
 				executeWithURL("instance -resume -type process -name "
 						+ overlay.get("processName")

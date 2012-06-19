@@ -437,6 +437,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 if (jobInfo != null) {
                     instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
                     instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());
+                    instance.logFile=jobInfo.getConsoleUrl();
                 }
                 instances.add(instance);
             }

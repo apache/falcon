@@ -228,7 +228,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     private void createTempDir(Cluster cluster, Path coordPath) throws IvoryException {
         try {
             FileSystem fs = coordPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
-            Path tempDir = new Path(coordPath, "../tmp");
+            Path tempDir = new Path(coordPath, "../../logs");
             fs.mkdirs(tempDir);
             fs.setPermission(tempDir, new FsPermission((short) 511));
         } catch (Exception e) {
