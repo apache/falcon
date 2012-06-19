@@ -369,7 +369,7 @@ public class EntityUtil {
 			lateProcess.setDelay(new Frequency(RuntimeProperties.get()
 					.getProperty("feed.late.frequency", "hours(3)")));
 			lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
-					.getProperty("feed.retry.policy", "exp-backoff")));
+					.getProperty("feed.late.policy", "exp-backoff")));
 			LateInput lateInput = new LateInput();
 			lateInput.setInput(entity.getName());
 			//TODO - Assuming the late workflow is not used
