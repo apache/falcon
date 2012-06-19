@@ -15,21 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.entity.common;
+package org.apache.ivory.entity.v0;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DateValidator {
 
-	private Pattern pattern;
-	private Matcher matcher;
-
-	private static final String DATE_PATTERN = "(2\\d\\d\\d|19\\d\\d)-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9])Z";
-
-	public DateValidator() {
-		pattern = Pattern.compile(DATE_PATTERN);
-	}
+    private static final String DATE_PATTERN = "(2\\d\\d\\d|19\\d\\d)-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9])Z";
+	private static final Pattern pattern = Pattern.compile(DATE_PATTERN);
 
 	/**
 	 * Validate date format with regular expression
@@ -38,9 +32,9 @@ public class DateValidator {
 	 *            date address for validation
 	 * @return true valid date fromat, false invalid date format
 	 */
-	public boolean validate(final String date) {
+	public static boolean validate(final String date) {
 
-		matcher = pattern.matcher(date);
+		Matcher matcher = pattern.matcher(date);
 
 		if (matcher.matches()) {
 

@@ -24,6 +24,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.LateInput;
@@ -82,7 +83,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		Long wait = null;
 
 		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: " +EntityUtil.formatDateUTC(cutOffTime)
+			LOG.warn("Feed Cut Off time: " +SchemaHelper.formatDateUTC(cutOffTime)
 					+ " has expired, Late Rerun can not be scheduled");
 			return -1;
 		} else {

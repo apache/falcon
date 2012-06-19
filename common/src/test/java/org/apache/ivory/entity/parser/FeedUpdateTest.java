@@ -51,6 +51,7 @@ public class FeedUpdateTest extends AbstractTestBase {
 		this.dfsCluster.shutdown();
 	}
 
+    @Override
     public void setup() throws Exception {
         storeEntity(EntityType.CLUSTER, "testCluster");
         storeEntity(EntityType.CLUSTER, "backupCluster");

@@ -1,31 +1,42 @@
 package org.apache.ivory.update;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.feed.*;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.feed.Partition;
+import org.apache.ivory.entity.v0.feed.Partitions;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public final class UpdateHelper {
     private static final Logger LOG = Logger.getLogger(UpdateHelper.class);
-
-    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity) {
-        if (oldEntity.getEntityType() == EntityType.PROCESS) {
-            Process clonedEntity = (Process) newEntity.clone();
-            clonedEntity.setRetry(((Process) oldEntity).getRetry());
-            if (clonedEntity.deepEquals(oldEntity))
-                return false;
+    private static final String[] FEED_FIELDS = new String[] { "groups", "lateArrival.cutOff", "schema.location", "schema.provider",
+        "ACL.group", "ACL.owner", "ACL.permission"};
+    private static final String[] PROCESS_FIELDS = new String[] { "retry.policy", "retry.delay", "retry.attempts", 
+        "lateProcess.policy", "lateProcess.delay", "lateProcess.lateInputs[\\d+].input", "lateProcess.lateInputs[\\d+].workflowPath"};
+    
+    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
+        switch(oldEntity.getEntityType()) {
+            case FEED:
+                if(EntityUtil.equals(oldEntity, newEntity, FEED_FIELDS))
+                    return false;
+                return true;
+                
+            case PROCESS:
+                if(EntityUtil.equals(oldEntity, newEntity, PROCESS_FIELDS))
+                    return false;
+                return true;
         }
-        return true;
+        throw new IllegalArgumentException("Unhandled entity type " + oldEntity.getEntityType());
     }
 
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, Entity affectedEntity) throws IvoryException {
@@ -38,12 +49,7 @@ public final class UpdateHelper {
         }
     }
 
-    public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess) throws IvoryException {
-
-        if (!oldFeed.getLateArrival().getCutOff().equals(newFeed.getLateArrival().getCutOff()))
-            return true;
-        LOG.debug(oldFeed.toShortString() + ": late-cutoff identical. Ignoring...");
-
+    public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess) {
         if (!FeedHelper.getLocation(oldFeed, LocationType.DATA).getPath()
                 .equals(FeedHelper.getLocation(newFeed, LocationType.DATA).getPath()))
             return true;
@@ -79,16 +85,6 @@ public final class UpdateHelper {
             LOG.debug(oldFeed.toShortString() + ": Partitions identical. Ignoring...");
         }
 
-        Map<String, String> oldProps = getProperties(oldFeed);
-        Map<String, String> newProps = getProperties(newFeed);
-        if (oldProps.size() != newProps.size())
-            return true;
-        for (Map.Entry<String, String> entry : oldProps.entrySet()) {
-            if (!newProps.containsKey(entry.getKey()) || !newProps.get(entry.getKey()).equals(entry.getValue()))
-                return true;
-        }
-        LOG.debug(oldFeed.toShortString() + ": Properties identical. Ignoring...");
-
         for (Cluster cluster : affectedProcess.getClusters().getClusters()) {
             if (!FeedHelper.getCluster(oldFeed, cluster.getName()).getValidity().getStart()
                     .equals(FeedHelper.getCluster(newFeed, cluster.getName()).getValidity().getStart()))
@@ -97,16 +93,6 @@ public final class UpdateHelper {
         }
 
         return false;
-    }
-
-    private static Map<String, String> getProperties(Feed feed) {
-        Map<String, String> props = new HashMap<String, String>();
-        if (feed.getProperties() == null)
-            return props;
-        for (Property prop : feed.getProperties().getProperties()) {
-            props.put(prop.getName(), prop.getValue());
-        }
-        return props;
     }
 
     private static List<String> getPartitions(Partitions partitions) {

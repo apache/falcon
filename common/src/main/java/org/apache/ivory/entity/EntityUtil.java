@@ -1,25 +1,27 @@
 package org.apache.ivory.entity;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.WorkflowNameBuilder.WorkflowName;
-import org.apache.ivory.entity.common.DateValidator;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.LateInput;
@@ -30,8 +32,6 @@ import org.apache.ivory.entity.v0.process.Retry;
 import org.apache.ivory.util.RuntimeProperties;
 
 public class EntityUtil {
-
-	private static final DateValidator DateValidator = new DateValidator();
 	private static final long MINUTE_IN_MS = 60000L;
 	private static final long HOUR_IN_MS = 3600000L;
 	private static final long DAY_IN_MS = 86400000L;
@@ -56,12 +56,6 @@ public class EntityUtil {
 		return getEntity(entityType, entityName);
 	}
 
-	private static DateFormat getDateFormat() {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-		return dateFormat;
-	}
-
 	public static TimeZone getTimeZone(String tzId) {
 		if (tzId == null) {
 			throw new IllegalArgumentException("Invalid TimeZone: " + tzId);
@@ -73,23 +67,7 @@ public class EntityUtil {
 		return tz;
 	}
 
-	public static Date parseDateUTC(String s) throws IvoryException {
-		try {
-			return getDateFormat().parse(s);
-		} catch (ParseException e) {
-			throw new IvoryException(e);
-		}
-	}
-
-	public static String formatDateUTC(Date d) {
-		return (d != null) ? getDateFormat().format(d) : null;
-	}
-
-	public static boolean isValidUTCDate(String date) {
-		return DateValidator.validate(date);
-	}
-
-	public static Date getEndTime(Entity entity, String cluster) throws IvoryException {
+	public static Date getEndTime(Entity entity, String cluster) {
 		if (entity.getEntityType() == EntityType.PROCESS) {
 			return getEndTime((Process) entity, cluster);
 		} else {
@@ -97,7 +75,15 @@ public class EntityUtil {
 		}
 	}
 
-	public static Date getStartTime(Entity entity, String cluster) throws IvoryException {
+    public static Date parseDateUTC(String dateStr) throws IvoryException {
+        try {
+            return SchemaHelper.parseDateUTC(dateStr);
+        } catch (Exception e) {
+            throw new IvoryException(e);
+        }
+    }
+
+	public static Date getStartTime(Entity entity, String cluster) {
 		if (entity.getEntityType() == EntityType.PROCESS) {
 			return getStartTime((Process) entity, cluster);
 		} else {
@@ -105,24 +91,24 @@ public class EntityUtil {
 		}
 	}
 
-	public static Date getEndTime(Process process, String cluster) throws IvoryException {
+	public static Date getEndTime(Process process, String cluster) {
 		org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
-		return EntityUtil.parseDateUTC(processCluster.getValidity().getEnd());
+		return processCluster.getValidity().getEnd();
 	}
 
-	public static Date getStartTime(Process process, String cluster) throws IvoryException {
+	public static Date getStartTime(Process process, String cluster) {
 		org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
-		return EntityUtil.parseDateUTC(processCluster.getValidity().getStart());
+		return processCluster.getValidity().getStart();
 	}
 
-	public static Date getEndTime(Feed feed, String cluster) throws IvoryException {
+	public static Date getEndTime(Feed feed, String cluster) {
 		org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
-		return EntityUtil.parseDateUTC(clusterDef.getValidity().getEnd());
+		return clusterDef.getValidity().getEnd();
 	}
 
-	public static Date getStartTime(Feed feed, String cluster) throws IvoryException {
+	public static Date getStartTime(Feed feed, String cluster) {
 		org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
-		return EntityUtil.parseDateUTC(clusterDef.getValidity().getStart());
+		return clusterDef.getValidity().getStart();
 	}
 
 	public static int getParallel(Entity entity) {
@@ -163,7 +149,7 @@ public class EntityUtil {
 
 	public static void setStartDate(Process process, String cluster, Date startDate) {
 		org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
-		processCluster.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
+		processCluster.getValidity().setStart(startDate);
 	}
 
 	public static void setParallel(Process process, int parallel) {
@@ -172,7 +158,7 @@ public class EntityUtil {
 
 	public static void setEndTime(Process process, String cluster, Date endDate) {
 		org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
-		processCluster.getValidity().setEnd(EntityUtil.formatDateUTC(endDate));
+		processCluster.getValidity().setEnd(endDate);
 	}
 
 	public static int getParallel(Feed feed) {
@@ -181,12 +167,12 @@ public class EntityUtil {
 
 	public static void setStartDate(Feed feed, String cluster, Date startDate) {
 		org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
-		clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(startDate));
+		clusterDef.getValidity().setStart(startDate);
 	}
 
 	public static void setEndTime(Feed feed, String cluster, Date endDate) {
 		org.apache.ivory.entity.v0.feed.Cluster clusterDef = FeedHelper.getCluster(feed, cluster);
-		clusterDef.getValidity().setStart(EntityUtil.formatDateUTC(endDate));
+		clusterDef.getValidity().setStart(endDate);
 	}
 
 	public static void setParallel(Feed feed, int parallel) {
@@ -260,11 +246,92 @@ public class EntityUtil {
 		return count + 1;
 	}
 
-	public static String getStagingPath(Entity entity) throws IvoryException {
+    public static String md5(Entity entity) throws IvoryException {
+        return new String(Hex.encodeHex(DigestUtils.md5(stringOf(entity))));
+    }
+
+    public static boolean equals(Entity lhs, Entity rhs) throws IvoryException {
+        return equals(lhs, rhs, null);
+    }
+
+    public static boolean equals(Entity lhs, Entity rhs, String[] filterProps) throws IvoryException {
+        if (lhs == null && rhs == null)
+            return true;
+        if (lhs == null || rhs == null)
+            return false;
+
+        if (lhs.equals(rhs)) {
+            String lhsString = stringOf(lhs, filterProps);
+            String rhsString = stringOf(rhs, filterProps);
+            return lhsString.equals(rhsString);
+        } else {
+            return false;
+        }
+    }
+
+    public static String stringOf(Entity entity) throws IvoryException {
+        return stringOf(entity, null);
+    }
+    
+    private static String stringOf(Entity entity, String[] filterProps) throws IvoryException {
+        Map<String, String> map = new HashMap<String, String>();
+        mapToProperties(entity, null, map, filterProps);
+        List<String> keyList = new ArrayList<String>(map.keySet());
+        Collections.sort(keyList);
+        StringBuilder builer = new StringBuilder();
+        for (String key : keyList)
+            builer.append(key).append('=').append(map.get(key)).append('\n');
+        return builer.toString();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void mapToProperties(Object obj, String name, Map<String, String> propMap, String[] filterProps) throws IvoryException {
+        if (obj == null)
+            return;
+
+        if (filterProps != null && name != null)
+            for (String filter : filterProps) {
+                if (name.matches(filter.replace(".", "\\.").replace("[", "\\[").replace("]", "\\]")))
+                    return;
+            }
+
+        if (Date.class.isAssignableFrom(obj.getClass()))
+            propMap.put(name, SchemaHelper.formatDateUTC((Date)obj));
+        else if (obj.getClass().getPackage().getName().equals("java.lang"))
+            propMap.put(name, String.valueOf(obj));
+        else if (TimeZone.class.isAssignableFrom(obj.getClass()))
+            propMap.put(name, ((TimeZone) obj).getID());
+        else if (Enum.class.isAssignableFrom(obj.getClass()))
+            propMap.put(name, ((Enum) obj).name());
+        else if (List.class.isAssignableFrom(obj.getClass())) {
+            List list = (List) obj;
+            for (int index = 0; index < list.size(); index++) {
+                mapToProperties(list.get(index), name + "[" + index + "]", propMap, filterProps);
+            }
+        } else {
+            try {
+                Method method = obj.getClass().getDeclaredMethod("toString");
+                propMap.put(name, (String) method.invoke(obj));
+            } catch (NoSuchMethodException e) {
+                try {
+                    Map map = PropertyUtils.describe(obj);
+                    for (Object key : map.keySet()) {
+                        if (!key.equals("class"))
+                            mapToProperties(map.get(key), name != null ? name + "." + key : (String)key, propMap, filterProps);
+                    }
+                } catch (Exception e1) {
+                    throw new IvoryException(e1);
+                }
+            } catch(Exception e) {
+                throw new IvoryException(e);
+            }
+        }
+    }
+
+    public static String getStagingPath(Entity entity) throws IvoryException {
 		try {
-			byte[] digest = DigestUtils.md5(entity.toComparableString());
 			return "ivory/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName() + "/"
-			+ new String(Hex.encodeHex(digest));
+			+ md5(entity);
 		} catch (Exception e) {
 			throw new IvoryException(e);
 		}

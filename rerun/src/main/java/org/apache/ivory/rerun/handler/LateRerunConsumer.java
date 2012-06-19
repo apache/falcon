@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
@@ -59,7 +60,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 			if (detectLate.equals("")) {
 				LOG.debug("No Late Data Detected, late rerun not scheduled for "
 						+ message.getWfId() + " at "
-						+ EntityUtil.formatDateUTC(new Date()));
+						+ SchemaHelper.formatDateUTC(new Date()));
 				return;
 			}
 

@@ -35,6 +35,7 @@ import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
 import org.apache.ivory.entity.v0.feed.ClusterType;
@@ -97,10 +98,10 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				"testCluster");
 		assertEquals(feed.getClusters().getClusters().get(0).getType(),
 				ClusterType.SOURCE);
-		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
-				.getStart(), "2011-11-01T00:00Z");
-		assertEquals(feed.getClusters().getClusters().get(0).getValidity()
-				.getEnd(), "2011-12-31T00:00Z");
+		assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(0).getValidity()
+				.getStart()), "2011-11-01T00:00Z");
+		assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(0).getValidity()
+				.getEnd()), "2011-12-31T00:00Z");
 		assertEquals(feed.getTimezone().getID(), "UTC");
 		assertEquals(feed.getClusters().getClusters().get(0).getRetention()
 				.getAction(), ActionType.DELETE);
@@ -111,10 +112,10 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				"backupCluster");
 		assertEquals(feed.getClusters().getClusters().get(1).getType(),
 				ClusterType.TARGET);
-		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
-				.getStart(), "2011-11-01T00:00Z");
-		assertEquals(feed.getClusters().getClusters().get(1).getValidity()
-				.getEnd(), "2011-12-31T00:00Z");
+		assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(1).getValidity()
+				.getStart()), "2011-11-01T00:00Z");
+		assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(1).getValidity()
+				.getEnd()), "2011-12-31T00:00Z");
 		assertEquals(feed.getClusters().getClusters().get(1).getRetention()
 				.getAction(), ActionType.ARCHIVE);
 		assertEquals(feed.getClusters().getClusters().get(1).getRetention()
@@ -164,27 +165,27 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Validity validity = modifiableFeed.getClusters().getClusters().get(0)
 				.getValidity();
 		try {
-			validity.setStart("2007-02-29T00:00Z");
+			validity.setStart(SchemaHelper.parseDateUTC("2007-02-29T00:00Z"));
 			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 			parser.parseAndValidate(marshallEntity(modifiableFeed));
 			Assert.fail("Cluster validity failed");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			validity.setStart("2011-11-01T00:00Z");
+			validity.setStart(SchemaHelper.parseDateUTC("2011-11-01T00:00Z"));
 			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 		}
 
 		try {
-			validity.setEnd("2010-04-31T00:00Z");
+			validity.setEnd(SchemaHelper.parseDateUTC("2010-04-31T00:00Z"));
 			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 			parser.parseAndValidate(marshallEntity(modifiableFeed));
 			Assert.fail("Cluster validity failed");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			validity.setEnd("2011-12-31T00:00Z");
+			validity.setEnd(SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
 			modifiableFeed.getClusters().getClusters().get(0)
 					.setValidity(validity);
 		}
@@ -195,7 +196,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Feed feed = parser.parseAndValidate((FeedEntityParserTest.class
 				.getResourceAsStream(FEED_XML)));
 		feed.getClusters().getClusters().get(0).getValidity()
-				.setStart("2012-11-01T00:00Z");
+				.setStart(SchemaHelper.parseDateUTC("2012-11-01T00:00Z"));
 		parser.validate(feed);
 	}
 

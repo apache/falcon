@@ -211,7 +211,7 @@ public abstract class AbstractEntityManager {
             validate(newEntity);
 
             validateUpdate(oldEntity, newEntity);
-            if (!oldEntity.deepEquals(newEntity)) {
+            if (!EntityUtil.equals(oldEntity, newEntity)) {
                 configStore.initiateUpdate(newEntity);
                 getWorkflowEngine().update(oldEntity, newEntity);
                 configStore.update(entityType, newEntity);
@@ -264,10 +264,9 @@ public abstract class AbstractEntityManager {
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
 
-        ConfigurationStore configStore = ConfigurationStore.get();
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
-            if (existingEntity.deepEquals(entity))
+            if (EntityUtil.equals(existingEntity, entity))
                 return existingEntity;
 
             throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
@@ -420,7 +419,6 @@ public abstract class AbstractEntityManager {
     public String getEntityDefinition(String type, String entityName) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            ConfigurationStore configStore = ConfigurationStore.get();
             Entity entity = configStore.get(entityType, entityName);
             if (entity == null) {
                 throw new NoSuchElementException(entityName + " (" + type + ") not found");

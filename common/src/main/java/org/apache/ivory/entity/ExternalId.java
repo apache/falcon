@@ -3,6 +3,7 @@ package org.apache.ivory.entity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
+import org.apache.ivory.entity.v0.SchemaHelper;
 
 import java.util.Date;
 
@@ -26,7 +27,7 @@ public class ExternalId {
     }
     
     public ExternalId(String name, Tag tag, Date date) {
-        this(name, tag, EntityUtil.formatDateUTC(date));
+        this(name, tag, SchemaHelper.formatDateUTC(date));
     }
     
     public String getName() {

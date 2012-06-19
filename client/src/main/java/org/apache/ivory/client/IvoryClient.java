@@ -29,7 +29,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.InstancesResult;

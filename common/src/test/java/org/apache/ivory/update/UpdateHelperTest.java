@@ -26,15 +26,18 @@ import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.parser.ProcessEntityParser;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.feed.Partition;
 import org.apache.ivory.entity.v0.feed.Properties;
 import org.apache.ivory.entity.v0.feed.Property;
+import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class UpdateHelperTest extends AbstractTestBase {
@@ -55,14 +58,47 @@ public class UpdateHelperTest extends AbstractTestBase {
 		this.dfsCluster.shutdown();
 	}
 
-    @Test
-    public void testShouldUpdate() throws Exception {
+	@BeforeMethod
+	public void setUp() throws Exception {
         storeEntity(EntityType.CLUSTER, "testCluster");
         storeEntity(EntityType.CLUSTER, "backupCluster");
         storeEntity(EntityType.FEED, "clicksFeed");
         storeEntity(EntityType.FEED, "impressionFeed");
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
+	}
+	
+	@Test
+	public void testShouldUpdate2() throws Exception {
+        Feed oldFeed = parser.parseAndValidate(this.getClass()
+                .getResourceAsStream(FEED_XML));
+
+        Feed newFeed = (Feed)oldFeed.clone();
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        
+        newFeed.setGroups("newgroups");
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(8)"));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        newFeed.setFrequency(Frequency.fromString("days(1)"));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        
+        Process oldProcess = processParser.parseAndValidate(this.getClass().
+                getResourceAsStream(PROCESS_XML));
+        Process newProcess = (Process) oldProcess.clone();
+        
+        newProcess.getRetry().setPolicy(PolicyType.FINAL);
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        newProcess.getLateProcess().getLateInputs().remove(1);
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        newProcess.getLateProcess().setPolicy(PolicyType.PERIODIC);
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        newProcess.setFrequency(Frequency.fromString("days(1"));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldProcess, newProcess));        
+	}
+	
+    @Test
+    public void testShouldUpdate() throws Exception {
         Feed oldFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
 
@@ -73,7 +109,7 @@ public class UpdateHelperTest extends AbstractTestBase {
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(1)"));
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.getLateArrival().setCutOff(oldFeed.getLateArrival().getCutOff());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
@@ -101,12 +137,12 @@ public class UpdateHelperTest extends AbstractTestBase {
         property.setValue("1");
         newFeed.setProperties(new Properties());
         newFeed.getProperties().getProperties().add(property);
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.getProperties().getProperties().remove(0);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().setStart("123");
+        FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().setStart(SchemaHelper.parseDateUTC("2012-11-01T00:00Z"));
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().

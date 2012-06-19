@@ -24,16 +24,7 @@ import java.io.StringWriter;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.converters.reflection.FieldDictionary;
-import com.thoughtworks.xstream.converters.reflection.ImmutableFieldKeySorter;
-import com.thoughtworks.xstream.converters.reflection.Sun14ReflectionProvider;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-
 public abstract class Entity {
-    private static XStream xstream = new XStream(new Sun14ReflectionProvider(new FieldDictionary(new ImmutableFieldKeySorter())), new DomDriver(
-            "utf-8"));
-	
     public abstract String getName();
 
     public EntityType getEntityType() {
@@ -59,23 +50,6 @@ public abstract class Entity {
             return false;
 
         return true;
-    }
-
-    public boolean deepEquals(Entity entity) {
-        if (entity == null)
-            return false;
-        if (this == entity)
-            return true;
-        if (!equals(entity))
-            return false;
-
-        String thisStr = toComparableString();
-        String entityStr = entity.toComparableString();
-        return thisStr.equals(entityStr);
-    }
-    
-    public String toComparableString() {
-        return xstream.toXML(this);
     }
 
     @Override

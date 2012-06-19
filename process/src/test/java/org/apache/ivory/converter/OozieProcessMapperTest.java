@@ -44,6 +44,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -89,8 +90,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {
         assertEquals("IVORY_PROCESS_DEFAULT_" + process.getName(), coord.getName());
         Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        assertEquals(processValidity.getStart(), coord.getStart());
-        assertEquals(processValidity.getEnd(), coord.getEnd());
+        assertEquals(SchemaHelper.formatDateUTC(processValidity.getStart()), coord.getStart());
+        assertEquals(SchemaHelper.formatDateUTC(processValidity.getEnd()), coord.getEnd());
         assertEquals("${coord:"+process.getFrequency().toString()+"}", coord.getFrequency());
         assertEquals(process.getTimezone().getID(), coord.getTimezone());
         
@@ -116,7 +117,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         ConfigurationStore store = ConfigurationStore.get();
         Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());
         SYNCDATASET ds = (SYNCDATASET) coord.getDatasets().getDatasetOrAsyncDataset().get(0);
-        assertEquals(feed.getClusters().getClusters().get(0).getValidity().getStart(), ds.getInitialInstance());
+        assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(0).getValidity().getStart()), ds.getInitialInstance());
         assertEquals(feed.getTimezone().getID(), ds.getTimezone());
         assertEquals("${coord:"+feed.getFrequency().toString()+"}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());

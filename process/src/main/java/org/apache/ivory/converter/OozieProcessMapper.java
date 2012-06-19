@@ -36,6 +36,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
@@ -111,8 +112,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // coord attributes
         coord.setName(coordName);
         org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster.getName());
-        coord.setStart(processCluster.getValidity().getStart());
-        coord.setEnd(processCluster.getValidity().getEnd());
+        coord.setStart(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()));
+        coord.setEnd(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()));
         coord.setTimezone(process.getTimezone().getID());
         coord.setFrequency("${coord:" + process.getFrequency().toString() + "}");
 
@@ -242,7 +243,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-        syncdataset.setInitialInstance(feedCluster.getValidity().getStart());
+        syncdataset.setInitialInstance(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
         syncdataset.setTimezone(feed.getTimezone().getID());
 		if (feed.getAvailabilityFlag() == null) {
 			syncdataset.setDoneFlag("");

@@ -35,7 +35,7 @@
 
     <workflow engine="oozie" path="/user/guest/workflow" />
 
-    <retry policy="backoff" delay="hours(10)" attempts="3" />
+    <retry policy="periodic" delay="hours(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
         <late-input input="impression" workflow-path="hdfs://impression/late/workflow" />

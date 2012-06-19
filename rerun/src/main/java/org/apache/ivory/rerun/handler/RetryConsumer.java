@@ -20,6 +20,7 @@ package org.apache.ivory.rerun.handler;
 import java.util.Date;
 
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.util.GenericAlert;
@@ -54,7 +55,7 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 					+ " And WorkflowId: "
 					+ message.getWfId()
 					+ " At time: "
-					+ EntityUtil.formatDateUTC(new Date(System
+					+ SchemaHelper.formatDateUTC(new Date(System
 							.currentTimeMillis())));
 			handler.getWfEngine().reRun(message.getClusterName(),
 					message.getWfId(), null);

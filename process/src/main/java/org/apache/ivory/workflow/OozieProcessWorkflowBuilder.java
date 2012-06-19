@@ -44,8 +44,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for(String clusterName:clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
             // start time >= end time
-            if (!EntityUtil.parseDateUTC(processCluster.getValidity().getStart())
-                    .before(EntityUtil.parseDateUTC(processCluster.getValidity().getEnd())))
+            if (!processCluster.getValidity().getStart().before(processCluster.getValidity().getEnd()))
                 continue;
             
             Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
@@ -62,7 +61,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     @Override
     public Date getNextStartTime(Process process, String cluster, Date now) throws IvoryException {
         org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster);
-        return EntityUtil.getNextStartTime(EntityUtil.parseDateUTC(processCluster.getValidity().getStart()),
+        return EntityUtil.getNextStartTime(processCluster.getValidity().getStart(),
                 process.getFrequency(), process.getTimezone(), now);
     }
 

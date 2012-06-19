@@ -16,7 +16,8 @@
  * limitations under the License.
  */
 
-package org.apache.ivory.entity.common;
+package org.apache.ivory.entity.v0;
+import org.apache.ivory.entity.v0.DateValidator;
 import org.testng.Assert;
 import org.testng.annotations.*;
  
@@ -25,13 +26,6 @@ import org.testng.annotations.*;
  *
  */
 public class DateValidatorTest {
- 
-	private DateValidator dateValidator;
- 
-	@BeforeClass
-        public void initData(){
-		dateValidator = new DateValidator();
-        }
  
 	@DataProvider
 	public Object[][] ValidDateProvider() {
@@ -73,7 +67,7 @@ public class DateValidatorTest {
  
 	@Test(dataProvider = "ValidDateProvider")
 	public void ValidDateTest(String date) {
-		boolean valid = dateValidator.validate(date);
+		boolean valid = DateValidator.validate(date);
 		System.out.println("Date is valid : " + date + " , " + valid);
 		Assert.assertEquals(valid, true);
 	}
@@ -81,7 +75,7 @@ public class DateValidatorTest {
 	@Test(dataProvider = "InvalidDateProvider", 
                  dependsOnMethods="ValidDateTest")
 	public void InValidDateTest(String date) {
-		boolean valid = dateValidator.validate(date);
+		boolean valid = DateValidator.validate(date);
 		System.out.println("Date is valid : " + date + " , " + valid);
 		Assert.assertEquals(valid, false); 
 	}

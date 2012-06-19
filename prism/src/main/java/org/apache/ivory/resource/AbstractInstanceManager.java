@@ -29,12 +29,11 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.Tag;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.logging.LogProvider;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -88,20 +87,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 			throw IvoryWebException
 					.newInstanceException(e, Response.Status.BAD_REQUEST);
 		}
-	}
-
-	private InstancesResult getInstanceWithLog(Entity entity,
-                                               Tag type, String runId, InstancesResult result)
-			throws IvoryException {
-		InstancesResult.Instance[] instances = new InstancesResult.Instance[result
-				.getInstances().length];
-		for (int i = 0; i < result.getInstances().length; i++) {
-			InstancesResult.Instance pInstance = LogProvider
-					.getLogUrl(entity, result.getInstances()[i], type, runId);
-			instances[i] = pInstance;
-		}
-
-		return new InstancesResult(result.getMessage(), instances);
 	}
 
     public InstancesResult killInstance(HttpServletRequest request,
@@ -245,19 +230,19 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         Date instStart = EntityUtil.parseDateUTC(start);
         if(instStart.before(clusterStart))
             throw new ValidationException("Start date " + start +
-                    " is before" + entity.getEntityType() + "  start " + EntityUtil.formatDateUTC(clusterStart));
+                    " is before" + entity.getEntityType() + "  start " + SchemaHelper.formatDateUTC(clusterStart) + " for cluster " + cluster);
 
         if(StringUtils.isNotEmpty(end)) {
             Date instEnd = EntityUtil.parseDateUTC(end);
             if(instStart.after(instEnd))
-                throw new ValidationException("Start date " + start + " is after end date " + end);
+                throw new ValidationException("Start date " + start + " is after end date " + end + " for cluster " + cluster);
 
             if(instEnd.after(clusterEnd))
                 throw new ValidationException("End date " + end + " is after " + entity.getEntityType() + " end " +
-                        EntityUtil.formatDateUTC(clusterEnd));
+                        SchemaHelper.formatDateUTC(clusterEnd) + " for cluster " + cluster);
         } else if(instStart.after(clusterEnd))
             throw new ValidationException("Start date " + start + " is after " + entity.getEntityType() + " end " +
-                    EntityUtil.formatDateUTC(clusterEnd));
+                    SchemaHelper.formatDateUTC(clusterEnd) + " for cluster " + cluster);
     }
 
     private void validateNotEmpty(String field, String param) throws ValidationException {

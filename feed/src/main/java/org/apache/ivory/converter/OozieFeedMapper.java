@@ -36,6 +36,7 @@ import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency.TimeUnit;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -79,15 +80,15 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         Feed feed = getEntity();
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
 
-        if (EntityUtil.parseDateUTC(feedCluster.getValidity().getEnd()).before(new Date())) {
+        if (feedCluster.getValidity().getEnd().before(new Date())) {
             LOG.warn("Feed Retention is not applicable as Feed's end time for cluster " + cluster.getName() + " is not in the future");
             return null;
         }
         COORDINATORAPP retentionApp = new COORDINATORAPP();
         String coordName = EntityUtil.getWorkflowName(Tag.RETENTION, feed).toString();
         retentionApp.setName(coordName);
-        retentionApp.setEnd(feedCluster.getValidity().getEnd());
-        retentionApp.setStart(EntityUtil.formatDateUTC(new Date()));
+        retentionApp.setEnd(SchemaHelper.formatDateUTC(feedCluster.getValidity().getEnd()));
+        retentionApp.setStart(SchemaHelper.formatDateUTC(new Date()));
         retentionApp.setTimezone(feed.getTimezone().getID());
         TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
         if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
@@ -163,13 +164,13 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, Arrays.asList(srcCluster.getName()), feed).toString();
             replicationCoord.setName(coordName);
             replicationCoord.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
-            Date srcStartDate = EntityUtil.parseDateUTC(FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getStart());
-            Date srcEndDate = EntityUtil.parseDateUTC(FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd());
-            Date trgStartDate = EntityUtil.parseDateUTC(FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart());
-            Date trgEndDate = EntityUtil.parseDateUTC(FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getEnd());
-            replicationCoord.setStart(srcStartDate.after(trgStartDate) ? EntityUtil.formatDateUTC(srcStartDate) : EntityUtil
+            Date srcStartDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getStart();
+            Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
+            Date trgStartDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart();
+            Date trgEndDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getEnd();
+            replicationCoord.setStart(srcStartDate.after(trgStartDate) ? SchemaHelper.formatDateUTC(srcStartDate) : SchemaHelper
                     .formatDateUTC(trgStartDate));
-            replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? EntityUtil.formatDateUTC(srcEndDate) : EntityUtil
+            replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? SchemaHelper.formatDateUTC(srcEndDate) : SchemaHelper
                     .formatDateUTC(trgEndDate));
             replicationCoord.setTimezone(feed.getTimezone().getID());
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
@@ -197,7 +198,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private void setDatasetValues(SYNCDATASET dataset, Feed feed, Cluster cluster) {
-        dataset.setInitialInstance(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getStart());
+        dataset.setInitialInstance(SchemaHelper.formatDateUTC(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getStart()));
         dataset.setTimezone(feed.getTimezone().getID());
         dataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
     }

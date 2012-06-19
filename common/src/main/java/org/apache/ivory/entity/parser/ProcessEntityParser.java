@@ -116,27 +116,15 @@ public class ProcessEntityParser extends EntityParser<Process> {
         return ClusterHelper.getHdfsUrl(cluster);
     }
 
-    private void validateProcessValidity(String start, String end) throws IvoryException {
+    private void validateProcessValidity(Date start, Date end) throws IvoryException {
         try {
-            validateProcessDates(start, end);
-            Date processStart = EntityUtil.parseDateUTC(start);
-            Date processEnd = EntityUtil.parseDateUTC(end);
-            if (!processStart.before(processEnd)) {
+            if (!start.before(end)) {
                 throw new ValidationException("Process start time: " + start + " should be before process end time: " + end);
             }
         } catch (ValidationException e) {
             throw new ValidationException(e);
         } catch (Exception e) {
             throw new IvoryException(e);
-        }
-    }
-
-    private void validateProcessDates(String start, String end) throws ValidationException {
-        if (!EntityUtil.isValidUTCDate(start)) {
-            throw new ValidationException("Invalid start date: " + start);
-        }
-        if (!EntityUtil.isValidUTCDate(end)) {
-            throw new ValidationException("Invalid end date: " + end);
         }
     }
 

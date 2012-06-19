@@ -22,6 +22,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.ValidationEvent;
+import javax.xml.bind.ValidationEventHandler;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -34,9 +36,17 @@ import org.apache.ivory.entity.v0.process.Process;
  */
 public enum EntityType {
     FEED(Feed.class, "/feed-0.1.xsd", "name"), 
-    PROCESS(Process.class, "/process-0.1.xsd", "name"), //TODO how to check for start?? should it be supported?s 
+    PROCESS(Process.class, "/process-0.1.xsd", "name"), 
     CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name");
 
+    //Fail unmarshalling of whole xml if unmarshalling of any element fails
+    private static class EventHandler implements ValidationEventHandler {
+        @Override
+        public boolean handleEvent(ValidationEvent event) {
+            return false;
+        }
+    }
+    
     private static final String NS = "http://www.w3.org/2001/XMLSchema";
 
     private final Class<? extends Entity> clazz;
@@ -71,6 +81,7 @@ public enum EntityType {
     public Unmarshaller getUnmarshaller() throws JAXBException {
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         unmarshaller.setSchema(schema);
+        unmarshaller.setEventHandler(new EventHandler());
         return unmarshaller;
     }
     

@@ -40,7 +40,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
@@ -82,7 +81,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         process.getInputs().getInputs().add(input);
 
         Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        processValidity.setEnd(EntityUtil.formatDateUTC(new Date(new Date().getTime() + 60 * 60 * 1000)));
+        processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)

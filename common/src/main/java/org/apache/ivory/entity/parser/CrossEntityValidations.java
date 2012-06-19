@@ -1,7 +1,8 @@
 package org.apache.ivory.entity.parser;
 
+import java.util.Date;
+
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -12,8 +13,6 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Validity;
 import org.apache.ivory.expression.ExpressionHelper;
 
-import java.util.Date;
-
 public final class CrossEntityValidations {
 
     public static void validateInstanceRange(Process process, Input input, Feed feed) throws IvoryException {
@@ -22,15 +21,15 @@ public final class CrossEntityValidations {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
                 org.apache.ivory.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed, clusterName).getValidity();
-                Date feedStart = EntityUtil.parseDateUTC(feedValidity.getStart());
-                Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
+                Date feedStart = feedValidity.getStart();
+                Date feedEnd = feedValidity.getEnd();
 
                 String instStartEL = input.getStart();
                 String instEndEL = input.getEnd();
                 ExpressionHelper evaluator = ExpressionHelper.get();
 
                 Validity processValidity = ProcessHelper.getCluster(process, clusterName).getValidity();
-                ExpressionHelper.setReferenceDate(EntityUtil.parseDateUTC(processValidity.getStart()));
+                ExpressionHelper.setReferenceDate(processValidity.getStart());
                 Date instStart = evaluator.evaluate(instStartEL, Date.class);
                 if (instStart.before(feedStart))
                     throw new ValidationException("Start instance  " + instStartEL + " of feed " + feed.getName()
@@ -79,13 +78,13 @@ public final class CrossEntityValidations {
             for (Cluster cluster : process.getClusters().getClusters()) {
                 String clusterName = cluster.getName();
                 org.apache.ivory.entity.v0.feed.Validity feedValidity = FeedHelper.getCluster(feed, clusterName).getValidity();
-                Date feedStart = EntityUtil.parseDateUTC(feedValidity.getStart());
-                Date feedEnd = EntityUtil.parseDateUTC(feedValidity.getEnd());
+                Date feedStart = feedValidity.getStart();
+                Date feedEnd = feedValidity.getEnd();
 
                 String instEL = output.getInstance();
                 ExpressionHelper evaluator = ExpressionHelper.get();
                 Validity processValidity = ProcessHelper.getCluster(process, clusterName).getValidity();
-                ExpressionHelper.setReferenceDate(EntityUtil.parseDateUTC(processValidity.getStart()));
+                ExpressionHelper.setReferenceDate(processValidity.getStart());
                 Date inst = evaluator.evaluate(instEL, Date.class);
                 if (inst.before(feedStart))
                     throw new ValidationException("Instance  " + instEL + " of feed " + feed.getName()

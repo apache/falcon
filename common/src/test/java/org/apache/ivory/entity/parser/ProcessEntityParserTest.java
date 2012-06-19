@@ -18,15 +18,21 @@
 
 package org.apache.ivory.entity.parser;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
-import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
-import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.entity.v0.feed.Partition;
-import org.apache.ivory.entity.v0.feed.Partitions;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
@@ -34,16 +40,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.testng.AssertJUnit.assertEquals;
 
 public class ProcessEntityParserTest extends AbstractTestBase{
 
@@ -69,18 +65,16 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     
     @BeforeMethod
     public void setup() throws Exception {
-
         storeEntity(EntityType.CLUSTER, "testCluster");        
         storeEntity(EntityType.FEED, "impressionFeed");
         storeEntity(EntityType.FEED, "clicksFeed");
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
         storeEntity(EntityType.PROCESS, "sample");
-        
     }
 
     @Test
-    public void testParse() throws IOException, IvoryException, JAXBException {
+    public void testParse() throws IvoryException, JAXBException {
 
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
 
@@ -96,7 +90,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertEquals(process.getInputs().getInputs().get(0).getFeed(), "impressionFeed");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getStart(), "today(0,0)");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getEnd(), "today(2,0)");
-        assertEquals(process.getInputs().getInputs().get(0).getPartition(), "*/US");
+        Assert.assertEquals(process.getInputs().getInputs().get(0).getPartition(), "*/US");
 
         Assert.assertEquals(process.getOutputs().getOutputs().get(0).getName(), "impOutput");
         Assert.assertEquals(process.getOutputs().getOutputs().get(0).getFeed(), "imp-click-join1");
@@ -106,8 +100,8 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertEquals(process.getProperties().getProperties().get(0).getValue(), "value1");
 
         Cluster processCluster = process.getClusters().getClusters().get(0);
-        Assert.assertEquals(processCluster.getValidity().getStart(), "2011-11-02T00:00Z");
-        Assert.assertEquals(processCluster.getValidity().getEnd(), "2011-12-30T00:00Z");
+        Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()), "2011-11-02T00:00Z");
+        Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2011-12-30T00:00Z");
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
 
         Assert.assertEquals(process.getWorkflow().getEngine().name().toLowerCase(), "oozie");
@@ -193,7 +187,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		Process process = parser
 				.parseAndValidate((ProcessEntityParserTest.class
 						.getResourceAsStream(PROCESS_XML)));
-		process.getClusters().getClusters().get(0).getValidity().setStart("2011-12-31T00:00Z");
+		process.getClusters().getClusters().get(0).getValidity().setStart(SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
 		parser.validate(process);
 	}
 	

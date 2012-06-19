@@ -18,9 +18,17 @@
 
 package org.apache.ivory.entity.parser;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Pair;
-import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -35,11 +43,9 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.expression.ExpressionHelper;
-import org.apache.ivory.group.FeedGroupMap;
 import org.apache.ivory.group.FeedGroup;
+import org.apache.ivory.group.FeedGroupMap;
 import org.apache.log4j.Logger;
-
-import java.util.*;
 
 public class FeedEntityParser extends EntityParser<Feed> {
 
@@ -51,9 +57,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     @Override
     public void validate(Feed feed) throws IvoryException {
-
-        validateXMLelements(feed);
-
         if (feed.getClusters() == null)
             throw new ValidationException("Feed should have atleast one cluster");
 
@@ -154,20 +157,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateXMLelements(Feed feed) throws ValidationException {
-
-        for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (!EntityUtil.isValidUTCDate(cluster.getValidity().getStart())) {
-                throw new ValidationException("Invalid start date: " + cluster.getValidity().getStart() + " for cluster: "
-                        + cluster.getName());
-            }
-            if (!EntityUtil.isValidUTCDate(cluster.getValidity().getEnd())) {
-                throw new ValidationException("Invalid end date: " + cluster.getValidity().getEnd() + " for cluster: "
-                        + cluster.getName());
-            }
-        }
-    }
-
     private void validateFeedSourceCluster(Feed feed) throws ValidationException {
         int i = 0;
         for (Cluster cluster : feed.getClusters().getClusters()) {
@@ -179,11 +168,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
             throw new ValidationException("Feed should have atleast one source cluster");
     }
 
-    private void validateClusterValidity(String start, String end, String clusterName) throws IvoryException {
+    private void validateClusterValidity(Date start, Date end, String clusterName) throws IvoryException {
         try {
-            Date processStart = EntityUtil.parseDateUTC(start);
-            Date processEnd = EntityUtil.parseDateUTC(end);
-            if (processStart.after(processEnd)) {
+            if (start.after(end)) {
                 throw new ValidationException("Feed start time: " + start + " cannot be after feed end time: " + end
                         + " for cluster: " + clusterName);
             }

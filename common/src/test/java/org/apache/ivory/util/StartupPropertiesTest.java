@@ -32,7 +32,7 @@ public class StartupPropertiesTest {
     public void testDomain() {
         StartupProperties props = (StartupProperties) StartupProperties.get();
         assertEquals("debug", props.getDomain());
-        assertEquals("/tmp/ivory/journal", props.get("fs.journal.path"));
+        assertEquals("vm://localhost?broker.useJmx=false&broker.persistent=true;", props.get("broker.url"));
         assertEquals("IVORY.ENTITY.TOPIC", props.get("entity.topic"));
     }
 }

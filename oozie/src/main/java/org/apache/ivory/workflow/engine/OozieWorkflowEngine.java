@@ -18,6 +18,20 @@
 
 package org.apache.ivory.workflow.engine;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
@@ -27,7 +41,7 @@ import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.Frequency.TimeUnit;
-import org.apache.oozie.client.CoordinatorJob.Timeunit;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.resource.InstancesResult;
 import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
@@ -36,11 +50,15 @@ import org.apache.ivory.util.OozieUtils;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.*;
+import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorAction;
+import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.CoordinatorJob.Timeunit;
+import org.apache.oozie.client.Job;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.OozieClientException;
+import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.WorkflowJob.Status;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Workflow engine which uses oozies APIs
@@ -72,6 +90,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             Job.Status.DONEWITHERROR);
     private static List<Job.Status> BUNDLE_RESUME_PRECOND = Arrays.asList(Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED);
     private static final String IVORY_INSTANCE_ACTION_CLUSTERS = "ivory.instance.action.clusters";
+
+    private static final String[] BUNDLE_UPDATEABLE_PROPS = new String[] {"parallel", "clusters.clusters[\\d+].validity.end"};
 
     @Override
     public void schedule(Entity entity) throws IvoryException {
@@ -313,9 +333,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                             continue;
 
                         CoordinatorAction action = client.getCoordActionInfo(wf.getParentId());
-                        String nominalTimeStr = EntityUtil.formatDateUTC(action.getNominalTime());
+                        String nominalTimeStr = SchemaHelper.formatDateUTC(action.getNominalTime());
                         Instance instance = new Instance(cluster, nominalTimeStr, WorkflowStatus.RUNNING);
-                        instance.startTime = EntityUtil.formatDateUTC(wf.getStartTime());
+                        instance.startTime = SchemaHelper.formatDateUTC(wf.getStartTime());
                         runInstances.add(instance);
                     }
                 }
@@ -431,12 +451,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                 }
 
-                String nominalTimeStr = EntityUtil.formatDateUTC(coordinatorAction.getNominalTime());
+                String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
                 InstancesResult.Instance instance = new InstancesResult.Instance(cluster, nominalTimeStr,
                         WorkflowStatus.valueOf(status));
                 if (jobInfo != null) {
-                    instance.startTime = EntityUtil.formatDateUTC(jobInfo.getStartTime());
-                    instance.endTime = EntityUtil.formatDateUTC(jobInfo.getEndTime());
+                    instance.startTime = SchemaHelper.formatDateUTC(jobInfo.getStartTime());
+                    instance.endTime = SchemaHelper.formatDateUTC(jobInfo.getEndTime());
                 }
                 instances.add(instance);
             }
@@ -558,22 +578,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         });
     }
 
-    private boolean canUpdateBundle(String cluster, Entity oldEntity, Entity newEntity) throws IvoryException {
-        int oldConcurrency = EntityUtil.getParallel(oldEntity);
-        int newConcurrency = EntityUtil.getParallel(newEntity);
-
-        Date oldEndTime = EntityUtil.getEndTime(oldEntity, cluster);
-        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
-
-        if (oldConcurrency != newConcurrency || !oldEndTime.equals(newEndTime)) {
-            Entity clonedOldEntity = oldEntity.clone();
-            EntityUtil.setParallel(clonedOldEntity, newConcurrency);
-            EntityUtil.setEndTime(clonedOldEntity, cluster, newEndTime);
-            if (clonedOldEntity.deepEquals(newEntity))
-                // only concurrency and end time are changed
-                return true;
-        }
-        return false;
+    private boolean canUpdateBundle(Entity oldEntity, Entity newEntity) throws IvoryException {
+        return EntityUtil.equals(oldEntity, newEntity, BUNDLE_UPDATEABLE_PROPS);
     }
 
     @Override
@@ -598,7 +604,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
             LOG.debug("Updating for cluster : " + cluster + ", bundle: " + bundle.getId());
 
-            if (canUpdateBundle(cluster, oldEntity, newEntity)) {
+            if (canUpdateBundle(oldEntity, newEntity)) {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
                 updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
@@ -657,7 +663,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     private void updateCoords(String cluster, String bundleId, int concurrency, Date endTime, Job.Status oldBundleStatus)
             throws IvoryException {
         if (endTime.compareTo(now()) <= 0)
-            throw new IvoryException("End time " + EntityUtil.formatDateUTC(endTime) + " can't be in the past");
+            throw new IvoryException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
 
         BundleJob bundle = getBundleInfo(cluster, bundleId);
         if (oldBundleStatus == null)
@@ -667,19 +673,19 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         //change coords
         for (CoordinatorJob coord : bundle.getCoordinators()) {
-            LOG.debug("Updating endtime of coord " + coord.getId() + " to " + EntityUtil.formatDateUTC(endTime) + " on cluster "
+            LOG.debug("Updating endtime of coord " + coord.getId() + " to " + SchemaHelper.formatDateUTC(endTime) + " on cluster "
                     + cluster);
             Date lastActionTime = getCoordLastActionTime(coord);
             if (lastActionTime == null) { // nothing is materialized
                 if (endTime.compareTo(coord.getStartTime()) <= 0)
-                    change(cluster, coord.getId(), null, coord.getStartTime(), null);
+                    change(cluster, coord.getId(), concurrency, coord.getStartTime(), null);
                 else
                     change(cluster, coord.getId(), concurrency, endTime, null);
             } else {
-                if (endTime.before(lastActionTime)) {
+                if (!endTime.after(lastActionTime)) {
                     Date pauseTime = getPreviousMin(endTime);
                     // set pause time which deletes future actions
-                    change(cluster, coord.getId(), null, null, EntityUtil.formatDateUTC(pauseTime));
+                    change(cluster, coord.getId(), concurrency, null, SchemaHelper.formatDateUTC(pauseTime));
                 }
                 change(cluster, coord.getId(), concurrency, endTime, "");
             }
@@ -740,7 +746,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    // TODO just returns first 1000
     private List<WorkflowJob> getRunningWorkflows(String cluster, List<String> wfNames) throws IvoryException {
         StringBuilder filter = new StringBuilder();
         filter.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING.name());
@@ -859,12 +864,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    private void change(String cluster, String id, Integer concurrency, Date endTime, String pauseTime) throws IvoryException {
+    private void change(String cluster, String id, int concurrency, Date endTime, String pauseTime) throws IvoryException {
         StringBuilder changeValue = new StringBuilder();
-        if (concurrency != null)
-            changeValue.append(OozieClient.CHANGE_VALUE_CONCURRENCY).append("=").append(concurrency.intValue()).append(";");
+        changeValue.append(OozieClient.CHANGE_VALUE_CONCURRENCY).append("=").append(concurrency).append(";");
         if (endTime != null) {
-            String endTimeStr = EntityUtil.formatDateUTC(endTime);
+            String endTimeStr = SchemaHelper.formatDateUTC(endTime);
             changeValue.append(OozieClient.CHANGE_VALUE_ENDTIME).append("=").append(endTimeStr).append(";");
         }
         if (pauseTime != null)
@@ -880,8 +884,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             CoordinatorJob coord = client.getCoordJobInfo(id);
-            if (coord.getConcurrency() != concurrency || coord.getEndTime() != coord.getEndTime() || pauseTime.equals("") ? coord
-                    .getPauseTime() != null : coord.getPauseTime() != EntityUtil.parseDateUTC(pauseTime))
+            if (coord.getConcurrency() != concurrency || !coord.getEndTime().equals(endTime) || 
+                    (pauseTime != null && pauseTime.equals("") && coord.getPauseTime() != null) ||
+                    (pauseTime != null && !pauseTime.equals("") && !coord.getPauseTime().equals(SchemaHelper.parseDateUTC(pauseTime))))
                 throw new IvoryException("Failed to change coord " + id + " with change value " + changeValueStr);
         } catch (OozieClientException e) {
             throw new IvoryException(e);

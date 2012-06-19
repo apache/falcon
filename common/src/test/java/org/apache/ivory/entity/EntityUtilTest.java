@@ -1,18 +1,37 @@
 package org.apache.ivory.entity;
 
-import org.apache.ivory.entity.v0.Frequency;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.SchemaHelper;
+import org.apache.ivory.entity.v0.process.Process;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 public class EntityUtilTest {
-    private TimeZone tz = TimeZone.getTimeZone("UTC");
+    private static TimeZone tz = TimeZone.getTimeZone("UTC");
+    private static final String PROCESS_XML = "/config/process/process-0.1.xml";
     
-    private Date getDate(String date) throws Exception {
+    @Test
+    public void testEquals() throws Exception {
+        Process process1 = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+        Process process2 = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+        Assert.assertTrue(EntityUtil.equals(process1, process2));
+        Assert.assertTrue(EntityUtil.md5(process1).equals(EntityUtil.md5(process2)));
+        
+        process2.getClusters().getClusters().get(0).getValidity().setEnd(SchemaHelper.parseDateUTC("2013-04-21T00:00Z"));
+        Assert.assertFalse(EntityUtil.equals(process1, process2));
+        Assert.assertFalse(EntityUtil.md5(process1).equals(EntityUtil.md5(process2)));
+        Assert.assertTrue(EntityUtil.equals(process1, process2, new String[] {"clusters.clusters[\\d+].validity.end"}));
+    }
+    
+    private static Date getDate(String date) throws Exception {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm Z");
         return format.parse(date);
     }

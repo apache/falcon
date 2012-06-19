@@ -46,7 +46,7 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onAdd(Entity entity) throws IvoryException {
+    public void onAdd(Entity entity) {
         if (entity.getEntityType() != EntityType.CLUSTER)
             return;
 
@@ -56,7 +56,7 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onRemove(Entity entity) throws IvoryException {
+    public void onRemove(Entity entity) {
         if (entity.getEntityType() != EntityType.CLUSTER)
             return;
 

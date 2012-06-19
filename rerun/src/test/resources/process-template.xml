@@ -25,7 +25,7 @@
     <workflow path="/examples/apps/aggregator" />
     <retry policy="exp-backoff" delay="minutes(2)" attempts="2" />
 
-    <late-process policy="backoff" delay="minutes(1)">
+    <late-process policy="periodic" delay="minutes(1)">
         <late-input feed="inputData" workflow-path="hdfs://impression/late/workflow" />
     </late-process>
 </process>
