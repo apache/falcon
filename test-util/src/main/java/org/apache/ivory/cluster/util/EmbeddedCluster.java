@@ -132,8 +132,13 @@ public class EmbeddedCluster {
         interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
                         conf.get("mapred.job.tracker"), "0.1"));
-        interfaces.getInterfaces().add(newInterface(Interfacetype.MESSAGING, "N/A", "0.1"));
-        clusterEntity.setInterfaces(interfaces);
+		interfaces
+				.getInterfaces()
+				.add(newInterface(
+						Interfacetype.MESSAGING,
+						"vm://localhost1?broker.useJmx=false&broker.persistent=true",
+						"0.1"));
+      clusterEntity.setInterfaces(interfaces);
 
         Location location = new Location();
         location.setName("staging");
