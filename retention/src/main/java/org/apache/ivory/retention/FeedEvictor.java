@@ -72,8 +72,6 @@ public class FeedEvictor extends Configured implements Tool {
     private static final ExpressionHelper resolver = ExpressionHelper.get();
 
     static PrintStream stream = System.out;
-    static PrintStream instancePathsStream =System.out;
-
 
     private static final String format = "yyyyMMddHHmm";
 
@@ -112,7 +110,7 @@ public class FeedEvictor extends Configured implements Tool {
         Pair<Date, Date> range = getDateRange(retentionLimit);
         String dateMask = getDateFormatInPath(feedBasePath);
         List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath,
-                timeZone, dateMask, range.first, range.second);
+                timeZone, dateMask, range.first);
 
         LOG.info("Applying retention on " + feedBasePath + " type: " +
                 retentionType + ", Limit: " + retentionLimit + ", timezone: " +
@@ -162,8 +160,7 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private List<Path> discoverInstanceToDelete(String inPath, String timeZone,
-                                                String dateMask, Date start,
-                                                Date end)
+                                                String dateMask, Date start)
             throws IOException {
 
         FileStatus[] files = findFilesForFeed(inPath);
@@ -177,7 +174,7 @@ public class FeedEvictor extends Configured implements Tool {
                     inPath, dateMask, timeZone);
             LOG.debug("Considering " + file.getPath().toUri().getPath());
             LOG.debug("Date : " + date);
-            if (date != null && !isDateInRange(date, start, end)) {
+            if (date != null && !isDateInRange(date, start)) {
                 toBeDeleted.add(new Path(file.getPath().toUri().getPath()));
             }
         }
@@ -266,8 +263,9 @@ public class FeedEvictor extends Configured implements Tool {
         }
     }
 
-    private boolean isDateInRange(Date date, Date start, Date end) {
-        return date.compareTo(start) >= 0 && date.compareTo(end) <= 0;
+    private boolean isDateInRange(Date date, Date start) {
+        //ignore end ( && date.compareTo(end) <= 0 )
+        return date.compareTo(start) >= 0;
     }
 
     private boolean deleteInstance(Path path) throws IOException {
