@@ -17,132 +17,142 @@
  */
 package org.apache.ivory.logging;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.ExternalId;
-import org.apache.ivory.entity.parser.ValidationException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.process.Process;
-import org.apache.ivory.resource.InstancesResult;
-import org.apache.ivory.resource.InstancesResult.InstanceAction;
 import org.apache.ivory.resource.InstancesResult.Instance;
-import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
+import org.apache.ivory.resource.InstancesResult.InstanceAction;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.WorkflowAction;
-import org.apache.oozie.client.WorkflowJob;
-
-import java.util.List;
+import org.mortbay.log.Log;
 
 public final class LogProvider {
 	private static final Logger LOG = Logger.getLogger(LogProvider.class);
 
-	public static Instance getLogUrl(Entity entity, Instance Instance,
-			Tag type, String runId) throws IvoryException {
-        Process process = (Process) entity;
-		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
-				process.getClusters().getClusters().get(0).getName());
-		ExternalId externalId = getExternalId(process.getName(), type,
-				Instance.instance);
+	public Instance populateLogUrls(Entity entity, Instance instance,
+			String runId) throws IvoryException {
+
+		Cluster clusterObj = (Cluster) ConfigurationStore.get().get(
+				EntityType.CLUSTER, instance.cluster);
+		String resolvedRunId = "-";
 		try {
-			// if parent wf is running/suspend return oozie's console url of
-			// parent wf
-			if (Instance.status.equals(WorkflowStatus.RUNNING)
-					|| Instance.status.equals(WorkflowStatus.SUSPENDED)) {
-				String parentWFUrl = getConsoleURL(
-						ClusterHelper.getOozieUrl(cluster), externalId.getId());
-				return new InstancesResult.Instance(
-						Instance, parentWFUrl, null);
-			}
-
-			OozieClient client = new OozieClient(
-					ClusterHelper.getOozieUrl(cluster));
-			String parentJobId = client.getJobId(externalId.getId());
-			WorkflowJob jobInfo = client.getJobInfo(parentJobId);
-			List<WorkflowAction> actions = jobInfo.getActions();
-			// if parent wf killed manually or ivory actions fail, return
-			// oozie's console url of parent wf
-			if (actions.size() < 4
-					|| !actions.get(0).getStatus()
-							.equals(WorkflowAction.Status.OK)
-					|| !actions.get(2).getStatus()
-							.equals(WorkflowAction.Status.OK)
-					|| !actions.get(3).getStatus()
-							.equals(WorkflowAction.Status.OK)
-					|| (actions.size() == 5 && !actions.get(4).getStatus()
-							.equals(WorkflowAction.Status.OK))) {
-				return new InstancesResult.Instance(
-						Instance, jobInfo.getConsoleUrl(), null);
-			}
-
-			return getActionsUrl(cluster, process, Instance, externalId,
+			FileSystem fs = FileSystem.get(
+					new Path(ClusterHelper.getHdfsUrl(clusterObj)).toUri(),
+					new Configuration());
+			resolvedRunId = getResolvedRunId(fs, clusterObj, entity, instance,
 					runId);
-		} catch (Exception e) {
-			LOG.error("Exception in LogProvider while getting job id", e);
-			return new InstancesResult.Instance(Instance,
-					"-", null);
-		}
-
-	}
-
-	private static Instance getActionsUrl(Cluster cluster,
-			Process process, Instance Instance,
-			ExternalId externalId, String runId) throws IvoryException,
-			OozieClientException {
-		OozieClient client = new OozieClient(ClusterHelper.getOozieUrl(cluster));
-		String parentJobId = client.getJobId(externalId.getId());
-		WorkflowJob jobInfo = client.getJobInfo(parentJobId + "@user-workflow");
-		String subflowId = jobInfo.getExternalId();
-		WorkflowJob subflowJob = client.getJobInfo(subflowId);
-
-		InstanceAction[] instanceActions = new InstanceAction[subflowJob
-				.getActions().size()];
-		for (int i = 0; i < subflowJob.getActions().size(); i++) {
-			WorkflowAction action = subflowJob.getActions().get(i);
-			InstanceAction instanceAction = new InstanceAction();
-			instanceAction.action = action.getName();
-			instanceAction.status = action.getStatus().name();
-			if (action.getType().equals("pig")
-					|| action.getType().equals("java")) {
-				instanceAction.logFile = getDFSbrowserUrl(cluster, process,
-						externalId, runId, action.getName());
-			} else {
-				instanceAction.logFile = action.getConsoleUrl();
+			// if runId param is not resolved, i.e job is killed or not started
+			// or running
+			if (resolvedRunId.equals("-")
+					&& StringUtils.isEmpty(instance.logFile)) {
+				instance.logFile = "-";
+				return instance;
 			}
-			instanceActions[i] = instanceAction;
+			return populateActionLogUrls(fs, clusterObj, entity, instance,
+					resolvedRunId);
+		} catch (IOException e) {
+			LOG.warn("Exception while getting FS in LogProvider", e);
+		} catch (Exception e) {
+			LOG.warn("Exception in LogProvider while getting resolving run id",
+					e);
 		}
-		String oozieLogFile = getDFSbrowserUrl(cluster, process, externalId,
-				runId, "oozie");
-		return new Instance(Instance, oozieLogFile,
-				instanceActions);
+		return instance;
+	}
+
+	public String getResolvedRunId(FileSystem fs, Cluster cluster,
+			Entity entity, Instance instance, String runId)
+			throws IvoryException, IOException {
+		if (StringUtils.isEmpty(runId)) {
+			Path jobPath = new Path(ClusterHelper.getHdfsUrl(cluster),
+					EntityUtil.getLogPath(cluster, entity) + "/job-"
+							+ EntityUtil.UTCtoURIDate(instance.instance) + "/*");
+
+			FileStatus[] runs = fs.globStatus(jobPath);
+			if (runs.length > 0) {
+				// this is the latest run, dirs are sorted in increasing
+				// order of runs
+				return runs[runs.length - 1].getPath().getName();
+			} else {
+				LOG.warn("No run dirs are available in logs dir:" + jobPath);
+				return "-";
+			}
+		} else {
+			Path jobPath = new Path(ClusterHelper.getHdfsUrl(cluster),
+					EntityUtil.getLogPath(cluster, entity) + "/job-"
+							+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
+							+ getFormatedRunId(runId));
+			if (fs.exists(jobPath)) {
+				return getFormatedRunId(runId);
+			} else {
+				Log.warn("No run dirs are available in logs dir:" + jobPath);
+				return "-";
+			}
+		}
 
 	}
 
-	private static String getConsoleURL(String oozieUrl, String externalId)
-			throws OozieClientException {
-		OozieClient client = new OozieClient(oozieUrl);
-		String jobId = client.getJobId(externalId);
-		WorkflowJob jobInfo = client.getJobInfo(jobId);
-		return jobInfo.getConsoleUrl();
+	private Instance populateActionLogUrls(FileSystem fs, Cluster cluster,
+			Entity entity, Instance instance, String formatedRunId)
+			throws IvoryException, OozieClientException, IOException {
+
+		Path actionPaths = new Path(ClusterHelper.getHdfsUrl(cluster),
+				EntityUtil.getLogPath(cluster, entity) + "/job-"
+						+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
+						+ formatedRunId + "/*");
+		FileStatus[] actions = fs.globStatus(actionPaths);
+		InstanceAction[] instanceActions = new InstanceAction[actions.length - 1];
+		instance.actions = instanceActions;
+		int i = 0;
+		for (FileStatus file : actions) {
+			Path filePath = file.getPath();
+			String dfsBrowserUrl = getDFSbrowserUrl(
+					ClusterHelper.getHdfsUrl(cluster),
+					EntityUtil.getLogPath(cluster, entity) + "/job-"
+							+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
+							+ formatedRunId, file.getPath().getName());
+			if (filePath.getName().equals("oozie.log")) {
+				instance.logFile = dfsBrowserUrl;
+				continue;
+			}
+
+			InstanceAction instanceAction = new InstanceAction(
+					getActionName(filePath.getName()),
+					getActionStatus(filePath.getName()), dfsBrowserUrl);
+			instanceActions[i++] = instanceAction;
+		}
+
+		return instance;
+
 	}
 
-	private static ExternalId getExternalId(String processName, Tag tag,
-			String date) throws ValidationException {
-        return new ExternalId(processName, tag, date);
+	private String getActionName(String fileName) {
+		return fileName.replaceAll("_SUCCEEDED.log", "").replaceAll(
+				"_FAILED.log", "");
 	}
 
-	private static String getDFSbrowserUrl(Cluster cluster, Process process,
-			ExternalId externalId, String runId, String action)
-			throws IvoryException {
-		return (ClusterHelper.getHdfsUrl(cluster) + "/data/"
-				+ process.getWorkflow().getPath() + "/log/"
-				+ externalId.getDFSname() + "/" + runId + "/" + action + ".log")
-				.replaceAll("//", "/");
+	private String getActionStatus(String fileName) {
+		return fileName.contains("_SUCCEEDED.log") ? "SUCCEEDED" : "FAILED";
 	}
 
+	private String getDFSbrowserUrl(String hdfsPath, String logPath,
+			String fileName) throws IvoryException {
+		String httpUrl = hdfsPath.replaceAll("hdfs://", "http://").replaceAll(
+				":[0-9]+", ":50070");
+		return new Path(httpUrl, "/data/"+logPath + "/" + fileName).toString();
+	}
+
+	private String getFormatedRunId(String runId) {
+		return String.format("%03d", Integer.parseInt(runId));
+	}
 }

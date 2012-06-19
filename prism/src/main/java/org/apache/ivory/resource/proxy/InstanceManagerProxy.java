@@ -66,7 +66,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).
                         invoke("getRunningInstances", type, entity, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
     }
 
     @GET
@@ -85,7 +85,28 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).invoke("getStatus",
                         type, entity, startStr, endStr, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
+    }
+    
+	@GET
+	@Path("logs/{type}/{entity}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Monitored(event = "instance-logs")
+	@Override
+	public InstancesResult getLogs(
+			@Dimension("type") @PathParam("type") final String type,
+			@Dimension("entity") @PathParam("entity") final String entity,
+			@Dimension("start-time") @QueryParam("start") final String startStr,
+			@Dimension("end-time") @QueryParam("end") final String endStr,
+			@Dimension("colo") @QueryParam("colo") final String colo,
+			@Dimension("run-id") @QueryParam("runid") final String runId) {
+        return new InstanceProxy() {
+            @Override
+            protected InstancesResult doExecute(String colo) throws IvoryException {
+                return getInstanceManager(colo).invoke("getLogs",
+                        type, entity, startStr, endStr, colo, runId);
+            }
+        }.execute(colo, type, entity);
     }
 
     @POST
@@ -107,7 +128,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).invoke("killInstance",
                     bufferedRequest, type, entity, startStr, endStr, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
     }
 
     @POST
@@ -128,7 +149,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).invoke("suspendInstance",
                     bufferedRequest, type, entity, startStr, endStr, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
     }
 
     @POST
@@ -150,7 +171,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).invoke("resumeInstance",
                     bufferedRequest, type, entity, startStr, endStr, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
     }
 
     @POST
@@ -172,13 +193,13 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
                 return getInstanceManager(colo).invoke("reRunInstance",
                     type, entity, startStr, endStr, bufferedRequest, colo);
             }
-        }.execute(colo, entity);
+        }.execute(colo, type, entity);
     }
 
     private abstract class InstanceProxy {
 
-        public InstancesResult execute(String coloExpr, String name) {
-            String[] colos = getColosFromExpression(coloExpr, EntityType.PROCESS.name(), name);
+        public InstancesResult execute(String coloExpr, String type, String name) {
+            String[] colos = getColosFromExpression(coloExpr, type, name);
 
             InstancesResult[] results = new InstancesResult[colos.length];
             for (int index = 0; index < colos.length; index++) {

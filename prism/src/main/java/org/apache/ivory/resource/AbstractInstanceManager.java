@@ -35,6 +35,7 @@ import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.logging.LogProvider;
+import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -90,18 +91,24 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 		}
 	}
 
-	private InstancesResult getInstanceWithLog(Entity entity,
-                                               Tag type, String runId, InstancesResult result)
-			throws IvoryException {
-		InstancesResult.Instance[] instances = new InstancesResult.Instance[result
-				.getInstances().length];
-		for (int i = 0; i < result.getInstances().length; i++) {
-			InstancesResult.Instance pInstance = LogProvider
-					.getLogUrl(entity, result.getInstances()[i], type, runId);
-			instances[i] = pInstance;
-		}
+	public InstancesResult getLogs(String type, String entity, String startStr,
+			String endStr, String colo, String runId){
 
-		return new InstancesResult(result.getMessage(), instances);
+		try {
+			// TODO getStatus does all validations and filters clusters
+			InstancesResult result = getStatus(type, entity, startStr, endStr,
+					colo);
+			LogProvider logProvider = new LogProvider();
+			Entity entityObject = EntityUtil.getEntity(type, entity);
+			for (Instance instance : result.getInstances()) {
+				logProvider.populateLogUrls(entityObject, instance, runId);
+			}
+			return result;
+		} catch (Exception e) {
+			LOG.error("Failed to get logs for instances", e);
+			throw IvoryWebException.newInstanceException(e,
+					Response.Status.BAD_REQUEST);
+		}
 	}
 
     public InstancesResult killInstance(HttpServletRequest request,
