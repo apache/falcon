@@ -18,7 +18,6 @@
 package org.apache.ivory.resource;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.text.DateFormat;
@@ -68,7 +67,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         String feed3 = "f3" + System.currentTimeMillis();
         Map<String, String> overlay = new HashMap<String, String>();
-        overlay.put("name", feed3);
+        overlay.put("inputFeedName", feed3);
         overlay.put("cluster", clusterName);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
@@ -92,21 +91,16 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testStatus() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
         response = this.service
-                .path("api/entities/status/feed/" + feed1)
+                .path("api/entities/status/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
@@ -119,10 +113,8 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testIdempotentSubmit() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -146,7 +138,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     }
     
     @Test
-    public void testValidate() throws IOException {
+    public void testValidate() {
 
         ServletInputStream stream = getServletInputStream(getClass().
                 getResourceAsStream(SAMPLE_PROCESS_XML));
@@ -163,10 +155,8 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testClusterValidate() throws Exception {
         ClientResponse clientRepsonse;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         InputStream stream = getServletInputStream(overlayParametersOverTemplate(
                 CLUSTER_FILE_TEMPLATE, overlay));
 
@@ -180,37 +170,35 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 	@Test
 	public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
 		ClientResponse clientRepsonse;
-		Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
 		clientRepsonse = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay,
 				EntityType.CLUSTER);
 		assertSuccessful(clientRepsonse);
 
 		clientRepsonse = this.service
-				.path("api/entities/schedule/cluster/" + cluster)
+				.path("api/entities/schedule/cluster/" + clusterName)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
-				.path("api/entities/suspend/cluster/" + cluster)
+				.path("api/entities/suspend/cluster/" + clusterName)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
-				.path("api/entities/resume/cluster/" + cluster)
+				.path("api/entities/resume/cluster/" + clusterName)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
-				.path("api/entities/delete/cluster/" + cluster)
+				.path("api/entities/delete/cluster/" + clusterName)
                 .header("Remote-User", "testuser")
 				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
 		assertSuccessful(clientRepsonse);
@@ -220,28 +208,17 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     public void testSubmit() throws Exception {
 
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        String feed2 = "f2" + System.currentTimeMillis();
-        overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        String process = "p1" + System.currentTimeMillis();
-        overlay.put("name", process);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         assertSuccessful(response);
     }
@@ -249,21 +226,16 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testGetEntityDefinition() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
         response = this.service
-                .path("api/entities/definition/feed/" + feed1)
+                .path("api/entities/definition/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
@@ -271,7 +243,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         try {
             Feed result = (Feed)unmarshaller.
                     unmarshal(new StringReader(feedXML));
-            Assert.assertEquals(result.getName(), feed1);
+            Assert.assertEquals(result.getName(), overlay.get("inputFeedName"));
         } catch (JAXBException e) {
             Assert.fail("Reponse " + feedXML + " is not valid", e);
         }
@@ -306,22 +278,17 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test  (enabled = false)
     public void testFeedSchedule() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
         createTestData();
         ClientResponse clientRepsonse = this.service
-        		.path("api/entities/schedule/feed/" + feed1)
+        		.path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", "guest")
         		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
         		.post(ClientResponse.class);
@@ -382,21 +349,16 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testDeleteDataSet() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
         response = this.service
-                .path("api/entities/delete/feed/" + feed1)
+                .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
@@ -406,60 +368,45 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     public void testDelete() throws Exception {
 
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", cluster);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
         response = this.service
-                .path("api/entities/delete/cluster/" + cluster)
+                .path("api/entities/delete/cluster/" + clusterName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertFailure(response);
 
-        String feed2 = "f2" + System.currentTimeMillis();
-        overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        String process = "p1" + System.currentTimeMillis();
-        overlay.put("name", process);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         assertSuccessful(response);
 
         //Delete a referred feed
         response = this.service
-                .path("api/entities/delete/feed/" + feed1)
+                .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertFailure(response);
 
         //Delete a submitted process
         response = this.service
-                .path("api/entities/delete/process/" + process)
+                .path("api/entities/delete/process/" + processName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
 
-        process = "p1" + System.currentTimeMillis();
-        overlay.put("name", process);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         assertSuccessful(response);
 
         ClientResponse clientRepsonse = this.service
-                .path("api/entities/schedule/process/" + process)
+                .path("api/entities/schedule/process/" + processName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
@@ -467,7 +414,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         //Delete a scheduled process
         response = this.service
-                .path("api/entities/delete/process/" + process)
+                .path("api/entities/delete/process/" + processName)
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
@@ -483,10 +430,8 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
     	Assert.assertEquals(response.getStatus(), 200);
     	
-    	Map<String, String> overlay = new HashMap<String, String>();
+    	Map<String, String> overlay = getUniqueOverlay();
 
-        String cluster = "local" + System.currentTimeMillis();
-        overlay.put("name", cluster);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
         

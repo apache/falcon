@@ -93,7 +93,7 @@ public class UpdateHelperTest extends AbstractTestBase {
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
         newProcess.getLateProcess().setPolicy(PolicyType.PERIODIC);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
-        newProcess.setFrequency(Frequency.fromString("days(1"));
+        newProcess.setFrequency(Frequency.fromString("days(1)"));
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldProcess, newProcess));        
 	}
 	

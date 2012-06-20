@@ -16,7 +16,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<feed description="clicks log" name="##name##" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<feed description="clicks log" name="##inputFeedName##" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <groups>input</groups>
 
     <frequency>hours(1)</frequency>
@@ -25,7 +25,7 @@
 
     <clusters>
         <cluster name="##cluster##" type="source">
-            <validity start="2010-01-01T00:00Z" end="2099-02-30T00:00Z"/>
+            <validity start="2010-01-01T00:00Z" end="2099-01-30T00:00Z"/>
             <retention limit="hours(24)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>

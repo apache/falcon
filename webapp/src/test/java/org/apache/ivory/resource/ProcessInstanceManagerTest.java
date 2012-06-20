@@ -16,7 +16,7 @@ import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-@Test(enabled=false)
+@Test(enabled=true)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
     protected void schedule() throws Exception {

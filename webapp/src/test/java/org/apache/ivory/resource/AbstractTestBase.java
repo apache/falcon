@@ -80,28 +80,17 @@ public class AbstractTestBase {
 
     protected void scheduleProcess() throws Exception {
         ClientResponse response;
-        Map<String, String> overlay = new HashMap<String, String>();
+        Map<String, String> overlay = getUniqueOverlay();
 
-        clusterName = "local" + System.currentTimeMillis();
-        overlay.put("name", clusterName);
         response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        String feed1 = "f1" + System.currentTimeMillis();
-        overlay.put("name", feed1);
-        overlay.put("cluster", clusterName);
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        String feed2 = "f2" + System.currentTimeMillis();
-        overlay.put("name", feed2);
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        processName = "p1" + System.currentTimeMillis();
-        overlay.put("name", processName);
-        overlay.put("f1", feed1);
-        overlay.put("f2", feed2);
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         assertSuccessful(response);
         ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
@@ -180,24 +169,23 @@ public class AbstractTestBase {
 
         if (System.getProperty("ivory.test.hadoop.embedded", "true").equals("true")) {
             CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
-            this.cluster = EmbeddedCluster.newCluster("##name##", false);
+            this.cluster = EmbeddedCluster.newCluster("##cluster##", true);
             Cluster clusterEntity = this.cluster.getCluster();
             FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
             marshaller.marshal(clusterEntity, out);
             out.close();
         } else {
             Map<String, String> overlay = new HashMap<String, String>();
-            overlay.put("name", RandomStringUtils.randomAlphabetic(5));
+            overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
             String file = overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay);
             this.cluster = StandAloneCluster.newCluster(file);
+            clusterName = cluster.getCluster().getName();
         }
 
         cleanupStore();
 
         // setup dependent workflow and lipath in hdfs
         FileSystem fs = FileSystem.get(this.cluster.getConf());
-        fs.mkdirs(new Path("/examples/apps/aggregator"));
-        fs.mkdirs(new Path("/examples/apps/aggregator/lib"));
         fs.mkdirs(new Path("/ivory"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/ivory/test");
@@ -223,7 +211,7 @@ public class AbstractTestBase {
         return getServletInputStream(new FileInputStream(fileName));
     }
 
-    protected ServletInputStream getServletInputStream(final InputStream stream) throws IOException {
+    protected ServletInputStream getServletInputStream(final InputStream stream) {
         return new ServletInputStream() {
 
             @Override
@@ -352,16 +340,24 @@ public class AbstractTestBase {
         if (clusterName == null)
             return true;
 
-        Cluster cluster = (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
-        if (cluster == null)
-            return true;
-
-        OozieClient ozClient = OozieClientFactory.get(cluster);
+        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
         List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
         if (bundles != null) {
             for (BundleJob bundle : bundles)
                 ozClient.kill(bundle.getId());
         }
         return false;
+    }
+    
+    protected Map<String, String> getUniqueOverlay() {
+        Map<String, String> overlay = new HashMap<String, String>();
+        long time = System.currentTimeMillis();
+        clusterName = "cluster" + time;
+        overlay.put("cluster", clusterName);
+        overlay.put("inputFeedName", "in" + time);
+        overlay.put("outputFeedName", "out" + time);
+        processName = "p" + time;
+        overlay.put("processName", processName);
+        return overlay;
     }
 }

@@ -40,9 +40,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.feed.Feed;
-import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.service.ConfigurationChangeListener;
 import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.ReflectionUtils;
@@ -185,8 +182,6 @@ public class ConfigurationStore implements IvoryService {
     }
 
     private void onAdd(Entity entity) {
-        //FIXME hack for consistent xstream serialization
-        getProperties(entity);
         for (ConfigurationChangeListener listener : listeners) {
             try {
                 listener.onAdd(entity);
@@ -196,31 +191,7 @@ public class ConfigurationStore implements IvoryService {
         }
     }
 
-    private void getProperties(Entity entity) {
-        switch(entity.getEntityType()) {
-            case CLUSTER:
-                Cluster cluster = (Cluster) entity;
-                if(cluster.getProperties() != null)
-                    cluster.getProperties().getProperties();
-                break;
-                
-            case FEED:
-                Feed feed = (Feed) entity;
-                if(feed.getProperties() != null)
-                    feed.getProperties().getProperties();
-                break;
-                
-            case PROCESS:
-                Process process = (Process) entity;
-                if(process.getProperties() != null)
-                    process.getProperties().getProperties();
-                break;
-        }
-    }
-
     private void onChange(Entity oldEntity, Entity newEntity) {
-        //FIXME hack for consistent xstream serialization
-        getProperties(newEntity);
         for (ConfigurationChangeListener listener : listeners) {
             try {
                 listener.onChange(oldEntity, newEntity);
@@ -412,5 +383,5 @@ public class ConfigurationStore implements IvoryService {
     }
 
     @Override
-    public void destroy() throws IvoryException { }
+    public void destroy() { }
 }

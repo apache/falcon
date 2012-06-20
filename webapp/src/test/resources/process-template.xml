@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<process name="##name##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <clusters>
         <cluster name="##cluster##">
             <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
@@ -12,10 +12,10 @@
     <timezone>UTC</timezone>
     
     <inputs>
-        <input end="today(0,0)" start="today(0,0)" feed="##f1##" name="input" />
+        <input end="today(0,0)" start="today(0,0)" feed="##inputFeedName##" name="input" />
     </inputs>
     <outputs>
-        <output instance="now(0,0)" feed="##f2##" name="output" />
+        <output instance="now(0,0)" feed="##outputFeedName##" name="output" />
     </outputs>
     <properties>
         <property name="fileTime" value="${formatTime(dateOffset(instanceTime(), 1, 'DAY'), 'yyyy-MMM-dd')}"/>
