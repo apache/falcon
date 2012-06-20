@@ -24,17 +24,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.ivory.Pair;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
-import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -282,7 +277,7 @@ public class FeedEvictorTest {
 		displayFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 		StringBuffer buffer = new StringBuffer();
-		for (long date = now + timeUnit.toMillis(3);
+		for (long date = now;
 				date > now - timeUnit.toMillis(range + 6);
 				date -= timeUnit.toMillis(1)) {
 			String path = "/data/YYYY/" + feed + "/mmHH/dd/MM/" +
