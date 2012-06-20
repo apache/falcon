@@ -138,8 +138,8 @@ public class LateDataHandler extends Configured implements Tool {
 					LOG.info("No matching key " + entry.getKey());
 					continue;
 				}
-				if (recorded.get(entry.getKey()) != entry.getValue()) {
-					LOG.info("Found path to be different for " + entry.getKey());
+				if (!recorded.get(entry.getKey()).equals(entry.getValue())) {
+					LOG.info("Recorded size:"+recorded.get(entry.getKey())+"  is different from new size" + entry.getValue());
 					buffer.append(entry.getKey()).append(',');
 				}
 			}

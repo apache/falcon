@@ -236,4 +236,13 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getLateProcess().getLateInputs().get(0).setInput("invalidInput");
 		parser.parseAndValidate(process.toString());
 	}
+	
+	@Test(expectedExceptions = IvoryException.class)
+	public void testInvalidProcessName() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.setName("name_with_underscore");
+		parser.parseAndValidate(process.toString());
+	}
 }

@@ -312,4 +312,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
 				"/*/${cluster.field1}/Local"), "/*/value1/Local");
 	}
+	
+	@Test(expectedExceptions=IvoryException.class)
+	public void testInvalidFeedName() throws JAXBException, IvoryException  {
+		Feed feed1 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+				FeedGroupMapTest.class
+						.getResourceAsStream("/config/feed/feed-0.1.xml"));
+		feed1.setName("Feed_name");
+		parser.parseAndValidate(feed1.toString());
+	}
+
 }

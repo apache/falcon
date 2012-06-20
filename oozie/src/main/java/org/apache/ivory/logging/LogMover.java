@@ -79,7 +79,7 @@ public class LogMover extends Configured implements Tool {
 				return 0;
 			}
 			Path path = new Path(args.logDir + "/"
-					+ String.format("%0" + 3 + "d", args.runId));
+					+ String.format("%03d", Integer.parseInt(args.runId)));
 
 			FileSystem fs = path.getFileSystem(getConf());
 
@@ -126,8 +126,8 @@ public class LogMover extends Configured implements Tool {
 			LOG.info("Fetching log for action: " + action.getExternalId()
 					+ " from url: " + ttLogURL);
 			InputStream in = getURLinputStream(new URL(ttLogURL));
-			OutputStream out = fs.create(new Path(path, action.getName()
-					+ ".log"));
+			OutputStream out = fs.create(new Path(path, action.getName() + "_"
+					+ action.getStatus() + ".log"));
 			IOUtils.copyBytes(in, out, 4096, true);
 			LOG.info("Copied log to " + path);
 		}

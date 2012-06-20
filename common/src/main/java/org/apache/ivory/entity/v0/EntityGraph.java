@@ -78,7 +78,7 @@ public class EntityGraph implements ConfigurationChangeListener {
         }
         if (nodeEdges == null)
             return;
-        LOG.debug("Adding edges for " + entity.getName() + ": " + nodeEdges);
+        LOG.trace("Adding edges for " + entity.getName() + ": " + nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
@@ -87,7 +87,7 @@ public class EntityGraph implements ConfigurationChangeListener {
                 graph.put(entry.getKey(), entry.getValue());
             }
         }
-        LOG.debug("Merged edges to graph " + entity.getName());
+        LOG.trace("Merged edges to graph " + entity.getName());
     }
 
     @Override

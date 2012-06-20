@@ -9,7 +9,37 @@ public class InstancesResult extends APIResult {
 		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
 	}
 
-	@XmlRootElement(name = "pinstance")
+	@XmlElement
+    private Instance[] instances;
+
+    private InstancesResult() { // for jaxb
+        super();
+    }
+    
+    public InstancesResult(String message, Instance[] instances) {
+    	this(Status.SUCCEEDED, message, instances);
+    }
+
+    public InstancesResult(Status status, String message,
+                           Instance[] instanceExes) {
+    	super(status, message);
+    	this.instances = instanceExes;
+    }
+
+	public InstancesResult(Status status, String message) {
+	    super(status, message);
+    }
+
+
+    public Instance[] getInstances() {
+        return instances;
+    }
+
+	public void setInstances(Instance[] instances) {
+		this.instances = instances;
+	}
+	
+	@XmlRootElement(name = "instance")
 	public static class Instance {
 		@XmlElement
 		public String instance;
@@ -65,37 +95,6 @@ public class InstancesResult extends APIResult {
 		}
     }
     
-	@XmlElement
-    private Instance[] instances;
-
-    private InstancesResult() { // for jaxb
-        super();
-    }
-
-    
-    public InstancesResult(String message, Instance[] instances) {
-    	this(Status.SUCCEEDED, message, instances);
-    }
-
-    public InstancesResult(Status status, String message,
-                           Instance[] instanceExes) {
-    	super(status, message);
-    	this.instances = instanceExes;
-    }
-
-	public InstancesResult(Status status, String message) {
-	    super(status, message);
-    }
-
-
-    public Instance[] getInstances() {
-        return instances;
-    }
-
-	public void setInstances(Instance[] instances) {
-		this.instances = instances;
-	}
-
 	@XmlRootElement(name = "actions")
 	public static class InstanceAction {
 		@XmlElement

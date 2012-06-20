@@ -94,4 +94,14 @@ public final class ClusterHelper {
         }
         return null;
     }
+    
+	public static String getPropertyValue(Cluster cluster, String propName) {
+		if (cluster.getProperties() != null) {
+			for (Property prop : cluster.getProperties().getProperties()) {
+				if (prop.getName().equals(propName))
+					return prop.getValue();
+			}
+		}
+		return null;
+	}
 }

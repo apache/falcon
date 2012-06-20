@@ -82,13 +82,13 @@ public class IvoryClient {
 		if (input != null) {
 			prop.load(input);
 			readTimeout = prop.containsKey("ivory.read.timeout") ? Integer
-					.parseInt(prop.getProperty("ivory.read.timeout")) : 60000;
+					.parseInt(prop.getProperty("ivory.read.timeout")) : 180000;
 			connectTimeout = prop.containsKey("ivory.connect.timeout") ? Integer
 					.parseInt(prop.getProperty("ivory.connect.timeout"))
-					: 60000;
+					: 180000;
 		} else{
-			readTimeout = 60000;
-			connectTimeout = 60000;
+			readTimeout = 180000;
+			connectTimeout = 180000;
 		}
 		client.setConnectTimeout(connectTimeout);
 		client.setReadTimeout(readTimeout);
@@ -107,7 +107,7 @@ public class IvoryClient {
 				"api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML), RESUME(
 				"api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML), DELETE(
 				"api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML), STATUS(
-				"api/entities/status/", HttpMethod.GET, MediaType.TEXT_PLAIN), DEFINITION(
+				"api/entities/status/", HttpMethod.GET, MediaType.TEXT_XML), DEFINITION(
 				"api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML), LIST(
 				"api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML), DEPENDENCY(
 				"api/entities/dependencies/", HttpMethod.GET,
@@ -267,7 +267,7 @@ public class IvoryClient {
 			String end, String runid) throws IvoryCLIException {
 
 		return sendInstanceRequest(Instances.STATUS, type, entity, start,
-                end, null, runid);
+                end, null, null);
 	}
 
 	public String killInstances(String type, String entity, String start, String end)

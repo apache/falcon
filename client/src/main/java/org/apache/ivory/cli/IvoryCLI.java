@@ -20,6 +20,7 @@ package org.apache.ivory.cli;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -36,6 +37,9 @@ import com.sun.jersey.api.client.ClientHandlerException;
 
 public class IvoryCLI {
 
+	public static PrintStream ERR_STREAM = System.err;
+	public static PrintStream OUT_STREAM = System.out;
+	
 	public static final String IVORY_URL = "IVORY_URL";
 	public static final String URL_OPTION = "url";
 	public static final String VERSION_OPTION = "version";
@@ -133,21 +137,21 @@ public class IvoryCLI {
 
 			return 0;
 		} catch (IvoryCLIException ex) {
-			System.err.println("Error: " + ex.getMessage());
+			ERR_STREAM.println("Error: " + ex.getMessage());
 			return -1;
 		} catch (ParseException ex) {
-			System.err.println("Invalid sub-command: " + ex.getMessage());
-			System.err.println();
-			System.err.println(parser.shortHelp());
+			ERR_STREAM.println("Invalid sub-command: " + ex.getMessage());
+			ERR_STREAM.println();
+			ERR_STREAM.println(parser.shortHelp());
 			return -1;
 		} catch (ClientHandlerException ex) {
-			System.err
+			ERR_STREAM
 					.print("Unable to connect to Ivory server, please check if the URL is correct and Ivory server is up and running\n");
-			System.err.println(ex.getMessage());
+			ERR_STREAM.println(ex.getMessage());
 			return -1;
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			System.err.println(ex.getMessage());
+			ERR_STREAM.println(ex.getMessage());
 			return -1;
 		}
 
@@ -171,12 +175,14 @@ public class IvoryCLI {
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
 		String runid = commandLine.getOptionValue(RUNID_OPT);
 
-		validateInstanceCommands(optionsList, entity, type, start, end, filePath);
+		validateInstanceCommands(optionsList, entity, type, start, end,
+				filePath);
 
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(type, entity);
 		} else if (optionsList.contains(STATUS_OPT)) {
-			result = client.getStatusOfInstances(type, entity, start, end, runid);
+			result = client.getStatusOfInstances(type, entity, start, end,
+					runid);
 		} else if (optionsList.contains(KILL_OPT)) {
 			result = client.killInstances(type, entity, start, end);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
@@ -188,18 +194,18 @@ public class IvoryCLI {
 		} else {
 			throw new IvoryCLIException("Invalid command");
 		}
-		System.out.println(result);
+		OUT_STREAM.println(result);
 
 	}
 
 	private void validateInstanceCommands(Set<String> optionsList,
-			String entity, String type, String start, String end, String filePath)
-			throws IvoryCLIException {
+			String entity, String type, String start, String end,
+			String filePath) throws IvoryCLIException {
 
 		if (entity == null || entity.equals("")) {
 			throw new IvoryCLIException("Missing argument: name");
 		}
-		
+
 		if (type == null || entity.equals("")) {
 			throw new IvoryCLIException("Missing argument: type");
 		}
@@ -265,11 +271,11 @@ public class IvoryCLI {
 		} else if (optionsList.contains(LIST_OPT)) {
 			result = client.getEntityList(entityType);
 		} else if (optionsList.contains(HELP_CMD)) {
-			System.out.println("Ivory Help");
+			OUT_STREAM.println("Ivory Help");
 		} else {
 			throw new IvoryCLIException("Invalid command");
 		}
-		System.out.println(result);
+		OUT_STREAM.println(result);
 	}
 
 	private void validateFilePath(Set<String> optionsList, String filePath)
@@ -295,7 +301,7 @@ public class IvoryCLI {
 
 	// TODO
 	private void versionCommand() {
-		System.out.println("Apache Ivory version: 1.0");
+		OUT_STREAM.println("Apache Ivory version: 1.0");
 
 	}
 
@@ -427,10 +433,10 @@ public class IvoryCLI {
 				FILE_PATH_OPT,
 				true,
 				"Path to job.properties file is required for rerun command, it should contain name=value pair for properties to override for rerun");
-        Option entityType = new Option(ENTITY_TYPE_OPT, true,
-                "Entity type, can be feed or process xml");
-        Option entityName = new Option(ENTITY_NAME_OPT, true,
-                "Entity type, can be feed or process xml");
+		Option entityType = new Option(ENTITY_TYPE_OPT, true,
+				"Entity type, can be feed or process xml");
+		Option entityName = new Option(ENTITY_NAME_OPT, true,
+				"Entity type, can be feed or process xml");
 
 		instanceOptions.addOption(url);
 		instanceOptions.addOptionGroup(group);
@@ -445,14 +451,15 @@ public class IvoryCLI {
 
 	}
 
-	protected String validateIvoryUrl(CommandLine commandLine) throws IvoryCLIException {
+	protected String validateIvoryUrl(CommandLine commandLine)
+			throws IvoryCLIException {
 		String url = commandLine.getOptionValue(URL_OPTION);
 		if (url == null) {
 			try {
 				InputStream input = IvoryCLI.class
 						.getResourceAsStream("/client.properties");
 				if (input == null) {
-					System.err
+					ERR_STREAM
 							.println("client.properties file does not exist, Ivory URL is "
 									+ "neither available in command option nor in the client.properties file");
 					throw new IvoryCLIException("Ivory URL not specified");
@@ -460,10 +467,11 @@ public class IvoryCLI {
 				}
 				Properties prop = new Properties();
 				prop.load(input);
-				if(prop.containsKey("ivory.url"))
-				url = prop.getProperty("ivory.url");
-				else{
-					throw new IvoryCLIException("ivory.url property not present in client.properties");
+				if (prop.containsKey("ivory.url"))
+					url = prop.getProperty("ivory.url");
+				else {
+					throw new IvoryCLIException(
+							"ivory.url property not present in client.properties");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -481,11 +489,11 @@ public class IvoryCLI {
 			optionsList.add(option.getOpt());
 		}
 		if (optionsList.contains(VERSION_OPTION)) {
-			System.out.println("Ivory server build version: 1.0");
+			OUT_STREAM.println("Ivory server build version: 1.0");
 		}
 
 		else if (optionsList.contains(HELP_CMD)) {
-			System.out.println("Ivory Help");
+			OUT_STREAM.println("Ivory Help");
 		}
 	}
 

@@ -31,15 +31,15 @@
 	<late-arrival cut-off="months(3)" />
 
 	<clusters>
-		<cluster name="##clusterName##" type="source">
-			<validity start="2009-01-01T00:00Z" end="2012-12-31T23:59Z"/>
+		<cluster name="testCluster" type="source">
+			<validity start="2010-01-01T00:00Z" end="##endDate##"/>
 			<retention limit="months(36)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
 		</cluster>
 	</clusters>
 
 	<locations>
 		<location type="data"
-			path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
+			path="/workflow/static/in" />
 		<location type="stats" path="/projects/ivory/clicksStats" />
 		<location type="meta" path="/projects/ivory/clicksMetaData" />
 	</locations>
@@ -47,9 +47,4 @@
 	<ACL owner="testuser" group="group" permission="0x755" />
 	<schema location="/schema/clicks" provider="protobuf" />
 
-	<properties>
-		<property name="field3" value="value3" />
-		<property name="field2" value="value2" />
-		<property name="field4" value="value2" />
-	</properties>
 </feed>

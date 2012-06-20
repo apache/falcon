@@ -436,7 +436,7 @@ public class EntityUtil {
 			lateProcess.setDelay(new Frequency(RuntimeProperties.get()
 					.getProperty("feed.late.frequency", "hours(3)")));
 			lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
-					.getProperty("feed.retry.policy", "exp-backoff")));
+					.getProperty("feed.late.policy", "exp-backoff")));
 			LateInput lateInput = new LateInput();
 			lateInput.setInput(entity.getName());
 			//TODO - Assuming the late workflow is not used
@@ -449,5 +449,26 @@ public class EntityUtil {
 		default:
 			throw new IvoryException("Cannot create Late Process for entity:"+entity.getName());
 		}
+	}
+	
+	public static Path getLogPath(
+			org.apache.ivory.entity.v0.cluster.Cluster cluster, Entity entity)
+			throws IvoryException {
+		Path logPath = new Path(ClusterHelper.getLocation(cluster,
+				"staging"), EntityUtil.getStagingPath(entity) + "/../logs");
+		return logPath;
+	}
+	
+	public static String UTCtoURIDate(String utc) throws IvoryException {
+		DateFormat utcFormat = new SimpleDateFormat(
+				"yyyy'-'MM'-'dd'T'HH':'mm'Z'");
+		Date utcDate;
+		try {
+			utcDate = utcFormat.parse(utc);
+		} catch (ParseException e) {
+			throw new IvoryException("Unable to parse utc date:", e);
+		}
+		DateFormat uriFormat = new SimpleDateFormat("yyyy'-'MM'-'dd'-'HH'-'mm");
+		return uriFormat.format(utcDate);
 	}
 }
