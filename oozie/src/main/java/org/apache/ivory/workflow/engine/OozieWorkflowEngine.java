@@ -395,13 +395,13 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 		Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(
 				entity, start, end);
 		List<String> clusterList = getIncludedClusters(props,
-				IVORY_INSTANCE_ACTION_CLUSTERS, actionsMap);
+				IVORY_INSTANCE_ACTION_CLUSTERS);
 		List<String> sourceClusterList = getIncludedClusters(props,
-				IVORY_INSTANCE_SOURCE_CLUSTERS, actionsMap);
+				IVORY_INSTANCE_SOURCE_CLUSTERS);
 
 		List<Instance> instances = new ArrayList<Instance>();
 		for (String cluster : actionsMap.keySet()) {
-			if (!clusterList.contains(cluster))
+			if (clusterList.size() != 0 && !clusterList.contains(cluster))
 				continue;
 
 			List<CoordinatorAction> actions = actionsMap.get(cluster);
@@ -410,7 +410,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 				if (entity.getEntityType() == EntityType.FEED) {
 					sourceCluster = getSourceCluster(cluster,
 							coordinatorAction, entity);
-					if (!sourceClusterList.contains(sourceCluster))
+					if (sourceClusterList.size() != 0
+							&& !sourceClusterList.contains(sourceCluster))
 						continue;
 				}
 				String status = mapActionStatus(coordinatorAction.getStatus());
@@ -493,16 +494,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 	}
 
 	private List<String> getIncludedClusters(Properties props,
-			String clustersType, Map<String, List<CoordinatorAction>> actionsMap) {
+			String clustersType) {
 		String clusters = props == null ? "" : props.getProperty(clustersType,
 				"");
 		List<String> clusterList = new ArrayList<String>();
-		if (StringUtils.isEmpty(clusters)) {
-			clusterList.addAll(actionsMap.keySet());
-		} else {
-			for (String cluster : clusters.split(",")) {
-				clusterList.add(cluster.trim());
-			}
+		for (String cluster : clusters.split(",")) {
+			clusterList.add(cluster.trim());
 		}
 		return clusterList;
 	}
