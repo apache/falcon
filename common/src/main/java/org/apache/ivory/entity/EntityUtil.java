@@ -357,10 +357,11 @@ public class EntityUtil {
 		return getWorkflowName(null, null, entity);
 	}
 
-	public static String getWorkflowNameSuffixes(String workflowName, Entity entity) {
+	public static String getWorkflowNameSuffix(String workflowName,
+			Entity entity) throws IvoryException {
 		WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
 				entity);
-		return builder.getWorkflowSuffixes(workflowName);
+		return builder.getWorkflowSuffixes(workflowName).replaceAll("_", "");
 	}
 
 	public static Tag getWorkflowNameTag(String workflowName, Entity entity) {

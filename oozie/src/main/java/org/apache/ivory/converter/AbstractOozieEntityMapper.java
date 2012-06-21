@@ -117,12 +117,12 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
             marshal(cluster, coordinatorapp, coordPath,
-                    entity.getName() + EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(), entity) + ".xml");
+                    entity.getName() + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
             createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
             bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + entity.getName()
-                    + EntityUtil.getWorkflowNameSuffixes(coordinatorapp.getName(), entity) + ".xml");
+                    + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
             bundleApp.getCoordinator().add(bundleCoord);
 
             copySharedLibs(cluster, coordPath);

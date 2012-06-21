@@ -90,6 +90,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             Job.Status.DONEWITHERROR);
     private static List<Job.Status> BUNDLE_RESUME_PRECOND = Arrays.asList(Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED);
     private static final String IVORY_INSTANCE_ACTION_CLUSTERS = "ivory.instance.action.clusters";
+    private static final String IVORY_INSTANCE_SOURCE_CLUSTERS = "ivory.instance.source.clusters";
 
     private static final String[] BUNDLE_UPDATEABLE_PROPS = new String[] {"parallel", "clusters.clusters[\\d+].validity.end"};
 
@@ -336,6 +337,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                         String nominalTimeStr = SchemaHelper.formatDateUTC(action.getNominalTime());
                         Instance instance = new Instance(cluster, nominalTimeStr, WorkflowStatus.RUNNING);
                         instance.startTime = SchemaHelper.formatDateUTC(wf.getStartTime());
+                        if(entity.getEntityType()==EntityType.FEED){
+                        	instance.sourceCluster= getSourceCluster(cluster, action, entity);
+                        }
                         runInstances.add(instance);
                     }
                 }
@@ -388,22 +392,29 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props)
             throws IvoryException {
 
-        Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end);
-        String clusters = props == null ? "" : props.getProperty(IVORY_INSTANCE_ACTION_CLUSTERS, "");
-        List<String> clusterList = new ArrayList<String>();
-        if (StringUtils.isEmpty(clusters)) {
-            clusterList.addAll(actionsMap.keySet());
-        }
+		Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(
+				entity, start, end);
+		List<String> clusterList = getIncludedClusters(props,
+				IVORY_INSTANCE_ACTION_CLUSTERS, actionsMap);
+		List<String> sourceClusterList = getIncludedClusters(props,
+				IVORY_INSTANCE_SOURCE_CLUSTERS, actionsMap);
 
-        List<Instance> instances = new ArrayList<Instance>();
-        for (String cluster : actionsMap.keySet()) {
-            if (!clusterList.contains(cluster))
-                continue;
+		List<Instance> instances = new ArrayList<Instance>();
+		for (String cluster : actionsMap.keySet()) {
+			if (!clusterList.contains(cluster))
+				continue;
 
-            List<CoordinatorAction> actions = actionsMap.get(cluster);
+			List<CoordinatorAction> actions = actionsMap.get(cluster);
+			String sourceCluster = null;
+			for (CoordinatorAction coordinatorAction : actions) {
+				if (entity.getEntityType() == EntityType.FEED) {
+					sourceCluster = getSourceCluster(cluster,
+							coordinatorAction, entity);
+					if (!sourceClusterList.contains(sourceCluster))
+						continue;
+				}
+				String status = mapActionStatus(coordinatorAction.getStatus());
 
-            for (CoordinatorAction coordinatorAction : actions) {
-                String status = mapActionStatus(coordinatorAction.getStatus());
                 WorkflowJob jobInfo = null;
                 if (coordinatorAction.getExternalId() != null) {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
@@ -458,12 +469,45 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     instance.startTime = SchemaHelper.formatDateUTC(jobInfo.getStartTime());
                     instance.endTime = SchemaHelper.formatDateUTC(jobInfo.getEndTime());
                     instance.logFile=jobInfo.getConsoleUrl();
+                    instance.sourceCluster=sourceCluster;
                 }
                 instances.add(instance);
             }
         }
         return new InstancesResult(action.name(), instances.toArray(new Instance[instances.size()]));
     }
+    
+	private String getSourceCluster(String cluster,
+			CoordinatorAction coordinatorAction, Entity entity)
+			throws IvoryException {
+
+		OozieClient client = OozieClientFactory.get(cluster);
+		CoordinatorJob coordJob;
+		try {
+			coordJob = client.getCoordJobInfo(coordinatorAction.getJobId());
+		} catch (OozieClientException e) {
+			throw new IvoryException("Unable to get oozie job id:" + e);
+		}
+		return EntityUtil.getWorkflowNameSuffix(coordJob.getAppName(),
+				entity);
+	}
+
+	private List<String> getIncludedClusters(Properties props,
+			String clustersType, Map<String, List<CoordinatorAction>> actionsMap) {
+		String clusters = props == null ? "" : props.getProperty(clustersType,
+				"");
+		List<String> clusterList = new ArrayList<String>();
+		if (StringUtils.isEmpty(clusters)) {
+			clusterList.addAll(actionsMap.keySet());
+		} else {
+			for (String cluster : clusters.split(",")) {
+				clusterList.add(cluster.trim());
+			}
+		}
+		return clusterList;
+	}
+
+
 
     private String mapActionStatus(CoordinatorAction.Status status) {
         if (status == CoordinatorAction.Status.READY ||

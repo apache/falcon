@@ -41,11 +41,13 @@ import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
+import org.apache.oozie.client.WorkflowJob.Status;
 import org.apache.tools.ant.filters.StringInputStream;
 
 public class LogMover extends Configured implements Tool {
@@ -127,9 +129,19 @@ public class LogMover extends Configured implements Tool {
 					+ " from url: " + ttLogURL);
 			InputStream in = getURLinputStream(new URL(ttLogURL));
 			OutputStream out = fs.create(new Path(path, action.getName() + "_"
-					+ action.getStatus() + ".log"));
+					+ getMappedStatus(action.getStatus()) + ".log"));
 			IOUtils.copyBytes(in, out, 4096, true);
 			LOG.info("Copied log to " + path);
+		}
+	}
+
+	private String getMappedStatus(WorkflowAction.Status status) {
+		if (status == WorkflowAction.Status.FAILED
+				|| status == WorkflowAction.Status.KILLED
+				|| status == WorkflowAction.Status.ERROR) {
+			return "FAILED";
+		} else {
+			return "SUCCEEDED";
 		}
 	}
 

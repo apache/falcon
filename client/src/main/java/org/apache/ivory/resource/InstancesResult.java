@@ -52,12 +52,18 @@ public class InstancesResult extends APIResult {
 
         @XmlElement
         public String cluster;
+        
+        @XmlElement
+        public String sourceCluster;
 
         @XmlElement
         public String startTime;
 
         @XmlElement
         public String endTime;
+        
+        @XmlElement
+        public String details;
 
 		@XmlElement
 		public InstanceAction[] actions;
@@ -71,14 +77,6 @@ public class InstancesResult extends APIResult {
 			this.status = status;
 		}
 
-		public Instance(Instance instance, String logFile,
-                        InstanceAction[] actions) {
-			this.instance = instance.instance;
-			this.status = instance.status;
-			this.logFile = logFile;
-			this.actions = actions;
-		}
-        
         public String getInstance() {
             return instance;
         }
@@ -87,11 +85,41 @@ public class InstancesResult extends APIResult {
             return status;
         }
         
+		public String getLogFile() {
+			return logFile;
+		}
+
+		public String getCluster() {
+			return cluster;
+		}
+
+		public String getSourceCluster() {
+			return sourceCluster;
+		}
+
+		public String getStartTime() {
+			return startTime;
+		}
+
+		public String getEndTime() {
+			return endTime;
+		}
+
+		public InstanceAction[] getActions() {
+			return actions;
+		}
+
 		@Override
 		public String toString() {
-			return "{instance:" + this.instance + ", status:" + this.status
+			return "{instance:"
+					+ this.instance
+					+ ", status:"
+					+ this.status
 					+ (this.logFile == null ? "" : ", log:" + this.logFile)
-					+ "}";
+					+ (this.sourceCluster == null ? "" : ", source-cluster:"
+							+ this.sourceCluster)
+					+ (this.cluster == null ? "" : ", cluster:"
+							+ this.cluster) + "}";
 		}
     }
     
