@@ -499,12 +499,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 				"");
 		List<String> clusterList = new ArrayList<String>();
 		for (String cluster : clusters.split(",")) {
-			clusterList.add(cluster.trim());
+			if (StringUtils.isNotEmpty(cluster)) {
+				clusterList.add(cluster.trim());
+			}
 		}
 		return clusterList;
 	}
-
-
 
     private String mapActionStatus(CoordinatorAction.Status status) {
         if (status == CoordinatorAction.Status.READY ||
