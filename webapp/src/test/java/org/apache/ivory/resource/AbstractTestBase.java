@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.cluster.util.StandAloneCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
@@ -43,7 +43,6 @@ import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -119,9 +118,12 @@ public class AbstractTestBase {
     }
 
     protected void waitForBundleStart() throws Exception {
-        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
-        String bundleId = getBundleId(ozClient);
-
+        OozieClient ozClient = OozieClientFactory.get(clusterName);
+        List<BundleJob> bundles = getBundles();
+        if(bundles.isEmpty())
+            return;
+        
+        String bundleId = bundles.get(0).getId();
         for (int i = 0; i < 10; i++) {
             Thread.sleep(1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
@@ -322,13 +324,15 @@ public class AbstractTestBase {
         return File.createTempFile("test", ".xml", target);
     }
 
-    protected String getBundleId(OozieClient ozClient) throws Exception {
-        List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
-        if (bundles != null)
-            return bundles.get(0).getId();
-        return null;
+    protected List<BundleJob> getBundles() throws Exception {
+        List<BundleJob> bundles = new ArrayList<BundleJob>();
+        if (clusterName == null)
+            return bundles;
+        
+        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
+        return ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
     }
-
+    
     @AfterClass
     public void cleanup() throws Exception {
         tearDown();
@@ -336,12 +340,12 @@ public class AbstractTestBase {
     }
 
     @AfterMethod
-    public boolean killOozieJobs() throws IvoryException, OozieClientException {
+    public boolean killOozieJobs() throws Exception {
         if (clusterName == null)
             return true;
 
         OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-        List<BundleJob> bundles = ozClient.getBundleJobsInfo("name=IVORY_PROCESS_" + processName, 0, 10);
+        List<BundleJob> bundles = getBundles();
         if (bundles != null) {
             for (BundleJob bundle : bundles)
                 ozClient.kill(bundle.getId());

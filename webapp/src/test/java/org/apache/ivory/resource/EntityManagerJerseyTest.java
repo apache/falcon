@@ -44,6 +44,7 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Validity;
+import org.apache.oozie.client.BundleJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -56,7 +57,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      */
     
     @Test
-    public void testProcessUpdate() throws Exception {
+    public void testProcessInputUpdate() throws Exception {
         scheduleProcess();
         waitForBundleStart();
         
@@ -80,12 +81,39 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         process.getInputs().getInputs().add(input);
 
         Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
+        File tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
+        assertSuccessful(response);    
+        
+        //Assert that update creates new bundle
+        List<BundleJob> bundles = getBundles();
+        Assert.assertEquals(bundles.size(), 2);
+    }
+    
+    @Test
+    public void testProcessEndtimeUpdate() throws Exception {
+        scheduleProcess();
+        waitForBundleStart();
+        
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", "guest")
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
+
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
         processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
         assertSuccessful(response);    
+        
+        //Assert that update does not create new bundle
+        List<BundleJob> bundles = getBundles();
+        Assert.assertEquals(bundles.size(), 1);
     }
     
     @Test

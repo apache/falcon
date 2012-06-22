@@ -20,6 +20,7 @@
     <properties>
         <property name="fileTime" value="${formatTime(dateOffset(instanceTime(), 1, 'DAY'), 'yyyy-MMM-dd')}"/>
         <property name="user" value="${user()}"/>
+        <property name="baseTime" value="${today(0,0)}"/>
     </properties>
     <workflow engine="oozie" path="/ivory/test/workflow" />
     <retry policy="periodic" delay="minutes(10)" attempts="3" />
