@@ -232,7 +232,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
 	private void validateDateRange(Entity entity, String start, String end)
 			throws IvoryException {
-		String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
+		String[] clusters = EntityUtil.getClustersDefined(entity);
 		Pair<Date, String> clusterMinStartDate;
 		Pair<Date, String> clusterMaxEndDate;
 		if (clusters.length >= 1) {
