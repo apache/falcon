@@ -51,6 +51,7 @@ import org.apache.ivory.resource.APIResult.Status;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
@@ -435,4 +436,5 @@ public abstract class AbstractEntityManager {
     protected WorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;
     }
+
 }

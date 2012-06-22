@@ -9,8 +9,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.beanutils.PropertyUtils;
@@ -32,6 +34,7 @@ import org.apache.ivory.entity.v0.process.LateProcess;
 import org.apache.ivory.entity.v0.process.PolicyType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Retry;
+import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.RuntimeProperties;
 
 public class EntityUtil {
@@ -391,6 +394,20 @@ public class EntityUtil {
 		}  
 		throw new IllegalArgumentException("Unhandled entity type: " + entity.getEntityType());
 	}
+	
+	public static String[] getClustersDefinedInColos(Entity entity) {
+		String[] entityClusters = EntityUtil.getClustersDefined(entity);
+		if (DeploymentUtil.isEmbeddedMode())
+			return entityClusters;
+
+		Set<String> myClusters = DeploymentUtil.getCurrentClusters();
+		Set<String> applicableClusters = new HashSet<String>();
+		for (String cluster : entityClusters)
+			if (myClusters.contains(cluster))
+				applicableClusters.add(cluster);
+		return applicableClusters.toArray(new String[] {});
+
+	}
 
 	public static Path getStagingPath(
 			org.apache.ivory.entity.v0.cluster.Cluster cluster, Entity entity)
@@ -475,4 +492,5 @@ public class EntityUtil {
 		DateFormat uriFormat = new SimpleDateFormat("yyyy'-'MM'-'dd'-'HH'-'mm");
 		return uriFormat.format(utcDate);
 	}
+
 }

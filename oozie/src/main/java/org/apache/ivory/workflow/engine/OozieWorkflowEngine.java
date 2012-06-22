@@ -154,8 +154,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private Map<String, BundleJob> findBundle(Entity entity) throws IvoryException {
-        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-        String[] clusters = builder.getClustersDefined(entity);
+        String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
         for (String cluster : clusters) {
             jobMap.put(cluster, findBundle(entity, cluster));
@@ -186,8 +185,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private Map<String, List<BundleJob>> findBundles(Entity entity) throws IvoryException {
-        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-        String[] clusters = builder.getClustersDefined(entity);
+        String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, List<BundleJob>> jobMap = new HashMap<String, List<BundleJob>>();
 
         for (String cluster : clusters) {
@@ -314,7 +312,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     public InstancesResult getRunningInstances(Entity entity) throws IvoryException {
         try {
             WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-            String[] clusters = builder.getClustersDefined(entity);
+            String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
             List<Instance> runInstances = new ArrayList<Instance>();
             String[] wfNames = builder.getWorkflowNames(entity);
             List<String> coordNames = new ArrayList<String>();
@@ -415,7 +413,6 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 						continue;
 				}
 				String status = mapActionStatus(coordinatorAction.getStatus());
-
                 WorkflowJob jobInfo = null;
                 if (coordinatorAction.getExternalId() != null) {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
@@ -471,6 +468,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     instance.endTime = SchemaHelper.formatDateUTC(jobInfo.getEndTime());
                     instance.logFile=jobInfo.getConsoleUrl();
                     instance.sourceCluster=sourceCluster;
+                    instance.details=coordinatorAction.getMissingDependencies();
                 }
                 instances.add(instance);
             }
@@ -947,4 +945,5 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             throw new IvoryException(e);
         }
     }
+
 }

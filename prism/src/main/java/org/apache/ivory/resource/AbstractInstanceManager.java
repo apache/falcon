@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryWebException;
+import org.apache.ivory.Pair;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.parser.ValidationException;
 import org.apache.ivory.entity.v0.Entity;
@@ -229,42 +230,65 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         validateDateRange(entityObject, startStr, endStr);
     }
 
-    private void validateDateRange(Entity entity, String start, String end) throws IvoryException {
-        IvoryException firstException = null;
-        boolean valid = false;
-        for (String cluster : EntityUtil.getClustersDefined(entity)) {
-            try {
-                validateDateRangeFor(entity, cluster, start, end);
-                valid = true;
-                break;
-            } catch (IvoryException e) {
-                if (firstException == null) firstException = e;
-            }
-        }
-        if (!valid && firstException != null) throw firstException;
+	private void validateDateRange(Entity entity, String start, String end)
+			throws IvoryException {
+		String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
+		Pair<Date, String> clusterMinStartDate;
+		Pair<Date, String> clusterMaxEndDate;
+		if (clusters.length >= 1) {
+			clusterMinStartDate = Pair.of(
+					EntityUtil.getStartTime(entity, clusters[0]), clusters[0]);
+			clusterMaxEndDate = Pair.of(
+					EntityUtil.getEndTime(entity, clusters[0]), clusters[0]);
+		} else {
+			throw new IvoryException(
+					"No valid clusters available for entity:"+entity+ "in the given colo");
+		}
+		for (int i = 1; i < clusters.length; i++) {
+			if (clusterMinStartDate.first.after(EntityUtil.getStartTime(entity,
+					clusters[i]))) {
+				clusterMinStartDate = Pair.of(
+						EntityUtil.getStartTime(entity, clusters[i]),
+						clusters[i]);
+			}
+			if (clusterMaxEndDate.first.before(EntityUtil.getEndTime(entity,
+					clusters[i]))) {
+				clusterMaxEndDate = Pair
+						.of(EntityUtil.getEndTime(entity, clusters[i]),
+								clusters[i]);
+			}
+		}
 
-    }
+		validateDateRangeFor(entity, clusterMinStartDate, clusterMaxEndDate,
+				start, end);
+	}
+    
+    private void validateDateRangeFor(Entity entity, Pair<Date,String> clusterMinStart,
+    		Pair<Date,String> clusterMaxEnd, String start, String end) throws IvoryException {
 
-    private void validateDateRangeFor(Entity entity, String cluster, String start, String end) throws IvoryException {
-        Date clusterStart = EntityUtil.getStartTime(entity, cluster);
-        Date clusterEnd = EntityUtil.getEndTime(entity, cluster);
+    	Date instStart = EntityUtil.parseDateUTC(start);
+    	if (instStart.before(clusterMinStart.first))
+    		throw new ValidationException("Start date " + start + " is before "
+    				+ entity.getEntityType() + "'s  start "
+    				+ SchemaHelper.formatDateUTC(clusterMinStart.first)
+    				+ " for cluster " + clusterMinStart.second);
 
-        Date instStart = EntityUtil.parseDateUTC(start);
-        if(instStart.before(clusterStart))
-            throw new ValidationException("Start date " + start +
-                    " is before" + entity.getEntityType() + "  start " + SchemaHelper.formatDateUTC(clusterStart) + " for cluster " + cluster);
+		if (StringUtils.isNotEmpty(end)) {
+			Date instEnd = EntityUtil.parseDateUTC(end);
+			if (instStart.after(instEnd))
+				throw new ValidationException("Start date " + start
+						+ " is after end date " + end);
 
-        if(StringUtils.isNotEmpty(end)) {
-            Date instEnd = EntityUtil.parseDateUTC(end);
-            if(instStart.after(instEnd))
-                throw new ValidationException("Start date " + start + " is after end date " + end + " for cluster " + cluster);
-
-            if(instEnd.after(clusterEnd))
-                throw new ValidationException("End date " + end + " is after " + entity.getEntityType() + " end " +
-                        SchemaHelper.formatDateUTC(clusterEnd) + " for cluster " + cluster);
-        } else if(instStart.after(clusterEnd))
-            throw new ValidationException("Start date " + start + " is after " + entity.getEntityType() + " end " +
-                    SchemaHelper.formatDateUTC(clusterEnd) + " for cluster " + cluster);
+			if (instEnd.after(clusterMaxEnd.first))
+				throw new ValidationException("End date " + end + " is after "
+						+ entity.getEntityType() + "'s end "
+						+ SchemaHelper.formatDateUTC(clusterMaxEnd.first)
+						+ " for cluster " + clusterMaxEnd.second);
+		} else if (instStart.after(clusterMaxEnd.first))
+			throw new ValidationException("Start date " + start + " is after "
+					+ entity.getEntityType() + "'s end "
+					+ SchemaHelper.formatDateUTC(clusterMaxEnd.first)
+					+ " for cluster " + clusterMaxEnd.second);
     }
 
     private void validateNotEmpty(String field, String param) throws ValidationException {

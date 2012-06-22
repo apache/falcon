@@ -65,4 +65,5 @@ public interface WorkflowEngine {
 	String getWorkflowStatus(String cluster, String jobId) throws IvoryException;
 	
 	String getWorkflowProperty(String cluster, String jobId , String property) throws IvoryException;
+
 }
