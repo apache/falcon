@@ -594,8 +594,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                     String coordName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
                     if (coordName.equals(coord.getAppName()))
                         continue;
-                    if ((start.compareTo(coord.getStartTime()) <= 0 && start.compareTo(coord.getEndTime()) <= 0)
-                            || (end.compareTo(coord.getStartTime()) >= 0 && end.compareTo(coord.getEndTime()) >= 0)) {
+                    //if end time is before coord-start time or start time is after coord-end time ignore.
+                    if (!(end.compareTo(coord.getStartTime()) <= 0 || start.compareTo(coord.getEndTime()) >= 0)) {
                         applicableCoords.add(coord);
                     }
                 }
