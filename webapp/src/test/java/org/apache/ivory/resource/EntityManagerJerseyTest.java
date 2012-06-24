@@ -44,6 +44,8 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Validity;
+import org.apache.ivory.util.BuildProperties;
+import org.apache.ivory.util.DeploymentProperties;
 import org.apache.oozie.client.BundleJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -160,11 +162,25 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", "testuser")
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
-        System.out.println(status);
     	Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
   
     }
-    
+
+    @Test
+    public void testVersion() throws IvoryWebException
+    {
+    	ClientResponse response;
+    	response = this.service
+                .path("api/admin/version")
+                .header("Remote-User", "testuser")
+                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+        String status = response.getEntity(String.class);
+    	Assert.assertEquals(status, "{Version:\"" +
+                BuildProperties.get().getProperty("build.version") + "\",Mode:\"" +
+                DeploymentProperties.get().getProperty("deploy.mode") + "\"}");
+
+    }
+
     @Test
     public void testValidate() {
 
