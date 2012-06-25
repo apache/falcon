@@ -229,7 +229,7 @@ public abstract class AbstractEntityManager {
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
-        if (oldEntity.getEntityType() != newEntity.getEntityType())
+        if (oldEntity.getEntityType() != newEntity.getEntityType() || !oldEntity.equals(newEntity))
             throw new IvoryException(oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString());
 
         if (oldEntity.getEntityType() == EntityType.CLUSTER)
