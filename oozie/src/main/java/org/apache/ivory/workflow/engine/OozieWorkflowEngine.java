@@ -844,10 +844,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    private void assertStatus(String cluster, String jobId, Status status) throws IvoryException {
+    private void assertStatus(String cluster, String jobId, Status... statuses) throws IvoryException {
         String actualStatus = getWorkflowStatus(cluster, jobId);
         for (int counter = 0; counter < 3; counter++) {
-            if (!actualStatus.equals(status.name())) {
+            if (!statusEquals(actualStatus, statuses)) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ignore) { }
@@ -857,7 +857,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             actualStatus = getWorkflowStatus(cluster, jobId);
         }
         throw new IvoryException("For Job" + jobId +
-                ", actual status: " + actualStatus + ", expected status: " + status);
+                ", actual statuses: " + actualStatus +
+                ", expected statuses: " + Arrays.toString(statuses));
+    }
+
+    private boolean statusEquals(String left, Status... right) {
+        for (Status rightElement : right) {
+            if (left.equals(rightElement.name())) return true;
+        }
+        return false;
     }
 
     @Override
@@ -896,7 +904,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.suspend(jobId);
-            assertStatus(cluster, jobId, Status.SUSPENDED);
+            assertStatus(cluster, jobId, Status.SUSPENDED,
+                    Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Suspended job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -907,7 +916,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.resume(jobId);
-            assertStatus(cluster, jobId, Status.RUNNING);
+            assertStatus(cluster, jobId, Status.RUNNING,
+                    Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Resumed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -918,7 +928,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.kill(jobId);
-            assertStatus(cluster, jobId, Status.KILLED);
+            assertStatus(cluster, jobId, Status.KILLED,
+                    Status.SUCCEEDED, Status.FAILED);
             LOG.info("Killed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
