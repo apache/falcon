@@ -57,7 +57,7 @@ public class IvoryClient {
 	 * 
 	 * @param ivoryUrl
 	 *            of the server to which client interacts
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public IvoryClient(String ivoryUrl) throws IOException {
 		this.baseUrl = notEmpty(ivoryUrl, "IvoryUrl");
@@ -86,7 +86,7 @@ public class IvoryClient {
 			connectTimeout = prop.containsKey("ivory.connect.timeout") ? Integer
 					.parseInt(prop.getProperty("ivory.connect.timeout"))
 					: 180000;
-		} else{
+		} else {
 			readTimeout = 180000;
 			connectTimeout = 180000;
 		}
@@ -129,21 +129,36 @@ public class IvoryClient {
 	 */
 	protected static enum Instances {
 		RUNNING("api/instance/running/", HttpMethod.GET,
-				MediaType.APPLICATION_JSON), STATUS(
-				"api/instance/status/", HttpMethod.GET,
-				MediaType.APPLICATION_JSON), KILL("api/instance/kill/",
-				HttpMethod.POST, MediaType.APPLICATION_JSON), SUSPEND(
-				"api/instance/suspend/", HttpMethod.POST,
-				MediaType.APPLICATION_JSON), RESUME(
+				MediaType.APPLICATION_JSON), STATUS("api/instance/status/",
+				HttpMethod.GET, MediaType.APPLICATION_JSON), KILL(
+				"api/instance/kill/", HttpMethod.POST,
+				MediaType.APPLICATION_JSON), SUSPEND("api/instance/suspend/",
+				HttpMethod.POST, MediaType.APPLICATION_JSON), RESUME(
 				"api/instance/resume/", HttpMethod.POST,
-				MediaType.APPLICATION_JSON), RERUN(
-				"api/instance/rerun/", HttpMethod.POST,
-				MediaType.APPLICATION_JSON);
+				MediaType.APPLICATION_JSON), RERUN("api/instance/rerun/",
+				HttpMethod.POST, MediaType.APPLICATION_JSON);
 		private String path;
 		private String method;
 		private String mimeType;
 
 		Instances(String path, String method, String mimeType) {
+			this.path = path;
+			this.method = method;
+			this.mimeType = mimeType;
+		}
+	}
+	
+	protected static enum AdminOperations {
+		
+		STACK("api/admin/stack", HttpMethod.GET,
+				MediaType.TEXT_PLAIN), 
+		VERSION("api/admin/version", HttpMethod.GET,
+				MediaType.TEXT_PLAIN);
+		private String path;
+		private String method;
+		private String mimeType;
+		
+		AdminOperations(String path, String method, String mimeType) {
 			this.path = path;
 			this.method = method;
 			this.mimeType = mimeType;
@@ -176,31 +191,32 @@ public class IvoryClient {
 		return obj;
 	}
 
-	public String schedule(String entityType, String entityName)
+	public String schedule(String entityType, String entityName, String colo)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.SCHEDULE, entityType, entityName);
+		return sendEntityRequest(Entities.SCHEDULE, entityType, entityName,
+				colo);
 
 	}
 
-	public String suspend(String entityType, String entityName)
+	public String suspend(String entityType, String entityName, String colo)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.SUSPEND, entityType, entityName);
+		return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo);
 
 	}
 
-	public String resume(String entityType, String entityName)
+	public String resume(String entityType, String entityName, String colo)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.RESUME, entityType, entityName);
+		return sendEntityRequest(Entities.RESUME, entityType, entityName, colo);
 
 	}
 
 	public String delete(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.DELETE, entityType, entityName);
+		return sendEntityRequest(Entities.DELETE, entityType, entityName, null);
 
 	}
 
@@ -208,41 +224,42 @@ public class IvoryClient {
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
 		return sendEntityRequestWithObject(Entities.VALIDATE, entityType,
-				entityStream);
+				entityStream, null);
 	}
 
 	public String submit(String entityType, String filePath)
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
 		return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
-				entityStream);
+				entityStream, null);
 	}
 
-	public String update(String entityType, String entityName, String filePath)
+	public String update(String entityType, String entityName, String filePath) 
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
 		return sendEntityRequestWithNameAndObject(Entities.UPDATE, entityType,
 				entityName, entityStream);
 	}
 
-	public String submitAndSchedule(String entityType, String filePath)
+	public String submitAndSchedule(String entityType, String filePath) 
 			throws IvoryCLIException {
 		InputStream entityStream = getServletInputStream(filePath);
 		return sendEntityRequestWithObject(Entities.SUBMITandSCHEDULE,
-				entityType, entityStream);
+				entityType, entityStream, null);
 	}
 
-	public String getStatus(String entityType, String entityName)
+	public String getStatus(String entityType, String entityName, String colo)
 			throws IvoryCLIException {
 
-		return sendEntityRequest(Entities.STATUS, entityType, entityName);
+		return sendEntityRequest(Entities.STATUS, entityType, entityName, colo);
 
 	}
 
 	public String getDefinition(String entityType, String entityName)
 			throws IvoryCLIException {
 
-		return sendDefinitionRequest(Entities.DEFINITION, entityType, entityName);
+		return sendDefinitionRequest(Entities.DEFINITION, entityType,
+				entityName);
 
 	}
 
@@ -256,46 +273,55 @@ public class IvoryClient {
 		return sendListRequest(Entities.LIST, entityType);
 	}
 
-	public String getRunningInstances(String type, String entity)
+	public String getRunningInstances(String type, String entity, String colo)
 			throws IvoryCLIException {
 
-		return sendInstanceRequest(Instances.RUNNING, type, entity, null,
-                null, null, null);
+		return sendInstanceRequest(Instances.RUNNING, type, entity, null, null,
+				null, null, colo);
 	}
 
-	public String getStatusOfInstances(String type, String entity, String start,
-			String end, String runid) throws IvoryCLIException {
-
-		return sendInstanceRequest(Instances.STATUS, type, entity, start,
-                end, null, null);
-	}
-
-	public String killInstances(String type, String entity, String start, String end)
+	public String getStatusOfInstances(String type, String entity,
+			String start, String end, String runid, String colo)
 			throws IvoryCLIException {
 
-		return sendInstanceRequest(Instances.KILL, type, entity, start,
-                end, null, null);
+		return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
+				null, null, colo);
 	}
 
-	public String suspendInstances(String type, String entity, String start, String end)
-			throws IvoryCLIException {
+	public String killInstances(String type, String entity, String start,
+			String end, String colo) throws IvoryCLIException {
 
-		return sendInstanceRequest(Instances.SUSPEND, type, entity,
-                start, end, null, null);
+		return sendInstanceRequest(Instances.KILL, type, entity, start, end,
+				null, null, colo);
 	}
 
-	public String resumeInstances(String type, String entity, String start, String end)
-			throws IvoryCLIException {
+	public String suspendInstances(String type, String entity, String start,
+			String end, String colo) throws IvoryCLIException {
 
-		return sendInstanceRequest(Instances.RESUME, type, entity, start,
-                end, null, null);
+		return sendInstanceRequest(Instances.SUSPEND, type, entity, start, end,
+				null, null, colo);
 	}
 
-	public String rerunInstances(String type, String entity, String start, String end,
-			String filePath) throws IvoryCLIException {
+	public String resumeInstances(String type, String entity, String start,
+			String end, String colo) throws IvoryCLIException {
 
-		return sendInstanceRequest(Instances.RERUN, type, entity, start,
-                end, getServletInputStream(filePath), null);
+		return sendInstanceRequest(Instances.RESUME, type, entity, start, end,
+				null, null, colo);
+	}
+
+	public String rerunInstances(String type, String entity, String start,
+			String end, String filePath, String colo) throws IvoryCLIException {
+
+		return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
+				getServletInputStream(filePath), null, colo);
+	}
+	
+	public String getThreadDump() throws IvoryCLIException{
+		return sendAdminRequest(AdminOperations.STACK);
+	}
+	
+	public String getVersion() throws IvoryCLIException{
+		return sendAdminRequest(AdminOperations.VERSION);
 	}
 
 	/**
@@ -335,16 +361,20 @@ public class IvoryClient {
 	// }
 
 	private String sendEntityRequest(Entities entities, String entityType,
-			String entityName) throws IvoryCLIException {
-
-		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).path(entityName).header(REMOTE_USER, USER)
+			String entityName, String colo) throws IvoryCLIException {
+		
+		WebResource resource = service.path(entities.path)
+				.path(entityType).path(entityName);
+		if (colo != null) {
+			resource = resource.queryParam("colo", colo);
+		}
+		ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
 				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class);
 
 		checkIfSuccessfull(clientResponse);
 
-        return parseAPIResult(clientResponse);
+		return parseAPIResult(clientResponse);
 	}
 
 	private String sendDefinitionRequest(Entities entities, String entityType,
@@ -356,7 +386,7 @@ public class IvoryClient {
 				.method(entities.method, ClientResponse.class);
 
 		checkIfSuccessfull(clientResponse);
-        return clientResponse.getEntity(String.class);
+		return clientResponse.getEntity(String.class);
 	}
 
 	private String sendDependencyRequest(Entities entities, String entityType,
@@ -388,10 +418,14 @@ public class IvoryClient {
 	}
 
 	private String sendEntityRequestWithObject(Entities entities,
-			String entityType, Object requestObject) throws IvoryCLIException {
-
-		ClientResponse clientResponse = service.path(entities.path)
-				.path(entityType).header(REMOTE_USER, USER)
+			String entityType, Object requestObject, String colo) throws IvoryCLIException {
+		
+		WebResource resource = service.path(entities.path)
+				.path(entityType);
+		if (colo != null) {
+			resource = resource.queryParam("colo", colo);
+		}
+		ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
 				.accept(entities.mimeType).type(MediaType.TEXT_XML)
 				.method(entities.method, ClientResponse.class, requestObject);
 
@@ -404,7 +438,7 @@ public class IvoryClient {
 	private String sendEntityRequestWithNameAndObject(Entities entities,
 			String entityType, String entityName, Object requestObject)
 			throws IvoryCLIException {
-
+		
 		ClientResponse clientResponse = service.path(entities.path)
 				.path(entityType).path(entityName).header(REMOTE_USER, USER)
 				.accept(entities.mimeType).type(MediaType.TEXT_XML)
@@ -416,10 +450,11 @@ public class IvoryClient {
 
 	}
 
-	private String sendInstanceRequest(Instances instances,
-                                       String type, String entity, String start, String end,
-                                       InputStream props, String runid) throws IvoryCLIException {
-		WebResource resource = service.path(instances.path).path(type).path(entity);
+	private String sendInstanceRequest(Instances instances, String type,
+			String entity, String start, String end, InputStream props,
+			String runid, String colo) throws IvoryCLIException {
+		WebResource resource = service.path(instances.path).path(type)
+				.path(entity);
 		if (start != null) {
 			resource = resource.queryParam("start", start);
 		}
@@ -428,6 +463,9 @@ public class IvoryClient {
 		}
 		if (runid != null) {
 			resource = resource.queryParam("runid", runid);
+		}
+		if (colo != null) {
+			resource = resource.queryParam("colo", colo);
 		}
 
 		ClientResponse clientResponse = null;
@@ -445,7 +483,16 @@ public class IvoryClient {
 		return parseProcessInstanceResult(clientResponse);
 
 	}
-
+	
+	private String sendAdminRequest(AdminOperations job) 
+			throws IvoryCLIException {
+		
+		ClientResponse clientResponse = service.path(job.path)
+				.header(REMOTE_USER, USER).accept(job.mimeType)
+				.type(MediaType.TEXT_PLAIN).method(job.method, ClientResponse.class);
+		return parseStringResult(clientResponse);	
+	}
+	
 	private String parseAPIResult(ClientResponse clientResponse)
 			throws IvoryCLIException {
 
@@ -480,18 +527,33 @@ public class IvoryClient {
 		}
 
 		StringBuffer sb = new StringBuffer();
-		for (InstancesResult.Instance instance : result
-				.getInstances()) {
-			sb.append("instance=").append(instance.getInstance()).append(";status=")
-					.append(instance.getStatus());
+		for (InstancesResult.Instance instance : result.getInstances()) {
+			sb.append("instance=").append(instance.getInstance())
+					.append("\nstatus=").append(instance.getStatus());
+			
 			if (instance.logFile != null) {
-				sb.append(";log=").append(instance.logFile);
+				sb.append("\nlog=").append(instance.logFile);
+			}
+			if (instance.cluster != null) {
+				sb.append("\nCluster=").append(instance.cluster);
+			}
+			if (instance.sourceCluster != null) {
+				sb.append("\nSource Cluster=").append(instance.sourceCluster);
+			}
+			if (instance.startTime != null) {
+				sb.append("\nStart Time=").append(instance.startTime);
+			}
+			if (instance.endTime != null) {
+				sb.append("\nEnd Time=").append(instance.endTime);
+			}
+			if (instance.details != null) {
+				sb.append("\nDetails=").append(instance.details);
 			}
 			sb.append("\n");
 			if (instance.actions != null) {
 				sb.append("actions:\n");
 				for (InstancesResult.InstanceAction action : instance.actions) {
-					sb.append("    ").append(action).append("\n");
+					sb.append("    ").append(action.toString()).append("\n");
 				}
 			}
 		}
