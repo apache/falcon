@@ -32,7 +32,7 @@ public class NullServletRequest implements HttpServletRequest {
 
     @Override
     public String getHeader(String s) {
-        return null;
+        return s;
     }
 
     @Override
