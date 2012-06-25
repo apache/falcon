@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class InstancesResult extends APIResult {
 	public static enum WorkflowStatus {
-		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED;
+		WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR
 	}
 
 	@XmlElement

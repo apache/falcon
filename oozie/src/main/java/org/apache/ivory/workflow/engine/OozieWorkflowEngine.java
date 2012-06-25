@@ -42,6 +42,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.Frequency.TimeUnit;
 import org.apache.ivory.entity.v0.SchemaHelper;
+import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.InstancesResult;
 import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
@@ -396,6 +397,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 				IVORY_INSTANCE_ACTION_CLUSTERS);
 		List<String> sourceClusterList = getIncludedClusters(props,
 				IVORY_INSTANCE_SOURCE_CLUSTERS);
+        APIResult.Status overallStatus = APIResult.Status.SUCCEEDED;
+        int instanceCount = 0;
 
 		List<Instance> instances = new ArrayList<Instance>();
 		for (String cluster : actionsMap.keySet()) {
@@ -417,43 +420,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 if (coordinatorAction.getExternalId() != null) {
                     jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                 }
+                instanceCount++;
                 if (jobInfo != null) {
                     status = mapWorkflowStatus(jobInfo.getStatus());
-                    switch (action) {
-                        case KILL:
-                            if (!WF_KILL_PRECOND.contains(jobInfo.getStatus()))
-                                break;
-
-                            kill(cluster, jobInfo.getId());
-                            status = Status.KILLED.name();
-                            break;
-
-                        case SUSPEND:
-                            if (!WF_SUSPEND_PRECOND.contains(jobInfo.getStatus()))
-                                break;
-
-                            suspend(cluster, jobInfo.getId());
-                            status = Status.SUSPENDED.name();
-                            break;
-
-                        case RESUME:
-                            if (!WF_RESUME_PRECOND.contains(jobInfo.getStatus()))
-                                break;
-
-                            resume(cluster, jobInfo.getId());
-                            status = Status.RUNNING.name();
-                            break;
-
-                        case RERUN:
-                            if (!WF_RERUN_PRECOND.contains(jobInfo.getStatus()))
-                                break;
-
-                            reRun(cluster, jobInfo.getId(), props);
-                            status = Status.RUNNING.name();
-                            break;
-
-                        case STATUS:
-                            break;
+                    try {
+                        status = performAction(action, props, cluster, status, jobInfo);
+                    } catch (IvoryException e) {
+                        LOG.warn("Unable to perform action " + action + " on cluster ", e);
+                        status = WorkflowStatus.ERROR.name();
+                        overallStatus = APIResult.Status.PARTIAL;
                     }
                 }
                 if (action != OozieWorkflowEngine.JobAction.STATUS && coordinatorAction.getExternalId() != null) {
@@ -473,10 +448,56 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 instances.add(instance);
             }
         }
-        return new InstancesResult(action.name(), instances.toArray(new Instance[instances.size()]));
+        if (instanceCount < 2 && overallStatus == APIResult.Status.PARTIAL) {
+            overallStatus = APIResult.Status.FAILED;
+        }
+        InstancesResult instancesResult = new InstancesResult(overallStatus, action.name());
+        instancesResult.setInstances(instances.toArray(new Instance[instances.size()]));
+        return instancesResult;
     }
-    
-	private String getSourceCluster(String cluster,
+
+    private String performAction(JobAction action, Properties props, String cluster,
+                                 String status, WorkflowJob jobInfo) throws IvoryException {
+        switch (action) {
+            case KILL:
+                if (!WF_KILL_PRECOND.contains(jobInfo.getStatus()))
+                    break;
+
+                kill(cluster, jobInfo.getId());
+                status = Status.KILLED.name();
+                break;
+
+            case SUSPEND:
+                if (!WF_SUSPEND_PRECOND.contains(jobInfo.getStatus()))
+                    break;
+
+                suspend(cluster, jobInfo.getId());
+                status = Status.SUSPENDED.name();
+                break;
+
+            case RESUME:
+                if (!WF_RESUME_PRECOND.contains(jobInfo.getStatus()))
+                    break;
+
+                resume(cluster, jobInfo.getId());
+                status = Status.RUNNING.name();
+                break;
+
+            case RERUN:
+                if (!WF_RERUN_PRECOND.contains(jobInfo.getStatus()))
+                    break;
+
+                reRun(cluster, jobInfo.getId(), props);
+                status = Status.RUNNING.name();
+                break;
+
+            case STATUS:
+                break;
+        }
+        return status;
+    }
+
+    private String getSourceCluster(String cluster,
 			CoordinatorAction coordinatorAction, Entity entity)
 			throws IvoryException {
 
@@ -823,10 +844,28 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
 
-    private void assertStatus(String cluster, String jobId, Status status) throws IvoryException {
+    private void assertStatus(String cluster, String jobId, Status... statuses) throws IvoryException {
         String actualStatus = getWorkflowStatus(cluster, jobId);
-        if (!actualStatus.equals(status.name()))
-            throw new IvoryException("For Job" + jobId + ", actual status: " + actualStatus + ", expected status: " + status);
+        for (int counter = 0; counter < 3; counter++) {
+            if (!statusEquals(actualStatus, statuses)) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignore) { }
+            } else {
+                return;
+            }
+            actualStatus = getWorkflowStatus(cluster, jobId);
+        }
+        throw new IvoryException("For Job" + jobId +
+                ", actual statuses: " + actualStatus +
+                ", expected statuses: " + Arrays.toString(statuses));
+    }
+
+    private boolean statusEquals(String left, Status... right) {
+        for (Status rightElement : right) {
+            if (left.equals(rightElement.name())) return true;
+        }
+        return false;
     }
 
     @Override
@@ -865,7 +904,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.suspend(jobId);
-            assertStatus(cluster, jobId, Status.SUSPENDED);
+            assertStatus(cluster, jobId, Status.SUSPENDED,
+                    Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Suspended job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -876,7 +916,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.resume(jobId);
-            assertStatus(cluster, jobId, Status.RUNNING);
+            assertStatus(cluster, jobId, Status.RUNNING,
+                    Status.SUCCEEDED, Status.FAILED, Status.KILLED);
             LOG.info("Resumed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -887,7 +928,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.kill(jobId);
-            assertStatus(cluster, jobId, Status.KILLED);
+            assertStatus(cluster, jobId, Status.KILLED,
+                    Status.SUCCEEDED, Status.FAILED);
             LOG.info("Killed job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -924,10 +966,19 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             CoordinatorJob coord = client.getCoordJobInfo(id);
-            if (coord.getConcurrency() != concurrency || !coord.getEndTime().equals(endTime) || 
-                    (pauseTime != null && pauseTime.equals("") && coord.getPauseTime() != null) ||
-                    (pauseTime != null && !pauseTime.equals("") && !coord.getPauseTime().equals(SchemaHelper.parseDateUTC(pauseTime))))
-                throw new IvoryException("Failed to change coord " + id + " with change value " + changeValueStr);
+            for (int counter = 0; counter < 3; counter++) {
+                if (coord.getConcurrency() != concurrency || !coord.getEndTime().equals(endTime) ||
+                        (pauseTime != null && pauseTime.equals("") && coord.getPauseTime() != null) ||
+                        (pauseTime != null && !pauseTime.equals("") && !coord.getPauseTime().equals(SchemaHelper.parseDateUTC(pauseTime)))) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignore) { }
+                } else {
+                    return;
+                }
+                coord = client.getCoordJobInfo(id);
+            }
+            throw new IvoryException("Failed to change coordinator " + id + " with change value " + changeValueStr);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
         }

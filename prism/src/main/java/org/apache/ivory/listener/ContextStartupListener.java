@@ -27,6 +27,7 @@ import javax.servlet.ServletContextListener;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.service.ServiceInitializer;
+import org.apache.ivory.util.BuildProperties;
 import org.apache.ivory.util.RuntimeProperties;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -34,8 +35,6 @@ import org.apache.log4j.Logger;
 public class ContextStartupListener implements ServletContextListener {
 
     private static Logger LOG = Logger.getLogger(ContextStartupListener.class);
-
-    private static final String BUILD_PROPERTIES = "ivory-buildinfo.properties";
 
     private final ServiceInitializer startupServices = new ServiceInitializer();
 
@@ -64,10 +63,8 @@ public class ContextStartupListener implements ServletContextListener {
         buffer.append("############################################");
         buffer.append("\n                               Ivory Server (STARTUP)");
         buffer.append("\n");
-        Properties buildProperties = new Properties();
+        Properties buildProperties = BuildProperties.get();
         try {
-            buildProperties.load(getClass().getClassLoader().
-                        getResourceAsStream(BUILD_PROPERTIES));
             for (Map.Entry entry : buildProperties.entrySet()) {
                 buffer.append('\n').append('\t').append(entry.getKey()).
                         append(":\t").append(entry.getValue());
