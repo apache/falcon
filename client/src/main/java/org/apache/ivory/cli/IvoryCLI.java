@@ -46,9 +46,11 @@ public class IvoryCLI {
 	public static final String ADMIN_CMD = "admin";
 	public static final String HELP_CMD = "help";
 	private static final String VERSION_CMD = "version";
-
+	private static final String STACK_OPTION = "stack";
+	
 	public static final String ENTITY_CMD = "entity";
 	public static final String ENTITY_TYPE_OPT = "type";
+	public static final String COLO_OPT = "colo";
 	public static final String ENTITY_NAME_OPT = "name";
 	public static final String FILE_PATH_OPT = "file";
 	public static final String SUBMIT_OPT = "submit";
@@ -71,6 +73,8 @@ public class IvoryCLI {
 	public static final String KILL_OPT = "kill";
 	public static final String RERUN_OPT = "rerun";
 	public static final String RUNID_OPT = "runid";
+	public static final String CURRENT_COLO = "current.colo";
+	public static final String CLIENT_PROPERTIES = "/client.properties";
 
 	/**
 	 * Entry point for the Ivory CLI when invoked from the command line. Upon
@@ -174,23 +178,26 @@ public class IvoryCLI {
 		String end = commandLine.getOptionValue(END_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
 		String runid = commandLine.getOptionValue(RUNID_OPT);
-
+		String colo = commandLine.getOptionValue(COLO_OPT);
+		
+		colo = getColo(colo);
+		
 		validateInstanceCommands(optionsList, entity, type, start, end,
-				filePath);
+				filePath, colo);
 
 		if (optionsList.contains(RUNNING_OPT)) {
-			result = client.getRunningInstances(type, entity);
+			result = client.getRunningInstances(type, entity, colo);
 		} else if (optionsList.contains(STATUS_OPT)) {
 			result = client.getStatusOfInstances(type, entity, start, end,
-					runid);
+					runid, colo);
 		} else if (optionsList.contains(KILL_OPT)) {
-			result = client.killInstances(type, entity, start, end);
+			result = client.killInstances(type, entity, start, end, colo);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
-			result = client.suspendInstances(type, entity, start, end);
+			result = client.suspendInstances(type, entity, start, end, colo);
 		} else if (optionsList.contains(RESUME_OPT)) {
-			result = client.resumeInstances(type, entity, start, end);
+			result = client.resumeInstances(type, entity, start, end, colo);
 		} else if (optionsList.contains(RERUN_OPT)) {
-			result = client.rerunInstances(type, entity, start, end, filePath);
+			result = client.rerunInstances(type, entity, start, end, filePath, colo);
 		} else {
 			throw new IvoryCLIException("Invalid command");
 		}
@@ -200,16 +207,20 @@ public class IvoryCLI {
 
 	private void validateInstanceCommands(Set<String> optionsList,
 			String entity, String type, String start, String end,
-			String filePath) throws IvoryCLIException {
+			String filePath, String colo) throws IvoryCLIException {
 
 		if (entity == null || entity.equals("")) {
 			throw new IvoryCLIException("Missing argument: name");
 		}
 
-		if (type == null || entity.equals("")) {
+		if (type == null || type.equals("")) {
 			throw new IvoryCLIException("Missing argument: type");
 		}
-
+		
+		if (colo == null || colo.equals("")) {
+			throw new IvoryCLIException("Missing argument: colo");
+		}
+		
 		if (!optionsList.contains(RUNNING_OPT)) {
 			if (start == null || start.equals("")) {
 				throw new IvoryCLIException("Missing argument: start");
@@ -232,43 +243,58 @@ public class IvoryCLI {
 		String entityType = commandLine.getOptionValue(ENTITY_TYPE_OPT);
 		String entityName = commandLine.getOptionValue(ENTITY_NAME_OPT);
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
+		String colo = commandLine.getOptionValue(COLO_OPT);
+		
+		
 		validateEntityType(optionsList, entityType);
 
 		if (optionsList.contains(SUBMIT_OPT)) {
 			validateFilePath(optionsList, filePath);
+			validateColo(optionsList);
 			result = client.submit(entityType, filePath);
 		} else if (optionsList.contains(UPDATE_OPT)) {
 			validateFilePath(optionsList, filePath);
+			validateColo(optionsList);
 			validateEntityName(optionsList, entityName);
 			result = client.update(entityType, entityName, filePath);
 		} else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
 			validateFilePath(optionsList, filePath);
+			validateColo(optionsList);
 			result = client.submitAndSchedule(entityType, filePath);
 		} else if (optionsList.contains(VALIDATE_OPT)) {
 			validateFilePath(optionsList, filePath);
+			validateColo(optionsList);
 			result = client.validate(entityType, filePath);
 		} else if (optionsList.contains(SCHEDULE_OPT)) {
 			validateEntityName(optionsList, entityName);
-			result = client.schedule(entityType, entityName);
+			colo = getColo(colo);
+			result = client.schedule(entityType, entityName, colo);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
 			validateEntityName(optionsList, entityName);
-			result = client.suspend(entityType, entityName);
+			colo = getColo(colo);
+			result = client.suspend(entityType, entityName, colo);
 		} else if (optionsList.contains(RESUME_OPT)) {
 			validateEntityName(optionsList, entityName);
-			result = client.resume(entityType, entityName);
+			colo = getColo(colo);
+			result = client.resume(entityType, entityName, colo);
 		} else if (optionsList.contains(DELETE_OPT)) {
+			validateColo(optionsList);
 			validateEntityName(optionsList, entityName);
 			result = client.delete(entityType, entityName);
 		} else if (optionsList.contains(STATUS_OPT)) {
 			validateEntityName(optionsList, entityName);
-			result = client.getStatus(entityType, entityName);
+			colo = getColo(colo);
+			result = client.getStatus(entityType, entityName, colo);
 		} else if (optionsList.contains(DEFINITION_OPT)) {
+			validateColo(optionsList);
 			validateEntityName(optionsList, entityName);
 			result = client.getDefinition(entityType, entityName);
 		} else if (optionsList.contains(DEPENDENCY_OPT)) {
+			validateColo(optionsList);
 			validateEntityName(optionsList, entityName);
 			result = client.getDependency(entityType, entityName);
 		} else if (optionsList.contains(LIST_OPT)) {
+			validateColo(optionsList);
 			result = client.getEntityList(entityType);
 		} else if (optionsList.contains(HELP_CMD)) {
 			OUT_STREAM.println("Ivory Help");
@@ -277,11 +303,30 @@ public class IvoryCLI {
 		}
 		OUT_STREAM.println(result);
 	}
-
+	
+	private String getColo(String colo) throws IvoryCLIException, IOException
+	{
+		if (colo == null) {
+			Properties prop = getClientProperties();
+			if (prop.contains(CURRENT_COLO)) {
+				colo = prop.getProperty(CURRENT_COLO);
+			}else{
+				colo = "*";
+			}
+		}
+		return colo;
+	}
 	private void validateFilePath(Set<String> optionsList, String filePath)
 			throws IvoryCLIException {
 		if (filePath == null || filePath.equals("")) {
 			throw new IvoryCLIException("Missing argument: file");
+		}
+	}
+	
+	private void validateColo(Set<String> optionsList)
+			throws IvoryCLIException {
+		if (optionsList.contains(COLO_OPT)) {
+			throw new IvoryCLIException("Invalid argument : " + COLO_OPT);
 		}
 	}
 
@@ -298,7 +343,7 @@ public class IvoryCLI {
 			throw new IvoryCLIException("Missing argument: type");
 		}
 	}
-
+	
 	// TODO
 	private void versionCommand() {
 		OUT_STREAM.println("Apache Ivory version: 1.0");
@@ -456,17 +501,7 @@ public class IvoryCLI {
 		String url = commandLine.getOptionValue(URL_OPTION);
 		if (url == null) {
 			try {
-				InputStream input = IvoryCLI.class
-						.getResourceAsStream("/client.properties");
-				if (input == null) {
-					ERR_STREAM
-							.println("client.properties file does not exist, Ivory URL is "
-									+ "neither available in command option nor in the client.properties file");
-					throw new IvoryCLIException("Ivory URL not specified");
-
-				}
-				Properties prop = new Properties();
-				prop.load(input);
+				Properties prop = getClientProperties();
 				if (prop.containsKey("ivory.url"))
 					url = prop.getProperty("ivory.url");
 				else {
@@ -480,21 +515,42 @@ public class IvoryCLI {
 		return url;
 	}
 
-	private void adminCommand(CommandLine commandLine) throws IvoryCLIException {
-
-		validateIvoryUrl(commandLine);
-
+	private void adminCommand(CommandLine commandLine) throws IvoryCLIException, IOException {
+		String result;
+		String ivoryUrl = validateIvoryUrl(commandLine);
+		IvoryClient client = new IvoryClient(ivoryUrl);
+		
 		Set<String> optionsList = new HashSet<String>();
 		for (Option option : commandLine.getOptions()) {
 			optionsList.add(option.getOpt());
 		}
+		
+		if(optionsList.contains(STACK_OPTION)){
+			result = client.getThreadDump();
+			OUT_STREAM.println(result);
+		}
 		if (optionsList.contains(VERSION_OPTION)) {
-			OUT_STREAM.println("Ivory server build version: 1.0");
+			result = client.getVersion();
+			OUT_STREAM.println("Ivory server build version: " + result);
 		}
 
 		else if (optionsList.contains(HELP_CMD)) {
 			OUT_STREAM.println("Ivory Help");
 		}
+	}
+	
+	private Properties getClientProperties() throws IvoryCLIException, IOException
+	{
+		InputStream input = IvoryCLI.class
+				.getResourceAsStream(CLIENT_PROPERTIES);
+		if (input == null) {
+			ERR_STREAM
+					.println("client.properties file does not exist");
+			throw new IvoryCLIException("Ivory Client Properties missing");
+		}
+		Properties prop = new Properties();
+		prop.load(input);
+		return prop;
 	}
 
 }

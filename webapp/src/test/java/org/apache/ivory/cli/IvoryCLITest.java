@@ -19,8 +19,10 @@
 package org.apache.ivory.cli;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -440,9 +442,34 @@ public class IvoryCLITest extends AbstractTestBase{
 						+ " -start 2010-01-01T01:00Z  -end 2010-01-01T03:00Z")
 						.split("\\s")));
 
-		// TODO add test case for client.properties
+		
 	}
+	
+	@Test(enabled = enableTest)
+	public void testClientProperties() throws Exception {
+		Map<String, String> overlay = getUniqueOverlay();
+		submitTestFiles(overlay);
 
+		Assert.assertEquals(
+				0,
+				new IvoryCLI().run(("entity -schedule -type feed -name "
+						+ overlay.get("outputFeedName")).split("\\s")));
+
+		Assert.assertEquals(0,
+				new IvoryCLI().run(("entity -schedule -type process -name "
+						+ overlay.get("processName")).split("\\s")));
+		
+	}
+	
+	@Test(enabled = enableTest)
+	public void testGetVersion() throws Exception {
+		Assert.assertEquals( 0,
+				new IvoryCLI().run("admin -version".split("\\s")));
+		
+		Assert.assertEquals( 0,
+				new IvoryCLI().run("admin -stack".split("\\s")));
+	}
+	
 	private int executeWithURL(String command) throws Exception {
 		return new IvoryCLI()
 				.run((command + " -url " + BASE_URL).split("\\s+"));
