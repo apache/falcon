@@ -146,8 +146,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     COORDINATORAPP coord = createAndGetCoord(feed,
                             (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, feedCluster.getName()), targetCluster,
                             bundlePath);
-                    replicationCoords.add(coord);
-
+					if (coord != null) {
+						replicationCoords.add(coord);
+					}
                 }
             }
 
@@ -168,6 +169,15 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
             Date trgStartDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart();
             Date trgEndDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getEnd();
+			if (srcStartDate.after(trgEndDate)
+					|| trgStartDate.after(srcEndDate)) {
+				LOG.warn("Not creating replication coordinator, as the source cluster:"
+						+ srcCluster.getName()
+						+ " and target cluster: "
+						+ trgCluster.getName()
+						+ " do not have overlapping dates");
+				return null;
+			}
             replicationCoord.setStart(srcStartDate.after(trgStartDate) ? SchemaHelper.formatDateUTC(srcStartDate) : SchemaHelper
                     .formatDateUTC(trgStartDate));
             replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? SchemaHelper.formatDateUTC(srcEndDate) : SchemaHelper
