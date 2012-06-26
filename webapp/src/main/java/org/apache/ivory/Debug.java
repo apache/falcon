@@ -8,6 +8,8 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.service.Services;
+import org.apache.ivory.util.DeploymentProperties;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 
@@ -55,6 +57,8 @@ public class Debug {
 //        InstancesResult result = manager.suspendInstance(new NullServletRequest(), type, entity,
 //                "2010-01-02T01:05Z", "2010-01-02T01:21Z", "*");
 
+        DeploymentProperties.get().setProperty("deploy.mode", "standalone");
+        StartupProperties.get().setProperty("current.colo", "ua1");
         OozieWorkflowEngine engine = new OozieWorkflowEngine();
         ConfigurationStore.get().initiateUpdate(newEntity);
         engine.update(obj, newEntity);

@@ -51,14 +51,8 @@ import org.apache.ivory.util.OozieUtils;
 import org.apache.ivory.workflow.OozieWorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorAction;
-import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.*;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
-import org.apache.oozie.client.Job;
-import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.WorkflowJob.Status;
 
 /**
@@ -166,9 +160,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     private BundleJob findBundle(Entity entity, String cluster) throws IvoryException {
         String stPath = EntityUtil.getStagingPath(entity);
         List<BundleJob> bundles = findBundles(entity, cluster);
-        for (BundleJob job : bundles)
-            if (job.getAppPath().endsWith(stPath))
-                return job;
+        for (BundleJob job : bundles) {
+            if (job.getAppPath().endsWith(stPath)) {
+                return getBundleInfo(cluster, job.getId());
+            }
+        }
         return MISSING;
     }
 
@@ -758,13 +754,15 @@ public class OozieWorkflowEngine implements WorkflowEngine {
     }
 
     private void suspend(String cluster, BundleJob bundle) throws IvoryException {
-        for(CoordinatorJob coord : bundle.getCoordinators())
+        for(CoordinatorJob coord : bundle.getCoordinators()) {
             suspend(cluster, coord.getId());
+        }
     }
 
     private void resume(String cluster, BundleJob bundle) throws IvoryException {
-        for(CoordinatorJob coord : bundle.getCoordinators())
+        for(CoordinatorJob coord : bundle.getCoordinators()) {
             resume(cluster, coord.getId());
+        }
     }
     
     private void updateInternal(Entity oldEntity, Entity newEntity, String cluster, BundleJob bundle) throws IvoryException {
@@ -967,9 +965,9 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             OozieClient client = OozieClientFactory.get(cluster);
             CoordinatorJob coord = client.getCoordJobInfo(id);
             for (int counter = 0; counter < 3; counter++) {
-                if (coord.getConcurrency() != concurrency || !coord.getEndTime().equals(endTime) ||
-                        (pauseTime != null && pauseTime.equals("") && coord.getPauseTime() != null) ||
-                        (pauseTime != null && !pauseTime.equals("") && !coord.getPauseTime().equals(SchemaHelper.parseDateUTC(pauseTime)))) {
+                Date intendedPauseTime = (StringUtils.isEmpty(pauseTime) ? null : SchemaHelper.parseDateUTC(pauseTime));
+                if (coord.getConcurrency() != concurrency || (endTime != null && !coord.getEndTime().equals(endTime)) ||
+                        (intendedPauseTime != null && !intendedPauseTime.equals(coord.getPauseTime()))) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException ignore) { }
@@ -978,6 +976,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 }
                 coord = client.getCoordJobInfo(id);
             }
+            LOG.error("Failed to change coordinator. Current value " + coord.getConcurrency() + ", " + SchemaHelper.formatDateUTC(coord.getEndTime()) +
+                    ", " + SchemaHelper.formatDateUTC(coord.getPauseTime()));
             throw new IvoryException("Failed to change coordinator " + id + " with change value " + changeValueStr);
         } catch (OozieClientException e) {
             throw new IvoryException(e);
