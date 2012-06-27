@@ -72,6 +72,7 @@ public class IvoryCLI {
 	public static final String RUNNING_OPT = "running";
 	public static final String KILL_OPT = "kill";
 	public static final String RERUN_OPT = "rerun";
+	public static final String LOG_OPT = "logs";
 	public static final String RUNID_OPT = "runid";
 	public static final String CURRENT_COLO = "current.colo";
 	public static final String CLIENT_PROPERTIES = "/client.properties";
@@ -124,7 +125,7 @@ public class IvoryCLI {
 		parser.addCommand(
 				INSTANCE_CMD,
 				"",
-				"Process instances operations like running, status, kill, suspend, resume, rerun",
+				"Process instances operations like running, status, kill, suspend, resume, rerun, logs",
 				instanceOptions(), false);
 
 		try {
@@ -198,6 +199,8 @@ public class IvoryCLI {
 			result = client.resumeInstances(type, entity, start, end, colo);
 		} else if (optionsList.contains(RERUN_OPT)) {
 			result = client.rerunInstances(type, entity, start, end, filePath, colo);
+		} else if(optionsList.contains(LOG_OPT)){
+			result = client.getLogsOfInstances(type, entity, start, end, colo, runid);
 		} else {
 			throw new IvoryCLIException("Invalid command");
 		}
@@ -344,11 +347,6 @@ public class IvoryCLI {
 		}
 	}
 	
-	// TODO
-	private void versionCommand() {
-		OUT_STREAM.println("Apache Ivory version: 1.0");
-
-	}
 
 	private Options createAdminOptions() {
 		Options adminOptions = new Options();
@@ -455,7 +453,11 @@ public class IvoryCLI {
 				RERUN_OPT,
 				false,
 				"Reruns process instances for a given process in the range start time and optional end time and overrides properties present in job.properties file");
-
+		
+		Option logs = new Option(
+				LOG_OPT,
+				false,
+				"Logs print the logs for process instances for a given process in the range start time and optional end time");
 		OptionGroup group = new OptionGroup();
 		group.addOption(running);
 		group.addOption(status);
@@ -464,6 +466,7 @@ public class IvoryCLI {
 		group.addOption(suspend);
 		group.addOption(resume);
 		group.addOption(rerun);
+		group.addOption(logs);
 
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option start = new Option(START_OPT, true,

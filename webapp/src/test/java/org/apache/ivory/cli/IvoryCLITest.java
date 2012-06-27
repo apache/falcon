@@ -346,8 +346,6 @@ public class IvoryCLITest extends AbstractTestBase{
 				executeWithURL("instance -status -type process -name "
 						+ overlay.get("processName")
 						+ " -start " + START_INSTANCE));
-		
-
 	}
 
 	@Test(enabled = enableTest)
@@ -456,6 +454,23 @@ public class IvoryCLITest extends AbstractTestBase{
 		Assert.assertEquals( 0,
 				new IvoryCLI().run("admin -stack".split("\\s")));
 	}
+	
+	@Test(enabled = enableTest)
+	public void testInstanceGetLogs() throws Exception {
+		Map<String, String> overlay = getUniqueOverlay();
+		submitTestFiles(overlay);
+
+		Assert.assertEquals(0,
+				executeWithURL("entity -schedule -type process -name "
+						+ overlay.get("processName")));
+		
+		Assert.assertEquals(0,
+				executeWithURL("instance -logs -type process -name "
+						+ overlay.get("processName")
+						+ " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+		
+	}
+
 	
 	private int executeWithURL(String command) throws Exception {
 		return new IvoryCLI()

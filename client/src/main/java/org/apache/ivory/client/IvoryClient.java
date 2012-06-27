@@ -136,7 +136,8 @@ public class IvoryClient {
 				HttpMethod.POST, MediaType.APPLICATION_JSON), RESUME(
 				"api/instance/resume/", HttpMethod.POST,
 				MediaType.APPLICATION_JSON), RERUN("api/instance/rerun/",
-				HttpMethod.POST, MediaType.APPLICATION_JSON);
+				HttpMethod.POST, MediaType.APPLICATION_JSON) ,LOG("api/instance/logs/",
+				HttpMethod.GET, MediaType.APPLICATION_JSON);
 		private String path;
 		private String method;
 		private String mimeType;
@@ -316,6 +317,13 @@ public class IvoryClient {
 				getServletInputStream(filePath), null, colo);
 	}
 	
+	public String getLogsOfInstances(String type, String entity, String start,
+			String end, String colo, String runId) throws IvoryCLIException {
+
+		return sendInstanceRequest(Instances.LOG, type, entity, start, end,
+				null, runId, colo);
+	}
+	
 	public String getThreadDump() throws IvoryCLIException{
 		return sendAdminRequest(AdminOperations.STACK);
 	}
@@ -467,6 +475,7 @@ public class IvoryClient {
 		if (colo != null) {
 			resource = resource.queryParam("colo", colo);
 		}
+		
 
 		ClientResponse clientResponse = null;
 		if (props == null) {
@@ -521,39 +530,41 @@ public class IvoryClient {
 	private String parseProcessInstanceResult(ClientResponse clientResponse) {
 		InstancesResult result = clientResponse
 				.getEntity(InstancesResult.class);
-
-		if (result.getInstances() == null) {
-			return "";
-		}
-
 		StringBuffer sb = new StringBuffer();
-		for (InstancesResult.Instance instance : result.getInstances()) {
-			sb.append("instance=").append(instance.getInstance())
-					.append("\nstatus=").append(instance.getStatus());
-			
-			if (instance.logFile != null) {
-				sb.append("\nlog=").append(instance.logFile);
-			}
-			if (instance.cluster != null) {
-				sb.append("\nCluster=").append(instance.cluster);
-			}
-			if (instance.sourceCluster != null) {
-				sb.append("\nSource Cluster=").append(instance.sourceCluster);
-			}
-			if (instance.startTime != null) {
-				sb.append("\nStart Time=").append(instance.startTime);
-			}
-			if (instance.endTime != null) {
-				sb.append("\nEnd Time=").append(instance.endTime);
-			}
-			if (instance.details != null) {
-				sb.append("\nDetails=").append(instance.details);
-			}
-			sb.append("\n");
-			if (instance.actions != null) {
-				sb.append("actions:\n");
-				for (InstancesResult.InstanceAction action : instance.actions) {
-					sb.append("    ").append(action.toString()).append("\n");
+		
+		sb.append(result.getMessage());
+		sb.append(result.getRequestId() );
+		sb.append(result.getStatus() + "\n");
+		sb.append("Instances:\n");
+		if(result.getInstances() != null){
+			for (InstancesResult.Instance instance : result.getInstances()) {
+				sb.append("instance=").append(instance.getInstance())
+						.append("\nstatus=").append(instance.getStatus());
+				
+				if (instance.logFile != null) {
+					sb.append("\nlog=").append(instance.logFile);
+				}
+				if (instance.cluster != null) {
+					sb.append("\nCluster=").append(instance.cluster);
+				}
+				if (instance.sourceCluster != null) {
+					sb.append("\nSource Cluster=").append(instance.sourceCluster);
+				}
+				if (instance.startTime != null) {
+					sb.append("\nStart Time=").append(instance.startTime);
+				}
+				if (instance.endTime != null) {
+					sb.append("\nEnd Time=").append(instance.endTime);
+				}
+				if (instance.details != null) {
+					sb.append("\nDetails=").append(instance.details);
+				}
+				sb.append("\n");
+				if (instance.actions != null) {
+					sb.append("actions:\n");
+					for (InstancesResult.InstanceAction action : instance.actions) {
+						sb.append("    ").append(action.toString()).append("\n");
+					}
 				}
 			}
 		}
