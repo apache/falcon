@@ -80,4 +80,8 @@ public final class Services implements Iterable<IvoryService> {
         register(service);
         return service;
     }
+    
+    public void reset(){
+    	services.clear();
+    }
 }

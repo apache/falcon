@@ -63,7 +63,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         scheduleProcess();
         waitForBundleStart();
         
-        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", "guest")
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller()
                 .unmarshal(new StringReader(response.getEntity(String.class)));
@@ -86,7 +86,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
         assertSuccessful(response);    
         
@@ -100,7 +100,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         scheduleProcess();
         waitForBundleStart();
         
-        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", "guest")
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller()
                 .unmarshal(new StringReader(response.getEntity(String.class)));
@@ -109,7 +109,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", "guest").accept(MediaType.TEXT_XML)
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
         assertSuccessful(response);    
         
@@ -131,7 +131,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         response = this.service
                 .path("api/entities/status/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
         APIResult result = (APIResult)unmarshaller.
@@ -159,7 +159,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     	String feed1 = "f1" + System.currentTimeMillis();
     	response = this.service
                 .path("api/entities/status/feed/" + feed1)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
     	Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
@@ -172,7 +172,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     	ClientResponse response;
     	response = this.service
                 .path("api/admin/version")
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
     	Assert.assertEquals(status, "{Version:\"" +
@@ -189,7 +189,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/validate/process")
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, stream);
 
@@ -206,7 +206,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         clientRepsonse = this.service.path("api/entities/validate/cluster")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .post(ClientResponse.class, stream);
         assertSuccessful(clientRepsonse);
     }
@@ -222,28 +222,28 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
 		clientRepsonse = this.service
 				.path("api/entities/schedule/cluster/" + clusterName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/suspend/cluster/" + clusterName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/resume/cluster/" + clusterName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
 				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
 				.post(ClientResponse.class);
 		assertFailure(clientRepsonse);
 
 		clientRepsonse = this.service
 				.path("api/entities/delete/cluster/" + clusterName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
 				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
 		assertSuccessful(clientRepsonse);
 	}
@@ -280,7 +280,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         response = this.service
                 .path("api/entities/definition/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
         String feedXML = response.getEntity(String.class);
@@ -297,7 +297,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     public void testInvalidGetEntityDefinition() {
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/definition/process/sample1")
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         assertFailure(clientRepsonse);
     }
@@ -308,13 +308,13 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/suspend/process/" + processName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
 
         clientRepsonse = this.service
                 .path("api/entities/resume/process/" + processName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
     }
@@ -333,7 +333,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         createTestData();
         ClientResponse clientRepsonse = this.service
         		.path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", "guest")
+                .header("Remote-User", REMOTE_USER)
         		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
         		.post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
@@ -345,7 +345,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         conf.set("fs.default.name", "hdfs://localhost:8020");
         FileSystem fs = FileSystem.get(conf);
         fs.mkdirs(new Path("/user/guest"));
-        fs.setOwner(new Path("/user/guest"), "guest", "users");
+        fs.setOwner(new Path("/user/guest"), REMOTE_USER, "users");
 
         DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -403,7 +403,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         response = this.service
                 .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
     }
@@ -422,7 +422,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         response = this.service
                 .path("api/entities/delete/cluster/" + clusterName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertFailure(response);
 
@@ -435,14 +435,14 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         //Delete a referred feed
         response = this.service
                 .path("api/entities/delete/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertFailure(response);
 
         //Delete a submitted process
         response = this.service
                 .path("api/entities/delete/process/" + processName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
 
@@ -451,7 +451,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/schedule/process/" + processName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
@@ -459,7 +459,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         //Delete a scheduled process
         response = this.service
                 .path("api/entities/delete/process/" + processName)
-                .header("Remote-User", "testuser")
+                .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
 
@@ -470,7 +470,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     	ClientResponse response;
     	response = this.service
                 .path("api/entities/list/process/")
-                .header("Remote-User", "testuser").type(MediaType.TEXT_XML)
+                .header("Remote-User", REMOTE_USER).type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
     	Assert.assertEquals(response.getStatus(), 200);
     	
@@ -481,7 +481,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         
         response = this.service
                 .path("api/entities/list/cluster/")
-                .header("Remote-User", "testuser").type(MediaType.TEXT_XML)
+                .header("Remote-User", REMOTE_USER).type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
         

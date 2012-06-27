@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +31,12 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.cluster.util.StandAloneCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.util.EmbeddedServer;
@@ -64,6 +67,7 @@ public class AbstractTestBase {
     protected static final String PROCESS_TEMPLATE = "/process-template.xml";
 
     protected static final String BASE_URL = "http://localhost:15000/";
+    protected static final String REMOTE_USER="guest";
 
     protected EmbeddedServer server;
 
@@ -74,6 +78,7 @@ public class AbstractTestBase {
     protected WebResource service = null;
     protected String clusterName;
     protected String processName;
+    protected String outputFeedName;
 
     private static final Pattern varPattern = Pattern.compile("##[A-Za-z0-9_]*##");
 
@@ -93,28 +98,36 @@ public class AbstractTestBase {
         response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
         assertSuccessful(response);
         ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
-                .header("Remote-User", "guest").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
+                .header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
     }
 
-    private List<WorkflowJob> getRunningJobs() throws Exception {
+    private List<WorkflowJob> getRunningJobs(String entityName) throws Exception {
         OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         StringBuilder builder = new StringBuilder();
         builder.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING).append(';');
-        builder.append(OozieClient.FILTER_NAME).append('=').append("IVORY_PROCESS_DEFAULT_").append(processName);
+        builder.append(OozieClient.FILTER_NAME).append('=').append("IVORY_PROCESS_DEFAULT_").append(entityName);
         return ozClient.getJobsInfo(builder.toString());
     }
 
-    protected void waitForWorkflowStart() throws Exception {
+    protected void waitForWorkflowStart(String entityName) throws Exception {
         for (int i = 0; i < 10; i++) {
-            List<WorkflowJob> jobs = getRunningJobs();
+            List<WorkflowJob> jobs = getRunningJobs(entityName);
             if (jobs != null && !jobs.isEmpty())
                 return;
 
             System.out.println("Waiting for workflow to start");
             Thread.sleep(1000);
         }
-        throw new Exception("Process " + processName + " hasn't started in oozie");
+        throw new Exception(entityName + " hasn't started in oozie");
+    }
+    
+    protected void waitForProcessWFtoStart() throws Exception{
+    	waitForWorkflowStart(processName);
+    }
+    
+    protected void waitForOutputFeedWFtoStart() throws Exception{
+    	waitForWorkflowStart(outputFeedName);
     }
 
     protected void waitForBundleStart() throws Exception {
@@ -353,15 +366,19 @@ public class AbstractTestBase {
         return false;
     }
     
-    protected Map<String, String> getUniqueOverlay() {
-        Map<String, String> overlay = new HashMap<String, String>();
-        long time = System.currentTimeMillis();
-        clusterName = "cluster" + time;
-        overlay.put("cluster", clusterName);
-        overlay.put("inputFeedName", "in" + time);
-        overlay.put("outputFeedName", "out" + time);
-        processName = "p" + time;
-        overlay.put("processName", processName);
-        return overlay;
-    }
+	protected Map<String, String> getUniqueOverlay() throws IvoryException {
+		Map<String, String> overlay = new HashMap<String, String>();
+		long time = System.currentTimeMillis();
+		clusterName = "cluster" + time;
+		overlay.put("cluster", clusterName);
+		overlay.put("inputFeedName", "in" + time);
+		//only feeds with future dates can be scheduled
+		Date endDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
+		overlay.put("feedEndDate", SchemaHelper.formatDateUTC(endDate));
+		overlay.put("outputFeedName", "out" + time);
+		processName = "p" + time;
+		overlay.put("processName", processName);
+		outputFeedName = "out"+time;
+		return overlay;
+	}
 }

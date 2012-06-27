@@ -18,6 +18,7 @@
 
 package org.apache.ivory.util;
 
+import org.apache.ivory.service.Services;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
@@ -37,6 +38,7 @@ public class EmbeddedServer {
   }
 
   public void start() throws Exception {
+	Services.get().reset();
     server.start();
   }
 

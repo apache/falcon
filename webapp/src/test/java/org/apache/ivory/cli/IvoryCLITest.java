@@ -18,32 +18,20 @@
 
 package org.apache.ivory.cli;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
-import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.resource.AbstractTestBase;
 import org.testng.annotations.Test;
 
 //Refactor both the classes to move this methods to helper;
 public class IvoryCLITest extends AbstractTestBase{
-
-	private static final Pattern VAR_PATTERN = Pattern
-			.compile("##[A-Za-z0-9_]*##");
 
 	private InMemoryWriter stream = new InMemoryWriter(System.out);
 	// private static final String BROKER_URL =
@@ -223,9 +211,6 @@ public class IvoryCLITest extends AbstractTestBase{
 				executeWithURL("entity -status -type process -name "
 						+ overlay.get("processName")));
 
-		overlayParametersOverTemplate(cluster.getCluster(), overlay);
-		submitTestFiles(overlay);
-
 		Assert.assertEquals(
 				0,
 				executeWithURL("entity -schedule -type feed -name "
@@ -234,6 +219,8 @@ public class IvoryCLITest extends AbstractTestBase{
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
+		
+		waitForProcessWFtoStart();
 
 		Assert.assertEquals(
 				0,
@@ -344,7 +331,8 @@ public class IvoryCLITest extends AbstractTestBase{
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type feed -name "
 						+ overlay.get("outputFeedName")));
-		waitForWorkflowStart();
+		waitForProcessWFtoStart();
+		
 		Assert.assertEquals(0,
 				executeWithURL("instance -status -type feed -name "
 						+ overlay.get("outputFeedName")
@@ -361,8 +349,6 @@ public class IvoryCLITest extends AbstractTestBase{
 		
 
 	}
-	
-	
 
 	@Test(enabled = enableTest)
 	public void testInstanceSuspendAndResume() throws Exception {
@@ -372,6 +358,7 @@ public class IvoryCLITest extends AbstractTestBase{
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
+		
 		
 		Assert.assertEquals(0,
 				executeWithURL("instance -suspend -type process -name "
@@ -395,7 +382,7 @@ public class IvoryCLITest extends AbstractTestBase{
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
 
-		waitForWorkflowStart();
+		waitForProcessWFtoStart();
 		Assert.assertEquals(
 				0,
 				executeWithURL("instance -kill -type process -name "
@@ -473,49 +460,6 @@ public class IvoryCLITest extends AbstractTestBase{
 	private int executeWithURL(String command) throws Exception {
 		return new IvoryCLI()
 				.run((command + " -url " + BASE_URL).split("\\s+"));
-	}
-
-	protected String overlayParametersOverTemplate(Entity templateEntity,
-			Map<String, String> overlay) throws IOException {
-
-		return overlayParametersOverTemplate(new ByteArrayInputStream(
-				templateEntity.toString().getBytes()), overlay);
-	}
-
-	protected String overlayParametersOverTemplate(String template,
-			Map<String, String> overlay) throws IOException {
-
-		return overlayParametersOverTemplate(
-				IvoryCLITest.class.getResourceAsStream(template), overlay);
-	}
-
-	protected String overlayParametersOverTemplate(InputStream templateStream,
-			Map<String, String> overlay) throws IOException {
-		File target = new File("webapp/target");
-		if (!target.exists()) {
-			target = new File("target");
-		}
-
-		File tmpFile = File.createTempFile("test", ".xml", target);
-		OutputStream out = new FileOutputStream(tmpFile);
-		InputStreamReader in = new InputStreamReader(templateStream);
-		BufferedReader reader = new BufferedReader(in);
-		String line;
-		while ((line = reader.readLine()) != null) {
-			Matcher matcher = VAR_PATTERN.matcher(line);
-			while (matcher.find()) {
-				String variable = line
-						.substring(matcher.start(), matcher.end());
-				line = line.replace(variable, overlay.get(variable.substring(2,
-						variable.length() - 2)));
-				matcher = VAR_PATTERN.matcher(line);
-			}
-			out.write(line.getBytes());
-			out.write("\n".getBytes());
-		}
-		reader.close();
-		out.close();
-		return tmpFile.getAbsolutePath();
 	}
 
 	private String createTempJobPropertiesFile() throws IOException {

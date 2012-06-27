@@ -17,6 +17,8 @@
  */
 package org.apache.ivory.logging;
 
+import java.util.Collection;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
@@ -45,6 +47,7 @@ public class LogProviderTest {
 	@BeforeClass
 	public void setup() throws Exception {
 		testCluster = EmbeddedCluster.newCluster("testCluster", false);
+		cleanupStore();
 		store.publish(EntityType.CLUSTER, testCluster.getCluster());
 		fs = FileSystem.get(testCluster.getConf());
 		Path instanceLogPath = new Path(
@@ -78,6 +81,15 @@ public class LogProviderTest {
 		instance.instance = "2010-01-01T01:00Z";
 		instance.cluster = "testCluster";
 		instance.logFile = "http://localhost:15000/oozie/wflog";
+	}
+	
+	private void cleanupStore() throws IvoryException {
+		for (EntityType type : EntityType.values()) {
+			Collection<String> entities = store.getEntities(type);
+			for (String entity : entities) {
+				store.remove(type, entity);
+			}
+		}
 	}
 
 	@Test

@@ -136,7 +136,7 @@ public class EmbeddedCluster {
 				.getInterfaces()
 				.add(newInterface(
 						Interfacetype.MESSAGING,
-						"vm://localhost1?broker.useJmx=false&broker.persistent=true",
+						"vm://localhost",
 						"0.1"));
       clusterEntity.setInterfaces(interfaces);
 

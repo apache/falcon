@@ -30,8 +30,9 @@ public class Main {
         server.start();
         
         BrokerService broker = new BrokerService();
-        broker.setUseJmx(true);
-        broker.addConnector("vm://localhost?broker.useJmx=false&broker.persistent=true");
+        broker.setUseJmx(false);
+		broker.setDataDirectory("target/");
+		broker.addConnector("vm://localhost");
         broker.start();
     }
 }
