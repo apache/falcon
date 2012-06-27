@@ -3,6 +3,8 @@ package org.apache.ivory;
 import org.apache.ivory.client.IvoryClient;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
+import org.apache.ivory.entity.v0.Frequency;
+import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -26,26 +28,34 @@ public class Debug {
     public static void main(String[] args) throws Exception {
         String ivoryUrl = args[0];
         String type = args[1];
-        String entity = args[2];
+        String entity;
 
         Services.get().register(ConfigurationStore.get());
         ConfigurationStore.get().init();
         CurrentUser.authenticate("testuser");
         IvoryClient client = new IvoryClient(ivoryUrl);
-        String[] deps = client.getDependency(type, entity).split("\n");
-        for (String line : deps) {
-            String[] fields = line.replace("(", "").replace(")", "").split(" ");
-            EntityType eType = EntityType.valueOf(fields[0].toUpperCase());
-            String xml = client.getDefinition(eType.name().toLowerCase(), fields[1]);
-            store(eType, xml);
+        for (int index = 2; index < args.length; index++) {
+            entity = args[index];
+            String[] deps = client.getDependency(type, entity).split("\n");
+            for (String line : deps) {
+                String[] fields = line.replace("(", "").replace(")", "").split(" ");
+                EntityType eType = EntityType.valueOf(fields[0].toUpperCase());
+                if (ConfigurationStore.get().get(eType, fields[1]) != null) continue;
+                String xml = client.getDefinition(eType.name().toLowerCase(), fields[1]);
+                System.out.println(xml);
+                store(eType, xml);
+            }
+            String xml = client.getDefinition(type.toLowerCase(), entity);
+            System.out.println(xml);
+            store(EntityType.valueOf(type.toUpperCase()), xml);
         }
-        String xml = client.getDefinition(type.toLowerCase(), entity);
-        System.out.println(xml);
-        store(EntityType.valueOf(type.toUpperCase()), xml);
 
+        entity = args[2];
         Entity obj = EntityUtil.getEntity(type, entity);
-        Feed newEntity = (Feed)obj.clone();
-        newEntity.getLocations().getLocations().get(0).setPath("/new/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        Process newEntity = (Process)obj.clone();
+        newEntity.setFrequency(Frequency.fromString("minutes(5)"));
+        System.out.println("##############OLD ENTITY " + EntityUtil.md5(obj));
+        System.out.println("##############NEW ENTITY " + EntityUtil.md5(newEntity));
 
 
 //        OozieWorkflowEngine engine = new OozieWorkflowEngine();
@@ -62,6 +72,8 @@ public class Debug {
         OozieWorkflowEngine engine = new OozieWorkflowEngine();
         ConfigurationStore.get().initiateUpdate(newEntity);
         engine.update(obj, newEntity);
+        engine.delete(newEntity);
+        System.exit(0);
     }
 
     private static void store(EntityType eType, String xml) throws JAXBException, IvoryException {
