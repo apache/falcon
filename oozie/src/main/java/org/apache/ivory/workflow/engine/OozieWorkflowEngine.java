@@ -172,9 +172,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         try {
             OozieClient client = OozieClientFactory.get(cluster);
             List<BundleJob> jobs = client.getBundleJobsInfo(OozieClient.FILTER_NAME + "=" + EntityUtil.getWorkflowName(entity) + ";",
-                    0, 100);
-            if (jobs != null)
+                    0, 256);
+            if (jobs != null) {
                 return jobs;
+            }
             return new ArrayList<BundleJob>();
         } catch (OozieClientException e) {
             throw new IvoryException(e);
@@ -665,12 +666,12 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 // only concurrency and endtime are changed. So, change coords
                 LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
                 updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
-                        EntityUtil.getEndTime(newEntity, cluster), null);
+                        EntityUtil.getEndTime(newEntity, cluster));
                 return;
             }
 
             LOG.debug("Going to update ! : " + newEntity.toShortString() + cluster + ", bundle: " + bundle.getId());
-            updateInternal(oldEntity, newEntity, cluster, bundle);
+            updateInternal(oldEntity, newEntity, cluster, bundle, false);
             LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: " + bundle.getId());
         }
 
@@ -685,10 +686,19 @@ public class OozieWorkflowEngine implements WorkflowEngine {
             for (Map.Entry<String, BundleJob> processBundle : processBundles.entrySet()) {
                 if (processBundle.getValue() == MISSING)
                     continue;
+                BundleJob feedBundle = findBundle(newEntity, processBundle.getKey());
+                if (feedBundle == MISSING && bundleMap.get(processBundle.getKey()) != MISSING) {
+                    throw new IllegalStateException("Unable to find feed bundle in " +
+                            processBundle.getKey() + " for entity " + newEntity.getName());
+                }
                 LOG.info("Triggering update for " + processBundle.getKey() + ", " + processBundle.getValue().getId());
-                updateInternal(entity, entity, processBundle.getKey(), processBundle.getValue());
+                boolean processCreated = feedBundle.getCreatedTime().before(processBundle.getValue().getCreatedTime());
+                updateInternal(entity, entity, processBundle.getKey(), processBundle.getValue(), processCreated);
+                LOG.info("Entity update complete : " + entity.toShortString() + processBundle.getKey() +
+                        ", bundle: " + processBundle.getValue().getId());
             }
         }
+        LOG.info("Entity update and all dependent entities updated: " + oldEntity.toShortString());
     }
 
     private Date now() {
@@ -717,39 +727,38 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return null;
     }
 
-    private void updateCoords(String cluster, String bundleId, int concurrency, Date endTime, Job.Status oldBundleStatus)
+    private void updateCoords(String cluster, String bundleId, int concurrency, Date endTime)
             throws IvoryException {
         if (endTime.compareTo(now()) <= 0)
             throw new IvoryException("End time " + SchemaHelper.formatDateUTC(endTime) + " can't be in the past");
 
         BundleJob bundle = getBundleInfo(cluster, bundleId);
-        if (oldBundleStatus == null)
-            oldBundleStatus = bundle.getStatus();
-        
-        suspend(cluster, bundle);
-
         //change coords
         for (CoordinatorJob coord : bundle.getCoordinators()) {
             LOG.debug("Updating endtime of coord " + coord.getId() + " to " + SchemaHelper.formatDateUTC(endTime) + " on cluster "
                     + cluster);
             Date lastActionTime = getCoordLastActionTime(coord);
             if (lastActionTime == null) { // nothing is materialized
-                if (endTime.compareTo(coord.getStartTime()) <= 0)
+                LOG.info("Nothing is materialized for this coord: " + coord.getId());
+                if (endTime.compareTo(coord.getStartTime()) <= 0) {
+                    LOG.info("Setting end time to START TIME " + SchemaHelper.formatDateUTC(coord.getStartTime()));
                     change(cluster, coord.getId(), concurrency, coord.getStartTime(), null);
-                else
+                } else {
+                    LOG.info("Setting end time to START TIME " + SchemaHelper.formatDateUTC(endTime));
                     change(cluster, coord.getId(), concurrency, endTime, null);
+                }
             } else {
+                LOG.info("Actions have materialized for this coord: " + coord.getId() +
+                        ", last action " + SchemaHelper.formatDateUTC(lastActionTime));
                 if (!endTime.after(lastActionTime)) {
                     Date pauseTime = getPreviousMin(endTime);
                     // set pause time which deletes future actions
+                    LOG.info("Setting pause time on coord : " + coord.getId() + " to " +
+                            SchemaHelper.formatDateUTC(pauseTime));
                     change(cluster, coord.getId(), concurrency, null, SchemaHelper.formatDateUTC(pauseTime));
                 }
                 change(cluster, coord.getId(), concurrency, endTime, "");
             }
-        }
-
-        if (oldBundleStatus != Job.Status.SUSPENDED && oldBundleStatus != Job.Status.PREPSUSPENDED) {
-            resume(cluster, bundle);
         }
     }
 
@@ -765,7 +774,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         }
     }
     
-    private void updateInternal(Entity oldEntity, Entity newEntity, String cluster, BundleJob bundle) throws IvoryException {
+    private void updateInternal(Entity oldEntity, Entity newEntity,
+                                String cluster, BundleJob bundle, boolean alreadyCreated) throws IvoryException {
         OozieWorkflowBuilder<Entity> builder = (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
         // Change end time of coords and schedule new bundle
@@ -774,17 +784,37 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
         BundleJob newBundle = findBundle(newEntity, cluster);
         Date endTime;
-        if (newBundle == MISSING) { // new entity is not scheduled yet
+        if (newBundle == MISSING || !alreadyCreated) { // new entity is not scheduled yet
+            LOG.info("New bundle hasn't been created yet. So will create one");
             endTime = getNextMin(getNextMin(now()));
             Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);
-            Entity clonedNewEntity = newEntity.clone();
-            EntityUtil.setStartDate(clonedNewEntity, cluster, newStartTime);
-            schedule(clonedNewEntity);
+            scheduleForUpdate(newEntity, cluster, newStartTime);
+            LOG.info("New bundle scheduled successfully " + SchemaHelper.formatDateUTC(newStartTime));
         } else {
+            LOG.info("New bundle has already been created. Bundle Id: " +
+                    newBundle.getId() + ", Start: " + SchemaHelper.formatDateUTC(newBundle.getStartTime()) +
+                    ", End: " + newBundle.getEndTime());
             endTime = getMinStartTime(newBundle);
+            LOG.info("Will set old coord end time to " + SchemaHelper.formatDateUTC(endTime));
         }
         if (endTime != null)
-            updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(oldEntity), endTime, oldBundleStatus);
+            updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(oldEntity), endTime);
+
+        if (oldBundleStatus != Job.Status.SUSPENDED && oldBundleStatus != Job.Status.PREPSUSPENDED) {
+            resume(cluster, bundle);
+        }
+    }
+
+    private void scheduleForUpdate(Entity entity, String cluster, Date startDate) throws IvoryException {
+        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
+        Properties bundleProps = builder.newWorkflowSchedule(entity, startDate, cluster);
+        LOG.info("Scheduling " + entity.toShortString() + " on cluster " + cluster +
+                " with props " + bundleProps);
+        if (bundleProps != null) {
+            scheduleEntity(cluster, bundleProps, entity);
+        } else {
+            LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
+        }
     }
 
     private Date getMinStartTime(BundleJob bundle) {

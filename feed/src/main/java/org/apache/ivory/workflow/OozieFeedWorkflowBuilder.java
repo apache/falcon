@@ -40,24 +40,34 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
     public Map<String, Properties> newWorkflowSchedule(Feed feed, List<String> clusters) throws IvoryException {
-        Map<String, Path> pathsMap = new HashMap<String, Path>();
+        Map<String, Properties> propertiesMap = new HashMap<String, Properties>();
         
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-            if (!feedCluster.getValidity().getStart().before(feedCluster.getValidity().getEnd()))
-                // start time >= end time
-                continue;
-
-            Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
-            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
-
-            AbstractOozieEntityMapper<Feed> mapper = new OozieFeedMapper(feed);
-            if(mapper.map(cluster, bundlePath)==false){
-            	continue;
-            }
-            pathsMap.put(clusterName, bundlePath);
+            Properties properties = newWorkflowSchedule(feed, feedCluster.getValidity().getStart(), clusterName);
+            if (properties == null) continue;
+            propertiesMap.put(clusterName, properties);
         }
-        return createAppProperties(pathsMap);
+        return propertiesMap;
+    }
+
+    @Override
+    public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName) throws IvoryException {
+        org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+        if (!startDate.before(feedCluster.getValidity().getEnd()))
+            // start time >= end time
+            return null;
+
+        Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
+        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
+        Feed feedClone = (Feed) feed.clone();
+        EntityUtil.setStartDate(feedClone, clusterName, startDate);
+
+        AbstractOozieEntityMapper<Feed> mapper = new OozieFeedMapper(feedClone);
+        if(!mapper.map(cluster, bundlePath)){
+            return null;
+        }
+        return createAppProperties(clusterName, bundlePath);
     }
 
     @Override

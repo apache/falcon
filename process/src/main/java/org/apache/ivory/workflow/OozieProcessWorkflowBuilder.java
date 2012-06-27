@@ -27,35 +27,50 @@ import java.util.Properties;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
+import org.apache.ivory.converter.AbstractOozieEntityMapper;
+import org.apache.ivory.converter.OozieFeedMapper;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public Map<String, Properties> newWorkflowSchedule(Process process, List<String> clusters) throws IvoryException {
-        Map<String, Path> pathMap = new HashMap<String, Path>();
-        
-        for(String clusterName:clusters) {
+        Map<String, Properties> propertiesMap = new HashMap<String, Properties>();
+
+        for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
-            // start time >= end time
-            if (!processCluster.getValidity().getStart().before(processCluster.getValidity().getEnd()))
-                continue;
-            
-            Cluster cluster = configStore.get(EntityType.CLUSTER, clusterName);
-            Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
-            OozieProcessMapper mapper = new OozieProcessMapper(process);
-            if(mapper.map(cluster, bundlePath)==false){
-            	continue;
-            }           
-            pathMap.put(clusterName, bundlePath);
+            Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
+            if (properties == null) continue;
+            propertiesMap.put(clusterName, properties);
         }
-        return createAppProperties(pathMap);
+        return propertiesMap;
+    }
+
+    @Override
+    public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName) throws IvoryException {
+        org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
+        if (!startDate.before(processCluster.getValidity().getEnd()))
+            // start time >= end time
+            return null;
+
+        Cluster cluster = configStore.get(EntityType.CLUSTER, processCluster.getName());
+        Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
+        Process processClone = (Process) process.clone();
+        EntityUtil.setStartDate(processClone, clusterName, startDate);
+
+        OozieProcessMapper mapper = new OozieProcessMapper(processClone);
+        if(!mapper.map(cluster, bundlePath)){
+            return null;
+        }
+        return createAppProperties(clusterName, bundlePath);
     }
 
     @Override

@@ -18,6 +18,7 @@
 
 package org.apache.ivory.workflow;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -28,9 +29,6 @@ import org.apache.ivory.util.ReflectionUtils;
 
 public abstract class WorkflowBuilder<T extends Entity> {
 
-    public static final String PROPS = "PROPS";
-    public static final String CLUSTERS = "CLUSTERS";
-
     public static WorkflowBuilder<Entity> getBuilder(String engine, Entity entity) throws IvoryException {
         String classKey = engine + "." + entity.getEntityType().name().toLowerCase() + ".workflow.builder";
         return ReflectionUtils.getInstance(classKey);
@@ -38,5 +36,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
 
     public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws IvoryException;
     
+    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName) throws IvoryException;
+
     public abstract String[] getWorkflowNames(T entity);
 }
