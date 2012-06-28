@@ -108,6 +108,11 @@ public class InstancesResult extends APIResult {
 		public InstanceAction[] getActions() {
 			return actions;
 		}
+		
+		public String getDetails() {
+			return details;
+		}
+
 
 		@Override
 		public String toString() {
