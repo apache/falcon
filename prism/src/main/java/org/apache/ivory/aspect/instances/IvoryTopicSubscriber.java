@@ -18,6 +18,8 @@
 package org.apache.ivory.aspect.instances;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -32,6 +34,8 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.aspect.GenericAlert;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
@@ -39,6 +43,10 @@ import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
+import org.apache.ivory.resource.InstancesResult;
+import org.apache.ivory.resource.InstancesResult.Instance;
+import org.apache.ivory.workflow.WorkflowEngineFactory;
+import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
@@ -52,12 +60,12 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String url;
 	private String topicName;
 	private Connection connection;
-	
-	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler =  RerunHandlerFactory
+
+	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler = RerunHandlerFactory
 			.getRerunHandler(RerunType.RETRY);
-	private AbstractRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> latedataHandler =  RerunHandlerFactory
-			                       .getRerunHandler(RerunType.LATE);
-	
+	private AbstractRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> latedataHandler = RerunHandlerFactory
+			.getRerunHandler(RerunType.LATE);
+
 	public IvoryTopicSubscriber(String implementation, String userName,
 			String password, String url, String topicName) {
 		this.implementation = implementation;
@@ -90,8 +98,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		MapMessage mapMessage = (MapMessage) message;
 		try {
 			debug(mapMessage);
-			String cluster = mapMessage.getString(ARG.cluster
-					.getArgName());
+			String cluster = mapMessage.getString(ARG.cluster.getArgName());
 			String entityName = mapMessage.getString(ARG.entityName
 					.getArgName());
 			String entityType = mapMessage.getString(ARG.entityType
@@ -102,22 +109,27 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String nominalTime = mapMessage.getString(ARG.nominalTime
 					.getArgName());
 			String status = mapMessage.getString(ARG.status.getArgName());
-		    
-			try {
+			String operation = mapMessage.getString(ARG.operation.getArgName());
 
-				if (status.equalsIgnoreCase("FAILED")) {
-					retryHandler.handleRerun(cluster, entityType, entityName,
-							nominalTime, runId, workflowId,
-							System.currentTimeMillis());
-					throw new Exception(entityName + ":" + nominalTime
-							+ " Failed");
-				} else if (status.equalsIgnoreCase("SUCCEEDED")) {
-					latedataHandler.handleRerun(cluster, entityType,
-							entityName, nominalTime, runId, workflowId,
-							System.currentTimeMillis());
-				}
-			} catch (Exception ignore) {
-				// mocked exception
+			WorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+			InstancesResult result = wfEngine
+					.getJobDetails(cluster, workflowId);
+			Long duration = (result.getInstances()[0].endTime.getTime() - result
+					.getInstances()[0].startTime.getTime()) * 1000000;
+			if (status.equalsIgnoreCase("FAILED")) {
+				retryHandler.handleRerun(cluster, entityType, entityName,
+						nominalTime, runId, workflowId,
+						System.currentTimeMillis());
+				GenericAlert.instrumentFailedInstance(cluster, entityType,
+						entityName, nominalTime, workflowId, runId, operation,
+						duration);
+			} else if (status.equalsIgnoreCase("SUCCEEDED")) {
+				latedataHandler.handleRerun(cluster, entityType, entityName,
+						nominalTime, runId, workflowId,
+						System.currentTimeMillis());
+				GenericAlert.instrumentSucceededInstance(cluster, entityType,
+						entityName, nominalTime, workflowId, runId, operation,
+						duration);
 			}
 
 		} catch (Exception ignore) {

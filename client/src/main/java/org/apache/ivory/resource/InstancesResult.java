@@ -1,5 +1,7 @@
 package org.apache.ivory.resource;
 
+import java.util.Date;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -57,10 +59,10 @@ public class InstancesResult extends APIResult {
         public String sourceCluster;
 
         @XmlElement
-        public String startTime;
+        public Date startTime;
 
         @XmlElement
-        public String endTime;
+        public Date endTime;
         
         @XmlElement
         public String details;
@@ -97,17 +99,22 @@ public class InstancesResult extends APIResult {
 			return sourceCluster;
 		}
 
-		public String getStartTime() {
+		public Date getStartTime() {
 			return startTime;
 		}
 
-		public String getEndTime() {
+		public Date getEndTime() {
 			return endTime;
 		}
 
 		public InstanceAction[] getActions() {
 			return actions;
 		}
+		
+		public String getDetails() {
+			return details;
+		}
+
 
 		@Override
 		public String toString() {

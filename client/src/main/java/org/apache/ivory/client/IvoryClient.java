@@ -488,8 +488,11 @@ public class IvoryClient {
 					.method(instances.method, ClientResponse.class, props);
 		}
 		checkIfSuccessfull(clientResponse);
-
-		return parseProcessInstanceResult(clientResponse);
+		
+		if(instances.name().equals("LOG"))
+			return parseProcessInstanceResultLogs(clientResponse, runid);
+		else
+			return parseProcessInstanceResult(clientResponse);
 
 	}
 	
@@ -531,46 +534,94 @@ public class IvoryClient {
 		InstancesResult result = clientResponse
 				.getEntity(InstancesResult.class);
 		StringBuffer sb = new StringBuffer();
+		String toAppend = null;
 		
-		sb.append(result.getMessage());
-		sb.append(result.getRequestId() );
-		sb.append(result.getStatus() + "\n");
-		sb.append("Instances:\n");
+		sb.append("Consolidated Status: " + result.getStatus() + "\n");
+		
+		sb.append("\nInstances:\n");
+		sb.append("Instance\t\tCluster\t\tSourceCluster\t\tStatus\t\tStart\t\tEnd\t\tDetails\t\t\t\t\tLog\n");
+		sb.append("----------------------------------------------------------------------------------------------------------------------------------------\n");
 		if(result.getInstances() != null){
 			for (InstancesResult.Instance instance : result.getInstances()) {
-				sb.append("instance=").append(instance.getInstance())
-						.append("\nstatus=").append(instance.getStatus());
 				
-				if (instance.logFile != null) {
-					sb.append("\nlog=").append(instance.logFile);
-				}
-				if (instance.cluster != null) {
-					sb.append("\nCluster=").append(instance.cluster);
-				}
-				if (instance.sourceCluster != null) {
-					sb.append("\nSource Cluster=").append(instance.sourceCluster);
-				}
-				if (instance.startTime != null) {
-					sb.append("\nStart Time=").append(instance.startTime);
-				}
-				if (instance.endTime != null) {
-					sb.append("\nEnd Time=").append(instance.endTime);
-				}
-				if (instance.details != null) {
-					sb.append("\nDetails=").append(instance.details);
-				}
-				sb.append("\n");
+				toAppend = instance.getInstance() != null  ? instance.getInstance() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = instance.getCluster() != null ? instance.getCluster() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = instance.getSourceCluster() != null ? instance.getSourceCluster() : "-";
+				sb.append(toAppend + "\t");	
+				
+				toAppend =  (instance.getStatus() != null ? instance.getStatus().toString() : "-");
+				sb.append(toAppend + "\t");	
+				
+				toAppend = instance.getStartTime() != null ? instance.getStartTime() : "-";
+				sb.append(toAppend + "\t");	
+				
+				toAppend = instance.getEndTime() != null ? instance.getEndTime() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = (instance.getDetails() != null && !instance.getDetails().equals("")) ? instance.getDetails() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = instance.getLogFile() != null ? instance.getLogFile() : "-";
+				sb.append(toAppend + "\n");	
+				
+			}
+		}
+		sb.append("\nAdditional Information:\n");
+		sb.append("Response: " + result.getMessage());
+		sb.append("Request Id: " + result.getRequestId() );
+		return sb.toString();
+	}
+	
+	private String parseProcessInstanceResultLogs(ClientResponse clientResponse, String runid) {
+		InstancesResult result = clientResponse
+				.getEntity(InstancesResult.class);
+		StringBuffer sb = new StringBuffer();
+		String toAppend = null;
+		
+		sb.append("Consolidated Status: " + result.getStatus() + "\n");
+		
+		sb.append("\nInstances:\n");
+		sb.append("Instance\t\tCluster\t\tSourceCluster\t\tStatus\t\tRunID\t\t\tLog\n");
+		sb.append("----------------------------------------------------------------------------------------------------\n");
+		if(result.getInstances() != null){
+			for (InstancesResult.Instance instance : result.getInstances()) {
+				
+				toAppend = (instance.getInstance() != null ) ? instance.getInstance() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = instance.getCluster() != null ? instance.getCluster() : "-";
+				sb.append(toAppend + "\t");
+				
+				toAppend = instance.getSourceCluster() != null ? instance.getSourceCluster() : "-";
+				sb.append(toAppend + "\t");	
+				
+				toAppend =  (instance.getStatus() != null ? instance.getStatus().toString() : "-");
+				sb.append(toAppend + "\t");	
+				
+				toAppend =  (runid != null ? runid : "latest");
+				sb.append(toAppend + "\t");	
+				
+				toAppend = instance.getLogFile() != null ? instance.getLogFile() : "-";
+				sb.append(toAppend + "\n");	
+				
+				
 				if (instance.actions != null) {
 					sb.append("actions:\n");
 					for (InstancesResult.InstanceAction action : instance.actions) {
-						sb.append("    ").append(action.toString()).append("\n");
+						sb.append("    ").append(action.getAction()+ "\t" + action.getStatus() + "\t" + action.getLogFile()).append("\n");
 					}
 				}
 			}
 		}
+		sb.append("\nAdditional Information:\n");
+		sb.append("Response: " + result.getMessage());
+		sb.append("Request Id: " + result.getRequestId() );
 		return sb.toString();
 	}
-
 	private void checkIfSuccessfull(ClientResponse clientResponse)
 			throws IvoryCLIException {
 		if (clientResponse.getStatus() == Response.Status.BAD_REQUEST

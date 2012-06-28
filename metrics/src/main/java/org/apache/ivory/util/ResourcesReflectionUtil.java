@@ -19,6 +19,7 @@
 package org.apache.ivory.util;
 
 import org.apache.ivory.monitors.Monitored;
+import org.apache.ivory.monitors.TimeTaken;
 
 import java.awt.Dimension;
 import java.lang.annotation.Annotation;
@@ -46,7 +47,7 @@ public class ResourcesReflectionUtil {
 		buildAnnotationsMapForClass("org.apache.ivory.resource.proxy.InstanceManagerProxy");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.AbstractInstanceManager");
 		buildAnnotationsMapForClass("org.apache.ivory.aspect.instances.IvoryTopicSubscriber");
-		buildAnnotationsMapForClass("org.apache.ivory.util.GenericAlert");
+		buildAnnotationsMapForClass("org.apache.ivory.aspect.GenericAlert");
 	}
 
 	public static Map<Integer, String> getResourceDimensionsName(String methodName) {
@@ -56,11 +57,19 @@ public class ResourcesReflectionUtil {
 	public static String getResourceMonitorName(String methodName) {
 		return methods.get(methodName)!=null?methods.get(methodName).monitoredName:null;
 	}	
+	
+	public static Integer getResourceTimeTakenName(String methodName) {
+		return methods.get(methodName) != null ? methods.get(methodName).timeTakenArgIndex
+				: null;
+	}
 
 	public static class MethodAnnotation {
 		private String monitoredName;
 		// argument <index,DimensionValue>
 		private Map<Integer, String> params = new HashMap<Integer, String>();
+		
+		//to override time taken by an api
+		private Integer timeTakenArgIndex;
 		
 		@Override
 		public String toString() {
@@ -93,7 +102,7 @@ public class ResourcesReflectionUtil {
 					Annotation[][] paramAnnots = declMethods[i]
 							.getParameterAnnotations();
 					// scan every param
-					annotation.params = getDeclaredParamAnnots(paramAnnots);
+					annotation.params = getDeclaredParamAnnots(paramAnnots, annotation);
 					methods.put(
 							clazz.getSimpleName() + "."
 									+ declMethods[i].getName(), annotation);
@@ -104,7 +113,7 @@ public class ResourcesReflectionUtil {
 	}
 
 	private static Map<Integer, String> getDeclaredParamAnnots(
-			Annotation[][] paramAnnots) {
+			Annotation[][] paramAnnots, MethodAnnotation annotation) {
 		Map<Integer, String> params = new HashMap<Integer, String>();
 		for (int i = 0; i < paramAnnots.length; i++) {
 			for (int j = 0; j < paramAnnots[i].length; j++) {
@@ -112,6 +121,10 @@ public class ResourcesReflectionUtil {
 						.equals(Dimension.class.getSimpleName())) {
 					params.put(Integer.valueOf(i),
 							getAnnotationValue(paramAnnots[i][j], "value"));
+				}
+				if (paramAnnots[i][j].annotationType().getSimpleName()
+						.equals(TimeTaken.class.getSimpleName())) {
+					annotation.timeTakenArgIndex =Integer.valueOf(i);
 				}
 			}
 		}

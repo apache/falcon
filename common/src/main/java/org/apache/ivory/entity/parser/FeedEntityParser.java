@@ -18,17 +18,14 @@
 
 package org.apache.ivory.entity.parser;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.Pair;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -60,16 +57,13 @@ public class FeedEntityParser extends EntityParser<Feed> {
         if (feed.getClusters() == null)
             throw new ValidationException("Feed should have atleast one cluster");
 
-        // validate on dependent clusters
-        List<Pair<EntityType, String>> entities = new ArrayList<Pair<EntityType, String>>();
         for (Cluster cluster : feed.getClusters().getClusters()) {
+            validateEntityExists(EntityType.CLUSTER, cluster.getName());
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(), cluster.getName());
             validateFeedCutOffPeriod(feed, cluster);
             validateFeedPartitionExpression(feed, cluster);
-            entities.add(Pair.of(EntityType.CLUSTER, cluster.getName()));
         }
 
-        validateEntitiesExist(entities);
         validateFeedSourceCluster(feed);
         validateFeedGroups(feed);
 

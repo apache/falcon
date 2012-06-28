@@ -20,6 +20,7 @@ package org.apache.ivory.rerun.handler;
 import java.util.Date;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -54,16 +55,18 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 				return;
 
 			LOG.debug("Scheduling the late rerun for entity instance : "
-					+ entityType + "(" + entityName+ ")"
-					+ ":" + nominalTime + " And WorkflowId: " + wfId);
+					+ entityType + "(" + entityName + ")" + ":" + nominalTime
+					+ " And WorkflowId: " + wfId);
 			LaterunEvent event = new LaterunEvent(cluster, wfId,
 					msgInsertTime.getTime(), wait, entityType, entityName,
 					nominalTime, intRunId);
 			offerToQueue(event);
 		} catch (Exception e) {
 			LOG.error("Unable to schedule late rerun for entity instance : "
-					+ entityType + "(" + entityName + ")"
-					+ ":" + nominalTime + " And WorkflowId: " + wfId, e);
+					+ entityType + "(" + entityName + ")" + ":" + nominalTime
+					+ " And WorkflowId: " + wfId, e);
+			GenericAlert.alertLateRerunFailed(entityType, entityName,
+					nominalTime, wfId, runId, e.getMessage());
 		}
 	}
 
@@ -83,7 +86,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		Long wait = null;
 
 		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: " +SchemaHelper.formatDateUTC(cutOffTime)
+			LOG.warn("Feed Cut Off time: "
+					+ SchemaHelper.formatDateUTC(cutOffTime)
 					+ " has expired, Late Rerun can not be scheduled");
 			return -1;
 		} else {
@@ -139,7 +143,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 			}
 			return feedCutOff;
 		} else {
-			throw new IvoryException("Invalid entity while getting cut-off time:" + entity.getName());
+			throw new IvoryException(
+					"Invalid entity while getting cut-off time:"
+							+ entity.getName());
 		}
 	}
 
