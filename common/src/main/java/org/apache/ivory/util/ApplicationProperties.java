@@ -79,6 +79,8 @@ public abstract class ApplicationProperties extends Properties {
         InputStream resource;
         try {
             if (location == LocationType.CLASSPATH) {
+                LOG.info("Property file being loaded from " +
+                        getClass().getResource("/" + propertyFile));
                 resource = getClass().getResourceAsStream("/" + propertyFile);
             } else {
                 resource = new FileInputStream(propertyFile);
@@ -88,8 +90,6 @@ public abstract class ApplicationProperties extends Properties {
                 throw new FileNotFoundException(propertyFile + " not found in " + location);
             } else {
                 try {
-                    // TODO:: Should we clear and reload? In which case we need
-                    // to lock down the object.
                     LOG.info("Loading properties from " + propertyFile);
                     Properties origProps = new Properties();
                     origProps.load(resource);
