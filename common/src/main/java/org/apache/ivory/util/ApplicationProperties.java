@@ -79,7 +79,7 @@ public abstract class ApplicationProperties extends Properties {
         InputStream resource;
         try {
             if (location == LocationType.CLASSPATH) {
-                if (getClass().getResource(propertyFile) == null) {
+                if (getClass().getResource(propertyFile) != null) {
                     LOG.info("Property file being loaded from " +
                             getClass().getResource(propertyFile));
                     resource = getClass().getResourceAsStream(propertyFile);
