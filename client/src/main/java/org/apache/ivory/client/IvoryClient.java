@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.resource.APIResult;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.InstancesResult;
@@ -556,10 +557,10 @@ public class IvoryClient {
 				toAppend =  (instance.getStatus() != null ? instance.getStatus().toString() : "-");
 				sb.append(toAppend + "\t");	
 				
-				toAppend = instance.getStartTime() != null ? instance.getStartTime() : "-";
+				toAppend = instance.getStartTime() != null ? SchemaHelper.formatDateUTC(instance.getStartTime()) : "-";
 				sb.append(toAppend + "\t");	
 				
-				toAppend = instance.getEndTime() != null ? instance.getEndTime() : "-";
+				toAppend = instance.getEndTime() != null ? SchemaHelper.formatDateUTC(instance.getEndTime()) : "-";
 				sb.append(toAppend + "\t");
 				
 				toAppend = (instance.getDetails() != null && !instance.getDetails().equals("")) ? instance.getDetails() : "-";
