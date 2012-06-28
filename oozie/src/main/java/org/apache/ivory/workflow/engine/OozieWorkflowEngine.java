@@ -708,12 +708,8 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         return cal.getTime();
     }
 
-    private Date getNextMin(Date date) {
-        return new Date(date.getTime() + 60 * 1000);
-    }
-
-    private Date getPreviousMin(Date date) {
-        return new Date(date.getTime() - 60 * 1000);
+    private Date offsetTime(Date date, int minute) {
+        return new Date(date.getTime() + minute * 60 * 1000);
     }
 
     private Date getCoordLastActionTime(CoordinatorJob coord) {
@@ -751,7 +747,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
                 LOG.info("Actions have materialized for this coord: " + coord.getId() +
                         ", last action " + SchemaHelper.formatDateUTC(lastActionTime));
                 if (!endTime.after(lastActionTime)) {
-                    Date pauseTime = getPreviousMin(endTime);
+                    Date pauseTime = offsetTime(endTime, -1);
                     // set pause time which deletes future actions
                     LOG.info("Setting pause time on coord : " + coord.getId() + " to " +
                             SchemaHelper.formatDateUTC(pauseTime));
@@ -786,7 +782,7 @@ public class OozieWorkflowEngine implements WorkflowEngine {
         Date endTime;
         if (newBundle == MISSING || !alreadyCreated) { // new entity is not scheduled yet
             LOG.info("New bundle hasn't been created yet. So will create one");
-            endTime = getNextMin(getNextMin(now()));
+            endTime = offsetTime(now(), 3);
             Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);
             scheduleForUpdate(newEntity, cluster, newStartTime);
             LOG.info("New bundle scheduled successfully " + SchemaHelper.formatDateUTC(newStartTime));
