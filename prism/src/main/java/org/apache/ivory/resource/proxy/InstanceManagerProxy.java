@@ -244,7 +244,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             if (result.getInstances() == null) continue;
 
             for (Instance instance : result.getInstances()) {
-            	instance.instance=colos[index] + "/" + instance.getInstance();
+            	instance.instance = instance.getInstance();
             	instances.add(instance);
             }
         }

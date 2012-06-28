@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.Path;
+import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.SchemaHelper;
@@ -59,7 +60,8 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
 			if (detectLate.equals("")) {
 				LOG.debug("No Late Data Detected, late rerun not scheduled for "
-						+ message.getWfId() + " at "
+						+ message.getWfId()
+						+ " at "
 						+ SchemaHelper.formatDateUTC(new Date()));
 				return;
 			}
@@ -72,13 +74,16 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 			LOG.info("Scheduled late rerun for wf-id: " + message.getWfId()
 					+ " on cluster: " + message.getClusterName());
 		} catch (Exception e) {
-
 			LOG.warn(
 					"Late Re-run failed for instance "
 							+ message.getEntityName() + ":"
 							+ message.getInstance() + " after "
 							+ message.getDelayInMilliSec() + " with message:",
 					e);
+			GenericAlert.alertLateRerunFailed(message.getEntityType(),
+					message.getEntityName(), message.getInstance(),
+					message.getWfId(), Integer.toString(message.getRunId()),
+					e.getMessage());
 		}
 
 	}
@@ -100,7 +105,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
 		String[] pathGroups = ivoryInPaths.split("#");
 		String[] inputFeeds = ivoryInputFeeds.split("#");
-		Entity entity =  EntityUtil.getEntity(message.getEntityType(),
+		Entity entity = EntityUtil.getEntity(message.getEntityType(),
 				message.getEntityName());
 		List<String> lateFeed = new ArrayList<String>();
 		Configuration conf = new Configuration();
@@ -110,7 +115,8 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 						message.getClusterName(), message.getWfId(),
 						WorkflowEngine.NAME_NODE));
 		if (EntityUtil.getLateProcess(entity) != null) {
-			for (LateInput li : EntityUtil.getLateProcess(entity).getLateInputs()) {
+			for (LateInput li : EntityUtil.getLateProcess(entity)
+					.getLateInputs()) {
 				lateFeed.add(li.getInput());
 			}
 			for (int index = 0; index < pathGroups.length; index++) {

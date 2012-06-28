@@ -86,7 +86,12 @@ public abstract class AbstractIvoryAspect {
 								.getKey()].toString());
 			}
 		}
-		return new ResourceMessage(action, dimensions, status, executionTime);
+		Integer timeTakenArg = ResourcesReflectionUtil
+				.getResourceTimeTakenName(methodName);
+		return timeTakenArg == null ? new ResourceMessage(action, dimensions,
+				status, executionTime) : new ResourceMessage(action,
+				dimensions, status, Long.valueOf(args[timeTakenArg]
+						.toString()));
 	}
 
 	abstract public void publishMessage(ResourceMessage message);

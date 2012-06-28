@@ -54,6 +54,11 @@
             <artifactId>ivory-oozie-adaptor</artifactId>
             <version>${project.version}</version>
         </dependency>
+         <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>jms</artifactId>

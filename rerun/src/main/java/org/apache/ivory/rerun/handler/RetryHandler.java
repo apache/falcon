@@ -19,6 +19,7 @@
 package org.apache.ivory.rerun.handler;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.process.PolicyType;
@@ -27,7 +28,6 @@ import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.util.GenericAlert;
 
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 		AbstractRerunHandler<RetryEvent, M> {
@@ -66,13 +66,16 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
 						+ entityName + ":" + nominalTime + " And WorkflowId: "
 						+ wfId);
 
-				GenericAlert.alertWFfailed(entity.getName(), nominalTime);
+				GenericAlert.alertRetryFailed(entityType, entityName,
+						nominalTime, wfId, runId,
+						"All retry attempt failed out of configured: "
+								+ attempts + " attempt for entity instance::");
 			}
 		} catch (Exception e) {
 			LOG.error("Error during retry of entity instance " + entityName
 					+ ":" + nominalTime, e);
-			GenericAlert.alertRetryFailed(entityName, nominalTime,
-					Integer.parseInt(runId), e.getMessage());
+			GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
+					wfId, runId, e.getMessage());
 		}
 
 	}
