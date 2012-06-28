@@ -19,11 +19,10 @@ package org.apache.ivory.rerun.handler;
 
 import java.util.Date;
 
-import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.util.GenericAlert;
 import org.apache.ivory.util.StartupProperties;
 
 public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
@@ -74,18 +73,22 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
 					handler.offerToQueue(message);
 				} catch (Exception ex) {
 					LOG.error("Unable to re-offer to queue:", ex);
-					GenericAlert.alertRetryFailed(message.getEntityName(),
-							message.getInstance(), message.getRunId(),
+					GenericAlert.alertRetryFailed(message.getEntityType(),
+							message.getEntityName(), message.getInstance(),
+							message.getWfId(),
+							Integer.toString(message.getRunId()),
 							ex.getMessage());
 				}
 			} else {
 				LOG.warn(
-						"Failure retry attempts exhausted for processInstance: "
+						"Failure retry attempts exhausted for instance: "
 								+ message.getEntityName() + ":"
 								+ message.getInstance(), e);
-				GenericAlert.alertRetryFailed(message.getEntityName(),
-						message.getInstance(), message.getRunId(),
-						e.getMessage());
+				GenericAlert.alertRetryFailed(message.getEntityType(),
+						message.getEntityName(), message.getInstance(),
+						message.getWfId(),
+						Integer.toString(message.getRunId()),
+						"Failure retry attempts exhausted");
 			}
 
 		}

@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.concurrent.DelayQueue;
 
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.event.RerunEventFactory;
-import org.apache.ivory.util.GenericAlert;
 import org.apache.log4j.Logger;
 
 public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
@@ -104,9 +104,10 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 		if (!retryFile.exists()) {
 			LOG.warn("Rerun file deleted or renamed for process-instance: "
 					+ event.getEntityName() + ":" + event.getInstance());
-			GenericAlert.alertRetryFailed(event.getEntityName(),
-					event.getInstance(), event.getRunId(),
-					"Rerun file deleted or renamed for process-instance");
+			GenericAlert.alertRetryFailed(event.getEntityType(),
+					event.getEntityName(), event.getInstance(),
+					event.getWfId(), Integer.toString(event.getRunId()),
+					"Rerun file deleted or renamed for process-instance:");
 		} else {
 			if (!retryFile.delete()) {
 				LOG.warn("Unable to remove rerun file " + event.getWfId());

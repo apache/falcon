@@ -167,11 +167,12 @@
                         <include>org/apache/ivory/resource/proxy/InstanceManagerProxy.java</include>
                         <include>org/apache/ivory/resource/AbstractInstanceManager.java</include>
                         <include>org/apache/ivory/aspect/LoggingAspect.java</include>
+                        <include>org/apache/ivory/aspect/instances/IvoryTopicSubscriber.java</include>
                     </includes>
                     <weaveDependencies>
                         <weaveDependency>
                             <groupId>org.apache.ivory</groupId>
-                            <artifactId>ivory-common</artifactId>
+                            <artifactId>ivory-rerun</artifactId>
                         </weaveDependency>
                     </weaveDependencies>
                 </configuration>
