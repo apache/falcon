@@ -72,8 +72,11 @@ public class IvoryCLI {
 	public static final String RUNNING_OPT = "running";
 	public static final String KILL_OPT = "kill";
 	public static final String RERUN_OPT = "rerun";
+	public static final String CONTINUE_OPT = "continue";
 	public static final String LOG_OPT = "logs";
 	public static final String RUNID_OPT = "runid";
+	public static final String CLUSTERS_OPT = "clusters";
+	public static final String SOURCECLUSTER_OPT = "sourceClusters";
 	public static final String CURRENT_COLO = "current.colo";
 	public static final String CLIENT_PROPERTIES = "/client.properties";
 
@@ -180,25 +183,31 @@ public class IvoryCLI {
 		String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
 		String runid = commandLine.getOptionValue(RUNID_OPT);
 		String colo = commandLine.getOptionValue(COLO_OPT);
+		String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
+		String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
 		
 		colo = getColo(colo);
 		
 		validateInstanceCommands(optionsList, entity, type, start, end,
-				filePath, colo);
-
+				filePath, colo, clusters, sourceClusters);
+		
+		
+		
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(type, entity, colo);
 		} else if (optionsList.contains(STATUS_OPT)) {
 			result = client.getStatusOfInstances(type, entity, start, end,
 					runid, colo);
 		} else if (optionsList.contains(KILL_OPT)) {
-			result = client.killInstances(type, entity, start, end, colo);
+			result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if (optionsList.contains(SUSPEND_OPT)) {
-			result = client.suspendInstances(type, entity, start, end, colo);
+			result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if (optionsList.contains(RESUME_OPT)) {
-			result = client.resumeInstances(type, entity, start, end, colo);
+			result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if (optionsList.contains(RERUN_OPT)) {
 			result = client.rerunInstances(type, entity, start, end, filePath, colo);
+		}  else if (optionsList.contains(CONTINUE_OPT)) {
+			result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if(optionsList.contains(LOG_OPT)){
 			result = client.getLogsOfInstances(type, entity, start, end, colo, runid);
 		} else {
@@ -210,7 +219,8 @@ public class IvoryCLI {
 
 	private void validateInstanceCommands(Set<String> optionsList,
 			String entity, String type, String start, String end,
-			String filePath, String colo) throws IvoryCLIException {
+			String filePath, String colo, String clusters, String sourceClusters) 
+					throws IvoryCLIException {
 
 		if (entity == null || entity.equals("")) {
 			throw new IvoryCLIException("Missing argument: name");
@@ -227,6 +237,24 @@ public class IvoryCLI {
 		if (!optionsList.contains(RUNNING_OPT)) {
 			if (start == null || start.equals("")) {
 				throw new IvoryCLIException("Missing argument: start");
+			}
+		}
+		
+		if (optionsList.contains(CLUSTERS_OPT)) {
+			if (optionsList.contains(RUNNING_OPT)
+					|| optionsList.contains(LOG_OPT)
+					|| optionsList.contains(STATUS_OPT)
+					|| optionsList.contains(RERUN_OPT)) {
+				throw new IvoryCLIException("Invalid argument: clusters");
+			}
+		}
+		
+		if (optionsList.contains(SOURCECLUSTER_OPT)) {
+			if ( optionsList.contains(RUNNING_OPT)
+					|| optionsList.contains(LOG_OPT)
+					|| optionsList.contains(STATUS_OPT)
+					|| optionsList.contains(RERUN_OPT) || !type.equals("feed") ) {
+				throw new IvoryCLIException("Invalid argument: sourceClusters");
 			}
 		}
 
@@ -454,6 +482,11 @@ public class IvoryCLI {
 				false,
 				"Reruns process instances for a given process in the range start time and optional end time and overrides properties present in job.properties file");
 		
+		Option continues = new Option(
+				CONTINUE_OPT,
+				false,
+				"resume process instance execution for a given process in the range start time and optional end time and overrides properties present in job.properties file");
+		
 		Option logs = new Option(
 				LOG_OPT,
 				false,
@@ -467,6 +500,7 @@ public class IvoryCLI {
 		group.addOption(resume);
 		group.addOption(rerun);
 		group.addOption(logs);
+		group.addOption(continues);
 
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option start = new Option(START_OPT, true,
@@ -477,6 +511,10 @@ public class IvoryCLI {
 				"End time is optional for commands, status, kill, suspend, resume and re-run; if not specified then current time is considered as end time");
 		Option runid = new Option(RUNID_OPT, true,
 				"Instance runid  is optional and user can specify the runid, defaults to 0");
+		Option clusters = new Option(CLUSTERS_OPT, true,
+				"clusters is optional for commands kill, suspend and resume, should not be specified for other commands");
+		Option sourceClusters = new Option(SOURCECLUSTER_OPT, true,
+				" source cluster is optional for commands kill, suspend and resume, should not be specified for other commands (required for only feed)");
 		Option filePath = new Option(
 				FILE_PATH_OPT,
 				true,
@@ -494,6 +532,8 @@ public class IvoryCLI {
 		instanceOptions.addOption(entityType);
 		instanceOptions.addOption(entityName);
 		instanceOptions.addOption(runid);
+		instanceOptions.addOption(clusters);
+		instanceOptions.addOption(sourceClusters);
 
 		return instanceOptions;
 

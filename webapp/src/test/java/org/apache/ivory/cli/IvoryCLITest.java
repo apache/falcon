@@ -27,6 +27,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.apache.ivory.IvoryException;
 import org.apache.ivory.resource.AbstractTestBase;
 import org.testng.annotations.Test;
 
@@ -40,7 +41,7 @@ public class IvoryCLITest extends AbstractTestBase{
 
 	@Test(enabled = enableTest)
 	public void testSubmitEntityValidCommands() throws Exception {
-
+		
 		IvoryCLI.OUT_STREAM = stream;
 
 		String filePath;
@@ -78,7 +79,15 @@ public class IvoryCLITest extends AbstractTestBase{
 				"default/Submit successful (process) "
 						+ overlay.get("processName"));
 	}
-
+	
+	@Test(enabled = enableTest)
+	public void testListWithEmptyConfigStore() throws Exception
+	{
+		Assert.assertEquals(
+				0,
+				executeWithURL("entity -list -type process "));
+	}
+	
 	@Test(enabled = enableTest)
 	public void testSubmitAndScheduleEntityValidCommands() throws Exception {
 
@@ -394,7 +403,30 @@ public class IvoryCLITest extends AbstractTestBase{
 						+ " -start " + START_INSTANCE + " -file "
 						+ createTempJobPropertiesFile()));
 	}
+	
+	@Test(enabled = enableTest)
+	public void testContinue() throws Exception{
+		Map<String, String> overlay = getUniqueOverlay();
+		submitTestFiles(overlay);
 
+		Assert.assertEquals(0,
+				executeWithURL("entity -schedule -type process -name "
+						+ overlay.get("processName")));
+
+		waitForProcessWFtoStart();
+		Assert.assertEquals(
+				0,
+				executeWithURL("instance -kill -type process -name "
+						+ overlay.get("processName")
+						+ " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+		
+		Assert.assertEquals(
+				0,
+				executeWithURL("instance -continue -type process -name "
+						+ overlay.get("processName")
+						+ " -start " + START_INSTANCE ));
+	}
+	
 	@Test(enabled = enableTest)
 	public void testInvalidCLIInstanceCommands() throws Exception {
 		// no command

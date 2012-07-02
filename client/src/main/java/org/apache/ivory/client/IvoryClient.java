@@ -18,10 +18,12 @@
 
 package org.apache.ivory.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 import javax.ws.rs.HttpMethod;
@@ -46,13 +48,12 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 public class IvoryClient {
 
 	private String baseUrl;
-	private String version;
 	protected static WebResource service;
 	public static final String WS_HEADER_PREFIX = "header:";
 	private static final String REMOTE_USER = "Remote-User";
-
 	private static final String USER = System.getProperty("user.name");
-
+	private static final String IVORY_INSTANCE_ACTION_CLUSTERS = "ivory.instance.action.clusters";
+	private static final String IVORY_INSTANCE_SOURCE_CLUSTERS = "ivory.instance.source.clusters";
 	/**
 	 * Create a Ivory client instance.
 	 * 
@@ -291,24 +292,27 @@ public class IvoryClient {
 	}
 
 	public String killInstances(String type, String entity, String start,
-			String end, String colo) throws IvoryCLIException {
+			String end, String colo, String clusters, String sourceClusters)
+			throws IvoryCLIException, UnsupportedEncodingException {
 
 		return sendInstanceRequest(Instances.KILL, type, entity, start, end,
-				null, null, colo);
+				getServletInputStream(clusters, sourceClusters, null), null, colo);
 	}
 
 	public String suspendInstances(String type, String entity, String start,
-			String end, String colo) throws IvoryCLIException {
+			String end, String colo, String clusters, String sourceClusters)
+			throws IvoryCLIException, UnsupportedEncodingException {
 
 		return sendInstanceRequest(Instances.SUSPEND, type, entity, start, end,
-				null, null, colo);
+				getServletInputStream(clusters, sourceClusters, null), null, colo);
 	}
 
 	public String resumeInstances(String type, String entity, String start,
-			String end, String colo) throws IvoryCLIException {
+			String end, String colo, String clusters, String sourceClusters)
+			throws IvoryCLIException, UnsupportedEncodingException {
 
 		return sendInstanceRequest(Instances.RESUME, type, entity, start, end,
-				null, null, colo);
+				getServletInputStream(clusters, sourceClusters, null), null, colo);
 	}
 
 	public String rerunInstances(String type, String entity, String start,
@@ -316,6 +320,14 @@ public class IvoryClient {
 
 		return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
 				getServletInputStream(filePath), null, colo);
+	}
+	
+	public String rerunInstances(String type, String entity, String start,
+			String end, String colo , String clusters, String sourceClusters) throws IvoryCLIException, UnsupportedEncodingException {
+		String text = "oozie.wf.rerun.failnodes=true\n";
+		InputStream is = new ByteArrayInputStream(text.getBytes("UTF-8"));
+		return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
+				getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo);
 	}
 	
 	public String getLogsOfInstances(String type, String entity, String start,
@@ -356,7 +368,25 @@ public class IvoryClient {
 		}
 		return stream;
 	}
-
+	
+	private InputStream getServletInputStream(String clusters,
+			String sourceClusters, String rerunProperty) throws IvoryCLIException,
+			UnsupportedEncodingException {
+		
+		InputStream stream = null;
+		StringBuffer sb = new StringBuffer();
+		if (clusters != null) {
+			sb.append(IVORY_INSTANCE_ACTION_CLUSTERS + "=" + clusters + "\n");
+		}
+		if (sourceClusters != null) {
+			sb.append(IVORY_INSTANCE_SOURCE_CLUSTERS + "=" + sourceClusters + "\n");
+		} 
+		if(rerunProperty != null) {
+			sb.append(rerunProperty);
+		}
+		stream = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
+		return (sb.length() == 0) ? null : stream;
+	}
 	// private ServletInputStream getServletInputStream(final InputStream
 	// stream)
 	// throws IOException {
@@ -518,7 +548,7 @@ public class IvoryClient {
 			throws IvoryCLIException {
 
 		EntityList result = clientResponse.getEntity(EntityList.class);
-		if (result == null) {
+		if (result == null || result.getElements() == null) {
 			return "";
 		}
 		return result.toString();
