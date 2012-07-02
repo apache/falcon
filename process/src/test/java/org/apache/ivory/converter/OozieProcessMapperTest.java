@@ -154,15 +154,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
     		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
-    		Assert.assertEquals("fork-for-succeeded", ((FORK) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
-    		Assert.assertEquals("join-for-succeeded", ((JOIN) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
-    		Assert.assertEquals("fork-for-failed", ((FORK) parentWorkflow.getDecisionOrForkOrJoin().get(4)).getName());
-    		Assert.assertEquals("join-for-failed", ((JOIN) parentWorkflow.getDecisionOrForkOrJoin().get(5)).getName());
-    		Assert.assertEquals("ivory-succeeded-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(6)).getName());
-    		Assert.assertEquals("ivory-succeeded-log-mover", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(7)).getName());
-    		Assert.assertEquals("ivory-failed-log-mover", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(8)).getName());
-    		Assert.assertEquals("ivory-failed-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(9)).getName());
-    		Assert.assertEquals("user-jms-messaging", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(10)).getName());
+    		Assert.assertEquals("succeeded-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
+    		Assert.assertEquals("failed-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {

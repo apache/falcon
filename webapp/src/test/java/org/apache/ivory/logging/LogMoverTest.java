@@ -138,10 +138,10 @@ public class LogMoverTest {
 	}
 
 	private void testLogMoverWithNextRunId(String jobId) throws Exception {
-		LogMover.main(new String[] { "-workflowengineurl",
+		LogMover.main(new String[] { "-workflowEngineUrl",
 				ClusterHelper.getOozieUrl(testCluster.getCluster()),
-				"-subflowid", jobId + "@user-workflow", "-runid", "1",
-				"-logdir", getLogPath().toString() + "/job-2010-01-01-01-00",
+				"-subflowId", jobId + "@user-workflow", "-runId", "1",
+				"-logDir", getLogPath().toString() + "/job-2010-01-01-01-00",
 				"-status", "SUCCEEDED", "-entityType", "process" });
 
 		Path oozieLogPath = new Path(getLogPath(),

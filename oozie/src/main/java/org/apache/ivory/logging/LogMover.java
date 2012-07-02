@@ -41,13 +41,11 @@ import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.resource.InstancesResult.WorkflowStatus;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
-import org.apache.oozie.client.WorkflowJob.Status;
 import org.apache.tools.ant.filters.StringInputStream;
 
 public class LogMover extends Configured implements Tool {
@@ -148,17 +146,17 @@ public class LogMover extends Configured implements Tool {
 	private void setupArgs(String[] arguments, ARGS args) throws ParseException {
 		Options options = new Options();
 		Option opt;
-		opt = new Option("workflowengineurl", true,
+		opt = new Option("workflowEngineUrl", true,
 				"url of workflow engine, ex:oozie");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("subflowid", true, "external id of userworkflow");
+		opt = new Option("subflowId", true, "external id of userworkflow");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("runid", true, "current workflow's runid");
+		opt = new Option("runId", true, "current workflow's runid");
 		opt.setRequired(true);
 		options.addOption(opt);
-		opt = new Option("logdir", true, "log dir where job logs are stored");
+		opt = new Option("logDir", true, "log dir where job logs are stored");
 		opt.setRequired(true);
 		options.addOption(opt);
 		opt = new Option("status", true, "user workflow status");
@@ -170,10 +168,10 @@ public class LogMover extends Configured implements Tool {
 
 		CommandLine cmd = new GnuParser().parse(options, arguments);
 
-		args.oozieUrl = cmd.getOptionValue("workflowengineurl");
-		args.subflowId = cmd.getOptionValue("subflowid");
-		args.runId = cmd.getOptionValue("runid");
-		args.logDir = cmd.getOptionValue("logdir");
+		args.oozieUrl = cmd.getOptionValue("workflowEngineUrl");
+		args.subflowId = cmd.getOptionValue("subflowId");
+		args.runId = cmd.getOptionValue("runId");
+		args.logDir = cmd.getOptionValue("logDir");
 		args.status = cmd.getOptionValue("status");
 		args.entityType = cmd.getOptionValue("entityType");
 
