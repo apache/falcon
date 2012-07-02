@@ -18,9 +18,11 @@
 
 package org.apache.ivory.client;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -316,16 +318,26 @@ public class IvoryClient {
 	}
 
 	public String rerunInstances(String type, String entity, String start,
-			String end, String filePath, String colo) throws IvoryCLIException {
-
+			String end, String filePath, String colo, String clusters,
+			String sourceClusters) throws IvoryCLIException, IOException {
+		StringBuffer sb = new StringBuffer();
+		if(filePath != null)	
+		{
+			BufferedReader in = new BufferedReader(new FileReader(filePath));
+		    String str;
+		    while ((str = in.readLine()) != null) {
+		    	sb.append(str).append("\n");
+		    }
+		    in.close();
+		}
+		String temp = (sb.length() == 0) ? null : sb.toString();
 		return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
-				getServletInputStream(filePath), null, colo);
+				getServletInputStream(clusters, sourceClusters, temp), null, colo);
 	}
-	
+
 	public String rerunInstances(String type, String entity, String start,
-			String end, String colo , String clusters, String sourceClusters) throws IvoryCLIException, UnsupportedEncodingException {
-		String text = "oozie.wf.rerun.failnodes=true\n";
-		InputStream is = new ByteArrayInputStream(text.getBytes("UTF-8"));
+			String end, String colo, String clusters, String sourceClusters)
+			throws IvoryCLIException, UnsupportedEncodingException {
 		return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
 				getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo);
 	}
@@ -370,7 +382,7 @@ public class IvoryClient {
 	}
 	
 	private InputStream getServletInputStream(String clusters,
-			String sourceClusters, String rerunProperty) throws IvoryCLIException,
+			String sourceClusters, String properties) throws IvoryCLIException,
 			UnsupportedEncodingException {
 		
 		InputStream stream = null;
@@ -381,8 +393,8 @@ public class IvoryClient {
 		if (sourceClusters != null) {
 			sb.append(IVORY_INSTANCE_SOURCE_CLUSTERS + "=" + sourceClusters + "\n");
 		} 
-		if(rerunProperty != null) {
-			sb.append(rerunProperty);
+		if(properties != null) {
+			sb.append(properties);
 		}
 		stream = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
 		return (sb.length() == 0) ? null : stream;
