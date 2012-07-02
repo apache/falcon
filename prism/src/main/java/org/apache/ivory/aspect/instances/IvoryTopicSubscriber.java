@@ -18,8 +18,6 @@
 package org.apache.ivory.aspect.instances;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
-import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -35,7 +33,6 @@ import javax.jms.TopicSubscriber;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.aspect.GenericAlert;
-import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
@@ -44,7 +41,6 @@ import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.resource.InstancesResult;
-import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.WorkflowEngine;
 import org.apache.log4j.Logger;
