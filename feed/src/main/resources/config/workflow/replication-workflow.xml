@@ -68,7 +68,7 @@
 			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>			
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
-			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
+			<arg>-subflowId</arg> <arg>${wf:id()}</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
 		</java>
 		<ok to="end" />
@@ -97,7 +97,7 @@
 			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>			
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
-			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
+			<arg>-subflowId</arg> <arg>${wf:id()}</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
 		</java>
 		<ok to="fail" />
