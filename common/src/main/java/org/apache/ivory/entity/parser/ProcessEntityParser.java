@@ -24,13 +24,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
-import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -54,6 +54,9 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
     @Override
     public void validate(Process process) throws IvoryException {
+        if(process.getTimezone() == null)
+            process.setTimezone(TimeZone.getTimeZone("UTC"));
+
         // check if dependent entities exists
         for (org.apache.ivory.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
             String clusterName = cluster.getName();

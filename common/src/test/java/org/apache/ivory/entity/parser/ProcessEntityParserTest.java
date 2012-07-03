@@ -77,7 +77,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     public void testParse() throws IvoryException, JAXBException {
 
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
-
+        
         Assert.assertNotNull(process);
         Assert.assertEquals(process.getName(), "sample");
 
