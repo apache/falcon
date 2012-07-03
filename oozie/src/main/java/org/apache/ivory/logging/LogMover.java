@@ -85,7 +85,7 @@ public class LogMover extends Configured implements Tool {
 
 			if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
 				// if replication wf
-				copyTTlogs(args, fs, path, jobInfo.getActions().get(0));
+				copyTTlogs(args, fs, path, jobInfo.getActions().get(1));
 				copyOozieLog(client, fs, path, jobInfo.getId());
 			} else {
 				// if process wf
