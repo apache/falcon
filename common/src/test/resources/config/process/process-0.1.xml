@@ -13,7 +13,6 @@
     <parallel>1</parallel>
     <order>LIFO</order>
     <frequency>hours(1)</frequency>
-    <timezone>UTC</timezone>
 
     <!-- what -->
     <inputs>

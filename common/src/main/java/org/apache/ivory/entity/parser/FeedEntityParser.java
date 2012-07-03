@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.FeedHelper;
@@ -54,6 +55,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     @Override
     public void validate(Feed feed) throws IvoryException {
+        if(feed.getTimezone() == null)
+            feed.setTimezone(TimeZone.getTimeZone("UTC"));
+        
         if (feed.getClusters() == null)
             throw new ValidationException("Feed should have atleast one cluster");
 
