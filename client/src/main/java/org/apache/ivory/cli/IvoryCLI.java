@@ -191,8 +191,6 @@ public class IvoryCLI {
 		validateInstanceCommands(optionsList, entity, type, start, end,
 				filePath, colo, clusters, sourceClusters);
 		
-		
-		
 		if (optionsList.contains(RUNNING_OPT)) {
 			result = client.getRunningInstances(type, entity, colo);
 		} else if (optionsList.contains(STATUS_OPT)) {
@@ -205,7 +203,7 @@ public class IvoryCLI {
 		} else if (optionsList.contains(RESUME_OPT)) {
 			result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if (optionsList.contains(RERUN_OPT)) {
-			result = client.rerunInstances(type, entity, start, end, filePath, colo);
+			result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters);
 		}  else if (optionsList.contains(CONTINUE_OPT)) {
 			result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters);
 		} else if(optionsList.contains(LOG_OPT)){
@@ -243,8 +241,7 @@ public class IvoryCLI {
 		if (optionsList.contains(CLUSTERS_OPT)) {
 			if (optionsList.contains(RUNNING_OPT)
 					|| optionsList.contains(LOG_OPT)
-					|| optionsList.contains(STATUS_OPT)
-					|| optionsList.contains(RERUN_OPT)) {
+					|| optionsList.contains(STATUS_OPT)) {
 				throw new IvoryCLIException("Invalid argument: clusters");
 			}
 		}
@@ -252,8 +249,7 @@ public class IvoryCLI {
 		if (optionsList.contains(SOURCECLUSTER_OPT)) {
 			if ( optionsList.contains(RUNNING_OPT)
 					|| optionsList.contains(LOG_OPT)
-					|| optionsList.contains(STATUS_OPT)
-					|| optionsList.contains(RERUN_OPT) || !type.equals("feed") ) {
+					|| optionsList.contains(STATUS_OPT) || !type.equals("feed") ) {
 				throw new IvoryCLIException("Invalid argument: sourceClusters");
 			}
 		}
