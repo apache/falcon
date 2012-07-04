@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.EntityUtil;
@@ -103,21 +104,25 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		String nominalTime = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "nominalTime");
 
-		Path lateLogPath = getLateLogPath(logDir, nominalTime);
-
-		Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
-
-		String[] pathGroups = ivoryInPaths.split("#");
-		String[] inputFeeds = ivoryInputFeeds.split("#");
-		Entity entity = EntityUtil.getEntity(message.getEntityType(),
-				message.getEntityName());
-		List<String> lateFeed = new ArrayList<String>();
 		Configuration conf = new Configuration();
 		conf.set(
 				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
 				handler.getWfEngine().getWorkflowProperty(
 						message.getClusterName(), message.getWfId(),
 						WorkflowEngine.NAME_NODE));
+		Path lateLogPath = getLateLogPath(logDir, nominalTime);
+		FileSystem fs = FileSystem.get(conf);
+		if(!fs.exists(lateLogPath)){
+			LOG.warn("Late log file:"+lateLogPath+" not found:");
+			return "";
+		}
+		Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
+		String[] pathGroups = ivoryInPaths.split("#");
+		String[] inputFeeds = ivoryInputFeeds.split("#");
+		Entity entity = EntityUtil.getEntity(message.getEntityType(),
+				message.getEntityName());
+		
+		List<String> lateFeed = new ArrayList<String>();
 		if (EntityUtil.getLateProcess(entity) != null) {
 			for (LateInput li : EntityUtil.getLateProcess(entity)
 					.getLateInputs()) {
