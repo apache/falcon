@@ -48,7 +48,7 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 		return wfEngine;
 	}
 
-	public boolean offerToQueue(T event) {
+	public boolean offerToQueue(T event) throws IvoryException {
 		return delayQueue.offer(event);
 	}
 

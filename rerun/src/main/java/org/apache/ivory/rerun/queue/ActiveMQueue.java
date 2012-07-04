@@ -50,7 +50,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 	}
 
 	@Override
-	public boolean offer(T event) {
+	public boolean offer(T event) throws IvoryException {
 		Session session;
 		try {
 			session = getSession();
@@ -64,8 +64,8 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 			return true;
 		} catch (Exception e) {
 			LOG.error("Unable to offer event:" + event + " to activeMqueue", e);
+			throw new IvoryException("Unable to offer event:" + event + " to activeMqueue", e);
 		}
-		return false;
 	}
 
 	private Session getSession() throws Exception {
@@ -88,8 +88,8 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 			return event;
 		} catch (Exception e) {
 			LOG.error("Error getting the messge from ActiveMqueue: ", e);
+			throw new IvoryException("Error getting the messge from ActiveMqueue: ", e);
 		}
-		return null;
 	}
 
 	@Override

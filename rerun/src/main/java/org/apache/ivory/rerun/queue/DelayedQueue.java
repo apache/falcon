@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
 
 public abstract class  DelayedQueue<T extends RerunEvent> {
 	public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
-	public abstract boolean offer(T event);
+	public abstract boolean offer(T event) throws IvoryException;
 
 	public abstract T take() throws IvoryException;
 	
