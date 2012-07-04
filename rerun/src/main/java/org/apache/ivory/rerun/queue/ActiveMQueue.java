@@ -34,7 +34,6 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.event.RerunEventFactory;
-import org.mockito.asm.tree.IntInsnNode;
 
 public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
