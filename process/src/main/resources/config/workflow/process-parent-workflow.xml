@@ -73,7 +73,7 @@
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
-			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
 			<arg>-cluster</arg><arg>${cluster}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
 			<arg>-entityName</arg><arg>${entityName}</arg>
