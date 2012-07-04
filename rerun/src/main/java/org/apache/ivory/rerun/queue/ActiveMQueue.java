@@ -34,6 +34,7 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.event.RerunEventFactory;
+import org.mockito.asm.tree.IntInsnNode;
 
 public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
@@ -70,7 +71,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
 	private Session getSession() throws Exception {
 		if (connection == null) {
-			createAndStartConnection("", "", brokerUrl);
+			init();
 		}
 		Session session = connection.createSession(false,
 				Session.AUTO_ACKNOWLEDGE);
@@ -125,31 +126,30 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 		connection = (ActiveMQConnection) connectionFactory.createConnection();
 		connection.start();
 		LOG.info("Connected successfully to " + url);
-}
-	
+	}
+
 	@Override
 	public void reconnect() throws IvoryException {
 		try {
 			LOG.info("Attempting to close producer");
 			producer.close();
 			LOG.info("Producer closed successfully");
-		} catch (Exception ignore) { }
+		} catch (Exception ignore) {
+		}
 		try {
 			LOG.info("Attempting to close consumer");
 			consumer.close();
 			LOG.info("Consumer closed successfully");
-		} catch (Exception ignore) { }
+		} catch (Exception ignore) {
+		}
 		try {
 			LOG.info("Attempting to close connection");
 			connection.close();
 			LOG.info("Connection closed successfully");
-		} catch (Exception ignore) { }
-		
-		
-		try {
-			createAndStartConnection("", "", brokerUrl);
-		} catch (JMSException e) {
-			throw new IvoryException("Unable to connect to JMS " + brokerUrl, e);
+		} catch (Exception ignore) {
 		}
+
+		init();
+
 	}
 }
