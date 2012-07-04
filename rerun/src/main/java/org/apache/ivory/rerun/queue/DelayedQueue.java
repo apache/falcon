@@ -32,5 +32,7 @@ public abstract class  DelayedQueue<T extends RerunEvent> {
 	public abstract void populateQueue(List<T> events);
 	
 	public abstract void init();
+	
+	public abstract void reconnect() throws IvoryException;
 
 }

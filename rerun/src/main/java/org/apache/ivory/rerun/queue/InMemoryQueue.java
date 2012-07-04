@@ -77,6 +77,11 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
 	}
 
+	@Override
+	public void reconnect() throws IvoryException {
+		//Do Nothing
+	}
+	
 	private void beforeRetry(T event) {
 		File retryFile = getRetryFile(serializeFilePath, event);
 		try {

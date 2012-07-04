@@ -78,4 +78,12 @@ public class GenericAlert {
 			throws IvoryException {
 		return "IGNORE";
 	}
+	
+	@Monitored(event = "rerun-queue-failed")
+	public static String alertRerunConsumerFailed(
+			@Dimension(value = "message") String message,
+			@Dimension(value = "exception") Exception exception) {
+		return "IGNORE";
+
+	}
 }

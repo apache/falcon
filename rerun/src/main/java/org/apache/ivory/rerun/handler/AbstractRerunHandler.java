@@ -55,6 +55,10 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 	public T takeFromQueue() throws IvoryException {
 		return delayQueue.take();
 	}
+	
+	public void reconnect() throws IvoryException {
+		delayQueue.reconnect();
+	}
 
 	public Entity getEntity(String entityType, String entityName)
 			throws IvoryException {

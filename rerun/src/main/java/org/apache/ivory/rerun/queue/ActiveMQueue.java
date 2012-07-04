@@ -124,5 +124,32 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 				userName, password, url);
 		connection = (ActiveMQConnection) connectionFactory.createConnection();
 		connection.start();
+		LOG.info("Connected successfully to " + url);
+}
+	
+	@Override
+	public void reconnect() throws IvoryException {
+		try {
+			LOG.info("Attempting to close producer");
+			producer.close();
+			LOG.info("Producer closed successfully");
+		} catch (Exception ignore) { }
+		try {
+			LOG.info("Attempting to close consumer");
+			consumer.close();
+			LOG.info("Consumer closed successfully");
+		} catch (Exception ignore) { }
+		try {
+			LOG.info("Attempting to close connection");
+			connection.close();
+			LOG.info("Connection closed successfully");
+		} catch (Exception ignore) { }
+		
+		
+		try {
+			createAndStartConnection("", "", brokerUrl);
+		} catch (JMSException e) {
+			throw new IvoryException("Unable to connect to JMS " + brokerUrl, e);
+		}
 	}
 }

@@ -59,10 +59,14 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 			String detectLate = detectLate(message);
 
 			if (detectLate.equals("")) {
-				LOG.debug("No Late Data Detected, late rerun not scheduled for "
+				LOG.debug("No Late Data Detected, scheduling next late rerun for wf-id: "
 						+ message.getWfId()
 						+ " at "
 						+ SchemaHelper.formatDateUTC(new Date()));
+				handler.handleRerun(cluster, message.getEntityType(),
+						message.getEntityName(), message.getInstance(),
+						Integer.toString(message.getRunId()),
+						message.getWfId(), System.currentTimeMillis());
 				return;
 			}
 
