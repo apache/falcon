@@ -59,7 +59,6 @@ import org.apache.oozie.client.WorkflowJob.Status;
  * Workflow engine which uses oozies APIs
  * 
  */
-@SuppressWarnings("unchecked")
 public class OozieWorkflowEngine implements WorkflowEngine {
 
 	private static final Logger LOG = Logger
@@ -193,7 +192,11 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 					OozieClient.FILTER_NAME + "="
 							+ EntityUtil.getWorkflowName(entity) + ";", 0, 256);
 			if (jobs != null) {
-				return jobs;
+			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
+			    for(BundleJob job:jobs)
+			        if(job.getStatus() != Job.Status.KILLED)
+			            filteredJobs.add(job);
+				return filteredJobs;
 			}
 			return new ArrayList<BundleJob>();
 		} catch (OozieClientException e) {
