@@ -16,7 +16,15 @@
   ~ limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-process-parent-workflow'>
-	<start to='recordsize' />
+	<start to='should-record' />
+	<decision name='should-record'>
+        <switch>
+            <case to="recordsize"> 
+              ${shouldRecord=="true"}
+            </case>
+            <default to="user-workflow"/>
+        </switch>
+    </decision>
 	<action name='recordsize'>
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>

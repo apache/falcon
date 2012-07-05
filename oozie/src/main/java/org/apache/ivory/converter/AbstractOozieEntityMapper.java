@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
@@ -175,7 +176,18 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
-
+		try {
+			if (EntityUtil.getLateProcess(entity) == null
+					|| EntityUtil.getLateProcess(entity).getLateInputs() == null
+					|| EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
+				props.put("shouldRecord", "false");
+			} else {
+				props.put("shouldRecord", "true");
+			}
+		} catch (IvoryException e) {
+			LOG.error("Unable to get Late Process for entity:" + entity, e);
+			throw new IvoryRuntimException(e);
+		}
         props.put("entityName", entity.getName());
         props.put("entityType", entity.getEntityType().name().toLowerCase());
         props.put(ARG.cluster.getPropName(), cluster.getName());

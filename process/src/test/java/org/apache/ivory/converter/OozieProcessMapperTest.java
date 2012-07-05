@@ -55,6 +55,7 @@ import org.apache.ivory.oozie.bundle.BUNDLEAPP;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
+import org.apache.ivory.oozie.workflow.DECISION;
 import org.apache.ivory.oozie.workflow.FORK;
 import org.apache.ivory.oozie.workflow.JOIN;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
@@ -151,11 +152,11 @@ public class OozieProcessMapperTest extends AbstractTestBase{
     
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
     		Assert.assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString(), parentWorkflow.getName());
-    		//Assert.assertEquals("pre-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
-    		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
-    		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
-    		Assert.assertEquals("succeeded-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
-    		Assert.assertEquals("failed-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
+    		Assert.assertEquals("should-record", ((DECISION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
+    		Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
+    		Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
+    		Assert.assertEquals("succeeded-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
+    		Assert.assertEquals("failed-post-processing", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(4)).getName());
     }
     
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
