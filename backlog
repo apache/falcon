@@ -1,0 +1,4 @@
+Ivory 0.2.1 backlog:
+1. SLA tracking
+2. In oozie workflow engine, findBundle filters on killed bundles. This can create issues if the bundle is killed because all instances are killed. Instead, we can check for missing bundle path
+3. For CLI, client.properties shouldn't be mandatory
