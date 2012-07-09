@@ -335,11 +335,7 @@ public class IvoryCLI {
 	{
 		if (colo == null) {
 			Properties prop = getClientProperties();
-			if (prop.contains(CURRENT_COLO)) {
-				colo = prop.getProperty(CURRENT_COLO);
-			}else{
-				colo = "*";
-			}
+			colo = prop.getProperty(CURRENT_COLO, "*");
 		}
 		return colo;
 	}
