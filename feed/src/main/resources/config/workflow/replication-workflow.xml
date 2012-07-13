@@ -43,7 +43,7 @@
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
             <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
-            <arg>-Divory.include.path</arg><arg>${sourceRelativePaths}</arg>
+            <arg>-Divory.include.path=${sourceRelativePaths}</arg>
             <arg>-update</arg>
             <arg>-blocking</arg><arg>true</arg>
 			<arg>-maxMaps</arg><arg>5</arg>
