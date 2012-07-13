@@ -2,6 +2,7 @@ package org.apache.ivory.replication;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.SimpleCopyListing;
@@ -36,15 +37,16 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path, DistCpOptions options) {
+        if (path.getName().equals(FileOutputCommitter.SUCCEEDED_FILE_NAME)) return false;
         return regex == null || regex.matcher(path.toString()).find();
     }
 
-    private boolean isJavaRegexSpecialChar(char pChar) {
+    private static boolean isJavaRegexSpecialChar(char pChar) {
         return pChar == '.' || pChar == '$' || pChar == '(' || pChar == ')' ||
                 pChar == '|' || pChar == '+';
     }
 
-    private Pattern getRegEx(String filePattern) throws IOException {
+    public static Pattern getRegEx(String filePattern) throws IOException {
         int len;
         int setOpen;
         int curlyOpen;
@@ -121,7 +123,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
         return Pattern.compile("(" + fileRegex.toString() + "/)|(" + fileRegex.toString() + "$)");
     }
 
-    private void error(String s, String pattern, int pos) throws IOException {
+    private static void error(String s, String pattern, int pos) throws IOException {
         throw new IOException("Illegal file pattern: "
                 +s+ " for glob "+ pattern + " at " + pos);
     }
