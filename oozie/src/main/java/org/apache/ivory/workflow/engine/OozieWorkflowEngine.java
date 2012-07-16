@@ -490,10 +490,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 					instance.endTime = jobInfo.getEndTime();
 					instance.logFile = jobInfo.getConsoleUrl();
 					instance.sourceCluster = sourceCluster;
-					instance.details = coordinatorAction
-							.getMissingDependencies();
 				}
-				instances.add(instance);
+                instance.details = coordinatorAction
+                        .getMissingDependencies();
+                instances.add(instance);
 			}
 		}
 		if (instanceCount < 2 && overallStatus == APIResult.Status.PARTIAL) {
