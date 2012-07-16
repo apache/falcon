@@ -30,7 +30,7 @@
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
 			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
-			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}</arg>
+			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}/${srcClusterName}</arg>
 			<arg>-paths</arg><arg>${ivoryInPaths}</arg>
 			<arg>-ivoryInputFeeds</arg><arg>${ivoryInputFeeds}</arg>
 			<capture-output />

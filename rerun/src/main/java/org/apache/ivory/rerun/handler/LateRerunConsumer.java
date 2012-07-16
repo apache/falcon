@@ -103,14 +103,16 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 				message.getClusterName(), message.getWfId(), "ivoryInPaths");
 		String nominalTime = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "nominalTime");
-
+		String srcClusterName = handler.getWfEngine().getWorkflowProperty(
+				message.getClusterName(), message.getWfId(), "srcClusterName");
+		
 		Configuration conf = new Configuration();
 		conf.set(
 				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
 				handler.getWfEngine().getWorkflowProperty(
 						message.getClusterName(), message.getWfId(),
 						WorkflowEngine.NAME_NODE));
-		Path lateLogPath = getLateLogPath(logDir, nominalTime);
+		Path lateLogPath = getLateLogPath(logDir, nominalTime, srcClusterName);
 		FileSystem fs = FileSystem.get(conf);
 		if(!fs.exists(lateLogPath)){
 			LOG.warn("Late log file:"+lateLogPath+" not found:");
@@ -148,8 +150,12 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		return detectLate;
 	}
 
-	private Path getLateLogPath(String logDir, String nominalTime) {
-		return new Path(logDir + "/latedata/" + nominalTime);
+	private Path getLateLogPath(String logDir, String nominalTime,
+			String srcClusterName) {
+		//SrcClusterName valid only in case of feed
+		return new Path(logDir + "/latedata/" + nominalTime + "/"
+				+ srcClusterName == null
+				? "" : srcClusterName);
 
 	}
 }
