@@ -244,7 +244,9 @@ public class EntityUtil {
 		if (count > 2) {
 			startCal.add(frequency.getTimeUnit().getCalendarUnit(), (count / frequency.getFrequency()) * frequency.getFrequency());
 			count = (count / frequency.getFrequency());
-		}
+		} else {
+            count = 0;
+        }
 		while (startCal.getTime().before(instanceTime)) {
 			startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
 			count++;
