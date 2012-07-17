@@ -154,8 +154,8 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 			String srcClusterName) {
 		//SrcClusterName valid only in case of feed
 		return new Path(logDir + "/latedata/" + nominalTime + "/"
-				+ srcClusterName == null
-				? "" : srcClusterName);
+				+ (srcClusterName == null
+				? "" : srcClusterName));
 
 	}
 }
