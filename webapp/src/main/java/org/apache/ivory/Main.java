@@ -26,7 +26,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         EmbeddedServer server = new EmbeddedServer(15000,
-                "target/ivory-webapp-0.2-SNAPSHOT");
+                "webapp/target/ivory-webapp-0.2-SNAPSHOT");
         server.start();
         
         BrokerService broker = new BrokerService();

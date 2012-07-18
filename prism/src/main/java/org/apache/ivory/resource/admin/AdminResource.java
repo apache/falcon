@@ -3,11 +3,20 @@ package org.apache.ivory.resource.admin;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.util.BuildProperties;
 import org.apache.ivory.util.DeploymentProperties;
+import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.util.StartupProperties;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 @Path("admin")
 public class AdminResource {
@@ -45,5 +54,49 @@ public class AdminResource {
                     "\",Mode:\"" + DeploymentProperties.get().getProperty("deploy.mode") + "\"}";
         }
         return version;
+    }
+
+    @GET
+    @Path("config/{type}")
+    @Produces(MediaType.TEXT_XML)
+    public PropertyList getVersion(@PathParam("type") String type) {
+        if ("build".equals(type)) {
+            return getProperties(BuildProperties.get());
+        } else if ("deploy".equals(type)) {
+            return getProperties(DeploymentProperties.get());
+        } else if ("startup".equals(type)) {
+            return getProperties(StartupProperties.get());
+        } else if ("runtime".equals(type)) {
+            return getProperties(RuntimeProperties.get());
+        } else {
+            return null;
+        }
+    }
+
+    private PropertyList getProperties(Properties properties) {
+        List<Property> props = new ArrayList<Property>();
+
+        for (Object key : properties.keySet()) {
+            Property property = new Property();
+            property.key = key.toString();
+            property.value = properties.getProperty(key.toString());
+            props.add(property);
+        }
+        PropertyList propertyList = new PropertyList();
+        propertyList.properties = props;
+        return propertyList;
+    }
+
+    @XmlRootElement(name = "property")
+    @XmlAccessorType(XmlAccessType.FIELD)
+    private static class Property {
+        public String key;
+        public String value;
+    }
+
+    @XmlRootElement(name = "properties")
+    @XmlAccessorType(XmlAccessType.FIELD)
+    private static class PropertyList {
+        public List<Property> properties;
     }
 }
