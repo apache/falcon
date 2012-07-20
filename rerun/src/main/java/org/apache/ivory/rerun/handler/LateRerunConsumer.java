@@ -35,7 +35,7 @@ import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.latedata.LateDataHandler;
 import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 
 public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEvent>>>
 		extends AbstractRerunConsumer<LaterunEvent, T> {
@@ -111,7 +111,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
 				handler.getWfEngine().getWorkflowProperty(
 						message.getClusterName(), message.getWfId(),
-						WorkflowEngine.NAME_NODE));
+						AbstractWorkflowEngine.NAME_NODE));
 		Path lateLogPath = getLateLogPath(logDir, nominalTime, srcClusterName);
 		FileSystem fs = FileSystem.get(conf);
 		if(!fs.exists(lateLogPath)){
@@ -146,8 +146,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 					+ ")");
 		}
 
-		String detectLate = late.detectChanges(lateLogPath, feedSizes, conf);
-		return detectLate;
+        return late.detectChanges(lateLogPath, feedSizes, conf);
 	}
 
 	private Path getLateLogPath(String logDir, String nominalTime,

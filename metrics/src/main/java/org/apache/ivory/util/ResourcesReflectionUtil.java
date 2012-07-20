@@ -46,7 +46,7 @@ public class ResourcesReflectionUtil {
 		buildAnnotationsMapForClass("org.apache.ivory.resource.proxy.SchedulableEntityManagerProxy");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.proxy.InstanceManagerProxy");
 		buildAnnotationsMapForClass("org.apache.ivory.resource.AbstractInstanceManager");
-		buildAnnotationsMapForClass("org.apache.ivory.aspect.instances.IvoryTopicSubscriber");
+		buildAnnotationsMapForClass("org.apache.ivory.service.IvoryTopicSubscriber");
 		buildAnnotationsMapForClass("org.apache.ivory.aspect.GenericAlert");
 	}
 
@@ -79,8 +79,7 @@ public class ResourcesReflectionUtil {
 	}
 
 	private static void buildAnnotationsMapForClass(String className) {
-        @SuppressWarnings("rawtypes")
-		Class clazz = null;
+		Class clazz;
         try {
             clazz = ResourcesReflectionUtil.class.
                     getClassLoader().loadClass(className);
@@ -90,26 +89,26 @@ public class ResourcesReflectionUtil {
         Method[] declMethods = clazz.getMethods();
 
 		// scan every method
-		for (int i = 0; i < declMethods.length; i++) {
-			Annotation[] methodAnnots = declMethods[i].getDeclaredAnnotations();
-			// scan every annotation on method
-			for (int j = 0; j < methodAnnots.length; j++) {
-				if (methodAnnots[j].annotationType().getSimpleName()
-						.equals(Monitored.class.getSimpleName())) {
-					MethodAnnotation annotation = new MethodAnnotation();
-					annotation.monitoredName = getAnnotationValue(
-							methodAnnots[j], "event");
-					Annotation[][] paramAnnots = declMethods[i]
-							.getParameterAnnotations();
-					// scan every param
-					annotation.params = getDeclaredParamAnnots(paramAnnots, annotation);
-					methods.put(
-							clazz.getSimpleName() + "."
-									+ declMethods[i].getName(), annotation);
-				}
+        for (Method declMethod : declMethods) {
+            Annotation[] methodAnnots = declMethod.getDeclaredAnnotations();
+            // scan every annotation on method
+            for (Annotation methodAnnot : methodAnnots) {
+                if (methodAnnot.annotationType().getSimpleName()
+                        .equals(Monitored.class.getSimpleName())) {
+                    MethodAnnotation annotation = new MethodAnnotation();
+                    annotation.monitoredName = getAnnotationValue(
+                            methodAnnot, "event");
+                    Annotation[][] paramAnnots = declMethod
+                            .getParameterAnnotations();
+                    // scan every param
+                    annotation.params = getDeclaredParamAnnots(paramAnnots, annotation);
+                    methods.put(
+                            clazz.getSimpleName() + "."
+                                    + declMethod.getName(), annotation);
+                }
 
-			}
-		}
+            }
+        }
 	}
 
 	private static Map<Integer, String> getDeclaredParamAnnots(
@@ -119,12 +118,11 @@ public class ResourcesReflectionUtil {
 			for (int j = 0; j < paramAnnots[i].length; j++) {
 				if (paramAnnots[i][j].annotationType().getSimpleName()
 						.equals(Dimension.class.getSimpleName())) {
-					params.put(Integer.valueOf(i),
-							getAnnotationValue(paramAnnots[i][j], "value"));
+					params.put(i, getAnnotationValue(paramAnnots[i][j], "value"));
 				}
 				if (paramAnnots[i][j].annotationType().getSimpleName()
 						.equals(TimeTaken.class.getSimpleName())) {
-					annotation.timeTakenArgIndex =Integer.valueOf(i);
+					annotation.timeTakenArgIndex = i;
 				}
 			}
 		}

@@ -37,7 +37,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.logging.LogProvider;
 import org.apache.ivory.resource.InstancesResult.Instance;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
@@ -61,7 +61,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkType(type);
         try {
             validateNotEmpty("entityName", entity);
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             return wfEngine.getRunningInstances(entityObject);
         } catch (Throwable e) {
@@ -82,7 +82,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 			Date end = getEndDate(start, endStr);
 			Entity entityObject = EntityUtil.getEntity(type, entity);
 
-			WorkflowEngine wfEngine = getWorkflowEngine();
+			AbstractWorkflowEngine wfEngine = getWorkflowEngine();
 			return wfEngine.getStatus(
 					entityObject, start, end);
 		} catch (Throwable e) {
@@ -126,7 +126,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.killInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
@@ -148,7 +148,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.suspendInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
@@ -170,7 +170,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             
             Properties props = getProperties(request);
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.resumeInstances(entityObject, start, end, props);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
@@ -192,7 +192,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
 
             Properties props = getProperties(request);
-            WorkflowEngine wfEngine = getWorkflowEngine();
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return wfEngine.reRunInstances(entityObject, start, end, props);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);

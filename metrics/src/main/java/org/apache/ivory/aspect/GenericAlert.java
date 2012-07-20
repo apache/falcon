@@ -60,6 +60,9 @@ public class GenericAlert {
 			@Dimension(value = "wf-id") String workflowId,
 			@Dimension(value = "run-id") String runId,
 			@Dimension(value = "operation") String operation,
+            @Dimension(value = "start-time") String startTime,
+            @Dimension(value = "error-message") String errorMessage,
+            @Dimension(value = "message") String message,
 			@TimeTaken long timeTaken)
 			throws IvoryException {
 		return "IGNORE";
@@ -74,6 +77,7 @@ public class GenericAlert {
 			@Dimension(value = "wf-id") String workflowId,
 			@Dimension(value = "run-id") String runId,
 			@Dimension(value = "operation") String operation,
+            @Dimension(value = "start-time") String startTime,
 			@TimeTaken long timeTaken)
 			throws IvoryException {
 		return "IGNORE";
@@ -85,5 +89,14 @@ public class GenericAlert {
 			@Dimension(value = "exception") Exception exception) {
 		return "IGNORE";
 
+	}
+
+	@Monitored(event = "sla-miss")
+	public static String alertOnLikelySLAMiss(
+            @Dimension(value = "cluster") String cluster,
+            @Dimension(value = "entity-type") String entityType,
+            @Dimension(value = "entity-name") String entityName,
+            @Dimension(value = "nominal-time") String nominalTime) {
+		return "IGNORE";
 	}
 }

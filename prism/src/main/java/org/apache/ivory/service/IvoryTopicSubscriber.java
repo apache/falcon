@@ -15,35 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.aspect.instances;
-
-import java.lang.reflect.InvocationTargetException;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
+package org.apache.ivory.service;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.aspect.GenericAlert;
+import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
-import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.event.RerunEvent.RerunType;
-import org.apache.ivory.rerun.event.RetryEvent;
 import org.apache.ivory.rerun.handler.AbstractRerunHandler;
 import org.apache.ivory.rerun.handler.RerunHandlerFactory;
-import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.resource.InstancesResult;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
+
+import javax.jms.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 
 public class IvoryTopicSubscriber implements MessageListener, ExceptionListener {
 	private static final Logger LOG = Logger
@@ -57,9 +46,9 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 	private String topicName;
 	private Connection connection;
 
-	private AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> retryHandler = RerunHandlerFactory
+	private AbstractRerunHandler retryHandler = RerunHandlerFactory
 			.getRerunHandler(RerunType.RETRY);
-	private AbstractRerunHandler<LaterunEvent, DelayedQueue<LaterunEvent>> latedataHandler = RerunHandlerFactory
+	private AbstractRerunHandler latedataHandler = RerunHandlerFactory
 			.getRerunHandler(RerunType.LATE);
 
 	public IvoryTopicSubscriber(String implementation, String userName,
@@ -89,7 +78,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 		}
 	}
 
-	// @Override
+	@Override
 	public void onMessage(Message message) {
 		MapMessage mapMessage = (MapMessage) message;
 		try {
@@ -107,26 +96,30 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 			String status = mapMessage.getString(ARG.status.getArgName());
 			String operation = mapMessage.getString(ARG.operation.getArgName());
 
-			WorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+			AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
 			InstancesResult result = wfEngine
 					.getJobDetails(cluster, workflowId);
-			Long duration = (result.getInstances()[0].endTime.getTime() - result
-					.getInstances()[0].startTime.getTime()) * 1000000;
+            Date startTime = result.getInstances()[0].startTime;
+            Date endTime = result.getInstances()[0].endTime;
+            Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
 			if (status.equalsIgnoreCase("FAILED")) {
 				retryHandler.handleRerun(cluster, entityType, entityName,
 						nominalTime, runId, workflowId,
 						System.currentTimeMillis());
 				GenericAlert.instrumentFailedInstance(cluster, entityType,
 						entityName, nominalTime, workflowId, runId, operation,
-						duration);
+                        SchemaHelper.formatDateUTC(startTime),
+                        "", "", duration);
 			} else if (status.equalsIgnoreCase("SUCCEEDED")) {
 				latedataHandler.handleRerun(cluster, entityType, entityName,
 						nominalTime, runId, workflowId,
 						System.currentTimeMillis());
 				GenericAlert.instrumentSucceededInstance(cluster, entityType,
-						entityName, nominalTime, workflowId, runId, operation,
-						duration);
-			}
+                        entityName, nominalTime, workflowId, runId, operation,
+                        SchemaHelper.formatDateUTC(startTime),
+                        duration);
+                notifySLAService(cluster, entityName, entityType, nominalTime, duration);
+            }
 
 		} catch (Exception ignore) {
 			LOG.info(
@@ -136,20 +129,35 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 
 	}
 
-	private void debug(MapMessage mapMessage) throws JMSException {
-		StringBuffer buff = new StringBuffer();
-		buff.append("Received:{");
-		for (ARG arg : ARG.values()) {
-			buff.append(
-					arg.getArgName() + "="
-							+ mapMessage.getString(arg.getArgName())).append(
-					", ");
-		}
-		buff.append("}");
-		LOG.debug(buff);
-	}
+    private void notifySLAService(String cluster, String entityName,
+                                  String entityType, String nominalTime, Long duration) {
+        try {
+            getSLAMonitoringService().notifyCompletion(EntityUtil.getEntity(entityType, entityName),
+                    cluster, SchemaHelper.parseDateUTC(nominalTime), duration);
+        } catch (Throwable e) {
+            LOG.warn("Unable to notify SLA Service", e);
+        }
+    }
 
-	// @Override
+    private SLAMonitoringService getSLAMonitoringService() {
+        return (SLAMonitoringService) Services.get().getService(SLAMonitoringService.SERVICE_NAME);
+    }
+
+    private void debug(MapMessage mapMessage) throws JMSException {
+        if (LOG.isDebugEnabled()) {
+            StringBuffer buff = new StringBuffer();
+            buff.append("Received:{");
+            for (ARG arg : ARG.values()) {
+                buff.append(arg.getArgName()).append('=').
+                        append(mapMessage.getString(arg.getArgName())).
+                        append(", ");
+            }
+            buff.append("}");
+            LOG.debug(buff);
+        }
+    }
+
+	@Override
 	public void onException(JMSException ignore) {
 		LOG.info(
 				"Error in onException for subscriber of topic: "
@@ -182,8 +190,7 @@ public class IvoryTopicSubscriber implements MessageListener, ExceptionListener 
 				String.class, String.class, String.class).newInstance(userName,
 				password, url);
 
-		Connection connection = connectionFactory.createConnection();
-		return connection;
+        return connectionFactory.createConnection();
 	}
 
 	@Override

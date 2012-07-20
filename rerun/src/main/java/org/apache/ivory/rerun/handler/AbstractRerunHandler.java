@@ -24,7 +24,7 @@ import org.apache.ivory.entity.v0.process.Retry;
 import org.apache.ivory.rerun.event.RerunEvent;
 import org.apache.ivory.rerun.queue.DelayedQueue;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractRerunHandler<T extends RerunEvent, M extends DelayedQueue<T>> {
@@ -32,7 +32,7 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 	protected static final Logger LOG = Logger
 			.getLogger(LateRerunHandler.class);
 	protected M delayQueue;
-	private WorkflowEngine wfEngine;
+	private AbstractWorkflowEngine wfEngine;
 
 	public void init(M delayQueue) throws IvoryException {
 		this.wfEngine = WorkflowEngineFactory.getWorkflowEngine();
@@ -44,7 +44,7 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
 			String entityName, String nominalTime, String runId, String wfId,
 			long msgReceivedTime);
 
-	public WorkflowEngine getWfEngine() {
+	public AbstractWorkflowEngine getWfEngine() {
 		return wfEngine;
 	}
 

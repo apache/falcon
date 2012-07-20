@@ -24,7 +24,8 @@ public class GenericAlertTest {
 	
 	@Test
 	public void testWfInstanceFailedAlert() throws IvoryException{
-		GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df", "ef-id", "1", "DELETE", 1242);
+		GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df", "ef-id", "1",
+                "DELETE", "now", "error", "none", 1242);
 	}
 }
 

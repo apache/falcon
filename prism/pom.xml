@@ -161,13 +161,14 @@
                 <version>1.4</version>
                 <configuration>
                     <verbose>true</verbose>
-                    <complianceLevel>1.5</complianceLevel>
+                    <source>1.6</source>
+                    <complianceLevel>1.6</complianceLevel>
                     <includes>
                         <include>org/apache/ivory/resource/proxy/SchedulableEntityManagerProxy.java</include>
                         <include>org/apache/ivory/resource/proxy/InstanceManagerProxy.java</include>
                         <include>org/apache/ivory/resource/AbstractInstanceManager.java</include>
-                        <include>org/apache/ivory/aspect/LoggingAspect.java</include>
-                        <include>org/apache/ivory/aspect/instances/IvoryTopicSubscriber.java</include>
+                        <include>org/apache/ivory/plugin/ChainableMonitoringPlugin.java</include>
+                        <include>org/apache/ivory/service/IvoryTopicSubscriber.java</include>
                     </includes>
                     <weaveDependencies>
                         <weaveDependency>

@@ -15,23 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.aspect.instances;
+package org.apache.ivory.service;
 
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.service.IvoryService;
 import org.apache.ivory.util.StartupProperties;
-import org.apache.log4j.Logger;
 
 public class ProcessSubscriberService implements IvoryService {
 
-	private static final Logger LOG = Logger
-			.getLogger(ProcessSubscriberService.class);
-
-	private String ivoryBrokerImplClass;
-	private String ivoryBrokerUrl;
-	private String ivoryEntityTopic;
-
-	private IvoryTopicSubscriber subscriber;
+    private IvoryTopicSubscriber subscriber;
 
 	private static enum JMSprops {
 		IvoryBrokerImplClass("broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory"), 
@@ -48,19 +39,19 @@ public class ProcessSubscriberService implements IvoryService {
 
 	}
 
-	// @Override
+	@Override
 	public String getName() {
 		return ProcessSubscriberService.class.getSimpleName();
 	}
 
-	// @Override
+	@Override
 	public void init() throws IvoryException {
-		this.ivoryBrokerImplClass = getPropertyValue(JMSprops.IvoryBrokerImplClass);
-		this.ivoryBrokerUrl = getPropertyValue(JMSprops.IvoryBrokerUrl);
-		this.ivoryEntityTopic = getPropertyValue(JMSprops.IvoryEntityTopic);
+        String ivoryBrokerImplClass = getPropertyValue(JMSprops.IvoryBrokerImplClass);
+        String ivoryBrokerUrl = getPropertyValue(JMSprops.IvoryBrokerUrl);
+        String ivoryEntityTopic = getPropertyValue(JMSprops.IvoryEntityTopic);
 
 		subscriber = new IvoryTopicSubscriber(ivoryBrokerImplClass, "", "",
-				ivoryBrokerUrl, ivoryEntityTopic);
+                ivoryBrokerUrl, ivoryEntityTopic);
 		subscriber.startSubscriber();
 	}
 
@@ -69,7 +60,7 @@ public class ProcessSubscriberService implements IvoryService {
 				prop.defaultPropValue);
 	}
 
-	// @Override
+	@Override
 	public void destroy() throws IvoryException {
 		subscriber.closeSubscriber();
 	}

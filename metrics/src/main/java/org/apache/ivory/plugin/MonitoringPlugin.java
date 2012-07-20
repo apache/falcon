@@ -15,20 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.ivory.plugin;
 
-package org.apache.ivory.aspect;
+import org.apache.ivory.aspect.ResourceMessage;
 
-import org.apache.log4j.Logger;
-import org.aspectj.lang.annotation.Aspect;
+public interface MonitoringPlugin {
 
-@Aspect
-public class LoggingAspect extends AbstractIvoryAspect {
-
-	private static final Logger METRIC = Logger.getLogger("METRIC");
-
-	@Override
-	public void publishMessage(ResourceMessage message) {
-		METRIC.info(message);
-	}
+    void monitor(ResourceMessage message);
 
 }

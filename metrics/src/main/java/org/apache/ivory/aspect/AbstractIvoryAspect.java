@@ -38,7 +38,7 @@ public abstract class AbstractIvoryAspect {
 			.getLogger(AbstractIvoryAspect.class);
 
 	@Around("@annotation(org.apache.ivory.monitors.Monitored)")
-	public Object LogAround(ProceedingJoinPoint joinPoint) throws Throwable {
+	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
 		String methodName = joinPoint.getSignature().getName();
 		Object[] args = joinPoint.getArgs();

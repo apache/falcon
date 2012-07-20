@@ -36,7 +36,7 @@ public class ResourcesReflectionUtilTest {
 		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("InstanceManagerProxy.killInstance").get(1));
 		
 		Assert.assertEquals("wf-instance-failed",ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.instrumentFailedInstance"));
-		Assert.assertEquals(new Integer(7), ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.instrumentFailedInstance"));
+		Assert.assertEquals(new Integer(10), ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.instrumentFailedInstance"));
 		Assert.assertEquals(null, ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.alertLateRerunFailed"));
 	}
 }

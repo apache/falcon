@@ -20,8 +20,7 @@ package org.apache.ivory.workflow;
 
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.util.ReflectionUtils;
-import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 
 @SuppressWarnings("unchecked")
 public class WorkflowEngineFactory {
@@ -30,7 +29,7 @@ public class WorkflowEngineFactory {
 
     private WorkflowEngineFactory() { }
 
-	public static WorkflowEngine getWorkflowEngine()
+	public static AbstractWorkflowEngine getWorkflowEngine()
             throws IvoryException {
         return ReflectionUtils.getInstance(WORKFLOW_ENGINE);
 	}

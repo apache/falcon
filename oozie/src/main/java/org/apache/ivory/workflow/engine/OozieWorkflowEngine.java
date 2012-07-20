@@ -59,15 +59,13 @@ import org.apache.oozie.client.WorkflowJob.Status;
  * Workflow engine which uses oozies APIs
  * 
  */
-public class OozieWorkflowEngine implements WorkflowEngine {
+public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 	private static final Logger LOG = Logger
 			.getLogger(OozieWorkflowEngine.class);
 
 	public static final String ENGINE = "oozie";
 	private static final BundleJob MISSING = new NullBundleJob();
-
-	private static final WorkflowEngineActionListener listener = new OozieHouseKeepingService();
 
 	private static List<Status> WF_KILL_PRECOND = Arrays.asList(Status.PREP,
 			Status.RUNNING, Status.SUSPENDED, Status.FAILED);
@@ -98,6 +96,10 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
 	private static final String[] BUNDLE_UPDATEABLE_PROPS = new String[] {
 			"parallel", "clusters.clusters[\\d+].validity.end" };
+
+    public OozieWorkflowEngine() {
+        registerListener(new OozieHouseKeepingService());
+    }
 
 	@Override
 	public void schedule(Entity entity) throws IvoryException {
@@ -304,37 +306,41 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
 	private void beforeAction(Entity entity, BundleAction action, String cluster)
 			throws IvoryException {
-		switch (action) {
-		case SUSPEND:
-			listener.beforeSuspend(entity, cluster);
-			break;
+        for (WorkflowEngineActionListener listener : listeners) {
+            switch (action) {
+                case SUSPEND:
+                    listener.beforeSuspend(entity, cluster);
+                    break;
 
-		case RESUME:
-			listener.beforeResume(entity, cluster);
-			break;
+                case RESUME:
+                    listener.beforeResume(entity, cluster);
+                    break;
 
-		case KILL:
-			listener.beforeDelete(entity, cluster);
-			break;
-		}
-	}
+                case KILL:
+                    listener.beforeDelete(entity, cluster);
+                    break;
+            }
+        }
+    }
 
 	private void afterAction(Entity entity, BundleAction action, String cluster)
 			throws IvoryException {
-		switch (action) {
-		case SUSPEND:
-			listener.afterSuspend(entity, cluster);
-			break;
+        for (WorkflowEngineActionListener listener : listeners) {
+            switch (action) {
+            case SUSPEND:
+                listener.afterSuspend(entity, cluster);
+                break;
 
-		case RESUME:
-			listener.afterResume(entity, cluster);
-			break;
+            case RESUME:
+                listener.afterResume(entity, cluster);
+                break;
 
-		case KILL:
-			listener.afterDelete(entity, cluster);
-			break;
-		}
-	}
+            case KILL:
+                listener.afterDelete(entity, cluster);
+                break;
+            }
+        }
+    }
 
 	@Override
 	public InstancesResult getRunningInstances(Entity entity)
@@ -1033,10 +1039,14 @@ public class OozieWorkflowEngine implements WorkflowEngine {
 
 	private String scheduleEntity(String cluster, Properties props,
 			Entity entity) throws IvoryException {
-		listener.beforeSchedule(entity, cluster);
-		String jobId = run(cluster, props);
-		listener.afterSchedule(entity, cluster);
-		return jobId;
+        for (WorkflowEngineActionListener listener : listeners) {
+            listener.beforeSchedule(entity, cluster);
+        }
+        String jobId = run(cluster, props);
+        for (WorkflowEngineActionListener listener : listeners) {
+            listener.afterSchedule(entity, cluster);
+        }
+        return jobId;
 	}
 
 	private String run(String cluster, Properties props) throws IvoryException {

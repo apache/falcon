@@ -184,6 +184,38 @@ public class EntityUtil {
 	public static void setParallel(Feed feed, int parallel) {
 	}
 
+    public static Frequency getFrequency(Entity entity) {
+        if (entity.getEntityType() == EntityType.PROCESS) {
+            return getFrequency((Process) entity);
+        } else {
+            return getFrequency((Feed) entity);
+        }
+    }
+
+    public static Frequency getFrequency(Process process) {
+        return process.getFrequency();
+    }
+
+    public static Frequency getFrequency(Feed feed) {
+        return feed.getFrequency();
+    }
+
+    public static TimeZone getTimeZone(Entity entity) {
+        if (entity.getEntityType() == EntityType.PROCESS) {
+            return getTimeZone((Process) entity);
+        } else {
+            return getTimeZone((Feed) entity);
+        }
+    }
+
+    public static TimeZone getTimeZone(Process process) {
+        return process.getTimezone();
+    }
+
+    public static TimeZone getTimeZone(Feed feed) {
+        return feed.getTimezone();
+    }
+
 	public static Date getNextStartTime(Date startTime, Frequency frequency, TimeZone timezone, Date now) {
 		if (startTime.after(now))
 			return startTime;

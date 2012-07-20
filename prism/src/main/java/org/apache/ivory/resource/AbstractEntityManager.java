@@ -18,16 +18,6 @@
 
 package org.apache.ivory.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -51,17 +41,25 @@ import org.apache.ivory.resource.APIResult.Status;
 import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.RuntimeProperties;
-import org.apache.ivory.workflow.WorkflowBuilder;
 import org.apache.ivory.workflow.WorkflowEngineFactory;
-import org.apache.ivory.workflow.engine.WorkflowEngine;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 public abstract class AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     protected static final int XML_DEBUG_LEN = 10 * 1024;
 
-    private WorkflowEngine workflowEngine;
+    private AbstractWorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
 
     public AbstractEntityManager() {
@@ -433,7 +431,7 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected WorkflowEngine getWorkflowEngine() {
+    protected AbstractWorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;
     }
 

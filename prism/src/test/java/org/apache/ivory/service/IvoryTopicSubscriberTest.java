@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ivory.aspect.instances;
+package org.apache.ivory.service;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;

@@ -169,7 +169,7 @@ public class AbstractTestBase {
         StartupProperties.get().setProperty(
                 "application.services",
                 StartupProperties.get().getProperty("application.services")
-                        .replace("org.apache.ivory.aspect.instances.ProcessSubscriberService", ""));
+                        .replace("org.apache.ivory.service.ProcessSubscriberService", ""));
         if (new File("webapp/src/main/webapp").exists()) {
             this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
         } else if (new File("src/main/webapp").exists()) {
