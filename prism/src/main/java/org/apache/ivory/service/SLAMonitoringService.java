@@ -99,9 +99,11 @@ public class SLAMonitoringService implements IvoryService, WorkflowEngineActionL
 
     private void removeFromPendingList(Entity entity, String cluster, Date nominalTime) {
         ConcurrentMap<Date, Date> pendingInstances = pendingJobs.get(getKey(entity, cluster));
-        LOG.debug("Removing from pending jobs: " + getKey(entity,  cluster) + " ---> " +
-                SchemaHelper.formatDateUTC(nominalTime));
-        pendingInstances.remove(nominalTime);
+        if (pendingInstances != null) {
+            LOG.debug("Removing from pending jobs: " + getKey(entity,  cluster) + " ---> " +
+                    SchemaHelper.formatDateUTC(nominalTime));
+            pendingInstances.remove(nominalTime);
+        }
     }
 
     private class Monitor implements Runnable {
