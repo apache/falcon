@@ -29,7 +29,7 @@ public class ChainableMonitoringPlugin extends AbstractIvoryAspect implements Mo
             }
         } catch (IvoryException e) {
             plugins = Arrays.asList((MonitoringPlugin)new LoggingPlugin());
-            LOG.error("Unable to initialize monitoring plugins: " + pluginClasses);
+            LOG.error("Unable to initialize monitoring plugins: " + pluginClasses, e);
         }
     }
 
@@ -39,7 +39,7 @@ public class ChainableMonitoringPlugin extends AbstractIvoryAspect implements Mo
             try {
                 plugin.monitor(message);
             } catch (Exception e) {
-                LOG.debug("Unable to publish message to " + plugin.getClass());
+                LOG.debug("Unable to publish message to " + plugin.getClass(), e);
             }
         }
     }
