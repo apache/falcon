@@ -21,11 +21,13 @@ import org.apache.ivory.IvoryException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.monitors.TimeTaken;
+import org.aspectj.lang.annotation.Aspect;
 
 /**
  * Create a method with params you want to monitor via Aspect and log in metric
  * and iMon, invoke this method from code.
  */
+@Aspect
 public class GenericAlert {
 
 	@Monitored(event = "retry-instance-failed")

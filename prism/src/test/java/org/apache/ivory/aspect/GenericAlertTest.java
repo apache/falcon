@@ -18,8 +18,10 @@
 package org.apache.ivory.aspect;
 
 import org.apache.ivory.IvoryException;
+import org.aspectj.lang.annotation.Aspect;
 import org.testng.annotations.Test;
 
+@Aspect
 public class GenericAlertTest {
 	
 	@Test

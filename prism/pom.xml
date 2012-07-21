@@ -169,6 +169,8 @@
                         <include>org/apache/ivory/resource/AbstractInstanceManager.java</include>
                         <include>org/apache/ivory/plugin/ChainableMonitoringPlugin.java</include>
                         <include>org/apache/ivory/service/IvoryTopicSubscriber.java</include>
+                        <include>org/apache/ivory/aspect/GenericAlert.java</include>
+                        <include>org/apache/ivory/aspect/GenericAlertTest.java</include>
                     </includes>
                     <weaveDependencies>
                         <weaveDependency>
