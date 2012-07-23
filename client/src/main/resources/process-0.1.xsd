@@ -91,6 +91,12 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element type="frequency-type" name="timeout" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Defines time after which instances will no longer be executed
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="frequency-type" name="frequency">
                 <xs:annotation>
                     <xs:documentation>Defines workflow frequency

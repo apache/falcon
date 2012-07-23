@@ -18,22 +18,7 @@
 
 package org.apache.ivory.converter;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
 import junit.framework.Assert;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,6 +29,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
@@ -56,13 +42,24 @@ import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.DECISION;
-import org.apache.ivory.oozie.workflow.FORK;
-import org.apache.ivory.oozie.workflow.JOIN;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class OozieProcessMapperTest extends AbstractTestBase{
 
@@ -95,7 +92,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals(SchemaHelper.formatDateUTC(processValidity.getEnd()), coord.getEnd());
         assertEquals("${coord:"+process.getFrequency().toString()+"}", coord.getFrequency());
         assertEquals(process.getTimezone().getID(), coord.getTimezone());
-        
+
         assertEquals(process.getParallel()+"", coord.getControls().getConcurrency());
         assertEquals(process.getOrder().name(), coord.getControls().getExecution());
         
@@ -144,12 +141,43 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         testDefCoordMap(process, coord);
-        
+        assertEquals(coord.getControls().getThrottle(), "12");
+        assertEquals(coord.getControls().getTimeout(), "360");
+
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(wfPath));
         testParentWorkflow(process,parentWorkflow);
     }
-    
+
+    @Test
+    public void testBundle1() throws Exception {
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        process.setFrequency(Frequency.fromString("minutes(1)"));
+        process.setTimeout(Frequency.fromString("minutes(15)"));
+        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
+        mapper.map(cluster, bundlePath);
+
+        FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString(), bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+        testDefCoordMap(process, coord);
+        assertEquals(coord.getControls().getThrottle(), "30");
+        assertEquals(coord.getControls().getTimeout(), "15");
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(wfPath));
+        testParentWorkflow(process,parentWorkflow);
+    }
+
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow){
     		Assert.assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString(), parentWorkflow.getName());
     		Assert.assertEquals("should-record", ((DECISION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());

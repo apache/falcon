@@ -36,6 +36,7 @@ import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -44,6 +45,7 @@ import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Output;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Property;
+import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.oozie.coordinator.CONTROLS;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
@@ -62,6 +64,7 @@ import org.apache.oozie.client.OozieClient;
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
+    private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     public OozieProcessMapper(Process entity) {
         super(entity);
@@ -121,6 +124,22 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         CONTROLS controls = new CONTROLS();
         controls.setConcurrency(String.valueOf(process.getParallel()));
         controls.setExecution(process.getOrder().name());
+
+        Frequency timeout = process.getTimeout();
+        long frequency_ms = ExpressionHelper.get().
+                evaluate(process.getFrequency().toString(), Long.class);
+        long timeout_ms;
+        if (timeout != null) {
+            timeout_ms = ExpressionHelper.get().
+                    evaluate(process.getTimeout().toString(), Long.class);
+        } else {
+            timeout_ms = frequency_ms * 6;
+            if (timeout_ms < THIRTY_MINUTES) timeout_ms = THIRTY_MINUTES;
+        }
+        controls.setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
+        if (timeout_ms / frequency_ms * 2 > 0) {
+            controls.setThrottle(String.valueOf(timeout_ms / frequency_ms * 2));
+        }
         coord.setControls(controls);
 
         // Configuration

@@ -35,6 +35,7 @@ import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.Frequency.TimeUnit;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -42,6 +43,7 @@ import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.feed.Property;
+import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.messaging.EntityInstanceMessage.EntityOps;
 import org.apache.ivory.oozie.coordinator.ACTION;
@@ -54,6 +56,8 @@ import org.apache.log4j.Logger;
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private static Logger LOG = Logger.getLogger(OozieFeedMapper.class);
+
+    private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
     private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
@@ -165,6 +169,14 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, Arrays.asList(srcCluster.getName()), feed).toString();
             replicationCoord.setName(coordName);
             replicationCoord.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
+
+            long frequency_ms = ExpressionHelper.get().
+                    evaluate(feed.getFrequency().toString(), Long.class);
+            long timeout_ms = frequency_ms * 6;
+            if (timeout_ms < THIRTY_MINUTES) timeout_ms = THIRTY_MINUTES;
+            replicationCoord.getControls().setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
+            replicationCoord.getControls().setThrottle(String.valueOf(timeout_ms / frequency_ms * 2));
+
             Date srcStartDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getStart();
             Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
             Date trgStartDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart();
