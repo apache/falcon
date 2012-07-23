@@ -40,7 +40,7 @@ public class SLAMonitoringService implements IvoryService, WorkflowEngineActionL
     public void init() throws IvoryException {
         WorkflowEngineFactory.getWorkflowEngine().registerListener(this);
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
-        executor.schedule(new Monitor(), POLL_PERIODICITY_SECS, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(new Monitor(), POLL_PERIODICITY_SECS, POLL_PERIODICITY_SECS, TimeUnit.SECONDS);
     }
 
     @Override
