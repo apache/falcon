@@ -56,7 +56,6 @@ public class FeedGroup {
 
 	private String name;
 	private Frequency frequency;
-	private int periodicity;
 	private String datePattern;
 	private Set<String> feeds;
 
@@ -72,15 +71,14 @@ public class FeedGroup {
 		FeedGroup group = (FeedGroup) obj;
 		return (this.name.equals(group.getName())
 				&& this.frequency.equals(group.frequency)
-				&& this.periodicity == group.periodicity && this.datePattern
+				&& this.datePattern
 					.equals(group.datePattern));
 
 	}
 
 	@Override
 	public int hashCode() {
-		return 127 * name.hashCode() + 31 * frequency.hashCode() + 7
-				* periodicity + datePattern.hashCode();
+		return 127 * name.hashCode() + 31 * frequency.hashCode() + datePattern.hashCode();
 	}
 
 	public String getName() {
@@ -89,10 +87,6 @@ public class FeedGroup {
 
 	public Frequency getFrequency() {
 		return frequency;
-	}
-
-	public int getPeriodicity() {
-		return periodicity;
 	}
 
 	public String getDatePattern() {

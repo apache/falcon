@@ -35,6 +35,7 @@ import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.ActionType;
@@ -320,6 +321,32 @@ public class FeedEntityParserTest extends AbstractTestBase {
 						.getResourceAsStream("/config/feed/feed-0.1.xml"));
 		feed1.setName("Feed_name");
 		parser.parseAndValidate(feed1.toString());
+	}
+	
+	@Test(expectedExceptions=IvoryException.class)
+	public void testInvalidFeedGroupName() throws JAXBException, IvoryException  {
+		Feed feed1 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+				FeedGroupMapTest.class
+						.getResourceAsStream("/config/feed/feed-0.1.xml"));
+		feed1.setName("feed1");
+		feed1.getLocations().getLocations().get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+		ConfigurationStore.get().publish(EntityType.FEED, feed1);
+		
+		Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+				FeedGroupMapTest.class
+						.getResourceAsStream("/config/feed/feed-0.1.xml"));
+		feed2.setName("feed2");
+		feed2.getLocations().getLocations().get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+		feed2.setFrequency(new Frequency("hours(1)"));
+		try{
+			parser.parseAndValidate(feed2.toString());
+		}catch(IvoryException e){
+			e.printStackTrace();
+			Assert.fail("Not expecting exception for same frequency");
+		}
+		feed2.setFrequency(new Frequency("hours(2)"));
+		//expecting exception
+		parser.parseAndValidate(feed2.toString());
 	}
 
 }

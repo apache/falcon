@@ -110,7 +110,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 throw new ValidationException("Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
                         + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
                         + " does not match with group: " + group.getName() + "'s frequency: " + group.getFrequency()
-                        + ", periodicity: " + group.getPeriodicity() + ", date pattern: " + group.getDatePattern());
+                        + ", date pattern: " + group.getDatePattern());
             }
         }
     }

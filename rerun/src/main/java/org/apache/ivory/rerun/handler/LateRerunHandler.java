@@ -53,11 +53,11 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 						|| EntityUtil.getLateProcess(entity).getLateInputs() == null
 						|| EntityUtil.getLateProcess(entity).getLateInputs()
 								.size() == 0) {
-					LOG.info("Late rerun not configured for entity: " + entity);
+					LOG.info("Late rerun not configured for entity: " + entityName);
 					return;
 				}
 			} catch (IvoryException e) {
-				LOG.error("Unable to get Late Process for entity:" + entity);
+				LOG.error("Unable to get Late Process for entity:" + entityName);
 				return;
 			}
 			int intRunId = Integer.parseInt(runId);
