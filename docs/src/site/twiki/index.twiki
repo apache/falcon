@@ -19,6 +19,7 @@ management on hadoop clusters.
 
    * Enables use cases for local processing in colo and global aggregations
 
+
 ---+ Getting Started
 
 Start with these simple steps to install an ivory instance [[InstallationSteps][Simple setup]]. Also refer
