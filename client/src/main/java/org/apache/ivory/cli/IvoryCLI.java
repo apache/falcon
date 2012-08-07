@@ -515,6 +515,8 @@ public class IvoryCLI {
 				"Entity type, can be feed or process xml");
 		Option entityName = new Option(ENTITY_NAME_OPT, true,
 				"Entity type, can be feed or process xml");
+        Option colo = new Option(COLO_OPT, true,
+                "Colo on which the cmd has to be executed");
 
 		instanceOptions.addOption(url);
 		instanceOptions.addOptionGroup(group);
@@ -526,7 +528,8 @@ public class IvoryCLI {
 		instanceOptions.addOption(runid);
 		instanceOptions.addOption(clusters);
 		instanceOptions.addOption(sourceClusters);
-
+		instanceOptions.addOption(colo);
+		
 		return instanceOptions;
 
 	}

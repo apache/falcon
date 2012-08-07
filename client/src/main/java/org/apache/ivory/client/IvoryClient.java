@@ -501,6 +501,16 @@ public class IvoryClient {
 
 	}
 
+	public InstancesResult instanceCmd(Instances instances, String type, String name, String start, String end, String colo) {
+        WebResource resource = service.path(instances.path).path(type).path(name);
+        resource = resource.queryParam("start", start);
+        if(end != null)
+            resource = resource.queryParam("end", end);
+        resource = resource.queryParam("colo", colo);
+        
+        return resource.header(REMOTE_USER, USER).accept(instances.mimeType).method(instances.method, InstancesResult.class);
+	}
+	
 	private String sendInstanceRequest(Instances instances, String type,
 			String entity, String start, String end, InputStream props,
 			String runid, String colo) throws IvoryCLIException {
