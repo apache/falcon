@@ -6,3 +6,5 @@ Ivory 0.2.1 backlog:
 5. process with latest and future EL exp not getting submitted to ivory
 6. JMS message is not sent if process has no output
 7. process should gate on partition
+8. use queueName from properties for parent wf.
+
