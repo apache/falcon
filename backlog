@@ -7,4 +7,7 @@ Ivory 0.2.1 backlog:
 6. JMS message is not sent if process has no output
 7. process should gate on partition
 8. use queueName from properties for parent wf.
+9. Succeeded and DoneWithError bundles/process cannot be deleted and resubmitted.
+10.SharedLib copying should throw exception.
+11. GlobStatus in replication throws null when....
 
