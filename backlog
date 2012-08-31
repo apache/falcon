@@ -10,4 +10,5 @@ Ivory 0.2.1 backlog:
 9. Succeeded and DoneWithError bundles/process cannot be deleted and resubmitted.
 10.SharedLib copying should throw exception.
 11. GlobStatus in replication throws null when....
+12. EL extensions to support Latest and Future
 
