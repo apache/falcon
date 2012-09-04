@@ -11,4 +11,5 @@ Ivory 0.2.1 backlog:
 10.SharedLib copying should throw exception.
 11. GlobStatus in replication throws null when....
 12. EL extensions to support Latest and Future
+12. Clean up of Ivory TT logs from hdfs.
 
