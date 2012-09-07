@@ -172,7 +172,8 @@ public class MessageProducer extends Configured implements Tool {
 			LOG.error("Error in getConnection:", e);
 		} finally {
 			try {
-				ivoryMessageProducer.connection.close();
+			    if(ivoryMessageProducer.connection != null)
+			        ivoryMessageProducer.connection.close();
 			} catch (JMSException e) {
 				LOG.error("Error in closing connection:", e);
 			}

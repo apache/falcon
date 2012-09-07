@@ -73,6 +73,13 @@
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
+            <file>${wf:conf("ivory.libpath")}/activemq-core.jar</file>
+            <file>${wf:conf("ivory.libpath")}/ant.jar</file>
+            <file>${wf:conf("ivory.libpath")}/geronimo-j2ee-management.jar</file>
+            <file>${wf:conf("ivory.libpath")}/jms.jar</file>
+            <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
+            <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
+            <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
 		</java>
 		<ok to="end" />
 		<error to="fail" />
@@ -102,6 +109,13 @@
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
+            <file>${wf:conf("ivory.libpath")}/activemq-core.jar</file>
+            <file>${wf:conf("ivory.libpath")}/ant.jar</file>
+            <file>${wf:conf("ivory.libpath")}/geronimo-j2ee-management.jar</file>
+            <file>${wf:conf("ivory.libpath")}/jms.jar</file>
+            <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
+            <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
+            <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
 		</java>
 		<ok to="fail" />
 		<error to="fail" />

@@ -19,8 +19,6 @@
 package org.apache.ivory.workflow;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.fs.Path;
@@ -37,7 +35,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
 public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBuilder<T> {
-
+    
     private static Logger LOG = Logger.getLogger(OozieWorkflowBuilder.class);
 
     protected static final ConfigurationStore configStore = ConfigurationStore.get();
@@ -53,9 +51,11 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                 ClusterHelper.getMREndPoint(cluster));
         properties.setProperty(OozieClient.BUNDLE_APP_PATH,
                 "${" + OozieWorkflowEngine.NAME_NODE + "}" + bundlePath.toString());
-
+        
         properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
+        properties.setProperty("ivory.libpath", 
+                ClusterHelper.getHdfsUrl(cluster) + ClusterHelper.getLocation(cluster, "working") + "/lib");
         LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
         return properties;
     }

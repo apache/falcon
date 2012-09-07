@@ -54,6 +54,13 @@
 			<arg>-status</arg><arg>SUCCEEDED</arg>
 			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
 			<arg>-cluster</arg><arg>${cluster}</arg>
+            <file>${wf:conf("ivory.libpath")}/activemq-core.jar</file>
+            <file>${wf:conf("ivory.libpath")}/ant.jar</file>
+            <file>${wf:conf("ivory.libpath")}/geronimo-j2ee-management.jar</file>
+            <file>${wf:conf("ivory.libpath")}/jms.jar</file>
+            <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
+            <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
+            <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
 		</java>
 		<ok to="end" />
 		<error to="fail" />

@@ -20,76 +20,72 @@ package org.apache.ivory.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
-import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.ivory.util.DeploymentUtil;
 import org.apache.ivory.util.StartupProperties;
-import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.CustomOozieClient;
-import org.apache.oozie.client.OozieClient;
 
 public class SharedLibraryHostingService implements ConfigurationChangeListener {
     private static Logger LOG = Logger.getLogger(SharedLibraryHostingService.class);
 
-    private static final String SYS_LIB_PATH = "oozie.service.WorkflowAppService.system.libpath";
-
-    private static final PathFilter nonIvoryJarFilter = new PathFilter() {
+    private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
+    
+    private static final IvoryPathFilter nonIvoryJarFilter = new IvoryPathFilter() {
         @Override
         public boolean accept(Path path) {
-            if(!path.getName().startsWith("ivory"))
-                return true;
+            for(String jarName:LIBS) {
+                if(path.getName().startsWith(jarName))  return true;
+            }
             return false;
+        }
+
+        @Override
+        public String getJarName(Path path) {
+            for(String jarName:LIBS) {
+                if(path.getName().startsWith(jarName))  return jarName;
+            }
+            throw new IllegalArgumentException(path + " is not accepted!");
         }
     };
 
     private void addLibsTo(Cluster cluster) throws IvoryException {
-        OozieClient oozieClient = OozieClientFactory.get(cluster);
-        if (oozieClient instanceof CustomOozieClient) {
-            CustomOozieClient customClient = (CustomOozieClient) oozieClient;
-            try {
-                String path = getSystemLibPath(customClient);
-                pushLibsToHDFS(path, cluster, nonIvoryJarFilter);
-            } catch (Exception e) {
-                LOG.error("Unable to load shared libraries to " + cluster.getName(), e);
-            }
-        } else {
-            LOG.warn("Not loading shared libraries to " + cluster.getName());
+        String libLocation = ClusterHelper.getLocation(cluster, "working") + "/lib";
+        try {
+            pushLibsToHDFS(libLocation, cluster, nonIvoryJarFilter);
+        } catch (IOException e) {
+            throw new IvoryException("Failed to copy shared libs to cluster " + cluster.getName(), e);
         }
     }
 
-    private String getSystemLibPath(CustomOozieClient customClient) throws Exception {
-        Properties allProps = customClient.getProperties();
-        allProps.putAll(customClient.getConfiguration());
-        return ExpressionHelper.substitute(allProps.getProperty(SYS_LIB_PATH), allProps);
-    }
-
-    public static void pushLibsToHDFS(String path, Cluster cluster, PathFilter pathFilter) throws IOException {
-        Configuration conf = ClusterHelper.getConfiguration(cluster);
-        FileSystem fs = FileSystem.get(conf);
+    public static void pushLibsToHDFS(String path, Cluster cluster, IvoryPathFilter pathFilter) throws IOException, IvoryException {
         String localPaths = StartupProperties.get().getProperty("system.lib.location");
         assert localPaths != null && !localPaths.isEmpty() : "Invalid value for system.lib.location";
         if (!new File(localPaths).isDirectory()) {
-            LOG.warn(localPaths + " configured for system.lib.location doesn't contain any valid libs");
-            return;
+            throw new IvoryException(localPaths + " configured for system.lib.location doesn't contain any valid libs");
         }
+        
+        Configuration conf = ClusterHelper.getConfiguration(cluster);
+        FileSystem fs = FileSystem.get(conf);
+        Path clusterPath = new Path(path);
+        if(!fs.exists(clusterPath))
+            fs.mkdirs(clusterPath);
+            
         for (File localFile : new File(localPaths).listFiles()) {
-            Path clusterFile = new Path(path, localFile.getName());
-            if (!pathFilter.accept(clusterFile))
+            Path localPath = new Path(localFile.getAbsolutePath());
+            if (!pathFilter.accept(localPath))
                 continue;
 
+            Path clusterFile = new Path(path, pathFilter.getJarName(localPath) + ".jar");
             if (fs.exists(clusterFile)) {
                 FileStatus fstat = fs.getFileStatus(clusterFile);
                 if (fstat.getLen() == localFile.length() && fstat.getModificationTime() == localFile.lastModified())
@@ -105,10 +101,10 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     public void onAdd(Entity entity) throws IvoryException {
         if (entity.getEntityType() != EntityType.CLUSTER)
             return;
-        
+
         Cluster cluster = (Cluster) entity;
         String currentColo = DeploymentUtil.getCurrentColo();
-        if(DeploymentUtil.isEmbeddedMode() || currentColo.equals(cluster.getColo()))
+        if (DeploymentUtil.isEmbeddedMode() || currentColo.equals(cluster.getColo()))
             addLibsTo(cluster);
     }
 

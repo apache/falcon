@@ -35,7 +35,6 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
@@ -52,6 +51,7 @@ import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.service.IvoryPathFilter;
 import org.apache.ivory.service.SharedLibraryHostingService;
 import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -70,12 +70,17 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final JAXBContext coordJaxbContext;
     protected static final JAXBContext bundleJaxbContext;
 
-    protected static final PathFilter ivoryJarFilter = new PathFilter() {
+    protected static final IvoryPathFilter ivoryJarFilter = new IvoryPathFilter() {
         @Override
         public boolean accept(Path path) {
             if (path.getName().startsWith("ivory"))
                 return true;
             return false;
+        }
+
+        @Override
+        public String getJarName(Path path) {
+            return path.getName();
         }
     };
 
