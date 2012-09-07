@@ -1,14 +1,15 @@
 Ivory 0.2.1 backlog:
-1. SLA tracking
-2. In oozie workflow engine, findBundle filters on killed bundles. This can create issues if the bundle is killed because all instances are killed. Instead, we can check for missing bundle path
-3. For CLI, client.properties shouldn't be mandatory
-4. late arrival,retention should be optional for feed
-5. process with latest and future EL exp not getting submitted to ivory
-6. JMS message is not sent if process has no output
-7. process should gate on partition
-8. use queueName from properties for parent wf.
-10.SharedLib copying should throw exception.
-11. GlobStatus in replication throws null when....
-8. For feed, cluster type should be optional, partition expression is required only if there is a target and multiple sources
-12. Updating feed/process with another cluster doesn't work
-9. Number of expressions in Partition Expression are not equal to number of feed partitions - this may not be the case always
+* SLA tracking
+* In oozie workflow engine, findBundle filters on killed bundles. This can create issues if the bundle is killed because all instances are killed. Instead, we can check for missing bundle path
+* For CLI, client.properties shouldn't be mandatory
+* late arrival,retention should be optional for feed
+* process with latest and future EL exp not getting submitted to ivory
+* JMS message is not sent if process has no output
+* process should gate on partition
+* use queueName from properties for parent wf.
+* SharedLib copying should throw exception.
+* GlobStatus in replication throws null when....
+* For feed, cluster type should be optional, partition expression is required only if there is a target and multiple sources
+* Updating feed/process with another cluster doesn't work
+* Number of expressions in Partition Expression are not equal to number of feed partitions - this may not be the case always
+* Clean up of Ivory TT logs from hdfs.
