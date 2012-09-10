@@ -34,7 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class IvoryTopicProducerTest {
-	private String[] args;
+
 	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
@@ -46,7 +46,23 @@ public class IvoryTopicProducerTest {
 
 	@BeforeClass
 	public void setup() throws Exception {
-		args = new String[] { "-" + ARG.entityName.getArgName(), "agg-coord",
+		broker = new BrokerService();
+		broker.setUseJmx(true);
+		broker.setDataDirectory("target/activemq");
+		broker.addConnector(BROKER_URL);
+		broker.setBrokerName("localhost");
+		broker.start();
+	}
+
+	@AfterClass
+	public void tearDown() throws Exception {
+		broker.deleteAllMessages();
+		broker.stop();
+	}
+	
+	@Test
+	public void testWithFeedOutputPaths() throws Exception{
+		String [] args = new String[] { "-" + ARG.entityName.getArgName(), "agg-coord",
 				"-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
 				"-" + ARG.feedInstancePaths.getArgName(),
 				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
@@ -63,22 +79,32 @@ public class IvoryTopicProducerTest {
 				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
 				"-" + ARG.brokerTTL.getArgName(), "10",
 				"-" + ARG.cluster.getArgName(), "corp" };
-		broker = new BrokerService();
-		broker.setUseJmx(true);
-		broker.setDataDirectory("target/activemq");
-		broker.addConnector(BROKER_URL);
-		broker.setBrokerName("localhost");
-		broker.start();
+		testProcessMessageCreator(args);
 	}
-
-	@AfterClass
-	public void tearDown() throws Exception {
-		broker.deleteAllMessages();
-		broker.stop();
-	}
-
+	
 	@Test
-	public void testProcessMessageCreator() throws Exception {
+	public void testWithEmptyFeedOutputPaths() throws Exception{
+		String [] args = new String[] { "-" + ARG.entityName.getArgName(), "agg-coord",
+				"-" + ARG.feedNames.getArgName(), "null",
+				"-" + ARG.feedInstancePaths.getArgName(),
+				"null",
+				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
+				"-" + ARG.runId.getArgName(), "1",
+				"-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
+				"-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
+				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
+				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
+				"-" + ARG.entityType.getArgName(), ("process"),
+				"-" + ARG.operation.getArgName(), ("GENERATE"),
+				"-" + ARG.logFile.getArgName(), ("/logFile"),
+				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
+				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
+				"-" + ARG.brokerTTL.getArgName(), "10",
+				"-" + ARG.cluster.getArgName(), "corp" };
+		testProcessMessageCreator(args);
+	}
+
+	private void testProcessMessageCreator(String[] args) throws Exception {
 
 		Thread t = new Thread() {
 			@Override
@@ -94,7 +120,7 @@ public class IvoryTopicProducerTest {
 		};
 		t.start();
 		Thread.sleep(1500);
-		new MessageProducer().run(this.args);
+		new MessageProducer().run(args);
 		t.join();
 		if (error != null) {
 			throw error;
@@ -119,10 +145,12 @@ public class IvoryTopicProducerTest {
 		System.out.println("Consumed: " + m.toString());
 
 		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedNames.getArgName()),
-				"click-logs,raw-logs");
-		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
-				"/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
+		Assert.assertTrue((m.getString(ARG.feedNames.getArgName())
+				.equals("click-logs,raw-logs"))
+				|| (m.getString(ARG.feedNames.getArgName()).equals("null")));
+		Assert.assertTrue(m.getString(ARG.feedInstancePaths.getArgName())
+				.equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20")
+				|| (m.getString(ARG.feedInstancePaths.getArgName()).equals("null")));
 
 		connection.close();
 	}

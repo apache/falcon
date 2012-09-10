@@ -68,10 +68,17 @@ public class FeedReplicator extends Configured implements Tool {
         String relativePath = includePath.toString().substring(sourcePath.toString().length());
         String fixedPath = getFixedPath(relativePath);
 
-        for (FileStatus file : fs.globStatus(new Path(targetPath.toString() + "/" + fixedPath))) {
+        FileStatus[] files = fs.globStatus(new Path(targetPath.toString() + "/" + fixedPath));
+		if (files != null) {
+			for (FileStatus file : files) {
             fs.create(new Path(file.getPath(), FileOutputCommitter.SUCCEEDED_FILE_NAME)).close();
             LOG.info("Created " + new Path(file.getPath(), FileOutputCommitter.SUCCEEDED_FILE_NAME));
-        }
+			}
+		} else {
+			LOG.info("No files present in path: "
+					+ new Path(targetPath.toString() + "/" + fixedPath)
+							.toString());
+		}
 		LOG.info("Completed DistCp");
 		return 0;
 	}
