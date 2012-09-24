@@ -13,3 +13,11 @@ Ivory 0.2.1 backlog:
 * Updating feed/process with another cluster doesn't work
 * Number of expressions in Partition Expression are not equal to number of feed partitions - this may not be the case always
 * Clean up of Ivory TT logs from hdfs.
+* Instance api to continue after failure of one instance
+* Get Status should look at last materizalization time
+* retention to delete root path if all children are gone (till date part, not over it)
+* stats path in the properties for process/feed. retention to clean up stats as well
+* we should use process's lib path
+* add cluster properties into job.properties while creating bundle
+* evaluate / build replication with a bulking factor
+* deb fix for ivory stop
