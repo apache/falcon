@@ -1,23 +1,27 @@
-Ivory 0.2.1 backlog:
+Bugs: (Must fix)
+* In oozie workflow engine, findBundle filters on killed bundles. This can create issues if the bundle is killed because all instances are killed. Instead, we can check for missing bundle path - Shwetha
+* use queueName from properties for parent wf. - Let us make queueName parameter as first class citizen if set, then we will use it for the launcher as well, else we fall back to default - Shaikh
+* Updating feed/process with another cluster doesn't work – A simple solution would be just go through the regular update by detecting that update needs to be done. Ideally I would prefer that we don't touch the unaffected clusters. But that is going to fairly tricky. - Shwetha
+* Clean up of Ivory TT logs from hdfs, also expose stats and meta path and add retention for it - Add a admin service to take care of some administrative tasks. Drive it through config values in runtime.properties - Shaikh
+* Get Status should look at last materialization time – Need to additionally check if too many instances qualify. - Shwetha
+
+Important Enhancements / Improvements  & Less Critical Bugs:
+* optional process inputs – elext, by passing optional input as properties. - Shwetha
+* deb fix for ivory stop - trivial - Nikhil
+* late arrival,retention should be optional for feed – trivial (handle nulls to avoid NPE) - Shaikh
+* process with latest and future EL exp not getting submitted to ivory - Shaikh, done
+* GlobStatus in replication throws null when…. - trivial fix - Shaikh
+* For feed, cluster type should be optional, partition expression is required only if there is a target and multiple sources – just validations … - Shaikh
+* Number of expressions in Partition Expression are not equal to number of feed partitions - this may not be the case always - Shaikh
+* we should use process's lib path - trivial - Shaikh
+* add cluster properties into job.properties while creating bundle - trivial - Shaikh
+* Feed to support clister specific data path - Shaikh
+
+Deprioritized
 * SLA tracking
-* In oozie workflow engine, findBundle filters on killed bundles. This can create issues if the bundle is killed because all instances are killed. Instead, we can check for missing bundle path
 * For CLI, client.properties shouldn't be mandatory
-* late arrival,retention should be optional for feed
-* process with latest and future EL exp not getting submitted to ivory
 * JMS message is not sent if process has no output
 * process should gate on partition
-* use queueName from properties for parent wf.
-* SharedLib copying should throw exception.
-* GlobStatus in replication throws null when....
-* For feed, cluster type should be optional, partition expression is required only if there is a target and multiple sources
-* Updating feed/process with another cluster doesn't work
-* Number of expressions in Partition Expression are not equal to number of feed partitions - this may not be the case always
-* Clean up of Ivory TT logs from hdfs.
-* Instance api to continue after failure of one instance
-* Get Status should look at last materizalization time
 * retention to delete root path if all children are gone (till date part, not over it)
 * stats path in the properties for process/feed. retention to clean up stats as well
-* we should use process's lib path
-* add cluster properties into job.properties while creating bundle
 * evaluate / build replication with a bulking factor
-* deb fix for ivory stop
