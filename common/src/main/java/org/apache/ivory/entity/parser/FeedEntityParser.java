@@ -206,10 +206,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateFeedPartitionExpression(Feed feed, Cluster cluster) throws IvoryException {
-        int expressions = 0, numSourceClusters = 0;
+        int expressions = 0, numSourceClusters = 0, numTargetClusters = 0;
         for (Cluster cl : feed.getClusters().getClusters()) {
-            if (cl.getType().equals(ClusterType.SOURCE))
+            if (cl.getType().equals(ClusterType.SOURCE)){
                 numSourceClusters++;
+            }
+            if (cl.getType().equals(ClusterType.TARGET)){
+            	numTargetClusters++;
+            }
         }
         if (cluster.getType().equals(ClusterType.SOURCE) && cluster.getPartition() != null && numSourceClusters != 1) {
             String[] tokens = cluster.getPartition().split("/");
@@ -234,7 +238,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
         } else {
             if (cluster.getPartition() != null && cluster.getType().equals(ClusterType.TARGET))
                 throw new ValidationException("Target Cluster should not have Partition Expression");
-            else if (cluster.getPartition() == null && cluster.getType().equals(ClusterType.SOURCE) && numSourceClusters > 1)
+			else if (cluster.getPartition() == null
+					&& cluster.getType().equals(ClusterType.SOURCE)
+					&& numSourceClusters > 1 && numTargetClusters > 0)
                 throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
             else if (cluster.getPartition() != null && numSourceClusters == 1)
                 throw new ValidationException("Partition Expression not expected for the cluster:" + cluster.getName());

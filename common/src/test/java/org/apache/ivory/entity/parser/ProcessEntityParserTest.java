@@ -245,4 +245,22 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.setName("name_with_underscore");
 		parser.parseAndValidate(process.toString());
 	}
+	
+	@Test
+	public void testOozieFutureExpression() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getInputs().getInputs().get(0).setStart("future(1,2)");
+		parser.parseAndValidate(process.toString());
+	}
+	
+	@Test
+	public void testOozieLatestExpression() throws Exception {
+		Process process = parser
+				.parseAndValidate((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getInputs().getInputs().get(0).setStart("latest(-1)");
+		parser.parseAndValidate(process.toString());
+	}
 }

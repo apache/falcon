@@ -145,6 +145,16 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         return getRelative(referenceDate.get(), Calendar.YEAR, month - 12, day, hour, minute);
     }
 
+    public static Date latest(int n) {
+    	//by pass Ivory validations
+        return  referenceDate.get();
+    }
+    
+    public static Date future(int n, int limit) {
+    	//by pass Ivory validations
+        return  referenceDate.get();
+    }
+    
     public static long hours(int val) {
         return TimeUnit.HOURS.toMillis(val);
     }
