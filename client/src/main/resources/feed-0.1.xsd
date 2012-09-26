@@ -79,7 +79,7 @@
                     <xs:restriction base="xs:string" />
                 </xs:simpleType>
             </xs:element>
-            <xs:element type="late-arrival" name="late-arrival" />
+            <xs:element type="late-arrival" name="late-arrival" minOccurs="0" />
             <xs:element type="clusters" name="clusters" />
             <xs:element type="locations" name="locations" />
             <xs:element type="ACL" name="ACL" />
