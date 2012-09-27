@@ -181,7 +181,7 @@ public abstract class AbstractEntityManager {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
 
                 canRemove(entityObj);
-                if (entityType.isSchedulable() && getWorkflowEngine().isActive(entityObj)) {
+                if (entityType.isSchedulable()) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
                 }

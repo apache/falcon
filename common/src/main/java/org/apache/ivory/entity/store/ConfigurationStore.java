@@ -191,13 +191,9 @@ public class ConfigurationStore implements IvoryService {
         }
     }
 
-    private void onChange(Entity oldEntity, Entity newEntity) {
+    private void onChange(Entity oldEntity, Entity newEntity) throws IvoryException {
         for (ConfigurationChangeListener listener : listeners) {
-            try {
-                listener.onChange(oldEntity, newEntity);
-            } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener + newEntity.toShortString(), e);
-            }
+			listener.onChange(oldEntity, newEntity);
         }
     }
 

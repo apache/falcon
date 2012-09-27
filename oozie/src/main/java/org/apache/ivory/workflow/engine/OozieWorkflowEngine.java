@@ -196,7 +196,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 			if (jobs != null) {
 			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
 			    for(BundleJob job:jobs)
-			        if(job.getStatus() != Job.Status.KILLED)
+			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() != null)
 			            filteredJobs.add(job);
 				return filteredJobs;
 			}
@@ -291,17 +291,35 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 				case KILL:
 					// not already killed and preconditions are true
-					if (!BUNDLE_KILLED_STATUS.contains(job.getStatus())
-							&& BUNDLE_KILL_PRECOND.contains(job.getStatus())) {
-						kill(cluster, job.getId());
-						success = true;
-					}
+					killBundle(cluster, job);
+					success = true;
 					break;
 				}
 				afterAction(entity, action, cluster);
 			}
 		}
 		return success ? "SUCCESS" : "FAILED";
+	}
+
+	private void killBundle(String cluster, BundleJob job) throws IvoryException {
+		OozieClient client = OozieClientFactory.get(cluster);
+		try {
+			//kill all coords
+			for(CoordinatorJob coord:job.getCoordinators()) {
+				client.kill(coord.getId());
+				LOG.debug("Killed coord " + coord.getId() + " on cluster " + cluster);
+			}
+			
+			//set end time of bundle
+			client.change(job.getId(), OozieClient.CHANGE_VALUE_ENDTIME + "=" + SchemaHelper.formatDateUTC(new Date()));
+			LOG.debug("Changed end time of bundle " + job.getId() + " on cluster " + cluster);
+			
+			//kill bundle
+			client.kill(job.getId());
+			LOG.debug("Killed bundle " + job.getId() + " on cluster " + cluster);
+		} catch (OozieClientException e) {
+			throw new IvoryException(e);
+		}
 	}
 
 	private void beforeAction(Entity entity, BundleAction action, String cluster)
@@ -620,8 +638,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 				TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
 				Date iterStart = EntityUtil.getNextStartTime(
 						coord.getStartTime(), freq, tz, start);
-				final Date iterEnd = (coord.getEndTime().before(end) ? coord
-						.getEndTime() : end);
+				final Date iterEnd = (coord.getNextMaterializedTime().before(end) ? coord.getNextMaterializedTime() : end);
 				while (!iterStart.after(iterEnd)) {
 					int sequence = EntityUtil.getInstanceSequence(
 							coord.getStartTime(), freq, tz, iterStart);

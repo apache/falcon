@@ -47,6 +47,7 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
+import org.apache.ivory.oozie.bundle.CONTROLS;
 import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;

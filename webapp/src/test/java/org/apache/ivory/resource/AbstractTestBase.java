@@ -45,6 +45,7 @@ import org.apache.ivory.workflow.engine.OozieClientFactory;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
@@ -82,11 +83,8 @@ public class AbstractTestBase {
 
     private static final Pattern varPattern = Pattern.compile("##[A-Za-z0-9_]*##");
 
-    protected void scheduleProcess() throws Exception {
-        ClientResponse response;
-        Map<String, String> overlay = getUniqueOverlay();
-
-        response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+    protected void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
+        ClientResponse response = submitToIvory(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToIvory(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -95,13 +93,17 @@ public class AbstractTestBase {
         response = submitToIvory(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitToIvory(PROCESS_TEMPLATE, overlay, EntityType.PROCESS);
+        response = submitToIvory(processTemplate, overlay, EntityType.PROCESS);
         assertSuccessful(response);
         ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
                 .header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
     }
 
+    protected void scheduleProcess() throws Exception {
+    	scheduleProcess(PROCESS_TEMPLATE, getUniqueOverlay());
+    }
+    
     private List<WorkflowJob> getRunningJobs(String entityName) throws Exception {
         OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         StringBuilder builder = new StringBuilder();
@@ -130,26 +132,30 @@ public class AbstractTestBase {
     	waitForWorkflowStart(outputFeedName);
     }
 
-    protected void waitForBundleStart() throws Exception {
+    protected void waitForBundleStart(Status status) throws Exception {
         OozieClient ozClient = OozieClientFactory.get(clusterName);
         List<BundleJob> bundles = getBundles();
         if(bundles.isEmpty())
             return;
         
         String bundleId = bundles.get(0).getId();
-        for (int i = 0; i < 10; i++) {
-            Thread.sleep(1000);
+        for (int i = 0; i < 15; i++) {
+            Thread.sleep(i * 1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (bundle.getStatus() == Job.Status.RUNNING) {
+            if (bundle.getStatus() == status) {
+            	if(status == Status.FAILED)
+            		return;
+            	
                 boolean done = false;
                 for (CoordinatorJob coord : bundle.getCoordinators())
-                    if (coord.getStatus() == Job.Status.RUNNING)
+                    if (coord.getStatus() == status)
                         done = true;
                 if (done == true)
                     return;
             }
+            System.out.println("Waiting for bundle " + bundleId  + " in " + status + " state");
         }
-        throw new Exception("Bundle " + bundleId + " is not RUNNING in oozie");
+        throw new Exception("Bundle " + bundleId + " is not " + status + " in oozie");
     }
 
     public AbstractTestBase() {

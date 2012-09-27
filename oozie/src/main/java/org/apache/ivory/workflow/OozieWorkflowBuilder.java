@@ -54,8 +54,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         
         properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
-        properties.setProperty("ivory.libpath", 
-                ClusterHelper.getHdfsUrl(cluster) + ClusterHelper.getLocation(cluster, "working") + "/lib");
+        properties.setProperty("ivory.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
         LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
         return properties;
     }

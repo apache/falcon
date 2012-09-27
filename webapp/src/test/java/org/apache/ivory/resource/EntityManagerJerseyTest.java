@@ -47,6 +47,8 @@ import org.apache.ivory.entity.v0.process.Validity;
 import org.apache.ivory.util.BuildProperties;
 import org.apache.ivory.util.DeploymentProperties;
 import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.Job;
+import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -58,10 +60,42 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      * instance of webserver
      */
     
+	@Test
+	public void testProcessDeleteAndSchedule() throws Exception {
+		//Submit process with no workflow so that bundle goes to failed state
+		Map<String, String> overlay = getUniqueOverlay();
+        String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+		Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
+        FileSystem fs = FileSystem.get(this.cluster.getConf());
+        Path invalidPath = new Path("/ivory/test/invalidWorkflow");
+        fs.mkdirs(invalidPath);
+		process.getWorkflow().setPath(invalidPath.toString());
+        File tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        waitForBundleStart(Status.FAILED);
+        
+        //Delete and re-submit the process with correct workflow
+        ClientResponse clientRepsonse = this.service.path("api/entities/delete/process/" + processName).header("Remote-User", REMOTE_USER)
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+		assertSuccessful(clientRepsonse);
+		process.getWorkflow().setPath("/ivory/test/workflow");
+        tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        clientRepsonse = this.service.path("api/entities/submitAndSchedule/process").header("Remote-User", REMOTE_USER)
+        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
+        assertSuccessful(clientRepsonse);    
+        
+        //Assert that new schedule creates new bundle
+        List<BundleJob> bundles = getBundles();
+        Assert.assertEquals(bundles.size(), 2);
+	}
+	
     @Test
     public void testProcessInputUpdate() throws Exception {
         scheduleProcess();
-        waitForBundleStart();
+        waitForBundleStart(Job.Status.RUNNING);
         
         ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
@@ -98,7 +132,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testProcessEndtimeUpdate() throws Exception {
         scheduleProcess();
-        waitForBundleStart();
+        waitForBundleStart(Job.Status.RUNNING);
         
         ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
