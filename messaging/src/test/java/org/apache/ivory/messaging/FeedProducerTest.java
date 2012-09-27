@@ -85,7 +85,6 @@ public class FeedProducerTest {
 				"-" + ARG.cluster.getArgName(), "corp" };
 
 		broker = new BrokerService();
-		broker.setUseJmx(true);
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
 		broker.start();

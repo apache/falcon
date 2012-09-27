@@ -47,7 +47,6 @@ public class IvoryTopicProducerTest {
 	@BeforeClass
 	public void setup() throws Exception {
 		broker = new BrokerService();
-		broker.setUseJmx(true);
 		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
 		broker.setBrokerName("localhost");

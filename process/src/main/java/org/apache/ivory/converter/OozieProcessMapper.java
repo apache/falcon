@@ -206,10 +206,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
         props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
 
-        String libDir = getLibDirectory(process.getWorkflow().getPath(), cluster);
-        if (libDir != null)
-            props.put(OozieClient.LIBPATH, libDir);
-        
         props.put("userWorkflowPath", process.getWorkflow().getPath());
 
         // create parent wf
@@ -232,25 +228,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         if(joinedStr.isEmpty())
             joinedStr = "null";
         return joinedStr;
-    }
-
-    private String getLibDirectory(String wfpath, Cluster cluster) throws IvoryException {
-        Path path = new Path(wfpath.replace("${nameNode}", ""));
-        String libDir;
-        try {
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-            FileStatus status = fs.getFileStatus(path);
-            if (status.isDir())
-                libDir = path.toString() + "/lib";
-            else
-                libDir = path.getParent().toString() + "/lib";
-
-            if (fs.exists(new Path(libDir)))
-                return "${nameNode}" + libDir;
-        } catch (IOException e) {
-            throw new IvoryException(e);
-        }
-        return null;
     }
 
     private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName) throws IvoryException {
