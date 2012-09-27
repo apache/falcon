@@ -29,6 +29,16 @@
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
+			<configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+					<value>${wf:conf('mapred.job.queue.name')}</value>
+				</property>
+				<property>
+					<name>mapred.job.priority</name>
+					<value>${wf:conf('mapred.job.priority')}</value>
+				</property>
+			</configuration>
 			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
 			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}</arg>
 			<arg>-paths</arg><arg>${ivoryInPaths}</arg>
@@ -52,6 +62,16 @@
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
+			<configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+					<value>${wf:conf('mapred.job.queue.name')}</value>
+				</property>
+				<property>
+					<name>mapred.job.priority</name>
+					<value>${wf:conf('mapred.job.priority')}</value>
+				</property>
+			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
 			<arg>-cluster</arg><arg>${cluster}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
@@ -88,6 +108,16 @@
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
+			<configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+					<value>${wf:conf('mapred.job.queue.name')}</value>
+				</property>
+				<property>
+					<name>mapred.job.priority</name>
+					<value>${wf:conf('mapred.job.priority')}</value>
+				</property>
+			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
 			<arg>-cluster</arg><arg>${cluster}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>

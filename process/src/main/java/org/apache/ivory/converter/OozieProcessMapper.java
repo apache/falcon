@@ -18,7 +18,6 @@
 
 package org.apache.ivory.converter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,12 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
-import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
@@ -59,7 +55,6 @@ import org.apache.ivory.oozie.coordinator.WORKFLOW;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.SUBWORKFLOW;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.oozie.client.OozieClient;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
