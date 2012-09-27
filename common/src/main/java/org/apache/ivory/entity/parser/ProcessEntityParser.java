@@ -21,8 +21,10 @@ package org.apache.ivory.entity.parser;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -93,6 +95,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
     private void validateHDFSpaths(Process process, String clusterName) throws IvoryException {
         org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String workflowPath = process.getWorkflow().getPath();
+        String libPath=process.getWorkflow().getLib();
         String nameNode = getNameNode(cluster, clusterName);
         try {
             Configuration configuration = new Configuration();
@@ -100,6 +103,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
             FileSystem fs = FileSystem.get(configuration);
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException("Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
+            }
+            
+            if (libPath!=null && !fs.exists(new Path(libPath))) {
+                throw new ValidationException("Lib path: " + libPath + " does not exists in HDFS: " + nameNode);
             }
         } catch (ValidationException e) {
             throw new ValidationException(e);
@@ -151,18 +158,27 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private void validateLateInputs(Process process) throws ValidationException {
-        List<String> feedName = new ArrayList<String>();
+        Map<String,String> feeds = new HashMap<String,String>();
         if(process.getInputs() != null) {
             for (Input in : process.getInputs().getInputs()) {
-                feedName.add(in.getName());
+            	feeds.put(in.getName(),in.getFeed());
             }
         }
-        
+
         if (process.getLateProcess() != null) {
-            for (LateInput lp : process.getLateProcess().getLateInputs()) {
-                if (!feedName.contains(lp.getInput()))
-                    throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
-            }
+        	for (LateInput lp : process.getLateProcess().getLateInputs()) {
+        		if (!feeds.keySet().contains(lp.getInput())){
+        			throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
+				}
+				try {
+        			Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
+        			if(feed.getLateArrival()==null){
+        				throw new ValidationException("Late Input feed: "+lp.getInput()+" is not configured with late arrival cut-off" );
+        			}
+				} catch (IvoryException e) {
+					throw new ValidationException(e);
+				}
+        	}
         }
     }
 }

@@ -24,20 +24,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
-import org.apache.ivory.converter.AbstractOozieEntityMapper;
-import org.apache.ivory.converter.OozieFeedMapper;
+
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
-import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
-import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.oozie.client.OozieClient;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
@@ -48,6 +47,11 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
             Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
+            String libPath = process.getWorkflow().getLib();
+			if (!StringUtils.isEmpty(libPath)) {
+				String path = libPath.replace("${nameNode}", "");
+				properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
+			}
             if (properties == null) continue;
             propertiesMap.put(clusterName, properties);
         }

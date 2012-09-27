@@ -125,6 +125,11 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		Date endTime = new Date();
 		Date feedCutOff = new Date(0);
 		if (entity.getEntityType() == EntityType.FEED) {
+			if (((Feed) entity).getLateArrival() == null) {
+				LOG.debug("Feed's " + entity.getName()
+						+ " late arrival cut-off is not configured, returning");
+				return feedCutOff;
+			}
 			String lateCutOff = ((Feed) entity).getLateArrival().getCutOff()
 					.toString();
 			endTime = EntityUtil.parseDateUTC(nominalTime);
@@ -142,6 +147,11 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 						feed = store.get(EntityType.FEED, input.getFeed());
 						break;
 					}
+				}
+				if (feed.getLateArrival() == null) {
+					LOG.debug("Feed's " + feed.getName()
+							+ " late arrival cut-off is not configured, ignoring this feed");
+					continue;
 				}
 				String lateCutOff = feed.getLateArrival().getCutOff()
 						.toString();

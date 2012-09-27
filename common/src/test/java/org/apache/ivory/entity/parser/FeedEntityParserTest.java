@@ -348,5 +348,16 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		//expecting exception
 		parser.parseAndValidate(feed2.toString());
 	}
+	
+	@Test
+	public void testNullFeedLateArrival() throws JAXBException, IvoryException  {
+		Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+				FeedGroupMapTest.class
+						.getResourceAsStream("/config/feed/feed-0.1.xml"));
+		
+		feed.setLateArrival(null);
+		parser.parseAndValidate(feed.toString());
+		
+	}
 
 }

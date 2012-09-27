@@ -185,6 +185,10 @@ public class FeedEntityParser extends EntityParser<Feed> {
         String feedRetention = cluster.getRetention().getLimit().toString();
         long retentionPeriod = evaluator.evaluate(feedRetention, Long.class);
 
+        if(feed.getLateArrival()==null){
+        	LOG.debug("Feed's late arrival cut-off not set");
+        	return;
+        }
         String feedCutoff = feed.getLateArrival().getCutOff().toString();
         long feedCutOffPeriod = evaluator.evaluate(feedCutoff, Long.class);
 
