@@ -47,7 +47,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
             Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
-            String libPath = process.getWorkflow().getLibPath();
+            String libPath = process.getWorkflow().getLib();
 			if (!StringUtils.isEmpty(libPath)) {
 				String path = libPath.replace("${nameNode}", "");
 				properties.put(OozieClient.LIBPATH, "${nameNode}" + path);

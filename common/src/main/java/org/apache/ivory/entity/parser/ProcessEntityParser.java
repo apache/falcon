@@ -95,6 +95,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
     private void validateHDFSpaths(Process process, String clusterName) throws IvoryException {
         org.apache.ivory.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
         String workflowPath = process.getWorkflow().getPath();
+        String libPath=process.getWorkflow().getLib();
         String nameNode = getNameNode(cluster, clusterName);
         try {
             Configuration configuration = new Configuration();
@@ -102,6 +103,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
             FileSystem fs = FileSystem.get(configuration);
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException("Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
+            }
+            
+            if (libPath!=null && !fs.exists(new Path(libPath))) {
+                throw new ValidationException("Lib path: " + libPath + " does not exists in HDFS: " + nameNode);
             }
         } catch (ValidationException e) {
             throw new ValidationException(e);
