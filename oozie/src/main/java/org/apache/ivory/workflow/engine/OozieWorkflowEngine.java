@@ -196,7 +196,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 			if (jobs != null) {
 			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
 			    for(BundleJob job:jobs)
-			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() != null)
+			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() == null)
 			            filteredJobs.add(job);
 				return filteredJobs;
 			}
