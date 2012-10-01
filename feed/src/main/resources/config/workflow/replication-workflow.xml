@@ -64,6 +64,8 @@
 			</configuration>
             <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
             <arg>-Divory.include.path=${sourceRelativePaths}</arg>
+            <arg>-Dmapred.job.queue.name=${wf:conf('mapred.job.queue.name')}</arg>
+            <arg>-Dmapred.job.priority=${wf:conf('mapred.job.priority')}</arg>
             <arg>-update</arg>
             <arg>-blocking</arg><arg>true</arg>
 			<arg>-maxMaps</arg><arg>5</arg>

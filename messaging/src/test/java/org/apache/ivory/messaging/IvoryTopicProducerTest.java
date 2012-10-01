@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 
 public class IvoryTopicProducerTest {
 
-	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
@@ -47,8 +47,8 @@ public class IvoryTopicProducerTest {
 	@BeforeClass
 	public void setup() throws Exception {
 		broker = new BrokerService();
-		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
+		broker.setDataDirectory("target/activemq");
 		broker.setBrokerName("localhost");
 		broker.start();
 	}
