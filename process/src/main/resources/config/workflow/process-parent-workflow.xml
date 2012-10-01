@@ -35,7 +35,7 @@
 					<value>${wf:conf('mapred.job.queue.name')}</value>
 				</property>
 				<property>
-					<name>mapred.job.priority</name>
+					<name>oozie.launcher.mapred.job.priority</name>
 					<value>${wf:conf('mapred.job.priority')}</value>
 				</property>
 			</configuration>
@@ -68,7 +68,7 @@
 					<value>${wf:conf('mapred.job.queue.name')}</value>
 				</property>
 				<property>
-					<name>mapred.job.priority</name>
+					<name>oozie.launcher.mapred.job.priority</name>
 					<value>${wf:conf('mapred.job.priority')}</value>
 				</property>
 			</configuration>
@@ -114,7 +114,7 @@
 					<value>${wf:conf('mapred.job.queue.name')}</value>
 				</property>
 				<property>
-					<name>mapred.job.priority</name>
+					<name>oozie.launcher.mapred.job.priority</name>
 					<value>${wf:conf('mapred.job.priority')}</value>
 				</property>
 			</configuration>

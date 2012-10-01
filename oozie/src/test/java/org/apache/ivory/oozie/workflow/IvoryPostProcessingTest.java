@@ -71,10 +71,10 @@ public class IvoryPostProcessingTest {
 				"-" + Arg.WF_ENGINE_URL.getOptionName(),
 				"http://localhost:11000/oozie/",
 				"-" + Arg.LOG_DIR.getOptionName(), "target/log",
-				"-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" };
+				"-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id"+"test" };
 		broker = new BrokerService();
-		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
+		broker.setDataDirectory("target/activemq");
 		broker.setBrokerName("localhost");
 		broker.start();
 	}
