@@ -38,6 +38,7 @@ import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.entity.v0.process.Validity;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
+import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
@@ -119,7 +120,13 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals(feed.getTimezone().getID(), ds.getTimezone());
         assertEquals("${coord:"+feed.getFrequency().toString()+"}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());
-        assertEquals("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath(), ds.getUriTemplate());        
+        assertEquals("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath(), ds.getUriTemplate());   
+        for(Property prop:coord.getAction().getWorkflow().getConfiguration().getProperty()){
+        	if(prop.getName().equals("mapred.job.priority")){
+        		assertEquals(prop.getValue(), "LOW");
+        		break;
+        	}
+        }
     }
     
     @Test

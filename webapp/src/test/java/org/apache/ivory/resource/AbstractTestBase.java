@@ -68,7 +68,7 @@ public class AbstractTestBase {
     protected static final String PROCESS_TEMPLATE = "/process-template.xml";
 
     protected static final String BASE_URL = "http://localhost:15000/";
-    protected static final String REMOTE_USER="guest";
+    protected static final String REMOTE_USER=System.getProperty("user.name");
 
     protected EmbeddedServer server;
 

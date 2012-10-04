@@ -17,6 +17,8 @@
  */
 package org.apache.ivory.converter;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -37,6 +39,7 @@ import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
+import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -130,6 +133,12 @@ public class OozieFeedMapperTest {
 				"${nameNode}"
 						+ "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
 				outputDataset.getUriTemplate());
+        for(Property prop:coord.getAction().getWorkflow().getConfiguration().getProperty()){
+        	if(prop.getName().equals("mapred.job.priority")){
+        		assertEquals(prop.getValue(), "NORMAL");
+        		break;
+        	}
+        }
 
 	}
 }

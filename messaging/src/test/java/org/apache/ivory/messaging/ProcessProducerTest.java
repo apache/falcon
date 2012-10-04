@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 public class ProcessProducerTest {
 
 	private String[] args;
-	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
@@ -66,8 +66,8 @@ public class ProcessProducerTest {
 				"-" + ARG.brokerTTL.getArgName(), "10",
 				"-" + ARG.cluster.getArgName(), "corp" };
 		broker = new BrokerService();
-		broker.setDataDirectory("target/activemq");
 		broker.addConnector(BROKER_URL);
+		broker.setDataDirectory("target/activemq");
 		broker.setBrokerName("localhost");
 		broker.setSchedulerSupport(true);
 		broker.start();

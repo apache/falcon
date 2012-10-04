@@ -21,6 +21,16 @@
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
+            <configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+					<value>${wf:conf('mapred.job.queue.name')}</value>
+				</property>
+				<property>
+					<name>oozie.launcher.mapred.job.priority</name>
+					<value>${wf:conf('mapred.job.priority')}</value>
+				</property>
+			</configuration>
             <main-class>org.apache.ivory.retention.FeedEvictor</main-class>
             <arg>-feedBasePath</arg><arg>${nameNode}/${feedDataPath}</arg>
             <arg>-retentionType</arg><arg>instance</arg>
@@ -37,6 +47,16 @@
 		<java>
 			<job-tracker>${jobTracker}</job-tracker>
 			<name-node>${nameNode}</name-node>
+			<configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+					<value>${wf:conf('mapred.job.queue.name')}</value>
+				</property>
+				<property>
+					<name>oozie.launcher.mapred.job.priority</name>
+					<value>${wf:conf('mapred.job.priority')}</value>
+				</property>
+			</configuration>
 			<main-class>org.apache.ivory.messaging.MessageProducer</main-class>
 			<arg>-entityName</arg><arg>${entityName}</arg>
 			<arg>-feedNames</arg><arg>${feedNames}</arg>
