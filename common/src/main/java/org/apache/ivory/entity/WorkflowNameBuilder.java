@@ -70,7 +70,7 @@ public class WorkflowNameBuilder<T extends Entity> {
 		private String entityName;
 		private List<String> suffixes;
 
-		private WorkflowName(String prefix, String entityType, String tag,
+		public WorkflowName(String prefix, String entityType, String tag,
 				String entityName, List<String> suffixes) {
 			this.prefix = prefix;
 			this.entityType = entityType;

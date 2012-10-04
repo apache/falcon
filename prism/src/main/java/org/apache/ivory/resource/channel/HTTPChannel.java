@@ -83,6 +83,7 @@ public class HTTPChannel extends AbstractChannel {
                     .header(REMOTE_USER, user).accept(accept)
                     .type(mimeType).method(httpMethod, ClientResponse.class,
                             (isPost(httpMethod) ? incomingRequest.getInputStream() : null));
+            incomingRequest.getInputStream().reset();
 
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {

@@ -21,6 +21,7 @@ package org.apache.ivory.resource;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -232,32 +233,17 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
 	private void validateDateRange(Entity entity, String start, String end)
 			throws IvoryException {
-		String[] clusters = EntityUtil.getClustersDefined(entity);
-		Pair<Date, String> clusterMinStartDate;
-		Pair<Date, String> clusterMaxEndDate;
-		if (clusters.length >= 1) {
-			clusterMinStartDate = Pair.of(
-					EntityUtil.getStartTime(entity, clusters[0]), clusters[0]);
-			clusterMaxEndDate = Pair.of(
-					EntityUtil.getEndTime(entity, clusters[0]), clusters[0]);
-		} else {
-			throw new IvoryException(
-					"No valid clusters available for entity:"+entity+ "in the given colo");
-		}
-		for (int i = 1; i < clusters.length; i++) {
-			if (clusterMinStartDate.first.after(EntityUtil.getStartTime(entity,
-					clusters[i]))) {
-				clusterMinStartDate = Pair.of(
-						EntityUtil.getStartTime(entity, clusters[i]),
-						clusters[i]);
-			}
-			if (clusterMaxEndDate.first.before(EntityUtil.getEndTime(entity,
-					clusters[i]))) {
-				clusterMaxEndDate = Pair
-						.of(EntityUtil.getEndTime(entity, clusters[i]),
-								clusters[i]);
-			}
-		}
+        Set<String> clusters = EntityUtil.getClustersDefined(entity);
+        Pair<Date, String> clusterMinStartDate = null;
+        Pair<Date, String> clusterMaxEndDate = null;
+        for (String cluster : clusters) {
+            if (clusterMinStartDate == null || clusterMinStartDate.first.after(EntityUtil.getStartTime(entity, cluster))) {
+                clusterMinStartDate = Pair.of(EntityUtil.getStartTime(entity, cluster), cluster);
+            }
+            if (clusterMaxEndDate == null || clusterMaxEndDate.first.before(EntityUtil.getEndTime(entity, cluster))) {
+                clusterMaxEndDate = Pair.of(EntityUtil.getEndTime(entity, cluster), cluster);
+            }
+        }
 
 		validateDateRangeFor(entity, clusterMinStartDate, clusterMaxEndDate,
 				start, end);

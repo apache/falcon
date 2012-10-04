@@ -18,6 +18,17 @@
 
 package org.apache.ivory.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.io.IOUtils;
@@ -45,15 +56,6 @@ import org.apache.ivory.workflow.WorkflowEngineFactory;
 import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
 public abstract class AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
@@ -77,23 +79,32 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected String[] getAllColos() {
+    protected Set<String> getAllColos() {
         if (DeploymentUtil.isEmbeddedMode())
             return DeploymentUtil.getDefaultColos();
-        return RuntimeProperties.get().getProperty("all.colos", DeploymentUtil.getDefaultColo()).split(",");
+        String[] colos = RuntimeProperties.get().getProperty("all.colos", DeploymentUtil.getDefaultColo()).split(",");
+        return new HashSet<String>(Arrays.asList(colos));
     }
 
-    protected String[] getColosFromExpression(String coloExpr, String type, String entity) {
-        String[] colos;
+    protected Set<String> getColosFromExpression(String coloExpr, String type, String entity) {
+        Set<String> colos;
         if (coloExpr == null || coloExpr.equals("*") || coloExpr.isEmpty()) {
             colos = getApplicableColos(type, entity);
         } else {
-            colos = coloExpr.split(",");
+            colos = new HashSet<String>(Arrays.asList(coloExpr.split(",")));
         }
         return colos;
     }
-
-    protected String[] getApplicableColos(String type, String name) throws IvoryWebException {
+    
+    protected Set<String> getApplicableColos(String type, String name) throws IvoryWebException {
+        try {
+            return getApplicableColos(type, EntityUtil.getEntity(type, name));
+        } catch (IvoryException e) {
+            throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+    
+    protected Set<String> getApplicableColos(String type, Entity entity) throws IvoryWebException {
         try {
             if (DeploymentUtil.isEmbeddedMode())
                 return DeploymentUtil.getDefaultColos();
@@ -101,14 +112,13 @@ public abstract class AbstractEntityManager {
             if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
                 return getAllColos();
 
-            Entity entity = EntityUtil.getEntity(type, name);
-            String[] clusters = EntityUtil.getClustersDefined(entity);
+            Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
             for (String cluster : clusters) {
                 Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);
                 colos.add(clusterEntity.getColo());
             }
-            return colos.toArray(new String[colos.size()]);
+            return colos;
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -181,7 +191,7 @@ public abstract class AbstractEntityManager {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
 
                 canRemove(entityObj);
-                if (entityType.isSchedulable()) {
+                if (entityType.isSchedulable() && !DeploymentUtil.isPrism()) {
                     getWorkflowEngine().delete(entityObj);
                     removedFromEngine = "(KILLED in ENGINE)";
                 }
@@ -201,7 +211,6 @@ public abstract class AbstractEntityManager {
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
     public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
-
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -213,7 +222,21 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             if (!EntityUtil.equals(oldEntity, newEntity)) {
                 configStore.initiateUpdate(newEntity);
-                getWorkflowEngine().update(oldEntity, newEntity);
+                //Update in workflow engine
+            	if(! DeploymentUtil.isPrism()) {
+                    Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
+                    Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
+                    newClusters.retainAll(oldClusters); //common clusters for update
+                    oldClusters.removeAll(newClusters); //deleted clusters
+
+                    for (String cluster : newClusters) {
+                        getWorkflowEngine().update(oldEntity, newEntity, cluster);
+                    }
+                    for(String cluster:oldClusters) {
+                        getWorkflowEngine().delete(oldEntity, cluster);
+                    }
+            	}
+            	
                 configStore.update(entityType, newEntity);
             }
 

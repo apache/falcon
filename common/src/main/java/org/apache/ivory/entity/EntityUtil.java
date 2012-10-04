@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.feed.Cluster;
+import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.LateInput;
 import org.apache.ivory.entity.v0.process.LateProcess;
@@ -407,30 +409,62 @@ public class EntityUtil {
 		return builder.getWorkflowTag(workflowName);
 	}
 
-	public static String[] getClustersDefined(Entity entity) {
-		switch(entity.getEntityType()) {
-		case CLUSTER:
-			return new String[] { entity.getName() };
-
-		case FEED:
-			Feed feed = (Feed) entity;
-			List<String> clusters = new ArrayList<String>();
-			for(Cluster cluster:feed.getClusters().getClusters())
-				clusters.add(cluster.getName());
-			return clusters.toArray(new String[clusters.size()]);
-
-		case PROCESS:
-			Process process = (Process) entity;
-			clusters = new ArrayList<String>();
-			for(org.apache.ivory.entity.v0.process.Cluster cluster:process.getClusters().getClusters())
-				clusters.add(cluster.getName());
-			return clusters.toArray(new String[clusters.size()]);
-		}  
-		throw new IllegalArgumentException("Unhandled entity type: " + entity.getEntityType());
+	public static <T extends Entity> T getClusterView(T entity, String clusterName) {
+	    switch(entity.getEntityType()) {
+	    case CLUSTER:
+	        return entity;
+	        
+	    case FEED:
+	        Feed feed = (Feed) entity.clone();
+	        Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+	        Iterator<Cluster> itr = feed.getClusters().getClusters().iterator();
+	        while(itr.hasNext()) {
+	            Cluster cluster = itr.next();
+	            //In addition to retaining the required clster, retain the sources clusters if this is the target cluster
+	            //1. Retain cluster if cluster n
+	            if(!(cluster.getName().equals(clusterName) || 
+	                    (feedCluster.getType() == ClusterType.TARGET && cluster.getType() == ClusterType.SOURCE)))
+	                itr.remove();
+	        }
+	        return (T) feed;            
+	        
+	    case PROCESS:
+	        Process process = (Process) entity.clone();
+	        Iterator<org.apache.ivory.entity.v0.process.Cluster> procItr = process.getClusters().getClusters().iterator();
+	        while(procItr.hasNext()) {
+	            org.apache.ivory.entity.v0.process.Cluster cluster = procItr.next();
+	            if(!cluster.getName().equals(clusterName))
+	                procItr.remove();
+	        }
+	        return (T) process;
+	    }
+	    throw new UnsupportedOperationException("Not supported for entity type " + entity.getEntityType());
 	}
 	
-	public static String[] getClustersDefinedInColos(Entity entity) {
-		String[] entityClusters = EntityUtil.getClustersDefined(entity);
+	public static Set<String> getClustersDefined(Entity entity) {
+	    Set<String> clusters = new HashSet<String>();
+		switch(entity.getEntityType()) {
+		case CLUSTER:
+		    clusters.add(entity.getName());
+		    break;
+		    
+		case FEED:
+			Feed feed = (Feed) entity;
+			for(Cluster cluster:feed.getClusters().getClusters())
+				clusters.add(cluster.getName());
+			break;
+			
+		case PROCESS:
+			Process process = (Process) entity;
+			for(org.apache.ivory.entity.v0.process.Cluster cluster:process.getClusters().getClusters())
+				clusters.add(cluster.getName());
+			break;
+		}  
+		return clusters;
+	}
+	
+	public static Set<String> getClustersDefinedInColos(Entity entity) {
+		Set<String> entityClusters = EntityUtil.getClustersDefined(entity);
 		if (DeploymentUtil.isEmbeddedMode())
 			return entityClusters;
 
@@ -439,8 +473,7 @@ public class EntityUtil {
 		for (String cluster : entityClusters)
 			if (myClusters.contains(cluster))
 				applicableClusters.add(cluster);
-		return applicableClusters.toArray(new String[] {});
-
+		return applicableClusters;
 	}
 
 	public static Path getStagingPath(

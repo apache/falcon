@@ -18,6 +18,7 @@
 
 package org.apache.ivory.util;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.ivory.entity.ColoClusterRelation;
@@ -29,12 +30,14 @@ public class DeploymentUtil {
     protected static final String DEFAULT_COLO = "default";
     protected static final String EMBEDDED = "embedded";
     protected static final String DEPLOY_MODE = "deploy.mode";
-    private static final String[] DEFAULT_ALL_COLOS = new String[] {DEFAULT_COLO};
+    private static final Set<String> DEFAULT_ALL_COLOS = new HashSet<String>();
 
     protected final static String currentColo;
     protected final static boolean embeddedMode;
+    protected static boolean prism = false;
     
     static {
+        DEFAULT_ALL_COLOS.add(DEFAULT_COLO);
         embeddedMode = DeploymentProperties.get().
                 getProperty(DEPLOY_MODE, EMBEDDED).equals(EMBEDDED);
         if (embeddedMode) {
@@ -45,6 +48,14 @@ public class DeploymentUtil {
         }
         LOG.info("Running in embedded mode? " + embeddedMode);
         LOG.info("Current colo: " + currentColo);
+    }
+    
+    public static void setPrismMode() {
+    	prism = true;
+    }
+    
+    public static boolean isPrism() {
+    	return prism;
     }
     
     public static String getCurrentColo() {
@@ -64,7 +75,7 @@ public class DeploymentUtil {
         return DEFAULT_COLO;
     }
 
-    public static String[] getDefaultColos() {
+    public static Set<String> getDefaultColos() {
         return DEFAULT_ALL_COLOS;
     }
 }

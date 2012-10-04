@@ -72,29 +72,29 @@ public class UpdateHelperTest extends AbstractTestBase {
 	public void testShouldUpdate2() throws Exception {
         Feed oldFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
-
+        String cluster = "testCluster";
         Feed newFeed = (Feed)oldFeed.clone();
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, cluster));
         
         newFeed.setGroups("newgroups");
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, cluster));
         newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(8)"));
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, cluster));
         newFeed.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, cluster));
         
         Process oldProcess = processParser.parseAndValidate(this.getClass().
                 getResourceAsStream(PROCESS_XML));
         Process newProcess = (Process) oldProcess.clone();
         
         newProcess.getRetry().setPolicy(PolicyType.FINAL);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
         newProcess.getLateProcess().getLateInputs().remove(1);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
         newProcess.getLateProcess().setPolicy(PolicyType.PERIODIC);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
         newProcess.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldProcess, newProcess));        
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));        
 	}
 	
     @Test

@@ -67,29 +67,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 	public static final String ENGINE = "oozie";
 	private static final BundleJob MISSING = new NullBundleJob();
 
-	private static List<Status> WF_KILL_PRECOND = Arrays.asList(Status.PREP,
+	private static final List<Status> WF_KILL_PRECOND = Arrays.asList(Status.PREP,
 			Status.RUNNING, Status.SUSPENDED, Status.FAILED);
-	private static List<Status> WF_SUSPEND_PRECOND = Arrays
+	private static final List<Status> WF_SUSPEND_PRECOND = Arrays
 			.asList(Status.RUNNING);
-	private static List<Status> WF_RESUME_PRECOND = Arrays
+	private static final List<Status> WF_RESUME_PRECOND = Arrays
 			.asList(Status.SUSPENDED);
-	private static List<Status> WF_RERUN_PRECOND = Arrays.asList(Status.FAILED,
+	private static final List<Status> WF_RERUN_PRECOND = Arrays.asList(Status.FAILED,
 			Status.KILLED, Status.SUCCEEDED);
 
-	private static List<Job.Status> BUNDLE_ACTIVE_STATUS = Arrays.asList(
+	private static final List<Job.Status> BUNDLE_ACTIVE_STATUS = Arrays.asList(
 			Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED,
 			Job.Status.PREPSUSPENDED);
-	private static List<Job.Status> BUNDLE_SUSPENDED_STATUS = Arrays.asList(
+	private static final List<Job.Status> BUNDLE_SUSPENDED_STATUS = Arrays.asList(
 			Job.Status.PREPSUSPENDED, Job.Status.SUSPENDED);
-	private static List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(
+	private static final List<Job.Status> BUNDLE_RUNNING_STATUS = Arrays.asList(
 			Job.Status.PREP, Job.Status.RUNNING);
-	private static List<Job.Status> BUNDLE_KILLED_STATUS = Arrays
-			.asList(Job.Status.KILLED);
 
-	private static List<Job.Status> BUNDLE_KILL_PRECOND = BUNDLE_ACTIVE_STATUS;
-	private static List<Job.Status> BUNDLE_SUSPEND_PRECOND = Arrays.asList(
+	private static final List<Job.Status> BUNDLE_SUSPEND_PRECOND = Arrays.asList(
 			Job.Status.PREP, Job.Status.RUNNING, Job.Status.DONEWITHERROR);
-	private static List<Job.Status> BUNDLE_RESUME_PRECOND = Arrays.asList(
+	private static final List<Job.Status> BUNDLE_RESUME_PRECOND = Arrays.asList(
 			Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED);
 	private static final String IVORY_INSTANCE_ACTION_CLUSTERS = "ivory.instance.action.clusters";
 	private static final String IVORY_INSTANCE_SOURCE_CLUSTERS = "ivory.instance.source.clusters";
@@ -103,11 +100,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 	@Override
 	public void schedule(Entity entity) throws IvoryException {
-		Map<String, BundleJob> bundleMap = findBundle(entity);
+		Map<String, BundleJob> bundleMap = findLatestBundle(entity);
 		List<String> schedClusters = new ArrayList<String>();
 		for (String cluster : bundleMap.keySet()) {
 			if (bundleMap.get(cluster) == MISSING)
 				schedClusters.add(cluster);
+			else 
+			    LOG.debug("The entity " + entity.getName() + " is already scheduled on cluster " + cluster);
 		}
 
 		if (!schedClusters.isEmpty()) {
@@ -164,16 +163,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		return true;
 	}
 
-	private Map<String, BundleJob> findBundle(Entity entity)
-			throws IvoryException {
-		String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
-		Map<String, BundleJob> jobMap = new HashMap<String, BundleJob>();
-		for (String cluster : clusters) {
-			jobMap.put(cluster, findBundle(entity, cluster));
-		}
-		return jobMap;
-	}
-
 	private BundleJob findBundle(Entity entity, String cluster)
 			throws IvoryException {
 		String stPath = EntityUtil.getStagingPath(entity);
@@ -196,7 +185,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 			if (jobs != null) {
 			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
 			    for(BundleJob job:jobs)
-			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() != null)
+			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() == null)
 			            filteredJobs.add(job);
 				return filteredJobs;
 			}
@@ -208,7 +197,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 	private Map<String, List<BundleJob>> findBundles(Entity entity)
 			throws IvoryException {
-		String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
+		Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
 		Map<String, List<BundleJob>> jobMap = new HashMap<String, List<BundleJob>>();
 
 		for (String cluster : clusters) {
@@ -237,6 +226,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		return bundleMap;
 	}
 
+	private BundleJob findLatestBundle(Entity entity, String cluster) throws IvoryException {
+	    List<BundleJob> bundles = findBundles(entity, cluster);
+        Date latest = null;
+        BundleJob bundle = MISSING;
+        for (BundleJob job : bundles)
+            if (latest == null || latest.before(job.getCreatedTime())) {
+                bundle = job;
+                latest = job.getCreatedTime();
+            }
+        return bundle;
+	}
+	
 	@Override
 	public String suspend(Entity entity) throws IvoryException {
 		return doBundleAction(entity, BundleAction.SUSPEND);
@@ -252,54 +253,63 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		return doBundleAction(entity, BundleAction.KILL);
 	}
 
+    @Override
+    public String delete(Entity entity, String cluster) throws IvoryException {
+        return doBundleAction(entity, BundleAction.KILL, cluster);
+    }
+
 	private enum BundleAction {
 		SUSPEND, RESUME, KILL
 	}
 
-	private String doBundleAction(Entity entity, BundleAction action)
-			throws IvoryException {
-		boolean success = true;
-		Map<String, List<BundleJob>> jobsMap = findBundles(entity);
-		for (String cluster : jobsMap.keySet()) {
-			List<BundleJob> jobs = jobsMap.get(cluster);
-			if (jobs.isEmpty()) {
-				LOG.warn("No active job found for " + entity.getName());
-				success = false;
-				break;
-			}
+    private String doBundleAction(Entity entity, BundleAction action) throws IvoryException {
+        Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+        String result = null;
+        for(String cluster:clusters)
+            result = doBundleAction(entity, action, cluster);
+        return result;
+    }
+    
+    private String doBundleAction(Entity entity, BundleAction action, String cluster)
+            throws IvoryException {
+        boolean success = true;
+        List<BundleJob> jobs = findBundles(entity, cluster);
+        if (jobs.isEmpty()) {
+            LOG.warn("No active job found for " + entity.getName());
+            return "FAILED";
+        }
 
-			beforeAction(entity, action, cluster);
-			for (BundleJob job : jobs) {
-				switch (action) {
-				case SUSPEND:
-					// not already suspended and preconditions are true
-					if (!BUNDLE_SUSPENDED_STATUS.contains(job.getStatus())
-							&& BUNDLE_SUSPEND_PRECOND.contains(job.getStatus())) {
-						suspend(cluster, job.getId());
-						success = true;
-					}
-					break;
+        beforeAction(entity, action, cluster);
+        for (BundleJob job : jobs) {
+            switch (action) {
+            case SUSPEND:
+                // not already suspended and preconditions are true
+                if (!BUNDLE_SUSPENDED_STATUS.contains(job.getStatus())
+                        && BUNDLE_SUSPEND_PRECOND.contains(job.getStatus())) {
+                    suspend(cluster, job.getId());
+                    success = true;
+                }
+                break;
 
-				case RESUME:
-					// not already running and preconditions are true
-					if (!BUNDLE_RUNNING_STATUS.contains(job.getStatus())
-							&& BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
-						resume(cluster, job.getId());
-						success = true;
-					}
-					break;
+            case RESUME:
+                // not already running and preconditions are true
+                if (!BUNDLE_RUNNING_STATUS.contains(job.getStatus())
+                        && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
+                    resume(cluster, job.getId());
+                    success = true;
+                }
+                break;
 
-				case KILL:
-					// not already killed and preconditions are true
-					killBundle(cluster, job);
-					success = true;
-					break;
-				}
-				afterAction(entity, action, cluster);
-			}
-		}
-		return success ? "SUCCESS" : "FAILED";
-	}
+            case KILL:
+                // not already killed and preconditions are true
+                killBundle(cluster, job);
+                success = true;
+                break;
+            }
+            afterAction(entity, action, cluster);
+        }
+        return success ? "SUCCESS" : "FAILED";
+    }
 
 	private void killBundle(String cluster, BundleJob job) throws IvoryException {
 		OozieClient client = OozieClientFactory.get(cluster);
@@ -366,7 +376,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		try {
 			WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(
 					ENGINE, entity);
-			String[] clusters = EntityUtil.getClustersDefinedInColos(entity);
+			Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
 			List<Instance> runInstances = new ArrayList<Instance>();
 			String[] wfNames = builder.getWorkflowNames(entity);
 			List<String> coordNames = new ArrayList<String>();
@@ -734,87 +744,68 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		return EntityUtil.equals(oldEntity, newEntity, BUNDLE_UPDATEABLE_PROPS);
 	}
 
-	@Override
-	public void update(Entity oldEntity, Entity newEntity)
-			throws IvoryException {
-		if (!UpdateHelper.shouldUpdate(oldEntity, newEntity))
-			return;
+    @Override
+    public void update(Entity oldEntity, Entity newEntity, String cluster) throws IvoryException {
+        if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, cluster)) {
+            LOG.debug("Nothing to update for cluster " + cluster);
+            return;
+        }
 
-		Map<String, BundleJob> bundleMap = findBundle(oldEntity);
+        BundleJob bundle = findLatestBundle(oldEntity, cluster);
+        if (bundle == MISSING)
+            return;
 
-		LOG.info("Updating entity through Workflow Engine"
-				+ newEntity.toShortString());
-		for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
-			if (entry.getValue() == MISSING)
-				continue;
+        LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
+        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
+        if (newEndTime.before(now())) {
+            throw new IvoryException("New end time for " + newEntity.getName()
+                    + " is past current time. Entity can't be updated. Use remove and add");
+        }
 
-			String cluster = entry.getKey();
-			BundleJob bundle = entry.getValue();
-			Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
-			if (newEndTime.before(now())) {
-				throw new IvoryException(
-						"New end time for "
-								+ newEntity.getName()
-								+ " is past current time. Entity can't be updated. Use remove and add");
-			}
+        LOG.debug("Updating for cluster : " + cluster + ", bundle: " + bundle.getId());
 
-			LOG.debug("Updating for cluster : " + cluster + ", bundle: "
-					+ bundle.getId());
+        if (canUpdateBundle(oldEntity, newEntity)) {
+            // only concurrency and endtime are changed. So, change coords
+            LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
+            updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
+                    EntityUtil.getEndTime(newEntity, cluster));
+            return;
+        }
 
-			if (canUpdateBundle(oldEntity, newEntity)) {
-				// only concurrency and endtime are changed. So, change coords
-				LOG.info("Change operation is adequate! : " + cluster
-						+ ", bundle: " + bundle.getId());
-				updateCoords(cluster, bundle.getId(),
-						EntityUtil.getParallel(newEntity),
-						EntityUtil.getEndTime(newEntity, cluster));
-				return;
-			}
+        LOG.debug("Going to update ! : " + newEntity.toShortString() + cluster + ", bundle: "
+                + bundle.getId());
+        updateInternal(oldEntity, newEntity, cluster, bundle, false);
+        LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: "
+                + bundle.getId());
 
-			LOG.debug("Going to update ! : " + newEntity.toShortString()
-					+ cluster + ", bundle: " + bundle.getId());
-			updateInternal(oldEntity, newEntity, cluster, bundle, false);
-			LOG.info("Entity update complete : " + newEntity.toShortString()
-					+ cluster + ", bundle: " + bundle.getId());
-		}
+        Set<Entity> affectedEntities = EntityGraph.get().getDependents(oldEntity);
+        for (Entity affectedEntity : affectedEntities) {
+            if (affectedEntity.getEntityType() != EntityType.PROCESS)
+                continue;
 
-		Set<Entity> affectedEntities = EntityGraph.get().getDependents(
-				oldEntity);
-		for (Entity entity : affectedEntities) {
-			if (entity.getEntityType() != EntityType.PROCESS)
-				continue;
-			LOG.info("Dependent entities need to be updated "
-					+ entity.toShortString());
-			if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, entity))
-				continue;
-			Map<String, BundleJob> processBundles = findBundle(entity);
-			for (Map.Entry<String, BundleJob> processBundle : processBundles
-					.entrySet()) {
-				if (processBundle.getValue() == MISSING)
-					continue;
-				BundleJob feedBundle = findBundle(newEntity,
-						processBundle.getKey());
-				if (feedBundle == MISSING
-						&& bundleMap.get(processBundle.getKey()) != MISSING) {
-					throw new IllegalStateException(
-							"Unable to find feed bundle in "
-									+ processBundle.getKey() + " for entity "
-									+ newEntity.getName());
-				}
-				LOG.info("Triggering update for " + processBundle.getKey()
-						+ ", " + processBundle.getValue().getId());
-				boolean processCreated = feedBundle.getCreatedTime().before(
-						processBundle.getValue().getCreatedTime());
-				updateInternal(entity, entity, processBundle.getKey(),
-						processBundle.getValue(), processCreated);
-				LOG.info("Entity update complete : " + entity.toShortString()
-						+ processBundle.getKey() + ", bundle: "
-						+ processBundle.getValue().getId());
-			}
-		}
-		LOG.info("Entity update and all dependent entities updated: "
-				+ oldEntity.toShortString());
-	}
+            LOG.info("Dependent entities need to be updated " + affectedEntity.toShortString());
+            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, affectedEntity))
+                continue;
+
+            BundleJob feedBundle = findLatestBundle(newEntity, cluster);
+            BundleJob affectedProcBundle = findLatestBundle(affectedEntity, cluster);
+            if (affectedProcBundle == MISSING)
+                continue;
+
+            if (feedBundle == MISSING) {
+                throw new IllegalStateException("Unable to find feed bundle in " + cluster
+                        + " for entity " + newEntity.getName());
+            }
+            LOG.info("Triggering update for " + cluster + ", " + affectedProcBundle.getId());
+            boolean processCreated = feedBundle.getCreatedTime().before(
+                    affectedProcBundle.getCreatedTime());
+            updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle,
+                    processCreated);
+            LOG.info("Entity update complete : " + affectedEntity.toShortString() + cluster
+                    + ", bundle: " + affectedProcBundle.getId());
+        }
+        LOG.info("Entity update and all dependent entities updated: " + oldEntity.toShortString());
+    }
 
 	private Date now() {
 		Calendar cal = Calendar.getInstance();

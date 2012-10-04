@@ -167,7 +167,7 @@ public class IvoryCLI {
 
 	private void instanceCommand(CommandLine commandLine)
 			throws IvoryCLIException, IOException {
-		String ivoryUrl = validateIvoryUrl(commandLine);
+		String ivoryUrl = getIvoryEndpoint(commandLine);
 		IvoryClient client = new IvoryClient(ivoryUrl);
 
 		Set<String> optionsList = new HashSet<String>();
@@ -258,7 +258,7 @@ public class IvoryCLI {
 
 	private void entityCommand(CommandLine commandLine)
 			throws IvoryCLIException, IOException {
-		String ivoryUrl = validateIvoryUrl(commandLine);
+		String ivoryUrl = getIvoryEndpoint(commandLine);
 		IvoryClient client = new IvoryClient(ivoryUrl);
 
 		Set<String> optionsList = new HashSet<String>();
@@ -432,16 +432,21 @@ public class IvoryCLI {
 		Option url = new Option(URL_OPTION, true, "Ivory URL");
 		Option entityType = new Option(ENTITY_TYPE_OPT, true,
 				"Entity type, can be cluster, feed or process xml");
+		entityType.setRequired(true);
 		Option filePath = new Option(FILE_PATH_OPT, true,
 				"Path to entity xml file");
 		Option entityName = new Option(ENTITY_NAME_OPT, true,
 				"Entity type, can be cluster, feed or process xml");
+        Option colo = new Option(COLO_OPT, true,
+                "Colo name");
+        colo.setRequired(false);
 
 		entityOptions.addOption(url);
 		entityOptions.addOptionGroup(group);
 		entityOptions.addOption(entityType);
 		entityOptions.addOption(entityName);
 		entityOptions.addOption(filePath);
+		entityOptions.addOption(colo);
 
 		return entityOptions;
 
@@ -534,28 +539,25 @@ public class IvoryCLI {
 
 	}
 
-	protected String validateIvoryUrl(CommandLine commandLine)
-			throws IvoryCLIException {
+	protected String getIvoryEndpoint(CommandLine commandLine)
+			throws IvoryCLIException, IOException {
 		String url = commandLine.getOptionValue(URL_OPTION);
 		if (url == null) {
-			try {
-				Properties prop = getClientProperties();
-				if (prop.containsKey("ivory.url"))
-					url = prop.getProperty("ivory.url");
-				else {
-					throw new IvoryCLIException(
-							"ivory.url property not present in client.properties");
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		    url = System.getenv(IVORY_URL);
 		}
+		if(url == null) {
+            Properties prop = getClientProperties();
+            if (prop.containsKey("ivory.url"))
+                url = prop.getProperty("ivory.url");
+		}
+		if(url == null)
+		    throw new IvoryCLIException("Failed to get ivory url from cmdline, or environment or client properties");
 		return url;
 	}
 
 	private void adminCommand(CommandLine commandLine) throws IvoryCLIException, IOException {
 		String result;
-		String ivoryUrl = validateIvoryUrl(commandLine);
+		String ivoryUrl = getIvoryEndpoint(commandLine);
 		IvoryClient client = new IvoryClient(ivoryUrl);
 		
 		Set<String> optionsList = new HashSet<String>();
@@ -577,17 +579,13 @@ public class IvoryCLI {
 		}
 	}
 	
-	private Properties getClientProperties() throws IvoryCLIException, IOException
+	private Properties getClientProperties() throws IOException
 	{
-		InputStream input = IvoryCLI.class
-				.getResourceAsStream(CLIENT_PROPERTIES);
-		if (input == null) {
-			ERR_STREAM
-					.println("client.properties file does not exist");
-			throw new IvoryCLIException("Ivory Client Properties missing");
+        Properties prop = new Properties();
+        InputStream input = IvoryCLI.class.getResourceAsStream(CLIENT_PROPERTIES);
+		if (input != null) {
+	        prop.load(input);
 		}
-		Properties prop = new Properties();
-		prop.load(input);
 		return prop;
 	}
 

@@ -88,11 +88,10 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             Path clusterFile = new Path(path, pathFilter.getJarName(localPath) + ".jar");
             if (fs.exists(clusterFile)) {
                 FileStatus fstat = fs.getFileStatus(clusterFile);
-                if (fstat.getLen() == localFile.length() && fstat.getModificationTime() == localFile.lastModified())
+                if (fstat.getLen() == localFile.length())
                     continue;
             }
             fs.copyFromLocalFile(false, true, new Path(localFile.getAbsolutePath()), clusterFile);
-            fs.setTimes(clusterFile, localFile.lastModified(), System.currentTimeMillis());
             LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
         }
     }

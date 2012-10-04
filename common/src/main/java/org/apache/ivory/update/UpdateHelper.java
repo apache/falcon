@@ -24,15 +24,17 @@ public final class UpdateHelper {
     private static final String[] PROCESS_FIELDS = new String[] { "retry.policy", "retry.delay", "retry.attempts", 
         "lateProcess.policy", "lateProcess.delay", "lateProcess.lateInputs[\\d+].input", "lateProcess.lateInputs[\\d+].workflowPath"};
     
-    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity) throws IvoryException {
+    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, String cluster) throws IvoryException {
+        Entity oldView = EntityUtil.getClusterView(oldEntity, cluster);
+        Entity newView = EntityUtil.getClusterView(newEntity, cluster);
         switch(oldEntity.getEntityType()) {
             case FEED:
-                if(EntityUtil.equals(oldEntity, newEntity, FEED_FIELDS))
+                if(EntityUtil.equals(oldView, newView, FEED_FIELDS))
                     return false;
                 return true;
                 
             case PROCESS:
-                if(EntityUtil.equals(oldEntity, newEntity, PROCESS_FIELDS))
+                if(EntityUtil.equals(oldView, newView, PROCESS_FIELDS))
                     return false;
                 return true;
         }

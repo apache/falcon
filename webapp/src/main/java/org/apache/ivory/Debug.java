@@ -71,7 +71,7 @@ public class Debug {
         StartupProperties.get().setProperty("current.colo", "ua1");
         OozieWorkflowEngine engine = new OozieWorkflowEngine();
         ConfigurationStore.get().initiateUpdate(newEntity);
-        engine.update(obj, newEntity);
+        engine.update(obj, newEntity, newEntity.getClusters().getClusters().get(0).getName());
         engine.delete(newEntity);
         System.exit(0);
     }

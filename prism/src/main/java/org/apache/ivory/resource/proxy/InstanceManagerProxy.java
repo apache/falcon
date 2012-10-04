@@ -1,9 +1,25 @@
 package org.apache.ivory.resource.proxy;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
-import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
@@ -13,17 +29,6 @@ import org.apache.ivory.resource.InstancesResult.Instance;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
 
@@ -31,7 +36,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
 
     public InstanceManagerProxy() {
         try {
-            String[] colos = getAllColos();
+            Set<String> colos = getAllColos();
 
             for (String colo : colos) {
                 initializeFor(colo);
@@ -199,24 +204,24 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     private abstract class InstanceProxy {
 
         public InstancesResult execute(String coloExpr, String type, String name) {
-            String[] colos = getColosFromExpression(coloExpr, type, name);
+            Set<String> colos = getColosFromExpression(coloExpr, type, name);
 
-            InstancesResult[] results = new InstancesResult[colos.length];
-            for (int index = 0; index < colos.length; index++) {
+            Map<String, InstancesResult> results = new HashMap<String, InstancesResult>();
+            for (String colo:colos) {
                 try {
-                    APIResult resultHolder = doExecute(colos[index]);
+                    APIResult resultHolder = doExecute(colo);
                     if (resultHolder instanceof InstancesResult) {
-                        results[index] = (InstancesResult) resultHolder;
+                        results.put(colo, (InstancesResult) resultHolder);
                     } else {
                         throw new IvoryException(resultHolder.getMessage());
                     }
                 } catch (IvoryException e) {
-                    results[index] = new InstancesResult(APIResult.Status.FAILED,
+                    results.put(colo, new InstancesResult(APIResult.Status.FAILED,
                             e.getClass().getName() + "::" + e.getMessage(),
-                            new InstancesResult.Instance[0]);
+                            new InstancesResult.Instance[0]));
                 }
             }
-            InstancesResult finalResult = consolidateInstanceResult(results, colos);
+            InstancesResult finalResult = consolidateInstanceResult(results);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
                 throw IvoryWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {
@@ -227,19 +232,19 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         protected abstract InstancesResult doExecute(String colo) throws IvoryException;
     }
     
-    private InstancesResult consolidateInstanceResult(InstancesResult[] results, String[] colos) {
-        if (results == null || results.length == 0)
+    private InstancesResult consolidateInstanceResult(Map<String, InstancesResult> results) {
+        if (results == null || results.isEmpty())
             return null;
 
         StringBuilder message = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();
         List<Instance> instances = new ArrayList<Instance>();
         int statusCount = 0;
-        for (int index = 0; index < results.length; index++) {
-            InstancesResult result = results[index];
-            message.append(colos[index]).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colos[index]).append('/').append(results[index].getRequestId()).append('\n');
-            statusCount += results[index].getStatus().ordinal();
+        for (String colo:results.keySet()) {
+            InstancesResult result = results.get(colo);
+            message.append(colo).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
+            statusCount += result.getStatus().ordinal();
 
             if (result.getInstances() == null) continue;
 
@@ -250,7 +255,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         }
         Instance[] arrInstances = new Instance[instances.size()];
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.length * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
         InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
         result.setRequestId(requestIds.toString());
         return result;

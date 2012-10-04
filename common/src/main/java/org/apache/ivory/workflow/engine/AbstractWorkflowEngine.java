@@ -47,6 +47,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract String delete(Entity entity) throws IvoryException;
     
+    public abstract String delete(Entity entity, String cluster) throws IvoryException;
+    
     public abstract void reRun(String cluster, String wfId, Properties props) throws IvoryException;
 
     public abstract boolean isActive(Entity entity) throws IvoryException;
@@ -65,7 +67,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws IvoryException;
 
-	public abstract void update(Entity oldEntity, Entity newEntity) throws IvoryException;
+	public abstract void update(Entity oldEntity, Entity newEntity, String cluster) throws IvoryException;
 
 	public abstract String getWorkflowStatus(String cluster, String jobId) throws IvoryException;
 	

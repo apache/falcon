@@ -1,5 +1,24 @@
 package org.apache.ivory.resource.proxy;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.IvoryRuntimException;
 import org.apache.ivory.IvoryWebException;
@@ -10,23 +29,15 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.resource.APIResult;
-import org.apache.ivory.resource.APIResult.Status;
 import org.apache.ivory.resource.AbstractSchedulableEntityManager;
 import org.apache.ivory.resource.EntityList;
 import org.apache.ivory.resource.channel.Channel;
 import org.apache.ivory.resource.channel.ChannelFactory;
 import org.apache.ivory.util.DeploymentUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.*;
-import java.util.Map.Entry;
-
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
+    private static final String PRISM_TAG = "prism";
 
     private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
     private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
@@ -35,11 +46,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     public SchedulableEntityManagerProxy() {
         try {
-            String[] colos = getAllColos();
+            Set<String> colos = getAllColos();
 
             for (String colo : colos) {
                 initializeFor(colo);
             }
+            
+            DeploymentUtil.setPrismMode();
         } catch (IvoryException e) {
             throw new IvoryRuntimException("Unable to initialize channels", e);
         }
@@ -84,7 +97,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             super.submit(bufferedRequest, type, currentColo);
         }
 
-        final String entity = getEntityName(bufferedRequest, type);
+        final String entity = getEntity(bufferedRequest, type).getName();
         return new EntityProxy(type, entity) {
             @Override
             protected APIResult doExecute(String colo) throws IvoryException {
@@ -93,12 +106,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute();
     }
 
-    private String getEntityName(HttpServletRequest request, String type) {
+    private Entity getEntity(HttpServletRequest request, String type) {
         try {
             request.getInputStream().reset();
             Entity entity = deserializeEntity(request, EntityType.valueOf(type.toUpperCase()));
             request.getInputStream().reset();
-            return entity.getName();
+            return entity;
         } catch (Exception e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);
         }
@@ -122,7 +135,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("entityName") @PathParam("entity") final String entity, @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        APIResult result = new EntityProxy(type, entity) {
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        
+        results.put("ivory", new EntityProxy(type, entity) {
             @Override
             public APIResult execute() {
                 try {
@@ -139,13 +154,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             protected APIResult doExecute(String colo) throws IvoryException {
                 return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entity, colo);
             }
-        }.execute();
+        }.execute());
 
         if (!embeddedMode) {
-            APIResult prismResult = super.delete(bufferedRequest, type, entity, currentColo);
-            result = consolidateResult(result, prismResult);
+            results.put(PRISM_TAG,  super.delete(bufferedRequest, type, entity, currentColo));
         }
-        return result;
+        return consolidateResult(results);
     }
 
     @POST
@@ -158,33 +172,62 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        String[] oldColos = getApplicableColos(type, entityName);
-        if (!embeddedMode) {
-            super.update(bufferedRequest, type, entityName, currentColo);
+        final Set<String> oldColos = getApplicableColos(type, entityName);
+        final Set<String> newColos = getApplicableColos(type, getEntity(bufferedRequest, type));
+        final Set<String> mergedColos = new HashSet<String>();
+        mergedColos.addAll(oldColos);
+        mergedColos.retainAll(newColos);    //Common colos where update should be called
+        newColos.removeAll(oldColos);   //New colos where submit should be called
+        oldColos.removeAll(mergedColos);   //Old colos where delete should be called
+
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        if(!oldColos.isEmpty()) {
+            results.put("delete", new EntityProxy(type, entityName) {
+                @Override
+                protected Set<String> getColosToApply() {
+                    return oldColos;
+                }
+    
+                @Override
+                protected APIResult doExecute(String colo) throws IvoryException {
+                    return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entityName, colo);
+                }
+            }.execute());
         }
-        String[] newColos = getApplicableColos(type, entityName);
-        final String[] mergedColos = addColos(oldColos, newColos);
 
-        return new EntityProxy(type, entityName) {
-            @Override
-            protected String[] getColosToApply() {
-                return mergedColos;
-            }
+        if(!mergedColos.isEmpty()) {
+            results.put("update", new EntityProxy(type, entityName) {
+                @Override
+                protected Set<String> getColosToApply() {
+                    return mergedColos;
+                }
+    
+                @Override
+                protected APIResult doExecute(String colo) throws IvoryException {
+                    return getConfigSyncChannel(colo).invoke("update", bufferedRequest, type, entityName, colo);
+                }
+            }.execute());
+        }
 
-            @Override
-            protected APIResult doExecute(String colo) throws IvoryException {
-                return getConfigSyncChannel(colo).invoke("update", bufferedRequest, type, entityName, colo);
-            }
-        }.execute();
-    }
-
-    private String[] addColos(String[] oldColos, String[] newColos) {
-        Set<String> colos = new HashSet<String>();
-        if (oldColos != null)
-            Collections.addAll(colos, oldColos);
-        if (newColos != null)
-            Collections.addAll(colos, newColos);
-        return colos.toArray(new String[colos.size()]);
+        if(!newColos.isEmpty()) {
+            results.put("submit", new EntityProxy(type, entityName) {
+                @Override
+                protected Set<String> getColosToApply() {
+                    return newColos;
+                }
+    
+                @Override
+                protected APIResult doExecute(String colo) throws IvoryException {
+                    return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, type, colo);
+                }
+            }.execute());
+        }
+        
+        if (!embeddedMode) {
+            results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo));
+        }
+        
+        return consolidateResult(results);
     }
 
     @GET
@@ -197,7 +240,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") final String coloExpr) throws IvoryWebException {
         return new EntityProxy(type, entity) {
             @Override
-            protected String[] getColosToApply() {
+            protected Set<String> getColosToApply() {
                 return getColosFromExpression(coloExpr, type, entity);
             }
 
@@ -247,7 +290,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
         return new EntityProxy(type, entity) {
             @Override
-            protected String[] getColosToApply() {
+            protected Set<String> getColosToApply() {
                 return getColosFromExpression(coloExpr, type, entity);
             }
 
@@ -267,20 +310,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @QueryParam("colo") String coloExpr) {
         BufferedRequest bufferedRequest = new BufferedRequest(request);
-        String entity = getEntityName(bufferedRequest, type);
-
-        APIResult submitResult = submit(bufferedRequest, type, coloExpr);
-        APIResult schedResult = schedule(bufferedRequest, type, entity, coloExpr);
-        return consolidateResult(submitResult, schedResult);
-    }
-
-    private APIResult consolidateResult(APIResult result1, APIResult result2) {
-        int statusCnt = result1.getStatus().ordinal() + result2.getStatus().ordinal();
-        APIResult result = new APIResult(statusCnt == 0 ? Status.SUCCEEDED : (statusCnt == 4 ? Status.FAILED : Status.PARTIAL),
-                result1.getMessage() + result2.getMessage());
-        result.setRequestId(result1.getRequestId().equals(result2.getRequestId()) ? result1.getRequestId() : result1.getRequestId()
-                + result2.getRequestId());
-        return result;
+        String entity = getEntity(bufferedRequest, type).getName();
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        results.put("submit", submit(bufferedRequest, type, coloExpr));
+        results.put("schedule", schedule(bufferedRequest, type, entity, coloExpr));
+        return consolidateResult(results);
     }
 
     @POST
@@ -296,7 +330,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new EntityProxy(type, entity) {
             @Override
-            protected String[] getColosToApply() {
+            protected Set<String> getColosToApply() {
                 return getColosFromExpression(coloExpr, type, entity);
             }
 
@@ -319,7 +353,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new EntityProxy(type, entity) {
             @Override
-            protected String[] getColosToApply() {
+            protected Set<String> getColosToApply() {
                 return getColosFromExpression(coloExpr, type, entity);
             }
 
@@ -340,7 +374,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         public APIResult execute() {
-            String[] colos = getColosToApply();
+            Set<String> colos = getColosToApply();
 
             Map<String, APIResult> results = new HashMap<String, APIResult>();
 
@@ -359,7 +393,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }
         }
 
-        protected String[] getColosToApply() {
+        protected Set<String> getColosToApply() {
             return getApplicableColos(type, name);
         }
 

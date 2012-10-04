@@ -8,14 +8,43 @@ import java.util.TimeZone;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.SchemaHelper;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class EntityUtilTest {
+public class EntityUtilTest extends AbstractTestBase{
     private static TimeZone tz = TimeZone.getTimeZone("UTC");
-    private static final String PROCESS_XML = "/config/process/process-0.1.xml";
 
+    @Test
+    public void testProcessView() throws Exception {
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+        Cluster cluster = new Cluster();
+        cluster.setName("newCluster");
+        cluster.setValidity(process.getClusters().getClusters().get(0).getValidity());
+        process.getClusters().getClusters().add(cluster);
+        Assert.assertEquals(process.getClusters().getClusters().size(), 2);
+        String currentCluster = process.getClusters().getClusters().get(0).getName();
+        Process newProcess = EntityUtil.getClusterView(process, currentCluster);
+        Assert.assertFalse(EntityUtil.equals(process, newProcess));
+        Assert.assertEquals(newProcess.getClusters().getClusters().size(), 1);
+        Assert.assertEquals(newProcess.getClusters().getClusters().get(0).getName(), currentCluster);
+    }
+    
+    @Test
+    public void testFeedView() throws Exception {
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(FEED_XML));
+        Feed view = EntityUtil.getClusterView(feed, "testCluster");
+        Assert.assertEquals(view.getClusters().getClusters().size(), 1);
+        Assert.assertEquals(view.getClusters().getClusters().get(0).getName(), "testCluster");
+        
+        view = EntityUtil.getClusterView(feed, "backupCluster");
+        Assert.assertEquals(view.getClusters().getClusters().size(), 2);
+    }
+    
     @Test
     public void testEquals() throws Exception {
         Process process1 = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(

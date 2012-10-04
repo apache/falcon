@@ -47,7 +47,6 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.apache.ivory.oozie.bundle.BUNDLEAPP;
-import org.apache.ivory.oozie.bundle.CONTROLS;
 import org.apache.ivory.oozie.bundle.COORDINATOR;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.ObjectFactory;
@@ -81,7 +80,10 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         @Override
         public String getJarName(Path path) {
-            return path.getName();
+            String name = path.getName();
+            if(name.endsWith(".jar"))
+                name = name.substring(0, name.indexOf(".jar"));
+            return name;
         }
     };
 
