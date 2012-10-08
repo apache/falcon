@@ -154,11 +154,53 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	
 	@Test
 	public void testPartitionExpression() throws IvoryException {
-		Feed feed = (Feed) parser
-				.parseAndValidate(ProcessEntityParserTest.class
-						.getResourceAsStream(FEED_XML));
-		feed.setPartitions(null);
-		parser.validate(feed);
+        Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class
+                .getResourceAsStream(FEED_XML));
+        
+        //When there are more than 1 src clusters, there should be partition expression
+        org.apache.ivory.entity.v0.feed.Cluster newCluster = new org.apache.ivory.entity.v0.feed.Cluster();
+        newCluster.setName("newCluster");
+        newCluster.setType(ClusterType.SOURCE);
+        newCluster.setPartition("${cluster.colo}");
+        feed.getClusters().getClusters().add(newCluster);
+        try {
+            parser.validate(feed);
+            Assert.fail("Expected ValidationException");
+        } catch(ValidationException e) { }
+        
+        //When there are more than 1 src clusters, the partition expression should contain cluster variable
+        feed.getClusters().getClusters().get(0).setPartition("*");
+        try {
+            parser.validate(feed);
+            Assert.fail("Expected ValidationException");
+        } catch(ValidationException e) { }
+        
+        //When there are more than 1 target cluster, there should be partition expre
+        newCluster.setType(ClusterType.TARGET);
+        try {
+            parser.validate(feed);
+            Assert.fail("Expected ValidationException");
+        } catch(ValidationException e) { }
+        
+        //When there are more than 1 target clusters, the partition expression should contain cluster variable
+        feed.getClusters().getClusters().get(1).setPartition("*");
+        try {
+            parser.validate(feed);
+            Assert.fail("Expected ValidationException");
+        } catch(ValidationException e) { }
+        
+        //Number of parts in partition expression < number of partitions defined for feed
+        feed.getClusters().getClusters().get(1).setPartition("*/*");
+        try {
+            parser.validate(feed);
+            Assert.fail("Expected ValidationException");
+        } catch(ValidationException e) { }
+
+        feed.getClusters().getClusters().get(0).setPartition(null);
+        feed.getClusters().getClusters().get(1).setPartition(null);
+        feed.getClusters().getClusters().remove(2);
+        feed.setPartitions(null);
+        parser.validate(feed);
 	}
 
 	@Test
@@ -306,11 +348,11 @@ public class FeedEntityParserTest extends AbstractTestBase {
 	public void testClusterPartitionExp() throws IvoryException {
 		Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
 				"testCluster");
-		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+		Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster,
 				"/*/${cluster.colo}"), "/*/" + cluster.getColo());
-		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+		Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster,
 				"/*/${cluster.name}/Local"), "/*/" + cluster.getName()+"/Local");
-		Assert.assertEquals(FeedEntityParser.getPartitionExpValue(cluster,
+		Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster,
 				"/*/${cluster.field1}/Local"), "/*/value1/Local");
 	}
 	

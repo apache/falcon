@@ -19,20 +19,18 @@
 package org.apache.ivory.entity.parser;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityGraph;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.ClusterType;
 import org.apache.ivory.entity.v0.feed.Feed;
@@ -65,9 +63,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(), cluster.getName());
             validateFeedCutOffPeriod(feed, cluster);
-            validateFeedPartitionExpression(feed, cluster);
         }
 
+        validateFeedPartitionExpression(feed);
         validateFeedSourceCluster(feed);
         validateFeedGroups(feed);
 
@@ -197,68 +195,59 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     + " should be more than feed's late arrival cut-off period: " + feedCutoff + " for feed: " + feed.getName());
         }
     }
-
-    private static void loadClusterProperties(Properties prop, org.apache.ivory.entity.v0.cluster.Cluster cluster) {
-        Map<String, String> clusterVars = new HashMap<String, String>();
-        clusterVars.put("colo", cluster.getColo());
-        clusterVars.put("name", cluster.getName());
-        if (cluster.getProperties() != null) {
-            for (Property property : cluster.getProperties().getProperties())
-                clusterVars.put(property.getName(), property.getValue());
-        }
-        prop.put("cluster", clusterVars);
-    }
-
-    private void validateFeedPartitionExpression(Feed feed, Cluster cluster) throws IvoryException {
-        int expressions = 0, numSourceClusters = 0, numTargetClusters = 0;
+    
+    private void validateFeedPartitionExpression(Feed feed) throws IvoryException {
+        int numSourceClusters = 0, numTrgClusters = 0;
         for (Cluster cl : feed.getClusters().getClusters()) {
-            if (cl.getType().equals(ClusterType.SOURCE)){
+            if (cl.getType() == ClusterType.SOURCE){
                 numSourceClusters++;
-            }
-            if (cl.getType().equals(ClusterType.TARGET)){
-            	numTargetClusters++;
+            } else if(cl.getType() == ClusterType.TARGET) {
+                numTrgClusters++;
             }
         }
-        if (cluster.getType().equals(ClusterType.SOURCE) && cluster.getPartition() != null && numSourceClusters != 1) {
-            String[] tokens = cluster.getPartition().split("/");
-            if (feed.getPartitions() == null)
-                throw new ValidationException("Feed Partitions not specified for feed: " + feed.getName());
-            if (tokens.length != feed.getPartitions().getPartitions().size()) {
-                throw new ValidationException(
-                        "Number of expressions in Partition Expression are not equal to number of feed partitions");
-            } else {
-                org.apache.ivory.entity.v0.cluster.Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER,
-                        cluster.getName());
-                for (String token : tokens) {
-                    String val = getPartitionExpValue(clusterEntity, token);
-                    if (!val.equals(token)) {
-                        expressions++;
-                        break;
+        
+        int feedParts = feed.getPartitions() != null ? feed.getPartitions().getPartitions().size() : 0;
+        
+        for(Cluster cluster:feed.getClusters().getClusters()) {
+
+            if(cluster.getType() == ClusterType.SOURCE && numSourceClusters > 1 && numTrgClusters >= 1) {
+                String part = FeedHelper.normalizePartitionExpression(cluster.getPartition());
+                if(StringUtils.split(part, '/').length == 0)
+                    throw new ValidationException("Partition expression has to be specified for cluster " + cluster.getName() +
+                            " as there are more than one source clusters");
+                validateClusterExpDefined(cluster);
+
+            } else if(cluster.getType() == ClusterType.TARGET) {
+
+                for(Cluster src:feed.getClusters().getClusters()) {
+                    if(src.getType() == ClusterType.SOURCE) {
+                        String part = FeedHelper.normalizePartitionExpression(src.getPartition(), cluster.getPartition());
+                        int numParts = StringUtils.split(part, '/').length;
+                        if(numParts > feedParts)
+                            throw new ValidationException("Partition for " + src.getName() + " and " + cluster.getName() + 
+                                    "clusters is more than the number of partitions defined in feed");
                     }
                 }
-                if (expressions == 0)
-                    throw new ValidationException("Alteast one of the partition tags has to be an expression");
+                
+                if(numTrgClusters > 1 && numSourceClusters >= 1) {
+                    String part = FeedHelper.normalizePartitionExpression(cluster.getPartition());
+                    if(StringUtils.split(part, '/').length == 0)
+                        throw new ValidationException("Partition expression has to be specified for cluster " + cluster.getName() +
+                                " as there are more than one target clusters");
+                    validateClusterExpDefined(cluster);                    
+                }
+                
             }
-        } else {
-            if (cluster.getPartition() != null && cluster.getType().equals(ClusterType.TARGET))
-                throw new ValidationException("Target Cluster should not have Partition Expression");
-			else if (cluster.getPartition() == null
-					&& cluster.getType().equals(ClusterType.SOURCE)
-					&& numSourceClusters > 1 && numTargetClusters > 0)
-                throw new ValidationException("Partition Expression is missing for the cluster: " + cluster.getName());
-            else if (cluster.getPartition() != null && numSourceClusters == 1)
-                throw new ValidationException("Partition Expression not expected for the cluster:" + cluster.getName());
-
         }
-
     }
 
-    public static String getPartitionExpValue(org.apache.ivory.entity.v0.cluster.Cluster clusterEntity, String exp)
-            throws IvoryException {
-        Properties properties = new Properties();
-        loadClusterProperties(properties, clusterEntity);
-        ExpressionHelper expHelp = ExpressionHelper.get();
-        expHelp.setPropertiesForVariable(properties);
-        return expHelp.evaluateFullExpression(exp, String.class);
+    private void validateClusterExpDefined(Cluster cl) throws IvoryException {
+        if(cl.getPartition() == null)
+            return;
+        
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cl.getName());
+        String part = FeedHelper.normalizePartitionExpression(cl.getPartition());
+        if(FeedHelper.evaluateClusterExp(cluster, part).equals(part))
+            throw new ValidationException("Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName()); 
     }
 }

@@ -116,7 +116,7 @@
             <xs:element type="retention" name="retention" />
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="cluster-type" name="type" use="required" />
+        <xs:attribute type="cluster-type" name="type" use="optional" />
         <xs:attribute type="xs:string" name="partition" use="optional" />
     </xs:complexType>
     <xs:complexType name="partitions">

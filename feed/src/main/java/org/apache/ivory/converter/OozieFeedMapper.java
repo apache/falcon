@@ -32,10 +32,8 @@ import org.apache.ivory.Tag;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
-import org.apache.ivory.entity.parser.FeedEntityParser;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
-import org.apache.ivory.entity.v0.Frequency;
 import org.apache.ivory.entity.v0.Frequency.TimeUnit;
 import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
@@ -141,10 +139,12 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath) throws IvoryException {
         Feed feed = getEntity();
         List<COORDINATORAPP> replicationCoords = new ArrayList<COORDINATORAPP>();
-        if (FeedHelper.getCluster(feed, targetCluster.getName()).getType().equals(ClusterType.TARGET)) {
+        
+        if (FeedHelper.getCluster(feed, targetCluster.getName()).getType() == ClusterType.TARGET) {
             String coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, feed).toString();
             Path basePath = getCoordPath(bundlePath, coordName);
             createReplicatonWorkflow(targetCluster, basePath, coordName);
+            
             for (org.apache.ivory.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
                 if (feedCluster.getType().equals(ClusterType.SOURCE)) {
                     COORDINATORAPP coord = createAndGetCoord(feed,
@@ -231,10 +231,14 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         try {
             replicationWF.setAppPath(getHDFSPath(wfPath.toString()));
             Feed feed = getEntity();
+
+            String srcPart = FeedHelper.normalizePartitionExpression(FeedHelper.getCluster(feed, srcCluster.getName()).getPartition());
+            srcPart = FeedHelper.evaluateClusterExp(srcCluster, srcPart);
+            String targetPart = FeedHelper.normalizePartitionExpression(FeedHelper.getCluster(feed, trgCluster.getName()).getPartition());
+            targetPart = FeedHelper.evaluateClusterExp(trgCluster, targetPart);
+            
             StringBuilder pathsWithPartitions = new StringBuilder();
-            pathsWithPartitions.append("${coord:dataIn('input')}").append(
-                    FeedHelper.getCluster(feed, srcCluster.getName()).getPartition() == null ? "" : "/"+FeedEntityParser.getPartitionExpValue(
-                            srcCluster, FeedHelper.getCluster(feed, srcCluster.getName()).getPartition()));
+            pathsWithPartitions.append("${coord:dataIn('input')}/").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
 
             Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
             props.put("srcClusterName", srcCluster.getName());

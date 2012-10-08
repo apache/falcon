@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 
 public final class UpdateHelper {
     private static final Logger LOG = Logger.getLogger(UpdateHelper.class);
-    private static final String[] FEED_FIELDS = new String[] { "groups", "lateArrival.cutOff", "schema.location", "schema.provider",
+    private static final String[] FEED_FIELDS = new String[] { "partitions", "groups", "lateArrival.cutOff", "schema.location", "schema.provider",
         "ACL.group", "ACL.owner", "ACL.permission"};
     private static final String[] PROCESS_FIELDS = new String[] { "retry.policy", "retry.delay", "retry.attempts", 
         "lateProcess.policy", "lateProcess.delay", "lateProcess.lateInputs[\\d+].input", "lateProcess.lateInputs[\\d+].workflowPath"};

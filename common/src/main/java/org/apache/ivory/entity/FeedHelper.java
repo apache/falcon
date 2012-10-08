@@ -18,10 +18,18 @@
 
 package org.apache.ivory.entity;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.ivory.IvoryException;
+import org.apache.ivory.entity.v0.cluster.Property;
 import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.expression.ExpressionHelper;
 
 public class FeedHelper {
     public static Cluster getCluster(Feed feed, String clusterName) {
@@ -36,5 +44,38 @@ public class FeedHelper {
             if(loc.getType() == type)
                 return loc;
         return null;
+    }
+    
+    public static String normalizePartitionExpression(String part1, String part2) {
+        String partExp = StringUtils.stripToEmpty(part1) + "/" + StringUtils.stripToEmpty(part2);
+        partExp = partExp.replaceAll("//+", "/");
+        partExp = StringUtils.stripStart(partExp, "/");
+        partExp = StringUtils.stripEnd(partExp, "/");
+        return partExp;
+    }
+
+    public static String normalizePartitionExpression(String partition) {
+        return normalizePartitionExpression(partition, null);
+    }    
+    
+    private static Properties loadClusterProperties(org.apache.ivory.entity.v0.cluster.Cluster cluster) {
+        Properties properties = new Properties();
+        Map<String, String> clusterVars = new HashMap<String, String>();
+        clusterVars.put("colo", cluster.getColo());
+        clusterVars.put("name", cluster.getName());
+        if (cluster.getProperties() != null) {
+            for (Property property : cluster.getProperties().getProperties())
+                clusterVars.put(property.getName(), property.getValue());
+        }
+        properties.put("cluster", clusterVars);
+        return properties;
+    }
+
+    public static String evaluateClusterExp(org.apache.ivory.entity.v0.cluster.Cluster clusterEntity, String exp)
+            throws IvoryException {
+        Properties properties = loadClusterProperties(clusterEntity);
+        ExpressionHelper expHelp = ExpressionHelper.get();
+        expHelp.setPropertiesForVariable(properties);
+        return expHelp.evaluateFullExpression(exp, String.class);
     }
 }
