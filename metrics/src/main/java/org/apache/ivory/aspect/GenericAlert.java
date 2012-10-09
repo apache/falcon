@@ -17,7 +17,6 @@
  */
 package org.apache.ivory.aspect;
 
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.monitors.Dimension;
 import org.apache.ivory.monitors.Monitored;
 import org.apache.ivory.monitors.TimeTaken;
@@ -66,7 +65,7 @@ public class GenericAlert {
             @Dimension(value = "error-message") String errorMessage,
             @Dimension(value = "message") String message,
 			@TimeTaken long timeTaken)
-			throws IvoryException {
+			throws Exception {
 		return "IGNORE";
 	}
 	
@@ -81,7 +80,7 @@ public class GenericAlert {
 			@Dimension(value = "operation") String operation,
             @Dimension(value = "start-time") String startTime,
 			@TimeTaken long timeTaken)
-			throws IvoryException {
+			throws Exception {
 		return "IGNORE";
 	}
 	
@@ -100,5 +99,13 @@ public class GenericAlert {
             @Dimension(value = "entity-name") String entityName,
             @Dimension(value = "nominal-time") String nominalTime) {
 		return "IGNORE";
+	}
+	
+	@Monitored(event = "log-cleanup-service-failed")
+	public static String alertLogCleanupServiceFailed(
+			@Dimension(value = "message") String message,
+			@Dimension(value = "exception") Throwable throwable) {
+		return "IGNORE";
+
 	}
 }

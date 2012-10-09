@@ -17,8 +17,13 @@
  */
 package org.apache.ivory.rerun.handler;
 
+import java.io.IOException;
 import java.util.Date;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.aspect.GenericAlert;
 import org.apache.ivory.entity.EntityUtil;
@@ -37,6 +42,7 @@ import org.apache.ivory.rerun.event.LaterunEvent;
 import org.apache.ivory.rerun.policy.AbstractRerunPolicy;
 import org.apache.ivory.rerun.policy.RerunPolicyFactory;
 import org.apache.ivory.rerun.queue.DelayedQueue;
+import org.apache.ivory.workflow.engine.AbstractWorkflowEngine;
 
 public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		AbstractRerunHandler<LaterunEvent, M> {
@@ -63,8 +69,24 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 			int intRunId = Integer.parseInt(runId);
 			Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
 			Long wait = getEventDelay(entity, nominalTime);
-			if (wait == -1)
+			if (wait == -1) {
+				String logDir = this.getWfEngine().getWorkflowProperty(cluster,
+						wfId, "logDir");
+				String srcClusterName = this.getWfEngine().getWorkflowProperty(
+						cluster, wfId, "srcClusterName");
+				Path lateLogPath = this.getLateLogPath(logDir, nominalTime,
+						srcClusterName);
+				FileSystem fs = FileSystem.get(getConfiguration(cluster,
+						wfId));
+				if (fs.exists(lateLogPath)) {
+					boolean deleted = fs.delete(lateLogPath, true);
+					if (deleted == true) {
+						LOG.info("Successfully deleted late file path:"
+								+ lateLogPath);
+					}
+				}
 				return;
+			}
 
 			LOG.debug("Scheduling the late rerun for entity instance : "
 					+ entityType + "(" + entityName + ")" + ":" + nominalTime
@@ -179,6 +201,25 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 		daemon.setDaemon(true);
 		daemon.start();
 		LOG.info("Laterun Handler  thread started");
+	}
+	
+	public Path getLateLogPath(String logDir, String nominalTime,
+			String srcClusterName) {
+		//SrcClusterName valid only in case of feed
+		return new Path(logDir + "/latedata/" + nominalTime + "/"
+				+ (srcClusterName == null
+				? "" : srcClusterName));
+
+	}
+	
+	public Configuration getConfiguration(String cluster, String wfId)
+			throws IvoryException {
+		Configuration conf = new Configuration();
+		conf.set(
+				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
+				this.getWfEngine().getWorkflowProperty(cluster, wfId,
+						AbstractWorkflowEngine.NAME_NODE));
+		return conf;
 	}
 
 }

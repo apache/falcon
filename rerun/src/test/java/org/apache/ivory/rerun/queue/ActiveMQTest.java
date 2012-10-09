@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 
 public class ActiveMQTest {
 
-	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	private BrokerService broker;
 	private static final String DESTI = "activemq.topic";
 

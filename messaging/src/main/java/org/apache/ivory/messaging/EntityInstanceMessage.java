@@ -202,6 +202,8 @@ public class EntityInstanceMessage {
 		InputStream instance = fs.open(logFile);
 		IOUtils.copyBytes(instance, writer, 4096, true);
 		String[] instancePaths = writer.toString().split("=");
+		fs.delete(logFile, true);
+		LOG.info("Deleted feed instance paths file:"+logFile);
 		if (instancePaths.length == 1) {
 			LOG.debug("Returning 0 instance paths for feed ");
 			return new String[0];

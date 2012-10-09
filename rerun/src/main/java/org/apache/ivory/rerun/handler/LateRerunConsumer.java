@@ -105,17 +105,14 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 				message.getClusterName(), message.getWfId(), "nominalTime");
 		String srcClusterName = handler.getWfEngine().getWorkflowProperty(
 				message.getClusterName(), message.getWfId(), "srcClusterName");
-		
-		Configuration conf = new Configuration();
-		conf.set(
-				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
-				handler.getWfEngine().getWorkflowProperty(
-						message.getClusterName(), message.getWfId(),
-						AbstractWorkflowEngine.NAME_NODE));
-		Path lateLogPath = getLateLogPath(logDir, nominalTime, srcClusterName);
+
+		Configuration conf = handler.getConfiguration(message.getClusterName(),
+				message.getWfId());
+		Path lateLogPath = handler.getLateLogPath(logDir, nominalTime,
+				srcClusterName);
 		FileSystem fs = FileSystem.get(conf);
-		if(!fs.exists(lateLogPath)){
-			LOG.warn("Late log file:"+lateLogPath+" not found:");
+		if (!fs.exists(lateLogPath)) {
+			LOG.warn("Late log file:" + lateLogPath + " not found:");
 			return "";
 		}
 		Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
@@ -123,7 +120,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 		String[] inputFeeds = ivoryInputFeeds.split("#");
 		Entity entity = EntityUtil.getEntity(message.getEntityType(),
 				message.getEntityName());
-		
+
 		List<String> lateFeed = new ArrayList<String>();
 		if (EntityUtil.getLateProcess(entity) != null) {
 			for (LateInput li : EntityUtil.getLateProcess(entity)
@@ -146,15 +143,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 					+ ")");
 		}
 
-        return late.detectChanges(lateLogPath, feedSizes, conf);
+		return late.detectChanges(lateLogPath, feedSizes, conf);
 	}
 
-	private Path getLateLogPath(String logDir, String nominalTime,
-			String srcClusterName) {
-		//SrcClusterName valid only in case of feed
-		return new Path(logDir + "/latedata/" + nominalTime + "/"
-				+ (srcClusterName == null
-				? "" : srcClusterName));
-
-	}
 }
