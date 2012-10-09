@@ -98,6 +98,12 @@ public abstract class AbstractEntityManager {
     
     protected Set<String> getApplicableColos(String type, String name) throws IvoryWebException {
         try {
+            if (DeploymentUtil.isEmbeddedMode())
+                return DeploymentUtil.getDefaultColos();
+
+            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+                return getAllColos();
+
             return getApplicableColos(type, EntityUtil.getEntity(type, name));
         } catch (IvoryException e) {
             throw IvoryWebException.newException(e, Response.Status.BAD_REQUEST);

@@ -55,7 +55,7 @@ public class DeploymentUtil {
     }
     
     public static boolean isPrism() {
-    	return prism;
+    	return !embeddedMode && prism;
     }
     
     public static String getCurrentColo() {
