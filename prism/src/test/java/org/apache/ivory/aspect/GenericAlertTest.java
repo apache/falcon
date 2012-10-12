@@ -17,7 +17,6 @@
  */
 package org.apache.ivory.aspect;
 
-import org.apache.ivory.IvoryException;
 import org.aspectj.lang.annotation.Aspect;
 import org.testng.annotations.Test;
 
@@ -25,7 +24,7 @@ import org.testng.annotations.Test;
 public class GenericAlertTest {
 	
 	@Test
-	public void testWfInstanceFailedAlert() throws IvoryException{
+	public void testWfInstanceFailedAlert() throws Exception{
 		GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df", "ef-id", "1",
                 "DELETE", "now", "error", "none", 1242);
 	}

@@ -34,6 +34,7 @@
             <id>all</id>
             <modules>
                 <module>client</module>
+                <module>metrics</module>
                 <module>common</module>
                 <module>test-util</module>
                 <module>feed</module>
@@ -44,7 +45,6 @@
                 <module>replication</module>
                 <module>retention</module>
                 <module>archival</module>
-                <module>metrics</module>
                 <module>rerun</module>
                 <module>prism</module>
                 <module>webapp</module>

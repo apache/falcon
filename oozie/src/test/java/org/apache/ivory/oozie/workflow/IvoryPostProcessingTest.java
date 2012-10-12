@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 public class IvoryPostProcessingTest {
 
 	private String[] args;
-	private static final String BROKER_URL = "vm://localhost1?broker.useJmx=false&broker.persistent=true";
+	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
 	// private static final String BROKER_URL =
 	// "tcp://localhost:61616?daemon=true";
 	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
