@@ -132,8 +132,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + entity.getName()
-                    + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
+            bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
             bundleApp.getCoordinator().add(bundleCoord);
 
             copySharedLibs(cluster, coordPath);
