@@ -118,7 +118,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-            String feedPathMask = FeedHelper.getLocation(feed, LocationType.DATA).getPath();
+            String feedPathMask = FeedHelper.getLocation(feed, LocationType.DATA,cluster.getName()).getPath();
 
             props.put("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{"));
             props.put("timeZone", feed.getTimezone().getID());
@@ -200,8 +200,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
 			inputDataset.setUriTemplate(new Path(ClusterHelper
 					.getHdfsUrl(srcCluster), FeedHelper.getLocation(feed,
-					LocationType.DATA).getPath()).toString());
-            outputDataset.setUriTemplate(getHDFSPath(FeedHelper.getLocation(feed, LocationType.DATA).getPath()));
+					LocationType.DATA,srcCluster.getName()).getPath()).toString());
+			outputDataset.setUriTemplate(getHDFSPath(FeedHelper.getLocation(
+					feed, LocationType.DATA, trgCluster.getName()).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
             if (feed.getAvailabilityFlag() == null) {

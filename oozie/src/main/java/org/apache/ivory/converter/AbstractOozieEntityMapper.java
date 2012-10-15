@@ -65,8 +65,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
-    protected static final String MR_QUEUE_NAME="mapred.job.queue.name";
-    protected static final String MR_JOB_PRIORITY="mapred.job.priority";
+    protected static final String MR_QUEUE_NAME="queueName";
+    protected static final String MR_JOB_PRIORITY="jobPriority";
 
     protected static final JAXBContext workflowJaxbContext;
     protected static final JAXBContext coordJaxbContext;

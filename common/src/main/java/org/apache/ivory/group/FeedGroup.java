@@ -43,7 +43,7 @@ public class FeedGroup {
 				.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 	}
 
-	private String getDatePattern(String path) {
+	public static String getDatePattern(String path) {
 		Matcher matcher = FeedDataPath.PATTERN.matcher(path);
 		List<String> fields = new ArrayList<String>();
 		while (matcher.find()) {

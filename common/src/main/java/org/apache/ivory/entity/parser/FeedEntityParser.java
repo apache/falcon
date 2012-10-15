@@ -100,6 +100,23 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void validateFeedGroups(Feed feed) throws ValidationException {
         String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[] {};
+        String defaultPath = FeedHelper.getLocation(feed, LocationType.DATA)
+		.getPath();
+		for (Cluster cluster : feed.getClusters().getClusters()) {
+			if (!FeedGroup.getDatePattern(
+					FeedHelper.getLocation(feed, LocationType.DATA,
+							cluster.getName()).getPath()).equals(
+					FeedGroup.getDatePattern(defaultPath))) {
+				throw new ValidationException("Feeds default path pattern: "
+						+ FeedHelper.getLocation(feed, LocationType.DATA)
+								.getPath()
+						+ ", does not match with cluster: "
+						+ cluster.getName()
+						+ " path pattern: "
+						+ FeedHelper.getLocation(feed, LocationType.DATA,
+								cluster.getName()).getPath());
+			}
+		}
         for (String groupName : groupNames) {
             FeedGroup group = FeedGroupMap.get().getGroupsMapping().get(groupName);
             if (group == null || group.canContainFeed(feed)) {

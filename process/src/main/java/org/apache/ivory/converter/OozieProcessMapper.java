@@ -145,7 +145,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // inputs
         if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInputs()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName(), LocationType.DATA);
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
@@ -167,6 +167,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(input.getName(), inputExpr);
                 inputFeeds.add(input.getName());
                 inputPaths.add(inputExpr);
+
             }
         }
         props.put("ivoryInPaths", join(inputPaths.iterator(), '#'));
@@ -177,7 +178,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<String> outputPaths = new ArrayList<String>();
         if (process.getOutputs() != null) {
             for (Output output : process.getOutputs().getOutputs()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName(),LocationType.DATA);
                 if (coord.getDatasets() == null)
                     coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
@@ -194,6 +195,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), outputExpr);
                 outputFeeds.add(output.getName());
                 outputPaths.add(outputExpr);
+                
+				// stats and meta paths
+				createOutputEvent(output.getFeed(),output.getName(), cluster, "stats",
+						LocationType.STATS, coord, props, output.getInstance());
+				createOutputEvent(output.getFeed(),output.getName(), cluster, "meta",
+						LocationType.META, coord, props,output.getInstance());
+				createOutputEvent(output.getFeed(),output.getName(), cluster, "tmp",
+						LocationType.TMP, coord, props,output.getInstance());
 
             }
         }
@@ -218,6 +227,23 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return coord;
     }
 
+	private void createOutputEvent(String feed, String name, Cluster cluster,
+			String type, LocationType locType, COORDINATORAPP coord,
+			Map<String, String> props, String instance)
+			throws IvoryException {
+		SYNCDATASET dataset = createDataSet(feed, cluster,name+type,
+				locType);
+		coord.getDatasets().getDatasetOrAsyncDataset().add(dataset);
+		DATAOUT dataout = new DATAOUT();
+        if (coord.getOutputEvents() == null)
+            coord.setOutputEvents(new OUTPUTEVENTS());
+		dataout.setName(name+type);
+		dataout.setDataset(name+type);
+		dataout.setInstance(getELExpression(instance));
+		coord.getOutputEvents().getDataOut().add(dataout);
+        String outputExpr = "${coord:dataOut('" + name+type+ "')}";
+        props.put(name+"."+type, outputExpr);
+	}
     private String join(Iterator<String> itr, char sep) {
         String joinedStr = StringUtils.join(itr, sep);
         if(joinedStr.isEmpty())
@@ -225,12 +251,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return joinedStr;
     }
 
-    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName) throws IvoryException {
+    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName, LocationType locationType) throws IvoryException {
         Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
-        syncdataset.setUriTemplate("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath());
+		syncdataset.setUriTemplate("${nameNode}"
+				+ FeedHelper.getLocation(feed, locationType,
+						cluster.getName()).getPath());
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());

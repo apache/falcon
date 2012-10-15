@@ -32,11 +32,11 @@
 			<configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>${wf:conf('mapred.job.queue.name')}</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${wf:conf('mapred.job.priority')}</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
 			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
@@ -55,11 +55,11 @@
             <configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>${wf:conf('mapred.job.queue.name')}</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${wf:conf('mapred.job.priority')}</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
             <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
@@ -83,11 +83,11 @@
 			<configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>${wf:conf('mapred.job.queue.name')}</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${wf:conf('mapred.job.priority')}</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
@@ -129,11 +129,11 @@
 			<configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>${wf:conf('mapred.job.queue.name')}</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${wf:conf('mapred.job.priority')}</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
