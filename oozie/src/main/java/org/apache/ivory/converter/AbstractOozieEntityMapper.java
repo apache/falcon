@@ -127,13 +127,11 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         }
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-            marshal(cluster, coordinatorapp, coordPath,
-                    entity.getName() + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
+            String coordXmlName = marshal(cluster, coordinatorapp, coordPath, EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
             createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + entity.getName()
-                    + EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity) + ".xml");
+            bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + coordXmlName);
             bundleApp.getCoordinator().add(bundleCoord);
 
             copySharedLibs(cluster, coordPath);
@@ -261,9 +259,12 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         }
     }
 
-    protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws IvoryException {
-
+    protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws IvoryException {
+        if(StringUtils.isEmpty(name))
+            name = "coordinator";
+        name = name + ".xml";
         marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, name));
+        return name;
     }
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws IvoryException {
