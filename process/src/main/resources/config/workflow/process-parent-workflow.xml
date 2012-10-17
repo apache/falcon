@@ -65,11 +65,11 @@
 			<configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>queueName</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>jobPriority</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
@@ -111,11 +111,11 @@
 			<configuration>
 				<property>
 					<name>mapred.job.queue.name</name>
-					<value>queueName</value>
+					<value>${queueName}</value>
 				</property>
 				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
-					<value>jobPriority</value>
+					<value>${jobPriority}</value>
 				</property>
 			</configuration>
 			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
