@@ -239,7 +239,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             targetPart = FeedHelper.evaluateClusterExp(trgCluster, targetPart);
             
             StringBuilder pathsWithPartitions = new StringBuilder();
-            pathsWithPartitions.append("${coord:dataIn('input')}/").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
+            pathsWithPartitions.append("${coord:dataIn('input')}").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
 
             Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
             props.put("srcClusterName", srcCluster.getName());
