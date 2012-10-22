@@ -263,4 +263,13 @@ public class ProcessEntityParserTest extends AbstractTestBase{
 		process.getInputs().getInputs().get(0).setStart("latest(-1)");
 		parser.parseAndValidate(process.toString());
 	}
+	
+	@Test(expectedExceptions=ValidationException.class)
+	public void testDuplicateClusterName() throws Exception {
+		Process process = parser
+				.parse((ProcessEntityParserTest.class
+						.getResourceAsStream(PROCESS_XML)));
+		process.getClusters().getClusters().add(1, process.getClusters().getClusters().get(0));
+		parser.validate(process);
+	}
 }

@@ -151,7 +151,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, ivoryJarFilter);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
-            throw new IvoryException(e);
+            throw new IvoryException("Failed to copy shared libs on cluster " + cluster.getName(),e);
         }
     }
 

@@ -66,7 +66,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         validateFeedPartitionExpression(feed);
-        validateFeedSourceCluster(feed);
+        validateFeedClustersSize(feed);
         validateFeedGroups(feed);
 
         // Seems like a good enough entity object for a new one
@@ -170,16 +170,13 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedSourceCluster(Feed feed) throws ValidationException {
-        int i = 0;
-        for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (cluster.getType().equals(ClusterType.SOURCE)) {
-                i++;
-            }
-        }
-        if (i == 0)
-            throw new ValidationException("Feed should have atleast one source cluster");
-    }
+	private void validateFeedClustersSize(Feed feed)
+			throws ValidationException {
+		if (feed.getClusters().getClusters().size() == 0) {
+			throw new ValidationException(
+					"Feed should have atleast one cluster");
+		}
+	}
 
     private void validateClusterValidity(Date start, Date end, String clusterName) throws IvoryException {
         try {
@@ -215,13 +212,23 @@ public class FeedEntityParser extends EntityParser<Feed> {
     
     private void validateFeedPartitionExpression(Feed feed) throws IvoryException {
         int numSourceClusters = 0, numTrgClusters = 0;
+        Set<String> clusters = new HashSet<String>();
         for (Cluster cl : feed.getClusters().getClusters()) {
+			if (!clusters.add(cl.getName())) {
+				throw new ValidationException("Cluster: " + cl.getName()
+						+ " is defined more than once for feed: "+feed.getName());
+			}
             if (cl.getType() == ClusterType.SOURCE){
                 numSourceClusters++;
             } else if(cl.getType() == ClusterType.TARGET) {
                 numTrgClusters++;
             }
         }
+        
+		if (numTrgClusters >= 1 && numSourceClusters == 0) {
+			throw new ValidationException("Feed: " + feed.getName()
+					+ " should have atleast one source cluster defined");
+		}
         
         int feedParts = feed.getPartitions() != null ? feed.getPartitions().getPartitions().size() : 0;
         

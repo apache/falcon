@@ -60,8 +60,13 @@ public class ProcessEntityParser extends EntityParser<Process> {
             process.setTimezone(TimeZone.getTimeZone("UTC"));
 
         // check if dependent entities exists
+        Set<String> clusters = new HashSet<String>();
         for (org.apache.ivory.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
             String clusterName = cluster.getName();
+			if (!clusters.add(cluster.getName())) {
+				throw new ValidationException("Cluster: " + cluster.getName()
+						+ " is defined more than once for process: "+process.getName());
+			}
             validateEntityExists(EntityType.CLUSTER, clusterName);
             validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
             validateHDFSpaths(process, clusterName);
