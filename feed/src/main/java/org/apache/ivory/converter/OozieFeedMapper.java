@@ -239,14 +239,14 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             targetPart = FeedHelper.evaluateClusterExp(trgCluster, targetPart);
             
             StringBuilder pathsWithPartitions = new StringBuilder();
-            pathsWithPartitions.append("${coord:dataIn('input')}").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
+            pathsWithPartitions.append("${coord:dataIn('input')}/").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
 
             Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
             props.put("srcClusterName", srcCluster.getName());
             props.put("srcClusterColo", srcCluster.getColo());
             props.put(ARG.feedNames.getPropName(), feed.getName());
             props.put(ARG.feedInstancePaths.getPropName(), pathsWithPartitions.toString());
-            props.put("sourceRelativePaths", pathsWithPartitions.toString());
+            props.put("sourceRelativePaths", pathsWithPartitions.toString().replaceAll("//+", "/"));
             props.put("distcpSourcePaths", "${coord:dataIn('input')}");
             props.put("distcpTargetPaths", "${coord:dataOut('output')}");
             props.put("ivoryInPaths", pathsWithPartitions.toString());
