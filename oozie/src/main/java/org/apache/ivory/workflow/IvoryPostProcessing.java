@@ -31,8 +31,11 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.ivory.logging.LogMover;
 import org.apache.ivory.messaging.MessageProducer;
+import org.apache.log4j.Logger;
+import org.mortbay.log.Log;
 
 public class IvoryPostProcessing extends Configured implements Tool{
+	private static final Logger LOG = Logger.getLogger(IvoryPostProcessing.class);
 
 	public enum Arg{
 		CLUSTER("cluster","name of the current cluster"),
@@ -87,9 +90,12 @@ public class IvoryPostProcessing extends Configured implements Tool{
 
 		CommandLine cmd = getCommand(args);
 
+		LOG.info("Sending user message "+cmd);
 		invokeUserMessageProducer(cmd);
 		//LogMover doesnt throw exception, a failed logmover will not fail the user workflow
+		LOG.info("Moving logs "+cmd);
 		invokeLogProducer(cmd);
+		LOG.info("Sending ivory message "+cmd);
 		invokeIvoryMessageProducer(cmd);
 
 		return 0;
