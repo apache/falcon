@@ -98,10 +98,11 @@ public class LogCleanupServiceTest extends AbstractTestBase {
 		fs.mkdirs(instanceLogPath2);
 		fs.mkdirs(instanceLogPath3);
 		fs.mkdirs(instanceLogPath4);
-		Thread.sleep(61000);
+
 		// fs.setTimes wont work on dirs
 		fs.createNewFile(new Path(instanceLogPath, "oozie.log"));
 		fs.createNewFile(new Path(instanceLogPath, "pigAction_SUCCEEDED.log"));
+		Thread.sleep(61000);
 
 		AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
 		processCleanupHandler.cleanup();

@@ -146,7 +146,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             createReplicatonWorkflow(targetCluster, basePath, coordName);
             
             for (org.apache.ivory.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
-                if (feedCluster.getType().equals(ClusterType.SOURCE)) {
+                if (feedCluster.getType()==ClusterType.SOURCE) {
                     COORDINATORAPP coord = createAndGetCoord(feed,
                             (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, feedCluster.getName()), targetCluster,
                             bundlePath);
