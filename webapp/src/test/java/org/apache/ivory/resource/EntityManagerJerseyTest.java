@@ -43,6 +43,7 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.entity.v0.process.Property;
 import org.apache.ivory.entity.v0.process.Validity;
 import org.apache.ivory.util.BuildProperties;
 import org.apache.ivory.util.DeploymentProperties;
@@ -60,16 +61,38 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      * instance of webserver
      */
     
+    @Test
+    public void testOptionalInput() throws Exception {
+        Map<String, String> overlay = getUniqueOverlay();
+        String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
+        
+        Input in1 = process.getInputs().getInputs().get(0);
+        Input in2 = new Input();
+        in2.setFeed(in1.getFeed());
+        in2.setName("input2");
+        in2.setOptional(true);
+        in2.setPartition(in1.getPartition());
+        in2.setStart("now(-1,0)");
+        in2.setEnd("now(0,0)");
+        process.getInputs().getInputs().add(in2);
+        
+        File tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        waitForWorkflowStart(processName);
+    }
+    
 	@Test
 	public void testProcessDeleteAndSchedule() throws Exception {
-		//Submit process with no workflow so that bundle goes to failed state
+		//Submit process with invalid property so that coord submit fails and bundle goes to failed state
 		Map<String, String> overlay = getUniqueOverlay();
         String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
 		Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
-        FileSystem fs = FileSystem.get(this.cluster.getConf());
-        Path invalidPath = new Path("/ivory/test/invalidWorkflow");
-        fs.mkdirs(invalidPath);
-		process.getWorkflow().setPath(invalidPath.toString());
+		Property prop = new Property();
+		prop.setName("newProp");
+		prop.setValue("${formatTim()}");
+        process.getProperties().getProperties().add(prop);
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         scheduleProcess(tmpFile.getAbsolutePath(), overlay);

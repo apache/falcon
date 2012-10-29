@@ -27,7 +27,7 @@ public final class ReflectionUtils {
     public static <T> T getInstance(String classKey) throws IvoryException {
         String clazzName = StartupProperties.get().getProperty(classKey);
         try {
-            return getInstanceByClassName(clazzName);
+            return ReflectionUtils.<T>getInstanceByClassName(clazzName);
         } catch (IvoryException e) {
             throw new IvoryException("Unable to get instance for key: " + classKey, e);
         }

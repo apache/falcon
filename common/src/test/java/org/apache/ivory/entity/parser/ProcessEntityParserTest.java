@@ -91,6 +91,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         Assert.assertEquals(process.getInputs().getInputs().get(0).getStart(), "today(0,0)");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getEnd(), "today(2,0)");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getPartition(), "*/US");
+        Assert.assertEquals(process.getInputs().getInputs().get(0).isOptional(), false);
 
         Assert.assertEquals(process.getOutputs().getOutputs().get(0).getName(), "impOutput");
         Assert.assertEquals(process.getOutputs().getOutputs().get(0).getFeed(), "imp-click-join1");

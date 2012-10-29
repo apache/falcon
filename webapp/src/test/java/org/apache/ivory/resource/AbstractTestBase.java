@@ -119,9 +119,9 @@ public class AbstractTestBase {
                 return;
 
             System.out.println("Waiting for workflow to start");
-            Thread.sleep(1000);
+            Thread.sleep(i * 1000);
         }
-        throw new Exception(entityName + " hasn't started in oozie");
+        throw new Exception("Workflow for " + entityName + " hasn't started in oozie");
     }
     
     protected void waitForProcessWFtoStart() throws Exception{
@@ -176,6 +176,8 @@ public class AbstractTestBase {
                 "application.services",
                 StartupProperties.get().getProperty("application.services")
                         .replace("org.apache.ivory.service.ProcessSubscriberService", ""));
+        String store = StartupProperties.get().getProperty("config.store.uri");
+        StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
         if (new File("webapp/src/main/webapp").exists()) {
             this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
         } else if (new File("src/main/webapp").exists()) {

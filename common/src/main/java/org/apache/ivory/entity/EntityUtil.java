@@ -45,16 +45,16 @@ public class EntityUtil {
 	private static final long DAY_IN_MS = 86400000L;
 	private static final long MONTH_IN_MS = 2592000000L;
 
-	public static Entity getEntity(EntityType type, String entityName) throws IvoryException {
+	public static <T extends Entity> T getEntity(EntityType type, String entityName) throws IvoryException {
 		ConfigurationStore configStore = ConfigurationStore.get();
-		Entity entity = configStore.get(type, entityName);
+		T entity = configStore.get(type, entityName);
 		if (entity == null) {
 			throw new EntityNotRegisteredException(entityName + " (" + type + ") not found");
 		}
 		return entity;        
 	}
 
-	public static Entity getEntity(String type, String entityName) throws IvoryException {
+	public static <T extends Entity> T getEntity(String type, String entityName) throws IvoryException {
 		EntityType entityType;
 		try {
 			entityType = EntityType.valueOf(type.toUpperCase());

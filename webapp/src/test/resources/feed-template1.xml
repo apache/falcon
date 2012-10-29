@@ -17,6 +17,9 @@
   ~ limitations under the License.
   -->
 <feed description="clicks log" name="##inputFeedName##" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <partitions>
+        <partition name="timestamp"/>
+    </partitions>
     <groups>input</groups>
 
     <frequency>hours(1)</frequency>

@@ -156,7 +156,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
     private void validateFeedSourceCluster(Feed feed) throws ValidationException {
         int i = 0;
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (cluster.getType().equals(ClusterType.SOURCE)) {
+            if (cluster.getType() == ClusterType.SOURCE) {
                 i++;
             }
         }
@@ -245,7 +245,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         if(cl.getPartition() == null)
             return;
         
-        org.apache.ivory.entity.v0.cluster.Cluster cluster = (org.apache.ivory.entity.v0.cluster.Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cl.getName());
+        org.apache.ivory.entity.v0.cluster.Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, cl.getName());
         String part = FeedHelper.normalizePartitionExpression(cl.getPartition());
         if(FeedHelper.evaluateClusterExp(cluster, part).equals(part))
             throw new ValidationException("Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName()); 

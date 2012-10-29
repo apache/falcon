@@ -229,7 +229,7 @@ public class ConfigurationStore implements IvoryService {
             T entity = (T) entityMap.get(name);
             if (entity == NULL) { // Object equality being checked
                 try {
-                    entity = restore(type, name);
+                    entity = this.<T>restore(type, name);
                 } catch (IOException e) {
                     throw new StoreAccessException(e);
                 }

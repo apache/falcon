@@ -248,6 +248,7 @@
         <xs:attribute type="xs:string" name="start" use="required" />
         <xs:attribute type="xs:string" name="end" use="required" />
         <xs:attribute type="xs:string" name="partition" use="optional" />
+        <xs:attribute type="xs:boolean" name="optional" use="optional" default="false"/>
     </xs:complexType>
 
     <xs:complexType name="outputs">

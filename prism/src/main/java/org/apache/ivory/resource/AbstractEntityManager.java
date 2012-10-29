@@ -121,7 +121,7 @@ public abstract class AbstractEntityManager {
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
             for (String cluster : clusters) {
-                Cluster clusterEntity = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, cluster);
+                Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER, cluster);
                 colos.add(clusterEntity.getColo());
             }
             return colos;

@@ -48,7 +48,7 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     @Override
     public void afterDelete(Entity entity, String clusterName) throws IvoryException {
         try {
-            Cluster cluster = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+            Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
             Path entityPath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(entity)).getParent();
             LOG.info("Deleting entity path " + entityPath + " on cluster " + clusterName);
             

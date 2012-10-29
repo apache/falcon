@@ -37,7 +37,12 @@ public class ServiceInitializer {
             IvoryService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
             services.register(service);
             LOG.info("Initializing service : " + serviceClassName);
-            service.init();
+            try {
+                service.init();
+            } catch(Throwable t) {
+                LOG.fatal("Failed to initialize service " + serviceClassName, t);
+                throw new IvoryException(t);
+            }
             LOG.info("Service initialized : " + serviceClassName);
         }
     }
@@ -45,7 +50,12 @@ public class ServiceInitializer {
     public void destroy() throws IvoryException {
         for (IvoryService service : services) {
             LOG.info("Destroying service : " + service.getClass().getName());
-            service.destroy();
+            try {
+                service.destroy();
+            } catch(Throwable t) {
+                LOG.fatal("Failed to destroy service " + service.getClass().getName(), t);
+                throw new IvoryException(t);
+            }
             LOG.info("Service destroyed : " + service.getClass().getName());
         }
     }

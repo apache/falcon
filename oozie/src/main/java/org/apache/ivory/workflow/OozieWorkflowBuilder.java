@@ -43,7 +43,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     
     protected Properties createAppProperties(String clusterName, Path bundlePath) throws IvoryException {
 
-        Cluster cluster = (Cluster) EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
+        Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
         Properties properties = new Properties();
 		if (cluster.getProperties() != null) {
 			addClusterProperties(properties, cluster.getProperties()

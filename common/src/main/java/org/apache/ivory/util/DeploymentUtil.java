@@ -76,6 +76,7 @@ public class DeploymentUtil {
     }
 
     public static Set<String> getDefaultColos() {
+        DEFAULT_ALL_COLOS.add(DEFAULT_COLO);
         return DEFAULT_ALL_COLOS;
     }
 }

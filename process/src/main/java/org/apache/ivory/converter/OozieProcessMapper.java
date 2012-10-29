@@ -143,27 +143,22 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<String> inputFeeds = new ArrayList<String>();
         List<String> inputPaths = new ArrayList<String>();
         // inputs
-        if (process.getInputs() != null) {
+        if (process.getInputs() != null) {            
             for (Input input : process.getInputs().getInputs()) {
-                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
-                if (coord.getDatasets() == null)
-                    coord.setDatasets(new DATASETS());
-                coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+                if(!input.isOptional()) {
+                    if (coord.getDatasets() == null)
+                        coord.setDatasets(new DATASETS());
+                    if (coord.getInputEvents() == null)
+                        coord.setInputEvents(new INPUTEVENTS());
 
-                DATAIN datain = new DATAIN();
-                datain.setName(input.getName());
-                datain.setDataset(input.getName());
-                datain.setStartInstance(getELExpression(input.getStart()));
-                datain.setEndInstance(getELExpression(input.getEnd()));
-                if (coord.getInputEvents() == null)
-                    coord.setInputEvents(new INPUTEVENTS());
-                coord.getInputEvents().getDataIn().add(datain);
+                    SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName());
+                    coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+    
+                    DATAIN datain = createDataIn(input);
+                    coord.getInputEvents().getDataIn().add(datain);
+                }
 
-                String inputExpr;
-                if(input.getPartition() != null)
-                    inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
-                else
-                    inputExpr = getELExpression("coord:dataIn('" + input.getName() + "')");
+                String inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
                 props.put(input.getName(), inputExpr);
                 inputFeeds.add(input.getName());
                 inputPaths.add(inputExpr);
@@ -176,32 +171,27 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<String> outputFeeds = new ArrayList<String>();
         List<String> outputPaths = new ArrayList<String>();
         if (process.getOutputs() != null) {
+            if (coord.getDatasets() == null)
+                coord.setDatasets(new DATASETS());
+            if (coord.getOutputEvents() == null)
+                coord.setOutputEvents(new OUTPUTEVENTS());
+            
             for (Output output : process.getOutputs().getOutputs()) {
                 SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName());
-                if (coord.getDatasets() == null)
-                    coord.setDatasets(new DATASETS());
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
-                DATAOUT dataout = new DATAOUT();
-                dataout.setName(output.getName());
-                dataout.setDataset(output.getName());
-                dataout.setInstance(getELExpression(output.getInstance()));
-                if (coord.getOutputEvents() == null)
-                    coord.setOutputEvents(new OUTPUTEVENTS());
+                DATAOUT dataout = createDataOut(output);
                 coord.getOutputEvents().getDataOut().add(dataout);
 
                 String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
                 props.put(output.getName(), outputExpr);
                 outputFeeds.add(output.getName());
                 outputPaths.add(outputExpr);
-
             }
         }
         // Output feed name and path for parent workflow
         props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
         props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
-
-        props.put("userWorkflowPath", process.getWorkflow().getPath());
 
         // create parent wf
         createWorkflow(cluster, DEFAULT_WF_TEMPLATE, coordName, coordPath);
@@ -218,6 +208,23 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return coord;
     }
 
+    private DATAOUT createDataOut(Output output) {
+        DATAOUT dataout = new DATAOUT();
+        dataout.setName(output.getName());
+        dataout.setDataset(output.getName());
+        dataout.setInstance(getELExpression(output.getInstance()));
+        return dataout;
+    }
+
+    private DATAIN createDataIn(Input input) {
+        DATAIN datain = new DATAIN();
+        datain.setName(input.getName());
+        datain.setDataset(input.getName());
+        datain.setStartInstance(getELExpression(input.getStart()));
+        datain.setEndInstance(getELExpression(input.getEnd()));
+        return datain;
+    }
+
     private String join(Iterator<String> itr, char sep) {
         String joinedStr = StringUtils.join(itr, sep);
         if(joinedStr.isEmpty())
@@ -226,7 +233,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     }
 
     private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName) throws IvoryException {
-        Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
+        Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);

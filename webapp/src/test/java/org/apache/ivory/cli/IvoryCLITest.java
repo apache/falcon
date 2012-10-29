@@ -27,7 +27,6 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
-import org.apache.ivory.IvoryException;
 import org.apache.ivory.resource.AbstractTestBase;
 import org.testng.annotations.Test;
 

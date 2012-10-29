@@ -32,10 +32,17 @@ import org.apache.ivory.Tag;
 import org.apache.ivory.converter.OozieProcessMapper;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
+import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.ProcessHelper;
 import org.apache.ivory.entity.v0.EntityType;
+import org.apache.ivory.entity.v0.Frequency.TimeUnit;
+import org.apache.ivory.entity.v0.SchemaHelper;
 import org.apache.ivory.entity.v0.cluster.Cluster;
+import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
@@ -47,17 +54,58 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
             Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
+            if (properties == null) continue;
+            
+            //Add libpath
             String libPath = process.getWorkflow().getLib();
 			if (!StringUtils.isEmpty(libPath)) {
 				String path = libPath.replace("${nameNode}", "");
 				properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
 			}
-            if (properties == null) continue;
+            
+            if(process.getInputs() != null) {
+                for(Input in:process.getInputs().getInputs())
+                    if(in.isOptional())
+                        addOptionalInputProperties(properties, in, clusterName);
+            }
+
             propertiesMap.put(clusterName, properties);
         }
         return propertiesMap;
     }
 
+    private void addOptionalInputProperties(Properties properties, Input in, String clusterName) throws IvoryException {
+        Feed feed = EntityUtil.getEntity(EntityType.FEED, in.getFeed());
+        org.apache.ivory.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, clusterName);
+        String inName = in.getName();
+        properties.put(inName + ".frequency", String.valueOf(feed.getFrequency().getFrequency()));
+        properties.put(inName + ".freq_timeunit", mapToCoordTimeUnit(feed.getFrequency().getTimeUnit()).name());
+        properties.put(inName + ".timezone", feed.getTimezone().getID());
+        properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
+        properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
+        properties.put(inName + ".done-flag", "notused");
+        properties.put(inName + ".uri-template", "${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath().replace('$', '%'));
+        properties.put(inName + ".start-instance", in.getStart());
+        properties.put(inName + ".end-instance", in.getEnd());
+    }
+
+    private Timeunit mapToCoordTimeUnit(TimeUnit tu) {
+        switch(tu) {
+        case days:
+            return Timeunit.DAY;
+            
+        case hours:
+            return Timeunit.HOUR;
+            
+        case minutes:
+            return Timeunit.MINUTE;
+            
+        case months:
+            return Timeunit.MONTH;
+        }
+        throw new IllegalArgumentException("Unhandled time unit " + tu);
+    }
+    
     @Override
     public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName) throws IvoryException {
         org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
