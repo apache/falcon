@@ -63,7 +63,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         try {
             pushLibsToHDFS(libLocation, cluster, nonIvoryJarFilter);
         } catch (IOException e) {
-            throw new IvoryException("Failed to copy shared libs to cluster " + cluster.getName(), e);
+            LOG.error("Failed to copy shared libs to cluster " + cluster.getName(), e);
         }
     }
 
@@ -75,7 +75,14 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         }
         
         Configuration conf = ClusterHelper.getConfiguration(cluster);
-        FileSystem fs = FileSystem.get(conf);
+        conf.setInt("ipc.client.connect.max.retries", 10);
+		FileSystem fs = null;
+		try {
+			fs = FileSystem.get(conf);
+		} catch (Exception e) {
+			throw new IvoryException("Unable to connect to HDFS: "
+					+ ClusterHelper.getHdfsUrl(cluster));
+		}
         Path clusterPath = new Path(path);
         if(!fs.exists(clusterPath))
             fs.mkdirs(clusterPath);

@@ -104,4 +104,9 @@ public class NullBundleJob implements BundleJob{
     public Date getCreatedTime() {
         return null;
     }
+
+    @Override
+    public String getAcl() {
+        return null;
+    }
 }

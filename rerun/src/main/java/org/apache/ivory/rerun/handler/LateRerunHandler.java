@@ -17,7 +17,6 @@
  */
 package org.apache.ivory.rerun.handler;
 
-import java.io.IOException;
 import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
@@ -70,12 +69,14 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 			Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
 			Long wait = getEventDelay(entity, nominalTime);
 			if (wait == -1) {
+				LOG.info("Late rerun expired for entity: "+entityType+"("+entityName+")");
 				String logDir = this.getWfEngine().getWorkflowProperty(cluster,
 						wfId, "logDir");
 				String srcClusterName = this.getWfEngine().getWorkflowProperty(
 						cluster, wfId, "srcClusterName");
-				Path lateLogPath = this.getLateLogPath(logDir, nominalTime,
-						srcClusterName);
+				Path lateLogPath = this.getLateLogPath(logDir,
+						EntityUtil.UTCtoURIDate(nominalTime), srcClusterName);
+				LOG.info("Going to delete path:" +lateLogPath);
 				FileSystem fs = FileSystem.get(getConfiguration(cluster,
 						wfId));
 				if (fs.exists(lateLogPath)) {

@@ -84,8 +84,8 @@ public class LogMover extends Configured implements Tool {
 			FileSystem fs = path.getFileSystem(getConf());
 
 			if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
-				// if replication wf
-				copyTTlogs(args, fs, path, jobInfo.getActions().get(1));
+				// if replication wf 
+				copyTTlogs(args, fs, path, jobInfo.getActions().get(2));
 				copyOozieLog(client, fs, path, jobInfo.getId());
 			} else {
 				// if process wf
@@ -93,7 +93,6 @@ public class LogMover extends Configured implements Tool {
 				WorkflowJob subflowInfo = client.getJobInfo(subflowId);
 				List<WorkflowAction> actions = subflowInfo.getActions();
 				for (WorkflowAction action : actions) {
-
 					if (action.getType().equals("pig")
 							|| action.getType().equals("java")) {
 						copyTTlogs(args, fs, path, action);

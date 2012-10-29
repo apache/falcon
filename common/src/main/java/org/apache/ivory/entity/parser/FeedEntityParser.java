@@ -66,7 +66,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         validateFeedPartitionExpression(feed);
-        validateFeedSourceCluster(feed);
         validateFeedGroups(feed);
 
         // Seems like a good enough entity object for a new one
@@ -100,6 +99,23 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void validateFeedGroups(Feed feed) throws ValidationException {
         String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[] {};
+        String defaultPath = FeedHelper.getLocation(feed, LocationType.DATA)
+		.getPath();
+		for (Cluster cluster : feed.getClusters().getClusters()) {
+			if (!FeedGroup.getDatePattern(
+					FeedHelper.getLocation(feed, LocationType.DATA,
+							cluster.getName()).getPath()).equals(
+					FeedGroup.getDatePattern(defaultPath))) {
+				throw new ValidationException("Feeds default path pattern: "
+						+ FeedHelper.getLocation(feed, LocationType.DATA)
+								.getPath()
+						+ ", does not match with cluster: "
+						+ cluster.getName()
+						+ " path pattern: "
+						+ FeedHelper.getLocation(feed, LocationType.DATA,
+								cluster.getName()).getPath());
+			}
+		}
         for (String groupName : groupNames) {
             FeedGroup group = FeedGroupMap.get().getGroupsMapping().get(groupName);
             if (group == null || group.canContainFeed(feed)) {
@@ -153,17 +169,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
-    private void validateFeedSourceCluster(Feed feed) throws ValidationException {
-        int i = 0;
-        for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (cluster.getType() == ClusterType.SOURCE) {
-                i++;
-            }
-        }
-        if (i == 0)
-            throw new ValidationException("Feed should have atleast one source cluster");
-    }
-
     private void validateClusterValidity(Date start, Date end, String clusterName) throws IvoryException {
         try {
             if (start.after(end)) {
@@ -198,13 +203,23 @@ public class FeedEntityParser extends EntityParser<Feed> {
     
     private void validateFeedPartitionExpression(Feed feed) throws IvoryException {
         int numSourceClusters = 0, numTrgClusters = 0;
+        Set<String> clusters = new HashSet<String>();
         for (Cluster cl : feed.getClusters().getClusters()) {
+			if (!clusters.add(cl.getName())) {
+				throw new ValidationException("Cluster: " + cl.getName()
+						+ " is defined more than once for feed: "+feed.getName());
+			}
             if (cl.getType() == ClusterType.SOURCE){
                 numSourceClusters++;
             } else if(cl.getType() == ClusterType.TARGET) {
                 numTrgClusters++;
             }
         }
+        
+		if (numTrgClusters >= 1 && numSourceClusters == 0) {
+			throw new ValidationException("Feed: " + feed.getName()
+					+ " should have atleast one source cluster defined");
+		}
         
         int feedParts = feed.getPartitions() != null ? feed.getPartitions().getPartitions().size() : 0;
         

@@ -27,6 +27,7 @@ import java.io.StringWriter;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.ClusterHelper;
@@ -35,6 +36,8 @@ import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interface;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class ClusterEntityParserTest extends AbstractTestBase {
@@ -46,7 +49,8 @@ public class ClusterEntityParserTest extends AbstractTestBase {
 
         InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
 
-        Cluster cluster = (Cluster) parser.parseAndValidate(stream);
+        Cluster cluster = (Cluster) parser.parse(stream);
+        ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
 
         Assert.assertNotNull(cluster);
         assertEquals(cluster.getName(), "testCluster");
@@ -61,7 +65,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         assertEquals(readonly.getVersion(), "0.20.2");
 
         Interface write = ClusterHelper.getInterface(cluster, Interfacetype.WRITE);
-        assertEquals(write.getEndpoint(), "hdfs://localhost:8020");
+        //assertEquals(write.getEndpoint(), conf.get("fs.default.name"));
         assertEquals(write.getVersion(), "0.20.2");
 
         Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
@@ -74,5 +78,17 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
         marshaller.marshal(cluster, stringWriter);
         System.out.println(stringWriter.toString());
+        parser.parseAndValidate(stringWriter.toString());
     }
+    
+    @BeforeClass
+    public void init() throws Exception {
+        conf.set("hadoop.log.dir", "/tmp");
+        this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+    }
+    
+	@AfterClass
+	public void tearDown() {
+		this.dfsCluster.shutdown();
+	}
 }

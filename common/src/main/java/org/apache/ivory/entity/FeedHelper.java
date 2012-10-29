@@ -29,6 +29,7 @@ import org.apache.ivory.entity.v0.feed.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
+import org.apache.ivory.entity.v0.feed.Locations;
 import org.apache.ivory.expression.ExpressionHelper;
 
 public class FeedHelper {
@@ -39,12 +40,34 @@ public class FeedHelper {
         return null;
     }
     
-    public static Location getLocation(Feed feed, LocationType type) {
-        for(Location loc:feed.getLocations().getLocations())
-            if(loc.getType() == type)
-                return loc;
-        return null;
-    }
+	public static Location getLocation(Feed feed, LocationType type,
+			String clusterName) {
+		Cluster cluster = getCluster(feed, clusterName);
+		if (cluster!=null &&cluster.getLocations() != null 
+				&& cluster.getLocations() .getLocations().size() != 0) {
+			return getLocation(cluster.getLocations() , type);
+		}
+		else{
+			return getLocation(feed.getLocations(), type);
+		}
+
+	}
+	
+	public static Location getLocation(Feed feed, LocationType type) {
+		return getLocation(feed.getLocations(), type);
+	}
+
+	public static Location getLocation(Locations locations, LocationType type) {
+		for (Location loc : locations.getLocations()) {
+			if (loc.getType() == type) {
+				return loc;
+			}
+		}
+		Location loc = new Location();
+		loc.setPath("/tmp");
+		loc.setType(type);
+		return loc;
+	}
     
     public static String normalizePartitionExpression(String part1, String part2) {
         String partExp = StringUtils.stripToEmpty(part1) + "/" + StringUtils.stripToEmpty(part2);

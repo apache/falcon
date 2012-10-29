@@ -65,8 +65,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
-    protected static final String MR_QUEUE_NAME="mapred.job.queue.name";
-    protected static final String MR_JOB_PRIORITY="mapred.job.priority";
+    protected static final String MR_QUEUE_NAME="queueName";
+    protected static final String MR_JOB_PRIORITY="jobPriority";
 
     protected static final JAXBContext workflowJaxbContext;
     protected static final JAXBContext coordJaxbContext;
@@ -151,7 +151,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, ivoryJarFilter);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
-            throw new IvoryException(e);
+            throw new IvoryException("Failed to copy shared libs on cluster " + cluster.getName(),e);
         }
     }
 

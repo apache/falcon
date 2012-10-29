@@ -147,4 +147,9 @@ public class NullCoordJob implements CoordinatorJob {
     public List<CoordinatorAction> getActions() {
         return null;
     }
+
+    @Override
+    public String getAcl() {
+        return null;
+    }
 }

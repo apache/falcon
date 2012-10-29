@@ -18,6 +18,8 @@
 
 package org.apache.ivory.entity.parser;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.StoreAccessException;
 import org.apache.ivory.entity.v0.EntityType;
@@ -33,9 +35,22 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     @Override
-    public void validate(Cluster cluster) throws StoreAccessException, ValidationException {
-        if (!ClusterHelper.getHdfsUrl(cluster).startsWith("hdfs://")) {
-            throw new ValidationException("Cannot get valid nameNode from write interface of cluster: " + cluster.getName());
-        }
-    }
+	public void validate(Cluster cluster) throws StoreAccessException,
+			ValidationException { 
+		if (!ClusterHelper.getHdfsUrl(cluster).startsWith("hdfs://")) {
+			throw new ValidationException(
+					"Cannot get valid nameNode from write interface of cluster: "
+							+ cluster.getName());
+		}
+		try {
+			Configuration conf = new Configuration();
+			conf.set("fs.default.name", ClusterHelper.getHdfsUrl(cluster));
+			conf.setInt("ipc.client.connect.max.retries", 10);
+			FileSystem.get(conf);
+		} catch (Exception e) {
+			throw new ValidationException("Invalid HDFS server or port:"
+					+ ClusterHelper.getHdfsUrl(cluster), e);
+		}
+	}
+
 }

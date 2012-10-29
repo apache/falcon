@@ -109,6 +109,7 @@ public abstract class AbstractCleanupHandler {
 					} else {
 						LOG.info("Deleted path: " + log.getPath());
 					}
+					deleteParentIfEmpty(getFileSystem(cluster),log.getPath().getParent());
 				} catch (IOException e) {
 					throw new IvoryException(" Unable to delete log file : "
 							+ log.getPath() + " for entity " + entity.getName()
@@ -122,6 +123,16 @@ public abstract class AbstractCleanupHandler {
 			}
 		}
 
+	}
+
+	private void deleteParentIfEmpty(FileSystem fs, Path parent) throws IOException {
+		 FileStatus[] files = fs.listStatus(parent);
+		if(files!=null && files.length==0){
+			LOG.info("Parent path: "+parent+ " is empty, deleting path");
+			fs.delete(parent, true);
+			deleteParentIfEmpty(fs,parent.getParent());
+		}
+		
 	}
 
 	public abstract void cleanup() throws IvoryException;

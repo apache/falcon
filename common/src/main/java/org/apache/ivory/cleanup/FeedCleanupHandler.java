@@ -49,7 +49,7 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
 	@Override
 	protected Path getLogPath(Entity entity, String stagingPath) {
 		Path logPath = new Path(stagingPath, "ivory/workflows/feed/"
-				+ entity.getName() + "/logs/job-*");
+				+ entity.getName() + "/logs/job-*/*/*");
 		return logPath;
 	}
 

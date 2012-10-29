@@ -106,12 +106,16 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals(process.getInputs().getInputs().get(1).getName(), coord.getInputEvents().getDataIn().get(1).getDataset());
         assertEquals("${"+process.getInputs().getInputs().get(1).getStart()+"}", coord.getInputEvents().getDataIn().get(1).getStartInstance());
         assertEquals("${" + process.getInputs().getInputs().get(1).getEnd()+"}", coord.getInputEvents().getDataIn().get(1).getEndInstance());
-
+        
+        assertEquals(process.getOutputs().getOutputs().get(0).getName()+"stats", coord.getOutputEvents().getDataOut().get(1).getName());
+        assertEquals(process.getOutputs().getOutputs().get(0).getName()+"meta", coord.getOutputEvents().getDataOut().get(2).getName());
+        assertEquals(process.getOutputs().getOutputs().get(0).getName()+"tmp", coord.getOutputEvents().getDataOut().get(3).getName());
+        
         assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getName());
         assertEquals("${"+process.getOutputs().getOutputs().get(0).getInstance()+"}", coord.getOutputEvents().getDataOut().get(0).getInstance());
         assertEquals(process.getOutputs().getOutputs().get(0).getName(), coord.getOutputEvents().getDataOut().get(0).getDataset());
 
-        assertEquals(3, coord.getDatasets().getDatasetOrAsyncDataset().size());
+        assertEquals(6, coord.getDatasets().getDatasetOrAsyncDataset().size());
         
         ConfigurationStore store = ConfigurationStore.get();
         Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());
@@ -120,7 +124,7 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         assertEquals(feed.getTimezone().getID(), ds.getTimezone());
         assertEquals("${coord:"+feed.getFrequency().toString()+"}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());
-        assertEquals("${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath(), ds.getUriTemplate());   
+        assertEquals(ds.getUriTemplate(),"${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA,feed.getClusters().getClusters().get(0).getName()).getPath());   
         for(Property prop:coord.getAction().getWorkflow().getConfiguration().getProperty()){
         	if(prop.getName().equals("mapred.job.priority")){
         		assertEquals(prop.getValue(), "LOW");

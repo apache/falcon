@@ -45,6 +45,7 @@ import org.apache.ivory.entity.v0.feed.Location;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.feed.Locations;
 import org.apache.ivory.entity.v0.feed.Validity;
+import org.apache.ivory.group.FeedGroup;
 import org.apache.ivory.group.FeedGroupMapTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -254,6 +255,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
 		location.setType(LocationType.DATA);
 		feed1.getLocations().getLocations().add(location);
+		feed1.getClusters().getClusters().get(0).getLocations().getLocations().set(0, location);
 		parser.parseAndValidate(feed1.toString());
 		ConfigurationStore.get().publish(EntityType.FEED, feed1);
 
@@ -267,7 +269,22 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
 		location2.setType(LocationType.DATA);
 		feed2.getLocations().getLocations().add(location2);
+		feed2.getClusters().getClusters().get(0).getLocations().getLocations().set(0, location);
 		parser.parseAndValidate(feed2.toString());
+	}
+	
+	@Test(expectedExceptions = ValidationException.class)
+	public void testInvalidFeedClusterDataLocation() throws JAXBException, IvoryException{
+		Feed feed1 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+				(FeedEntityParserTest.class.getResourceAsStream(FEED_XML)));
+		feed1.setName("f1" + System.currentTimeMillis());
+		feed1.setGroups("group1,group2,group3");
+		feed1.setLocations(new Locations());
+		Location location = new Location();
+		location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
+		location.setType(LocationType.DATA);
+		feed1.getLocations().getLocations().add(location);
+		parser.parseAndValidate(feed1.toString());
 	}
 
 	@Test(expectedExceptions = ValidationException.class)
@@ -282,6 +299,8 @@ public class FeedEntityParserTest extends AbstractTestBase {
 		location.setType(LocationType.DATA);
 		feed1.getLocations().getLocations().add(location);
 		parser.parseAndValidate(feed1.toString());
+		
+		feed1.getClusters().getClusters().get(0).getLocations().getLocations().set(0,location);
 		ConfigurationStore.get().publish(EntityType.FEED, feed1);
 
 		Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
@@ -294,6 +313,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}/${HOUR}/ad");
 		location2.setType(LocationType.DATA);
 		feed2.getLocations().getLocations().add(location2);
+		feed2.getClusters().getClusters().get(0).getLocations().getLocations().set(0,location);
 		parser.parseAndValidate(feed2.toString());
 	}
 
@@ -371,7 +391,10 @@ public class FeedEntityParserTest extends AbstractTestBase {
 				FeedGroupMapTest.class
 						.getResourceAsStream("/config/feed/feed-0.1.xml"));
 		feed1.setName("feed1");
-		feed1.getLocations().getLocations().get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+		feed1.getLocations().getLocations().get(0)
+				.setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+		feed1.getClusters().getClusters().get(0).getLocations().getLocations()
+				.get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
 		ConfigurationStore.get().publish(EntityType.FEED, feed1);
 		
 		Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
@@ -379,6 +402,8 @@ public class FeedEntityParserTest extends AbstractTestBase {
 						.getResourceAsStream("/config/feed/feed-0.1.xml"));
 		feed2.setName("feed2");
 		feed2.getLocations().getLocations().get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+		feed2.getClusters().getClusters().get(0).getLocations().getLocations()
+		.get(0).setPath("/data/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
 		feed2.setFrequency(new Frequency("hours(1)"));
 		try{
 			parser.parseAndValidate(feed2.toString());

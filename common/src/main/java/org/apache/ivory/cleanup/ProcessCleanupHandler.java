@@ -39,7 +39,7 @@ public class ProcessCleanupHandler extends AbstractCleanupHandler {
 			for (org.apache.ivory.entity.v0.process.Cluster cluster : process
 					.getClusters().getClusters()) {
 				LOG.info("Cleaning up logs for process:" + processName
-						+ " in  cluster: " + cluster.getName());
+						+ " in  cluster: " + cluster.getName() + " with retention: "+retention);
 				Cluster currentCluster = STORE.get(EntityType.CLUSTER,
 						cluster.getName());
 				delete(currentCluster, process, retention);
@@ -51,7 +51,7 @@ public class ProcessCleanupHandler extends AbstractCleanupHandler {
 	@Override
 	protected Path getLogPath(Entity entity, String stagingPath) {
 		Path logPath = new Path(stagingPath, "ivory/workflows/process/"
-				+ entity.getName() + "/logs/job-*");
+				+ entity.getName() + "/logs/job-*/*");
 		return logPath;
 	}
 

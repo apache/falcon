@@ -114,6 +114,7 @@
         <xs:sequence>
             <xs:element type="validity" name="validity" />
             <xs:element type="retention" name="retention" />
+            <xs:element type="locations" name="locations" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required" />
         <xs:attribute type="cluster-type" name="type" use="optional" />
@@ -287,6 +288,7 @@
             <xs:enumeration value="data" />
             <xs:enumeration value="stats" />
             <xs:enumeration value="meta" />
+            <xs:enumeration value="tmp" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="IDENTIFIER">
