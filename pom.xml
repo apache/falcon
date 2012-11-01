@@ -95,6 +95,10 @@
            <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
         </repository>
         <repository>
+           <id>internal.releases.tmp</id>
+           <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
+        </repository>
+        <repository>
             <id>internal.releases</id>
             <url>http://maven.scm.corp.inmobi.com/content/repositories/data-release</url>
         </repository>
