@@ -30,12 +30,6 @@
 	<description>Ivory Rerun Handler</description>
 	<name>Ivory Rerun</name>
 	<packaging>jar</packaging>
-	<repositories>
-		<repository>
-			<id>platform-pe-releases</id>
-			<url>http://build.corp.inmobi.com/nexus/content/repositories/platform-pe-releases</url>
-		</repository>
-	</repositories>
 
 	<dependencies>
 		<dependency>
