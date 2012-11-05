@@ -84,7 +84,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
         properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
         properties.put(inName + ".done-flag", "notused");
-        properties.put(inName + ".uri-template", "${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA).getPath().replace('$', '%'));
+        properties.put(inName + ".uri-template", "${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA, clusterName).getPath().replace('$', '%'));
         properties.put(inName + ".start-instance", in.getStart());
         properties.put(inName + ".end-instance", in.getEnd());
     }
