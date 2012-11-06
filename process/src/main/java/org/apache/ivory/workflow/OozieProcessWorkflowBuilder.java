@@ -54,22 +54,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
             Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
-            if (properties == null) continue;
-            
-            //Add libpath
-            String libPath = process.getWorkflow().getLib();
-			if (!StringUtils.isEmpty(libPath)) {
-				String path = libPath.replace("${nameNode}", "");
-				properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
-			}
-            
-            if(process.getInputs() != null) {
-                for(Input in:process.getInputs().getInputs())
-                    if(in.isOptional())
-                        addOptionalInputProperties(properties, in, clusterName);
-            }
-
-            propertiesMap.put(clusterName, properties);
+            if (properties != null)
+                propertiesMap.put(clusterName, properties);
         }
         return propertiesMap;
     }
@@ -122,7 +108,22 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         if(!mapper.map(cluster, bundlePath)){
             return null;
         }
-        return createAppProperties(clusterName, bundlePath);
+        
+        Properties properties = createAppProperties(clusterName, bundlePath);
+        
+        //Add libpath
+        String libPath = process.getWorkflow().getLib();
+        if (!StringUtils.isEmpty(libPath)) {
+            String path = libPath.replace("${nameNode}", "");
+            properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
+        }
+        
+        if(process.getInputs() != null) {
+            for(Input in:process.getInputs().getInputs())
+                if(in.isOptional())
+                    addOptionalInputProperties(properties, in, clusterName);
+        }
+        return properties;
     }
 
     @Override
