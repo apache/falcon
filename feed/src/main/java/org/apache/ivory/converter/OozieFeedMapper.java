@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.ivory.IvoryException;
 import org.apache.ivory.Tag;
@@ -246,7 +247,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put("srcClusterColo", srcCluster.getColo());
             props.put(ARG.feedNames.getPropName(), feed.getName());
             props.put(ARG.feedInstancePaths.getPropName(), pathsWithPartitions.toString());
-            props.put("sourceRelativePaths", pathsWithPartitions.toString().replaceAll("//+", "/"));
+            String parts = pathsWithPartitions.toString().replaceAll("//+", "/");
+            parts = StringUtils.stripEnd(parts, "/");
+            props.put("sourceRelativePaths", parts);
             props.put("distcpSourcePaths", "${coord:dataIn('input')}");
             props.put("distcpTargetPaths", "${coord:dataOut('output')}");
             props.put("ivoryInPaths", pathsWithPartitions.toString());
