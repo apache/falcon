@@ -1036,9 +1036,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 			throws IvoryException {
 		OozieClient client = OozieClientFactory.get(cluster);
 		try {
-			WorkflowJob jobInfo = client.getJobInfo(jobId);
-			Status status = jobInfo.getStatus();
-			return status.name();
+		    if(jobId.endsWith("-W")) {
+		        WorkflowJob jobInfo = client.getJobInfo(jobId);
+		        return jobInfo.getStatus().name();
+		    } else if(jobId.endsWith("-C")) {
+		        CoordinatorJob coord = client.getCoordJobInfo(jobId);
+		        return coord.getStatus().name();
+		    } else if(jobId.endsWith("-B")) {
+		        BundleJob bundle = client.getBundleJobInfo(jobId);
+		        return bundle.getStatus().name();
+		    }
+		    throw new IllegalArgumentException("Unhandled jobs id: " + jobId);
 		} catch (Exception e) {
 			LOG.error("Unable to get status of workflows", e);
 			throw new IvoryException(e);
