@@ -36,7 +36,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
 
     public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws IvoryException;
     
-    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName) throws IvoryException;
+    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName, String user) throws IvoryException;
 
     public abstract String[] getWorkflowNames(T entity);
 }

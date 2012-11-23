@@ -752,32 +752,32 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
 
         BundleJob bundle = findLatestBundle(oldEntity, cluster);
-        if (bundle == MISSING)
-            return;
-
-        LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
-        Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
-        if (newEndTime.before(now())) {
-            throw new IvoryException("New end time for " + newEntity.getName()
-                    + " is past current time. Entity can't be updated. Use remove and add");
+        if (bundle != MISSING) {
+            LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
+            Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
+            if (newEndTime.before(now())) {
+                throw new IvoryException("New end time for " + newEntity.getName()
+                        + " is past current time. Entity can't be updated. Use remove and add");
+            }
+    
+            LOG.debug("Updating for cluster : " + cluster + ", bundle: " + bundle.getId());
+    
+            if (canUpdateBundle(oldEntity, newEntity)) {
+                // only concurrency and endtime are changed. So, change coords
+                LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
+                updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
+                        EntityUtil.getEndTime(newEntity, cluster));
+                return;
+            }
+    
+            LOG.debug("Going to update ! : " + newEntity.toShortString() + cluster + ", bundle: "
+                    + bundle.getId());
+            updateInternal(oldEntity, newEntity, cluster, bundle, false);
+            LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: "
+                    + bundle.getId());
         }
-
-        LOG.debug("Updating for cluster : " + cluster + ", bundle: " + bundle.getId());
-
-        if (canUpdateBundle(oldEntity, newEntity)) {
-            // only concurrency and endtime are changed. So, change coords
-            LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
-            updateCoords(cluster, bundle.getId(), EntityUtil.getParallel(newEntity),
-                    EntityUtil.getEndTime(newEntity, cluster));
-            return;
-        }
-
-        LOG.debug("Going to update ! : " + newEntity.toShortString() + cluster + ", bundle: "
-                + bundle.getId());
-        updateInternal(oldEntity, newEntity, cluster, bundle, false);
-        LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: "
-                + bundle.getId());
-
+        
+        //Update affected entities
         Set<Entity> affectedEntities = EntityGraph.get().getDependents(oldEntity);
         for (Entity affectedEntity : affectedEntities) {
             if (affectedEntity.getEntityType() != EntityType.PROCESS)
@@ -787,20 +787,23 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, affectedEntity))
                 continue;
 
-            BundleJob feedBundle = findLatestBundle(newEntity, cluster);
             BundleJob affectedProcBundle = findLatestBundle(affectedEntity, cluster);
             if (affectedProcBundle == MISSING)
                 continue;
 
-            if (feedBundle == MISSING) {
-                throw new IllegalStateException("Unable to find feed bundle in " + cluster
-                        + " for entity " + newEntity.getName());
-            }
             LOG.info("Triggering update for " + cluster + ", " + affectedProcBundle.getId());
-            boolean processCreated = feedBundle.getCreatedTime().before(
-                    affectedProcBundle.getCreatedTime());
+            
+            //TODO handle roll forward
+//            BundleJob feedBundle = findLatestBundle(newEntity, cluster);
+//            if (feedBundle == MISSING) {
+//                throw new IllegalStateException("Unable to find feed bundle in " + cluster
+//                        + " for entity " + newEntity.getName());
+//            }
+//            boolean processCreated = feedBundle.getCreatedTime().before(
+//                    affectedProcBundle.getCreatedTime());
+            
             updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle,
-                    processCreated);
+                    false);
             LOG.info("Entity update complete : " + affectedEntity.toShortString() + cluster
                     + ", bundle: " + affectedProcBundle.getId());
         }
@@ -906,7 +909,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 			endTime = offsetTime(now(), 3);
 			Date newStartTime = builder.getNextStartTime(newEntity, cluster,
 					endTime);
-			scheduleForUpdate(newEntity, cluster, newStartTime);
+			scheduleForUpdate(newEntity, cluster, newStartTime, bundle.getUser());
 			LOG.info("New bundle scheduled successfully "
 					+ SchemaHelper.formatDateUTC(newStartTime));
 		} else {
@@ -928,12 +931,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		}
 	}
 
-	private void scheduleForUpdate(Entity entity, String cluster, Date startDate)
+	private void scheduleForUpdate(Entity entity, String cluster, Date startDate, String user)
 			throws IvoryException {
 		WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE,
 				entity);
 		Properties bundleProps = builder.newWorkflowSchedule(entity, startDate,
-				cluster);
+				cluster, user);
 		LOG.info("Scheduling " + entity.toShortString() + " on cluster "
 				+ cluster + " with props " + bundleProps);
 		if (bundleProps != null) {

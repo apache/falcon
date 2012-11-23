@@ -31,7 +31,6 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Property;
-import org.apache.ivory.security.CurrentUser;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
@@ -41,7 +40,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     private static Logger LOG = Logger.getLogger(OozieWorkflowBuilder.class);
     protected static final ConfigurationStore configStore = ConfigurationStore.get();
     
-    protected Properties createAppProperties(String clusterName, Path bundlePath) throws IvoryException {
+    protected Properties createAppProperties(String clusterName, Path bundlePath, String user) throws IvoryException {
 
         Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
         Properties properties = new Properties();
@@ -57,7 +56,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                 "${" + OozieWorkflowEngine.NAME_NODE + "}" + bundlePath.toString());
         properties.setProperty("colo.name", cluster.getColo());
         
-        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+        properties.setProperty(OozieClient.USER_NAME, user);
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         properties.setProperty("ivory.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
         LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
