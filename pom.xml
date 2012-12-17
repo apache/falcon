@@ -170,7 +170,7 @@
         <dependency>
             <groupId>com.inmobi.grid</groupId>
     		<artifactId>s4fs</artifactId>
-    		<version>0.1-SNAPSHOT</version>
+    		<version>0.1</version>
     	</dependency>
 
         <dependency>
