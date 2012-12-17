@@ -243,15 +243,10 @@ public class FeedEntityParser extends EntityParser<Feed> {
                                     "clusters is more than the number of partitions defined in feed");
                     }
                 }
-                
-                if(numTrgClusters > 1 && numSourceClusters >= 1) {
-                    String part = FeedHelper.normalizePartitionExpression(cluster.getPartition());
-                    if(StringUtils.split(part, '/').length == 0)
-                        throw new ValidationException("Partition expression has to be specified for cluster " + cluster.getName() +
-                                " as there are more than one target clusters");
-                    validateClusterExpDefined(cluster);                    
+
+                if (numTrgClusters > 1 && numSourceClusters >= 1) {
+                    validateClusterExpDefined(cluster);
                 }
-                
             }
         }
     }

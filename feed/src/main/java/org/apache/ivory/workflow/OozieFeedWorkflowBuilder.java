@@ -35,6 +35,7 @@ import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.security.CurrentUser;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
@@ -44,7 +45,8 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-            Properties properties = newWorkflowSchedule(feed, feedCluster.getValidity().getStart(), clusterName);
+            Properties properties = newWorkflowSchedule(feed, feedCluster.getValidity().getStart(), clusterName, 
+                    CurrentUser.getUser());
             if (properties == null) continue;
             propertiesMap.put(clusterName, properties);
         }
@@ -52,7 +54,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     }
 
     @Override
-    public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName) throws IvoryException {
+    public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName, String user) throws IvoryException {
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
         if (!startDate.before(feedCluster.getValidity().getEnd()))
             // start time >= end time
@@ -67,7 +69,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         if(!mapper.map(cluster, bundlePath)){
             return null;
         }
-        return createAppProperties(clusterName, bundlePath);
+        return createAppProperties(clusterName, bundlePath, user);
     }
 
     @Override

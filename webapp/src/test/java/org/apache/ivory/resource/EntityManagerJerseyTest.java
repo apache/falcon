@@ -62,6 +62,42 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
      */
     
     @Test
+    public void testUpdateCheckUser() throws Exception {
+        Map<String, String> overlay = getUniqueOverlay();
+        String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
+        File tmpFile = getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        waitForBundleStart(Status.RUNNING);
+        
+        List<BundleJob> bundles = getBundles();
+        Assert.assertEquals(bundles.size(), 1);
+        Assert.assertEquals(bundles.get(0).getUser(), REMOTE_USER);
+        
+        ClientResponse response = this.service.path("api/entities/definition/feed/" + outputFeedName).header("Remote-User", REMOTE_USER)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
+        
+        //change output feed path and update feed as another user
+        feed.getLocations().getLocations().get(0).setPath("/ivory/test/output2/${YEAR}/${MONTH}/${DAY}");
+        tmpFile = getTempFile();
+        EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
+        response = this.service.path("api/entities/update/feed/" + outputFeedName).header("Remote-User", "testuser").accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
+        assertSuccessful(response);    
+        
+        bundles = getBundles();
+        Assert.assertEquals(bundles.size(), 2);
+        Assert.assertEquals(bundles.get(0).getUser(), REMOTE_USER);
+        Assert.assertEquals(bundles.get(1).getUser(), REMOTE_USER);
+    }
+    
+    
+    @Test
     public void testOptionalInput() throws Exception {
         Map<String, String> overlay = getUniqueOverlay();
         String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);

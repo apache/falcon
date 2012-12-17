@@ -42,6 +42,7 @@ import org.apache.ivory.entity.v0.feed.Feed;
 import org.apache.ivory.entity.v0.feed.LocationType;
 import org.apache.ivory.entity.v0.process.Input;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.security.CurrentUser;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
 
@@ -53,23 +54,10 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         for (String clusterName: clusters) {
             org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
-            Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName);
-            if (properties == null) continue;
-            
-            //Add libpath
-            String libPath = process.getWorkflow().getLib();
-			if (!StringUtils.isEmpty(libPath)) {
-				String path = libPath.replace("${nameNode}", "");
-				properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
-			}
-            
-            if(process.getInputs() != null) {
-                for(Input in:process.getInputs().getInputs())
-                    if(in.isOptional())
-                        addOptionalInputProperties(properties, in, clusterName);
-            }
-
-            propertiesMap.put(clusterName, properties);
+            Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName, 
+                    CurrentUser.getUser());
+            if (properties != null)
+                propertiesMap.put(clusterName, properties);
         }
         return propertiesMap;
     }
@@ -84,8 +72,10 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
         properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
         properties.put(inName + ".done-flag", "notused");
-        String locPath = FeedHelper.getLocation(feed, LocationType.DATA).getPath().replace('$', '%');
+        
+        String locPath = FeedHelper.getLocation(feed, LocationType.DATA, clusterName).getPath().replace('$', '%');
 		properties.put(inName + ".uri-template", new Path(locPath).toUri().getScheme()!=null?locPath:"${nameNode}"+locPath);
+
         properties.put(inName + ".start-instance", in.getStart());
         properties.put(inName + ".end-instance", in.getEnd());
     }
@@ -108,7 +98,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
     
     @Override
-    public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName) throws IvoryException {
+    public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName, String user) throws IvoryException {
         org.apache.ivory.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
         if (!startDate.before(processCluster.getValidity().getEnd()))
             // start time >= end time
@@ -123,7 +113,22 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         if(!mapper.map(cluster, bundlePath)){
             return null;
         }
-        return createAppProperties(clusterName, bundlePath);
+        
+        Properties properties = createAppProperties(clusterName, bundlePath, user);
+        
+        //Add libpath
+        String libPath = process.getWorkflow().getLib();
+        if (!StringUtils.isEmpty(libPath)) {
+            String path = libPath.replace("${nameNode}", "");
+            properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
+        }
+        
+        if(process.getInputs() != null) {
+            for(Input in:process.getInputs().getInputs())
+                if(in.isOptional())
+                    addOptionalInputProperties(properties, in, clusterName);
+        }
+        return properties;
     }
 
     @Override
