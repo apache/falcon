@@ -42,7 +42,7 @@
             <arg>-timeZone</arg><arg>${timeZone}</arg>
             <arg>-frequency</arg><arg>${frequency}</arg>
 			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
-			<file>${wf:conf("ivory.libpath")}/s4fs-0.1-SNAPSHOT.jar</file>
+			<file>${wf:conf("ivory.libpath")}/s4fs-0.1.jar</file>
         </java>
         <ok to="jms-messaging"/>
         <error to="fail"/>
@@ -90,7 +90,7 @@
             <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
             <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
             <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
-            <file>${wf:conf("ivory.libpath")}/s4fs-0.1-SNAPSHOT.jar</file>
+            <file>${wf:conf("ivory.libpath")}/s4fs-0.1.jar</file>
 		</java>
 		<ok to="end" />
 		<error to="fail" />
