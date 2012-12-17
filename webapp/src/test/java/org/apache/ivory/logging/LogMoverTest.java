@@ -132,7 +132,7 @@ public class LogMoverTest {
 		Path stagingPath = new Path(ClusterHelper.getLocation(
 				testCluster.getCluster(), "staging"),
 				EntityUtil.getStagingPath(testProcess) + "/../logs");
-		Path logPath = new Path(ClusterHelper.getHdfsUrl(testCluster
+		Path logPath = new Path(ClusterHelper.getStoageUrl(testCluster
 				.getCluster()), stagingPath);
 		return logPath;
 	}

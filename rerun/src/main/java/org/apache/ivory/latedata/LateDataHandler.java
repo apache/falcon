@@ -54,7 +54,7 @@ public class LateDataHandler extends Configured implements Tool {
 		LOG.info(confPath + " found ? "
 				+ confPath.getFileSystem(conf).exists(confPath));
 		conf.addResource(confPath);
-		ToolRunner.run(new Configuration(), new LateDataHandler(), args);
+		ToolRunner.run(conf, new LateDataHandler(), args);
 	}
 
 	private static CommandLine getCommand(String[] args) throws ParseException {

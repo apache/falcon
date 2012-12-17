@@ -85,11 +85,12 @@ public class LogMover extends Configured implements Tool {
 
 			if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
 				// if replication wf 
-				copyTTlogs(args, fs, path, jobInfo.getActions().get(2));
 				copyOozieLog(client, fs, path, jobInfo.getId());
+				copyTTlogs(args, fs, path, jobInfo.getActions().get(2));
 			} else {
 				// if process wf
 				String subflowId = jobInfo.getExternalId();
+				copyOozieLog(client, fs, path, subflowId);
 				WorkflowJob subflowInfo = client.getJobInfo(subflowId);
 				List<WorkflowAction> actions = subflowInfo.getActions();
 				for (WorkflowAction action : actions) {
@@ -101,7 +102,7 @@ public class LogMover extends Configured implements Tool {
 								+ action.getName());
 					}
 				}
-				copyOozieLog(client, fs, path, subflowId);
+
 			}
 
 		} catch (Exception e) {

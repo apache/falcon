@@ -85,7 +85,7 @@ public abstract class AbstractCleanupHandler {
 
 		FileSystem fs;
 		try {
-			fs = new Path(ClusterHelper.getHdfsUrl(cluster))
+			fs = new Path(ClusterHelper.getStoageUrl(cluster))
 					.getFileSystem(new Configuration());
 		} catch (IOException e) {
 			throw new IvoryException(e);

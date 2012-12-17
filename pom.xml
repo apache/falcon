@@ -166,6 +166,12 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.2</version>
         </dependency>
+        
+        <dependency>
+            <groupId>com.inmobi.grid</groupId>
+    		<artifactId>s4fs</artifactId>
+    		<version>0.1-SNAPSHOT</version>
+    	</dependency>
 
         <dependency>
             <groupId>log4j</groupId>

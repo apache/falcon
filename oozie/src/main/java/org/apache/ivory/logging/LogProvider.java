@@ -48,7 +48,7 @@ public final class LogProvider {
 		String resolvedRunId = "-";
 		try {
 			FileSystem fs = FileSystem.get(
-					new Path(ClusterHelper.getHdfsUrl(clusterObj)).toUri(),
+					new Path(ClusterHelper.getStoageUrl(clusterObj)).toUri(),
 					new Configuration());
 			resolvedRunId = getResolvedRunId(fs, clusterObj, entity, instance,
 					runId);
@@ -74,7 +74,7 @@ public final class LogProvider {
 			Entity entity, Instance instance, String runId)
 			throws IvoryException, IOException {
 		if (StringUtils.isEmpty(runId)) {
-			Path jobPath = new Path(ClusterHelper.getHdfsUrl(cluster),
+			Path jobPath = new Path(ClusterHelper.getStoageUrl(cluster),
 					EntityUtil.getLogPath(cluster, entity) + "/job-"
 							+ EntityUtil.UTCtoURIDate(instance.instance) + "/*");
 
@@ -88,7 +88,7 @@ public final class LogProvider {
 				return "-";
 			}
 		} else {
-			Path jobPath = new Path(ClusterHelper.getHdfsUrl(cluster),
+			Path jobPath = new Path(ClusterHelper.getStoageUrl(cluster),
 					EntityUtil.getLogPath(cluster, entity) + "/job-"
 							+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
 							+ getFormatedRunId(runId));
@@ -106,7 +106,7 @@ public final class LogProvider {
 			Entity entity, Instance instance, String formatedRunId)
 			throws IvoryException, OozieClientException, IOException {
 
-		Path actionPaths = new Path(ClusterHelper.getHdfsUrl(cluster),
+		Path actionPaths = new Path(ClusterHelper.getStoageUrl(cluster),
 				EntityUtil.getLogPath(cluster, entity) + "/job-"
 						+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
 						+ formatedRunId + "/*");
@@ -117,7 +117,7 @@ public final class LogProvider {
 		for (FileStatus file : actions) {
 			Path filePath = file.getPath();
 			String dfsBrowserUrl = getDFSbrowserUrl(
-					ClusterHelper.getHdfsUrl(cluster),
+					ClusterHelper.getStoageUrl(cluster),
 					EntityUtil.getLogPath(cluster, entity) + "/job-"
 							+ EntityUtil.UTCtoURIDate(instance.instance) + "/"
 							+ formatedRunId, file.getPath().getName());
@@ -147,7 +147,8 @@ public final class LogProvider {
 
 	private String getDFSbrowserUrl(String hdfsPath, String logPath,
 			String fileName) throws IvoryException {
-		String httpUrl = hdfsPath.replaceAll("hdfs://", "http://").replaceAll(
+		String scheme = new Path(hdfsPath).toUri().getScheme();
+		String httpUrl = hdfsPath.replaceAll(scheme+"://", "http://").replaceAll(
 				":[0-9]+", ":50070");
 		return new Path(httpUrl, "/data/"+logPath + "/" + fileName).toString();
 	}

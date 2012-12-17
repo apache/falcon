@@ -125,10 +125,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
     private String getNameNode(Cluster cluster, String clusterName) throws ValidationException {
         // cluster should never be null as it is validated while submitting
         // feeds.
-        if (!ClusterHelper.getHdfsUrl(cluster).startsWith("hdfs://")) {
-            throw new ValidationException("Cannot get valid nameNode from write interface of cluster: " + clusterName);
+        if (new Path(ClusterHelper.getStoageUrl(cluster)).toUri().getScheme()==null) {
+            throw new ValidationException("Cannot get valid nameNode scheme from write interface of cluster: " + clusterName);
         }
-        return ClusterHelper.getHdfsUrl(cluster);
+        return ClusterHelper.getStoageUrl(cluster);
     }
 
     private void validateProcessValidity(Date start, Date end) throws IvoryException {

@@ -265,9 +265,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
-		syncdataset.setUriTemplate("${nameNode}"
-				+ FeedHelper.getLocation(feed, locationType,
-						cluster.getName()).getPath());
+		String locPath = FeedHelper.getLocation(feed, locationType,
+				cluster.getName()).getPath();
+		syncdataset.setUriTemplate(new Path(locPath).toUri().getScheme()!=null?locPath:"${nameNode}"
+				+ locPath);
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());

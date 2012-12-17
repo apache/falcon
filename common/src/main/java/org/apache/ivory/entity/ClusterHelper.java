@@ -33,7 +33,7 @@ public final class ClusterHelper {
 
     public static Configuration getConfiguration(Cluster cluster) {
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", getHdfsUrl(cluster));
+        conf.set("fs.default.name", getStoageUrl(cluster));
         conf.set("mapred.job.tracker", getMREndPoint(cluster));
         if(cluster.getProperties() != null)
             for(Property prop:cluster.getProperties().getProperties()) {
@@ -46,11 +46,11 @@ public final class ClusterHelper {
         return getInterface(cluster, Interfacetype.WORKFLOW).getEndpoint();
     }
 
-    public static String getHdfsUrl(Cluster cluster) {
+    public static String getStoageUrl(Cluster cluster) {
         return getNormalizedUrl(cluster, Interfacetype.WRITE);
     }
 
-    public static String getReadOnlyHdfsUrl(Cluster cluster) {
+    public static String getReadOnlyStorageUrl(Cluster cluster) {
         return getNormalizedUrl(cluster, Interfacetype.READONLY);
     }
 
@@ -84,7 +84,7 @@ public final class ClusterHelper {
     }
 
     public static String getCompleteLocation(Cluster cluster, String locationKey) {
-        return getHdfsUrl(cluster) + "/" + getLocation(cluster, locationKey);
+        return getStoageUrl(cluster) + "/" + getLocation(cluster, locationKey);
     }
     
     public static String getLocation(Cluster cluster, String locationKey) {

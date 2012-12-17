@@ -51,7 +51,17 @@ public class FeedReplicator extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 
         DistCpOptions options = getDistCpOptions(args);
-		DistCp distCp = new CustomReplicator(this.getConf(), options);
+        
+        Configuration conf = this.getConf();
+		// inject wf configs
+		Path confPath = new Path("file:///"
+				+ System.getProperty("oozie.action.conf.xml"));
+
+		LOG.info(confPath + " found conf ? "
+				+ confPath.getFileSystem(conf).exists(confPath));
+		conf.addResource(confPath);
+        
+		DistCp distCp = new CustomReplicator(conf, options);
 		LOG.info("Started DistCp");
 		distCp.execute();
 
