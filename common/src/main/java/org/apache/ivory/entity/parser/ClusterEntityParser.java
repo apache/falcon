@@ -38,19 +38,19 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     @Override
 	public void validate(Cluster cluster) throws StoreAccessException,
 			ValidationException { 
-		if (new Path(ClusterHelper.getStoageUrl(cluster)).toUri().getScheme()==null) {
+		if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme()==null) {
 			throw new ValidationException(
 					"Cannot get valid scheme for namenode from write interface of cluster: "
 							+ cluster.getName());
 		}
 		try {
 			Configuration conf = new Configuration();
-			conf.set("fs.default.name", ClusterHelper.getStoageUrl(cluster));
+			conf.set("fs.default.name", ClusterHelper.getStorageUrl(cluster));
 			conf.setInt("ipc.client.connect.max.retries", 10);
 			FileSystem.get(conf);
 		} catch (Exception e) {
 			throw new ValidationException("Invalid HDFS server or port:"
-					+ ClusterHelper.getStoageUrl(cluster), e);
+					+ ClusterHelper.getStorageUrl(cluster), e);
 		}
 	}
 

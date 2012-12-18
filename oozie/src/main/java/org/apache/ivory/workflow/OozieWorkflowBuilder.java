@@ -49,7 +49,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 					.getProperties());
 		}
         properties.setProperty(OozieWorkflowEngine.NAME_NODE,
-                ClusterHelper.getStoageUrl(cluster));
+                ClusterHelper.getStorageUrl(cluster));
         properties.setProperty(OozieWorkflowEngine.JOB_TRACKER,
                 ClusterHelper.getMREndPoint(cluster));
         properties.setProperty(OozieClient.BUNDLE_APP_PATH,

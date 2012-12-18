@@ -81,7 +81,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 			fs = FileSystem.get(conf);
 		} catch (Exception e) {
 			throw new IvoryException("Unable to connect to HDFS: "
-					+ ClusterHelper.getStoageUrl(cluster));
+					+ ClusterHelper.getStorageUrl(cluster));
 		}
         Path clusterPath = new Path(path);
         if(!fs.exists(clusterPath))

@@ -39,10 +39,6 @@
 					<value>${queueName}</value>
 				</property>
 				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
 					<name>oozie.launcher.mapred.job.priority</name>
 					<value>${jobPriority}</value>
 				</property>
@@ -77,8 +73,8 @@
 			</configuration>
             <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
             <arg>-Divory.include.path=${sourceRelativePaths}</arg>
-            <arg>-Dmapred.job.queue.name=${wf:conf('mapred.job.queue.name')}</arg>
-            <arg>-Dmapred.job.priority=${wf:conf('mapred.job.priority')}</arg>
+            <arg>-Dmapred.job.queue.name=${queueName}</arg>
+            <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-update</arg>
             <arg>-blocking</arg><arg>true</arg>
 			<arg>-maxMaps</arg><arg>5</arg>
