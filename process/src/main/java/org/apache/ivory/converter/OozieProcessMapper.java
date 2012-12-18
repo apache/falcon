@@ -80,7 +80,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         for (Object object : wfApp.getDecisionOrForkOrJoin()) {
             if (object instanceof ACTION && ((ACTION) object).getName().equals("user-workflow")) {
                 SUBWORKFLOW subWf = ((ACTION) object).getSubWorkflow();
-                subWf.setAppPath(getHDFSPath(getEntity().getWorkflow().getPath()));
+                subWf.setAppPath(getStoragePath(getEntity().getWorkflow().getPath()));
             }
         }
 
@@ -207,7 +207,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         createWorkflow(cluster, DEFAULT_WF_TEMPLATE, coordName, coordPath);
 
         WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(getHDFSPath(coordPath.toString()));
+        wf.setAppPath(getStoragePath(coordPath.toString()));
         wf.setConfiguration(getCoordConfig(props));
 
         // set coord action to parent wf

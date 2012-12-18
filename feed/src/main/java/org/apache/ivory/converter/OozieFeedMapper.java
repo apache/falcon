@@ -114,7 +114,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             WORKFLOWAPP retWfApp = createRetentionWorkflow(cluster);
             retWfApp.setName(wfName);
             marshal(cluster, retWfApp, wfPath);
-            retentionWorkflow.setAppPath(getHDFSPath(wfPath.toString()));
+            retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
 
             Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
@@ -202,7 +202,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 			inputDataset.setUriTemplate(new Path(ClusterHelper
 					.getStorageUrl(srcCluster), FeedHelper.getLocation(feed,
 					LocationType.DATA,srcCluster.getName()).getPath()).toString());
-			outputDataset.setUriTemplate(getHDFSPath(FeedHelper.getLocation(
+			outputDataset.setUriTemplate(getStoragePath(FeedHelper.getLocation(
 					feed, LocationType.DATA, trgCluster.getName()).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
@@ -231,7 +231,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         ACTION replicationAction = new ACTION();
         WORKFLOW replicationWF = new WORKFLOW();
         try {
-            replicationWF.setAppPath(getHDFSPath(wfPath.toString()));
+            replicationWF.setAppPath(getStoragePath(wfPath.toString()));
             Feed feed = getEntity();
 
             String srcPart = FeedHelper.normalizePartitionExpression(FeedHelper.getCluster(feed, srcCluster.getName()).getPartition());

@@ -131,7 +131,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getHDFSPath(coordPath) + "/" + coordXmlName);
+            bundleCoord.setAppPath(getStoragePath(coordPath) + "/" + coordXmlName);
             bundleApp.getCoordinator().add(bundleCoord);
 
             copySharedLibs(cluster, coordPath);
@@ -180,7 +180,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
         props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
         props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
-        props.put("logDir", getHDFSPath(new Path(coordPath, "../../logs")));
+        props.put("logDir", getStoragePath(new Path(coordPath, "../../logs")));
         props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
@@ -279,15 +279,15 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
                 new Path(outPath, "workflow.xml"));
     }
 
-    protected String getHDFSPath(Path path) {
+    protected String getStoragePath(Path path) {
         if (path != null)
-            return getHDFSPath(path.toString());
+            return getStoragePath(path.toString());
         return null;
     }
 
-    protected String getHDFSPath(String path) {
+    protected String getStoragePath(String path) {
         if (StringUtils.isNotEmpty(path)) {
-            if (!path.startsWith("${nameNode}"))
+            if (new Path(path).toUri().getScheme()==null)
                 path = "${nameNode}" + path;
         }
         return path;
