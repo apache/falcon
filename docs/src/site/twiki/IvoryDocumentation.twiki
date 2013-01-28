@@ -1,12 +1,14 @@
 ---++ Contents
    * <a href="#Architecture">Architecture</a>
    * <a href="#Control_flow">Control flow</a>
+   * <a href="#Modes_Of_Deployment">Modes Of Deployment</a>
    * <a href="#Entity_Management_actions">Entity Management actions</a>
    * <a href="#Instance_Management_actions">Instance Management actions</a>
    * <a href="#Retention">Retention</a>
    * <a href="#Cross_entity_validations">Cross entity validations</a>
    * <a href="#Updating_process_and_feed_definition">Updating process and feed definition</a>
    * <a href="#Handling_late_input_data">Handling late input data</a>
+   * <a href="#Idempotency">Idempotency</a>
    * <a href="#Alerting_and_Monitoring">Alerting and Monitoring</a>
    * <a href="#Ivory_EL_Expressions">Ivory EL Expressions</a>
 
@@ -34,12 +36,33 @@ workflow in Oozie, it does so, after instrumenting the workflow with additional 
 via JMS. Ivory system itself subscribes to these control messages and can perform actions such as retries,
 handling late input arrival etc.
 
+---++ Modes Of Deployment
+There are two basic components of Ivory set up. Ivory Prism and Ivory Server. 
+As the name suggests Ivory Prism splits the request it gets to the Ivory Servers.More details below:
+
 ---++++ Feed Schedule flow
 <img src="FeedSchedule.png" height="400" width="600" />
 
 ---++++ Process Schedule flow
 <img src="ProcessSchedule.png" height="400" width="600" />
 
+
+---+++ Stand Alone Mode: 
+Stand alone mode is useful when the hadoop jobs and revelant data processing invoves only one hadoop cluster. In this mode there is single Ivory server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend , kill are sent to this server only. For running in this mode oen should use the ivory whihc has been built for standalone mode , or build using standalone option if using source code. 
+
+---+++ Distributed Mode: 
+Distributed mode is the mode which you might me using most of the time. This is for orgs which have which have multiple instance of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config localtions. 
+In this mode Prism acts as a contact point for Ivory servers.Below is what all request can be sent tp prism and server in this mode:
+
+ Prism: submit, schedule, submitAndSchdeule, Suspend, Resume, Kill , instance management
+ Server: schedule, suspend, resume, instance management
+ 
+As observed above submit and kill are kept exclusively as Prism operations to keep all the config stores in sync and to support feture of idempotency.
+Request may also be sent from prism but directed to only one specific server, to use that once had to use option "-colo" from CLI or append the same in web request if using API.
+
+When a cluster is submitted it is bu default sent to all the servers configured in the prism.
+When is feed is SUBMIT / SCHEDULED request is only sent to he servers specified in the feed / process definitions. Servers are mentioned in the feed / process via CLUSTER tags in xml definition.  
+ 
 ---+++ Configuration Store
 Configuration store is file system based store that the Ivory system maintains where the entity definitions
 are stored. File System used for the configuration store can either be a local file system or a hdfs file system.
@@ -370,6 +393,10 @@ record input size or detecting late input based on this size is added to the wor
 for each process. The offset between the late coordinator and the default coordinator is same as the max
 late-cut-off of the input feeds. However they run with the same external id as the default one.
 
+---++ Idempotency
+All the operations in Ivory are Idempotent. That is if you make same request to the ivory server / prism again you will get a SUCCESSFUL return if it was SUCCESSFUL in the first attempt. For example, you submit a new process / feed and get SUCCESSFUL message return. Now if you run the same command / api request on same entity you will again get a SUCCESSFUL message.  Same is true for other operatins like schedule, kill , suspend and resume. 
+Idempotency also by takes care of the condition when request is sent through prism and fails on one or more servers. For example prism is configured to send request to 3 servers. First user sends a request to SUBMIT a process on all 3 of them, and receives a response SUCCESSFUL from all of them. Then due to some issue one of the servers goes down, and user send a request to schdeule the submitted process. This time he will receive a response with PARTIAL status and a FALIURE message from the server that has gone down. If the users check he will find the porcess would have been started and running on the 2 SUCCESSFUL servers. Now the issue with server is figured out and it is brought up. Sending the SCHEDULE request again through prism will result in a SUCCESSFUL response from pism as well as other three servers, but this time PORCESS will be SCHEDULED only on the server which had failed earlier and other two will keep running as before. 
+ 
 
 ---++ Alerting and Monitoring
 ---+++ Alerting

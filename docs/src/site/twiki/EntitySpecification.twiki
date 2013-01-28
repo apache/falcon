@@ -77,8 +77,8 @@ A feed should have a unique name and this name is referenced by processes as inp
 
 <verbatim>
    <partitions>
-        <partition name="fraud" />
-        <partition name="good" />
+        <partition name="country" />
+        <partition name="cluster" />
     </partitions>
 </verbatim>
 A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be same here as cluster partitions.
@@ -98,12 +98,11 @@ the feed is termed as available. ex: _SUCCESS, if this element is ignored then I
 data directory as feed availability.
 
 <verbatim>
-    <frequency>hours</frequency>
-    <periodicity>1</periodicity>
+    <frequency>minutes(20)</frequency>
 </verbatim>
-A feed has a frequency and a periodicity which specifies the frequency by which this feed is generated. 
+A feed has a frequency which specifies the frequency by which this feed is generated. 
 ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
-valid frequency type for a feed are minutes, hours, days, months
+valid frequency type for a feed are minutes, hours, days, months. The values can be negative, zero or positive.
 
 <verbatim>
     <late-arrival cut-off="hours(6)" />
@@ -113,11 +112,17 @@ The cut-off period is specified by expression frequency(times), ex: if the feed 
 upto 8 hours then late-arrival's cut-off="hours(8)"
 
 <verbatim>
-        <cluster name="testCluster" type="source" partitionExp="*/${cluster.colo}">
-            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"
-                      timezone="UTC" />
-            <retention limit="hours(48)" action="delete" /> 
+        <clusters>
+        <cluster name="test-cluster">
+            <validity start="2012-07-20T03:00Z" end="2099-07-16T00:00Z"/>
+            <retention limit="days(10)" action="delete"/>
+            <locations>
+                <location type="data" path="/hdfsDataLocation/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+                <location type="stats" path="/projects/ivory/clicksStats" />
+                <location type="meta" path="/projects/ivory/clicksMetaData" />
+            </locations>
         </cluster>
+..... more clusters </clusters>
 </verbatim>
 Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Ivory.
 type: specifies whether the referenced cluster should be treated as a source or target for a feed.
@@ -125,6 +130,7 @@ Validity of a feed on cluster specifies duration for which this feed is valid on
 Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
 The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
 The field partitionExp contains partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema. A partition tag can be a wildcard(*), a static string or an expression. Atleast one of the strings has to be an expression.
+Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional. 
 
 <verbatim>
  <location type="data" path="/projects/ivory/clicks" /> 
@@ -138,10 +144,12 @@ The granularity of date pattern in the path should be atleast that of a frequenc
     <properties>
         <property name="tmpFeedPath" value="tmpFeedPathValue" />
         <property name="field2" value="value2" />
+        <property name="queueName" value="hadoopQueue"/>
+        <property name="jobPriority" value="VERY_HIGH"/>
     </properties>
 </verbatim>
-A key-value pair, which are propagated to the workflow engine.
-
+A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are available to user to specify the hadoop job queue and priority. Same variables are available to user in workflow.xml to be user. The corrsponding values are propogated from feed / process xml. 
+ 
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
 
@@ -156,12 +164,22 @@ Syntax:
 </verbatim>
 
 ---++++ Cluster
-The cluster on which the workflow should run. A process can contain just one cluster. Cluster definition for the cluster name gives the end points for workflow execution, name node, job tracker, messaging and so on.
+The cluster on which the workflow should run. A process should contain one or more clusters. Cluster definition for the cluster name gives the end points for workflow execution, name node, job tracker, messaging and so on. Each cluster inturn has validity mentioned, which tell the times between which the job should run on that specified cluster. 
 Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-   <cluster name=[cluster name]/>
+   <clusters>
+        <cluster name="test-cluster1">
+            <validity start="2012-12-21T08:15Z" end="2100-01-01T00:00Z"/>
+        </cluster>
+        <cluster name="test-cluster2">
+            <validity start="2012-12-21T08:15Z" end="2100-01-01T00:00Z"/>
+        </cluster>
+       ....
+       ....
+    </clusters>
+
 ...
 </process>
 </verbatim>
@@ -272,6 +290,33 @@ Example:
 </verbatim>
 The input for the workflow is a hourly feed and takes 0th and 1st hour data of today(the day when the workflow runs). If the workflow is running for 2012-03-01T06:40Z, the inputs are /projects/bootcamp/feed1/2012-03-01-00/*/US and /projects/bootcamp/feed1/2012-03-01-01/*/US. The property for this input is
 input1=/projects/bootcamp/feed1/2012-03-01-00/*/US,/projects/bootcamp/feed1/2012-03-01-01/*/US
+
+---++++ Optional Inputs
+User can metion one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continue with the comlpulsury ones. 
+Example:
+<verbatim>
+<feed name="feed1">
+...
+    <partition name="isFraud"/>
+    <partition name="country"/>
+    <frequency>hours(1)</frequency>
+    <locations>
+        <location type="data" path="/projects/bootcamp/feed1/${YEAR}-${MONTH}-${DAY}-${HOUR}"/>
+        ...
+    </locations>
+...
+</feed>
+<process name="sample-process">
+...
+    <inputs>
+        <input name="input1" feed="feed1" start="today(0,0)" end="today(1,0)" partition="*/US"/>
+        <input name="input2" feed="feed2" start="today(0,0)" end="today(1,0)" partition="*/UK"/ optional true>
+        ...
+    </inputs>
+...
+</process>
+</verbatim>
+
 
 ---++++ Outputs
 Outputs define the output data that is generated by the workflow. A process can define 0 or more outputs. Each output is mapped to a feed and the output path is picked up from feed definition. The output instance that should be generated is specified in terms of [[IvoryDocumentation][EL expression]].
