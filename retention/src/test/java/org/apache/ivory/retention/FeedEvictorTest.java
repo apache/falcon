@@ -82,7 +82,7 @@ public class FeedEvictorTest {
 			stream.clear();
 
 			Pair<List<String>, List<String>>  pair;
-			pair = createTestData("feed1", "yyyy-MM-dd", 10, TimeUnit.DAYS);
+			pair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS);
 			String dataPath = "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-01-00.csv";
 
@@ -160,7 +160,7 @@ public class FeedEvictorTest {
 			stream.clear();
 
 			Pair<List<String>, List<String>>  pair;
-			pair = createTestData("feed2", "yyyyMMddHH", 5, TimeUnit.HOURS);
+			pair = createTestData("feed2", "yyyyMMddHH/'more'/yyyy", 5, TimeUnit.HOURS);
 			String dataPath = "/data/YYYY/feed2/mmHH/dd/MM/" +
 					"?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-02-00.csv";
@@ -281,7 +281,7 @@ public class FeedEvictorTest {
 				date > now - timeUnit.toMillis(range + 6);
 				date -= timeUnit.toMillis(1)) {
 			String path = "/data/YYYY/" + feed + "/mmHH/dd/MM/" +
-					format.format(date) + "/more/2012";
+					format.format(date);
 			touch(fs, path);
 			if (date <= now && date > now - timeUnit.toMillis(range)) {
 				outOfRange.add(path);

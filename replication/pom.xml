@@ -32,9 +32,9 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.hadoop.tools</groupId>
+			<groupId>org.apache.hadoop.inmobi.tools</groupId>
 			<artifactId>hadoop-distcp</artifactId>
-			<version>0.1-SNAPSHOT</version>
+			<version>0.3</version>
 		</dependency>
 	</dependencies>
 

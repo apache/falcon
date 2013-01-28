@@ -76,31 +76,11 @@
         <url>https://github.com/sriksun/Ivory</url>
     </scm>
 
-    <distributionManagement>
-        <repository>
-            <id>InMobiRepository</id>
-            <name>InMobi Internal Repository</name>
-            <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
-        </repository>
-    </distributionManagement>
-
 
     <repositories>
         <repository>
-            <id>internal.snapshots</id>
-            <url>http://maven.scm.corp.inmobi.com/content/repositories/data-snapshot</url>
-        </repository>
-        <repository>
-           <id>internal.snapshots.tmp</id>
-           <url>http://build.corp.inmobi.com/nexus/content/repositories/snapshots</url>
-        </repository>
-        <repository>
-           <id>internal.releases.tmp</id>
-           <url>http://build.corp.inmobi.com/nexus/content/repositories/releases</url>
-        </repository>
-        <repository>
-            <id>internal.releases</id>
-            <url>http://maven.scm.corp.inmobi.com/content/repositories/data-release</url>
+            <id>inmobi.repo</id>
+            <url>https://github.com/InMobi/mvn-repo/raw/master/releases/</url>
         </repository>
         <repository>
             <id>default</id>
