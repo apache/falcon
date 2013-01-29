@@ -36,9 +36,6 @@ workflow in Oozie, it does so, after instrumenting the workflow with additional 
 via JMS. Ivory system itself subscribes to these control messages and can perform actions such as retries,
 handling late input arrival etc.
 
----++ Modes Of Deployment
-There are two basic components of Ivory set up. Ivory Prism and Ivory Server. 
-As the name suggests Ivory Prism splits the request it gets to the Ivory Servers.More details below:
 
 ---++++ Feed Schedule flow
 <img src="FeedSchedule.png" height="400" width="600" />
@@ -46,6 +43,11 @@ As the name suggests Ivory Prism splits the request it gets to the Ivory Servers
 ---++++ Process Schedule flow
 <img src="ProcessSchedule.png" height="400" width="600" />
 
+
+
+---++ Modes Of Deployment
+There are two basic components of Ivory set up. Ivory Prism and Ivory Server. 
+As the name suggests Ivory Prism splits the request it gets to the Ivory Servers.More details below:
 
 ---+++ Stand Alone Mode: 
 Stand alone mode is useful when the hadoop jobs and revelant data processing invoves only one hadoop cluster. In this mode there is single Ivory server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend , kill are sent to this server only. For running in this mode oen should use the ivory whihc has been built for standalone mode , or build using standalone option if using source code. 
@@ -62,6 +64,9 @@ Request may also be sent from prism but directed to only one specific server, to
 
 When a cluster is submitted it is bu default sent to all the servers configured in the prism.
 When is feed is SUBMIT / SCHEDULED request is only sent to he servers specified in the feed / process definitions. Servers are mentioned in the feed / process via CLUSTER tags in xml definition.  
+
+---++++ Prism Setup
+<img src="PrismSetup.png" height="400" width="600" />
  
 ---+++ Configuration Store
 Configuration store is file system based store that the Ivory system maintains where the entity definitions
