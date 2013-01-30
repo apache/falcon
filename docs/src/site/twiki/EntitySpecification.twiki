@@ -62,13 +62,14 @@ A key-value pair, which are propagated to the workflow engine.
 <verbatim>
 <property name="brokerImplClass" value="org.apache.activemq.ActiveMQConnectionFactory" />
 </verbatim>
-Ideally the Mapred's job queue name (queueName) and JMS impl class name of messaging engine (brokerImplClass) 
+Ideally JMS impl class name of messaging engine (brokerImplClass) 
 should be defined here.
 
 ---++ Feed Specification
 The Feed XSD specification is available here.
 a Feed defines various attributes of feed like feed location, frequency, late-arrival handling
 and retention policies.
+A feed can be scheduled on a cluster, once a feed is scheduled its retention and replication process are triggered in a given cluster.
 <verbatim>
 <feed description="clicks log" name="clicks" xmlns="uri:ivory:feed:0.1" 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -81,7 +82,7 @@ A feed should have a unique name and this name is referenced by processes as inp
         <partition name="cluster" />
     </partitions>
 </verbatim>
-A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be same here as cluster partitions.
+A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be equal to or more than the cluster partitions.
 
 <verbatim>
     <groups>online,bi</groups>
@@ -125,7 +126,7 @@ upto 8 hours then late-arrival's cut-off="hours(8)"
 ..... more clusters </clusters>
 </verbatim>
 Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Ivory.
-type: specifies whether the referenced cluster should be treated as a source or target for a feed.
+type: specifies whether the referenced cluster should be treated as a source or target for a feed. A feed can have multiple source and target clusters. If the type of cluster is not specified then the cluster is not considered for replication.
 Validity of a feed on cluster specifies duration for which this feed is valid on this cluster.
 Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
 The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
@@ -133,12 +134,16 @@ The field partitionExp contains partition tags. Number of partition tags has to 
 Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional. 
 
 <verbatim>
- <location type="data" path="/projects/ivory/clicks" /> 
+ <location type="data" path="/projects/ivory/clicks" />
+ <location type="stats" path="/projects/ivory/clicksStats" />
+ <location type="meta" path="/projects/ivory/clicksMetaData" /> 
 </verbatim>
 A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
 A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is generated
 periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
 The granularity of date pattern in the path should be atleast that of a frequency of a feed.
+Other location type which are supported are stats and meta paths, if a process references a feed then the meta and stats
+paths are available as a property in a process.
 
 <verbatim>
     <properties>
@@ -148,7 +153,7 @@ The granularity of date pattern in the path should be atleast that of a frequenc
         <property name="jobPriority" value="VERY_HIGH"/>
     </properties>
 </verbatim>
-A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are available to user to specify the hadoop job queue and priority. Same variables are available to user in workflow.xml to be user. The corrsponding values are propogated from feed / process xml. 
+A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties available to user to specify the hadoop job queue and priority, the same value is used by Ivorys launcher job.
  
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
@@ -184,8 +189,8 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Concurrency
-Concurrency defines how many instances of the workflow can run concurrently. Concurrency should be a positive interger > 0. For example, concurrency of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
+---++++ Parallel
+Parallel defines how many instances of the workflow can run concurrently. It should be a positive interger > 0. For example, concurrency of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
 Syntax:
 <verbatim>
 <process name="[process name]">
@@ -206,6 +211,17 @@ Syntax:
 </process>
 </verbatim>
 
+---++++ Timeout
+A optional Timeout specifies the maximum time an instance waits for a dataset before being killed by the workflow engine, a time out is specified like frequency.
+If timeout is not specified, ivory computes a default timeout for a process based on its frequency, which is six times of the frequency of process or 30 minutes if computed timeout is less than 30 minutes. 
+<verbatim>
+<process name="[process name]">
+...
+   <timeout>[timeunit]([frequency])</timeout>
+...
+</process>
+</verbatim>
+
 ---++++ Frequency
 Frequency defines how frequently the workflow job should run. For example, hours(1) defines the frequency as hourly, days(7) defines weekly frequency. The values for timeunit can be minutes/hours/days/months and the frequency number should be a positive integer > 0. 
 Syntax:
@@ -218,7 +234,7 @@ Syntax:
 </verbatim>
 
 ---++++ Validity
-Validity defines how long the workflow should run. It has 3 components - start time, end time and timezone. Start time and end time are timestamps defined in yyyy-MM-dd'T'HH:mm'Z' format and should always be in UTC. Timezone is used to compute the next instances starting from start time. The workflow will start at start time and end before end time specified. So, there will not be a workflow instance at end time.
+Validity defines how long the workflow should run. It has 3 components - start time, end time and timezone. Start time and end time are timestamps defined in yyyy-MM-dd'T'HH:mm'Z' format and should always be in UTC. Timezone is used to compute the next instances starting from start time. The workflow will start at start time and end before end time specified on a given cluster. So, there will not be a workflow instance at end time.
 Syntax:
 <verbatim>
 <process name="[process name]">
@@ -371,6 +387,11 @@ Synatx:
 </process>
 </verbatim>
 
+queueName and jobPriority are special properites, which when present are used by the Ivory's launcher job, the same property is also availalble in workflow which can be used to propogate to pig or M/R job.
+<verbatim>
+        <property name="queueName" value="hadoopQueue"/>
+        <property name="jobPriority" value="VERY_HIGH"/>
+</verbatim>
 ---++++ Workflow
 The workflow defines the workflow engine that should be used and the path to the workflow on hdfs. The workflow definition on hdfs contains the actual job that should run and it should confirm to the workflow specification of the engine specified. The libraries required by the workflow should be in lib folder inside the workflow path.
 

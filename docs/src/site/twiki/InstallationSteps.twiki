@@ -3,13 +3,16 @@
 
 ---+++ Installing Ivory
 *Pre-requisites:*
-   * hadoop-0.20.2
-   * oozie-3.1.5
+   * hadoop-0.20.2 +
+   * oozie-3.1.5 +
 *Ivory Server*
 
    * Download the source from https://github.com/sriksun/Ivory
    * Navigate to base project folder,named 'Ivory'
    * Build as "mvn clean package" at the base location. Please note that both maven 2/3 are supported.
+   * By default only embedded/standalone mode is build.
+   * To build Ivory with documentation build with MVN profile "all".
+   * To build the Ivory for distributed mode, i.e. multiple server and prism mode, build with MVN profile "distributed". 
    * Once the build operation is over,navigate to '<base-folder>/Ivory/webapps/target' and deploy the .war file generated
       there in a web container (Eg: tomcat6).
 ---+++ User Guide
