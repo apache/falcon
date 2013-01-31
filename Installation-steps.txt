@@ -3,7 +3,7 @@ Building & Packaging Ivory
 Installing Ivory
 *Pre-requisites:
    * hadoop-0.20.2 +
-   * oozie-3.1.5 +
+   * oozie-3.1.5 + (Patched version can be downloaded from: https://github.com/InMobi/oozie/tree/branch-3.2)
 
 *Ivory Server
 
