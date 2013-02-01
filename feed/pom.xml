@@ -17,7 +17,8 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -31,28 +32,31 @@
     <name>Ivory Feed</name>
     <packaging>jar</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-oozie-adaptor</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-	  <groupId>org.apache.ivory</groupId>
-	  <artifactId>ivory-messaging</artifactId>
-	  <version>${project.version}</version>
-	</dependency>
-    <dependency>
-      <groupId>org.apache.ivory</groupId>
-      <artifactId>ivory-test-util</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-oozie-adaptor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-messaging</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-test-util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
