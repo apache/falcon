@@ -17,63 +17,60 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.apache.ivory</groupId>
-		<artifactId>ivory-main</artifactId>
-		<version>0.2-SNAPSHOT</version>
-	</parent>
-	<artifactId>ivory-rerun</artifactId>
-	<description>Ivory Rerun Handler</description>
-	<name>Ivory Rerun</name>
-	<packaging>jar</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.ivory</groupId>
+        <artifactId>ivory-main</artifactId>
+        <version>0.2-SNAPSHOT</version>
+    </parent>
+    <artifactId>ivory-rerun</artifactId>
+    <description>Ivory Rerun Handler</description>
+    <name>Ivory Rerun</name>
+    <packaging>jar</packaging>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.ivory</groupId>
-			<artifactId>ivory-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.ivory</groupId>
             <artifactId>ivory-test-util</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.ivory</groupId>
             <artifactId>ivory-oozie-adaptor</artifactId>
-            <version>${project.version}</version>
         </dependency>
-         <dependency>
+
+        <dependency>
             <groupId>org.apache.ivory</groupId>
             <artifactId>ivory-metrics</artifactId>
-            <version>${project.version}</version>
         </dependency>
-		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>jms</artifactId>
-			<version>1.1</version>
-		</dependency>
-		<dependency>
+
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.8.5</version>
-            <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-core</artifactId>
-			<version>5.4.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.ibm.icu</groupId>
-                    <artifactId>icu4j</artifactId>
-                </exclusion>
-            </exclusions>
-		</dependency>
-	</dependencies>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+    </dependencies>
 </project>
