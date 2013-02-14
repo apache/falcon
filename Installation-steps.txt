@@ -1,11 +1,11 @@
----+++ Building & Packaging Ivory
+Building & Packaging Ivory
 
-
----+++ Installing Ivory
-*Pre-requisites:*
+Installing Ivory
+*Pre-requisites:
    * hadoop-0.20.2 +
-   * oozie-3.1.5 +
-*Ivory Server*
+   * oozie-3.1.5 + (Patched version can be downloaded from: https://github.com/InMobi/oozie/tree/branch-3.2)
+
+*Ivory Server
 
    * Download the source from https://github.com/sriksun/Ivory
    * Navigate to base project folder,named 'Ivory'
@@ -15,16 +15,19 @@
    * To build the Ivory for distributed mode, i.e. multiple server and prism mode, build with MVN profile "distributed". 
    * Once the build operation is over,navigate to '<base-folder>/Ivory/webapps/target' and deploy the .war file generated
       there in a web container (Eg: tomcat6).
----+++ User Guide
-*Ivory Client*
+
+
+*Ivory Client
 
    * Follow the steps 1 to 3 from server instructions.
    * Once the build operation is over, navigate to '<base-folder>/Ivory/client/target'. There is a client.jar that has
       been generated along with multiple other jars. Fetch this jar and others to use the Ivory client application.
       Please ensure that the other jars in the folder are always specified in the classpath of the client.jar.
    * Please refer Ivory-CLI guide for various options on how to use the ivory client.
----+++ Administration Guide
-*Setting up Ivory server properties:*
+
+
+*Setting up Ivory server properties:
+
 Inside your web container, where the ivory war has exploded, you should be able to find 2 files, startup.properties and runtime.properties.
 The path would be:
 <container-base>/<war-location>/ivory-webapp-0.2-SNAPSHOT/WEB-INF/classes
@@ -41,18 +44,15 @@ Ivory 0.2 and subsequent releases support domain based properties. The user can 
 (with prefixing the property with a '*' ) or for a particular domain (with prefixing the domain name to the property).
 Once the domain is set,  the user can set an env variable,IVORY_DOMAIN as the domain that the Ivory is supposed to use.
 
-Please refer the example below:
-
 Example:
 Trying to set the config store property for all domains:
-
 *.config.store.uri=file:///var/lib/tomcat6/target/store
-
 Trying to set config store property for a 'specific' domain:
-
 qa.config.store.uri=file:///var/lib/tomcat6/target/store
 
 To ensure that Ivory installation on your system uses the qa domain settings, just set the IVORY_DOMAIN value to 'qa' in your environment.
----++++ Security
 
-*TO-DO*
+*Ivory logs
+Once deployed, all the Ivory operations are logged in folder /var/log/ivory by default.
+Application.log contains logs for all the ivory server operations, if Ivory is deployed in distributed mode then prism logs are populated in 
+Prism.log
