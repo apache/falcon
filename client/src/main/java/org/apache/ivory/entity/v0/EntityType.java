@@ -54,9 +54,12 @@ public enum EntityType {
     private Schema schema;
     private String[] immutableProperties;
 
+    private String schemaFile;
+
     private EntityType(Class<? extends Entity> typeClass, String schemaFile, String... immutableProperties) {
         clazz = typeClass;
         this.immutableProperties = immutableProperties;
+        this.schemaFile = schemaFile;
         try {
             jaxbContext = JAXBContext.newInstance(typeClass);
             synchronized(this) {
@@ -72,6 +75,10 @@ public enum EntityType {
         return clazz;
     }
 
+    public String getSchemaFile() {
+        return schemaFile;
+    }
+    
     public Marshaller getMarshaller() throws JAXBException {
         Marshaller marshaller = jaxbContext.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
