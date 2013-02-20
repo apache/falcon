@@ -46,6 +46,7 @@ public class EntityGraphTest extends AbstractTestBase{
         process.setName("p1");
         Cluster cluster = new Cluster();
         cluster.setName("c1");
+        cluster.setColo("1");
         Feed f1 = addInput(process, "f1", cluster);
         Feed f2 = addInput(process, "f2", cluster);
         Feed f3 = addOutput(process, "f3", cluster);
@@ -147,6 +148,7 @@ public class EntityGraphTest extends AbstractTestBase{
         process.setName("rp1");
         Cluster cluster = new Cluster();
         cluster.setName("rc1");
+        cluster.setColo("2");
         org.apache.ivory.entity.v0.process.Cluster processCluster = new org.apache.ivory.entity.v0.process.Cluster();
         processCluster.setName("rc1");
         process.setClusters(new org.apache.ivory.entity.v0.process.Clusters());
@@ -180,6 +182,7 @@ public class EntityGraphTest extends AbstractTestBase{
         p2.setName("ap2");
         Cluster cluster = new Cluster();
         cluster.setName("ac1");
+        cluster.setColo("3");
         Feed f1 = addInput(p1, "af1", cluster);
         Feed f3 = addOutput(p1, "af3", cluster);
         Feed f2 = addOutput(p2, "af2", cluster);

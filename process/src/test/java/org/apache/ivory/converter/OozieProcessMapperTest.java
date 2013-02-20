@@ -44,6 +44,8 @@ import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.DECISION;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
+import org.apache.ivory.util.ApplicationProperties;
+import org.apache.ivory.util.StartupProperties;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -57,6 +59,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStreamReader;
 
 import static org.testng.Assert.assertEquals;
@@ -71,6 +74,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
         Configuration conf = new Configuration();
         new MiniDFSCluster(conf , 1, true, null);
         hdfsUrl = conf.get("fs.default.name");
+        Assert.assertTrue(new File("target/dummy").mkdir());
+        StartupProperties.get().setProperty("system.lib.location", "target/dummy");
     }
     
     @BeforeMethod

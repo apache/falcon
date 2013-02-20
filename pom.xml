@@ -91,6 +91,13 @@
             </snapshots>
         </repository>
         <repository>
+            <id>im</id>
+            <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>Codehaus repository</id>
             <url>http://repository.codehaus.org/</url>
             <snapshots>
@@ -156,6 +163,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>1.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>2.6</version>
             </dependency>
 
             <dependency>
