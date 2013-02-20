@@ -2,7 +2,7 @@
 <process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <clusters>
         <cluster name="##cluster##">
-            <validity end="2012-04-21T00:00Z" start="2012-04-20T10:00Z" />
+            <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
         </cluster>
     </clusters>
 
