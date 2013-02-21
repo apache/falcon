@@ -33,6 +33,7 @@ import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.security.CurrentUser;
+import org.apache.ivory.service.SharedLibraryHostingService;
 import org.apache.ivory.workflow.engine.OozieWorkflowEngine;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
@@ -58,6 +59,8 @@ public class LogMoverTest {
 		cleanupStore();
 		testCluster = EmbeddedCluster.newCluster("testCluster", true);
 		store.publish(EntityType.CLUSTER, testCluster.getCluster());
+        SharedLibraryHostingService listener = new SharedLibraryHostingService();
+        listener.onAdd(testCluster.getCluster());
 		fs = FileSystem.get(testCluster.getConf());
 		fs.mkdirs(new Path("/workflow/lib"));
 

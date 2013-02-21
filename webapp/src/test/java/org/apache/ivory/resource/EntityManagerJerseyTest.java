@@ -97,7 +97,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     }
     
     
-    @Test
+    @Test(enabled = false)
     public void testOptionalInput() throws Exception {
         Map<String, String> overlay = getUniqueOverlay();
         String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);

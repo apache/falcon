@@ -90,6 +90,7 @@ public class IvoryCLITest extends AbstractTestBase{
 	@Test(enabled = enableTest)
 	public void testSubmitAndScheduleEntityValidCommands() throws Exception {
 
+        Thread.sleep(5000);
 		String filePath;
 		Map<String, String> overlay = getUniqueOverlay();
 
@@ -119,6 +120,7 @@ public class IvoryCLITest extends AbstractTestBase{
 				executeWithURL("entity -submitAndSchedule -type process -file "
 						+ filePath));
 
+        Thread.sleep(5000);
 	}
 
 	@Test(enabled = enableTest)
@@ -206,6 +208,7 @@ public class IvoryCLITest extends AbstractTestBase{
 	@Test(enabled = enableTest)
 	public void testSuspendResumeStatusEntityValidCommands() throws Exception {
 
+        Thread.sleep(5000);
 		Map<String, String> overlay = getUniqueOverlay();
 		submitTestFiles(overlay);
 
@@ -270,6 +273,7 @@ public class IvoryCLITest extends AbstractTestBase{
 				executeWithURL("entity -status -type process -name "
 						+ overlay.get("processName")));
 
+        Thread.sleep(5000);
 	}
 
 	@Test(enabled = enableTest)
@@ -358,14 +362,15 @@ public class IvoryCLITest extends AbstractTestBase{
 
 	@Test(enabled = enableTest)
 	public void testInstanceSuspendAndResume() throws Exception {
+        Thread.sleep(5000);
 		Map<String, String> overlay = getUniqueOverlay();
 		submitTestFiles(overlay);
 
 		Assert.assertEquals(0,
 				executeWithURL("entity -schedule -type process -name "
 						+ overlay.get("processName")));
-		
-		
+
+
 		Assert.assertEquals(0,
 				executeWithURL("instance -suspend -type process -name "
 						+ overlay.get("processName")
@@ -374,7 +379,8 @@ public class IvoryCLITest extends AbstractTestBase{
 		Assert.assertEquals(0,
 				executeWithURL("instance -resume -type process -name "
 						+ overlay.get("processName")
-						+ " -start " + START_INSTANCE));
+						+ " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+        Thread.sleep(5000);
 	}
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
