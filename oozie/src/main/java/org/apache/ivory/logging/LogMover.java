@@ -17,6 +17,7 @@
  */
 package org.apache.ivory.logging;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +47,6 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
-import org.apache.tools.ant.filters.StringInputStream;
 
 public class LogMover extends Configured implements Tool {
 
@@ -113,7 +113,7 @@ public class LogMover extends Configured implements Tool {
 
 	private void copyOozieLog(OozieClient client, FileSystem fs, Path path,
 			String id) throws OozieClientException, IOException {
-		InputStream in = new StringInputStream(client.getJobLog(id));
+		InputStream in = new ByteArrayInputStream(client.getJobLog(id).getBytes());
 		OutputStream out = fs.create(new Path(path, "oozie.log"));
 		IOUtils.copyBytes(in, out, 4096, true);
 		LOG.info("Copied oozie log to " + path);
