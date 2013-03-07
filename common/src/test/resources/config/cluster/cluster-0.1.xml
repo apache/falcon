@@ -17,7 +17,7 @@
   ~ limitations under the License.
   -->
 
-<cluster colo="gs" description="" name="testCluster" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<cluster colo="default" description="" name="testCluster" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<interfaces>
 		<interface type="readonly" endpoint="hftp://localhost:50010"
 			version="0.20.2" />

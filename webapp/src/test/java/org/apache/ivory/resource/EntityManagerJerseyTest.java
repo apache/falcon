@@ -412,7 +412,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(clientRepsonse);
     }
 
-    @Test  (enabled = false)
+    @Test  (enabled = true)
     public void testFeedSchedule() throws Exception {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();

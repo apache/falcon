@@ -61,6 +61,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
     private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
     private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
+    
+    private static final String FEED_PATH_SEP="#";
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -119,9 +121,23 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.ivory.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-            String feedPathMask = FeedHelper.getLocation(feed, LocationType.DATA,cluster.getName()).getPath();
+            String feedPathMask = getLocationURI(cluster, feed,LocationType.DATA);
+			String metaPathMask = getLocationURI(cluster, feed, LocationType.META);
+            String statsPathMask = getLocationURI(cluster, feed, LocationType.STATS);
+            String tmpPathMask = getLocationURI(cluster, feed, LocationType.TMP);
 
-            props.put("feedDataPath", feedPathMask.replaceAll("\\$\\{", "\\?\\{"));
+            StringBuilder feedBasePaths = new StringBuilder(feedPathMask);
+            if(metaPathMask!=null){
+            	feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
+            }
+            if(statsPathMask!=null){
+            	feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
+            }
+            if(tmpPathMask!=null){
+            	feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
+            }
+
+            props.put("feedDataPath", feedBasePaths.toString().replaceAll("\\$\\{", "\\?\\{"));
             props.put("timeZone", feed.getTimezone().getID());
             props.put("frequency", feed.getFrequency().getTimeUnit().name());
             props.put("limit", feedCluster.getRetention().getLimit().toString());
@@ -283,5 +299,21 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
         return props;
     }
+    
+	private String getLocationURI(Cluster cluster, Feed feed, LocationType type) {
+		String path = FeedHelper.getLocation(feed, type, cluster.getName())
+				.getPath();
+
+		if (!path.equals("/tmp")) {
+			if (new Path(path).toUri().getScheme() == null){
+				return  new Path(ClusterHelper.getStorageUrl(cluster), path)
+						.toString();}
+			else{
+				return  path;
+			}
+		}
+		return null;
+
+}
 
 }

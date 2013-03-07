@@ -82,7 +82,7 @@ public class FeedEvictorTest {
 			stream.clear();
 
 			Pair<List<String>, List<String>>  pair;
-			pair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS);
+			pair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS,"/data");
 			String dataPath = "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-01-00.csv";
 
@@ -107,15 +107,21 @@ public class FeedEvictorTest {
 		StringBuffer newBuffer = new StringBuffer("instancePaths=");
 		DateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
 		format.setTimeZone(TimeZone.getTimeZone("UTC"));
-		for (String instance : stream.getBuffer().split("=")[1].split(",")) {
-			if(instance.length()<12)
-				continue;
-			String instancePath = dataPath.replaceAll("\\?\\{YEAR\\}", instance.substring(0,4));
-			instancePath = instancePath.replaceAll("\\?\\{MONTH\\}", instance.substring(4,6));
-			instancePath = instancePath.replaceAll("\\?\\{DAY\\}", instance.substring(6,8));
-			instancePath = instancePath.replaceAll("\\?\\{HOUR\\}", instance.substring(8,10));
-			instancePath = instancePath.replaceAll("\\?\\{MINUTE\\}", instance.substring(10,12));
-			newBuffer.append(instancePath).append(',');
+		String[] locs = dataPath.split("#");
+		String [] instances = stream.getBuffer().split("instances=")[1].split(",");
+		if(instances[0].equals("NULL")){
+			return "instancePaths=";
+		}
+
+		for(int i=0;i<locs.length;i++){
+			for (int j=0, k=i*instances.length/locs.length;j<instances.length/locs.length;j++) {
+				String instancePath = locs[i].replaceAll("\\?\\{YEAR\\}", instances[j+k].substring(0,4));
+				instancePath = instancePath.replaceAll("\\?\\{MONTH\\}", instances[j+k].substring(4,6));
+				instancePath = instancePath.replaceAll("\\?\\{DAY\\}", instances[j+k].substring(6,8));
+				instancePath = instancePath.replaceAll("\\?\\{HOUR\\}", instances[j+k].substring(8,10));
+				instancePath = instancePath.replaceAll("\\?\\{MINUTE\\}", instances[j+k].substring(10,12));
+				newBuffer.append(instancePath).append(',');
+			}
 		}
 		return newBuffer.toString();
 	}
@@ -131,7 +137,7 @@ public class FeedEvictorTest {
 
 	private void compare(String str1, String str2) {
 		String[] instances1 = str1.split("=")[1].split(",");
-		String[] instances2 = str2.split("=")[1].split(",");
+		String[] instances2 = str2.split("instances=")[1].split(",");
 
 		Arrays.sort(instances1);
 		Arrays.sort(instances2);
@@ -160,7 +166,7 @@ public class FeedEvictorTest {
 			stream.clear();
 
 			Pair<List<String>, List<String>>  pair;
-			pair = createTestData("feed2", "yyyyMMddHH/'more'/yyyy", 5, TimeUnit.HOURS);
+			pair = createTestData("feed2", "yyyyMMddHH/'more'/yyyy", 5, TimeUnit.HOURS,"/data");
 			String dataPath = "/data/YYYY/feed2/mmHH/dd/MM/" +
 					"?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
 			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-02-00.csv";
@@ -190,7 +196,7 @@ public class FeedEvictorTest {
 			stream.clear();
 
 			Pair<List<String>, List<String>>  pair;
-			pair = createTestData();
+			pair = createTestData("/data");
 			FeedEvictor.main(new String[] {
 					"-feedBasePath",
 					cluster.getConf().get("fs.default.name")
@@ -219,22 +225,102 @@ public class FeedEvictorTest {
 			Assert.fail("Unknown exception", e);
 		}
 	}
+	
+	@Test
+	public void testEviction5() throws Exception {
+		try {
+			Configuration conf = cluster.getConf();
+			FileSystem fs = FileSystem.get(conf);
+			fs.delete(new Path("/"), true);
+			stream.clear();
 
-	private Pair<List<String>, List<String>> createTestData() throws Exception {
+			Pair<List<String>, List<String>>  pair,statsPair,metaPair,tmpPair;
+			pair = createTestData("/data");
+			statsPair = createTestData("/stats");
+			metaPair = createTestData("/meta");
+			tmpPair = createTestData("/tmp");
+			FeedEvictor.main(new String[] {
+					"-feedBasePath",
+					getFeedBasePath(cluster, "/data") + "#"
+							+ getFeedBasePath(cluster, "/stats") + "#"
+							+ getFeedBasePath(cluster, "/meta") + "#"
+							+ getFeedBasePath(cluster, "/tmp"),
+					"-retentionType", "instance", "-retentionLimit",
+					"months(5)", "-timeZone", "UTC", "-frequency", "hourly",
+					"-logFile", "/ivory/staging/feed/2012-01-01-04-00" });
+			Assert.assertEquals("instances=NULL", stream.getBuffer());
+
+			stream.clear();
+			String dataPath="/data/YYYY/feed4/dd/MM/" +
+					"02/more/hello";
+			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-02-00.csv";
+			FeedEvictor.main(new String[] { "-feedBasePath",
+					cluster.getConf().get("fs.default.name") + dataPath,
+					"-retentionType", "instance", "-retentionLimit",
+					"hours(5)", "-timeZone", "UTC", "-frequency", "hourly",
+					"-logFile", logFile });
+			Assert.assertEquals("instances=NULL", stream.getBuffer());     
+			
+			Assert.assertEquals(readLogFile(new Path(logFile)), getExpectedInstancePaths(dataPath));
+
+			assertFailures(fs, pair);
+		} catch (Exception e) {
+			Assert.fail("Unknown exception", e);
+		}
+	}
+	
+	@Test
+	public void testEviction6() throws Exception {
+		try {
+			Configuration conf = cluster.getConf();
+			FileSystem fs = FileSystem.get(conf);
+			fs.delete(new Path("/"), true);
+			stream.clear();
+
+			Pair<List<String>, List<String>>  pair, statsPair,metaPair;
+			pair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS,"/data");
+			statsPair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS,"/stats");
+			metaPair = createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS,"/meta");
+			String dataPath = cluster.getConf().get("fs.default.name")+"/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}"
+					+ "#"
+					+ cluster.getConf().get("fs.default.name")+"/stats/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}"
+					+ "#"
+					+ cluster.getConf().get("fs.default.name")+"/meta/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
+			String logFile = "/ivory/staging/feed/instancePaths-2012-01-01-01-00.csv";
+
+			FeedEvictor.main(new String[] {
+					"-feedBasePath",
+					dataPath,
+					"-retentionType","instance", "-retentionLimit","days(10)", "-timeZone","UTC", "-frequency","daily",
+					"-logFile",logFile});
+
+			assertFailures(fs, pair);
+
+			Assert.assertEquals(readLogFile(new Path(logFile)),
+					getExpectedInstancePaths(dataPath.replaceAll(cluster
+							.getConf().get("fs.default.name"), "")));
+
+
+		} catch (Exception e) {
+			Assert.fail("Unknown exception", e);
+		}
+	}
+
+	private Pair<List<String>, List<String>> createTestData(String locationType) throws Exception {
 		Configuration conf = cluster.getConf();
 		FileSystem fs = FileSystem.get(conf);
 
 		List<String> outOfRange = new ArrayList<String>();
 		List<String> inRange = new ArrayList<String>();
 
-		touch(fs, "/data/YYYY/feed3/dd/MM/02/more/hello");
-		touch(fs, "/data/YYYY/feed4/dd/MM/02/more/hello");
-		touch(fs, "/data/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
-		touch(fs, "/data/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
-		outOfRange.add("/data/YYYY/feed3/dd/MM/02/more/hello");
-		outOfRange.add("/data/YYYY/feed4/dd/MM/02/more/hello");
-		outOfRange.add("/data/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
-		outOfRange.add("/data/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
+		touch(fs, locationType+"/YYYY/feed3/dd/MM/02/more/hello");
+		touch(fs, locationType+"/YYYY/feed4/dd/MM/02/more/hello");
+		touch(fs, locationType+"/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
+		touch(fs, locationType+"/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
+		outOfRange.add(locationType+"/YYYY/feed3/dd/MM/02/more/hello");
+		outOfRange.add(locationType+"/YYYY/feed4/dd/MM/02/more/hello");
+		outOfRange.add(locationType+"/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
+		outOfRange.add(locationType+"/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
 
 		return Pair.of(inRange, outOfRange);
 	}
@@ -242,7 +328,7 @@ public class FeedEvictorTest {
 	private Pair<List<String>, List<String>> createTestData(String feed,
 			String mask,
 			int period,
-			TimeUnit timeUnit)
+			TimeUnit timeUnit, String locationType)
 					throws Exception {
 
 		Configuration conf = cluster.getConf();
@@ -251,11 +337,11 @@ public class FeedEvictorTest {
 		List<String> outOfRange = new ArrayList<String>();
 		List<String> inRange = new ArrayList<String>();
 
-		Pair<List<String>, List<String>> pair = createTestData();
+		Pair<List<String>, List<String>> pair = createTestData(locationType);
 		outOfRange.addAll(pair.second);
 		inRange.addAll(pair.first);
 
-		pair = generateInstances(fs, feed, mask, period, timeUnit);
+		pair = generateInstances(fs, feed, mask, period, timeUnit,locationType);
 		outOfRange.addAll(pair.second);
 		inRange.addAll(pair.first);
 		return Pair.of(inRange,  outOfRange);
@@ -263,7 +349,7 @@ public class FeedEvictorTest {
 
 	private Pair<List<String>, List<String>> generateInstances(
 			FileSystem fs, String feed, String formatString,
-			int range, TimeUnit timeUnit) throws Exception {
+			int range, TimeUnit timeUnit, String locationType) throws Exception {
 
 		List<String> outOfRange = new ArrayList<String>();
 		List<String> inRange = new ArrayList<String>();
@@ -280,7 +366,7 @@ public class FeedEvictorTest {
 		for (long date = now;
 				date > now - timeUnit.toMillis(range + 6);
 				date -= timeUnit.toMillis(1)) {
-			String path = "/data/YYYY/" + feed + "/mmHH/dd/MM/" +
+			String path = locationType+"/YYYY/" + feed + "/mmHH/dd/MM/" +
 					format.format(date);
 			touch(fs, path);
 			if (date <= now && date > now - timeUnit.toMillis(range)) {
@@ -297,6 +383,12 @@ public class FeedEvictorTest {
 
 	private void touch(FileSystem fs, String path) throws Exception {
 		fs.create(new Path(path)).close();
+	}
+	
+	private String getFeedBasePath(EmbeddedCluster cluster, String locationType){
+		return cluster.getConf().get("fs.default.name")
+		+ "/data/YYYY/feed3/dd/MM/"
+		+ "?{MONTH}/more/?{HOUR}";
 	}
 
 	private static class InMemoryWriter extends PrintStream {

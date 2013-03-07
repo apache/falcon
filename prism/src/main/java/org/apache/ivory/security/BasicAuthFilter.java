@@ -27,6 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class BasicAuthFilter implements Filter {
@@ -34,6 +37,9 @@ public class BasicAuthFilter implements Filter {
     private static final Logger LOG = Logger.getLogger(BasicAuthFilter.class);
 
     private static final String GUEST = "guest";
+    
+	private static final Set<String> BLACK_LISTED_USER = new HashSet<String>(
+			Arrays.asList(new String[] { "hdfs", "mapred", "oozie", "ivory" }));
 
     private boolean secure;
 
@@ -71,9 +77,13 @@ public class BasicAuthFilter implements Filter {
         }
 
         if (user == null || user.isEmpty()) {
-            httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Remote user header can't be empty");
-        } else {
+        	httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+        			"Remote user header can't be empty");
+        } else if(BLACK_LISTED_USER.contains(user)){
+        	httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+        			"Remote user header can't be superusers:"+BLACK_LISTED_USER);
+        }
+        else {
             CurrentUser.authenticate(user);
             try {
                 NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());

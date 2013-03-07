@@ -25,6 +25,7 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.process.Process;
+import org.apache.ivory.util.DeploymentUtil;
 
 public class ProcessCleanupHandler extends AbstractCleanupHandler {
 
@@ -38,11 +39,16 @@ public class ProcessCleanupHandler extends AbstractCleanupHandler {
 					.getTimeUnit());
 			for (org.apache.ivory.entity.v0.process.Cluster cluster : process
 					.getClusters().getClusters()) {
-				LOG.info("Cleaning up logs for process:" + processName
-						+ " in  cluster: " + cluster.getName() + " with retention: "+retention);
 				Cluster currentCluster = STORE.get(EntityType.CLUSTER,
 						cluster.getName());
-				delete(currentCluster, process, retention);
+				if(currentCluster.getColo().equals(getCurrentColo())){
+					LOG.info("Cleaning up logs for process:" + processName
+							+ " in  cluster: " + cluster.getName() + " with retention: "+retention);
+					delete(currentCluster, process, retention);
+				}else{
+					LOG.info("Ignoring cleanup for process:" + processName
+							+ " in  cluster: " + cluster.getName()+ " as this does not belong to current colo" );
+				}
 			}
 
 		}

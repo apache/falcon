@@ -36,6 +36,7 @@ import org.apache.ivory.entity.v0.Frequency.TimeUnit;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.expression.ExpressionHelper;
 import org.apache.ivory.util.RuntimeProperties;
+import org.apache.ivory.util.StartupProperties;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractCleanupHandler {
@@ -138,4 +139,8 @@ public abstract class AbstractCleanupHandler {
 	public abstract void cleanup() throws IvoryException;
 
 	protected abstract Path getLogPath(Entity entity, String stagingPath);
+	
+	protected String getCurrentColo(){
+		return StartupProperties.get().getProperty("current.colo", "default");
+	}
 }

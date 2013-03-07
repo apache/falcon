@@ -32,7 +32,7 @@
 				</property>
 			</configuration>
             <main-class>org.apache.ivory.retention.FeedEvictor</main-class>
-            <arg>-feedBasePath</arg><arg>${nameNode}/${feedDataPath}</arg>
+            <arg>-feedBasePath</arg><arg>${feedDataPath}</arg>
             <arg>-retentionType</arg><arg>instance</arg>
             <arg>-retentionLimit</arg><arg>${limit}</arg>
             <arg>-timeZone</arg><arg>${timeZone}</arg>

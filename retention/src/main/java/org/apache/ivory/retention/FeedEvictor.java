@@ -91,35 +91,53 @@ public class FeedEvictor extends Configured implements Tool {
 
     private FileSystem fs;
     private Map<VARS, String> map = new TreeMap<VARS, String>();
+	private final StringBuffer instancePaths = new StringBuffer("instancePaths=");
+	private final StringBuffer buffer = new StringBuffer();
 
     @Override
     public int run(String[] args) throws Exception {
         
     	CommandLine cmd = getCommand(args);
-        String feedBasePath = cmd.getOptionValue("feedBasePath").replaceAll("\\?\\{", "\\$\\{");
+        String feedBasePath = cmd.getOptionValue("feedBasePath").replaceAll("\\?\\{", "\\$\\{");        
         String retentionType = cmd.getOptionValue("retentionType");
         String retentionLimit = cmd.getOptionValue("retentionLimit");
         String timeZone = cmd.getOptionValue("timeZone");
         String frequency = cmd.getOptionValue("frequency"); //to write out smart path filters
         String logFile=cmd.getOptionValue("logFile");
 
-        Path normalizedPath = new Path(feedBasePath);
-        fs = normalizedPath.getFileSystem(getConf());
-        feedBasePath = normalizedPath.toUri().getPath();
-        LOG.info("Normalized path : " + feedBasePath);
-        Pair<Date, Date> range = getDateRange(retentionLimit);
-        String dateMask = getDateFormatInPath(feedBasePath);
-        List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath,
-                timeZone, dateMask, range.first);
+        String []feedLocs = feedBasePath.split("#");
+        for(String path: feedLocs){
+        	evictor(path, retentionType, retentionLimit, timeZone, frequency, logFile);
+        }
 
-        LOG.info("Applying retention on " + feedBasePath + " type: " +
-                retentionType + ", Limit: " + retentionLimit + ", timezone: " +
-                timeZone + ", frequency: " + frequency);
+		logInstancePaths(new Path(logFile), instancePaths.toString());
+		int len = buffer.length();
+		if (len > 0) {
+			stream.println("instances=" + buffer.substring(0, len - 1));
+		} else {
+			stream.println("instances=NULL");
+		}
+        return 0;
+    }
+    
+	private void evictor(String feedBasePath, String retentionType,
+			String retentionLimit, String timeZone, String frequency,
+			String logFile) throws IOException, ELException {
+		Path normalizedPath = new Path(feedBasePath);
+		fs = normalizedPath.getFileSystem(getConf());
+		feedBasePath = normalizedPath.toUri().getPath();
+		LOG.info("Normalized path : " + feedBasePath);
+		Pair<Date, Date> range = getDateRange(retentionLimit);
+		String dateMask = getDateFormatInPath(feedBasePath);
+		List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath,
+				timeZone, dateMask, range.first);
+
+		LOG.info("Applying retention on " + feedBasePath + " type: "
+				+ retentionType + ", Limit: " + retentionLimit + ", timezone: "
+				+ timeZone + ", frequency: " + frequency);
 
 		DateFormat dateFormat = new SimpleDateFormat(format);
 		dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-		StringBuffer buffer = new StringBuffer();
-		StringBuffer instancePaths = new StringBuffer("instancePaths=");
 		for (Path path : toBeDeleted) {
 			if (deleteInstance(path)) {
 				LOG.info("Deleted instance " + path);
@@ -128,18 +146,8 @@ public class FeedEvictor extends Configured implements Tool {
 				instancePaths.append(path).append(",");
 			}
 		}
-		
-		logInstancePaths(new Path(logFile),instancePaths.toString());
-	
-		int len = buffer.length();
-        if (len > 0) {
-            stream.println("instances=" + buffer.substring(0, len -1));
-        } else {
-            stream.println("instances=NULL");
-        }
 
-        return 0;
-    }
+	}
 
     private void logInstancePaths(Path path, String instancePaths) throws IOException {
 		LOG.info("Writing deleted instances to path " + path);

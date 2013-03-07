@@ -25,6 +25,7 @@ import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.util.DeploymentUtil;
 
 public class FeedCleanupHandler extends AbstractCleanupHandler {
 
@@ -40,7 +41,14 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
 					.getClusters().getClusters()) {
 				Cluster currentCluster = STORE.get(EntityType.CLUSTER,
 						cluster.getName());
-				delete(currentCluster, feed, retention);
+				if(currentCluster.getColo().equals(getCurrentColo())){
+					LOG.info("Cleaning up logs for process:" + feedName
+							+ " in  cluster: " + cluster.getName() + " with retention: "+retention);
+					delete(currentCluster, feed, retention);
+				}else{
+					LOG.info("Ignoring cleanup for process:" + feedName
+							+ " in  cluster: " + cluster.getName()+ " as this does not belong to current colo" );
+				}
 			}
 
 		}
