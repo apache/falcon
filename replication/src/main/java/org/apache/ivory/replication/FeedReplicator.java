@@ -116,16 +116,6 @@ public class FeedReplicator extends Configured implements Tool {
     public DistCpOptions getDistCpOptions(String[] args) throws ParseException {
 		Options options = new Options();
 		Option opt;
-		opt = new Option("update", false,
-				"specify update for synching folders");
-		opt.setRequired(true);
-		options.addOption(opt);
-
-		opt = new Option("blocking", true,
-				"should DistCp be running in blocking mode");
-		opt.setRequired(true);
-		options.addOption(opt);
-
 		opt = new Option("maxMaps", true,
 				"max number of maps to use for this copy");
 		opt.setRequired(true);
@@ -148,8 +138,8 @@ public class FeedReplicator extends Configured implements Tool {
 		DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(
 				trgPath));
         distcpOptions.setSyncFolder(true);
-		distcpOptions.setBlocking(Boolean.valueOf(cmd
-				.getOptionValue("blocking")));
+        distcpOptions.setDeleteMissing(true);
+		distcpOptions.setBlocking(true);
 		distcpOptions
 				.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
 

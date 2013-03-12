@@ -32,6 +32,7 @@ import org.apache.ivory.entity.v0.feed.Partition;
 import org.apache.ivory.entity.v0.feed.Partitions;
 import org.apache.ivory.entity.v0.process.Cluster;
 import org.apache.ivory.entity.v0.process.Input;
+import org.apache.ivory.entity.v0.process.Inputs;
 import org.apache.ivory.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 
@@ -103,24 +104,27 @@ public final class UpdateHelper {
         // nothing
         // to update in process
         boolean partitionApplicable = false;
-        for (Input input : affectedProcess.getInputs().getInputs()) {
-            if (input.getFeed().equals(oldFeed.getName())) {
-                if (input.getPartition() != null && !input.getPartition().isEmpty()) {
-                    partitionApplicable = true;
+        Inputs affectedInputs = affectedProcess.getInputs();
+        if (affectedInputs != null && affectedInputs.getInputs() != null) {
+            for (Input input : affectedInputs.getInputs()) {
+                if (input.getFeed().equals(oldFeed.getName())) {
+                    if (input.getPartition() != null && !input.getPartition().isEmpty()) {
+                        partitionApplicable = true;
+                    }
                 }
             }
-        }
-        if (partitionApplicable) {
-            LOG.debug("Partitions are applicable. Checking ...");
-            if (newFeed.getPartitions() != null && oldFeed.getPartitions() != null) {
-                List<String> newParts = getPartitions(newFeed.getPartitions());
-                List<String> oldParts = getPartitions(oldFeed.getPartitions());
-                if (newParts.size() != oldParts.size())
-                    return true;
-                if (!newParts.containsAll(oldParts))
-                    return true;
+            if (partitionApplicable) {
+                LOG.debug("Partitions are applicable. Checking ...");
+                if (newFeed.getPartitions() != null && oldFeed.getPartitions() != null) {
+                    List<String> newParts = getPartitions(newFeed.getPartitions());
+                    List<String> oldParts = getPartitions(oldFeed.getPartitions());
+                    if (newParts.size() != oldParts.size())
+                        return true;
+                    if (!newParts.containsAll(oldParts))
+                        return true;
+                }
+                LOG.debug(oldFeed.toShortString() + ": Partitions identical. Ignoring...");
             }
-            LOG.debug(oldFeed.toShortString() + ": Partitions identical. Ignoring...");
         }
 
         for (Cluster cluster : affectedProcess.getClusters().getClusters()) {

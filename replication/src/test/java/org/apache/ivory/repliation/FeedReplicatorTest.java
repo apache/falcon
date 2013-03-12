@@ -37,8 +37,7 @@ public class FeedReplicatorTest {
          * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
          */
         FeedReplicator replicator = new FeedReplicator();
-        DistCpOptions options = replicator.getDistCpOptions(new String[] { "-update",
-                "-blocking", "true", "-maxMaps", "5", "-sourcePaths",
+        DistCpOptions options = replicator.getDistCpOptions(new String[] { "true", "-maxMaps", "5", "-sourcePaths",
                 "hdfs://localhost:8020/tmp/", "-targetPath",
                 "hdfs://localhost1:8020/tmp/" });
 

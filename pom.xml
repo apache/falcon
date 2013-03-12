@@ -33,6 +33,7 @@
         <activemq.version>5.4.3</activemq.version>
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
+        <internal.maven.repo>file:///tmp/ivorytemprepo</internal.maven.repo>
     </properties>
 
     <profiles>
@@ -81,6 +82,14 @@
         <connection>scm:git:git://github.com/sriksun/Ivory.git</connection>
         <url>https://github.com/sriksun/Ivory</url>
     </scm>
+
+    <distributionManagement>
+      <repository>
+        <id>internal.repo</id>
+        <name>Internal Repository</name>
+        <url>${internal.maven.repo}</url>
+      </repository>
+    </distributionManagement>
 
     <repositories>
         <repository>
@@ -566,6 +575,36 @@
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>deploy</phase>
+                        <goals><goal>jar-no-fork</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>deploy</phase>
+                        <goals><goal>jar</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals><goal>deploy</goal></goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

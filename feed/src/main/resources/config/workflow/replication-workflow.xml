@@ -66,8 +66,6 @@
             <arg>-Divory.include.path=${sourceRelativePaths}</arg>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
-            <arg>-update</arg>
-            <arg>-blocking</arg><arg>true</arg>
 			<arg>-maxMaps</arg><arg>5</arg>
 			<arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
 			<arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
