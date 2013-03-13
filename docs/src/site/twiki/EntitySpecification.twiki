@@ -201,7 +201,7 @@ Syntax:
 </verbatim>
 
 ---++++ Order
-Order defines the order in which the the ready instances are picked up. The possible values are FIFO(First In First Out), LIFO(Last In First Out), and ONLYLAST(Last Only).
+Order defines the order in which the ready instances are picked up. The possible values are FIFO(First In First Out), LIFO(Last In First Out), and ONLYLAST(Last Only).
 Syntax:
 <verbatim>
 <process name="[process name]">
