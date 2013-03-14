@@ -105,7 +105,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         for (String cluster : bundleMap.keySet()) {
             BundleJob bundleJob = bundleMap.get(cluster);
             if (bundleJob == MISSING || bundleJob.getStatus().equals(Job.Status.KILLED)) {
-                if (bundleJob.getStatus().equals(Job.Status.KILLED)) {
+                if (bundleJob != MISSING) {
                     LOG.warn("Bundle id: " + bundleJob.getId() + " is in killed state, so allowing schedule");
                 }
                 schedClusters.add(cluster);
