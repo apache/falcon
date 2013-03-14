@@ -175,7 +175,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		return MISSING;
 	}
 
-	private List<BundleJob> findBundles(Entity entity, String cluster)
+	private List<BundleJob> findBundles(Entity entity, String cluster, boolean forKill)
 			throws IvoryException {
 		try {
 			OozieClient client = OozieClientFactory.get(cluster);
@@ -184,9 +184,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 							+ EntityUtil.getWorkflowName(entity) + ";", 0, 256);
 			if (jobs != null) {
 			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
-			    for(BundleJob job:jobs)
-			        if(job.getStatus() != Job.Status.KILLED || job.getEndTime() == null)
+			    for(BundleJob job : jobs) {
+			        if (forKill || (job.getStatus() != Job.Status.KILLED || job.getEndTime() == null)) {
 			            filteredJobs.add(job);
+                    }
+                }
 				return filteredJobs;
 			}
 			return new ArrayList<BundleJob>();
@@ -195,24 +197,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		}
 	}
 
-	private List<BundleJob> findBundlesForKill(Entity entity, String cluster)
+	private List<BundleJob> findBundles(Entity entity, String cluster)
 			throws IvoryException {
-		try {
-			OozieClient client = OozieClientFactory.get(cluster);
-			List<BundleJob> jobs = client.getBundleJobsInfo(
-					OozieClient.FILTER_NAME + "="
-							+ EntityUtil.getWorkflowName(entity) + ";", 0, 256);
-			if (jobs != null) {
-			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
-			    for (BundleJob job : jobs) {
-                    filteredJobs.add(job);
-                }
-				return filteredJobs;
-			}
-			return new ArrayList<BundleJob>();
-		} catch (OozieClientException e) {
-			throw new IvoryException(e);
-		}
+        return findBundles(entity, cluster, false);
 	}
 
 	private Map<String, List<BundleJob>> findBundles(Entity entity)
@@ -294,7 +281,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             throws IvoryException {
         boolean success = true;
         List<BundleJob> jobs = action == BundleAction.KILL ?
-                findBundlesForKill(entity, cluster) : findBundles(entity, cluster);
+                findBundles(entity, cluster, true) : findBundles(entity, cluster);
         if (jobs.isEmpty()) {
             LOG.warn("No active job found for " + entity.getName());
             return "FAILED";
