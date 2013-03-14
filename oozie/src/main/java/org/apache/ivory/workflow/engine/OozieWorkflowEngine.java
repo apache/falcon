@@ -195,6 +195,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 		}
 	}
 
+	private List<BundleJob> findBundlesForKill(Entity entity, String cluster)
+			throws IvoryException {
+		try {
+			OozieClient client = OozieClientFactory.get(cluster);
+			List<BundleJob> jobs = client.getBundleJobsInfo(
+					OozieClient.FILTER_NAME + "="
+							+ EntityUtil.getWorkflowName(entity) + ";", 0, 256);
+			if (jobs != null) {
+			    List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
+			    for (BundleJob job : jobs) {
+                    filteredJobs.add(job);
+                }
+				return filteredJobs;
+			}
+			return new ArrayList<BundleJob>();
+		} catch (OozieClientException e) {
+			throw new IvoryException(e);
+		}
+	}
+
 	private Map<String, List<BundleJob>> findBundles(Entity entity)
 			throws IvoryException {
 		Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
@@ -273,7 +293,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private String doBundleAction(Entity entity, BundleAction action, String cluster)
             throws IvoryException {
         boolean success = true;
-        List<BundleJob> jobs = findBundles(entity, cluster);
+        List<BundleJob> jobs = action == BundleAction.KILL ?
+                findBundlesForKill(entity, cluster) : findBundles(entity, cluster);
         if (jobs.isEmpty()) {
             LOG.warn("No active job found for " + entity.getName());
             return "FAILED";
