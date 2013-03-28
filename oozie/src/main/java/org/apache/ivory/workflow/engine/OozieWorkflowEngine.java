@@ -171,6 +171,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private BundleJob findBundle(Entity entity, String cluster)
             throws IvoryException {
         String stPath = EntityUtil.getStagingPath(entity);
+        LOG.info("Staging path for entity " + stPath);
         List<BundleJob> bundles = findBundles(entity, cluster);
         for (BundleJob job : bundles) {
             if (job.getAppPath().endsWith(stPath)) {
@@ -190,8 +191,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             if (jobs != null) {
                 List<BundleJob> filteredJobs = new ArrayList<BundleJob>();
                 for(BundleJob job : jobs)
-                    if(job.getStatus() != Job.Status.KILLED || job.getEndTime() == null)
+                    if(job.getStatus() != Job.Status.KILLED || job.getEndTime() == null) {
                         filteredJobs.add(job);
+                        LOG.debug("Found bundle " + job.getId());
+                    }
                 return filteredJobs;
             }
             return new ArrayList<BundleJob>();
@@ -204,7 +207,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             throws IvoryException {
         Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
         Map<String, List<BundleJob>> jobMap = new HashMap<String, List<BundleJob>>();
-
         for (String cluster : clusters) {
             jobMap.put(cluster, findBundles(entity, cluster));
         }
@@ -885,6 +887,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private void suspend(String cluster, BundleJob bundle)
             throws IvoryException {
+        bundle = getBundleInfo(cluster, bundle.getId());
         for (CoordinatorJob coord : bundle.getCoordinators()) {
             suspend(cluster, coord.getId());
         }
