@@ -138,7 +138,6 @@ public class FeedReplicator extends Configured implements Tool {
 		DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(
 				trgPath));
         distcpOptions.setSyncFolder(true);
-        distcpOptions.setDeleteMissing(true);
 		distcpOptions.setBlocking(true);
 		distcpOptions
 				.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
