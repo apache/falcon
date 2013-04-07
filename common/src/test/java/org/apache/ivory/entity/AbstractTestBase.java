@@ -18,18 +18,11 @@
 
 package org.apache.ivory.entity;
 
-import java.io.StringWriter;
-import java.util.Collection;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
 import org.apache.ivory.entity.v0.EntityType;
@@ -41,11 +34,17 @@ import org.apache.ivory.entity.v0.process.Process;
 import org.apache.ivory.util.StartupProperties;
 import org.testng.annotations.BeforeClass;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import java.io.StringWriter;
+import java.util.Collection;
+
 public class AbstractTestBase {
     protected static final String PROCESS_XML = "/config/process/process-0.1.xml";
     protected static final String FEED_XML = "/config/feed/feed-0.1.xml";
     protected static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
-    protected MiniDFSCluster dfsCluster;
+    protected EmbeddedCluster dfsCluster;
     protected Configuration conf= new Configuration();
 
     @BeforeClass

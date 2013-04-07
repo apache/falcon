@@ -18,8 +18,8 @@
 package org.apache.ivory.converter;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
@@ -40,16 +40,16 @@ public class OozieProcessMapperLateProcessTest {
 	private static final String PROCESS1_XML = "/config/late/late-process1.xml";
 	private static final String PROCESS2_XML = "/config/late/late-process2.xml";
 	private static final ConfigurationStore store = ConfigurationStore.get();
-	private static MiniDFSCluster dfsCluster;
-	private static 	Configuration conf = new Configuration();
+	private static EmbeddedCluster dfsCluster;
+	private static 	Configuration conf;
 
 	@BeforeClass
 	public void setUpDFS() throws Exception {
 
 		cleanupStore();
 
-		conf = new Configuration();
-		dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+		dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        conf = dfsCluster.getConf();
 		hdfsUrl = conf.get("fs.default.name");
 
 		Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller()

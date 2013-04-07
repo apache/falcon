@@ -17,19 +17,10 @@
  */
 package org.apache.ivory.converter;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.List;
-
-import javax.xml.bind.Unmarshaller;
-
 import junit.framework.Assert;
-
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -37,16 +28,22 @@ import org.apache.ivory.entity.v0.EntityType;
 import org.apache.ivory.entity.v0.cluster.Cluster;
 import org.apache.ivory.entity.v0.cluster.Interfacetype;
 import org.apache.ivory.entity.v0.feed.Feed;
+import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.ivory.oozie.coordinator.COORDINATORAPP;
 import org.apache.ivory.oozie.coordinator.SYNCDATASET;
-import org.apache.ivory.oozie.coordinator.CONFIGURATION.Property;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.Unmarshaller;
+import java.util.Collection;
+import java.util.List;
+
+import static org.testng.Assert.assertEquals;
+
 public class OozieFeedMapperTest {
-	private MiniDFSCluster srcMiniDFS;
-	private MiniDFSCluster trgMiniDFS;
+	private EmbeddedCluster srcMiniDFS;
+	private EmbeddedCluster trgMiniDFS;
 	ConfigurationStore store = ConfigurationStore.get();
 	Cluster srcCluster;
 	Cluster trgCluster;
@@ -58,15 +55,11 @@ public class OozieFeedMapperTest {
 
 	@BeforeClass
 	public void setUpDFS() throws Exception {
-		Configuration conf = new Configuration();
-		System.setProperty("test.build.data", "target/" + "cluster1" + "/data");
-		srcMiniDFS = new MiniDFSCluster(conf, 1, true, null);
-		String srcHdfsUrl = conf.get("fs.default.name");
+		srcMiniDFS = EmbeddedCluster.newCluster("cluster1", false);
+		String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
 
-		System.setProperty("test.build.data", "target/" + "cluster2" + "/data");
-		conf = new Configuration();
-		trgMiniDFS = new MiniDFSCluster(conf, 1, true, null);
-		String trgHdfsUrl = conf.get("fs.default.name");
+		trgMiniDFS = EmbeddedCluster.newCluster("cluster2", false);
+		String trgHdfsUrl = trgMiniDFS.getConf().get("fs.default.name");
 
 		cleanupStore();
 

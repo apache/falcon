@@ -18,17 +18,8 @@
 
 package org.apache.ivory.entity.parser;
 
-import static org.testng.AssertJUnit.assertEquals;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.v0.EntityType;
@@ -40,6 +31,14 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+
+import static org.testng.AssertJUnit.assertEquals;
+
 public class ClusterEntityParserTest extends AbstractTestBase {
 
     private final ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
@@ -49,7 +48,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
 
         InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
 
-        Cluster cluster = (Cluster) parser.parse(stream);
+        Cluster cluster = parser.parse(stream);
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
 
         Assert.assertNotNull(cluster);
@@ -83,8 +82,8 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     
     @BeforeClass
     public void init() throws Exception {
-        conf.set("hadoop.log.dir", "/tmp");
-        this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.conf = dfsCluster.getConf();
     }
     
 	@AfterClass

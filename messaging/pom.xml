@@ -28,6 +28,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.ivory</groupId>
+            <artifactId>ivory-test-util</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-core</artifactId>
         </dependency>

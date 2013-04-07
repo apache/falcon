@@ -17,13 +17,10 @@
  */
 package org.apache.ivory.cleanup;
 
-import java.io.IOException;
-
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.EntityType;
@@ -34,11 +31,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+
 public class LogCleanupServiceTest extends AbstractTestBase {
 
 	private FileSystem fs;
 	private FileSystem tfs;
-	private MiniDFSCluster targetDfsCluster;
+	private EmbeddedCluster targetDfsCluster;
 	Path instanceLogPath = new Path(
 			"/projects/ivory/staging/ivory/workflows/process/" + "sample"
 					+ "/logs/job-2010-01-01-01-00/000");
@@ -72,15 +71,16 @@ public class LogCleanupServiceTest extends AbstractTestBase {
 
 	@BeforeClass
 	public void setup() throws Exception {
-		conf.set("hadoop.log.dir", "/tmp");
-		this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+		this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        conf = dfsCluster.getConf();
 		fs = dfsCluster.getFileSystem();
 		
 		storeEntity(EntityType.CLUSTER, "testCluster");
-		conf = new Configuration();
 		System.setProperty("test.build.data",
-				"target/tdfs/data" + System.currentTimeMillis());
-		this.targetDfsCluster = new MiniDFSCluster(conf, 1, true, null);
+                "target/tdfs/data" + System.currentTimeMillis());
+		this.targetDfsCluster = EmbeddedCluster.newCluster("backupCluster", false);
+        conf = targetDfsCluster.getConf();
+
 		storeEntity(EntityType.CLUSTER, "backupCluster");
 		storeEntity(EntityType.FEED, "impressionFeed");
 		storeEntity(EntityType.FEED, "clicksFeed");

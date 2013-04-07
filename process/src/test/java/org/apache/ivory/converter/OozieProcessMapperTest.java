@@ -22,8 +22,8 @@ import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.Tag;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.EntityUtil;
 import org.apache.ivory.entity.FeedHelper;
@@ -44,8 +44,6 @@ import org.apache.ivory.oozie.coordinator.SYNCDATASET;
 import org.apache.ivory.oozie.workflow.ACTION;
 import org.apache.ivory.oozie.workflow.DECISION;
 import org.apache.ivory.oozie.workflow.WORKFLOWAPP;
-import org.apache.ivory.util.ApplicationProperties;
-import org.apache.ivory.util.StartupProperties;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -59,7 +57,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStreamReader;
 
 import static org.testng.Assert.assertEquals;
@@ -71,8 +68,8 @@ public class OozieProcessMapperTest extends AbstractTestBase{
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        Configuration conf = new Configuration();
-        new MiniDFSCluster(conf , 1, true, null);
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster("testCluster", false);
+        Configuration conf = cluster.getConf();
         hdfsUrl = conf.get("fs.default.name");
     }
 

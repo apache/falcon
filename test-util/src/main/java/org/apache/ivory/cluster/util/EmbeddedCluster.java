@@ -118,6 +118,10 @@ public class EmbeddedCluster {
         return cluster;
     }
 
+    public FileSystem getFileSystem() throws IOException {
+        return FileSystem.get(conf);
+    }
+
     private void buildClusterObject(String name) {
         clusterEntity = new Cluster();
         clusterEntity.setName(name);

@@ -18,7 +18,7 @@
 
 package org.apache.ivory.update;
 
-import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.AbstractTestBase;
 import org.apache.ivory.entity.FeedHelper;
 import org.apache.ivory.entity.parser.EntityParserFactory;
@@ -48,8 +48,8 @@ public class UpdateHelperTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        conf.set("hadoop.log.dir", "/tmp");
-        this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.conf = dfsCluster.getConf();
         setup();
     }
 

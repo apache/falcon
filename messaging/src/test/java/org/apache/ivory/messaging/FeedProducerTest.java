@@ -18,30 +18,23 @@
 
 package org.apache.ivory.messaging;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.messaging.EntityInstanceMessage.ARG;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import javax.jms.*;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class FeedProducerTest {
 
@@ -56,13 +49,14 @@ public class FeedProducerTest {
 	private Path logFile;
 
 	private volatile AssertionError error;
-	private MiniDFSCluster dfsCluster;
-	private Configuration conf = new Configuration();
+	private EmbeddedCluster dfsCluster;
+	private Configuration conf ;
 
 	@BeforeClass
 	public void setup() throws Exception {
 
-		this.dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+		this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        conf = dfsCluster.getConf();
 		logFile = new Path(conf.get("fs.default.name"),
 				"/ivory/feed/agg-logs/instance-2012-01-01-10-00.csv");
 

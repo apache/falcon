@@ -1,16 +1,8 @@
 package org.apache.ivory.rerun.handler;
 
-import java.io.StringWriter;
-import java.util.Collection;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
+import com.sun.jersey.api.client.WebResource;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.ivory.IvoryException;
-import org.apache.ivory.cluster.util.EmbeddedCluster;
 import org.apache.ivory.entity.ClusterHelper;
 import org.apache.ivory.entity.store.ConfigurationStore;
 import org.apache.ivory.entity.v0.Entity;
@@ -23,7 +15,11 @@ import org.apache.ivory.util.StartupProperties;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
 
-import com.sun.jersey.api.client.WebResource;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import java.io.StringWriter;
+import java.util.Collection;
 
 public class TestLateData {
 	
@@ -32,16 +28,9 @@ public class TestLateData {
     protected static final String PROCESS_XML = "/process-template.xml";
     protected static final String PROCESS_XML2 = "/process-template2.xml";
     
-    protected Unmarshaller unmarshaller;
-    protected Marshaller marshaller;
-
-    protected EmbeddedCluster cluster;
     protected WebResource service = null;
-    protected String clusterName;
-    protected String processName;
-    protected MiniDFSCluster dfsCluster;
-    protected Configuration conf= new Configuration();	
-	
+    protected Configuration conf = new Configuration();
+
     @BeforeClass
     public void initConfigStore() throws Exception {
     	MockitoAnnotations.initMocks(this);
