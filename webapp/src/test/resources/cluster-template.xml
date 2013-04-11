@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<cluster colo="gs" description="" name="##cluster##" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<cluster colo="gs" description="" name="##cluster##" xmlns="uri:falcon:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<interfaces>
 		<interface type="readonly" endpoint="hftp://localhost:50010"
 			version="0.20.2" />
@@ -13,9 +13,9 @@
 		<interface type="registry" endpoint="Hcat" version="1" />
 	</interfaces>
 	<locations>
-		<location name="staging" path="/projects/ivory/staging" />
+		<location name="staging" path="/projects/falcon/staging" />
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/project/ivory/working" />
+		<location name="working" path="/project/falcon/working" />
 	</locations>
 	<properties>
 	</properties>

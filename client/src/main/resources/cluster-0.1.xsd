@@ -5,7 +5,7 @@
     under the License is distributed on an "AS IS" BASIS, ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the License for the specific language governing 
     permissions and ~ limitations under the License. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" 
-            targetNamespace="uri:ivory:cluster:0.1" xmlns="uri:ivory:cluster:0.1"
+            targetNamespace="uri:falcon:cluster:0.1" xmlns="uri:falcon:cluster:0.1"
             xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
     <xs:annotation>
         <xs:documentation>
@@ -28,7 +28,7 @@
         </xs:documentation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="org.apache.ivory.entity.v0.cluster" />
+                <jaxb:package name="org.apache.falcon.entity.v0.cluster" />
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
@@ -37,9 +37,9 @@
     <xs:complexType name="cluster">
         <xs:annotation>
             <xs:documentation>The cluster contains the definition of different
-                interfaces which are used by Ivory like readonly, write, workflow and messaging.
+                interfaces which are used by Falcon like readonly, write, workflow and messaging.
                 A cluster is referenced by feeds and processes which are on-boarded
-                to Ivory by its name.
+                to Falcon by its name.
                 name: the name of cluster, which must be unique.
                 colo: the name of the colo to which this cluster belongs to.
             </xs:documentation>
@@ -78,7 +78,7 @@
     <xs:complexType name="interface">
         <xs:annotation>
             <xs:documentation>
-                An interface specifies the interface type, Ivory uses it to schedule
+                An interface specifies the interface type, Falcon uses it to schedule
                 entities in workflow engine, to save and read data from hadoop and to
                 publish messages to messaging engine.
                 endpoint: is the url for each interface; examples: for write it is the
@@ -108,8 +108,8 @@
                 name: is the type of locations like
                 staging, temp and working.
                 path: the hdfs path for each location.
-                Ivory would use the location to do intermediate
-                processing of entities in hdfs and hence Ivory
+                Falcon would use the location to do intermediate
+                processing of entities in hdfs and hence Falcon
                 should have read/write/execute permission on these
                 locations.
             </xs:documentation>

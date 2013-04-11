@@ -10,7 +10,7 @@
   </appender>
 
   <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/application.log"/>
+    <param name="File" value="/var/log/falcon/application.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -19,7 +19,7 @@
   </appender>
 
   <appender name="AUDIT" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/audit.log"/>
+    <param name="File" value="/var/log/falcon/audit.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -27,7 +27,7 @@
     </layout>
   </appender>
 
-  <logger name="org.apache.ivory" additivity="false">
+  <logger name="org.apache.falcon" additivity="false">
     <level value="debug"/>
     <appender-ref ref="console" />
   </logger>

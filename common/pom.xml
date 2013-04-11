@@ -16,13 +16,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-common</artifactId>
-    <description>Ivory Common Module</description>
-    <name>Ivory Commons</name>
+    <artifactId>falcon-common</artifactId>
+    <description>Apache Falcon Common Module</description>
+    <name>Apache Falcon Commons</name>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -43,13 +43,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-client</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-metrics</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-metrics</artifactId>
         </dependency>
 
         <dependency>
@@ -88,8 +88,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
         </dependency>
     </dependencies>
 

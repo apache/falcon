@@ -16,7 +16,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<feed description="clicks log" name="clicks" xmlns="uri:ivory:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
    <partitions>
         <partition name="fraud" />
         <partition name="good" />
@@ -35,9 +35,9 @@
             <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
             <retention limit="hours(48)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
        		<locations>
-        		<location type="data" path="/projects/ivory/clicks" />
-        		<location type="stats" path="/projects/ivory/clicksStats" />
-        		<location type="meta" path="/projects/ivory/clicksMetaData" />
+        		<location type="data" path="/projects/falcon/clicks" />
+        		<location type="stats" path="/projects/falcon/clicksStats" />
+        		<location type="meta" path="/projects/falcon/clicksMetaData" />
     		</locations>
         </cluster>
         <cluster name="backupCluster" type="target">
@@ -47,9 +47,9 @@
     </clusters>
 
     <locations>
-        <location type="data" path="/projects/ivory/clicks" />
-        <location type="stats" path="/projects/ivory/clicksStats" />
-        <location type="meta" path="/projects/ivory/clicksMetaData" />
+        <location type="data" path="/projects/falcon/clicks" />
+        <location type="stats" path="/projects/falcon/clicksStats" />
+        <location type="meta" path="/projects/falcon/clicksMetaData" />
     </locations>
     
     <ACL owner="testuser" group="group" permission="0x755" />

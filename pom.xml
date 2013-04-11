@@ -17,23 +17,23 @@
  -->
 <project>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.apache.ivory</groupId>
-    <artifactId>ivory-main</artifactId>
+    <groupId>org.apache.falcon</groupId>
+    <artifactId>falcon-main</artifactId>
     <version>0.2-SNAPSHOT</version>
     <description>Data Management and Feed Processing Platform over Hadoop</description>
-    <name>Ivory</name>
+    <name>Apache Falcon</name>
     <packaging>pom</packaging>
-    <url>https://github.com/sriksun/Ivory</url>
+    <url>https://github.com/sriksun/Falcon</url>
 
     <properties>
         <include.prism>true</include.prism>
 
-        <hadoop.version>0.20.2-cdh3u5</hadoop.version>
+        <hadoop.version>1.1.2</hadoop.version>
         <oozie.version>3.2.2</oozie.version>
         <activemq.version>5.4.3</activemq.version>
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
-        <internal.maven.repo>file:///tmp/ivorytemprepo</internal.maven.repo>
+        <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
     </properties>
 
     <profiles>
@@ -79,8 +79,8 @@
     </modules>
 
     <scm>
-        <connection>scm:git:git://github.com/sriksun/Ivory.git</connection>
-        <url>https://github.com/sriksun/Ivory</url>
+        <connection>scm:git:git://github.com/sriksun/Falcon.git</connection>
+        <url>https://github.com/sriksun/Falcon</url>
     </scm>
 
     <distributionManagement>
@@ -294,14 +294,14 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-client</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-metrics</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-metrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -460,63 +460,63 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-messaging</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-messaging</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-common</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-process</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-process</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-oozie-adaptor</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-oozie-adaptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-feed</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-feed</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-retention</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-retention</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-rerun</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-rerun</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-replication</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-replication</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-prism</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-prism</artifactId>
                 <version>${project.version}</version>
                 <classifier>classes</classifier>
             </dependency>
 
             <dependency>
-                <groupId>org.apache.ivory</groupId>
-                <artifactId>ivory-test-util</artifactId>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-test-util</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -604,6 +604,14 @@
                         <goals><goal>jar</goal></goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.14</version>
+                <configuration>
+                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>

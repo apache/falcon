@@ -22,54 +22,54 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-prism</artifactId>
-    <description>Ivory Prism</description>
-    <name>Ivory Prism</name>
+    <artifactId>falcon-prism</artifactId>
+    <description>Apache Falcon Prism</description>
+    <name>Apache Falcon Prism</name>
     <packaging>war</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-common</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-process</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-process</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-oozie-adaptor</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-oozie-adaptor</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-feed</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-feed</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-retention</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-retention</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-metrics</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-metrics</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-rerun</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-rerun</artifactId>
         </dependency>
 
         <dependency>
@@ -141,18 +141,18 @@
                     <source>1.6</source>
                     <complianceLevel>1.6</complianceLevel>
                     <includes>
-                        <include>org/apache/ivory/resource/proxy/SchedulableEntityManagerProxy.java</include>
-                        <include>org/apache/ivory/resource/proxy/InstanceManagerProxy.java</include>
-                        <include>org/apache/ivory/resource/AbstractInstanceManager.java</include>
-                        <include>org/apache/ivory/plugin/ChainableMonitoringPlugin.java</include>
-                        <include>org/apache/ivory/service/IvoryTopicSubscriber.java</include>
-                        <include>org/apache/ivory/aspect/GenericAlert.java</include>
-                        <include>org/apache/ivory/aspect/GenericAlertTest.java</include>
+                        <include>org/apache/falcon/resource/proxy/SchedulableEntityManagerProxy.java</include>
+                        <include>org/apache/falcon/resource/proxy/InstanceManagerProxy.java</include>
+                        <include>org/apache/falcon/resource/AbstractInstanceManager.java</include>
+                        <include>org/apache/falcon/plugin/ChainableMonitoringPlugin.java</include>
+                        <include>org/apache/falcon/service/FalconTopicSubscriber.java</include>
+                        <include>org/apache/falcon/aspect/GenericAlert.java</include>
+                        <include>org/apache/falcon/aspect/GenericAlertTest.java</include>
                     </includes>
                     <weaveDependencies>
                         <weaveDependency>
-                            <groupId>org.apache.ivory</groupId>
-                            <artifactId>ivory-rerun</artifactId>
+                            <groupId>org.apache.falcon</groupId>
+                            <artifactId>falcon-rerun</artifactId>
                         </weaveDependency>
                     </weaveDependencies>
                 </configuration>

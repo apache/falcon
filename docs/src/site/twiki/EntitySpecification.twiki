@@ -5,12 +5,12 @@
    
 ---++ Cluster Specification
 The cluster XSD specification is available here:
-A cluster contains different interfaces which are used by Ivory like readonly, write, workflow and messaging.
-A cluster is referenced by feeds and processes which are on-boarded to Ivory by its name.
+A cluster contains different interfaces which are used by Falcon like readonly, write, workflow and messaging.
+A cluster is referenced by feeds and processes which are on-boarded to Falcon by its name.
 
 Following are the tags defined in a cluster.xml:
 <verbatim>
-<cluster colo="gs" description="" name="corp" xmlns="uri:ivory:cluster:0.1" 
+<cluster colo="gs" description="" name="corp" xmlns="uri:falcon:cluster:0.1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 The colo specifies the colo to which this cluster belongs to and name is the name of the cluster which has to 
@@ -28,20 +28,20 @@ this would be used in the context of feed replication.
 <interface type="write" endpoint="hdfs://localhost:8020" version="0.20.2" />
 </verbatim>
 A write interface specifies the interface to write to hdfs, it's endpoint is the value of fs.default.name.
-Ivory uses this interface to write system data to hdfs and feeds referencing this cluster are written to hdfs
+Falcon uses this interface to write system data to hdfs and feeds referencing this cluster are written to hdfs
 using the same write interface.
 
 <verbatim>
 <interface type="execute" endpoint="localhost:8021" version="0.20.2" />
 </verbatim>
 An execute interface specifies the interface for job tracker, it's endpoint is the value of mapred.job.tracker. 
-Ivory uses this interface to submit the processes as jobs on JobTracker defined here.
+Falcon uses this interface to submit the processes as jobs on JobTracker defined here.
 
 <verbatim>
 <interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.1" />
 </verbatim>
 A workflow interface specifies the interface for workflow engine, example of its endpoint is the value for OOZIE_URL.
-Ivory uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
+Falcon uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
 
 <verbatim>
 <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
@@ -50,11 +50,11 @@ A messaging interface specifies the interface for sending feed availability mess
 
 A cluster has a list of locations defined:
 <verbatim>
-<location name="staging" path="/projects/ivory/staging" />
+<location name="staging" path="/projects/falcon/staging" />
 </verbatim>
 Location has the name and the path, name is the type of locations like staging, temp and working.
 and path is the hdfs path for each location.
-Ivory would use the location to do intermediate processing of entities in hdfs and hence Ivory 
+Falcon would use the location to do intermediate processing of entities in hdfs and hence Falcon
 should have read/write/execute permission on these locations.
 
 A cluster has a list of properties:
@@ -71,7 +71,7 @@ a Feed defines various attributes of feed like feed location, frequency, late-ar
 and retention policies.
 A feed can be scheduled on a cluster, once a feed is scheduled its retention and replication process are triggered in a given cluster.
 <verbatim>
-<feed description="clicks log" name="clicks" xmlns="uri:ivory:feed:0.1" 
+<feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 A feed should have a unique name and this name is referenced by processes as input or output feed.
@@ -95,7 +95,7 @@ must be same.
     <availabilityFlag>_SUCCESS</availabilityFlag>
 </verbatim>
 An availabilityFlag specifies the name of a file which when present/created in a feeds data directory, 
-the feed is termed as available. ex: _SUCCESS, if this element is ignored then Ivory would consider the presence of feed's 
+the feed is termed as available. ex: _SUCCESS, if this element is ignored then Falcon would consider the presence of feed's
 data directory as feed availability.
 
 <verbatim>
@@ -119,13 +119,13 @@ upto 8 hours then late-arrival's cut-off="hours(8)"
             <retention limit="days(10)" action="delete"/>
             <locations>
                 <location type="data" path="/hdfsDataLocation/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
-                <location type="stats" path="/projects/ivory/clicksStats" />
-                <location type="meta" path="/projects/ivory/clicksMetaData" />
+                <location type="stats" path="/projects/falcon/clicksStats" />
+                <location type="meta" path="/projects/falcon/clicksMetaData" />
             </locations>
         </cluster>
 ..... more clusters </clusters>
 </verbatim>
-Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Ivory.
+Feed references a cluster by it's name, before submitting a feed all the referenced cluster should be submitted to Falcon.
 type: specifies whether the referenced cluster should be treated as a source or target for a feed. A feed can have multiple source and target clusters. If the type of cluster is not specified then the cluster is not considered for replication.
 Validity of a feed on cluster specifies duration for which this feed is valid on this cluster.
 Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
@@ -134,9 +134,9 @@ The field partitionExp contains partition tags. Number of partition tags has to 
 Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional. 
 
 <verbatim>
- <location type="data" path="/projects/ivory/clicks" />
- <location type="stats" path="/projects/ivory/clicksStats" />
- <location type="meta" path="/projects/ivory/clicksMetaData" /> 
+ <location type="data" path="/projects/falcon/clicks" />
+ <location type="stats" path="/projects/falcon/clicksStats" />
+ <location type="meta" path="/projects/falcon/clicksMetaData" />
 </verbatim>
 A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
 A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is generated
@@ -153,7 +153,7 @@ paths are available as a property in a process.
         <property name="jobPriority" value="VERY_HIGH"/>
     </properties>
 </verbatim>
-A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties available to user to specify the hadoop job queue and priority, the same value is used by Ivorys launcher job.
+A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties available to user to specify the hadoop job queue and priority, the same value is used by Falcons launcher job.
  
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
@@ -213,7 +213,7 @@ Syntax:
 
 ---++++ Timeout
 A optional Timeout specifies the maximum time an instance waits for a dataset before being killed by the workflow engine, a time out is specified like frequency.
-If timeout is not specified, ivory computes a default timeout for a process based on its frequency, which is six times of the frequency of process or 30 minutes if computed timeout is less than 30 minutes. 
+If timeout is not specified, falcon computes a default timeout for a process based on its frequency, which is six times of the frequency of process or 30 minutes if computed timeout is less than 30 minutes.
 <verbatim>
 <process name="[process name]">
 ...
@@ -266,9 +266,9 @@ The daily workflow will start on Jan 1st 2012 at 00:40 UTC, it will run at 40th 
 The hourly workflow will start on March 11th 2012 at 00:40 PST, the next instances will be at 01:40 PST, 03:40 PDT, 04:40 PDT and so on till 23:40 PDT. So, there will be just 23 instances of the workflow for March 11th 2012 because of DST switch.
 
 ---++++ Inputs
-Inputs define the input data for the workflow. The workflow job will start executing only after the schedule time and when all the inputs are available. There can be 0 or more inputs and each of the input maps to a feed. The path and frequency of input data is picked up from feed definition. Each input should also define start and end instances in terms of [[IvoryDocumentation][EL expressions]] and can optionally specify specific partition of input that the workflow requires. The components in partition should be subset of partitions defined in the feed. 
+Inputs define the input data for the workflow. The workflow job will start executing only after the schedule time and when all the inputs are available. There can be 0 or more inputs and each of the input maps to a feed. The path and frequency of input data is picked up from feed definition. Each input should also define start and end instances in terms of [[FalconDocumentation][EL expressions]] and can optionally specify specific partition of input that the workflow requires. The components in partition should be subset of partitions defined in the feed.
 
-For each input, Ivory will create a property with the input name that contains the comma separated list of input paths. This property can be used in workflow actions like pig scripts and so on.
+For each input, Falcon will create a property with the input name that contains the comma separated list of input paths. This property can be used in workflow actions like pig scripts and so on.
 
 Syntax:
 <verbatim>
@@ -335,9 +335,9 @@ Example:
 
 
 ---++++ Outputs
-Outputs define the output data that is generated by the workflow. A process can define 0 or more outputs. Each output is mapped to a feed and the output path is picked up from feed definition. The output instance that should be generated is specified in terms of [[IvoryDocumentation][EL expression]].
+Outputs define the output data that is generated by the workflow. A process can define 0 or more outputs. Each output is mapped to a feed and the output path is picked up from feed definition. The output instance that should be generated is specified in terms of [[FalconDocumentation][EL expression]].
 
-For each output, Ivory creates a property with output name that contains the path of output data. This can be used in workflows to store in the path.
+For each output, Falcon creates a property with output name that contains the path of output data. This can be used in workflows to store in the path.
 Syntax:
 <verbatim>
 <process name="[process name]">
@@ -387,7 +387,7 @@ Synatx:
 </process>
 </verbatim>
 
-queueName and jobPriority are special properites, which when present are used by the Ivory's launcher job, the same property is also availalble in workflow which can be used to propogate to pig or M/R job.
+queueName and jobPriority are special properites, which when present are used by the Falcon's launcher job, the same property is also availalble in workflow which can be used to propogate to pig or M/R job.
 <verbatim>
         <property name="queueName" value="hadoopQueue"/>
         <property name="jobPriority" value="VERY_HIGH"/>
@@ -478,4 +478,4 @@ Example:
 ...
 </process>
 </verbatim>
-This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Ivory should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml
+This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Falcon should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml

@@ -23,13 +23,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-replication</artifactId>
-    <description>Ivory Replication Module</description>
-    <name>Ivory Replication</name>
+    <artifactId>falcon-replication</artifactId>
+    <description>Apache Falcon Replication Module</description>
+    <name>Apache Falcon Replication</name>
     <packaging>jar</packaging>
 
     <dependencies>

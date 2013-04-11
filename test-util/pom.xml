@@ -23,19 +23,19 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-test-util</artifactId>
-    <description>Ivory Test Utility</description>
-    <name>Ivory Test Utility</name>
+    <artifactId>falcon-test-util</artifactId>
+    <description>Apache Falcon Test Utility</description>
+    <name>Apache Falcon Test Utility</name>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-client</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-client</artifactId>
         </dependency>
 
         <dependency>

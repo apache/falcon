@@ -1,6 +1,6 @@
----+ Ivory - Feed management and data processing platform
+---+ Falcon - Feed management and data processing platform
 
-Ivory is a feed processing and feed management system aimed at making it
+Falcon is a feed processing and feed management system aimed at making it
 easier for end consumers to onboard their feed processing and feed
 management on hadoop clusters.
 
@@ -21,12 +21,12 @@ management on hadoop clusters.
 
 ---+ Getting Started
 
-Start with these simple steps to install an ivory instance [[InstallationSteps][Simple setup]]. Also refer
-to Ivory architecture and documentation in [[IvoryDocumentation][Documentation]]. [[OnBoarding][On boarding]] describes steps to on-board a pipeline to Ivory. It also gives a sample pipeline for reference. [[EntitySpecification][Entity Specification]] gives complete details of all Ivory entities.
+Start with these simple steps to install an falcon instance [[InstallationSteps][Simple setup]]. Also refer
+to Falcon architecture and documentation in [[FalconDocumentation][Documentation]]. [[OnBoarding][On boarding]] describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline for reference. [[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
 
 #LicenseInfo
 ---+ Licensing Information
 
-Ivory is distributed under [[http://www.apache.org/licenses/LICENSE-2.0][Apache License 2.0]].
+Falcon is distributed under [[http://www.apache.org/licenses/LICENSE-2.0][Apache License 2.0]].
 
 

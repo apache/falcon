@@ -20,7 +20,7 @@ Cluster definition that contains end points for name node, job tracker, oozie an
 <!--
     Cluster configuration
   -->
-<cluster colo="ua2" description="" name="corp" xmlns="uri:ivory:cluster:0.1" 
+<cluster colo="ua2" description="" name="corp" xmlns="uri:falcon:cluster:0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">    
     <interfaces>
         <interface type="readonly" endpoint="hftp://name-node.com:50070" version="0.20.2-cdh3u0" />
@@ -35,9 +35,9 @@ Cluster definition that contains end points for name node, job tracker, oozie an
     </interfaces>
 
     <locations>
-        <location name="staging" path="/projects/ivory/staging" />
+        <location name="staging" path="/projects/falcon/staging" />
         <location name="temp" path="/tmp" />
-        <location name="working" path="/projects/ivory/working" />
+        <location name="working" path="/projects/falcon/working" />
     </locations>
 </cluster>
 </verbatim>
@@ -50,7 +50,7 @@ Hourly feed that defines feed path, frequency, ownership and validity:
     Hourly sample input data
   -->
 
-<feed description="sample input data" name="SampleInput" xmlns="uri:ivory:feed:0.1" 
+<feed description="sample input data" name="SampleInput" xmlns="uri:falcon:feed:0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <groups>group</groups>
 
@@ -85,7 +85,7 @@ Daily feed that defines feed path, frequency, ownership and validity:
     Daily sample output data
   -->
 
-<feed description="sample output data" name="SampleOutput" xmlns="uri:ivory:feed:0.1" 
+<feed description="sample output data" name="SampleOutput" xmlns="uri:falcon:feed:0.1"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <groups>group</groups>
 
@@ -113,7 +113,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 
 ---++++ Process
-Sample process which runs daily at 6th hour on corp cluster. It takes one input - SampleInput for the previous day(24 instances). It generates one output - SampleOutput for previous day. The workflow is defined at /projects/bootcamp/workflow/workflow.xml. Any libraries available for the workflow should be at /projects/bootcamp/workflow/lib. The process also defines properties queueName, ssh.host, and fileTimestamp which are passed to the workflow. In addition, Ivory exposes the following properties to the workflow: nameNode, jobTracker(hadoop properties), input and output(Input/Output properties).
+Sample process which runs daily at 6th hour on corp cluster. It takes one input - SampleInput for the previous day(24 instances). It generates one output - SampleOutput for previous day. The workflow is defined at /projects/bootcamp/workflow/workflow.xml. Any libraries available for the workflow should be at /projects/bootcamp/workflow/lib. The process also defines properties queueName, ssh.host, and fileTimestamp which are passed to the workflow. In addition, Falcon exposes the following properties to the workflow: nameNode, jobTracker(hadoop properties), input and output(Input/Output properties).
 
 <verbatim>
 <?xml version="1.0" encoding="UTF-8"?>

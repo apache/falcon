@@ -23,29 +23,29 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-retention</artifactId>
-    <description>Ivory Retention Module</description>
-    <name>Ivory Retention</name>
+    <artifactId>falcon-retention</artifactId>
+    <description>Apache Falcon Retention Module</description>
+    <name>Apache Falcon Retention</name>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-common</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-feed</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-feed</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
         </dependency>
 
         <dependency>

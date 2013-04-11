@@ -21,17 +21,17 @@
 
 <web-app>
 
-    <display-name>Ivory Distributed Server</display-name>
-    <description>Ivory Distributed Server</description>
+    <display-name>Apache Falcon Distributed Server</display-name>
+    <description>Apache Falcon Distributed Server</description>
 
     <filter>
         <filter-name>auth</filter-name>
-        <filter-class>org.apache.ivory.security.BasicAuthFilter</filter-class>
+        <filter-class>org.apache.falcon.security.BasicAuthFilter</filter-class>
     </filter>
 
     <filter-mapping>
         <filter-name>auth</filter-name>
-        <servlet-name>IvoryRESTApi</servlet-name>
+        <servlet-name>FalconRESTApi</servlet-name>
     </filter-mapping>
 
     <filter-mapping>
@@ -40,11 +40,11 @@
     </filter-mapping>
 
     <listener>
-        <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
+        <listener-class>org.apache.falcon.listener.ContextStartupListener</listener-class>
     </listener>
 
     <servlet>
-        <servlet-name>IvoryRESTApi</servlet-name>
+        <servlet-name>FalconRESTApi</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
@@ -52,7 +52,7 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.ivory.resource.admin.AdminResource,org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.SchedulableEntityManager,org.apache.ivory.resource.InstanceManager</param-value>
+            <param-value>org.apache.falcon.resource.admin.AdminResource,org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.SchedulableEntityManager,org.apache.falcon.resource.InstanceManager</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -66,13 +66,13 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.ivory.resource.provider.JAXBContextResolver,org.apache.ivory.resource.ConfigSyncService</param-value>
+            <param-value>org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.ConfigSyncService</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>IvoryRESTApi</servlet-name>
+        <servlet-name>FalconRESTApi</servlet-name>
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
 

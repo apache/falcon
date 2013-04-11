@@ -1,6 +1,6 @@
 package org.apache.oozie.client;
 
-import org.apache.ivory.util.RuntimeProperties;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.oozie.client.rest.RestConstants;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;

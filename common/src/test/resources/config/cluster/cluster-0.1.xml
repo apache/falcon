@@ -17,7 +17,7 @@
   ~ limitations under the License.
   -->
 
-<cluster colo="default" description="" name="testCluster" xmlns="uri:ivory:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<cluster colo="default" description="" name="testCluster" xmlns="uri:falcon:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<interfaces>
 		<interface type="readonly" endpoint="hftp://localhost:50010"
 			version="0.20.2" />
@@ -31,9 +31,9 @@
 		<interface type="registry" endpoint="Hcat" version="1" />
 	</interfaces>
 	<locations>
-		<location name="staging" path="/projects/ivory/staging" />
+		<location name="staging" path="/projects/falcon/staging" />
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/projects/ivory/working" />
+		<location name="working" path="/projects/falcon/working" />
 	</locations>
 	<properties>
 		<property name="field1" value="value1" />

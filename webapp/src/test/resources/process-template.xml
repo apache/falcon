@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<process name="##processName##" xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="##processName##" xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <clusters>
         <cluster name="##cluster##">
             <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z" />
@@ -22,10 +22,10 @@
         <property name="user" value="${user()}"/>
         <property name="baseTime" value="${today(0,0)}"/>
     </properties>
-    <workflow engine="oozie" path="/ivory/test/workflow" />
+    <workflow engine="oozie" path="/falcon/test/workflow" />
     <retry policy="periodic" delay="minutes(10)" attempts="3" />
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input input="input" workflow-path="/ivory/test/workflow" />
+        <late-input input="input" workflow-path="/falcon/test/workflow" />
     </late-process>
 </process>

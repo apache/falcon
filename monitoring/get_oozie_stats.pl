@@ -49,7 +49,7 @@ use Pod::Usage;
  ./get_oozie_stats.pl -h <ooziehostname> --port 11000 --oid 0000443-120507085729249-oozie-oozi-W   --list
   recordsize
   user-workflow
-  ivory-succeeded-messaging
+  falcon-succeeded-messaging
   user-jms-messaging
 
  ./get_oozie_stats.pl -h <ooziehostname>  --port 11000 --oid 0000443-120507085729249-oozie-oozi-W

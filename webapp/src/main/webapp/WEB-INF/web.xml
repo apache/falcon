@@ -21,25 +21,25 @@
 
 <web-app>
 
-    <display-name>Ivory Placeholder</display-name>
-    <description>Ivory Placeholder</description>
+    <display-name>Apache Falcon Placeholder</display-name>
+    <description>Apache Falcon Placeholder</description>
 
   <filter>
     <filter-name>auth</filter-name>
-    <filter-class>org.apache.ivory.security.BasicAuthFilter</filter-class>
+    <filter-class>org.apache.falcon.security.BasicAuthFilter</filter-class>
   </filter>
 
   <filter-mapping>
     <filter-name>auth</filter-name>
-    <servlet-name>IvoryRESTApi</servlet-name>
+    <servlet-name>FalconRESTApi</servlet-name>
   </filter-mapping>
 
   <listener>
-    <listener-class>org.apache.ivory.listener.ContextStartupListener</listener-class>
+    <listener-class>org.apache.falcon.listener.ContextStartupListener</listener-class>
   </listener>
 
   <servlet>
-      <servlet-name>IvoryRESTApi</servlet-name>
+      <servlet-name>FalconRESTApi</servlet-name>
       <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
       <init-param>
           <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
@@ -47,13 +47,13 @@
       </init-param>
       <init-param>
           <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>org.apache.ivory.resource.admin,org.apache.ivory.resource.proxy,org.apache.ivory.resource.provider</param-value>
+          <param-value>org.apache.falcon.resource.admin,org.apache.falcon.resource.proxy,org.apache.falcon.resource.provider</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
-      <servlet-name>IvoryRESTApi</servlet-name>
+      <servlet-name>FalconRESTApi</servlet-name>
       <url-pattern>/api/*</url-pattern>
   </servlet-mapping>
 

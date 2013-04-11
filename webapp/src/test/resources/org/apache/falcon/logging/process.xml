@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process name="process-name" xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <!-- where -->
+    <clusters>
+        <cluster name="testCluster">
+            <validity start="2010-01-01T01:00Z" end="2010-01-01T01:01Z" />
+        </cluster>
+    </clusters>
+
+    <!-- when -->
+    <parallel>1</parallel>
+    <order>LIFO</order>
+    <frequency>minutes(1)</frequency>
+    <timezone>UTC</timezone>
+   
+    <properties>
+        <property name="queueName" value="default" />
+    </properties>
+
+    <workflow path="/workflow/workflow.xml"/>
+
+    <retry policy="periodic" delay="minutes(2)" attempts="3" />
+    
+</process>

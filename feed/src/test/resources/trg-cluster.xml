@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * -->
-<cluster colo="gs2" description="" name="corp2" xmlns="uri:ivory:cluster:0.1"
+<cluster colo="gs2" description="" name="corp2" xmlns="uri:falcon:cluster:0.1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<interfaces>
 		<interface type="readonly" endpoint="http://localhost:50070"
@@ -31,8 +31,8 @@
 	</interfaces>
 	<locations>
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/projects/ivory/working" />
-		<location name="staging" path="/projects/ivory/staging2" />
+		<location name="working" path="/projects/falcon/working" />
+		<location name="staging" path="/projects/falcon/staging2" />
 	</locations>
 	<properties>
 		<property name="separator" value="-" />

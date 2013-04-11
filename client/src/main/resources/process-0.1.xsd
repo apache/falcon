@@ -4,7 +4,7 @@
     License. You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 ~ ~ Unless required by applicable law or agreed to in writing, software ~ distributed 
     under the License is distributed on an "AS IS" BASIS, ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the License for the specific language governing 
     permissions and ~ limitations under the License. -->
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="uri:ivory:process:0.1" xmlns="uri:ivory:process:0.1"
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="uri:falcon:process:0.1" xmlns="uri:falcon:process:0.1"
     xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
     <xs:annotation>
         <xs:documentation>
@@ -31,7 +31,7 @@
         </xs:documentation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="org.apache.ivory.entity.v0.process" />
+                <jaxb:package name="org.apache.falcon.entity.v0.process" />
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
@@ -108,7 +108,7 @@
                     <xs:annotation>
                         <xs:appinfo>
                             <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" 
-                                        printMethod="org.apache.ivory.entity.v0.SchemaHelper.getTimeZoneId" />
+                                        printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId" />
                         </xs:appinfo>
                     </xs:annotation>
                     <xs:restriction base="xs:string" />
@@ -148,7 +148,7 @@
                 <xs:annotation>
                     <xs:documentation>Late process defines how the late data should be handled. Late policy - backoff, exponential backoff, final along with delay
                         define how
-                        frequently Ivory should check for late data. The late data handling can be customized for each input separatly.
+                        frequently Falcon should check for late data. The late data handling can be customized for each input separatly.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -199,7 +199,7 @@
     <xs:simpleType name="date-time-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.ivory.entity.v0.SchemaHelper.parseDateUTC" printMethod="org.apache.ivory.entity.v0.SchemaHelper.formatDateUTC" />
+                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC" printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC" />
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
@@ -218,7 +218,7 @@
     <xs:simpleType name="frequency-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="org.apache.ivory.entity.v0.Frequency" parseMethod="org.apache.ivory.entity.v0.Frequency.fromString" printMethod="org.apache.ivory.entity.v0.Frequency.toString" />
+                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency" parseMethod="org.apache.falcon.entity.v0.Frequency.fromString" printMethod="org.apache.falcon.entity.v0.Frequency.toString" />
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
@@ -232,7 +232,7 @@
                 <xs:annotation>
                     <xs:documentation>Defines input for the workflow. Each input maps to a feed. Input path and frequency are picked from feed definition.
                         The input specifies the
-                        start and end instance for the workflow. Ivory creates a property with input name which contains paths of all input
+                        start and end instance for the workflow. Falcon creates a property with input name which contains paths of all input
                         instances between start and end. This
                         property will be available for the workflow to read inputs.
                         Input can also optionally specify the specific partition of feed that the workflow needs.
@@ -258,7 +258,7 @@
                     <xs:documentation> Each output maps to a feed. The Output path and frequency are picked from the corresponding feed definition.
                         The output also specifies the
                         instance that is created in terms of EL expression.
-                        For each output, Ivory creates a property with the output name which can be used in workflows
+                        For each output, Falcon creates a property with the output name which can be used in workflows
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>

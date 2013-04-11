@@ -22,29 +22,29 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-oozie-adaptor</artifactId>
-    <description>Ivory Oozie Adaptor Module</description>
-    <name>Ivory Oozie Adaptor</name>
+    <artifactId>falcon-oozie-adaptor</artifactId>
+    <description>Apache Falcon Oozie Adaptor Module</description>
+    <name>Apache Falcon Oozie Adaptor</name>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-messaging</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-messaging</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-common</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
         </dependency>
 
         <dependency>
@@ -78,7 +78,7 @@
                         </goals>
                         <configuration>
                             <!-- <generateDirectory>src/main/java</generateDirectory> -->
-                            <generatePackage>org.apache.ivory.oozie.coordinator</generatePackage>
+                            <generatePackage>org.apache.falcon.oozie.coordinator</generatePackage>
                             <includeSchemas>
                                 <includeSchema>oozie-coordinator-0.3.xsd</includeSchema>
                             </includeSchemas>
@@ -95,7 +95,7 @@
                         </goals>
                         <configuration>
                             <!-- <generateDirectory>src/main/java</generateDirectory> -->
-                            <generatePackage>org.apache.ivory.oozie.workflow</generatePackage>
+                            <generatePackage>org.apache.falcon.oozie.workflow</generatePackage>
                             <includeSchemas>
                                 <includeSchema>oozie-workflow-0.3.xsd</includeSchema>
                             </includeSchemas>
@@ -112,7 +112,7 @@
                         </goals>
                         <configuration>
                             <!-- <generateDirectory>src/main/java</generateDirectory> -->
-                            <generatePackage>org.apache.ivory.oozie.bundle</generatePackage>
+                            <generatePackage>org.apache.falcon.oozie.bundle</generatePackage>
                             <includeSchemas>
                                 <includeSchema>oozie-bundle-0.1.xsd</includeSchema>
                             </includeSchemas>

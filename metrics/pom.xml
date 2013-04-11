@@ -23,13 +23,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-metrics</artifactId>
-    <description>Ivory Metrics</description>
-    <name>Ivory Metrics</name>
+    <artifactId>falcon-metrics</artifactId>
+    <description>Apache Falcon Metrics</description>
+    <name>Apache Falcon Metrics</name>
     <packaging>jar</packaging>
 
     <dependencies>

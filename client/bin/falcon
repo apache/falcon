@@ -1,0 +1,13 @@
+#!/bin/bash
+
+PRG="${0}"
+BASEDIR=`dirname ${PRG}`
+BASEDIR=`cd ${BASEDIR}/..;pwd`
+
+
+CLASSPATH=${CLASSPATH}:`ls target/falcon-client-*.jar`
+for f in $BASEDIR/target/dependency/*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+exec java -cp $CLASSPATH org.apache.falcon.cli.FalconCLI $@

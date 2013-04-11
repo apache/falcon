@@ -22,66 +22,66 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-webapp</artifactId>
-    <description>Ivory Web Application</description>
-    <name>Ivory Web Application</name>
+    <artifactId>falcon-webapp</artifactId>
+    <description>Apache Falcon Web Application</description>
+    <name>Apache Falcon Web Application</name>
     <packaging>war</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-common</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-prism</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-prism</artifactId>
             <version>${project.version}</version>
             <classifier>classes</classifier>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-process</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-process</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-oozie-adaptor</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-oozie-adaptor</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-feed</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-feed</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-retention</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-retention</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-metrics</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-metrics</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-rerun</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-rerun</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-replication</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-replication</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
         </dependency>
 
         <dependency>

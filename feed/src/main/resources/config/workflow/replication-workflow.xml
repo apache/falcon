@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * -->
-<workflow-app xmlns='uri:oozie:workflow:0.3' name='ivory-feed-parent-workflow'>
+<workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-feed-parent-workflow'>
 	<start to='should-record' />
 	<decision name='should-record'>
         <switch>
@@ -39,10 +39,10 @@
 					<value>${jobPriority}</value>
 				</property>
 			</configuration>
-			<main-class>org.apache.ivory.latedata.LateDataHandler</main-class>
+			<main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
 			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}/${srcClusterName}</arg>
-			<arg>-paths</arg><arg>${ivoryInPaths}</arg>
-			<arg>-ivoryInputFeeds</arg><arg>${ivoryInputFeeds}</arg>
+			<arg>-paths</arg><arg>${falconInPaths}</arg>
+			<arg>-falconInputFeeds</arg><arg>${falconInputFeeds}</arg>
 			<capture-output />
 		</java>
 		<ok to="replication" />
@@ -62,14 +62,14 @@
 					<value>${jobPriority}</value>
 				</property>
 			</configuration>
-            <main-class>org.apache.ivory.replication.FeedReplicator</main-class>
-            <arg>-Divory.include.path=${sourceRelativePaths}</arg>
+            <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
+            <arg>-Dfalcon.include.path=${sourceRelativePaths}</arg>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
 			<arg>-maxMaps</arg><arg>5</arg>
 			<arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
 			<arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
-            <file>${wf:conf("ivory.libpath")}/hadoop-distcp.jar</file>
+            <file>${wf:conf("falcon.libpath")}/hadoop-distcp.jar</file>
         </java>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
@@ -88,7 +88,7 @@
 					<value>${jobPriority}</value>
 				</property>
 			</configuration>
-			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
+			<main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
 			<arg>-cluster</arg><arg>${cluster}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
 			<arg>-entityName</arg><arg>${entityName}</arg>
@@ -109,13 +109,13 @@
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowId</arg> <arg>${wf:id()}</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
-            <file>${wf:conf("ivory.libpath")}/activemq-core.jar</file>
-            <file>${wf:conf("ivory.libpath")}/ant.jar</file>
-            <file>${wf:conf("ivory.libpath")}/geronimo-j2ee-management.jar</file>
-            <file>${wf:conf("ivory.libpath")}/jms.jar</file>
-            <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
-            <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
-            <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
+            <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
+            <file>${wf:conf("falcon.libpath")}/ant.jar</file>
+            <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
+            <file>${wf:conf("falcon.libpath")}/jms.jar</file>
+            <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
+            <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
+            <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
 		</java>
 		<ok to="end" />
 		<error to="fail" />
@@ -134,7 +134,7 @@
 					<value>${jobPriority}</value>
 				</property>
 			</configuration>
-			<main-class>org.apache.ivory.workflow.IvoryPostProcessing</main-class>
+			<main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
 			<arg>-cluster</arg><arg>${cluster}</arg>
 			<arg>-entityType</arg><arg>${entityType}</arg>
 			<arg>-entityName</arg><arg>${entityName}</arg>
@@ -155,13 +155,13 @@
 			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
 			<arg>-subflowId</arg> <arg>${wf:id()}</arg>
 			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
-            <file>${wf:conf("ivory.libpath")}/activemq-core.jar</file>
-            <file>${wf:conf("ivory.libpath")}/ant.jar</file>
-            <file>${wf:conf("ivory.libpath")}/geronimo-j2ee-management.jar</file>
-            <file>${wf:conf("ivory.libpath")}/jms.jar</file>
-            <file>${wf:conf("ivory.libpath")}/json-simple.jar</file>
-            <file>${wf:conf("ivory.libpath")}/oozie-client.jar</file>
-            <file>${wf:conf("ivory.libpath")}/spring-jms.jar</file>
+            <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
+            <file>${wf:conf("falcon.libpath")}/ant.jar</file>
+            <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
+            <file>${wf:conf("falcon.libpath")}/jms.jar</file>
+            <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
+            <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
+            <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
 		</java>
 		<ok to="fail" />
 		<error to="fail" />

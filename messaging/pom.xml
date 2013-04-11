@@ -17,19 +17,19 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-messaging</artifactId>
-    <description>Ivory JMS messaging Module</description>
-    <name>Ivory Messaging</name>
+    <artifactId>falcon-messaging</artifactId>
+    <description>Apache Falcon JMS messaging Module</description>
+    <name>Apache Falcon Messaging</name>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.ivory</groupId>
-            <artifactId>ivory-test-util</artifactId>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -75,11 +75,11 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                        <finalName>ivory-messaging-execution-jar</finalName>
+                        <finalName>falcon-messaging-execution-jar</finalName>
                             <transformers>
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.apache.ivory.messaging.MessageProducer</mainClass>
+                                    <mainClass>org.apache.falcon.messaging.MessageProducer</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

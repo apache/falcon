@@ -19,7 +19,7 @@
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <main-class>org.apache.ivory.messaging.MessageProducer</main-class>
+            <main-class>org.apache.falcon.messaging.MessageProducer</main-class>
             <arg>${wf:name()}</arg>
             <arg>${wf:appPath()}</arg>
 	    <arg>${timestamp()}</arg>

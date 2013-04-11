@@ -18,7 +18,7 @@
  * limitations under the License.
  */
  -->
-<process name="sample"  xmlns="uri:ivory:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="sample"  xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <!-- where -->
     <clusters>
     <cluster name="testCluster">

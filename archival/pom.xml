@@ -22,13 +22,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-archival</artifactId>
-    <description>Ivory Archival Module</description>
-    <name>Ivory Archival</name>
+    <artifactId>falcon-archival</artifactId>
+    <description>Apache Falcon Archival Module</description>
+    <name>Apache Falcon Archival</name>
     <packaging>jar</packaging>
 
 </project>

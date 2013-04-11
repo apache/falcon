@@ -23,13 +23,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ivory</groupId>
-        <artifactId>ivory-main</artifactId>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>ivory-client</artifactId>
-    <description>Ivory CLI client</description>
-    <name>Ivory CLI client</name>
+    <artifactId>falcon-client</artifactId>
+    <description>Apache Falcon CLI client</description>
+    <name>Apache Falcon CLI client</name>
     <packaging>jar</packaging>
 
     <dependencies>

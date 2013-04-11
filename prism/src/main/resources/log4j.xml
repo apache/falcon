@@ -10,7 +10,7 @@
   </appender>
 
   <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/prism.log"/>
+    <param name="File" value="/var/log/falcon/prism.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -19,7 +19,7 @@
   </appender>
 
   <appender name="AUDIT" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/prism-audit.log"/>
+    <param name="File" value="/var/log/falcon/prism-audit.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -28,7 +28,7 @@
   </appender>
   
   <appender name="TRANSACTIONLOG" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/prsim-tranlog.log"/>
+    <param name="File" value="/var/log/falcon/prsim-tranlog.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -37,7 +37,7 @@
   </appender>
   
     <appender name="METRIC" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="/var/log/ivory/prism-metric.log"/>
+    <param name="File" value="/var/log/falcon/prism-metric.log"/>
     <param name="Append" value="true"/>
     <param name="Threshold" value="debug"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -45,7 +45,7 @@
     </layout>
   </appender>
 
-  <logger name="org.apache.ivory">
+  <logger name="org.apache.falcon">
     <level value="debug"/>
     <appender-ref ref="FILE" />
   </logger>

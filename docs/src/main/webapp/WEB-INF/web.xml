@@ -21,5 +21,5 @@
         "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
-    <display-name>Ivory Documentation</display-name>
+    <display-name>Apache Falcon Documentation</display-name>
 </web-app>

@@ -1,0 +1,166 @@
+---+FalconCLI
+
+FalconCLI is a interface between user and Falcon. It is a command line utility provided by Falcon. FalconCLI supports Entity Management, Instance Management and Admin operations.There is a set of web services that are used by FalconCLI to interact with Falcon.
+
+---++Entity Management Operations
+
+---+++Submit
+
+Submit option is used to set up entity definition.
+
+Example: 
+$FALCON_HOME/bin/falcon entity -submit -type cluster -file /cluster/definition.xml
+
+Note: The url option in the above and all subsequent commands is optional. If not mentioned it will be picked from client.properties file. If the option is not provided and also not set in client.properties, Falcon CLI will fail.
+
+---+++Schedule
+
+Once submitted, an entity can be scheduled using schedule option. Process and feed can only be scheduled.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [process|feed] -name <<name>> -schedule
+
+Example:
+$FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule
+
+---+++Suspend
+
+Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedulable entities(process/feed) can be suspended.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -suspend
+
+---+++Resume
+
+Puts a suspended process/feed back to active, which in turn resumes applicable oozie bundle.
+
+Usage:
+ $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -resume
+
+---+++Delete
+
+Delete removes the submitted entity definition for the specified entity and put it into the archive.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [cluster|feed|process] -name <<name>> -delete
+
+---+++List
+
+Entities of a particular type can be listed with list sub-command.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -list
+
+---+++Update
+
+Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
+not allowed.
+
+Usage:
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update
+
+---+++Status
+
+Status returns the current status of the entity.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -name <<name>> -status
+
+---+++Dependency
+
+With the use of dependency option, we can list all the entities on which the specified entity is dependent. For example for a feed, dependency return the cluster name and for process it returns all the input feeds, output feeds and cluster names.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -name <<name>> -dependency
+
+---+++Definition
+
+Definition option returns the entity definition submitted earlier during submit step.
+
+Usage:
+$FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -name <<name>> -definition
+
+---++Instance Management Options
+
+---+++Kill
+
+Kill sub-command is used to kill all the instances of the specified process whose nominal time is between the given start time and end time.
+
+Note: 
+1. For all the instance management sub-commands, if end time is not specified, Falcon will perform the actions on all the instances whose instance time falls after the start time.
+
+2. The start time and end time needs to be specified in TZ format. 
+Example:   01 Jan 2012 01:00  => 2012-01-01T01:00Z
+
+3. Process name is compulsory parameter for each instance management command.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -kill -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Suspend
+
+Suspend is used to suspend a instance or instances  for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -suspend -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Continue
+
+Continue option is used to continue the failed workflow instance. This option is valid only for process instances in terminal state, i.e. SUCCEDDED, KILLED or FAILED.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -re-run -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Rerun
+
+Rerun option is used to rerun instances of a given process. This option is valid only for process instances in terminal state, i.e. SUCCEDDED, KILLED or FAILED. Optionally, you can specify the properties to override.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -re-run -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-file <<properties file>>]
+
+---+++Resume
+
+Resume option is used to resume any instance that  is in suspended state.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -resume -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Status
+
+Status option via CLI can be used to get the status of a single or multiple instances.  If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state. Along with the status of the instance time is also returned. Log location gives the oozie workflow url
+If the instance is in WAITING state, missing dependencies are listed
+
+Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
+
+{"status":"SUCCEEDED","message":"getStatus is successful","instances":[{"instance":"2012-05-07T05:02Z","status":"SUCCEEDED","logFile":"http://oozie-dashboard-url"},{"instance":"2012-05-07T05:07Z","status":"RUNNING","logFile":"http://oozie-dashboard-url"}, {"instance":"2010-01-02T11:05Z","status":"WAITING"}] 
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+
+---+++Running
+
+Running option provides all the running instances of the mentioned process.
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -running
+
+---+++Logs
+
+Get logs for instance actions
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs -start "yyyy-MM-dd'T'HH:mm'Z'" [-end "yyyy-MM-dd'T'HH:mm'Z'"] [-runid <<runid>>]
+
+
+---++Admin Options
+
+---+++Help
+
+Usage:
+$FALCON_HOME/bin/falcon admin -version
+
+---+++Version
+
+Version returns the current verion of Falcon installed.
+Usage:
+$FALCON_HOME/bin/falcon admin -help

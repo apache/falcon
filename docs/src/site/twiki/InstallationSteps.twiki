@@ -1,45 +1,45 @@
----+++ Building & Packaging Ivory
+---+++ Building & Packaging Falcon
 
 
----+++ Installing Ivory
+---+++ Installing Falcon
 *Pre-requisites:*
    * hadoop-0.20.2 +
    * oozie-3.1.5 +
-*Ivory Server*
+*Falcon Server*
 
-   * Download the source from https://github.com/sriksun/Ivory
-   * Navigate to base project folder,named 'Ivory'
+   * Download the source from https://github.com/sriksun/Falcon
+   * Navigate to base project folder,named 'Falcon'
    * Build as "mvn clean package" at the base location. Please note that both maven 2/3 are supported.
    * By default only embedded/standalone mode is build.
-   * To build Ivory with documentation build with MVN profile "all".
-   * To build the Ivory for distributed mode, i.e. multiple server and prism mode, build with MVN profile "distributed". 
-   * Once the build operation is over,navigate to '<base-folder>/Ivory/webapps/target' and deploy the .war file generated
+   * To build Falcon with documentation build with MVN profile "all".
+   * To build the Falcon for distributed mode, i.e. multiple server and prism mode, build with MVN profile "distributed".
+   * Once the build operation is over,navigate to '<base-folder>/Falcon/webapps/target' and deploy the .war file generated
       there in a web container (Eg: tomcat6).
 ---+++ User Guide
-*Ivory Client*
+*Falcon Client*
 
    * Follow the steps 1 to 3 from server instructions.
-   * Once the build operation is over, navigate to '<base-folder>/Ivory/client/target'. There is a client.jar that has
-      been generated along with multiple other jars. Fetch this jar and others to use the Ivory client application.
+   * Once the build operation is over, navigate to '<base-folder>/Falcon/client/target'. There is a client.jar that has
+      been generated along with multiple other jars. Fetch this jar and others to use the Falcon client application.
       Please ensure that the other jars in the folder are always specified in the classpath of the client.jar.
-   * Please refer Ivory-CLI guide for various options on how to use the ivory client.
+   * Please refer Falcon-CLI guide for various options on how to use the falcon client.
 ---+++ Administration Guide
-*Setting up Ivory server properties:*
-Inside your web container, where the ivory war has exploded, you should be able to find 2 files, startup.properties and runtime.properties.
+*Setting up Falcon server properties:*
+Inside your web container, where the falcon war has exploded, you should be able to find 2 files, startup.properties and runtime.properties.
 The path would be:
-<container-base>/<war-location>/ivory-webapp-0.2-SNAPSHOT/WEB-INF/classes
+<container-base>/<war-location>/falcon-webapp-0.2-SNAPSHOT/WEB-INF/classes
 
-*startup.properties:* Specifies values/paths used by Ivory on startup. Common entries usually include config store location
-,broker url (for messaging), and other settings.Any changes to this requires Ivory to be restarted to take effect.
+*startup.properties:* Specifies values/paths used by Falcon on startup. Common entries usually include config store location
+,broker url (for messaging), and other settings.Any changes to this requires Falcon to be restarted to take effect.
 
-*runtime.properties:* Specifies various properties that can be picked at runtime. Ivory server keeps polling this file after a certain interval;
+*runtime.properties:* Specifies various properties that can be picked at runtime. Falcon server keeps polling this file after a certain interval;
 and incorporates changes, if any.
 
-*Domain based settings (only applicable for Ivory 0.2):*
+*Domain based settings (only applicable for Falcon 0.2):*
 
-Ivory 0.2 and subsequent releases support domain based properties. The user can specify properties either for all domains
+Falcon 0.2 and subsequent releases support domain based properties. The user can specify properties either for all domains
 (with prefixing the property with a '*' ) or for a particular domain (with prefixing the domain name to the property).
-Once the domain is set,  the user can set an env variable,IVORY_DOMAIN as the domain that the Ivory is supposed to use.
+Once the domain is set,  the user can set an env variable,FALCON_DOMAIN as the domain that the Falcon is supposed to use.
 
 Please refer the example below:
 
@@ -52,7 +52,7 @@ Trying to set config store property for a 'specific' domain:
 
 qa.config.store.uri=file:///var/lib/tomcat6/target/store
 
-To ensure that Ivory installation on your system uses the qa domain settings, just set the IVORY_DOMAIN value to 'qa' in your environment.
+To ensure that Falcon installation on your system uses the qa domain settings, just set the FALCON_DOMAIN value to 'qa' in your environment.
 ---++++ Security
 
 *TO-DO*
