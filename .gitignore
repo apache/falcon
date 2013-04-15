@@ -28,3 +28,5 @@ target
 .project
 .settings
 
+#ActiveMQ
+activemq-data
