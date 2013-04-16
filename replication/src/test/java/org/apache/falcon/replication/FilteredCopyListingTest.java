@@ -34,7 +34,9 @@ import org.testng.annotations.Test;
 
 import java.io.DataOutputStream;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FilteredCopyListingTest {
 
@@ -69,8 +71,7 @@ public class FilteredCopyListingTest {
             fileSystem = FileSystem.getLocal(new Configuration());
             fileSystem.mkdirs(new Path(path));
             recordInExpectedValues(path);
-        }
-        finally {
+        } finally {
             IOUtils.cleanup(null, fileSystem);
         }
     }
@@ -80,8 +81,7 @@ public class FilteredCopyListingTest {
         try {
             fileSystem = FileSystem.getLocal(new Configuration());
             fileSystem.delete(new Path(path), true);
-        }
-        finally {
+        } finally {
             IOUtils.cleanup(null, fileSystem);
         }
     }
@@ -93,8 +93,7 @@ public class FilteredCopyListingTest {
             fileSystem = FileSystem.getLocal(new Configuration());
             outputStream = fileSystem.create(new Path(path), true, 10);
             recordInExpectedValues(path);
-        }
-        finally {
+        } finally {
             IOUtils.cleanup(null, fileSystem, outputStream);
         }
     }
@@ -209,7 +208,7 @@ public class FilteredCopyListingTest {
     private void verifyContents(Path listingPath, int expected) throws Exception {
         SequenceFile.Reader reader = new SequenceFile.Reader(FileSystem.getLocal(new Configuration()),
                 listingPath, new Configuration());
-        Text key   = new Text();
+        Text key = new Text();
         FileStatus value = new FileStatus();
         Map<String, String> actualValues = new HashMap<String, String>();
         while (reader.next(key, value)) {

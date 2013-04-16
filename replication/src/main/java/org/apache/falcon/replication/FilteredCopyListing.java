@@ -32,12 +32,18 @@ import java.util.regex.Pattern;
 public class FilteredCopyListing extends SimpleCopyListing {
     private static final Logger LOG = Logger.getLogger(FilteredCopyListing.class);
 
-    /** Default pattern character: Escape any special meaning. */
-    private static final char  PAT_ESCAPE = '\\';
-    /** Default pattern character: Any single character. */
-    private static final char  PAT_ANY = '.';
-    /** Default pattern character: Character set close. */
-    private static final char  PAT_SET_CLOSE = ']';
+    /**
+     * Default pattern character: Escape any special meaning.
+     */
+    private static final char PAT_ESCAPE = '\\';
+    /**
+     * Default pattern character: Any single character.
+     */
+    private static final char PAT_ANY = '.';
+    /**
+     * Default pattern character: Character set close.
+     */
+    private static final char PAT_SET_CLOSE = ']';
 
     private Pattern regex;
 
@@ -55,7 +61,9 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path, DistCpOptions options) {
-        if (path.getName().equals(FileOutputCommitter.SUCCEEDED_FILE_NAME)) return false;
+        if (path.getName().equals(FileOutputCommitter.SUCCEEDED_FILE_NAME)) {
+            return false;
+        }
         return regex == null || regex.matcher(path.toString()).find();
     }
 
@@ -74,8 +82,9 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
         // Validate the pattern
         len = filePattern.length();
-        if (len == 0)
+        if (len == 0) {
             return null;
+        }
 
         setOpen = 0;
         setRange = false;
@@ -89,8 +98,9 @@ public class FilteredCopyListing extends SimpleCopyListing {
             if (pCh == PAT_ESCAPE) {
                 fileRegex.append(pCh);
                 i++;
-                if (i >= len)
+                if (i >= len) {
                     error("An escaped character does not present", filePattern, i);
+                }
                 pCh = filePattern.charAt(i);
             } else if (isJavaRegexSpecialChar(pCh)) {
                 fileRegex.append(PAT_ESCAPE);
@@ -121,8 +131,9 @@ public class FilteredCopyListing extends SimpleCopyListing {
                 error("Incomplete character set range", filePattern, i);
             } else if (pCh == PAT_SET_CLOSE && setOpen > 0) {
                 // End of a character set
-                if (setOpen < 2)
+                if (setOpen < 2) {
                     error("Unexpected end of set", filePattern, i);
+                }
                 setOpen = 0;
             } else if (setOpen > 0) {
                 // Normal character, or the end of a character set range
@@ -143,7 +154,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     private static void error(String s, String pattern, int pos) throws IOException {
         throw new IOException("Illegal file pattern: "
-                +s+ " for glob "+ pattern + " at " + pos);
+                + s + " for glob " + pattern + " at " + pos);
     }
 
     @Override

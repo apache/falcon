@@ -21,36 +21,36 @@ import java.util.regex.Pattern;
 
 public class FeedDataPath {
 
-	public static enum VARS {
-		YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
+    public static enum VARS {
+        YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
 
-		private final Pattern pattern;
-		private final String datePattern;
+        private final Pattern pattern;
+        private final String datePattern;
 
-		private VARS(String datePattern) {
-			pattern = Pattern.compile("\\$\\{" + name() + "\\}");
-			this.datePattern = datePattern;
-		}
+        private VARS(String datePattern) {
+            pattern = Pattern.compile("\\$\\{" + name() + "\\}");
+            this.datePattern = datePattern;
+        }
 
-		public String regex() {
-			return pattern.pattern();
-		}
+        public String regex() {
+            return pattern.pattern();
+        }
 
-		public static VARS from(String str) {
-			for (VARS var : VARS.values()) {
-				if (var.datePattern.equals(str)) {
-					return var;
-				}
-			}
-			return null;
-		}
-	}
+        public static VARS from(String str) {
+            for (VARS var : VARS.values()) {
+                if (var.datePattern.equals(str)) {
+                    return var;
+                }
+            }
+            return null;
+        }
+    }
 
-	public static final Pattern PATTERN = Pattern.compile(VARS.YEAR.regex()
-			+ "|" + VARS.MONTH.regex() + "|" + VARS.DAY.regex() + "|"
-			+ VARS.HOUR.regex() + "|" + VARS.MINUTE.regex());
+    public static final Pattern PATTERN = Pattern.compile(VARS.YEAR.regex()
+            + "|" + VARS.MONTH.regex() + "|" + VARS.DAY.regex() + "|"
+            + VARS.HOUR.regex() + "|" + VARS.MINUTE.regex());
 
-	public static final Pattern DATE_FIELD_PATTERN = Pattern
-			.compile("yyyy|MM|dd|HH|mm");
+    public static final Pattern DATE_FIELD_PATTERN = Pattern
+            .compile("yyyy|MM|dd|HH|mm");
 
 }

@@ -18,7 +18,6 @@
 package org.apache.falcon.converter;
 
 import junit.framework.Assert;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -31,6 +30,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
+import org.apache.hadoop.fs.Path;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -42,96 +42,97 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 
 public class OozieFeedMapperTest {
-	private EmbeddedCluster srcMiniDFS;
-	private EmbeddedCluster trgMiniDFS;
-	ConfigurationStore store = ConfigurationStore.get();
-	Cluster srcCluster;
-	Cluster trgCluster;
-	Feed feed;
+    private EmbeddedCluster srcMiniDFS;
+    private EmbeddedCluster trgMiniDFS;
+    ConfigurationStore store = ConfigurationStore.get();
+    Cluster srcCluster;
+    Cluster trgCluster;
+    Feed feed;
 
-	private static final String SRC_CLUSTER_PATH = "/src-cluster.xml";
-	private static final String TRG_CLUSTER_PATH = "/trg-cluster.xml";
-	private static final String FEED = "/feed.xml";
+    private static final String SRC_CLUSTER_PATH = "/src-cluster.xml";
+    private static final String TRG_CLUSTER_PATH = "/trg-cluster.xml";
+    private static final String FEED = "/feed.xml";
 
-	@BeforeClass
-	public void setUpDFS() throws Exception {
-		srcMiniDFS = EmbeddedCluster.newCluster("cluster1", false);
-		String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
+    @BeforeClass
+    public void setUpDFS() throws Exception {
+        srcMiniDFS = EmbeddedCluster.newCluster("cluster1", false);
+        String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
 
-		trgMiniDFS = EmbeddedCluster.newCluster("cluster2", false);
-		String trgHdfsUrl = trgMiniDFS.getConf().get("fs.default.name");
+        trgMiniDFS = EmbeddedCluster.newCluster("cluster2", false);
+        String trgHdfsUrl = trgMiniDFS.getConf().get("fs.default.name");
 
-		cleanupStore();
+        cleanupStore();
 
-		srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH);
-		ClusterHelper.getInterface(srcCluster, Interfacetype.WRITE).setEndpoint(srcHdfsUrl);
+        srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH);
+        ClusterHelper.getInterface(srcCluster, Interfacetype.WRITE).setEndpoint(srcHdfsUrl);
 
-		trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH);
+        trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH);
         ClusterHelper.getInterface(trgCluster, Interfacetype.WRITE).setEndpoint(trgHdfsUrl);
 
-		feed = (Feed) storeEntity(EntityType.FEED, FEED);
+        feed = (Feed) storeEntity(EntityType.FEED, FEED);
 
-	}
+    }
 
-	protected Entity storeEntity(EntityType type, String path) throws Exception {
-		Unmarshaller unmarshaller = type.getUnmarshaller();
-		Entity entity = (Entity) unmarshaller
-				.unmarshal(OozieFeedMapperTest.class.getResource(path));
-		store.publish(type, entity);
-		return entity;
-	}
+    protected Entity storeEntity(EntityType type, String path) throws Exception {
+        Unmarshaller unmarshaller = type.getUnmarshaller();
+        Entity entity = (Entity) unmarshaller
+                .unmarshal(OozieFeedMapperTest.class.getResource(path));
+        store.publish(type, entity);
+        return entity;
+    }
 
-	protected void cleanupStore() throws FalconException {
-		for (EntityType type : EntityType.values()) {
-			Collection<String> entities = store.getEntities(type);
-			for (String entity : entities)
-				store.remove(type, entity);
-		}
-	}
+    protected void cleanupStore() throws FalconException {
+        for (EntityType type : EntityType.values()) {
+            Collection<String> entities = store.getEntities(type);
+            for (String entity : entities) {
+                store.remove(type, entity);
+            }
+        }
+    }
 
-	@AfterClass
-	public void stopDFS() {
-		srcMiniDFS.shutdown();
-		trgMiniDFS.shutdown();
-	}
+    @AfterClass
+    public void stopDFS() {
+        srcMiniDFS.shutdown();
+        trgMiniDFS.shutdown();
+    }
 
-	@Test
-	public void testReplicationCoords() throws FalconException {
-		OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
-		List<COORDINATORAPP> coords = feedMapper.getCoordinators(trgCluster,
-				new Path("/projects/falcon/"));
-		COORDINATORAPP coord = coords.get(0);
+    @Test
+    public void testReplicationCoords() throws FalconException {
+        OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
+        List<COORDINATORAPP> coords = feedMapper.getCoordinators(trgCluster,
+                new Path("/projects/falcon/"));
+        COORDINATORAPP coord = coords.get(0);
 
-		Assert.assertEquals("${nameNode}/projects/falcon/REPLICATION", coord
-				.getAction().getWorkflow().getAppPath());
-		Assert.assertEquals("FALCON_FEED_REPLICATION_" + feed.getName() + "_"
-				+ srcCluster.getName(), coord.getName());
-		Assert.assertEquals("${coord:minutes(20)}", coord.getFrequency());
-		SYNCDATASET inputDataset = (SYNCDATASET) coord.getDatasets()
-				.getDatasetOrAsyncDataset().get(0);
-		SYNCDATASET outputDataset = (SYNCDATASET) coord.getDatasets()
-				.getDatasetOrAsyncDataset().get(1);
+        Assert.assertEquals("${nameNode}/projects/falcon/REPLICATION", coord
+                .getAction().getWorkflow().getAppPath());
+        Assert.assertEquals("FALCON_FEED_REPLICATION_" + feed.getName() + "_"
+                + srcCluster.getName(), coord.getName());
+        Assert.assertEquals("${coord:minutes(20)}", coord.getFrequency());
+        SYNCDATASET inputDataset = (SYNCDATASET) coord.getDatasets()
+                .getDatasetOrAsyncDataset().get(0);
+        SYNCDATASET outputDataset = (SYNCDATASET) coord.getDatasets()
+                .getDatasetOrAsyncDataset().get(1);
 
-		Assert.assertEquals("${coord:minutes(20)}", inputDataset.getFrequency());
-		Assert.assertEquals("input-dataset", inputDataset.getName());
-		Assert.assertEquals(
-				ClusterHelper.getStorageUrl(srcCluster)
-						+ "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
-				inputDataset.getUriTemplate());
+        Assert.assertEquals("${coord:minutes(20)}", inputDataset.getFrequency());
+        Assert.assertEquals("input-dataset", inputDataset.getName());
+        Assert.assertEquals(
+                ClusterHelper.getStorageUrl(srcCluster)
+                        + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
+                inputDataset.getUriTemplate());
 
-		Assert.assertEquals("${coord:minutes(20)}",
-				outputDataset.getFrequency());
-		Assert.assertEquals("output-dataset", outputDataset.getName());
-		Assert.assertEquals(
-				"${nameNode}"
-						+ "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
-				outputDataset.getUriTemplate());
-        for(Property prop:coord.getAction().getWorkflow().getConfiguration().getProperty()){
-        	if(prop.getName().equals("mapred.job.priority")){
-        		assertEquals(prop.getValue(), "NORMAL");
-        		break;
-        	}
+        Assert.assertEquals("${coord:minutes(20)}",
+                outputDataset.getFrequency());
+        Assert.assertEquals("output-dataset", outputDataset.getName());
+        Assert.assertEquals(
+                "${nameNode}"
+                        + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
+                outputDataset.getUriTemplate());
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            if (prop.getName().equals("mapred.job.priority")) {
+                assertEquals(prop.getValue(), "NORMAL");
+                break;
+            }
         }
 
-	}
+    }
 }

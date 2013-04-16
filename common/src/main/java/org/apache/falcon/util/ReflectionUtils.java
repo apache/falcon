@@ -18,9 +18,9 @@
 
 package org.apache.falcon.util;
 
-import java.lang.reflect.Method;
-
 import org.apache.falcon.FalconException;
+
+import java.lang.reflect.Method;
 
 public final class ReflectionUtils {
 

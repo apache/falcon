@@ -28,11 +28,11 @@ public class Main {
         EmbeddedServer server = new EmbeddedServer(15000,
                 "webapp/target/falcon-webapp-0.2-SNAPSHOT");
         server.start();
-        
+
         BrokerService broker = new BrokerService();
         broker.setUseJmx(false);
-		broker.setDataDirectory("target/");
-		broker.addConnector("vm://localhost");
+        broker.setDataDirectory("target/");
+        broker.addConnector("vm://localhost");
         broker.start();
     }
 }

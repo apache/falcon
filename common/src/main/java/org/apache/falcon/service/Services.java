@@ -18,14 +18,14 @@
 
 package org.apache.falcon.service;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.util.ReflectionUtils;
+import org.apache.log4j.Logger;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import org.apache.falcon.FalconException;
-import org.apache.falcon.util.ReflectionUtils;
-import org.apache.log4j.Logger;
 
 
 public final class Services implements Iterable<FalconService> {
@@ -33,7 +33,8 @@ public final class Services implements Iterable<FalconService> {
 
     private static Services instance = new Services();
 
-    private Services() { }
+    private Services() {
+    }
 
     public static Services get() {
         return instance;
@@ -80,8 +81,8 @@ public final class Services implements Iterable<FalconService> {
         register(service);
         return service;
     }
-    
-    public void reset(){
-    	services.clear();
+
+    public void reset() {
+        services.clear();
     }
 }

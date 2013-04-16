@@ -27,47 +27,47 @@ import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.log4j.Logger;
 
 public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends AbstractRerunHandler<T, DelayedQueue<T>>>
-		implements Runnable {
+        implements Runnable {
 
-	protected static final Logger LOG = Logger
-			.getLogger(AbstractRerunConsumer.class);
+    protected static final Logger LOG = Logger
+            .getLogger(AbstractRerunConsumer.class);
 
-	protected M handler;
+    protected M handler;
 
-	public AbstractRerunConsumer(M handler) {
-		this.handler = handler;
-	}
+    public AbstractRerunConsumer(M handler) {
+        this.handler = handler;
+    }
 
-	@Override
-	public void run() {
-		int attempt = 1;
-		AbstractRerunPolicy policy = new ExpBackoffPolicy();
-		Frequency frequency = new Frequency("minutes(1)");
-		while (true) {
-			try {
-				T message = null;
-				try {
-					message = handler.takeFromQueue();
-					attempt = 1;
-				} catch (FalconException e) {
-					LOG.error("Error while reading message from the queue: ", e);
-					GenericAlert.alertRerunConsumerFailed(
-							"Error while reading message from the queue: ", e);
-					Thread.sleep(policy.getDelay(frequency, attempt));
-					handler.reconnect();
-					attempt++;
-					continue;
-				}
-				String jobStatus = handler.getWfEngine().getWorkflowStatus(
-						message.getClusterName(), message.getWfId());
-				handleRerun(message.getClusterName(), jobStatus, message);
+    @Override
+    public void run() {
+        int attempt = 1;
+        AbstractRerunPolicy policy = new ExpBackoffPolicy();
+        Frequency frequency = new Frequency("minutes(1)");
+        while (true) {
+            try {
+                T message = null;
+                try {
+                    message = handler.takeFromQueue();
+                    attempt = 1;
+                } catch (FalconException e) {
+                    LOG.error("Error while reading message from the queue: ", e);
+                    GenericAlert.alertRerunConsumerFailed(
+                            "Error while reading message from the queue: ", e);
+                    Thread.sleep(policy.getDelay(frequency, attempt));
+                    handler.reconnect();
+                    attempt++;
+                    continue;
+                }
+                String jobStatus = handler.getWfEngine().getWorkflowStatus(
+                        message.getClusterName(), message.getWfId());
+                handleRerun(message.getClusterName(), jobStatus, message);
 
-			} catch (Throwable e) {
-				LOG.error("Error in rerun consumer:", e);
-			}
-		}
+            } catch (Throwable e) {
+                LOG.error("Error in rerun consumer:", e);
+            }
+        }
 
-	}
+    }
 
-	protected abstract void handleRerun(String cluster, String jobStatus, T message);
+    protected abstract void handleRerun(String cluster, String jobStatus, T message);
 }

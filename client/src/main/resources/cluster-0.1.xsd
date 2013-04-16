@@ -16,9 +16,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" 
-            targetNamespace="uri:falcon:cluster:0.1" xmlns="uri:falcon:cluster:0.1"
-            xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified"
+           targetNamespace="uri:falcon:cluster:0.1" xmlns="uri:falcon:cluster:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
     <xs:annotation>
         <xs:documentation>
             Licensed to the Apache Software Foundation (ASF) under one or more
@@ -40,7 +40,7 @@
         </xs:documentation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="org.apache.falcon.entity.v0.cluster" />
+                <jaxb:package name="org.apache.falcon.entity.v0.cluster"/>
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
@@ -57,13 +57,13 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="interfaces" name="interfaces" />
-            <xs:element type="locations" name="locations" />
-            <xs:element type="properties" name="properties" minOccurs="0" />
+            <xs:element type="interfaces" name="interfaces"/>
+            <xs:element type="locations" name="locations"/>
+            <xs:element type="properties" name="properties" minOccurs="0"/>
         </xs:sequence>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="xs:string" name="description" />
-        <xs:attribute type="xs:string" name="colo" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="description"/>
+        <xs:attribute type="xs:string" name="colo" use="required"/>
     </xs:complexType>
     <xs:complexType name="locations">
         <xs:annotation>
@@ -71,7 +71,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="location" name="location" maxOccurs="unbounded" minOccurs="1" />
+            <xs:element type="location" name="location" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="property">
@@ -84,8 +84,8 @@
                 should be defined here.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="xs:string" name="name" use="required" />
-        <xs:attribute type="xs:string" name="value" use="required" />
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
     </xs:complexType>
     <xs:complexType name="interface">
         <xs:annotation>
@@ -99,9 +99,9 @@
                 version: The current runtime version of each interface.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="interfacetype" name="type" use="required" />
-        <xs:attribute type="xs:string" name="endpoint" use="required" />
-        <xs:attribute type="xs:string" name="version" use="required" />
+        <xs:attribute type="interfacetype" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="endpoint" use="required"/>
+        <xs:attribute type="xs:string" name="version" use="required"/>
     </xs:complexType>
     <xs:complexType name="properties">
         <xs:annotation>
@@ -110,7 +110,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0" />
+            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="location">
@@ -126,8 +126,8 @@
                 locations.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="xs:string" name="path" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="path" use="required"/>
     </xs:complexType>
     <xs:complexType name="interfaces">
         <xs:annotation>
@@ -136,7 +136,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="interface" name="interface" maxOccurs="unbounded" minOccurs="3" />
+            <xs:element type="interface" name="interface" maxOccurs="unbounded" minOccurs="3"/>
         </xs:sequence>
     </xs:complexType>
     <xs:simpleType name="interfacetype">
@@ -158,17 +158,17 @@
             </xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:enumeration value="readonly" />
-            <xs:enumeration value="write" />
-            <xs:enumeration value="execute" />
-            <xs:enumeration value="workflow" />
-            <xs:enumeration value="messaging" />
-            <xs:enumeration value="registry" />
+            <xs:enumeration value="readonly"/>
+            <xs:enumeration value="write"/>
+            <xs:enumeration value="execute"/>
+            <xs:enumeration value="workflow"/>
+            <xs:enumeration value="messaging"/>
+            <xs:enumeration value="registry"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="IDENTIFIER">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})" />
+            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

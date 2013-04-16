@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 
 public class CurrentUserTest {
 
-    @Test(threadPoolSize = 10, invocationCount = 10,  timeOut = 10000)
+    @Test(threadPoolSize = 10, invocationCount = 10, timeOut = 10000)
     public void testGetUser() throws Exception {
         String id = Long.toString(System.nanoTime());
         CurrentUser.authenticate(id);

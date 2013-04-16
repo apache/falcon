@@ -17,48 +17,47 @@
  */
 package org.apache.falcon.cleanup;
 
-import java.util.Collection;
-
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.util.DeploymentUtil;
+import org.apache.hadoop.fs.Path;
+
+import java.util.Collection;
 
 public class FeedCleanupHandler extends AbstractCleanupHandler {
 
-	@Override
-	public void cleanup() throws FalconException {
-		Collection<String> feeds = STORE.getEntities(EntityType.FEED);
-		for (String feedName : feeds) {
-			Feed feed;
-			feed = STORE.get(EntityType.FEED, feedName);
-			long retention = getRetention(feed, feed.getFrequency()
-					.getTimeUnit());
-			for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed
-					.getClusters().getClusters()) {
-				Cluster currentCluster = STORE.get(EntityType.CLUSTER,
-						cluster.getName());
-				if(currentCluster.getColo().equals(getCurrentColo())){
-					LOG.info("Cleaning up logs for process:" + feedName
-							+ " in  cluster: " + cluster.getName() + " with retention: "+retention);
-					delete(currentCluster, feed, retention);
-				}else{
-					LOG.info("Ignoring cleanup for process:" + feedName
-							+ " in  cluster: " + cluster.getName()+ " as this does not belong to current colo" );
-				}
-			}
+    @Override
+    public void cleanup() throws FalconException {
+        Collection<String> feeds = STORE.getEntities(EntityType.FEED);
+        for (String feedName : feeds) {
+            Feed feed;
+            feed = STORE.get(EntityType.FEED, feedName);
+            long retention = getRetention(feed, feed.getFrequency()
+                    .getTimeUnit());
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed
+                    .getClusters().getClusters()) {
+                Cluster currentCluster = STORE.get(EntityType.CLUSTER,
+                        cluster.getName());
+                if (currentCluster.getColo().equals(getCurrentColo())) {
+                    LOG.info("Cleaning up logs for process:" + feedName
+                            + " in  cluster: " + cluster.getName() + " with retention: " + retention);
+                    delete(currentCluster, feed, retention);
+                } else {
+                    LOG.info("Ignoring cleanup for process:" + feedName
+                            + " in  cluster: " + cluster.getName() + " as this does not belong to current colo");
+                }
+            }
 
-		}
-	}
+        }
+    }
 
-	@Override
-	protected Path getLogPath(Entity entity, String stagingPath) {
-		Path logPath = new Path(stagingPath, "falcon/workflows/feed/"
-				+ entity.getName() + "/logs/job-*/*/*");
-		return logPath;
-	}
+    @Override
+    protected Path getLogPath(Entity entity, String stagingPath) {
+        Path logPath = new Path(stagingPath, "falcon/workflows/feed/"
+                + entity.getName() + "/logs/job-*/*/*");
+        return logPath;
+    }
 
 }

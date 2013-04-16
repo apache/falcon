@@ -18,21 +18,22 @@
 
 package org.apache.falcon.entity.v0;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.Pair;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.Pair;
-
 public class EntityIntegrityChecker {
 
     public static Pair<String, EntityType>[] referencedBy(Entity entity) throws FalconException {
         Set<Entity> deps = EntityGraph.get().getDependents(entity);
-        if(deps == null)
+        if (deps == null) {
             return null;
-        
+        }
+
         switch (entity.getEntityType()) {
             case CLUSTER:
                 return filter(deps, EntityType.FEED, EntityType.PROCESS);
@@ -46,12 +47,14 @@ public class EntityIntegrityChecker {
     }
 
     @SuppressWarnings("unchecked")
-    private static Pair<String, EntityType>[] filter(Set<Entity> deps, EntityType ... types) {
-        List<Pair<String, EntityType>> filteredSet = new ArrayList<Pair<String,EntityType>>();
+    private static Pair<String, EntityType>[] filter(Set<Entity> deps, EntityType... types) {
+        List<Pair<String, EntityType>> filteredSet = new ArrayList<Pair<String, EntityType>>();
         List<EntityType> validTypes = Arrays.asList(types);
-        for(Entity dep:deps)
-            if(validTypes.contains(dep.getEntityType()))
+        for (Entity dep : deps) {
+            if (validTypes.contains(dep.getEntityType())) {
                 filteredSet.add(Pair.of(dep.getName(), dep.getEntityType()));
+            }
+        }
         return filteredSet.toArray(new Pair[0]);
     }
 }

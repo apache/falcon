@@ -18,13 +18,6 @@
 
 package org.apache.falcon.workflow;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.converter.AbstractOozieEntityMapper;
@@ -36,29 +29,37 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.fs.Path;
+
+import java.util.*;
 
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
     public Map<String, Properties> newWorkflowSchedule(Feed feed, List<String> clusters) throws FalconException {
         Map<String, Properties> propertiesMap = new HashMap<String, Properties>();
-        
-        for (String clusterName: clusters) {
+
+        for (String clusterName : clusters) {
             org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-            Properties properties = newWorkflowSchedule(feed, feedCluster.getValidity().getStart(), clusterName, 
+            Properties properties = newWorkflowSchedule(feed, feedCluster.getValidity().getStart(), clusterName,
                     CurrentUser.getUser());
-            if (properties == null) continue;
+            if (properties == null) {
+                continue;
+            }
             propertiesMap.put(clusterName, properties);
         }
         return propertiesMap;
     }
 
     @Override
-    public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName, String user) throws FalconException {
+    public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName, String user)
+            throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
         if (!startDate.before(feedCluster.getValidity().getEnd()))
-            // start time >= end time
+        // start time >= end time
+        {
             return null;
+        }
 
         Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
         Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
@@ -66,7 +67,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         EntityUtil.setStartDate(feedClone, clusterName, startDate);
 
         AbstractOozieEntityMapper<Feed> mapper = new OozieFeedMapper(feedClone);
-        if(!mapper.map(cluster, bundlePath)){
+        if (!mapper.map(cluster, bundlePath)) {
             return null;
         }
         return createAppProperties(clusterName, bundlePath, user);
@@ -79,10 +80,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 feed.getFrequency(), feed.getTimezone(), now);
     }
 
-	@Override
-	public String[] getWorkflowNames(Feed entity) {
-		return new String[] {
-				EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString(),
-				EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString() };
-	}
+    @Override
+    public String[] getWorkflowNames(Feed entity) {
+        return new String[]{
+                EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString(),
+                EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString()};
+    }
 }

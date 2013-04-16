@@ -18,25 +18,9 @@
 
 package org.apache.falcon.resource.channel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Properties;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status.Family;
-import javax.ws.rs.core.UriBuilder;
-
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
@@ -44,9 +28,15 @@ import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.log4j.Logger;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
+import javax.ws.rs.core.UriBuilder;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Properties;
 
 public class HTTPChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
@@ -121,8 +111,9 @@ public class HTTPChannel extends AbstractChannel {
     }
 
     private boolean isPost(String httpMethod) {
-        if(httpMethod.equals("POST") || httpMethod.equals("PUT"))
+        if (httpMethod.equals("POST") || httpMethod.equals("PUT")) {
             return true;
+        }
         return false;
     }
 
@@ -181,13 +172,19 @@ public class HTTPChannel extends AbstractChannel {
 
     private String getHttpMethod(Method method) {
         PUT put = method.getAnnotation(PUT.class);
-        if (put != null) return HttpMethod.PUT;
+        if (put != null) {
+            return HttpMethod.PUT;
+        }
 
         POST post = method.getAnnotation(POST.class);
-        if (post != null) return HttpMethod.POST;
+        if (post != null) {
+            return HttpMethod.POST;
+        }
 
         DELETE delete = method.getAnnotation(DELETE.class);
-        if (delete != null) return HttpMethod.DELETE;
+        if (delete != null) {
+            return HttpMethod.DELETE;
+        }
 
         return HttpMethod.GET;
     }

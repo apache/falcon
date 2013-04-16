@@ -18,14 +18,7 @@
 
 package org.apache.falcon.converter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
@@ -43,18 +36,13 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
-import org.apache.falcon.oozie.coordinator.CONTROLS;
-import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
-import org.apache.falcon.oozie.coordinator.DATAIN;
-import org.apache.falcon.oozie.coordinator.DATAOUT;
-import org.apache.falcon.oozie.coordinator.DATASETS;
-import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
-import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
-import org.apache.falcon.oozie.coordinator.SYNCDATASET;
-import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.oozie.coordinator.*;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.SUBWORKFLOW;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.hadoop.fs.Path;
+
+import java.util.*;
 
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
@@ -69,7 +57,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     protected List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws FalconException {
         List<COORDINATORAPP> apps = new ArrayList<COORDINATORAPP>();
         apps.add(createDefaultCoordinator(cluster, bundlePath));
-        
+
         return apps;
     }
 
@@ -89,27 +77,26 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     /**
      * Creates default oozie coordinator
-     * 
-     * @param cluster
-     *            - Cluster for which the coordiantor app need to be created
-     * @param bundlePath
-     *            - bundle path
+     *
+     * @param cluster    - Cluster for which the coordiantor app need to be created
+     * @param bundlePath - bundle path
      * @return COORDINATORAPP
-     * @throws FalconException
-     *             on Error
+     * @throws FalconException on Error
      */
     public COORDINATORAPP createDefaultCoordinator(Cluster cluster, Path bundlePath) throws FalconException {
         Process process = getEntity();
-        if (process == null)
+        if (process == null) {
             return null;
+        }
 
         COORDINATORAPP coord = new COORDINATORAPP();
-        String coordName = EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString();
+        String coordName = EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString();
         Path coordPath = getCoordPath(bundlePath, coordName);
 
         // coord attributes
         coord.setName(coordName);
-        org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, cluster.getName());
+        org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process,
+                cluster.getName());
         coord.setStart(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()));
         coord.setEnd(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()));
         coord.setTimezone(process.getTimezone().getID());
@@ -129,7 +116,9 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                     evaluate(process.getTimeout().toString(), Long.class);
         } else {
             timeout_ms = frequency_ms * 6;
-            if (timeout_ms < THIRTY_MINUTES) timeout_ms = THIRTY_MINUTES;
+            if (timeout_ms < THIRTY_MINUTES) {
+                timeout_ms = THIRTY_MINUTES;
+            }
         }
         controls.setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
         if (timeout_ms / frequency_ms * 2 > 0) {
@@ -143,17 +132,20 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<String> inputFeeds = new ArrayList<String>();
         List<String> inputPaths = new ArrayList<String>();
         // inputs
-        if (process.getInputs() != null) {            
+        if (process.getInputs() != null) {
             for (Input input : process.getInputs().getInputs()) {
-                if(!input.isOptional()) {
-                    if (coord.getDatasets() == null)
+                if (!input.isOptional()) {
+                    if (coord.getDatasets() == null) {
                         coord.setDatasets(new DATASETS());
-                    if (coord.getInputEvents() == null)
+                    }
+                    if (coord.getInputEvents() == null) {
                         coord.setInputEvents(new INPUTEVENTS());
+                    }
 
-                    SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName(), LocationType.DATA);
+                    SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName(),
+                            LocationType.DATA);
                     coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
-    
+
                     DATAIN datain = createDataIn(input);
                     coord.getInputEvents().getDataIn().add(datain);
                 }
@@ -172,13 +164,15 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         List<String> outputFeeds = new ArrayList<String>();
         List<String> outputPaths = new ArrayList<String>();
         if (process.getOutputs() != null) {
-            if (coord.getDatasets() == null)
+            if (coord.getDatasets() == null) {
                 coord.setDatasets(new DATASETS());
-            if (coord.getOutputEvents() == null)
+            }
+            if (coord.getOutputEvents() == null) {
                 coord.setOutputEvents(new OUTPUTEVENTS());
-            
+            }
+
             for (Output output : process.getOutputs().getOutputs()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName(),LocationType.DATA);
+                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName(), LocationType.DATA);
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAOUT dataout = createDataOut(output);
@@ -188,14 +182,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 props.put(output.getName(), outputExpr);
                 outputFeeds.add(output.getName());
                 outputPaths.add(outputExpr);
-                
-				// stats and meta paths
-				createOutputEvent(output.getFeed(),output.getName(), cluster, "stats",
-						LocationType.STATS, coord, props, output.getInstance());
-				createOutputEvent(output.getFeed(),output.getName(), cluster, "meta",
-						LocationType.META, coord, props,output.getInstance());
-				createOutputEvent(output.getFeed(),output.getName(), cluster, "tmp",
-						LocationType.TMP, coord, props,output.getInstance());
+
+                // stats and meta paths
+                createOutputEvent(output.getFeed(), output.getName(), cluster, "stats",
+                        LocationType.STATS, coord, props, output.getInstance());
+                createOutputEvent(output.getFeed(), output.getName(), cluster, "meta",
+                        LocationType.META, coord, props, output.getInstance());
+                createOutputEvent(output.getFeed(), output.getName(), cluster, "tmp",
+                        LocationType.TMP, coord, props, output.getInstance());
 
             }
         }
@@ -235,50 +229,53 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return datain;
     }
 
-	private void createOutputEvent(String feed, String name, Cluster cluster,
-			String type, LocationType locType, COORDINATORAPP coord,
-			Map<String, String> props, String instance)
-			throws FalconException {
-		SYNCDATASET dataset = createDataSet(feed, cluster,name+type,
-				locType);
-		coord.getDatasets().getDatasetOrAsyncDataset().add(dataset);
-		DATAOUT dataout = new DATAOUT();
-        if (coord.getOutputEvents() == null)
+    private void createOutputEvent(String feed, String name, Cluster cluster,
+                                   String type, LocationType locType, COORDINATORAPP coord,
+                                   Map<String, String> props, String instance)
+            throws FalconException {
+        SYNCDATASET dataset = createDataSet(feed, cluster, name + type,
+                locType);
+        coord.getDatasets().getDatasetOrAsyncDataset().add(dataset);
+        DATAOUT dataout = new DATAOUT();
+        if (coord.getOutputEvents() == null) {
             coord.setOutputEvents(new OUTPUTEVENTS());
-		dataout.setName(name+type);
-		dataout.setDataset(name+type);
-		dataout.setInstance(getELExpression(instance));
-		coord.getOutputEvents().getDataOut().add(dataout);
-        String outputExpr = "${coord:dataOut('" + name+type+ "')}";
-        props.put(name+"."+type, outputExpr);
-	}
-	
+        }
+        dataout.setName(name + type);
+        dataout.setDataset(name + type);
+        dataout.setInstance(getELExpression(instance));
+        coord.getOutputEvents().getDataOut().add(dataout);
+        String outputExpr = "${coord:dataOut('" + name + type + "')}";
+        props.put(name + "." + type, outputExpr);
+    }
+
     private String join(Iterator<String> itr, char sep) {
         String joinedStr = StringUtils.join(itr, sep);
-        if(joinedStr.isEmpty())
+        if (joinedStr.isEmpty()) {
             joinedStr = "null";
+        }
         return joinedStr;
     }
 
-    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName, LocationType locationType) throws FalconException {
+    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName, LocationType locationType)
+            throws FalconException {
         Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
-		String locPath = FeedHelper.getLocation(feed, locationType,
-				cluster.getName()).getPath();
-		syncdataset.setUriTemplate(new Path(locPath).toUri().getScheme()!=null?locPath:"${nameNode}"
-				+ locPath);
+        String locPath = FeedHelper.getLocation(feed, locationType,
+                cluster.getName()).getPath();
+        syncdataset.setUriTemplate(new Path(locPath).toUri().getScheme() != null ? locPath : "${nameNode}"
+                + locPath);
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
         syncdataset.setInitialInstance(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
         syncdataset.setTimezone(feed.getTimezone().getID());
-		if (feed.getAvailabilityFlag() == null) {
-			syncdataset.setDoneFlag("");
-		} else {
-			syncdataset.setDoneFlag(feed.getAvailabilityFlag());
-		}
+        if (feed.getAvailabilityFlag() == null) {
+            syncdataset.setDoneFlag("");
+        } else {
+            syncdataset.setDoneFlag(feed.getAvailabilityFlag());
+        }
         return syncdataset;
     }
 
@@ -294,8 +291,9 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Process process = getEntity();
         Map<String, String> props = new HashMap<String, String>();
         if (process.getProperties() != null) {
-            for (Property prop : process.getProperties().getProperties())
+            for (Property prop : process.getProperties().getProperties()) {
                 props.put(prop.getName(), prop.getValue());
+            }
         }
         return props;
     }

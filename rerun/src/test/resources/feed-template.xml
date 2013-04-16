@@ -17,27 +17,28 @@
   -->
 
 <feed description="clicks log" name="raw-logs" xmlns="uri:falcon:feed:0.1"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        >
 
-	<frequency>minutes(20)</frequency>
+    <frequency>minutes(20)</frequency>
     <timezone>UTC</timezone>
-    
-	<late-arrival cut-off="minutes(6)" />
-	<clusters>
-		<cluster name="corp" type="source">
-			<validity start="2012-05-01T00:00Z" end="2012-12-31T23:59Z"/>
-			<retention limit="months(36)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
-		</cluster>
-	</clusters>
 
-	<locations>
-		<location type="data"
-			path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
-		<location type="stats" path="/projects/falcon/clicksStats" />
-		<location type="meta" path="/projects/falcon/clicksMetaData" />
-	</locations>
+    <late-arrival cut-off="minutes(6)"/>
+    <clusters>
+        <cluster name="corp" type="source">
+            <validity start="2012-05-01T00:00Z" end="2012-12-31T23:59Z"/>
+            <retention limit="months(36)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+        </cluster>
+    </clusters>
 
-	<ACL owner="testuser" group="group" permission="0x755" />
-	<schema location="/schema/clicks" provider="protobuf" />
+    <locations>
+        <location type="data"
+                  path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
+    </locations>
+
+    <ACL owner="testuser" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
 
 </feed>

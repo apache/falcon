@@ -12,18 +12,18 @@
 	language governing permissions and limitations under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.apache.falcon</groupId>
-		<artifactId>falcon-main</artifactId>
-		<version>0.2-SNAPSHOT</version>
-	</parent>
-	<artifactId>falcon-process</artifactId>
-	<description>Apache Falcon Process Module</description>
-	<name>Apache Falcon Process</name>
-	<packaging>jar</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
+        <version>0.2-SNAPSHOT</version>
+    </parent>
+    <artifactId>falcon-process</artifactId>
+    <description>Apache Falcon Process Module</description>
+    <name>Apache Falcon Process</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -32,53 +32,53 @@
         </dependency>
 
         <dependency>
-			<groupId>org.apache.falcon</groupId>
-			<artifactId>falcon-oozie-adaptor</artifactId>
-		</dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-oozie-adaptor</artifactId>
+        </dependency>
 
         <dependency>
-			<groupId>org.apache.falcon</groupId>
-			<artifactId>falcon-common</artifactId>
-		</dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-common</artifactId>
+        </dependency>
 
         <dependency>
-			<groupId>org.apache.falcon</groupId>
-			<artifactId>falcon-feed</artifactId>
-		</dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-feed</artifactId>
+        </dependency>
 
         <dependency>
-			<groupId>org.apache.falcon</groupId>
-			<artifactId>falcon-test-util</artifactId>
-		</dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-test-util</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.falcon</groupId>
-			<artifactId>falcon-messaging</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-messaging</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-test</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-test</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jms</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>
-	</dependencies>
+    </dependencies>
 </project>

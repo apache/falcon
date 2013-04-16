@@ -18,8 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ExternalId;
@@ -34,9 +32,12 @@ import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-@Test(enabled=false)
+import javax.ws.rs.core.MediaType;
+
+@Test(enabled = false)
 public class ProcessInstanceManagerTest extends AbstractTestBase {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
+
     protected void schedule() throws Exception {
         scheduleProcess();
         waitForProcessWFtoStart();
@@ -113,7 +114,7 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
 
     public void testResumesInstances() throws Exception {
         testSuspendInstances();
-        
+
         InstancesResult response = this.service.path("api/instance/resume/process/" + processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
@@ -124,16 +125,18 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
 
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);
     }
-    
+
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
         ExternalId extId = new ExternalId(processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
-        OozieClient ozClient = OozieClientFactory.get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
+        OozieClient ozClient = OozieClientFactory.get(
+                (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;
         for (int i = 0; i < 15; i++) {
             jobInfo = ozClient.getJobInfo(jobId);
-            if (jobInfo.getStatus() == status)
+            if (jobInfo.getStatus() == status) {
                 break;
+            }
             System.out.println("Waiting for workflow job " + jobId + " status " + status);
             Thread.sleep((i + 1) * 1000);
         }

@@ -17,28 +17,28 @@
  */
 package org.apache.falcon.rerun.policy;
 
-import java.util.Date;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.expression.ExpressionHelper;
 
+import java.util.Date;
+
 public abstract class AbstractRerunPolicy {
 
-	public long getDurationInMilliSec(Frequency frequency)
-			throws FalconException {
-		ExpressionHelper helper = ExpressionHelper.get();
-		return helper.evaluate(frequency.toString(), Long.class);
+    public long getDurationInMilliSec(Frequency frequency)
+            throws FalconException {
+        ExpressionHelper helper = ExpressionHelper.get();
+        return helper.evaluate(frequency.toString(), Long.class);
 
-	}
+    }
 
-	public static Date addTime(Date date, int milliSecondsToAdd) {
-		return new Date(date.getTime() + milliSecondsToAdd);
-	}
+    public static Date addTime(Date date, int milliSecondsToAdd) {
+        return new Date(date.getTime() + milliSecondsToAdd);
+    }
 
-	public abstract long getDelay(Frequency delay, int eventNumber)
-			throws FalconException;
+    public abstract long getDelay(Frequency delay, int eventNumber)
+            throws FalconException;
 
-	public abstract long getDelay(Frequency delay, Date nominaltime,
-			Date cutOffTime) throws FalconException;
+    public abstract long getDelay(Frequency delay, Date nominaltime,
+                                  Date cutOffTime) throws FalconException;
 }

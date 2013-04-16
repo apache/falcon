@@ -19,24 +19,32 @@
 package org.apache.falcon.util;
 
 import junit.framework.Assert;
-
 import org.testng.annotations.Test;
 
 public class ResourcesReflectionUtilTest {
-	
-	@Test
-	public void testMonitoredResources(){
-		Assert.assertEquals("submit",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submit"));
-		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
-		
-		Assert.assertEquals("submitAndSchedule",ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submitAndSchedule"));
-		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
-		
-		Assert.assertEquals("kill-instance",ResourcesReflectionUtil.getResourceMonitorName("InstanceManagerProxy.killInstance"));
-		Assert.assertEquals("entityType", ResourcesReflectionUtil.getResourceDimensionsName("InstanceManagerProxy.killInstance").get(1));
-		
-		Assert.assertEquals("wf-instance-failed",ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.instrumentFailedInstance"));
-		Assert.assertEquals(new Integer(10), ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.instrumentFailedInstance"));
-		Assert.assertEquals(null, ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.alertLateRerunFailed"));
-	}
+
+    @Test
+    public void testMonitoredResources() {
+        Assert.assertEquals("submit",
+                ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submit"));
+        Assert.assertEquals("entityType",
+                ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
+
+        Assert.assertEquals("submitAndSchedule",
+                ResourcesReflectionUtil.getResourceMonitorName("SchedulableEntityManagerProxy.submitAndSchedule"));
+        Assert.assertEquals("entityType",
+                ResourcesReflectionUtil.getResourceDimensionsName("SchedulableEntityManagerProxy.submit").get(1));
+
+        Assert.assertEquals("kill-instance",
+                ResourcesReflectionUtil.getResourceMonitorName("InstanceManagerProxy.killInstance"));
+        Assert.assertEquals("entityType",
+                ResourcesReflectionUtil.getResourceDimensionsName("InstanceManagerProxy.killInstance").get(1));
+
+        Assert.assertEquals("wf-instance-failed",
+                ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.instrumentFailedInstance"));
+        Assert.assertEquals(new Integer(10),
+                ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.instrumentFailedInstance"));
+        Assert.assertEquals(null,
+                ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.alertLateRerunFailed"));
+    }
 }

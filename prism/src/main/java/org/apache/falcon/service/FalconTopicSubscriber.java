@@ -35,99 +35,99 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
 public class FalconTopicSubscriber implements MessageListener, ExceptionListener {
-	private static final Logger LOG = Logger
-			.getLogger(FalconTopicSubscriber.class);
+    private static final Logger LOG = Logger
+            .getLogger(FalconTopicSubscriber.class);
 
-	private TopicSubscriber subscriber;
-	private String implementation;
-	private String userName;
-	private String password;
-	private String url;
-	private String topicName;
-	private Connection connection;
+    private TopicSubscriber subscriber;
+    private String implementation;
+    private String userName;
+    private String password;
+    private String url;
+    private String topicName;
+    private Connection connection;
 
-	private AbstractRerunHandler retryHandler = RerunHandlerFactory
-			.getRerunHandler(RerunType.RETRY);
-	private AbstractRerunHandler latedataHandler = RerunHandlerFactory
-			.getRerunHandler(RerunType.LATE);
+    private AbstractRerunHandler retryHandler = RerunHandlerFactory
+            .getRerunHandler(RerunType.RETRY);
+    private AbstractRerunHandler latedataHandler = RerunHandlerFactory
+            .getRerunHandler(RerunType.LATE);
 
-	public FalconTopicSubscriber(String implementation, String userName,
-			String password, String url, String topicName) {
-		this.implementation = implementation;
-		this.userName = userName;
-		this.password = password;
-		this.url = url;
-		this.topicName = topicName;
-	}
+    public FalconTopicSubscriber(String implementation, String userName,
+                                 String password, String url, String topicName) {
+        this.implementation = implementation;
+        this.userName = userName;
+        this.password = password;
+        this.url = url;
+        this.topicName = topicName;
+    }
 
-	public void startSubscriber() throws FalconException {
-		try {
-			connection = createAndGetConnection(implementation, userName,
-					password, url);
-			TopicSession session = (TopicSession) connection.createSession(
-					false, Session.AUTO_ACKNOWLEDGE);
-			Topic destination = session.createTopic(topicName);
-			subscriber = session.createSubscriber(destination);
-			subscriber.setMessageListener(this);
-			connection.setExceptionListener(this);
-			connection.start();
-		} catch (Exception e) {
-			LOG.error("Error starting subscriber of topic: " + this.toString(),
-					e);
-			throw new FalconException(e);
-		}
-	}
+    public void startSubscriber() throws FalconException {
+        try {
+            connection = createAndGetConnection(implementation, userName,
+                    password, url);
+            TopicSession session = (TopicSession) connection.createSession(
+                    false, Session.AUTO_ACKNOWLEDGE);
+            Topic destination = session.createTopic(topicName);
+            subscriber = session.createSubscriber(destination);
+            subscriber.setMessageListener(this);
+            connection.setExceptionListener(this);
+            connection.start();
+        } catch (Exception e) {
+            LOG.error("Error starting subscriber of topic: " + this.toString(),
+                    e);
+            throw new FalconException(e);
+        }
+    }
 
-	@Override
-	public void onMessage(Message message) {
-		MapMessage mapMessage = (MapMessage) message;
-		try {
-			debug(mapMessage);
-			String cluster = mapMessage.getString(ARG.cluster.getArgName());
-			String entityName = mapMessage.getString(ARG.entityName
-					.getArgName());
-			String entityType = mapMessage.getString(ARG.entityType
-					.getArgName());
-			String workflowId = mapMessage.getString(ARG.workflowId
-					.getArgName());
-			String runId = mapMessage.getString(ARG.runId.getArgName());
-			String nominalTime = mapMessage.getString(ARG.nominalTime
-					.getArgName());
-			String status = mapMessage.getString(ARG.status.getArgName());
-			String operation = mapMessage.getString(ARG.operation.getArgName());
+    @Override
+    public void onMessage(Message message) {
+        MapMessage mapMessage = (MapMessage) message;
+        try {
+            debug(mapMessage);
+            String cluster = mapMessage.getString(ARG.cluster.getArgName());
+            String entityName = mapMessage.getString(ARG.entityName
+                    .getArgName());
+            String entityType = mapMessage.getString(ARG.entityType
+                    .getArgName());
+            String workflowId = mapMessage.getString(ARG.workflowId
+                    .getArgName());
+            String runId = mapMessage.getString(ARG.runId.getArgName());
+            String nominalTime = mapMessage.getString(ARG.nominalTime
+                    .getArgName());
+            String status = mapMessage.getString(ARG.status.getArgName());
+            String operation = mapMessage.getString(ARG.operation.getArgName());
 
-			AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-			InstancesResult result = wfEngine
-					.getJobDetails(cluster, workflowId);
+            AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+            InstancesResult result = wfEngine
+                    .getJobDetails(cluster, workflowId);
             Date startTime = result.getInstances()[0].startTime;
             Date endTime = result.getInstances()[0].endTime;
             Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
-			if (status.equalsIgnoreCase("FAILED")) {
-				retryHandler.handleRerun(cluster, entityType, entityName,
-						nominalTime, runId, workflowId,
-						System.currentTimeMillis());
-				GenericAlert.instrumentFailedInstance(cluster, entityType,
-						entityName, nominalTime, workflowId, runId, operation,
+            if (status.equalsIgnoreCase("FAILED")) {
+                retryHandler.handleRerun(cluster, entityType, entityName,
+                        nominalTime, runId, workflowId,
+                        System.currentTimeMillis());
+                GenericAlert.instrumentFailedInstance(cluster, entityType,
+                        entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         "", "", duration);
-			} else if (status.equalsIgnoreCase("SUCCEEDED")) {
-				latedataHandler.handleRerun(cluster, entityType, entityName,
-						nominalTime, runId, workflowId,
-						System.currentTimeMillis());
-				GenericAlert.instrumentSucceededInstance(cluster, entityType,
+            } else if (status.equalsIgnoreCase("SUCCEEDED")) {
+                latedataHandler.handleRerun(cluster, entityType, entityName,
+                        nominalTime, runId, workflowId,
+                        System.currentTimeMillis());
+                GenericAlert.instrumentSucceededInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         duration);
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }
 
-		} catch (Exception ignore) {
-			LOG.info(
-					"Error in onMessage for subscriber of topic: "
-							+ this.toString(), ignore);
-		}
+        } catch (Exception ignore) {
+            LOG.info(
+                    "Error in onMessage for subscriber of topic: "
+                            + this.toString(), ignore);
+        }
 
-	}
+    }
 
     private void notifySLAService(String cluster, String entityName,
                                   String entityType, String nominalTime, Long duration) {
@@ -157,45 +157,49 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
         }
     }
 
-	@Override
-	public void onException(JMSException ignore) {
-		LOG.info(
-				"Error in onException for subscriber of topic: "
-						+ this.toString(), ignore);
-	}
+    @Override
+    public void onException(JMSException ignore) {
+        LOG.info(
+                "Error in onException for subscriber of topic: "
+                        + this.toString(), ignore);
+    }
 
-	public void closeSubscriber() throws FalconException {
-		try {
-			LOG.info("Closing subscriber on topic : " + this.topicName);
-			subscriber.close();
-			connection.close();
-		} catch (JMSException e) {
-			LOG.error("Error closing subscriber of topic: " + this.toString(),
-					e);
-			throw new FalconException(e);
-		}
-	}
+    public void closeSubscriber() throws FalconException {
+        try {
+            LOG.info("Closing subscriber on topic : " + this.topicName);
+            subscriber.close();
+            connection.close();
+        } catch (JMSException e) {
+            LOG.error("Error closing subscriber of topic: " + this.toString(),
+                    e);
+            throw new FalconException(e);
+        }
+    }
 
-	private static Connection createAndGetConnection(String implementation,
-			String userName, String password, String url) throws JMSException,
-			ClassNotFoundException, IllegalArgumentException,
-			SecurityException, InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException {
+    private static Connection createAndGetConnection(String implementation,
+                                                     String userName, String password, String url) throws JMSException,
+                                                                                                          ClassNotFoundException,
+                                                                                                          IllegalArgumentException,
+                                                                                                          SecurityException,
+                                                                                                          InstantiationException,
+                                                                                                          IllegalAccessException,
+                                                                                                          InvocationTargetException,
+                                                                                                          NoSuchMethodException {
 
-		@SuppressWarnings("unchecked")
-		Class<ConnectionFactory> clazz = (Class<ConnectionFactory>) FalconTopicSubscriber.class
-				.getClassLoader().loadClass(implementation);
+        @SuppressWarnings("unchecked")
+        Class<ConnectionFactory> clazz = (Class<ConnectionFactory>) FalconTopicSubscriber.class
+                .getClassLoader().loadClass(implementation);
 
-		ConnectionFactory connectionFactory = clazz.getConstructor(
-				String.class, String.class, String.class).newInstance(userName,
-				password, url);
+        ConnectionFactory connectionFactory = clazz.getConstructor(
+                String.class, String.class, String.class).newInstance(userName,
+                password, url);
 
         return connectionFactory.createConnection();
-	}
+    }
 
-	@Override
-	public String toString() {
-		return topicName;
-	}
+    @Override
+    public String toString() {
+        return topicName;
+    }
 
 }

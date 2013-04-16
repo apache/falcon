@@ -40,7 +40,7 @@ public class FalconLoginModule implements LoginModule {
     }
 
     private <T extends Principal> T getCanonicalUser(Class<T> cls) {
-        for(T user: subject.getPrincipals(cls)) {
+        for (T user : subject.getPrincipals(cls)) {
             return user;
         }
         return null;

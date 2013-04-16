@@ -18,12 +18,6 @@
 
 package org.apache.falcon.entity.v0;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -33,6 +27,12 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EntityGraph implements ConfigurationChangeListener {
 
@@ -76,8 +76,9 @@ public class EntityGraph implements ConfigurationChangeListener {
                 nodeEdges = getEdgesFor((Feed) entity);
                 break;
         }
-        if (nodeEdges == null)
+        if (nodeEdges == null) {
             return;
+        }
         LOG.trace("Adding edges for " + entity.getName() + ": " + nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
@@ -101,8 +102,9 @@ public class EntityGraph implements ConfigurationChangeListener {
                 nodeEdges = getEdgesFor((Feed) entity);
                 break;
         }
-        if (nodeEdges == null)
+        if (nodeEdges == null) {
             return;
+        }
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
@@ -154,7 +156,7 @@ public class EntityGraph implements ConfigurationChangeListener {
             nodeEdges.put(clusterNode, new HashSet<Node>());
             nodeEdges.get(clusterNode).add(processNode);
         }
-        
+
         return nodeEdges;
     }
 
@@ -188,19 +190,23 @@ public class EntityGraph implements ConfigurationChangeListener {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
 
             Node node = (Node) o;
 
             boolean nameEqual = name != null ? !name.equals(node.name) : node.name != null;
 
-            if (nameEqual)
+            if (nameEqual) {
                 return false;
-            if (type != node.type)
+            }
+            if (type != node.type) {
                 return false;
+            }
 
             return true;
         }

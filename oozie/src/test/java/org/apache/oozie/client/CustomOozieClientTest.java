@@ -24,7 +24,7 @@ import java.util.Properties;
 
 public class CustomOozieClientTest {
 
-    @Test (enabled = false)
+    @Test(enabled = false)
     public void testGetConfiguration() throws Exception {
         CustomOozieClient client = new CustomOozieClient("http://localhost:11000/oozie");
         Properties props = client.getConfiguration();

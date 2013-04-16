@@ -17,11 +17,11 @@
  */
 package org.apache.falcon.util;
 
+import org.apache.hadoop.conf.Configuration;
+
 import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.hadoop.conf.Configuration;
 
 public final class OozieUtils {
 

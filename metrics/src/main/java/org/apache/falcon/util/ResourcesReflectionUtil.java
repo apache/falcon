@@ -21,7 +21,7 @@ package org.apache.falcon.util;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
 
-import java.awt.Dimension;
+import java.awt.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -31,55 +31,54 @@ import java.util.Map;
 /**
  * Builds a cached of methods annotated with Monitored and params of methods
  * annotated with Dimension.
- * 
  */
 public class ResourcesReflectionUtil {
 
-	private static final Map<String, MethodAnnotation> methods = new HashMap<String, MethodAnnotation>();
-	
-	private ResourcesReflectionUtil(){
-		
-	}
+    private static final Map<String, MethodAnnotation> methods = new HashMap<String, MethodAnnotation>();
 
-	static {
-		//TODO load these classes from properties file
-		buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy");
-		buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.InstanceManagerProxy");
-		buildAnnotationsMapForClass("org.apache.falcon.resource.AbstractInstanceManager");
-		buildAnnotationsMapForClass("org.apache.falcon.service.FalconTopicSubscriber");
-		buildAnnotationsMapForClass("org.apache.falcon.aspect.GenericAlert");
-	}
+    private ResourcesReflectionUtil() {
 
-	public static Map<Integer, String> getResourceDimensionsName(String methodName) {
-		return methods.get(methodName)!=null?Collections.unmodifiableMap(methods.get(methodName).params):null;
-	}
+    }
 
-	public static String getResourceMonitorName(String methodName) {
-		return methods.get(methodName)!=null?methods.get(methodName).monitoredName:null;
-	}	
-	
-	public static Integer getResourceTimeTakenName(String methodName) {
-		return methods.get(methodName) != null ? methods.get(methodName).timeTakenArgIndex
-				: null;
-	}
+    static {
+        //TODO load these classes from properties file
+        buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy");
+        buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.InstanceManagerProxy");
+        buildAnnotationsMapForClass("org.apache.falcon.resource.AbstractInstanceManager");
+        buildAnnotationsMapForClass("org.apache.falcon.service.FalconTopicSubscriber");
+        buildAnnotationsMapForClass("org.apache.falcon.aspect.GenericAlert");
+    }
 
-	public static class MethodAnnotation {
-		private String monitoredName;
-		// argument <index,DimensionValue>
-		private Map<Integer, String> params = new HashMap<Integer, String>();
-		
-		//to override time taken by an api
-		private Integer timeTakenArgIndex;
-		
-		@Override
-		public String toString() {
-			return "{" + monitoredName + "[" + params.toString() + "]" + "}";
-		}
+    public static Map<Integer, String> getResourceDimensionsName(String methodName) {
+        return methods.get(methodName) != null ? Collections.unmodifiableMap(methods.get(methodName).params) : null;
+    }
 
-	}
+    public static String getResourceMonitorName(String methodName) {
+        return methods.get(methodName) != null ? methods.get(methodName).monitoredName : null;
+    }
 
-	private static void buildAnnotationsMapForClass(String className) {
-		Class clazz;
+    public static Integer getResourceTimeTakenName(String methodName) {
+        return methods.get(methodName) != null ? methods.get(methodName).timeTakenArgIndex
+                : null;
+    }
+
+    public static class MethodAnnotation {
+        private String monitoredName;
+        // argument <index,DimensionValue>
+        private Map<Integer, String> params = new HashMap<Integer, String>();
+
+        //to override time taken by an api
+        private Integer timeTakenArgIndex;
+
+        @Override
+        public String toString() {
+            return "{" + monitoredName + "[" + params.toString() + "]" + "}";
+        }
+
+    }
+
+    private static void buildAnnotationsMapForClass(String className) {
+        Class clazz;
         try {
             clazz = ResourcesReflectionUtil.class.
                     getClassLoader().loadClass(className);
@@ -88,7 +87,7 @@ public class ResourcesReflectionUtil {
         }
         Method[] declMethods = clazz.getMethods();
 
-		// scan every method
+        // scan every method
         for (Method declMethod : declMethods) {
             Annotation[] methodAnnots = declMethod.getDeclaredAnnotations();
             // scan every annotation on method
@@ -109,41 +108,41 @@ public class ResourcesReflectionUtil {
 
             }
         }
-	}
+    }
 
-	private static Map<Integer, String> getDeclaredParamAnnots(
-			Annotation[][] paramAnnots, MethodAnnotation annotation) {
-		Map<Integer, String> params = new HashMap<Integer, String>();
-		for (int i = 0; i < paramAnnots.length; i++) {
-			for (int j = 0; j < paramAnnots[i].length; j++) {
-				if (paramAnnots[i][j].annotationType().getSimpleName()
-						.equals(Dimension.class.getSimpleName())) {
-					params.put(i, getAnnotationValue(paramAnnots[i][j], "value"));
-				}
-				if (paramAnnots[i][j].annotationType().getSimpleName()
-						.equals(TimeTaken.class.getSimpleName())) {
-					annotation.timeTakenArgIndex = i;
-				}
-			}
-		}
-		return params;
+    private static Map<Integer, String> getDeclaredParamAnnots(
+            Annotation[][] paramAnnots, MethodAnnotation annotation) {
+        Map<Integer, String> params = new HashMap<Integer, String>();
+        for (int i = 0; i < paramAnnots.length; i++) {
+            for (int j = 0; j < paramAnnots[i].length; j++) {
+                if (paramAnnots[i][j].annotationType().getSimpleName()
+                        .equals(Dimension.class.getSimpleName())) {
+                    params.put(i, getAnnotationValue(paramAnnots[i][j], "value"));
+                }
+                if (paramAnnots[i][j].annotationType().getSimpleName()
+                        .equals(TimeTaken.class.getSimpleName())) {
+                    annotation.timeTakenArgIndex = i;
+                }
+            }
+        }
+        return params;
 
-	}
+    }
 
-	private static String getAnnotationValue(Annotation annotation,
-			String attributeName) {
-		String value = null;
+    private static String getAnnotationValue(Annotation annotation,
+                                             String attributeName) {
+        String value = null;
 
-		if (annotation != null) {
-			try {
-				value = (String) annotation.annotationType()
-						.getMethod(attributeName).invoke(annotation);
-			} catch (Exception ignore) {
-				ignore.printStackTrace();
-			}
-		}
+        if (annotation != null) {
+            try {
+                value = (String) annotation.annotationType()
+                        .getMethod(attributeName).invoke(annotation);
+            } catch (Exception ignore) {
+                ignore.printStackTrace();
+            }
+        }
 
-		return value;
-	}
+        return value;
+    }
 
 }

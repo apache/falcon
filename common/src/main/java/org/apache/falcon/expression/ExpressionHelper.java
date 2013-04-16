@@ -49,12 +49,13 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         return instance;
     }
 
-    private ExpressionHelper() {}
+    private ExpressionHelper() {
+    }
 
     public <T> T evaluate(String expression, Class<T> clazz) throws FalconException {
         return evaluateFullExpression("${" + expression + "}", clazz);
     }
-    
+
     @SuppressWarnings("unchecked")
     public <T> T evaluateFullExpression(String expression, Class<T> clazz) throws FalconException {
         try {
@@ -67,8 +68,9 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     @Override
     public Method resolveFunction(String prefix, String name) {
         for (Method method : ExpressionHelper.class.getDeclaredMethods()) {
-            if (method.getName().equals(name))
+            if (method.getName().equals(name)) {
                 return method;
+            }
         }
         throw new UnsupportedOperationException("Not found " + prefix + ":" + name);
     }
@@ -146,15 +148,15 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public static Date latest(int n) {
-    	//by pass Falcon validations
-        return  referenceDate.get();
+        //by pass Falcon validations
+        return referenceDate.get();
     }
-    
+
     public static Date future(int n, int limit) {
-    	//by pass Falcon validations
-        return  referenceDate.get();
+        //by pass Falcon validations
+        return referenceDate.get();
     }
-    
+
     public static long hours(int val) {
         return TimeUnit.HOURS.toMillis(val);
     }
@@ -180,19 +182,19 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public static String substitute(String originalValue, Properties properties) {
-      Matcher envVarMatcher = sysPropertyPattern.matcher(originalValue);
-      while (envVarMatcher.find()) {
-        String envVar = originalValue.substring(envVarMatcher.start() + 2,
-            envVarMatcher.end() - 1);
-        String envVal = properties.getProperty(envVar, System.getenv(envVar));
+        Matcher envVarMatcher = sysPropertyPattern.matcher(originalValue);
+        while (envVarMatcher.find()) {
+            String envVar = originalValue.substring(envVarMatcher.start() + 2,
+                    envVarMatcher.end() - 1);
+            String envVal = properties.getProperty(envVar, System.getenv(envVar));
 
-        envVar = "\\$\\{" + envVar + "\\}";
-        if (envVal != null) {
-          originalValue = originalValue.replaceAll(envVar, Matcher.quoteReplacement(envVal));
-          envVarMatcher = sysPropertyPattern.matcher(originalValue);
+            envVar = "\\$\\{" + envVar + "\\}";
+            if (envVal != null) {
+                originalValue = originalValue.replaceAll(envVar, Matcher.quoteReplacement(envVal));
+                envVarMatcher = sysPropertyPattern.matcher(originalValue);
+            }
         }
-      }
-      return originalValue;
+        return originalValue;
     }
 
 }

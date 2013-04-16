@@ -22,14 +22,14 @@ import org.apache.falcon.FalconException;
 
 public class StoreAccessException extends FalconException {
 
-  /**
-   * @param e Exception
-   */
-  public StoreAccessException(String message, Exception e) {
-    super(message, e);
-  }
+    /**
+     * @param e Exception
+     */
+    public StoreAccessException(String message, Exception e) {
+        super(message, e);
+    }
 
-  public StoreAccessException(Exception e) {
-    super(e);
-  }
+    public StoreAccessException(Exception e) {
+        super(e);
+    }
 }

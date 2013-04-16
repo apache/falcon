@@ -21,12 +21,12 @@ package org.apache.falcon.messaging;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.falcon.cluster.util.EmbeddedCluster;
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -38,162 +38,166 @@ import java.io.OutputStream;
 
 public class FeedProducerTest {
 
-	private String[] args;
-	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-	// private static final String BROKER_URL =
-	// "tcp://localhost:61616?daemon=true";
-	private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-	private static final String TOPIC_NAME = "Falcon.process1.click-logs";
-	private BrokerService broker;
+    private String[] args;
+    private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+    // private static final String BROKER_URL =
+    // "tcp://localhost:61616?daemon=true";
+    private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
+    private static final String TOPIC_NAME = "Falcon.process1.click-logs";
+    private BrokerService broker;
 
-	private Path logFile;
+    private Path logFile;
 
-	private volatile AssertionError error;
-	private EmbeddedCluster dfsCluster;
-	private Configuration conf ;
+    private volatile AssertionError error;
+    private EmbeddedCluster dfsCluster;
+    private Configuration conf;
 
-	@BeforeClass
-	public void setup() throws Exception {
+    @BeforeClass
+    public void setup() throws Exception {
 
-		this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
         conf = dfsCluster.getConf();
-		logFile = new Path(conf.get("fs.default.name"),
-				"/falcon/feed/agg-logs/instance-2012-01-01-10-00.csv");
+        logFile = new Path(conf.get("fs.default.name"),
+                "/falcon/feed/agg-logs/instance-2012-01-01-10-00.csv");
 
-		args = new String[] { "-" + ARG.entityName.getArgName(), TOPIC_NAME,
-				"-" + ARG.feedNames.getArgName(), "click-logs",
-				"-" + ARG.feedInstancePaths.getArgName(),
-				"/click-logs/10/05/05/00/20",
-				"-" + ARG.workflowId.getArgName(), "workflow-01-00",
-				"-" + ARG.runId.getArgName(), "1",
-				"-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
-				"-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
-				"-" + ARG.brokerUrl.getArgName(), BROKER_URL,
-				"-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
-				"-" + ARG.entityType.getArgName(), ("FEED"),
-				"-" + ARG.operation.getArgName(), ("DELETE"),
-				"-" + ARG.logFile.getArgName(), (logFile.toString()),
-				"-" + ARG.topicName.getArgName(), (TOPIC_NAME),
-				"-" + ARG.status.getArgName(), ("SUCCEEDED"),
-				"-" + ARG.brokerTTL.getArgName(), "10",
-				"-" + ARG.cluster.getArgName(), "corp" };
+        args = new String[]{"-" + ARG.entityName.getArgName(), TOPIC_NAME,
+                            "-" + ARG.feedNames.getArgName(), "click-logs",
+                            "-" + ARG.feedInstancePaths.getArgName(),
+                            "/click-logs/10/05/05/00/20",
+                            "-" + ARG.workflowId.getArgName(), "workflow-01-00",
+                            "-" + ARG.runId.getArgName(), "1",
+                            "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
+                            "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
+                            "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
+                            "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
+                            "-" + ARG.entityType.getArgName(), ("FEED"),
+                            "-" + ARG.operation.getArgName(), ("DELETE"),
+                            "-" + ARG.logFile.getArgName(), (logFile.toString()),
+                            "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
+                            "-" + ARG.status.getArgName(), ("SUCCEEDED"),
+                            "-" + ARG.brokerTTL.getArgName(), "10",
+                            "-" + ARG.cluster.getArgName(), "corp"};
 
-		broker = new BrokerService();
-		broker.addConnector(BROKER_URL);
-		broker.setDataDirectory("target/activemq");
-		broker.start();
-	}
+        broker = new BrokerService();
+        broker.addConnector(BROKER_URL);
+        broker.setDataDirectory("target/activemq");
+        broker.start();
+    }
 
-	@AfterClass
-	public void tearDown() throws Exception {
-		broker.deleteAllMessages();
-		broker.stop();
-		this.dfsCluster.shutdown();
-	}
+    @AfterClass
+    public void tearDown() throws Exception {
+        broker.deleteAllMessages();
+        broker.stop();
+        this.dfsCluster.shutdown();
+    }
 
-	@Test
-	public void testLogFile() throws Exception {
-		FileSystem fs = dfsCluster.getFileSystem();
-		OutputStream out = fs.create(logFile);
-		InputStream in = new ByteArrayInputStream(
-				("instancePaths=/falcon/feed/agg-logs/path1/2010/10/10/20,"
-						+ "/falcon/feed/agg-logs/path1/2010/10/10/21,"
-						+ "/falcon/feed/agg-logs/path1/2010/10/10/22,"
-						+ "/falcon/feed/agg-logs/path1/2010/10/10/23")
-						.getBytes());
-		IOUtils.copyBytes(in, out, conf);
-		testProcessMessageCreator();
-	}
+    @Test
+    public void testLogFile() throws Exception {
+        FileSystem fs = dfsCluster.getFileSystem();
+        OutputStream out = fs.create(logFile);
+        InputStream in = new ByteArrayInputStream(
+                ("instancePaths=/falcon/feed/agg-logs/path1/2010/10/10/20,"
+                        + "/falcon/feed/agg-logs/path1/2010/10/10/21,"
+                        + "/falcon/feed/agg-logs/path1/2010/10/10/22,"
+                        + "/falcon/feed/agg-logs/path1/2010/10/10/23")
+                        .getBytes());
+        IOUtils.copyBytes(in, out, conf);
+        testProcessMessageCreator();
+    }
 
-	@Test
-	public void testEmptyLogFile() throws Exception {
-		FileSystem fs = dfsCluster.getFileSystem();
-		OutputStream out = fs.create(logFile);
-		InputStream in = new ByteArrayInputStream(("instancePaths=").getBytes());
-		IOUtils.copyBytes(in, out, conf);
+    @Test
+    public void testEmptyLogFile() throws Exception {
+        FileSystem fs = dfsCluster.getFileSystem();
+        OutputStream out = fs.create(logFile);
+        InputStream in = new ByteArrayInputStream(("instancePaths=").getBytes());
+        IOUtils.copyBytes(in, out, conf);
 
-		new MessageProducer().run(this.args);
-	}
+        new MessageProducer().run(this.args);
+    }
 
-	private void testProcessMessageCreator() throws Exception {
+    private void testProcessMessageCreator() throws Exception {
 
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				try {
-					consumer();
-				} catch (AssertionError e) {
-					error = e;
-				} catch (JMSException ignore) {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    consumer();
+                } catch (AssertionError e) {
+                    error = e;
+                } catch (JMSException ignore) {
 
-				}
-			}
-		};
-		t.start();
-		Thread.sleep(1500);
-		new MessageProducer().run(this.args);
-		t.join();
-		if (error != null) {
-			throw error;
-		}
-	}
+                }
+            }
+        };
+        t.start();
+        Thread.sleep(1500);
+        new MessageProducer().run(this.args);
+        t.join();
+        if (error != null) {
+            throw error;
+        }
+    }
 
-	private void consumer() throws JMSException {
-		ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-				BROKER_URL);
-		Connection connection = connectionFactory.createConnection();
-		connection.start();
+    private void consumer() throws JMSException {
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
+                BROKER_URL);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
 
-		Session session = connection.createSession(false,
-				Session.AUTO_ACKNOWLEDGE);
-		Destination destination = session.createTopic(TOPIC_NAME);
-		MessageConsumer consumer = session.createConsumer(destination);
+        Session session = connection.createSession(false,
+                Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createTopic(TOPIC_NAME);
+        MessageConsumer consumer = session.createConsumer(destination);
 
-		// wait till you get atleast one message
-		MapMessage m;
-		for (m = null; m == null;)
-			m = (MapMessage) consumer.receive();
-		System.out.println("Consumed: " + m.toString());
-		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
-				"/falcon/feed/agg-logs/path1/2010/10/10/20");
+        // wait till you get atleast one message
+        MapMessage m;
+        for (m = null; m == null; ) {
+            m = (MapMessage) consumer.receive();
+        }
+        System.out.println("Consumed: " + m.toString());
+        assertMessage(m);
+        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+                "/falcon/feed/agg-logs/path1/2010/10/10/20");
 
-		for (m = null; m == null;)
-			m = (MapMessage) consumer.receive();
-		System.out.println("Consumed: " + m.toString());
-		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
-				"/falcon/feed/agg-logs/path1/2010/10/10/21");
+        for (m = null; m == null; ) {
+            m = (MapMessage) consumer.receive();
+        }
+        System.out.println("Consumed: " + m.toString());
+        assertMessage(m);
+        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+                "/falcon/feed/agg-logs/path1/2010/10/10/21");
 
-		for (m = null; m == null;)
-			m = (MapMessage) consumer.receive();
-		System.out.println("Consumed: " + m.toString());
-		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
-				"/falcon/feed/agg-logs/path1/2010/10/10/22");
+        for (m = null; m == null; ) {
+            m = (MapMessage) consumer.receive();
+        }
+        System.out.println("Consumed: " + m.toString());
+        assertMessage(m);
+        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+                "/falcon/feed/agg-logs/path1/2010/10/10/22");
 
-		for (m = null; m == null;)
-			m = (MapMessage) consumer.receive();
-		System.out.println("Consumed: " + m.toString());
-		assertMessage(m);
-		Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
-				"/falcon/feed/agg-logs/path1/2010/10/10/23");
+        for (m = null; m == null; ) {
+            m = (MapMessage) consumer.receive();
+        }
+        System.out.println("Consumed: " + m.toString());
+        assertMessage(m);
+        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+                "/falcon/feed/agg-logs/path1/2010/10/10/23");
 
-		connection.close();
-	}
+        connection.close();
+    }
 
-	private void assertMessage(MapMessage m) throws JMSException {
-		Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
-				TOPIC_NAME);
-		Assert.assertEquals(m.getString(ARG.operation.getArgName()), "DELETE");
-		Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
-				"workflow-01-00");
-		Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
-		Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
-				"2011-01-01T01:00Z");
-		Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
-				"2012-01-01T01:00Z");
-		Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
-	}
+    private void assertMessage(MapMessage m) throws JMSException {
+        Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
+                TOPIC_NAME);
+        Assert.assertEquals(m.getString(ARG.operation.getArgName()), "DELETE");
+        Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
+                "workflow-01-00");
+        Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
+        Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
+                "2011-01-01T01:00Z");
+        Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
+                "2012-01-01T01:00Z");
+        Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
+    }
 
 }

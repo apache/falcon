@@ -18,18 +18,19 @@
 
 package org.apache.falcon.entity;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.service.ConfigurationChangeListener;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ColoClusterRelation implements ConfigurationChangeListener {
-    private static final ConcurrentHashMap<String, Set<String>> coloClusterMap = new ConcurrentHashMap<String, Set<String>>();
+    private static final ConcurrentHashMap<String, Set<String>> coloClusterMap
+            = new ConcurrentHashMap<String, Set<String>>();
     private static final ColoClusterRelation instance = new ColoClusterRelation();
 
     private ColoClusterRelation() {
@@ -40,15 +41,17 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
     }
 
     public Set<String> getClusters(String colo) {
-        if (coloClusterMap.containsKey(colo))
+        if (coloClusterMap.containsKey(colo)) {
             return coloClusterMap.get(colo);
+        }
         return new HashSet<String>();
     }
 
     @Override
     public void onAdd(Entity entity) {
-        if (entity.getEntityType() != EntityType.CLUSTER)
+        if (entity.getEntityType() != EntityType.CLUSTER) {
             return;
+        }
 
         Cluster cluster = (Cluster) entity;
         coloClusterMap.putIfAbsent(cluster.getColo(), new HashSet<String>());
@@ -57,19 +60,22 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
 
     @Override
     public void onRemove(Entity entity) {
-        if (entity.getEntityType() != EntityType.CLUSTER)
+        if (entity.getEntityType() != EntityType.CLUSTER) {
             return;
+        }
 
         Cluster cluster = (Cluster) entity;
         coloClusterMap.get(cluster.getColo()).remove(cluster.getName());
-        if (coloClusterMap.get(cluster.getColo()).isEmpty())
+        if (coloClusterMap.get(cluster.getColo()).isEmpty()) {
             coloClusterMap.remove(cluster.getColo());
+        }
     }
 
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
-        if (oldEntity.getEntityType() != EntityType.CLUSTER)
+        if (oldEntity.getEntityType() != EntityType.CLUSTER) {
             return;
+        }
         throw new FalconException("change shouldn't be supported on cluster!");
     }
 }

@@ -18,14 +18,14 @@
 
 package org.apache.falcon.workflow;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.util.ReflectionUtils;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.util.ReflectionUtils;
 
 public abstract class WorkflowBuilder<T extends Entity> {
 
@@ -35,8 +35,9 @@ public abstract class WorkflowBuilder<T extends Entity> {
     }
 
     public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws FalconException;
-    
-    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName, String user) throws FalconException;
+
+    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName, String user)
+            throws FalconException;
 
     public abstract String[] getWorkflowNames(T entity);
 }

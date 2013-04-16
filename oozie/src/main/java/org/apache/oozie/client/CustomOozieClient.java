@@ -51,16 +51,16 @@ public class CustomOozieClient extends OozieClient {
     @Override
     protected HttpURLConnection createConnection(URL url, String method) throws IOException, OozieClientException {
         HttpURLConnection conn = super.createConnection(url, method);
-        
+
         int connectTimeout = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.connect.timeout", "1000"));
         conn.setConnectTimeout(connectTimeout);
 
         int readTimeout = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.read.timeout", "45000"));
         conn.setReadTimeout(readTimeout);
-        
+
         return conn;
     }
-    
+
     private class OozieConfiguration extends ClientCallable<Properties> {
 
         public OozieConfiguration(String resource) {
@@ -78,8 +78,7 @@ public class CustomOozieClient extends OozieClient {
                     props.put(key, json.get(key));
                 }
                 return props;
-            }
-            else {
+            } else {
                 handleError(conn);
                 return null;
             }

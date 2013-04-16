@@ -17,53 +17,54 @@
  */
 package org.apache.falcon.rerun.event;
 
+import org.apache.falcon.rerun.event.RerunEvent.RerunType;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.falcon.rerun.event.RerunEvent.RerunType;
-
 public class RerunEventFactory<T extends RerunEvent> {
 
-	public T getRerunEvent(String type, String line) {
-		if (type.startsWith(RerunType.RETRY.name())) {
-			return retryEventFromString(line);
-		} else if (type.startsWith(RerunType.LATE.name())) {
-			return lateEventFromString(line);
-		} else
-			return null;
-	}
+    public T getRerunEvent(String type, String line) {
+        if (type.startsWith(RerunType.RETRY.name())) {
+            return retryEventFromString(line);
+        } else if (type.startsWith(RerunType.LATE.name())) {
+            return lateEventFromString(line);
+        } else {
+            return null;
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	private T lateEventFromString(String line) {
-		Map<String, String> map = getMap(line);
-		return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"),
-				Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
-						.get("delayInMilliSec")), map.get("entityType"),
-				map.get("entityName"), map.get("instance"),
-				Integer.parseInt(map.get("runId")));
-	}
+    @SuppressWarnings("unchecked")
+    private T lateEventFromString(String line) {
+        Map<String, String> map = getMap(line);
+        return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"),
+                Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
+                .get("delayInMilliSec")), map.get("entityType"),
+                map.get("entityName"), map.get("instance"),
+                Integer.parseInt(map.get("runId")));
+    }
 
-	@SuppressWarnings("unchecked")
-	public T retryEventFromString(String line) {
-		Map<String, String> map = getMap(line);
-		return (T) new RetryEvent(map.get("clusterName"), map.get("wfId"),
-				Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
-						.get("delayInMilliSec")), map.get("entityType"),
-				map.get("entityName"), map.get("instance"),
-				Integer.parseInt(map.get("runId")), Integer.parseInt(map
-						.get("attempts")), Integer.parseInt(map
-						.get("failRetryCount")));
+    @SuppressWarnings("unchecked")
+    public T retryEventFromString(String line) {
+        Map<String, String> map = getMap(line);
+        return (T) new RetryEvent(map.get("clusterName"), map.get("wfId"),
+                Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map
+                .get("delayInMilliSec")), map.get("entityType"),
+                map.get("entityName"), map.get("instance"),
+                Integer.parseInt(map.get("runId")), Integer.parseInt(map
+                .get("attempts")), Integer.parseInt(map
+                .get("failRetryCount")));
 
-	}
+    }
 
-	private Map<String, String> getMap(String message) {
-		String[] items = message.split("\\" + RerunEvent.SEP);
-		Map<String, String> map = new HashMap<String, String>();
-		for (String item : items) {
-			String[] pair = item.split("=");
-			map.put(pair[0], pair[1]);
-		}
-		return map;
-	}
+    private Map<String, String> getMap(String message) {
+        String[] items = message.split("\\" + RerunEvent.SEP);
+        Map<String, String> map = new HashMap<String, String>();
+        for (String item : items) {
+            String[] pair = item.split("=");
+            map.put(pair[0], pair[1]);
+        }
+        return map;
+    }
 
 }

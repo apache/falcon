@@ -17,16 +17,7 @@
  */
 package org.apache.falcon.cleanup;
 
-import java.io.IOException;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-
 import org.apache.commons.el.ExpressionEvaluatorImpl;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -37,110 +28,118 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.io.IOException;
 
 public abstract class AbstractCleanupHandler {
 
-	protected static final Logger LOG = Logger
-			.getLogger(AbstractCleanupHandler.class);
-	protected final ConfigurationStore STORE = ConfigurationStore.get();
-	public static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
-	public static final ExpressionHelper resolver = ExpressionHelper.get();
+    protected static final Logger LOG = Logger
+            .getLogger(AbstractCleanupHandler.class);
+    protected final ConfigurationStore STORE = ConfigurationStore.get();
+    public static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    public static final ExpressionHelper resolver = ExpressionHelper.get();
 
-	protected long getRetention(Entity entity, TimeUnit timeUnit)
-			throws FalconException {
-		String retention = getRetentionValue(timeUnit);
-		try {
-			return (Long) EVALUATOR.evaluate("${" + retention + "}",
-					Long.class, resolver, resolver);
-		} catch (ELException e) {
-			throw new FalconException("Unable to evalue retention limit: "
-					+ retention + " for entity: " + entity.getName());
-		}
-	}
+    protected long getRetention(Entity entity, TimeUnit timeUnit)
+            throws FalconException {
+        String retention = getRetentionValue(timeUnit);
+        try {
+            return (Long) EVALUATOR.evaluate("${" + retention + "}",
+                    Long.class, resolver, resolver);
+        } catch (ELException e) {
+            throw new FalconException("Unable to evalue retention limit: "
+                    + retention + " for entity: " + entity.getName());
+        }
+    }
 
-	private String getRetentionValue(Frequency.TimeUnit timeunit) {
-		return RuntimeProperties.get().getProperty(
-				"log.cleanup.frequency." + timeunit + ".retention", "days(1)");
+    private String getRetentionValue(Frequency.TimeUnit timeunit) {
+        return RuntimeProperties.get().getProperty(
+                "log.cleanup.frequency." + timeunit + ".retention", "days(1)");
 
-	}
+    }
 
-	protected FileStatus[] getAllLogs(
-			org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-			throws FalconException {
-		String stagingPath = ClusterHelper.getLocation(cluster, "staging");
-		Path logPath = getLogPath(entity, stagingPath);
-		FileSystem fs = getFileSystem(cluster);
-		FileStatus[] paths;
-		try {
-			paths = fs.globStatus(logPath);
-		} catch (IOException e) {
-			throw new FalconException(e);
-		}
-		return paths;
-	}
+    protected FileStatus[] getAllLogs(
+            org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+            throws FalconException {
+        String stagingPath = ClusterHelper.getLocation(cluster, "staging");
+        Path logPath = getLogPath(entity, stagingPath);
+        FileSystem fs = getFileSystem(cluster);
+        FileStatus[] paths;
+        try {
+            paths = fs.globStatus(logPath);
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
+        return paths;
+    }
 
-	private FileSystem getFileSystem(
-			org.apache.falcon.entity.v0.cluster.Cluster cluster)
-			throws FalconException {
+    private FileSystem getFileSystem(
+            org.apache.falcon.entity.v0.cluster.Cluster cluster)
+            throws FalconException {
 
-		FileSystem fs;
-		try {
-			fs = new Path(ClusterHelper.getStorageUrl(cluster))
-					.getFileSystem(new Configuration());
-		} catch (IOException e) {
-			throw new FalconException(e);
-		}
-		return fs;
-	}
+        FileSystem fs;
+        try {
+            fs = new Path(ClusterHelper.getStorageUrl(cluster))
+                    .getFileSystem(new Configuration());
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
+        return fs;
+    }
 
-	protected void delete(Cluster cluster, Entity entity, long retention)
-			throws FalconException {
+    protected void delete(Cluster cluster, Entity entity, long retention)
+            throws FalconException {
 
-		FileStatus[] logs = getAllLogs(cluster, entity);
-		long now = System.currentTimeMillis();
+        FileStatus[] logs = getAllLogs(cluster, entity);
+        long now = System.currentTimeMillis();
 
-		for (FileStatus log : logs) {
-			if (now - log.getModificationTime() > retention) {
-				try {
-					boolean isDeleted = getFileSystem(cluster).delete(
-							log.getPath(), true);
-					if (isDeleted == false) {
-						LOG.error("Unable to delete path: " + log.getPath());
-					} else {
-						LOG.info("Deleted path: " + log.getPath());
-					}
-					deleteParentIfEmpty(getFileSystem(cluster),log.getPath().getParent());
-				} catch (IOException e) {
-					throw new FalconException(" Unable to delete log file : "
-							+ log.getPath() + " for entity " + entity.getName()
-							+ " for cluster: " + cluster.getName(), e);
-				}
-			} else {
-				LOG.info("Retention limit: " + retention
-						+ " is less than modification"
-						+ (now - log.getModificationTime()) + " for path: "
-						+ log.getPath());
-			}
-		}
+        for (FileStatus log : logs) {
+            if (now - log.getModificationTime() > retention) {
+                try {
+                    boolean isDeleted = getFileSystem(cluster).delete(
+                            log.getPath(), true);
+                    if (isDeleted == false) {
+                        LOG.error("Unable to delete path: " + log.getPath());
+                    } else {
+                        LOG.info("Deleted path: " + log.getPath());
+                    }
+                    deleteParentIfEmpty(getFileSystem(cluster), log.getPath().getParent());
+                } catch (IOException e) {
+                    throw new FalconException(" Unable to delete log file : "
+                            + log.getPath() + " for entity " + entity.getName()
+                            + " for cluster: " + cluster.getName(), e);
+                }
+            } else {
+                LOG.info("Retention limit: " + retention
+                        + " is less than modification"
+                        + (now - log.getModificationTime()) + " for path: "
+                        + log.getPath());
+            }
+        }
 
-	}
+    }
 
-	private void deleteParentIfEmpty(FileSystem fs, Path parent) throws IOException {
-		 FileStatus[] files = fs.listStatus(parent);
-		if(files!=null && files.length==0){
-			LOG.info("Parent path: "+parent+ " is empty, deleting path");
-			fs.delete(parent, true);
-			deleteParentIfEmpty(fs,parent.getParent());
-		}
-		
-	}
+    private void deleteParentIfEmpty(FileSystem fs, Path parent) throws IOException {
+        FileStatus[] files = fs.listStatus(parent);
+        if (files != null && files.length == 0) {
+            LOG.info("Parent path: " + parent + " is empty, deleting path");
+            fs.delete(parent, true);
+            deleteParentIfEmpty(fs, parent.getParent());
+        }
 
-	public abstract void cleanup() throws FalconException;
+    }
 
-	protected abstract Path getLogPath(Entity entity, String stagingPath);
-	
-	protected String getCurrentColo(){
-		return StartupProperties.get().getProperty("current.colo", "default");
-	}
+    public abstract void cleanup() throws FalconException;
+
+    protected abstract Path getLogPath(Entity entity, String stagingPath);
+
+    protected String getCurrentColo() {
+        return StartupProperties.get().getProperty("current.colo", "default");
+    }
 }

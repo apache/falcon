@@ -24,16 +24,16 @@ import org.testng.annotations.Test;
 
 public class EntityTypeTest {
 
-	@Test
-	public void testGetEntityClass() {
-		Assert.assertEquals(EntityType.PROCESS.getEntityClass().getName(),
-				"org.apache.falcon.entity.v0.process.Process");
-	}
+    @Test
+    public void testGetEntityClass() {
+        Assert.assertEquals(EntityType.PROCESS.getEntityClass().getName(),
+                "org.apache.falcon.entity.v0.process.Process");
+    }
 
-	@Test
-	public void testIsSchedulable() {
-		Assert.assertTrue(EntityType.PROCESS.isSchedulable());
-		Assert.assertTrue(EntityType.FEED.isSchedulable());
-		Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
-	}
+    @Test
+    public void testIsSchedulable() {
+        Assert.assertTrue(EntityType.PROCESS.isSchedulable());
+        Assert.assertTrue(EntityType.FEED.isSchedulable());
+        Assert.assertFalse(EntityType.CLUSTER.isSchedulable());
+    }
 }

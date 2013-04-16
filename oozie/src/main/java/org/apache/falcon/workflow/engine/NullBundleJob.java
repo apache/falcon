@@ -18,13 +18,13 @@
 
 package org.apache.falcon.workflow.engine;
 
-import java.util.Date;
-import java.util.List;
-
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 
-public class NullBundleJob implements BundleJob{
+import java.util.Date;
+import java.util.List;
+
+public class NullBundleJob implements BundleJob {
 
     @Override
     public String getAppPath() {

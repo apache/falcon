@@ -24,7 +24,6 @@ import org.apache.falcon.FalconException;
  * This exception is thrown when Unschedulable entity
  * like CLUSTER is tried with actions like Schedule, Suspend,
  * Resume.
- *
  */
 public class UnschedulableEntityException extends FalconException {
 

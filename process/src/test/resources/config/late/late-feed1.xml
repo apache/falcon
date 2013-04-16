@@ -16,10 +16,11 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<feed description="clicks log" name="late-feed1" xmlns="uri:falcon:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <partitions>
-        <partition name="fraud" />
-        <partition name="country" />
+<feed description="clicks log" name="late-feed1" xmlns="uri:falcon:feed:0.1"
+        >
+    <partitions>
+        <partition name="fraud"/>
+        <partition name="country"/>
     </partitions>
 
     <groups>online,bi</groups>
@@ -31,21 +32,22 @@
     <clusters>
         <cluster name="late-cluster" type="source">
             <validity start="2011-11-01T00:00Z" end="2099-12-31T23:59Z"/>
-            <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+            <retention limit="hours(6)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
 
     <locations>
-        <location type="data" path="/projects/falcon/clicks" />
-        <location type="stats" path="/projects/falcon/clicksStats" />
-        <location type="meta" path="/projects/falcon/clicksMetaData" />
+        <location type="data" path="/projects/falcon/clicks"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
-    
-    <ACL owner="testuser" group="group" permission="0x755" />
-    <schema location="/schema/clicks" provider="protobuf" />
+
+    <ACL owner="testuser" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
 
     <properties>
-        <property name="field1" value="value1" />
-        <property name="field2" value="value2" />
+        <property name="field1" value="value1"/>
+        <property name="field2" value="value2"/>
     </properties>
 </feed>

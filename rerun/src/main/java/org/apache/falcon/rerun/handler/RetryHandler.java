@@ -1,4 +1,3 @@
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,65 +29,65 @@ import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
-		AbstractRerunHandler<RetryEvent, M> {
+        AbstractRerunHandler<RetryEvent, M> {
 
-	@Override
-	public void handleRerun(String cluster, String entityType,
-			String entityName, String nominalTime, String runId, String wfId,
-			long msgReceivedTime) {
-		try {
-			Entity entity = getEntity(entityType, entityName);
-			Retry retry = getRetry(entity);
+    @Override
+    public void handleRerun(String cluster, String entityType,
+                            String entityName, String nominalTime, String runId, String wfId,
+                            long msgReceivedTime) {
+        try {
+            Entity entity = getEntity(entityType, entityName);
+            Retry retry = getRetry(entity);
 
-			if (retry == null) {
-				LOG.warn("Retry not configured for entity:" + entityType + "("
-						+ entity.getName() + "), ignoring failed retries");
-				return;
-			}
+            if (retry == null) {
+                LOG.warn("Retry not configured for entity:" + entityType + "("
+                        + entity.getName() + "), ignoring failed retries");
+                return;
+            }
 
-			int attempts = retry.getAttempts();
-			Frequency delay = retry.getDelay();
-			PolicyType policy = retry.getPolicy();
-			int intRunId = Integer.parseInt(runId);
+            int attempts = retry.getAttempts();
+            Frequency delay = retry.getDelay();
+            PolicyType policy = retry.getPolicy();
+            int intRunId = Integer.parseInt(runId);
 
-			if (attempts > intRunId) {
-				AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
-						.getRetryPolicy(policy);
-				long delayTime = rerunPolicy.getDelay(delay,
-						Integer.parseInt(runId));
-				RetryEvent event = new RetryEvent(cluster, wfId,
-						msgReceivedTime, delayTime, entityType, entityName,
-						nominalTime, intRunId, attempts, 0);
-				offerToQueue(event);
-			} else {
-				LOG.warn("All retry attempt failed out of configured: "
-						+ attempts + " attempt for entity instance::"
-						+ entityName + ":" + nominalTime + " And WorkflowId: "
-						+ wfId);
+            if (attempts > intRunId) {
+                AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
+                        .getRetryPolicy(policy);
+                long delayTime = rerunPolicy.getDelay(delay,
+                        Integer.parseInt(runId));
+                RetryEvent event = new RetryEvent(cluster, wfId,
+                        msgReceivedTime, delayTime, entityType, entityName,
+                        nominalTime, intRunId, attempts, 0);
+                offerToQueue(event);
+            } else {
+                LOG.warn("All retry attempt failed out of configured: "
+                        + attempts + " attempt for entity instance::"
+                        + entityName + ":" + nominalTime + " And WorkflowId: "
+                        + wfId);
 
-				GenericAlert.alertRetryFailed(entityType, entityName,
-						nominalTime, wfId, runId,
-						"All retry attempt failed out of configured: "
-								+ attempts + " attempt for entity instance::");
-			}
-		} catch (Exception e) {
-			LOG.error("Error during retry of entity instance " + entityName
-					+ ":" + nominalTime, e);
-			GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
-					wfId, runId, e.getMessage());
-		}
+                GenericAlert.alertRetryFailed(entityType, entityName,
+                        nominalTime, wfId, runId,
+                        "All retry attempt failed out of configured: "
+                                + attempts + " attempt for entity instance::");
+            }
+        } catch (Exception e) {
+            LOG.error("Error during retry of entity instance " + entityName
+                    + ":" + nominalTime, e);
+            GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
+                    wfId, runId, e.getMessage());
+        }
 
-	}
+    }
 
-	@Override
-	public void init(M queue) throws FalconException {
-		super.init(queue);
-		Thread daemon = new Thread(new RetryConsumer(this));
-		daemon.setName("RetryHandler");
-		daemon.setDaemon(true);
-		daemon.start();
-		LOG.info("RetryHandler  thread started");
+    @Override
+    public void init(M queue) throws FalconException {
+        super.init(queue);
+        Thread daemon = new Thread(new RetryConsumer(this));
+        daemon.setName("RetryHandler");
+        daemon.setDaemon(true);
+        daemon.start();
+        LOG.info("RetryHandler  thread started");
 
-	}
+    }
 
 }

@@ -32,42 +32,43 @@ public class ExternalId {
     public ExternalId(String id) {
         this.id = id;
     }
-    
+
     public String getId() {
         return id;
     }
-    
+
     public ExternalId(String name, Tag tag, String elexpr) {
-        if(StringUtils.isEmpty(name) || tag == null || StringUtils.isEmpty(elexpr))
+        if (StringUtils.isEmpty(name) || tag == null || StringUtils.isEmpty(elexpr)) {
             throw new IllegalArgumentException("Empty inputs!");
-        
+        }
+
         id = name + SEPARATOR + tag.name() + SEPARATOR + elexpr;
     }
-    
+
     public ExternalId(String name, Tag tag, Date date) {
         this(name, tag, SchemaHelper.formatDateUTC(date));
     }
-    
+
     public String getName() {
         String[] parts = id.split(SEPARATOR);
         return parts[0];
     }
-    
+
     public Date getDate() throws FalconException {
-        return EntityUtil.parseDateUTC(getDateAsString());            
+        return EntityUtil.parseDateUTC(getDateAsString());
     }
-    
+
     public String getDateAsString() {
         String[] parts = id.split(SEPARATOR);
         return parts[2];
     }
-    
-	public Tag getTag() {
-		String[] parts = id.split(SEPARATOR);
-		return Tag.valueOf(parts[1]);
-	}
 
-	public String getDFSname() {
-		return id.replace(":", "-");
-	}
+    public Tag getTag() {
+        String[] parts = id.split(SEPARATOR);
+        return Tag.valueOf(parts[1]);
+    }
+
+    public String getDFSname() {
+        return id.replace(":", "-");
+    }
 }

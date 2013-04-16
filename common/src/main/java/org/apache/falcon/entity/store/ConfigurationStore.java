@@ -18,25 +18,6 @@
 
 package org.apache.falcon.entity.store;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.xml.bind.JAXBException;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -44,7 +25,20 @@ import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
+
+import javax.xml.bind.JAXBException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigurationStore implements FalconService {
 
@@ -62,7 +56,8 @@ public class ConfigurationStore implements FalconService {
         return store;
     }
 
-    private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
+    private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary
+            = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
 
     private final FileSystem fs;
     private final Path storePath;
@@ -98,13 +93,15 @@ public class ConfigurationStore implements FalconService {
     public void init() throws FalconException {
         String listenerClassNames = StartupProperties.get().
                 getProperty("configstore.listeners", "org.apache.falcon.entity.v0.EntityGraph");
-        for(String listenerClassName:listenerClassNames.split(",")) {
+        for (String listenerClassName : listenerClassNames.split(",")) {
             listenerClassName = listenerClassName.trim();
-            if (listenerClassName.isEmpty()) continue;
+            if (listenerClassName.isEmpty()) {
+                continue;
+            }
             ConfigurationChangeListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
             registerListener(listener);
         }
-        
+
         try {
             for (EntityType type : EntityType.values()) {
                 ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
@@ -113,7 +110,7 @@ public class ConfigurationStore implements FalconService {
                     for (FileStatus file : files) {
                         String fileName = file.getPath().getName();
                         String encodedEntityName = fileName.substring(0, fileName.length() - 4); // drop
-                                                                                                 // ".xml"
+                        // ".xml"
                         String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
                         Entity entity = restore(type, entityName);
                         entityMap.put(entityName, entity);
@@ -131,11 +128,8 @@ public class ConfigurationStore implements FalconService {
     }
 
     /**
-     * 
-     * @param type
-     *            - EntityType that need to be published
-     * @param entity
-     *            - Reference to the Entity Object
+     * @param type   - EntityType that need to be published
+     * @param entity - Reference to the Entity Object
      * @throws FalconException
      */
     public synchronized void publish(EntityType type, Entity entity) throws FalconException {
@@ -145,8 +139,9 @@ public class ConfigurationStore implements FalconService {
                 dictionary.get(type).put(entity.getName(), entity);
                 onAdd(entity);
             } else {
-                throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
-                        + "Can't be submitted again. Try removing before submitting.");
+                throw new EntityAlreadyExistsException(
+                        entity.toShortString() + " already registered with configuration store. "
+                                + "Can't be submitted again. Try removing before submitting.");
             }
         } catch (IOException e) {
             throw new StoreAccessException(e);
@@ -193,25 +188,22 @@ public class ConfigurationStore implements FalconService {
 
     private void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
         for (ConfigurationChangeListener listener : listeners) {
-			listener.onChange(oldEntity, newEntity);
+            listener.onChange(oldEntity, newEntity);
         }
     }
 
     public synchronized void initiateUpdate(Entity entity) throws FalconException {
         if (get(entity.getEntityType(), entity.getName()) == null || updatesInProgress.get() != null) {
-            throw new FalconException("An update for " + entity.toShortString() + " is already in progress or doesn't exist");
+            throw new FalconException(
+                    "An update for " + entity.toShortString() + " is already in progress or doesn't exist");
         }
         updatesInProgress.set(entity);
     }
 
     /**
-     * 
-     * @param type
-     *            - Entity type that is being retrieved
-     * @param name
-     *            - Name as it appears in the entity xml definition
-     * @param <T>
-     *            - Actual Entity object type
+     * @param type - Entity type that is being retrieved
+     * @param name - Name as it appears in the entity xml definition
+     * @param <T>  - Actual Entity object type
      * @return - Entity object from internal dictionary, If the object is not
      *         loaded in memory yet, it will retrieve it from persistent store
      *         just in time. On startup all the entities will be added to the
@@ -249,11 +241,9 @@ public class ConfigurationStore implements FalconService {
 
     /**
      * Remove an entity which is already stored in the config store
-     * 
-     * @param type
-     *            - Entity type being removed
-     * @param name
-     *            - Name of the entity object being removed
+     *
+     * @param type - Entity type being removed
+     * @param name - Name of the entity object being removed
      * @return - True is remove is successful, false if request entity doesn't
      *         exist
      * @throws FalconException
@@ -279,19 +269,17 @@ public class ConfigurationStore implements FalconService {
                 listener.onRemove(entity);
             } catch (Throwable e) {
                 LOG.warn(
-                        "Encountered exception while notifying " + listener + "(" + entity.getEntityType() + ") " + entity.getName(),
+                        "Encountered exception while notifying " + listener + "(" + entity.getEntityType() + ") "
+                                + entity.getName(),
                         e);
             }
         }
     }
 
     /**
-     * 
-     * @param type
-     *            - Entity type that needs to be searched
-     * @param keywords
-     *            - List of keywords to search for. only entities that have all
-     *            the keywords being searched would be returned
+     * @param type     - Entity type that needs to be searched
+     * @param keywords - List of keywords to search for. only entities that have all
+     *                 the keywords being searched would be returned
      * @return - Array of entity types
      */
     public Entity[] search(EntityType type, String... keywords) {
@@ -299,20 +287,17 @@ public class ConfigurationStore implements FalconService {
     }
 
     /**
-     * 
-     * @param type
-     *            - Entity type that is to be stored into persistent storage
-     * @param entity
-     *            - entity to persist. JAXB Annotated entity will be marshalled
-     *            to the persistent store. The convention used for storing the
-     *            object:: PROP(config.store.uri)/{entitytype}/{entityname}.xml
-     * @throws java.io.IOException
-     *             If any error in accessing the storage
+     * @param type   - Entity type that is to be stored into persistent storage
+     * @param entity - entity to persist. JAXB Annotated entity will be marshalled
+     *               to the persistent store. The convention used for storing the
+     *               object:: PROP(config.store.uri)/{entitytype}/{entityname}.xml
+     * @throws java.io.IOException If any error in accessing the storage
      * @throws FalconException
      */
     private void persist(EntityType type, Entity entity) throws IOException, FalconException {
         OutputStream out = fs
-                .create(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
+                .create(new Path(storePath,
+                        type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
         try {
             type.getMarshaller().marshal(entity, out);
             LOG.info("Persisted configuration " + type + "/" + entity.getName());
@@ -326,37 +311,31 @@ public class ConfigurationStore implements FalconService {
 
     /**
      * Archive removed configuration in the persistent store
-     * 
-     * @param type
-     *            - Entity type to archive
-     * @param name
-     *            - name
-     * @throws IOException
-     *             If any error in accessing the storage
+     *
+     * @param type - Entity type to archive
+     * @param name - name
+     * @throws IOException If any error in accessing the storage
      */
     private void archive(EntityType type, String name) throws IOException {
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
         fs.mkdirs(archivePath);
-        fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"), new Path(archivePath,
-                URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
+        fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
+                new Path(archivePath,
+                        URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
         LOG.info("Archived configuration " + type + "/" + name);
     }
 
     /**
-     * 
-     * @param type
-     *            - Entity type to restore from persistent store
-     * @param name
-     *            - Name of the entity to restore.
-     * @param <T>
-     *            - Actual entity object type
+     * @param type - Entity type to restore from persistent store
+     * @param name - Name of the entity to restore.
+     * @param <T>  - Actual entity object type
      * @return - De-serialized entity object restored from persistent store
-     * @throws IOException
-     *             If any error in accessing the storage
+     * @throws IOException     If any error in accessing the storage
      * @throws FalconException
      */
     @SuppressWarnings("unchecked")
-    private synchronized <T extends Entity> T restore(EntityType type, String name) throws IOException, FalconException {
+    private synchronized <T extends Entity> T restore(EntityType type, String name)
+            throws IOException, FalconException {
 
         InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
         try {
@@ -379,5 +358,6 @@ public class ConfigurationStore implements FalconService {
     }
 
     @Override
-    public void destroy() { }
+    public void destroy() {
+    }
 }

@@ -46,10 +46,10 @@ public class FeedUpdateTest extends AbstractTestBase {
         setup();
     }
 
-	@AfterClass
-	public void tearDown() {
-		this.dfsCluster.shutdown();
-	}
+    @AfterClass
+    public void tearDown() {
+        this.dfsCluster.shutdown();
+    }
 
     @Override
     public void setup() throws Exception {

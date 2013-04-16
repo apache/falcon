@@ -17,31 +17,31 @@
   -->
 
 <workflow-app xmlns="uri:oozie:workflow:0.2" name="test-wf">
-	<start to="fsAction" />
-	<action name="fsAction">
-		<fs>
-			<delete path="${nameNode}/test/dir1" />
-			<mkdir path="${nameNode}/test/dir1" />
-		</fs>
-		<ok to="javaAction" />
-		<error to="fail" />
-	</action>
-	<action name="javaAction">
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<main-class>org.apache.oozie.example.DemoJavaMain</main-class>
-			<arg>Hello</arg>
-			<arg>Oozie!</arg>
-		</java>
+    <start to="fsAction"/>
+    <action name="fsAction">
+        <fs>
+            <delete path="${nameNode}/test/dir1"/>
+            <mkdir path="${nameNode}/test/dir1"/>
+        </fs>
+        <ok to="javaAction"/>
+        <error to="fail"/>
+    </action>
+    <action name="javaAction">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <main-class>org.apache.oozie.example.DemoJavaMain</main-class>
+            <arg>Hello</arg>
+            <arg>Oozie!</arg>
+        </java>
         <ok to="end"/>
         <error to="fail"/>
-	</action>
-	<kill name="fail">
-		<message>Job failed, error
-			message[${wf:errorMessage(wf:lastErrorNode())}]
-		</message>
-	</kill>
-	<end name="end" />
+    </action>
+    <kill name="fail">
+        <message>Job failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name="end"/>
 
 </workflow-app>

@@ -18,16 +18,12 @@
 
 package org.apache.falcon.cli;
 
+import org.apache.commons.cli.*;
+
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 
 /**
@@ -57,9 +53,9 @@ public class CLIParser {
     /**
      * Add a command to the parser.
      *
-     * @param command comand name.
-     * @param argsHelp command arguments help.
-     * @param commandHelp command description.
+     * @param command        comand name.
+     * @param argsHelp       command arguments help.
+     * @param commandHelp    command description.
      * @param commandOptions command options.
      * @param hasArguments
      */
@@ -74,7 +70,7 @@ public class CLIParser {
     /**
      * Bean that represents a parsed command.
      */
-    public class Command {
+    public final class Command {
         private String name;
         private CommandLine commandLine;
 
@@ -112,16 +108,14 @@ public class CLIParser {
     public Command parse(String[] args) throws ParseException {
         if (args.length == 0) {
             throw new ParseException("missing sub-command");
-        }
-        else {
+        } else {
             if (commands.containsKey(args[0])) {
                 GnuParser parser = new GnuParser();
                 String[] minusCommand = new String[args.length - 1];
                 System.arraycopy(args, 1, minusCommand, 0, minusCommand.length);
                 return new Command(args[0], parser.parse(commands.get(args[0]), minusCommand,
-                                                         commandWithArgs.get(args[0])));
-            }
-            else {
+                        commandWithArgs.get(args[0])));
+            } else {
                 throw new ParseException(MessageFormat.format("invalid sub-command [{0}]", args[0]));
             }
         }
@@ -147,8 +141,7 @@ public class CLIParser {
             if (entry.getValue().getOptions().size() > 0) {
                 pw.println(s + "<OPTIONS> " + commandsHelp.get(entry.getKey()));
                 formatter.printOptions(pw, 100, entry.getValue(), s.length(), 3);
-            }
-            else {
+            } else {
                 pw.println(s + commandsHelp.get(entry.getKey()));
             }
             pw.println();

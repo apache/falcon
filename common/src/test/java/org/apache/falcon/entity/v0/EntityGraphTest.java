@@ -18,22 +18,19 @@
 
 package org.apache.falcon.entity.v0;
 
-import java.util.Set;
-
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Clusters;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Inputs;
-import org.apache.falcon.entity.v0.process.Output;
-import org.apache.falcon.entity.v0.process.Outputs;
+import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class EntityGraphTest extends AbstractTestBase{
+import java.util.Set;
+
+public class EntityGraphTest extends AbstractTestBase {
 
     private ConfigurationStore store = ConfigurationStore.get();
 
@@ -101,7 +98,9 @@ public class EntityGraphTest extends AbstractTestBase{
     }
 
     private Feed addInput(Process process, String feed, Cluster cluster) {
-        if (process.getInputs() == null) process.setInputs(new Inputs());
+        if (process.getInputs() == null) {
+            process.setInputs(new Inputs());
+        }
         Inputs inputs = process.getInputs();
         Input input = new Input();
         input.setFeed(feed);
@@ -114,11 +113,13 @@ public class EntityGraphTest extends AbstractTestBase{
                 new org.apache.falcon.entity.v0.feed.Cluster();
         feedCluster.setName(cluster.getName());
         clusters.getClusters().add(feedCluster);
-        return f1; 
+        return f1;
     }
 
     private void attachInput(Process process, Feed feed) {
-        if (process.getInputs() == null) process.setInputs(new Inputs());
+        if (process.getInputs() == null) {
+            process.setInputs(new Inputs());
+        }
         Inputs inputs = process.getInputs();
         Input input = new Input();
         input.setFeed(feed.getName());
@@ -126,7 +127,9 @@ public class EntityGraphTest extends AbstractTestBase{
     }
 
     private Feed addOutput(Process process, String feed, Cluster cluster) {
-        if (process.getOutputs() == null) process.setOutputs(new Outputs());
+        if (process.getOutputs() == null) {
+            process.setOutputs(new Outputs());
+        }
         Outputs Outputs = process.getOutputs();
         Output Output = new Output();
         Output.setFeed(feed);

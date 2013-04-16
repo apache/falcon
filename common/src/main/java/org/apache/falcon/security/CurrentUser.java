@@ -40,7 +40,9 @@ public final class CurrentUser {
             throw new IllegalStateException
                     ("Bad user name sent for authentication");
         }
-        if (user.equals(getUserInternal())) return;
+        if (user.equals(getUserInternal())) {
+            return;
+        }
 
         Subject subject = new Subject();
         subject.getPrincipals().add(new FalconPrincipal(user));
@@ -66,7 +68,7 @@ public final class CurrentUser {
         if (subject == null) {
             return null;
         } else {
-            for(FalconPrincipal principal: subject.
+            for (FalconPrincipal principal : subject.
                     getPrincipals(FalconPrincipal.class)) {
                 return principal.getName();
             }

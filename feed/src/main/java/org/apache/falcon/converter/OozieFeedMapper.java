@@ -18,16 +18,7 @@
 
 package org.apache.falcon.converter;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
@@ -50,7 +41,11 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.util.*;
 
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
@@ -61,8 +56,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
     private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
     private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
-    
-    private static final String FEED_PATH_SEP="#";
+
+    private static final String FEED_PATH_SEP = "#";
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -86,7 +81,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
 
         if (feedCluster.getValidity().getEnd().before(new Date())) {
-            LOG.warn("Feed Retention is not applicable as Feed's end time for cluster " + cluster.getName() + " is not in the future");
+            LOG.warn("Feed Retention is not applicable as Feed's end time for cluster " + cluster.getName()
+                    + " is not in the future");
             return null;
         }
         COORDINATORAPP retentionApp = new COORDINATORAPP();
@@ -121,20 +117,20 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-            String feedPathMask = getLocationURI(cluster, feed,LocationType.DATA);
-			String metaPathMask = getLocationURI(cluster, feed, LocationType.META);
+            String feedPathMask = getLocationURI(cluster, feed, LocationType.DATA);
+            String metaPathMask = getLocationURI(cluster, feed, LocationType.META);
             String statsPathMask = getLocationURI(cluster, feed, LocationType.STATS);
             String tmpPathMask = getLocationURI(cluster, feed, LocationType.TMP);
 
             StringBuilder feedBasePaths = new StringBuilder(feedPathMask);
-            if(metaPathMask!=null){
-            	feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
+            if (metaPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
             }
-            if(statsPathMask!=null){
-            	feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
+            if (statsPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
             }
-            if(tmpPathMask!=null){
-            	feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
+            if (tmpPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
             }
 
             props.put("feedDataPath", feedBasePaths.toString().replaceAll("\\$\\{", "\\?\\{"));
@@ -153,23 +149,25 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
     }
 
-    private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath) throws FalconException {
+    private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath)
+            throws FalconException {
         Feed feed = getEntity();
         List<COORDINATORAPP> replicationCoords = new ArrayList<COORDINATORAPP>();
-        
+
         if (FeedHelper.getCluster(feed, targetCluster.getName()).getType() == ClusterType.TARGET) {
             String coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, feed).toString();
             Path basePath = getCoordPath(bundlePath, coordName);
             createReplicatonWorkflow(targetCluster, basePath, coordName);
-            
+
             for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
                 if (feedCluster.getType() == ClusterType.SOURCE) {
                     COORDINATORAPP coord = createAndGetCoord(feed,
-                            (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, feedCluster.getName()), targetCluster,
+                            (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, feedCluster.getName()),
+                            targetCluster,
                             bundlePath);
-					if (coord != null) {
-						replicationCoords.add(coord);
-					}
+                    if (coord != null) {
+                        replicationCoords.add(coord);
+                    }
                 }
             }
 
@@ -183,14 +181,17 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         String coordName;
         try {
             replicationCoord = getCoordinatorTemplate(REPLICATION_COORD_TEMPLATE);
-            coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, Arrays.asList(srcCluster.getName()), feed).toString();
+            coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, Arrays.asList(srcCluster.getName()),
+                    feed).toString();
             replicationCoord.setName(coordName);
             replicationCoord.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
             long frequency_ms = ExpressionHelper.get().
                     evaluate(feed.getFrequency().toString(), Long.class);
             long timeout_ms = frequency_ms * 6;
-            if (timeout_ms < THIRTY_MINUTES) timeout_ms = THIRTY_MINUTES;
+            if (timeout_ms < THIRTY_MINUTES) {
+                timeout_ms = THIRTY_MINUTES;
+            }
             replicationCoord.getControls().setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
             replicationCoord.getControls().setThrottle(String.valueOf(timeout_ms / frequency_ms * 2));
 
@@ -198,28 +199,30 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
             Date trgStartDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart();
             Date trgEndDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getEnd();
-			if (srcStartDate.after(trgEndDate)
-					|| trgStartDate.after(srcEndDate)) {
-				LOG.warn("Not creating replication coordinator, as the source cluster:"
-						+ srcCluster.getName()
-						+ " and target cluster: "
-						+ trgCluster.getName()
-						+ " do not have overlapping dates");
-				return null;
-			}
-            replicationCoord.setStart(srcStartDate.after(trgStartDate) ? SchemaHelper.formatDateUTC(srcStartDate) : SchemaHelper
-                    .formatDateUTC(trgStartDate));
-            replicationCoord.setEnd(srcEndDate.before(trgEndDate) ? SchemaHelper.formatDateUTC(srcEndDate) : SchemaHelper
-                    .formatDateUTC(trgEndDate));
+            if (srcStartDate.after(trgEndDate)
+                    || trgStartDate.after(srcEndDate)) {
+                LOG.warn("Not creating replication coordinator, as the source cluster:"
+                        + srcCluster.getName()
+                        + " and target cluster: "
+                        + trgCluster.getName()
+                        + " do not have overlapping dates");
+                return null;
+            }
+            replicationCoord.setStart(
+                    srcStartDate.after(trgStartDate) ? SchemaHelper.formatDateUTC(srcStartDate) : SchemaHelper
+                            .formatDateUTC(trgStartDate));
+            replicationCoord.setEnd(
+                    srcEndDate.before(trgEndDate) ? SchemaHelper.formatDateUTC(srcEndDate) : SchemaHelper
+                            .formatDateUTC(trgEndDate));
             replicationCoord.setTimezone(feed.getTimezone().getID());
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-			inputDataset.setUriTemplate(new Path(ClusterHelper
-					.getStorageUrl(srcCluster), FeedHelper.getLocation(feed,
-					LocationType.DATA,srcCluster.getName()).getPath()).toString());
-			outputDataset.setUriTemplate(getStoragePath(FeedHelper.getLocation(
-					feed, LocationType.DATA, trgCluster.getName()).getPath()));
+            inputDataset.setUriTemplate(new Path(ClusterHelper
+                    .getStorageUrl(srcCluster), FeedHelper.getLocation(feed,
+                    LocationType.DATA, srcCluster.getName()).getPath()).toString());
+            outputDataset.setUriTemplate(getStoragePath(FeedHelper.getLocation(
+                    feed, LocationType.DATA, trgCluster.getName()).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
             if (feed.getAvailabilityFlag() == null) {
@@ -238,25 +241,30 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private void setDatasetValues(SYNCDATASET dataset, Feed feed, Cluster cluster) {
-        dataset.setInitialInstance(SchemaHelper.formatDateUTC(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getStart()));
+        dataset.setInitialInstance(
+                SchemaHelper.formatDateUTC(FeedHelper.getCluster(feed, cluster.getName()).getValidity().getStart()));
         dataset.setTimezone(feed.getTimezone().getID());
         dataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
     }
 
-    private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath, String wfName) throws FalconException {
+    private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath, String wfName)
+            throws FalconException {
         ACTION replicationAction = new ACTION();
         WORKFLOW replicationWF = new WORKFLOW();
         try {
             replicationWF.setAppPath(getStoragePath(wfPath.toString()));
             Feed feed = getEntity();
 
-            String srcPart = FeedHelper.normalizePartitionExpression(FeedHelper.getCluster(feed, srcCluster.getName()).getPartition());
+            String srcPart = FeedHelper.normalizePartitionExpression(
+                    FeedHelper.getCluster(feed, srcCluster.getName()).getPartition());
             srcPart = FeedHelper.evaluateClusterExp(srcCluster, srcPart);
-            String targetPart = FeedHelper.normalizePartitionExpression(FeedHelper.getCluster(feed, trgCluster.getName()).getPartition());
+            String targetPart = FeedHelper.normalizePartitionExpression(
+                    FeedHelper.getCluster(feed, trgCluster.getName()).getPartition());
             targetPart = FeedHelper.evaluateClusterExp(trgCluster, targetPart);
-            
+
             StringBuilder pathsWithPartitions = new StringBuilder();
-            pathsWithPartitions.append("${coord:dataIn('input')}/").append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
+            pathsWithPartitions.append("${coord:dataIn('input')}/").append(
+                    FeedHelper.normalizePartitionExpression(srcPart, targetPart));
 
             Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
             props.put("srcClusterName", srcCluster.getName());
@@ -294,26 +302,27 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         Feed feed = getEntity();
         Map<String, String> props = new HashMap<String, String>();
         if (feed.getProperties() != null) {
-            for (Property prop : feed.getProperties().getProperties())
+            for (Property prop : feed.getProperties().getProperties()) {
                 props.put(prop.getName(), prop.getValue());
+            }
         }
         return props;
     }
-    
-	private String getLocationURI(Cluster cluster, Feed feed, LocationType type) {
-		String path = FeedHelper.getLocation(feed, type, cluster.getName())
-				.getPath();
 
-		if (!path.equals("/tmp")) {
-			if (new Path(path).toUri().getScheme() == null){
-				return  new Path(ClusterHelper.getStorageUrl(cluster), path)
-						.toString();}
-			else{
-				return  path;
-			}
-		}
-		return null;
+    private String getLocationURI(Cluster cluster, Feed feed, LocationType type) {
+        String path = FeedHelper.getLocation(feed, type, cluster.getName())
+                .getPath();
 
-}
+        if (!path.equals("/tmp")) {
+            if (new Path(path).toUri().getScheme() == null) {
+                return new Path(ClusterHelper.getStorageUrl(cluster), path)
+                        .toString();
+            } else {
+                return path;
+            }
+        }
+        return null;
+
+    }
 
 }

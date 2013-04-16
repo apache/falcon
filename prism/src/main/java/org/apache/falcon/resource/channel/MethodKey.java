@@ -42,19 +42,25 @@ public class MethodKey {
 
     @Override
     public boolean equals(Object methodRHS) {
-        if (this == methodRHS) return true;
+        if (this == methodRHS) {
+            return true;
+        }
         if (methodRHS == null ||
-                getClass() != methodRHS.getClass()) return false;
+                getClass() != methodRHS.getClass()) {
+            return false;
+        }
 
         MethodKey methodKey = (MethodKey) methodRHS;
 
         if (name != null ? !name.equals(methodKey.name) :
-                methodKey.name != null) return false;
+                methodKey.name != null) {
+            return false;
+        }
         boolean matching = true;
         for (int index = 0; index < argClasses.length; index++) {
             if (argClasses[index] != null && methodKey.argClasses[index] != null &&
                     !methodKey.argClasses[index].isAssignableFrom(argClasses[index])) {
-                 matching = false;
+                matching = false;
             }
         }
         return matching;

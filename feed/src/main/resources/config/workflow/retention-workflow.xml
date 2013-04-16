@@ -16,64 +16,86 @@
   limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-feed-parent-workflow'>
-	<start to='eviction' />
+    <start to='eviction'/>
     <action name="eviction">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
             <configuration>
-				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
-					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${jobPriority}</value>
-				</property>
-			</configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
             <main-class>org.apache.falcon.retention.FeedEvictor</main-class>
-            <arg>-feedBasePath</arg><arg>${feedDataPath}</arg>
-            <arg>-retentionType</arg><arg>instance</arg>
-            <arg>-retentionLimit</arg><arg>${limit}</arg>
-            <arg>-timeZone</arg><arg>${timeZone}</arg>
-            <arg>-frequency</arg><arg>${frequency}</arg>
-			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+            <arg>-feedBasePath</arg>
+            <arg>${feedDataPath}</arg>
+            <arg>-retentionType</arg>
+            <arg>instance</arg>
+            <arg>-retentionLimit</arg>
+            <arg>${limit}</arg>
+            <arg>-timeZone</arg>
+            <arg>${timeZone}</arg>
+            <arg>-frequency</arg>
+            <arg>${frequency}</arg>
+            <arg>-logFile</arg>
+            <arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
         </java>
         <ok to="jms-messaging"/>
         <error to="fail"/>
     </action>
-	
-	<action name='jms-messaging'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<configuration>
-				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
-					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${jobPriority}</value>
-				</property>
-			</configuration>
-			<main-class>org.apache.falcon.messaging.MessageProducer</main-class>
-			<arg>-entityName</arg><arg>${entityName}</arg>
-			<arg>-feedNames</arg><arg>${feedNames}</arg>
-			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>
-			<arg>-workflowId</arg><arg>${wf:id()}</arg>
-			<arg>-runId</arg><arg>${wf:run()}</arg>
-			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
-			<arg>-timeStamp</arg><arg>${timeStamp}</arg>
-			<arg>-brokerUrl</arg><arg>${userBrokerUrl}</arg>
-			<arg>-brokerImplClass</arg><arg>${userBrokerImplClass}</arg>
-			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-operation</arg><arg>DELETE</arg>
-			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
-			<arg>-topicName</arg><arg>FALCON.${entityName}</arg>
-			<arg>-status</arg><arg>SUCCEEDED</arg>
-			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
-			<arg>-cluster</arg><arg>${cluster}</arg>
+
+    <action name='jms-messaging'>
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.messaging.MessageProducer</main-class>
+            <arg>-entityName</arg>
+            <arg>${entityName}</arg>
+            <arg>-feedNames</arg>
+            <arg>${feedNames}</arg>
+            <arg>-feedInstancePaths</arg>
+            <arg>${feedInstancePaths}</arg>
+            <arg>-workflowId</arg>
+            <arg>${wf:id()}</arg>
+            <arg>-runId</arg>
+            <arg>${wf:run()}</arg>
+            <arg>-nominalTime</arg>
+            <arg>${nominalTime}</arg>
+            <arg>-timeStamp</arg>
+            <arg>${timeStamp}</arg>
+            <arg>-brokerUrl</arg>
+            <arg>${userBrokerUrl}</arg>
+            <arg>-brokerImplClass</arg>
+            <arg>${userBrokerImplClass}</arg>
+            <arg>-entityType</arg>
+            <arg>${entityType}</arg>
+            <arg>-operation</arg>
+            <arg>DELETE</arg>
+            <arg>-logFile</arg>
+            <arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+            <arg>-topicName</arg>
+            <arg>FALCON.${entityName}</arg>
+            <arg>-status</arg>
+            <arg>SUCCEEDED</arg>
+            <arg>-brokerTTL</arg>
+            <arg>${wf:conf("broker.ttlInMins")}</arg>
+            <arg>-cluster</arg>
+            <arg>${cluster}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/ant.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
@@ -81,15 +103,15 @@
             <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
             <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
             <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
-		</java>
-		<ok to="end" />
-		<error to="fail" />
-	</action>	
+        </java>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
 
-	<kill name="fail">
-		<message>Workflow failed, error
-			message[${wf:errorMessage(wf:lastErrorNode())}]
-		</message>
-	</kill>
-	<end name='end' />
+    <kill name="fail">
+        <message>Workflow failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end'/>
 </workflow-app>

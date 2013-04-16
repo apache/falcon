@@ -25,24 +25,24 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 public class EmbeddedServer {
-  private Server server = new Server();
-  private Connector connector = new SocketConnector();
+    private Server server = new Server();
+    private Connector connector = new SocketConnector();
 
-  public EmbeddedServer(int port, String path) {
-    connector.setPort(port);
-    connector.setHost("0.0.0.0");
-    server.addConnector(connector);
+    public EmbeddedServer(int port, String path) {
+        connector.setPort(port);
+        connector.setHost("0.0.0.0");
+        server.addConnector(connector);
 
-    WebAppContext application = new WebAppContext(path, "/");
-    server.setHandler(application);
-  }
+        WebAppContext application = new WebAppContext(path, "/");
+        server.setHandler(application);
+    }
 
-  public void start() throws Exception {
-	Services.get().reset();
-    server.start();
-  }
+    public void start() throws Exception {
+        Services.get().reset();
+        server.start();
+    }
 
-  public void stop() throws Exception {
-    server.stop();
-  }
+    public void stop() throws Exception {
+        server.stop();
+    }
 }

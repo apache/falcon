@@ -18,12 +18,6 @@
 
 package org.apache.falcon.listener;
 
-import java.util.Map;
-import java.util.Properties;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.service.ServiceInitializer;
@@ -31,6 +25,11 @@ import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import java.util.Map;
+import java.util.Properties;
 
 public class ContextStartupListener implements ServletContextListener {
 
@@ -48,7 +47,7 @@ public class ContextStartupListener implements ServletContextListener {
 
         LOG.info("Initializing runtime properties ...");
         RuntimeProperties.get();
-        
+
         try {
             startupServices.initialize();
             ConfigurationStore.get();

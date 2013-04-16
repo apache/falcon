@@ -17,22 +17,23 @@
  */
 package org.apache.falcon.rerun.queue;
 
-import java.util.List;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.log4j.Logger;
 
-public abstract class  DelayedQueue<T extends RerunEvent> {
-	public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
-	public abstract boolean offer(T event) throws FalconException;
+import java.util.List;
 
-	public abstract T take() throws FalconException;
-	
-	public abstract void populateQueue(List<T> events);
-	
-	public abstract void init();
-	
-	public abstract void reconnect() throws FalconException;
+public abstract class DelayedQueue<T extends RerunEvent> {
+    public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
+
+    public abstract boolean offer(T event) throws FalconException;
+
+    public abstract T take() throws FalconException;
+
+    public abstract void populateQueue(List<T> events);
+
+    public abstract void init();
+
+    public abstract void reconnect() throws FalconException;
 
 }

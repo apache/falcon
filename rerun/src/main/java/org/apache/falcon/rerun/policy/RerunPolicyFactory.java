@@ -28,7 +28,7 @@ public class RerunPolicyFactory {
     public static AbstractRerunPolicy getRetryPolicy(PolicyType latePolicy) {
         switch (latePolicy) {
             case PERIODIC:
-                return new  PeriodicPolicy();
+                return new PeriodicPolicy();
 
             case EXP_BACKOFF:
                 return new ExpBackoffPolicy();

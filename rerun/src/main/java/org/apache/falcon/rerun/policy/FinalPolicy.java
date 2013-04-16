@@ -18,10 +18,10 @@
 
 package org.apache.falcon.rerun.policy;
 
-import java.util.Date;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Frequency;
+
+import java.util.Date;
 
 public class FinalPolicy extends AbstractRerunPolicy {
 

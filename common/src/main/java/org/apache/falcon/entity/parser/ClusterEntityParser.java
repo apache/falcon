@@ -18,13 +18,13 @@
 
 package org.apache.falcon.entity.parser;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
 public class ClusterEntityParser extends EntityParser<Cluster> {
@@ -36,22 +36,22 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     @Override
-	public void validate(Cluster cluster) throws StoreAccessException,
-			ValidationException { 
-		if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme()==null) {
-			throw new ValidationException(
-					"Cannot get valid scheme for namenode from write interface of cluster: "
-							+ cluster.getName());
-		}
-		try {
-			Configuration conf = new Configuration();
-			conf.set("fs.default.name", ClusterHelper.getStorageUrl(cluster));
-			conf.setInt("ipc.client.connect.max.retries", 10);
-			FileSystem.get(conf);
-		} catch (Exception e) {
-			throw new ValidationException("Invalid HDFS server or port:"
-					+ ClusterHelper.getStorageUrl(cluster), e);
-		}
-	}
+    public void validate(Cluster cluster) throws StoreAccessException,
+                                                 ValidationException {
+        if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme() == null) {
+            throw new ValidationException(
+                    "Cannot get valid scheme for namenode from write interface of cluster: "
+                            + cluster.getName());
+        }
+        try {
+            Configuration conf = new Configuration();
+            conf.set("fs.default.name", ClusterHelper.getStorageUrl(cluster));
+            conf.setInt("ipc.client.connect.max.retries", 10);
+            FileSystem.get(conf);
+        } catch (Exception e) {
+            throw new ValidationException("Invalid HDFS server or port:"
+                    + ClusterHelper.getStorageUrl(cluster), e);
+        }
+    }
 
 }

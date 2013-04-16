@@ -18,11 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
@@ -43,6 +38,11 @@ import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.log4j.Logger;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TimeZone;
+
 public class FeedEntityParser extends EntityParser<Feed> {
 
     private static final Logger LOG = Logger.getLogger(FeedEntityParser.class);
@@ -53,15 +53,18 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     @Override
     public void validate(Feed feed) throws FalconException {
-        if(feed.getTimezone() == null)
+        if (feed.getTimezone() == null) {
             feed.setTimezone(TimeZone.getTimeZone("UTC"));
-        
-        if (feed.getClusters() == null)
+        }
+
+        if (feed.getClusters() == null) {
             throw new ValidationException("Feed should have atleast one cluster");
+        }
 
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
-            validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(), cluster.getName());
+            validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
+                    cluster.getName());
             validateFeedCutOffPeriod(feed, cluster);
         }
 
@@ -72,8 +75,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
         // But is this an update ?
 
         Feed oldFeed = ConfigurationStore.get().get(EntityType.FEED, feed.getName());
-        if (oldFeed == null)
+        if (oldFeed == null) {
             return; // Not an update case
+        }
 
         // Is actually an update. Need to iterate over all the processes
         // depending on this feed and see if they are valid with the new
@@ -81,8 +85,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
         EntityGraph graph = EntityGraph.get();
         Set<Entity> referenced = graph.getDependents(oldFeed);
         Set<Process> processes = findProcesses(referenced);
-        if (processes.isEmpty())
+        if (processes.isEmpty()) {
             return;
+        }
 
         ensureValidityFor(feed, processes);
     }
@@ -98,33 +103,35 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateFeedGroups(Feed feed) throws ValidationException {
-        String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[] {};
+        String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[]{};
         String defaultPath = FeedHelper.getLocation(feed, LocationType.DATA)
-		.getPath();
-		for (Cluster cluster : feed.getClusters().getClusters()) {
-			if (!FeedGroup.getDatePattern(
-					FeedHelper.getLocation(feed, LocationType.DATA,
-							cluster.getName()).getPath()).equals(
-					FeedGroup.getDatePattern(defaultPath))) {
-				throw new ValidationException("Feeds default path pattern: "
-						+ FeedHelper.getLocation(feed, LocationType.DATA)
-								.getPath()
-						+ ", does not match with cluster: "
-						+ cluster.getName()
-						+ " path pattern: "
-						+ FeedHelper.getLocation(feed, LocationType.DATA,
-								cluster.getName()).getPath());
-			}
-		}
+                .getPath();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (!FeedGroup.getDatePattern(
+                    FeedHelper.getLocation(feed, LocationType.DATA,
+                            cluster.getName()).getPath()).equals(
+                    FeedGroup.getDatePattern(defaultPath))) {
+                throw new ValidationException("Feeds default path pattern: "
+                        + FeedHelper.getLocation(feed, LocationType.DATA)
+                        .getPath()
+                        + ", does not match with cluster: "
+                        + cluster.getName()
+                        + " path pattern: "
+                        + FeedHelper.getLocation(feed, LocationType.DATA,
+                        cluster.getName()).getPath());
+            }
+        }
         for (String groupName : groupNames) {
             FeedGroup group = FeedGroupMap.get().getGroupsMapping().get(groupName);
             if (group == null || group.canContainFeed(feed)) {
                 continue;
             } else {
-                throw new ValidationException("Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
-                        + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
-                        + " does not match with group: " + group.getName() + "'s frequency: " + group.getFrequency()
-                        + ", date pattern: " + group.getDatePattern());
+                throw new ValidationException(
+                        "Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
+                                + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
+                                + " does not match with group: " + group.getName() + "'s frequency: "
+                                + group.getFrequency()
+                                + ", date pattern: " + group.getDatePattern());
             }
         }
     }
@@ -134,8 +141,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
             try {
                 ensureValidityFor(newFeed, process);
             } catch (FalconException e) {
-                throw new ValidationException("Process " + process.getName() + " is not compatible " + "with changes to feed "
-                        + newFeed.getName(), e);
+                throw new ValidationException(
+                        "Process " + process.getName() + " is not compatible " + "with changes to feed "
+                                + newFeed.getName(), e);
             }
         }
     }
@@ -145,8 +153,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
             String clusterName = cluster.getName();
             if (process.getInputs() != null) {
                 for (Input input : process.getInputs().getInputs()) {
-                    if (!input.getFeed().equals(newFeed.getName()))
+                    if (!input.getFeed().equals(newFeed.getName())) {
                         continue;
+                    }
                     CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
                     CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), newFeed, clusterName);
                     CrossEntityValidations.validateInstanceRange(process, input, newFeed);
@@ -159,13 +168,15 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
             if (process.getOutputs() != null) {
                 for (Output output : process.getOutputs().getOutputs()) {
-                    if (!output.getFeed().equals(newFeed.getName()))
+                    if (!output.getFeed().equals(newFeed.getName())) {
                         continue;
+                    }
                     CrossEntityValidations.validateFeedDefinedForCluster(newFeed, clusterName);
                     CrossEntityValidations.validateInstance(process, output, newFeed);
                 }
             }
-            LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of " + newFeed.getName());
+            LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of "
+                    + newFeed.getName());
         }
     }
 
@@ -188,59 +199,66 @@ public class FeedEntityParser extends EntityParser<Feed> {
         String feedRetention = cluster.getRetention().getLimit().toString();
         long retentionPeriod = evaluator.evaluate(feedRetention, Long.class);
 
-        if(feed.getLateArrival()==null){
-        	LOG.debug("Feed's late arrival cut-off not set");
-        	return;
+        if (feed.getLateArrival() == null) {
+            LOG.debug("Feed's late arrival cut-off not set");
+            return;
         }
         String feedCutoff = feed.getLateArrival().getCutOff().toString();
         long feedCutOffPeriod = evaluator.evaluate(feedCutoff, Long.class);
 
         if (retentionPeriod < feedCutOffPeriod) {
-            throw new ValidationException("Feed's retention limit: " + feedRetention + " of referenced cluster " + cluster.getName()
-                    + " should be more than feed's late arrival cut-off period: " + feedCutoff + " for feed: " + feed.getName());
+            throw new ValidationException(
+                    "Feed's retention limit: " + feedRetention + " of referenced cluster " + cluster.getName()
+                            + " should be more than feed's late arrival cut-off period: " + feedCutoff + " for feed: "
+                            + feed.getName());
         }
     }
-    
+
     private void validateFeedPartitionExpression(Feed feed) throws FalconException {
         int numSourceClusters = 0, numTrgClusters = 0;
         Set<String> clusters = new HashSet<String>();
         for (Cluster cl : feed.getClusters().getClusters()) {
-			if (!clusters.add(cl.getName())) {
-				throw new ValidationException("Cluster: " + cl.getName()
-						+ " is defined more than once for feed: "+feed.getName());
-			}
-            if (cl.getType() == ClusterType.SOURCE){
+            if (!clusters.add(cl.getName())) {
+                throw new ValidationException("Cluster: " + cl.getName()
+                        + " is defined more than once for feed: " + feed.getName());
+            }
+            if (cl.getType() == ClusterType.SOURCE) {
                 numSourceClusters++;
-            } else if(cl.getType() == ClusterType.TARGET) {
+            } else if (cl.getType() == ClusterType.TARGET) {
                 numTrgClusters++;
             }
         }
-        
-		if (numTrgClusters >= 1 && numSourceClusters == 0) {
-			throw new ValidationException("Feed: " + feed.getName()
-					+ " should have atleast one source cluster defined");
-		}
-        
-        int feedParts = feed.getPartitions() != null ? feed.getPartitions().getPartitions().size() : 0;
-        
-        for(Cluster cluster:feed.getClusters().getClusters()) {
 
-            if(cluster.getType() == ClusterType.SOURCE && numSourceClusters > 1 && numTrgClusters >= 1) {
+        if (numTrgClusters >= 1 && numSourceClusters == 0) {
+            throw new ValidationException("Feed: " + feed.getName()
+                    + " should have atleast one source cluster defined");
+        }
+
+        int feedParts = feed.getPartitions() != null ? feed.getPartitions().getPartitions().size() : 0;
+
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+
+            if (cluster.getType() == ClusterType.SOURCE && numSourceClusters > 1 && numTrgClusters >= 1) {
                 String part = FeedHelper.normalizePartitionExpression(cluster.getPartition());
-                if(StringUtils.split(part, '/').length == 0)
-                    throw new ValidationException("Partition expression has to be specified for cluster " + cluster.getName() +
-                            " as there are more than one source clusters");
+                if (StringUtils.split(part, '/').length == 0) {
+                    throw new ValidationException(
+                            "Partition expression has to be specified for cluster " + cluster.getName() +
+                                    " as there are more than one source clusters");
+                }
                 validateClusterExpDefined(cluster);
 
-            } else if(cluster.getType() == ClusterType.TARGET) {
+            } else if (cluster.getType() == ClusterType.TARGET) {
 
-                for(Cluster src:feed.getClusters().getClusters()) {
-                    if(src.getType() == ClusterType.SOURCE) {
-                        String part = FeedHelper.normalizePartitionExpression(src.getPartition(), cluster.getPartition());
+                for (Cluster src : feed.getClusters().getClusters()) {
+                    if (src.getType() == ClusterType.SOURCE) {
+                        String part = FeedHelper.normalizePartitionExpression(src.getPartition(),
+                                cluster.getPartition());
                         int numParts = StringUtils.split(part, '/').length;
-                        if(numParts > feedParts)
-                            throw new ValidationException("Partition for " + src.getName() + " and " + cluster.getName() + 
-                                    "clusters is more than the number of partitions defined in feed");
+                        if (numParts > feedParts) {
+                            throw new ValidationException(
+                                    "Partition for " + src.getName() + " and " + cluster.getName() +
+                                            "clusters is more than the number of partitions defined in feed");
+                        }
                     }
                 }
 
@@ -252,12 +270,15 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateClusterExpDefined(Cluster cl) throws FalconException {
-        if(cl.getPartition() == null)
+        if (cl.getPartition() == null) {
             return;
-        
+        }
+
         org.apache.falcon.entity.v0.cluster.Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, cl.getName());
         String part = FeedHelper.normalizePartitionExpression(cl.getPartition());
-        if(FeedHelper.evaluateClusterExp(cluster, part).equals(part))
-            throw new ValidationException("Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName()); 
+        if (FeedHelper.evaluateClusterExp(cluster, part).equals(part)) {
+            throw new ValidationException(
+                    "Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName());
+        }
     }
 }

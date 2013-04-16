@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EntityList {
 
-    @XmlElement (name = "entity")
+    @XmlElement(name = "entity")
     private EntityElement[] elements;
 
     public static class EntityElement {
@@ -54,7 +54,8 @@ public class EntityList {
     }
 
     //For JAXB
-    public EntityList() {}
+    public EntityList() {
+    }
 
     public EntityList(Entity[] elements) {
         EntityElement[] items = new EntityElement[elements.length];

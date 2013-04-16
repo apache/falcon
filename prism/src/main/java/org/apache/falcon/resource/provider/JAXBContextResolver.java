@@ -18,6 +18,11 @@
 
 package org.apache.falcon.resource.provider;
 
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.api.json.JSONJAXBContext;
+import org.apache.falcon.resource.APIResult;
+import org.apache.falcon.resource.InstancesResult;
+
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -25,17 +30,13 @@ import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.json.JSONJAXBContext;
-import org.apache.falcon.resource.APIResult;
-import org.apache.falcon.resource.InstancesResult;
-
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
-public class JAXBContextResolver implements ContextResolver<JAXBContext>{
+public class JAXBContextResolver implements ContextResolver<JAXBContext> {
     private static JAXBContext context;
-    private static Class<?>[] types = { InstancesResult.class, APIResult.class, InstancesResult.Instance.class,
-            InstancesResult.WorkflowStatus.class };
+    private static Class<?>[] types = {InstancesResult.class, APIResult.class, InstancesResult.Instance.class,
+                                       InstancesResult.WorkflowStatus.class};
+
     static {
         try {
             context = new JSONJAXBContext(JSONConfiguration.natural().build(), types);
@@ -44,8 +45,9 @@ public class JAXBContextResolver implements ContextResolver<JAXBContext>{
         }
     }
 
-    public JAXBContextResolver() { }
-    
+    public JAXBContextResolver() {
+    }
+
     public JAXBContext getContext(Class<?> objectType) {
         for (Class<?> type : types) {
             if (type == objectType) {

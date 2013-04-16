@@ -46,7 +46,7 @@ public class ChainableMonitoringPlugin extends AbstractFalconAspect implements M
                 LOG.info("Registered Monitoring Plugin " + pluginClass);
             }
         } catch (FalconException e) {
-            plugins = Arrays.asList((MonitoringPlugin)new LoggingPlugin());
+            plugins = Arrays.asList((MonitoringPlugin) new LoggingPlugin());
             LOG.error("Unable to initialize monitoring plugins: " + pluginClasses, e);
         }
     }

@@ -18,11 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.EntityUtil;
@@ -31,6 +26,11 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 /**
  * REST resource of allowed actions on Schedulable Entities Only Process and
@@ -42,13 +42,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     /**
      * Schedules an submitted entity immediately
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
      */
-    public APIResult schedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("colo") @PathParam("colo") String colo) {
+    public APIResult schedule(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity,
+            @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
             audit(request, entity, type, "SCHEDULED");
@@ -68,11 +70,12 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     /**
      * Submits a new entity and schedules it immediately
-     * 
+     *
      * @param type
      * @return
      */
-    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+    public APIResult submitAndSchedule(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
@@ -80,7 +83,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
             audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
-            return new APIResult(APIResult.Status.SUCCEEDED, entity.getName() + "(" + type + ") scheduled successfully");
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    entity.getName() + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
             LOG.error("Unable to submit and schedule ", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -89,22 +93,25 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     /**
      * Suspends a running entity
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
      */
-    public APIResult suspend(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("entityName") @PathParam("entity") String colo) {
+    public APIResult suspend(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity,
+            @Dimension("entityName") @PathParam("entity") String colo) {
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
             audit(request, entity, type, "SUSPEND");
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj))
+            if (getWorkflowEngine().isActive(entityObj)) {
                 getWorkflowEngine().suspend(entityObj);
-            else
+            } else {
                 throw new FalconException(entity + "(" + type + ") is not scheduled");
+            }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") suspended successfully");
         } catch (Throwable e) {
             LOG.error("Unable to suspend entity", e);
@@ -114,23 +121,26 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
 
     /**
      * Resumes a suspended entity
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
      */
-    public APIResult resume(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity, @Dimension("colo") @PathParam("colo") String colo) {
+    public APIResult resume(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+            @Dimension("entityName") @PathParam("entity") String entity,
+            @Dimension("colo") @PathParam("colo") String colo) {
 
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
             audit(request, entity, type, "RESUME");
             Entity entityObj = EntityUtil.getEntity(type, entity);
-            if (getWorkflowEngine().isActive(entityObj))
+            if (getWorkflowEngine().isActive(entityObj)) {
                 getWorkflowEngine().resume(entityObj);
-            else
+            } else {
                 throw new FalconException(entity + "(" + type + ") is not scheduled");
+            }
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") resumed successfully");
         } catch (Throwable e) {
             LOG.error("Unable to resume entity", e);
@@ -141,7 +151,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     private void checkSchedulableEntity(String type) throws UnschedulableEntityException {
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         if (!entityType.isSchedulable()) {
-            throw new UnschedulableEntityException("Entity type (" + type + ") " + " cannot be Scheduled/Suspended/Resumed");
+            throw new UnschedulableEntityException(
+                    "Entity type (" + type + ") " + " cannot be Scheduled/Suspended/Resumed");
         }
     }
 }

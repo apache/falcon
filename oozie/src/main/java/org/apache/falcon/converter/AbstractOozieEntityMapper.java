@@ -18,24 +18,7 @@
 
 package org.apache.falcon.converter;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.Tag;
@@ -54,8 +37,20 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+
+import javax.xml.bind.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
@@ -65,8 +60,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected static final String ACTUAL_TIME_EL = "${coord:formatTime(coord:actualTime(), 'yyyy-MM-dd-HH-mm')}";
     protected static final Long DEFAULT_BROKER_MSG_TTL = 3 * 24 * 60L;
-    protected static final String MR_QUEUE_NAME="queueName";
-    protected static final String MR_JOB_PRIORITY="jobPriority";
+    protected static final String MR_QUEUE_NAME = "queueName";
+    protected static final String MR_JOB_PRIORITY = "jobPriority";
 
     protected static final JAXBContext workflowJaxbContext;
     protected static final JAXBContext coordJaxbContext;
@@ -75,16 +70,18 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final FalconPathFilter falconJarFilter = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
-            if (path.getName().startsWith("falcon"))
+            if (path.getName().startsWith("falcon")) {
                 return true;
+            }
             return false;
         }
 
         @Override
         public String getJarName(Path path) {
             String name = path.getName();
-            if(name.endsWith(".jar"))
+            if (name.endsWith(".jar")) {
                 name = name.substring(0, name.indexOf(".jar"));
+            }
             return name;
         }
     };
@@ -127,7 +124,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         }
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-            String coordXmlName = marshal(cluster, coordinatorapp, coordPath, EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
+            String coordXmlName = marshal(cluster, coordinatorapp, coordPath,
+                    EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
             createTempDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
@@ -145,23 +143,26 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         try {
             Path libPath = new Path(coordPath, "lib");
             FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-            if (!fs.exists(libPath))
+            if (!fs.exists(libPath)) {
                 fs.mkdirs(libPath);
+            }
 
             SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, falconJarFilter);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
-            throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(),e);
+            throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(), e);
         }
     }
 
     protected abstract List<COORDINATORAPP> getCoordinators(Cluster cluster, Path bundlePath) throws FalconException;
 
     protected org.apache.falcon.oozie.coordinator.CONFIGURATION getCoordConfig(Map<String, String> propMap) {
-        org.apache.falcon.oozie.coordinator.CONFIGURATION conf = new org.apache.falcon.oozie.coordinator.CONFIGURATION();
+        org.apache.falcon.oozie.coordinator.CONFIGURATION conf
+                = new org.apache.falcon.oozie.coordinator.CONFIGURATION();
         List<org.apache.falcon.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
-        for (Entry<String, String> prop : propMap.entrySet())
+        for (Entry<String, String> prop : propMap.entrySet()) {
             props.add(createCoordProperty(prop.getKey(), prop.getValue()));
+        }
         return conf;
     }
 
@@ -172,37 +173,42 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
         props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
         props.put("userBrokerImplClass", ClusterHelper.getMessageBrokerImplClass(cluster));
-        String falconBrokerUrl = StartupProperties.get().getProperty(ARG.brokerUrl.getPropName(), "tcp://localhost:61616?daemon=true");
+        String falconBrokerUrl = StartupProperties.get().getProperty(ARG.brokerUrl.getPropName(),
+                "tcp://localhost:61616?daemon=true");
         props.put(ARG.brokerUrl.getPropName(), falconBrokerUrl);
         String falconBrokerImplClass = StartupProperties.get().getProperty(ARG.brokerImplClass.getPropName(),
                 ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
         props.put(ARG.brokerImplClass.getPropName(), falconBrokerImplClass);
-        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
+        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
+                DEFAULT_BROKER_MSG_TTL.toString());
         props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
         props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
         props.put("logDir", getStoragePath(new Path(coordPath, "../../logs")));
-        props.put(OozieClient.EXTERNAL_ID, new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
-                "${coord:nominalTime()}").getId());
+        props.put(OozieClient.EXTERNAL_ID,
+                new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
+                        "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
-		try {
-			if (EntityUtil.getLateProcess(entity) == null
-					|| EntityUtil.getLateProcess(entity).getLateInputs() == null
-					|| EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
-				props.put("shouldRecord", "false");
-			} else {
-				props.put("shouldRecord", "true");
-			}
-		} catch (FalconException e) {
-			LOG.error("Unable to get Late Process for entity:" + entity, e);
-			throw new FalconRuntimException(e);
-		}
+        try {
+            if (EntityUtil.getLateProcess(entity) == null
+                    || EntityUtil.getLateProcess(entity).getLateInputs() == null
+                    || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
+                props.put("shouldRecord", "false");
+            } else {
+                props.put("shouldRecord", "true");
+            }
+        } catch (FalconException e) {
+            LOG.error("Unable to get Late Process for entity:" + entity, e);
+            throw new FalconRuntimException(e);
+        }
         props.put("entityName", entity.getName());
         props.put("entityType", entity.getEntityType().name().toLowerCase());
         props.put(ARG.cluster.getPropName(), cluster.getName());
-        if(cluster.getProperties() != null)
-            for(Property prop:cluster.getProperties().getProperties())
+        if (cluster.getProperties() != null) {
+            for (Property prop : cluster.getProperties().getProperties()) {
                 props.put(prop.getName(), prop.getValue());
-        
+            }
+        }
+
         props.put(MR_QUEUE_NAME, "default");
         props.put(MR_JOB_PRIORITY, "NORMAL");
         //props in entity override the set props.
@@ -210,21 +216,25 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return props;
     }
 
-    protected org.apache.falcon.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name, String value) {
-        org.apache.falcon.oozie.coordinator.CONFIGURATION.Property prop = new org.apache.falcon.oozie.coordinator.CONFIGURATION.Property();
+    protected org.apache.falcon.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name,
+                                                                                             String value) {
+        org.apache.falcon.oozie.coordinator.CONFIGURATION.Property prop
+                = new org.apache.falcon.oozie.coordinator.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
     }
 
     protected org.apache.falcon.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
-        org.apache.falcon.oozie.bundle.CONFIGURATION.Property prop = new org.apache.falcon.oozie.bundle.CONFIGURATION.Property();
+        org.apache.falcon.oozie.bundle.CONFIGURATION.Property prop
+                = new org.apache.falcon.oozie.bundle.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
     }
 
-    protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath) throws FalconException {
+    protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
+            throws FalconException {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -260,8 +270,9 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws FalconException {
-        if(StringUtils.isEmpty(name))
+        if (StringUtils.isEmpty(name)) {
             name = "coordinator";
+        }
         name = name + ".xml";
         marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, name));
         return name;
@@ -269,26 +280,30 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
 
-        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext, new Path(
-                outPath, "bundle.xml"));
+        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext,
+                new Path(
+                        outPath, "bundle.xml"));
     }
 
     protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
 
-        marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow), workflowJaxbContext,
+        marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
+                workflowJaxbContext,
                 new Path(outPath, "workflow.xml"));
     }
 
     protected String getStoragePath(Path path) {
-        if (path != null)
+        if (path != null) {
             return getStoragePath(path.toString());
+        }
         return null;
     }
 
     protected String getStoragePath(String path) {
         if (StringUtils.isNotEmpty(path)) {
-            if (new Path(path).toUri().getScheme()==null)
+            if (new Path(path).toUri().getScheme() == null) {
                 path = "${nameNode}" + path;
+            }
         }
         return path;
     }

@@ -26,13 +26,14 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CustomOozieClient;
 import org.apache.oozie.client.OozieClient;
-//import org.apache.oozie.local.LocalOozie;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+//import org.apache.oozie.local.LocalOozie;
+
 public class OozieClientFactory {
 
-	private static final Logger LOG = Logger.getLogger(OozieClientFactory.class);
+    private static final Logger LOG = Logger.getLogger(OozieClientFactory.class);
 
     private static final ConcurrentHashMap<String, OozieClient> cache =
             new ConcurrentHashMap<String, OozieClient>();
@@ -56,6 +57,7 @@ public class OozieClientFactory {
     public static OozieClient get(String cluster) throws FalconException {
         return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, cluster));
     }
+
     private static OozieClient getClientRef(String oozieUrl)
             throws FalconException {
         if (LOCAL_OOZIE.equals(oozieUrl)) {

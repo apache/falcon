@@ -17,40 +17,42 @@
   limitations under the License.
   -->
 
-<coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns="uri:oozie:coordinator:0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:oozie:coordinator:0.2 ../../main/resources/coordinator.xsd ">
-  <controls>
-    <timeout>timeout</timeout>
-    <concurrency>concurrency</concurrency>
-    <execution>execution</execution>
-    <throttle>throttle</throttle>
-  </controls>
-  <datasets>
-    <include>include</include>
-    <dataset frequency="" initial-instance="" name="dataset1" timezone="">
-      <uri-template>uri-template</uri-template>
-      <done-flag>done-flag</done-flag>
-    </dataset>
-  </datasets>
-  <input-events>
-    <data-in dataset="dataset1" name="data-in">
-      <instance>instance</instance>
-    </data-in>
-  </input-events>
-  <output-events>
-    <data-out dataset="dataset1" name="data-out1">
-      <instance>instance</instance>
-    </data-out>
-  </output-events>
-  <action>
-    <workflow>
-      <app-path>app-path</app-path>
-      <configuration>
-        <property>
-          <name>name</name>
-          <value>value</value>
-          <description>description</description>
-        </property>
-      </configuration>
-    </workflow>
-  </action>
+<coordinator-app end="" frequency="" name="test" start="" timezone="" xmlns="uri:oozie:coordinator:0.3"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="/../main/resources/coordinator.xsd">
+    <controls>
+        <timeout>timeout</timeout>
+        <concurrency>concurrency</concurrency>
+        <execution>execution</execution>
+        <throttle>throttle</throttle>
+    </controls>
+    <datasets>
+        <include>include</include>
+        <dataset frequency="" initial-instance="" name="dataset1" timezone="">
+            <uri-template>uri-template</uri-template>
+            <done-flag>done-flag</done-flag>
+        </dataset>
+    </datasets>
+    <input-events>
+        <data-in dataset="dataset1" name="data-in">
+            <instance>instance</instance>
+        </data-in>
+    </input-events>
+    <output-events>
+        <data-out dataset="dataset1" name="data-out1">
+            <instance>instance</instance>
+        </data-out>
+    </output-events>
+    <action>
+        <workflow>
+            <app-path>app-path</app-path>
+            <configuration>
+                <property>
+                    <name>name</name>
+                    <value>value</value>
+                    <description>description</description>
+                </property>
+            </configuration>
+        </workflow>
+    </action>
 </coordinator-app>

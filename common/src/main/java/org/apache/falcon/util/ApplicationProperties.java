@@ -18,6 +18,10 @@
 
 package org.apache.falcon.util;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -25,10 +29,6 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-
-import org.apache.falcon.FalconException;
-import org.apache.falcon.expression.ExpressionHelper;
-import org.apache.log4j.Logger;
 
 public abstract class ApplicationProperties extends Properties {
 
@@ -52,7 +52,7 @@ public abstract class ApplicationProperties extends Properties {
     public String getDomain() {
         return domain;
     }
-    
+
     protected void initialize() {
         String propFile = getPropertyFile();
         String userHome = System.getProperty("user.home");
@@ -68,7 +68,8 @@ public abstract class ApplicationProperties extends Properties {
             location = LocationType.FILE;
             propertyFile = new File(confDir, propFile).getAbsolutePath();
         } else {
-            LOG.info("config.location is not set, properties file not present in " + "user home dir, falling back to classpath for "
+            LOG.info("config.location is not set, properties file not present in "
+                    + "user home dir, falling back to classpath for "
                     + propFile);
             location = LocationType.CLASSPATH;
             propertyFile = propFile;
@@ -99,15 +100,16 @@ public abstract class ApplicationProperties extends Properties {
                     LOG.info("Loading properties from " + propertyFile);
                     Properties origProps = new Properties();
                     origProps.load(resource);
-                    if(domain == null) {
+                    if (domain == null) {
                         domain = origProps.getProperty("*.domain");
-                        if(domain == null)
+                        if (domain == null) {
                             throw new FalconException("Domain is not set!");
+                        }
                     }
                     LOG.info("Initializing properties with domain " + domain);
-                    
+
                     Set<String> keys = getKeys(origProps.keySet());
-                    for(String key:keys) {
+                    for (String key : keys) {
                         String value = origProps.getProperty(domain + "." + key, origProps.getProperty("*." + key));
                         value = ExpressionHelper.substitute(value);
                         LOG.debug(key + "=" + value);
@@ -124,7 +126,7 @@ public abstract class ApplicationProperties extends Properties {
 
     private Set<String> getKeys(Set<Object> keySet) {
         Set<String> keys = new HashSet<String>();
-        for(Object keyObj:keySet) {
+        for (Object keyObj : keySet) {
             String key = (String) keyObj;
             keys.add(key.substring(key.indexOf('.') + 1));
         }

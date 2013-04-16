@@ -18,25 +18,6 @@
 
 package org.apache.falcon.resource.proxy;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -52,6 +33,17 @@ import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.util.DeploymentUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
@@ -69,7 +61,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             for (String colo : colos) {
                 initializeFor(colo);
             }
-            
+
             DeploymentUtil.setPrismMode();
         } catch (FalconException e) {
             throw new FalconRuntimException("Unable to initialize channels", e);
@@ -96,18 +88,20 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     private BufferedRequest getBufferedRequest(HttpServletRequest request) {
-        if (request instanceof BufferedRequest)
+        if (request instanceof BufferedRequest) {
             return (BufferedRequest) request;
+        }
         return new BufferedRequest(request);
     }
 
     @POST
     @Path("submit/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "submit")
     @Override
-    public APIResult submit(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+    public APIResult submit(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("colo") @QueryParam("colo") final String ignore) {
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
@@ -137,8 +131,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @POST
     @Path("validate/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Override
     public APIResult validate(@Context HttpServletRequest request, @PathParam("type") String type) {
         return super.validate(request, type);
@@ -146,15 +140,17 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @DELETE
     @Path("delete/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "delete")
     @Override
-    public APIResult delete(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
-            @Dimension("entityName") @PathParam("entity") final String entity, @Dimension("colo") @QueryParam("colo") String ignore) {
+    public APIResult delete(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("colo") @QueryParam("colo") String ignore) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
-        
+
         results.put("falcon", new EntityProxy(type, entity) {
             @Override
             public APIResult execute() {
@@ -167,7 +163,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                     throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
                 }
             }
-            
+
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
                 return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entity, colo);
@@ -175,17 +171,18 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }.execute());
 
         if (!embeddedMode) {
-            results.put(PRISM_TAG,  super.delete(bufferedRequest, type, entity, currentColo));
+            results.put(PRISM_TAG, super.delete(bufferedRequest, type, entity, currentColo));
         }
         return consolidateResult(results);
     }
 
     @POST
     @Path("update/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "update")
     @Override
-    public APIResult update(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+    public APIResult update(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("entityName") @PathParam("entity") final String entityName,
             @Dimension("colo") @QueryParam("colo") String ignore) {
 
@@ -199,13 +196,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         oldColos.removeAll(mergedColos);   //Old colos where delete should be called
 
         Map<String, APIResult> results = new HashMap<String, APIResult>();
-        if(!oldColos.isEmpty()) {
+        if (!oldColos.isEmpty()) {
             results.put("delete", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return oldColos;
                 }
-    
+
                 @Override
                 protected APIResult doExecute(String colo) throws FalconException {
                     return getConfigSyncChannel(colo).invoke("delete", bufferedRequest, type, entityName, colo);
@@ -213,13 +210,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }.execute());
         }
 
-        if(!mergedColos.isEmpty()) {
+        if (!mergedColos.isEmpty()) {
             results.put("update", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return mergedColos;
                 }
-    
+
                 @Override
                 protected APIResult doExecute(String colo) throws FalconException {
                     return getConfigSyncChannel(colo).invoke("update", bufferedRequest, type, entityName, colo);
@@ -227,35 +224,35 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }.execute());
         }
 
-        if(!newColos.isEmpty()) {
+        if (!newColos.isEmpty()) {
             results.put("submit", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return newColos;
                 }
-    
+
                 @Override
                 protected APIResult doExecute(String colo) throws FalconException {
                     return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, type, colo);
                 }
             }.execute());
         }
-        
+
         if (!embeddedMode) {
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo));
         }
-        
+
         return consolidateResult(results);
     }
 
     @GET
     @Path("status/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "status")
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") final String type,
-            @Dimension("entityName") @PathParam("entity") final String entity,
-            @Dimension("colo") @QueryParam("colo") final String coloExpr) throws FalconWebException {
+                               @Dimension("entityName") @PathParam("entity") final String entity,
+                               @Dimension("colo") @QueryParam("colo") final String coloExpr) throws FalconWebException {
         return new EntityProxy(type, entity) {
             @Override
             protected Set<String> getColosToApply() {
@@ -275,7 +272,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Monitored(event = "dependencies")
     @Override
     public EntityList getDependencies(@Dimension("entityType") @PathParam("type") String type,
-            @Dimension("entityName") @PathParam("entity") String entity) {
+                                      @Dimension("entityName") @PathParam("entity") String entity) {
         return super.getDependencies(type, entity);
     }
 
@@ -289,7 +286,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @GET
     @Path("definition/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Override
     public String getEntityDefinition(@PathParam("type") String type, @PathParam("entity") String entityName) {
         return super.getEntityDefinition(type, entityName);
@@ -297,13 +294,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @POST
     @Path("schedule/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "schedule")
     @Override
     public APIResult schedule(@Context final HttpServletRequest request,
-            @Dimension("entityType") @PathParam("type") final String type,
-            @Dimension("entityName") @PathParam("entity") final String entity,
-            @Dimension("colo") @QueryParam("colo") final String coloExpr) {
+                              @Dimension("entityType") @PathParam("type") final String type,
+                              @Dimension("entityName") @PathParam("entity") final String entity,
+                              @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
         return new EntityProxy(type, entity) {
@@ -321,11 +318,12 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @POST
     @Path("submitAndSchedule/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "submitAndSchedule")
     @Override
-    public APIResult submitAndSchedule(@Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
+    public APIResult submitAndSchedule(
+            @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
             @Dimension("colo") @QueryParam("colo") String coloExpr) {
         BufferedRequest bufferedRequest = new BufferedRequest(request);
         String entity = getEntity(bufferedRequest, type).getName();
@@ -337,13 +335,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @POST
     @Path("suspend/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "suspend")
     @Override
     public APIResult suspend(@Context final HttpServletRequest request,
-            @Dimension("entityType") @PathParam("type") final String type,
-            @Dimension("entityName") @PathParam("entity") final String entity,
-            @Dimension("colo") @QueryParam("colo") final String coloExpr) {
+                             @Dimension("entityType") @PathParam("type") final String type,
+                             @Dimension("entityName") @PathParam("entity") final String entity,
+                             @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new EntityProxy(type, entity) {
@@ -361,10 +359,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
     @POST
     @Path("resume/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "resume")
     @Override
-    public APIResult resume(@Context final HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
+    public APIResult resume(
+            @Context final HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("entityName") @PathParam("entity") final String entity,
             @Dimension("colo") @QueryParam("colo") final String coloExpr) {
 
@@ -400,7 +399,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                 try {
                     results.put(colo, doExecute(colo));
                 } catch (FalconException e) {
-                    results.put(colo, new APIResult(APIResult.Status.FAILED, e.getClass().getName() + "::" + e.getMessage()));
+                    results.put(colo,
+                            new APIResult(APIResult.Status.FAILED, e.getClass().getName() + "::" + e.getMessage()));
                 }
             }
             APIResult finalResult = consolidateResult(results);
@@ -417,10 +417,11 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
         protected abstract APIResult doExecute(String colo) throws FalconException;
     }
-    
+
     private APIResult consolidateResult(Map<String, APIResult> results) {
-        if (results == null || results.size() == 0)
+        if (results == null || results.size() == 0) {
             return null;
+        }
 
         StringBuilder buffer = new StringBuilder();
         StringBuilder requestIds = new StringBuilder();

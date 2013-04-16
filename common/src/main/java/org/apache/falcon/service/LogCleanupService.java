@@ -17,13 +17,6 @@
  */
 package org.apache.falcon.service;
 
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
@@ -34,58 +27,64 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
 
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class LogCleanupService implements FalconService {
 
-	private static final Logger LOG = Logger.getLogger(LogCleanupService.class);
-	private final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
-	private final ExpressionHelper resolver = ExpressionHelper.get();
+    private static final Logger LOG = Logger.getLogger(LogCleanupService.class);
+    private final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    private final ExpressionHelper resolver = ExpressionHelper.get();
 
-	@Override
-	public String getName() {
-		return "Falcon Log cleanup service";
-	}
+    @Override
+    public String getName() {
+        return "Falcon Log cleanup service";
+    }
 
-	@Override
-	public void init() throws FalconException {
-		Timer timer = new Timer();
-		timer.schedule(new CleanupThread(), 0, getDelay());
-		LOG.info("Falcon log cleanup service initialized");
+    @Override
+    public void init() throws FalconException {
+        Timer timer = new Timer();
+        timer.schedule(new CleanupThread(), 0, getDelay());
+        LOG.info("Falcon log cleanup service initialized");
 
-	}
+    }
 
-	private class CleanupThread extends TimerTask {
+    private class CleanupThread extends TimerTask {
 
-		private AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
-		private AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
+        private AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
+        private AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
 
-		@Override
-		public void run() {
-			try {
-				LOG.info("Cleaning up logs at: " + new Date());
-				processCleanupHandler.cleanup();
-				feedCleanupHandler.cleanup();
-			} catch (Throwable t) {
-				LOG.error("Error in cleanup task: ", t);
-				GenericAlert.alertLogCleanupServiceFailed(
-						"Exception in log cleanup service", t);
-			}
-		}
-	}
+        @Override
+        public void run() {
+            try {
+                LOG.info("Cleaning up logs at: " + new Date());
+                processCleanupHandler.cleanup();
+                feedCleanupHandler.cleanup();
+            } catch (Throwable t) {
+                LOG.error("Error in cleanup task: ", t);
+                GenericAlert.alertLogCleanupServiceFailed(
+                        "Exception in log cleanup service", t);
+            }
+        }
+    }
 
-	@Override
-	public void destroy() throws FalconException {
-		LOG.info("Falcon log cleanup service destroyed");
-	}
+    @Override
+    public void destroy() throws FalconException {
+        LOG.info("Falcon log cleanup service destroyed");
+    }
 
-	private long getDelay() throws FalconException {
-		String delay = StartupProperties.get().getProperty(
-				"falcon.cleanup.service.frequency", "days(1)");
-		try {
-			return (Long) EVALUATOR.evaluate("${" + delay + "}", Long.class,
-					resolver, resolver);
-		} catch (ELException e) {
-			throw new FalconException("Exception in EL evaluation", e);
-		}
-	}
+    private long getDelay() throws FalconException {
+        String delay = StartupProperties.get().getProperty(
+                "falcon.cleanup.service.frequency", "days(1)");
+        try {
+            return (Long) EVALUATOR.evaluate("${" + delay + "}", Long.class,
+                    resolver, resolver);
+        } catch (ELException e) {
+            throw new FalconException("Exception in EL evaluation", e);
+        }
+    }
 
 }

@@ -18,8 +18,8 @@
 
 package org.apache.falcon.resource.proxy;
 
-import org.apache.hadoop.io.IOUtils;
 import org.apache.falcon.FalconWebException;
+import org.apache.hadoop.io.IOUtils;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;

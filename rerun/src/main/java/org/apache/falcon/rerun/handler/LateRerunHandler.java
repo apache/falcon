@@ -17,12 +17,6 @@
  */
 package org.apache.falcon.rerun.handler;
 
-import java.util.Date;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeys;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.EntityUtil;
@@ -31,10 +25,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.LateInput;
-import org.apache.falcon.entity.v0.process.LateProcess;
-import org.apache.falcon.entity.v0.process.PolicyType;
+import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.rerun.event.LaterunEvent;
@@ -42,185 +33,192 @@ import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import java.util.Date;
 
 public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
-		AbstractRerunHandler<LaterunEvent, M> {
+        AbstractRerunHandler<LaterunEvent, M> {
 
-	@Override
-	public void handleRerun(String cluster, String entityType,
-			String entityName, String nominalTime, String runId, String wfId,
-			long msgReceivedTime) {
+    @Override
+    public void handleRerun(String cluster, String entityType,
+                            String entityName, String nominalTime, String runId, String wfId,
+                            long msgReceivedTime) {
 
-		try {
-			Entity entity = EntityUtil.getEntity(entityType, entityName);
-			try {
-				if (EntityUtil.getLateProcess(entity) == null
-						|| EntityUtil.getLateProcess(entity).getLateInputs() == null
-						|| EntityUtil.getLateProcess(entity).getLateInputs()
-								.size() == 0) {
-					LOG.info("Late rerun not configured for entity: " + entityName);
-					return;
-				}
-			} catch (FalconException e) {
-				LOG.error("Unable to get Late Process for entity:" + entityName);
-				return;
-			}
-			int intRunId = Integer.parseInt(runId);
-			Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
-			Long wait = getEventDelay(entity, nominalTime);
-			if (wait == -1) {
-				LOG.info("Late rerun expired for entity: "+entityType+"("+entityName+")");
-				String logDir = this.getWfEngine().getWorkflowProperty(cluster,
-						wfId, "logDir");
-				String srcClusterName = this.getWfEngine().getWorkflowProperty(
-						cluster, wfId, "srcClusterName");
-				Path lateLogPath = this.getLateLogPath(logDir,
-						EntityUtil.UTCtoURIDate(nominalTime), srcClusterName);
-				LOG.info("Going to delete path:" +lateLogPath);
-				FileSystem fs = FileSystem.get(getConfiguration(cluster,
-						wfId));
-				if (fs.exists(lateLogPath)) {
-					boolean deleted = fs.delete(lateLogPath, true);
-					if (deleted == true) {
-						LOG.info("Successfully deleted late file path:"
-								+ lateLogPath);
-					}
-				}
-				return;
-			}
+        try {
+            Entity entity = EntityUtil.getEntity(entityType, entityName);
+            try {
+                if (EntityUtil.getLateProcess(entity) == null
+                        || EntityUtil.getLateProcess(entity).getLateInputs() == null
+                        || EntityUtil.getLateProcess(entity).getLateInputs()
+                        .size() == 0) {
+                    LOG.info("Late rerun not configured for entity: " + entityName);
+                    return;
+                }
+            } catch (FalconException e) {
+                LOG.error("Unable to get Late Process for entity:" + entityName);
+                return;
+            }
+            int intRunId = Integer.parseInt(runId);
+            Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
+            Long wait = getEventDelay(entity, nominalTime);
+            if (wait == -1) {
+                LOG.info("Late rerun expired for entity: " + entityType + "(" + entityName + ")");
+                String logDir = this.getWfEngine().getWorkflowProperty(cluster,
+                        wfId, "logDir");
+                String srcClusterName = this.getWfEngine().getWorkflowProperty(
+                        cluster, wfId, "srcClusterName");
+                Path lateLogPath = this.getLateLogPath(logDir,
+                        EntityUtil.UTCtoURIDate(nominalTime), srcClusterName);
+                LOG.info("Going to delete path:" + lateLogPath);
+                FileSystem fs = FileSystem.get(getConfiguration(cluster,
+                        wfId));
+                if (fs.exists(lateLogPath)) {
+                    boolean deleted = fs.delete(lateLogPath, true);
+                    if (deleted == true) {
+                        LOG.info("Successfully deleted late file path:"
+                                + lateLogPath);
+                    }
+                }
+                return;
+            }
 
-			LOG.debug("Scheduling the late rerun for entity instance : "
-					+ entityType + "(" + entityName + ")" + ":" + nominalTime
-					+ " And WorkflowId: " + wfId);
-			LaterunEvent event = new LaterunEvent(cluster, wfId,
-					msgInsertTime.getTime(), wait, entityType, entityName,
-					nominalTime, intRunId);
-			offerToQueue(event);
-		} catch (Exception e) {
-			LOG.error("Unable to schedule late rerun for entity instance : "
-					+ entityType + "(" + entityName + ")" + ":" + nominalTime
-					+ " And WorkflowId: " + wfId, e);
-			GenericAlert.alertLateRerunFailed(entityType, entityName,
-					nominalTime, wfId, runId, e.getMessage());
-		}
-	}
+            LOG.debug("Scheduling the late rerun for entity instance : "
+                    + entityType + "(" + entityName + ")" + ":" + nominalTime
+                    + " And WorkflowId: " + wfId);
+            LaterunEvent event = new LaterunEvent(cluster, wfId,
+                    msgInsertTime.getTime(), wait, entityType, entityName,
+                    nominalTime, intRunId);
+            offerToQueue(event);
+        } catch (Exception e) {
+            LOG.error("Unable to schedule late rerun for entity instance : "
+                    + entityType + "(" + entityName + ")" + ":" + nominalTime
+                    + " And WorkflowId: " + wfId, e);
+            GenericAlert.alertLateRerunFailed(entityType, entityName,
+                    nominalTime, wfId, runId, e.getMessage());
+        }
+    }
 
-	private long getEventDelay(Entity entity, String nominalTime)
-			throws FalconException {
+    private long getEventDelay(Entity entity, String nominalTime)
+            throws FalconException {
 
-		Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
-		LateProcess lateProcess = EntityUtil.getLateProcess(entity);
-		if (lateProcess == null) {
-			LOG.warn("Late run not applicable for entity:"
-					+ entity.getEntityType() + "(" + entity.getName() + ")");
-			return -1;
-		}
-		PolicyType latePolicy = lateProcess.getPolicy();
-		Date cutOffTime = getCutOffTime(entity, nominalTime);
-		Date now = new Date();
-		Long wait = null;
+        Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
+        LateProcess lateProcess = EntityUtil.getLateProcess(entity);
+        if (lateProcess == null) {
+            LOG.warn("Late run not applicable for entity:"
+                    + entity.getEntityType() + "(" + entity.getName() + ")");
+            return -1;
+        }
+        PolicyType latePolicy = lateProcess.getPolicy();
+        Date cutOffTime = getCutOffTime(entity, nominalTime);
+        Date now = new Date();
+        Long wait = null;
 
-		if (now.after(cutOffTime)) {
-			LOG.warn("Feed Cut Off time: "
-					+ SchemaHelper.formatDateUTC(cutOffTime)
-					+ " has expired, Late Rerun can not be scheduled");
-			return -1;
-		} else {
-			AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
-					.getRetryPolicy(latePolicy);
-			wait = rerunPolicy.getDelay(lateProcess.getDelay(), instanceDate,
-					cutOffTime);
-		}
-		return wait;
-	}
+        if (now.after(cutOffTime)) {
+            LOG.warn("Feed Cut Off time: "
+                    + SchemaHelper.formatDateUTC(cutOffTime)
+                    + " has expired, Late Rerun can not be scheduled");
+            return -1;
+        } else {
+            AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
+                    .getRetryPolicy(latePolicy);
+            wait = rerunPolicy.getDelay(lateProcess.getDelay(), instanceDate,
+                    cutOffTime);
+        }
+        return wait;
+    }
 
-	public static Date addTime(Date date, int milliSecondsToAdd) {
-		return new Date(date.getTime() + milliSecondsToAdd);
-	}
+    public static Date addTime(Date date, int milliSecondsToAdd) {
+        return new Date(date.getTime() + milliSecondsToAdd);
+    }
 
-	public static Date getCutOffTime(Entity entity, String nominalTime)
-			throws FalconException {
+    public static Date getCutOffTime(Entity entity, String nominalTime)
+            throws FalconException {
 
-		ConfigurationStore store = ConfigurationStore.get();
-		ExpressionHelper evaluator = ExpressionHelper.get();
-		Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
-		ExpressionHelper.setReferenceDate(instanceStart);
-		Date endTime = new Date();
-		Date feedCutOff = new Date(0);
-		if (entity.getEntityType() == EntityType.FEED) {
-			if (((Feed) entity).getLateArrival() == null) {
-				LOG.debug("Feed's " + entity.getName()
-						+ " late arrival cut-off is not configured, returning");
-				return feedCutOff;
-			}
-			String lateCutOff = ((Feed) entity).getLateArrival().getCutOff()
-					.toString();
-			endTime = EntityUtil.parseDateUTC(nominalTime);
-			long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
-			endTime = addTime(endTime, (int) feedCutOffPeriod);
-			return endTime;
-		} else if (entity.getEntityType() == EntityType.PROCESS) {
-			Process process = (Process) entity;
-			for (LateInput lp : process.getLateProcess().getLateInputs()) {
-				Feed feed = null;
-				String endInstanceTime = "";
-				for (Input input : process.getInputs().getInputs()) {
-					if (input.getName().equals(lp.getInput())) {
-						endInstanceTime = input.getEnd();
-						feed = store.get(EntityType.FEED, input.getFeed());
-						break;
-					}
-				}
-				if (feed.getLateArrival() == null) {
-					LOG.debug("Feed's " + feed.getName()
-							+ " late arrival cut-off is not configured, ignoring this feed");
-					continue;
-				}
-				String lateCutOff = feed.getLateArrival().getCutOff()
-						.toString();
-				endTime = evaluator.evaluate(endInstanceTime, Date.class);
-				long feedCutOffPeriod = evaluator.evaluate(lateCutOff,
-						Long.class);
-				endTime = addTime(endTime, (int) feedCutOffPeriod);
+        ConfigurationStore store = ConfigurationStore.get();
+        ExpressionHelper evaluator = ExpressionHelper.get();
+        Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
+        ExpressionHelper.setReferenceDate(instanceStart);
+        Date endTime = new Date();
+        Date feedCutOff = new Date(0);
+        if (entity.getEntityType() == EntityType.FEED) {
+            if (((Feed) entity).getLateArrival() == null) {
+                LOG.debug("Feed's " + entity.getName()
+                        + " late arrival cut-off is not configured, returning");
+                return feedCutOff;
+            }
+            String lateCutOff = ((Feed) entity).getLateArrival().getCutOff()
+                    .toString();
+            endTime = EntityUtil.parseDateUTC(nominalTime);
+            long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
+            endTime = addTime(endTime, (int) feedCutOffPeriod);
+            return endTime;
+        } else if (entity.getEntityType() == EntityType.PROCESS) {
+            Process process = (Process) entity;
+            for (LateInput lp : process.getLateProcess().getLateInputs()) {
+                Feed feed = null;
+                String endInstanceTime = "";
+                for (Input input : process.getInputs().getInputs()) {
+                    if (input.getName().equals(lp.getInput())) {
+                        endInstanceTime = input.getEnd();
+                        feed = store.get(EntityType.FEED, input.getFeed());
+                        break;
+                    }
+                }
+                if (feed.getLateArrival() == null) {
+                    LOG.debug("Feed's " + feed.getName()
+                            + " late arrival cut-off is not configured, ignoring this feed");
+                    continue;
+                }
+                String lateCutOff = feed.getLateArrival().getCutOff()
+                        .toString();
+                endTime = evaluator.evaluate(endInstanceTime, Date.class);
+                long feedCutOffPeriod = evaluator.evaluate(lateCutOff,
+                        Long.class);
+                endTime = addTime(endTime, (int) feedCutOffPeriod);
 
-				if (endTime.after(feedCutOff))
-					feedCutOff = endTime;
-			}
-			return feedCutOff;
-		} else {
-			throw new FalconException(
-					"Invalid entity while getting cut-off time:"
-							+ entity.getName());
-		}
-	}
+                if (endTime.after(feedCutOff)) {
+                    feedCutOff = endTime;
+                }
+            }
+            return feedCutOff;
+        } else {
+            throw new FalconException(
+                    "Invalid entity while getting cut-off time:"
+                            + entity.getName());
+        }
+    }
 
-	@Override
-	public void init(M delayQueue) throws FalconException {
-		super.init(delayQueue);
-		Thread daemon = new Thread(new LateRerunConsumer(this));
-		daemon.setName("LaterunHandler");
-		daemon.setDaemon(true);
-		daemon.start();
-		LOG.info("Laterun Handler  thread started");
-	}
-	
-	public Path getLateLogPath(String logDir, String nominalTime,
-			String srcClusterName) {
-		//SrcClusterName valid only in case of feed
-		return new Path(logDir + "/latedata/" + nominalTime + "/"
-				+ (srcClusterName == null
-				? "" : srcClusterName));
+    @Override
+    public void init(M delayQueue) throws FalconException {
+        super.init(delayQueue);
+        Thread daemon = new Thread(new LateRerunConsumer(this));
+        daemon.setName("LaterunHandler");
+        daemon.setDaemon(true);
+        daemon.start();
+        LOG.info("Laterun Handler  thread started");
+    }
 
-	}
-	
-	public Configuration getConfiguration(String cluster, String wfId)
-			throws FalconException {
-		Configuration conf = new Configuration();
-		conf.set(
-				CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
-				this.getWfEngine().getWorkflowProperty(cluster, wfId,
-						AbstractWorkflowEngine.NAME_NODE));
-		return conf;
-	}
+    public Path getLateLogPath(String logDir, String nominalTime,
+                               String srcClusterName) {
+        //SrcClusterName valid only in case of feed
+        return new Path(logDir + "/latedata/" + nominalTime + "/"
+                + (srcClusterName == null
+                ? "" : srcClusterName));
+
+    }
+
+    public Configuration getConfiguration(String cluster, String wfId)
+            throws FalconException {
+        Configuration conf = new Configuration();
+        conf.set(
+                CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
+                this.getWfEngine().getWorkflowProperty(cluster, wfId,
+                        AbstractWorkflowEngine.NAME_NODE));
+        return conf;
+    }
 
 }

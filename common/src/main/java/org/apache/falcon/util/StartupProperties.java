@@ -18,36 +18,36 @@
 
 package org.apache.falcon.util;
 
+import org.apache.falcon.FalconException;
+
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.falcon.FalconException;
-
 public class StartupProperties extends ApplicationProperties {
 
-  private static final String PROPERTY_FILE = "startup.properties";
+    private static final String PROPERTY_FILE = "startup.properties";
 
-  private static final AtomicReference<StartupProperties> instance =
-      new AtomicReference<StartupProperties>();
+    private static final AtomicReference<StartupProperties> instance =
+            new AtomicReference<StartupProperties>();
 
-  private StartupProperties() throws FalconException {
-    super();
-  }
-
-  @Override
-  protected String getPropertyFile() {
-    return PROPERTY_FILE;
-  }
-
-  public static Properties get() {
-    try {
-      if (instance.get() == null) {
-        instance.compareAndSet(null, new StartupProperties());
-      }
-      return instance.get();
-    } catch (FalconException e) {
-      throw new RuntimeException("Unable to read application " +
-          "startup properties", e);
+    private StartupProperties() throws FalconException {
+        super();
     }
-  }
+
+    @Override
+    protected String getPropertyFile() {
+        return PROPERTY_FILE;
+    }
+
+    public static Properties get() {
+        try {
+            if (instance.get() == null) {
+                instance.compareAndSet(null, new StartupProperties());
+            }
+            return instance.get();
+        } catch (FalconException e) {
+            throw new RuntimeException("Unable to read application " +
+                    "startup properties", e);
+        }
+    }
 }

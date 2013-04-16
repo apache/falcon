@@ -37,9 +37,9 @@ public class BasicAuthFilter implements Filter {
     private static final Logger LOG = Logger.getLogger(BasicAuthFilter.class);
 
     private static final String GUEST = "guest";
-    
-	private static final Set<String> BLACK_LISTED_USER = new HashSet<String>(
-			Arrays.asList(new String[] { "hdfs", "mapred", "oozie", "falcon" }));
+
+    private static final Set<String> BLACK_LISTED_USER = new HashSet<String>(
+            Arrays.asList(new String[]{"hdfs", "mapred", "oozie", "falcon"}));
 
     private boolean secure;
 
@@ -69,7 +69,7 @@ public class BasicAuthFilter implements Filter {
 
         String user;
         String requestId = UUID.randomUUID().toString();
-        
+
         if (!secure) {
             user = GUEST;
         } else {
@@ -77,13 +77,12 @@ public class BasicAuthFilter implements Filter {
         }
 
         if (user == null || user.isEmpty()) {
-        	httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-        			"Remote user header can't be empty");
-        } else if(BLACK_LISTED_USER.contains(user)){
-        	httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-        			"Remote user header can't be superusers:"+BLACK_LISTED_USER);
-        }
-        else {
+            httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Remote user header can't be empty");
+        } else if (BLACK_LISTED_USER.contains(user)) {
+            httpResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Remote user header can't be superusers:" + BLACK_LISTED_USER);
+        } else {
             CurrentUser.authenticate(user);
             try {
                 NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());

@@ -21,11 +21,10 @@ package org.apache.falcon;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentProperties;
@@ -58,7 +57,9 @@ public class Debug {
             for (String line : deps) {
                 String[] fields = line.replace("(", "").replace(")", "").split(" ");
                 EntityType eType = EntityType.valueOf(fields[0].toUpperCase());
-                if (ConfigurationStore.get().get(eType, fields[1]) != null) continue;
+                if (ConfigurationStore.get().get(eType, fields[1]) != null) {
+                    continue;
+                }
                 String xml = client.getDefinition(eType.name().toLowerCase(), fields[1]);
                 System.out.println(xml);
                 store(eType, xml);
@@ -70,7 +71,7 @@ public class Debug {
 
         entity = args[2];
         Entity obj = EntityUtil.getEntity(type, entity);
-        Process newEntity = (Process)obj.clone();
+        Process newEntity = (Process) obj.clone();
         newEntity.setFrequency(Frequency.fromString("minutes(5)"));
         System.out.println("##############OLD ENTITY " + EntityUtil.md5(obj));
         System.out.println("##############NEW ENTITY " + EntityUtil.md5(newEntity));

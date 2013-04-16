@@ -53,7 +53,9 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.falcon.resource.admin.AdminResource,org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.SchedulableEntityManager,org.apache.falcon.resource.InstanceManager</param-value>
+            <param-value>
+                org.apache.falcon.resource.admin.AdminResource,org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.SchedulableEntityManager,org.apache.falcon.resource.InstanceManager
+            </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -67,7 +69,9 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
-            <param-value>org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.ConfigSyncService</param-value>
+            <param-value>
+                org.apache.falcon.resource.provider.JAXBContextResolver,org.apache.falcon.resource.ConfigSyncService
+            </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

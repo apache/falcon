@@ -18,8 +18,8 @@
 package org.apache.falcon.rerun.policy;
 
 public class PeriodicPolicy extends ExpBackoffPolicy {
-	@Override
-	protected int getPower() {
-		return 1;
-	}
+    @Override
+    protected int getPower() {
+        return 1;
+    }
 }

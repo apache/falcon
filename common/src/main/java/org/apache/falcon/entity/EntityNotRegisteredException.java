@@ -20,8 +20,8 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 
-public class EntityNotRegisteredException extends FalconException{
-    
+public class EntityNotRegisteredException extends FalconException {
+
     public EntityNotRegisteredException(String message) {
         super(message);
     }

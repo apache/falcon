@@ -18,17 +18,9 @@
 
 package org.apache.falcon.workflow;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
-
 import org.apache.falcon.converter.OozieProcessMapper;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -43,8 +35,11 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
+
+import java.util.*;
 
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
@@ -52,17 +47,19 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     public Map<String, Properties> newWorkflowSchedule(Process process, List<String> clusters) throws FalconException {
         Map<String, Properties> propertiesMap = new HashMap<String, Properties>();
 
-        for (String clusterName: clusters) {
+        for (String clusterName : clusters) {
             org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
-            Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName, 
+            Properties properties = newWorkflowSchedule(process, processCluster.getValidity().getStart(), clusterName,
                     CurrentUser.getUser());
-            if (properties != null)
+            if (properties != null) {
                 propertiesMap.put(clusterName, properties);
+            }
         }
         return propertiesMap;
     }
 
-    private void addOptionalInputProperties(Properties properties, Input in, String clusterName) throws FalconException {
+    private void addOptionalInputProperties(Properties properties, Input in, String clusterName)
+            throws FalconException {
         Feed feed = EntityUtil.getEntity(EntityType.FEED, in.getFeed());
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, clusterName);
         String inName = in.getName();
@@ -72,37 +69,41 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
         properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
         properties.put(inName + ".done-flag", "notused");
-        
+
         String locPath = FeedHelper.getLocation(feed, LocationType.DATA, clusterName).getPath().replace('$', '%');
-		properties.put(inName + ".uri-template", new Path(locPath).toUri().getScheme()!=null?locPath:"${nameNode}"+locPath);
+        properties.put(inName + ".uri-template",
+                new Path(locPath).toUri().getScheme() != null ? locPath : "${nameNode}" + locPath);
 
         properties.put(inName + ".start-instance", in.getStart());
         properties.put(inName + ".end-instance", in.getEnd());
     }
 
     private Timeunit mapToCoordTimeUnit(TimeUnit tu) {
-        switch(tu) {
-        case days:
-            return Timeunit.DAY;
-            
-        case hours:
-            return Timeunit.HOUR;
-            
-        case minutes:
-            return Timeunit.MINUTE;
-            
-        case months:
-            return Timeunit.MONTH;
+        switch (tu) {
+            case days:
+                return Timeunit.DAY;
+
+            case hours:
+                return Timeunit.HOUR;
+
+            case minutes:
+                return Timeunit.MINUTE;
+
+            case months:
+                return Timeunit.MONTH;
         }
         throw new IllegalArgumentException("Unhandled time unit " + tu);
     }
-    
+
     @Override
-    public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName, String user) throws FalconException {
+    public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName, String user)
+            throws FalconException {
         org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
         if (!startDate.before(processCluster.getValidity().getEnd()))
-            // start time >= end time
+        // start time >= end time
+        {
             return null;
+        }
 
         Cluster cluster = configStore.get(EntityType.CLUSTER, processCluster.getName());
         Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
@@ -110,23 +111,25 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         EntityUtil.setStartDate(processClone, clusterName, startDate);
 
         OozieProcessMapper mapper = new OozieProcessMapper(processClone);
-        if(!mapper.map(cluster, bundlePath)){
+        if (!mapper.map(cluster, bundlePath)) {
             return null;
         }
-        
+
         Properties properties = createAppProperties(clusterName, bundlePath, user);
-        
+
         //Add libpath
         String libPath = process.getWorkflow().getLib();
         if (!StringUtils.isEmpty(libPath)) {
             String path = libPath.replace("${nameNode}", "");
             properties.put(OozieClient.LIBPATH, "${nameNode}" + path);
         }
-        
-        if(process.getInputs() != null) {
-            for(Input in:process.getInputs().getInputs())
-                if(in.isOptional())
+
+        if (process.getInputs() != null) {
+            for (Input in : process.getInputs().getInputs()) {
+                if (in.isOptional()) {
                     addOptionalInputProperties(properties, in, clusterName);
+                }
+            }
         }
         return properties;
     }
@@ -140,6 +143,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
     public String[] getWorkflowNames(Process process) {
-        return new String[] { EntityUtil.getWorkflowName(Tag.DEFAULT,process).toString() };
+        return new String[]{EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString()};
     }
 }

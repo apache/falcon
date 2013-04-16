@@ -16,39 +16,41 @@
   limitations under the License.
   -->
 <feed description="clicks log" name="raw-logs" xmlns="uri:falcon:feed:0.1"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        >
 
-	<groups>online,bi</groups>
+    <groups>online,bi</groups>
 
-	<frequency>minutes(20)</frequency>
+    <frequency>minutes(20)</frequency>
     <timezone>UTC</timezone>
-    
-	<late-arrival cut-off="minutes(3)" />
-	<clusters>
-		<cluster name="corp1" type="source">
-			<validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
-			<retention limit="minutes(5)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
-		</cluster>
-		<cluster name="corp2" type="target">
-			<validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
-			<retention limit="minutes(7)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
-		</cluster>
-	</clusters>
 
-	<locations>
-		<location type="data"
-			path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}" />
-		<location type="stats" path="/projects/falcon/clicksStats" />
-		<location type="meta" path="/projects/falcon/clicksMetaData" />
-	</locations>
+    <late-arrival cut-off="minutes(3)"/>
+    <clusters>
+        <cluster name="corp1" type="source">
+            <validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
+            <retention limit="minutes(5)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+        </cluster>
+        <cluster name="corp2" type="target">
+            <validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
+            <retention limit="minutes(7)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+        </cluster>
+    </clusters>
 
-	<ACL owner="testuser" group="group" permission="0x755" />
-	<schema location="/schema/clicks" provider="protobuf" />
+    <locations>
+        <location type="data"
+                  path="/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
+    </locations>
 
-	<properties>
-		<property name="field3" value="value3" />
-		<property name="field2" value="value2" />
+    <ACL owner="testuser" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
 
-		<property name="field4" value="value2" />
-	</properties>
+    <properties>
+        <property name="field3" value="value3"/>
+        <property name="field2" value="value2"/>
+
+        <property name="field4" value="value2"/>
+    </properties>
 </feed>

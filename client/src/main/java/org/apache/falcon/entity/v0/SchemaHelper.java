@@ -40,8 +40,9 @@ public class SchemaHelper {
     }
 
     public static Date parseDateUTC(String dateStr) {
-        if(!DateValidator.validate(dateStr))
+        if (!DateValidator.validate(dateStr)) {
             throw new IllegalArgumentException(dateStr + " is not a valid UTC string");
+        }
         try {
             return getDateFormat().parse(dateStr);
         } catch (ParseException e) {

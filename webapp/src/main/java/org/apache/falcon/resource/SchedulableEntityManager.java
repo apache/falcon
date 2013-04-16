@@ -32,12 +32,12 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("status/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "status")
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
-                            @Dimension("entityName") @PathParam("entity") String entity,
-                            @Dimension("colo") @QueryParam("colo") final String colo)
+                               @Dimension("entityName") @PathParam("entity") String entity,
+                               @Dimension("colo") @QueryParam("colo") final String colo)
             throws FalconWebException {
         return super.getStatus(type, entity, colo);
     }
@@ -63,7 +63,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("definition/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "definition")
     @Override
     public String getEntityDefinition(@Dimension("type") @PathParam("type") String type,
@@ -73,7 +73,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("schedule/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "schedule")
     @Override
     public APIResult schedule(@Context HttpServletRequest request,
@@ -85,7 +85,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("suspend/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "suspend")
     @Override
     public APIResult suspend(@Context HttpServletRequest request,
@@ -97,7 +97,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("resume/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "resume")
     @Override
     public APIResult resume(@Context HttpServletRequest request,

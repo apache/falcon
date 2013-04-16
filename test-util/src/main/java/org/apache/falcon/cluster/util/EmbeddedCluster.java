@@ -18,10 +18,7 @@
 
 package org.apache.falcon.cluster.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-
+import org.apache.falcon.entity.v0.cluster.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -29,14 +26,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interface;
-import org.apache.falcon.entity.v0.cluster.Interfaces;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.cluster.Location;
-import org.apache.falcon.entity.v0.cluster.Locations;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 
 public class EmbeddedCluster {
 
@@ -105,7 +100,7 @@ public class EmbeddedCluster {
             cluster.conf.set("mapreduce.jobtracker.staging.root.dir", "/user");
             Path path = new Path("/tmp/hadoop-" + user, "mapred");
             FileSystem.get(cluster.conf).mkdirs(path);
-            FileSystem.get(cluster.conf).setPermission(path, new FsPermission((short)511));
+            FileSystem.get(cluster.conf).setPermission(path, new FsPermission((short) 511));
             cluster.mrCluster = new MiniMRCluster(1,
                     hdfsUrl, 1);
             Configuration mrConf = cluster.mrCluster.createJobConf();
@@ -137,14 +132,14 @@ public class EmbeddedCluster {
         interfaces.getInterfaces().add(newInterface(Interfacetype.READONLY, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
-                        conf.get("mapred.job.tracker"), "0.1"));
-		interfaces
-				.getInterfaces()
-				.add(newInterface(
-						Interfacetype.MESSAGING,
-						"vm://localhost",
-						"0.1"));
-      clusterEntity.setInterfaces(interfaces);
+                conf.get("mapred.job.tracker"), "0.1"));
+        interfaces
+                .getInterfaces()
+                .add(newInterface(
+                        Interfacetype.MESSAGING,
+                        "vm://localhost",
+                        "0.1"));
+        clusterEntity.setInterfaces(interfaces);
 
         Location location = new Location();
         location.setName("staging");
@@ -168,7 +163,9 @@ public class EmbeddedCluster {
     }
 
     public void shutdown() {
-        if (mrCluster != null) mrCluster.shutdown();
+        if (mrCluster != null) {
+            mrCluster.shutdown();
+        }
         dfsCluster.shutdown();
     }
 

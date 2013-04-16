@@ -18,72 +18,72 @@
 
 package org.apache.falcon.util;
 
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.falcon.FalconException;
 import org.apache.log4j.Logger;
 
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class RuntimeProperties extends ApplicationProperties {
 
-  private static Logger LOG = Logger.getLogger(RuntimeProperties.class);
+    private static Logger LOG = Logger.getLogger(RuntimeProperties.class);
 
-  private static final String PROPERTY_FILE = "runtime.properties";
+    private static final String PROPERTY_FILE = "runtime.properties";
 
-  private static final AtomicReference<RuntimeProperties> instance =
-      new AtomicReference<RuntimeProperties>();
+    private static final AtomicReference<RuntimeProperties> instance =
+            new AtomicReference<RuntimeProperties>();
 
-  private RuntimeProperties() throws FalconException {
-    super();
-    Thread refreshThread = new Thread(new DynamicLoader(this));
-    refreshThread.start();
-  }
-
-  @Override
-  protected String getPropertyFile() {
-    return PROPERTY_FILE;
-  }
-
-  public static Properties get() {
-    try {
-      if (instance.get() == null) {
-        instance.compareAndSet(null, new RuntimeProperties());
-      }
-      return instance.get();
-    } catch (FalconException e) {
-      throw new RuntimeException("Unable to read application " +
-          "runtime properties", e);
-    }
-  }
-
-  private class DynamicLoader implements Runnable {
-
-    private static final long REFRESH_DELAY = 300000L;
-    private static final int MAX_ITER = 20;  //1hr
-    private final ApplicationProperties applicationProperties;
-
-    private DynamicLoader(ApplicationProperties applicationProperties) {
-      this.applicationProperties = applicationProperties;
+    private RuntimeProperties() throws FalconException {
+        super();
+        Thread refreshThread = new Thread(new DynamicLoader(this));
+        refreshThread.start();
     }
 
     @Override
-    public void run() {
-      long backOffDelay = REFRESH_DELAY;
-      while (true) {
-        try {
-          try {
-            applicationProperties.loadProperties();
-            backOffDelay = REFRESH_DELAY;
-          } catch (FalconException e) {
-            LOG.warn("Error refreshing runtime properties", e);
-            backOffDelay += REFRESH_DELAY;
-          }
-          Thread.sleep(Math.min(MAX_ITER * REFRESH_DELAY, backOffDelay));
-        } catch (InterruptedException e) {
-          LOG.info("Application is stopping. Aborting...");
-          break;
-        }
-      }
+    protected String getPropertyFile() {
+        return PROPERTY_FILE;
     }
-  }
+
+    public static Properties get() {
+        try {
+            if (instance.get() == null) {
+                instance.compareAndSet(null, new RuntimeProperties());
+            }
+            return instance.get();
+        } catch (FalconException e) {
+            throw new RuntimeException("Unable to read application " +
+                    "runtime properties", e);
+        }
+    }
+
+    private class DynamicLoader implements Runnable {
+
+        private static final long REFRESH_DELAY = 300000L;
+        private static final int MAX_ITER = 20;  //1hr
+        private final ApplicationProperties applicationProperties;
+
+        private DynamicLoader(ApplicationProperties applicationProperties) {
+            this.applicationProperties = applicationProperties;
+        }
+
+        @Override
+        public void run() {
+            long backOffDelay = REFRESH_DELAY;
+            while (true) {
+                try {
+                    try {
+                        applicationProperties.loadProperties();
+                        backOffDelay = REFRESH_DELAY;
+                    } catch (FalconException e) {
+                        LOG.warn("Error refreshing runtime properties", e);
+                        backOffDelay += REFRESH_DELAY;
+                    }
+                    Thread.sleep(Math.min(MAX_ITER * REFRESH_DELAY, backOffDelay));
+                } catch (InterruptedException e) {
+                    LOG.info("Application is stopping. Aborting...");
+                    break;
+                }
+            }
+        }
+    }
 }

@@ -18,15 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -41,7 +32,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class ProcessEntityParserTest extends AbstractTestBase{
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProcessEntityParserTest extends AbstractTestBase {
 
     private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
     private String INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
@@ -57,15 +56,15 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
         this.conf = dfsCluster.getConf();
     }
-    
-	@AfterClass
-	public void tearDown() {
-		this.dfsCluster.shutdown();
-	}
-    
+
+    @AfterClass
+    public void tearDown() {
+        this.dfsCluster.shutdown();
+    }
+
     @BeforeMethod
     public void setup() throws Exception {
-        storeEntity(EntityType.CLUSTER, "testCluster");        
+        storeEntity(EntityType.CLUSTER, "testCluster");
         storeEntity(EntityType.FEED, "impressionFeed");
         storeEntity(EntityType.FEED, "clicksFeed");
         storeEntity(EntityType.FEED, "imp-click-join1");
@@ -77,7 +76,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     public void testParse() throws FalconException, JAXBException {
 
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
-        
+
         Assert.assertNotNull(process);
         Assert.assertEquals(process.getName(), "sample");
 
@@ -123,28 +122,31 @@ public class ProcessEntityParserTest extends AbstractTestBase{
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
+        } catch (ValidationException e) {
+        }
 
         process.getInputs().getInputs().get(0).setStart("today(0,0)");
         process.getInputs().getInputs().get(0).setEnd("lastMonth(0,0,0)");
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
+        } catch (ValidationException e) {
+        }
 
         process.getInputs().getInputs().get(0).setStart("today(2,0)");
         process.getInputs().getInputs().get(0).setEnd("today(0,0)");
         try {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
-        } catch (ValidationException e) { }
+        } catch (ValidationException e) {
+        }
 
     }
-    
+
     @Test(expectedExceptions = FalconException.class)
     public void doParseInvalidXML() throws IOException, FalconException {
 
-        parser.parseAndValidate(this.getClass().getResourceAsStream(INVALID_PROCESS_XML ));
+        parser.parseAndValidate(this.getClass().getResourceAsStream(INVALID_PROCESS_XML));
     }
 
     @Test(expectedExceptions = ValidationException.class)
@@ -162,7 +164,7 @@ public class ProcessEntityParserTest extends AbstractTestBase{
     @Test
     public void testConcurrentParsing() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
-        
+
         for (int i = 0; i < 3; i++) {
             threadList.add(new Thread() {
                 public void run() {
@@ -175,102 +177,103 @@ public class ProcessEntityParserTest extends AbstractTestBase{
                 }
             });
         }
-        for(Thread thread:threadList) {
+        for (Thread thread : threadList) {
             thread.start();
         }
-        for(Thread thread:threadList) {
+        for (Thread thread : threadList) {
             thread.join();
         }
     }
 
-	@Test(expectedExceptions = ValidationException.class)
-	public void testInvalidProcessValidity() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getClusters().getClusters().get(0).getValidity().setStart(SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
-		parser.validate(process);
-	}
-	
-	@Test(expectedExceptions = ValidationException.class)
-	public void testInvalidDependentFeedsRetentionLimit() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getInputs().getInputs().get(0).setStart("today(-48,0)");
-		parser.validate(process);
-	}
-	
-	@Test(expectedExceptions = ValidationException.class)
-	public void testDuplicateInputOutputNames() throws FalconException {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getInputs().getInputs().get(0).setName("duplicateName");
-		process.getOutputs().getOutputs().get(0).setName("duplicateName");
-		parser.validate(process);
-	}
-	
-	@Test(expectedExceptions = FalconException.class)
-	public void testInvalidRetryAttempt() throws FalconException {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getRetry().setAttempts(-1);
-		parser.parseAndValidate(process.toString());
-	}
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInvalidProcessValidity() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().get(0).getValidity().setStart(
+                SchemaHelper.parseDateUTC("2011-12-31T00:00Z"));
+        parser.validate(process);
+    }
 
-	@Test(expectedExceptions = FalconException.class)
-	public void testInvalidRetryDelay() throws FalconException {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getRetry().setDelay(Frequency.fromString("hours(0)"));
-		parser.parseAndValidate(process.toString());
-	}
-	
-	@Test(expectedExceptions = ValidationException.class)
-	public void testInvalidLateInputs() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getLateProcess().getLateInputs().get(0).setInput("invalidInput");
-		parser.parseAndValidate(process.toString());
-	}
-	
-	@Test(expectedExceptions = FalconException.class)
-	public void testInvalidProcessName() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.setName("name_with_underscore");
-		parser.parseAndValidate(process.toString());
-	}
-	
-	@Test
-	public void testOozieFutureExpression() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getInputs().getInputs().get(0).setStart("future(1,2)");
-		parser.parseAndValidate(process.toString());
-	}
-	
-	@Test
-	public void testOozieLatestExpression() throws Exception {
-		Process process = parser
-				.parseAndValidate((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getInputs().getInputs().get(0).setStart("latest(-1)");
-		parser.parseAndValidate(process.toString());
-	}
-	
-	@Test(expectedExceptions=ValidationException.class)
-	public void testDuplicateClusterName() throws Exception {
-		Process process = parser
-				.parse((ProcessEntityParserTest.class
-						.getResourceAsStream(PROCESS_XML)));
-		process.getClusters().getClusters().add(1, process.getClusters().getClusters().get(0));
-		parser.validate(process);
-	}
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInvalidDependentFeedsRetentionLimit() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getInputs().getInputs().get(0).setStart("today(-48,0)");
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testDuplicateInputOutputNames() throws FalconException {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getInputs().getInputs().get(0).setName("duplicateName");
+        process.getOutputs().getOutputs().get(0).setName("duplicateName");
+        parser.validate(process);
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testInvalidRetryAttempt() throws FalconException {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getRetry().setAttempts(-1);
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testInvalidRetryDelay() throws FalconException {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getRetry().setDelay(Frequency.fromString("hours(0)"));
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testInvalidLateInputs() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getLateProcess().getLateInputs().get(0).setInput("invalidInput");
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test(expectedExceptions = FalconException.class)
+    public void testInvalidProcessName() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.setName("name_with_underscore");
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test
+    public void testOozieFutureExpression() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getInputs().getInputs().get(0).setStart("future(1,2)");
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test
+    public void testOozieLatestExpression() throws Exception {
+        Process process = parser
+                .parseAndValidate((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getInputs().getInputs().get(0).setStart("latest(-1)");
+        parser.parseAndValidate(process.toString());
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testDuplicateClusterName() throws Exception {
+        Process process = parser
+                .parse((ProcessEntityParserTest.class
+                        .getResourceAsStream(PROCESS_XML)));
+        process.getClusters().getClusters().add(1, process.getClusters().getClusters().get(0));
+        parser.validate(process);
+    }
 }

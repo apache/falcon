@@ -31,8 +31,8 @@ public class ConfigSyncService extends AbstractEntityManager {
 
     @POST
     @Path("submit/{type}")
-    @Consumes({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Consumes({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "submit")
     @Override
     public APIResult submit(@Context HttpServletRequest request,
@@ -43,7 +43,7 @@ public class ConfigSyncService extends AbstractEntityManager {
 
     @DELETE
     @Path("delete/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "delete")
     @Override
     public APIResult delete(@Context HttpServletRequest request,
@@ -55,7 +55,7 @@ public class ConfigSyncService extends AbstractEntityManager {
 
     @POST
     @Path("update/{type}/{entity}")
-    @Produces({ MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     @Monitored(event = "update")
     @Override
     public APIResult update(@Context HttpServletRequest request,

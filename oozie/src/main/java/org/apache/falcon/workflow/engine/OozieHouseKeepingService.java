@@ -18,15 +18,15 @@
 
 package org.apache.falcon.workflow.engine;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
 public class OozieHouseKeepingService implements WorkflowEngineActionListener {
@@ -49,16 +49,18 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
     public void afterDelete(Entity entity, String clusterName) throws FalconException {
         try {
             Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
-            Path entityPath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(entity)).getParent();
+            Path entityPath = new Path(ClusterHelper.getLocation(cluster, "staging"),
+                    EntityUtil.getStagingPath(entity)).getParent();
             LOG.info("Deleting entity path " + entityPath + " on cluster " + clusterName);
-            
+
             Configuration conf = ClusterHelper.getConfiguration(cluster);
             FileSystem fs = FileSystem.get(conf);
             if (fs.exists(entityPath) && !fs.delete(entityPath, true)) {
                 throw new FalconException("Unable to cleanup entity path: " + entityPath);
             }
         } catch (Exception e) {
-            throw new FalconException("Failed to cleanup entity path for " + entity.toShortString() + " on cluster " + clusterName, e);
+            throw new FalconException(
+                    "Failed to cleanup entity path for " + entity.toShortString() + " on cluster " + clusterName, e);
         }
     }
 

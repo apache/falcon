@@ -30,6 +30,7 @@ import java.io.IOException;
 public class CustomReplicator extends DistCp {
 
     private static Logger LOG = Logger.getLogger(CustomReplicator.class);
+
     /**
      * Public Constructor. Creates DistCp object with specified input-parameters.
      * (E.g. source-paths, target-location, etc.)

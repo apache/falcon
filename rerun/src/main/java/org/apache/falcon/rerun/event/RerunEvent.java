@@ -23,91 +23,91 @@ import java.util.concurrent.TimeUnit;
 
 public class RerunEvent implements Delayed {
 
-	protected static final String SEP = "*";
-	
-	public  enum RerunType{
-		RETRY, LATE
-	}
+    protected static final String SEP = "*";
 
-	protected String clusterName;
-	protected String wfId;
-	protected long msgInsertTime;
-	protected long delayInMilliSec;
-	protected String entityType;
-	protected String entityName;
-	protected String instance;
-	protected int runId;
+    public enum RerunType {
+        RETRY, LATE
+    }
 
-	public RerunEvent(String clusterName, String wfId,
-			long msgInsertTime, long delay, String entityType, String entityName,
-			String instance, int runId) {
-		this.clusterName = clusterName;
-		this.wfId = wfId;
-		this.msgInsertTime = msgInsertTime;
-		this.delayInMilliSec = delay;
-		this.entityName = entityName;
-		this.instance = instance;
-		this.runId = runId;
-		this.entityType=entityType;
-	}
+    protected String clusterName;
+    protected String wfId;
+    protected long msgInsertTime;
+    protected long delayInMilliSec;
+    protected String entityType;
+    protected String entityName;
+    protected String instance;
+    protected int runId;
 
-	public String getClusterName() {
-		return clusterName;
-	}
+    public RerunEvent(String clusterName, String wfId,
+                      long msgInsertTime, long delay, String entityType, String entityName,
+                      String instance, int runId) {
+        this.clusterName = clusterName;
+        this.wfId = wfId;
+        this.msgInsertTime = msgInsertTime;
+        this.delayInMilliSec = delay;
+        this.entityName = entityName;
+        this.instance = instance;
+        this.runId = runId;
+        this.entityType = entityType;
+    }
 
-	public String getWfId() {
-		return wfId;
-	}
+    public String getClusterName() {
+        return clusterName;
+    }
 
-	public long getDelayInMilliSec() {
-		return delayInMilliSec;
-	}
+    public String getWfId() {
+        return wfId;
+    }
 
-	public String getEntityName() {
-		return entityName;
-	}
+    public long getDelayInMilliSec() {
+        return delayInMilliSec;
+    }
 
-	public String getInstance() {
-		return instance;
-	}
+    public String getEntityName() {
+        return entityName;
+    }
 
-	public int getRunId() {
-		return runId;
-	}
-	
-	public String getEntityType(){
-		return entityType;
-	}
+    public String getInstance() {
+        return instance;
+    }
 
-	@Override
-	public int compareTo(Delayed o) {
+    public int getRunId() {
+        return runId;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public int compareTo(Delayed o) {
         RerunEvent event = (RerunEvent) o;
         return new Date(msgInsertTime + delayInMilliSec).
                 compareTo(new Date(event.msgInsertTime + event.delayInMilliSec));
-	}
+    }
 
-	@Override
-	public long getDelay(TimeUnit unit) {
-		return unit.convert((msgInsertTime - System.currentTimeMillis())
-				+ delayInMilliSec, TimeUnit.MILLISECONDS);
-	}
+    @Override
+    public long getDelay(TimeUnit unit) {
+        return unit.convert((msgInsertTime - System.currentTimeMillis())
+                + delayInMilliSec, TimeUnit.MILLISECONDS);
+    }
 
-	public long getMsgInsertTime() {
-		return msgInsertTime;
-	}
+    public long getMsgInsertTime() {
+        return msgInsertTime;
+    }
 
-	public void setMsgInsertTime(long msgInsertTime) {
-		this.msgInsertTime = msgInsertTime;
-	}
+    public void setMsgInsertTime(long msgInsertTime) {
+        this.msgInsertTime = msgInsertTime;
+    }
 
-	public RerunType getType() {
-		if (this instanceof RetryEvent) {
-			return RerunType.RETRY;
-		} else if (this instanceof LaterunEvent) {
-			return RerunType.LATE;
-		} else {
-			return null;
-		}
-	}
+    public RerunType getType() {
+        if (this instanceof RetryEvent) {
+            return RerunType.RETRY;
+        } else if (this instanceof LaterunEvent) {
+            return RerunType.LATE;
+        } else {
+            return null;
+        }
+    }
 
 }

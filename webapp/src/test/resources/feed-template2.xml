@@ -16,26 +16,28 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="clicks log" name="##outputFeedName##" xmlns="uri:falcon:feed:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<feed description="clicks log" name="##outputFeedName##" xmlns="uri:falcon:feed:0.1"
+        >
     <groups>output</groups>
 
     <frequency>days(1)</frequency>
     <timezone>UTC</timezone>
-    <late-arrival cut-off="hours(6)" />
+    <late-arrival cut-off="hours(6)"/>
 
     <clusters>
         <cluster name="##cluster##" type="source">
             <validity start="2010-01-01T01:00Z" end="##feedEndDate##"/>
-            <retention limit="hours(6)" action="delete" /> <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+            <retention limit="hours(6)" action="delete"/>
+            <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
     </clusters>
 
     <locations>
-        <location type="data" path="/falcon/test/output/${YEAR}/${MONTH}/${DAY}" />
-        <location type="stats" path="/projects/falcon/clicksStats" />
-        <location type="meta" path="/projects/falcon/clicksMetaData" />
+        <location type="data" path="/falcon/test/output/${YEAR}/${MONTH}/${DAY}"/>
+        <location type="stats" path="/projects/falcon/clicksStats"/>
+        <location type="meta" path="/projects/falcon/clicksMetaData"/>
     </locations>
-    
-    <ACL owner="testuser" group="group" permission="0x755" />
-    <schema location="/schema/clicks" provider="protobuf" />
+
+    <ACL owner="testuser" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
 </feed>

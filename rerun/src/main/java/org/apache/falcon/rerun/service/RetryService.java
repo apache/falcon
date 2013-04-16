@@ -17,8 +17,6 @@
  */
 package org.apache.falcon.rerun.service;
 
-import java.io.File;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.RerunEvent.RerunType;
 import org.apache.falcon.rerun.event.RetryEvent;
@@ -30,38 +28,40 @@ import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
 
+import java.io.File;
+
 public class RetryService implements FalconService {
 
-	private static final Logger LOG = Logger.getLogger(RetryService.class);
+    private static final Logger LOG = Logger.getLogger(RetryService.class);
 
-	@Override
-	public String getName() {
-		return "Falcon Retry failed Instance";
-	}
+    @Override
+    public String getName() {
+        return "Falcon Retry failed Instance";
+    }
 
-	@Override
-	public void init() throws FalconException {
-		AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
-				.getRerunHandler(RerunType.RETRY);
-		 InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(
-		 getBasePath());
-		rerunHandler.init(queue);
-	}
+    @Override
+    public void init() throws FalconException {
+        AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
+                .getRerunHandler(RerunType.RETRY);
+        InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(
+                getBasePath());
+        rerunHandler.init(queue);
+    }
 
-	@Override
-	public void destroy() throws FalconException {
-		LOG.info("RetryHandler  thread destroyed");
-	}
+    @Override
+    public void destroy() throws FalconException {
+        LOG.info("RetryHandler  thread destroyed");
+    }
 
-	private File getBasePath() {
-		File basePath = new File(StartupProperties.get().getProperty(
-				"retry.recorder.path", "/tmp/falcon/retry"));
-		if ((!basePath.exists() && !basePath.mkdirs())
-				|| (basePath.exists() && !basePath.canWrite())) {
-			throw new RuntimeException("Unable to initialize retry recorder @"
-					+ basePath);
-		}
-		return basePath;
-	}
+    private File getBasePath() {
+        File basePath = new File(StartupProperties.get().getProperty(
+                "retry.recorder.path", "/tmp/falcon/retry"));
+        if ((!basePath.exists() && !basePath.mkdirs())
+                || (basePath.exists() && !basePath.canWrite())) {
+            throw new RuntimeException("Unable to initialize retry recorder @"
+                    + basePath);
+        }
+        return basePath;
+    }
 
 }

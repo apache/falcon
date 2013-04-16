@@ -18,9 +18,10 @@
 
 package org.apache.falcon.util;
 
-import static org.testng.AssertJUnit.assertEquals;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import static org.testng.AssertJUnit.assertEquals;
 
 @Test
 public class StartupPropertiesTest {
@@ -28,7 +29,7 @@ public class StartupPropertiesTest {
     public void setUp() {
         StartupProperties.get();
     }
-    
+
     public void testDomain() {
         StartupProperties props = (StartupProperties) StartupProperties.get();
         assertEquals("debug", props.getDomain());

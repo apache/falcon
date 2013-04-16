@@ -18,7 +18,6 @@
 package org.apache.falcon.rerun.queue;
 
 import junit.framework.Assert;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.event.RerunEvent;
@@ -27,39 +26,39 @@ import org.testng.annotations.Test;
 
 public class ActiveMQTest {
 
-	private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-	private BrokerService broker;
-	private static final String DESTI = "activemq.topic";
+    private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
+    private BrokerService broker;
+    private static final String DESTI = "activemq.topic";
 
-	@BeforeClass
-	private void setup() throws Exception {
-		broker = new BrokerService();
-		broker.setDataDirectory("target/activemq");
-		broker.addConnector(BROKER_URL);
-		broker.setBrokerName("localhost");
-		broker.setSchedulerSupport(true);
-		broker.start();
-	}
+    @BeforeClass
+    private void setup() throws Exception {
+        broker = new BrokerService();
+        broker.setDataDirectory("target/activemq");
+        broker.addConnector(BROKER_URL);
+        broker.setBrokerName("localhost");
+        broker.setSchedulerSupport(true);
+        broker.start();
+    }
 
-	@Test
-	public void testBrokerStartAndEnqueue() {
-		ActiveMQueue<RerunEvent> activeMQueue = new ActiveMQueue<RerunEvent>(
-				BROKER_URL, DESTI);
-		activeMQueue.init();
-		RerunEvent event = new LaterunEvent("clusterName", "wfId",
-				System.currentTimeMillis(), 60 * 1000, "entityType",
-				"entityName", "instance", 0);
-	
-		try{
-		activeMQueue.offer(event);
-		broker.stop();
-		broker.start();
-		activeMQueue.reconnect();
-		activeMQueue.offer(event);
-		}catch(Exception e){
-			Assert.fail();
-		}
+    @Test
+    public void testBrokerStartAndEnqueue() {
+        ActiveMQueue<RerunEvent> activeMQueue = new ActiveMQueue<RerunEvent>(
+                BROKER_URL, DESTI);
+        activeMQueue.init();
+        RerunEvent event = new LaterunEvent("clusterName", "wfId",
+                System.currentTimeMillis(), 60 * 1000, "entityType",
+                "entityName", "instance", 0);
 
-	
-	}
+        try {
+            activeMQueue.offer(event);
+            broker.stop();
+            broker.start();
+            activeMQueue.reconnect();
+            activeMQueue.offer(event);
+        } catch (Exception e) {
+            Assert.fail();
+        }
+
+
+    }
 }

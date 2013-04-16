@@ -4,11 +4,11 @@
     License. You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 ~ ~ Unless required by applicable law or agreed to in writing, software ~ distributed 
     under the License is distributed on an "AS IS" BASIS, ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the License for the specific language governing 
     permissions and ~ limitations under the License. -->
-<process name="sample" xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="sample" xmlns="uri:falcon:process:0.1">
     <!-- where -->
     <clusters>
         <cluster name="corp">
-            <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z" />
+            <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"/>
         </cluster>
     </clusters>
 
@@ -20,26 +20,26 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="impressions" start="today(0,0)" end="today(0,2)" />
-        <input name="click" feed="clicks" start="yesterday(0,0)" end="latest(0)" partition="*/US" />
+        <input name="impression" feed="impressions" start="today(0,0)" end="today(0,2)"/>
+        <input name="click" feed="clicks" start="yesterday(0,0)" end="latest(0)" partition="*/US"/>
     </inputs>
 
     <outputs>
-        <output name="clicksummary" feed="impressions" instance="today(0,0)" />
+        <output name="clicksummary" feed="impressions" instance="today(0,0)"/>
     </outputs>
 
     <!-- how -->
     <properties>
-        <property name="procprop" value="procprop" />
-        <property name="mapred.job.priority" value="LOW" />
+        <property name="procprop" value="procprop"/>
+        <property name="mapred.job.priority" value="LOW"/>
     </properties>
 
-    <workflow engine="oozie" path="/user/guest/workflow" />
+    <workflow engine="oozie" path="/user/guest/workflow"/>
 
-    <retry policy="periodic" delay="hours(10)" attempts="3" />
+    <retry policy="periodic" delay="hours(10)" attempts="3"/>
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input input="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
+        <late-input input="impression" workflow-path="hdfs://impression/late/workflow"/>
+        <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow"/>
     </late-process>
 </process>

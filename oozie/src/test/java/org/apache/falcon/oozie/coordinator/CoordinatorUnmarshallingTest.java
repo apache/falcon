@@ -17,6 +17,10 @@
  */
 package org.apache.falcon.oozie.coordinator;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -24,14 +28,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
 /**
- * 
  * Class to test if generated coordinator.xml is valid
- * 
  */
 public class CoordinatorUnmarshallingTest {
 

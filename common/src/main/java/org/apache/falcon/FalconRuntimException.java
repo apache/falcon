@@ -19,26 +19,25 @@
 package org.apache.falcon;
 
 /**
- *Runtime Execption class for Falcon application
- *
+ * Runtime Execption class for Falcon application
  */
-public class FalconRuntimException extends RuntimeException{
+public class FalconRuntimException extends RuntimeException {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1105135528999858955L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1105135528999858955L;
 
-	public FalconRuntimException(Exception e) {
-		super(e);
-	}
+    public FalconRuntimException(Exception e) {
+        super(e);
+    }
 
-	public FalconRuntimException(String message) {
-		super(message);
-	}
-	
-	public FalconRuntimException(String message, Throwable e) {
-		super(message);
-	}
+    public FalconRuntimException(String message) {
+        super(message);
+    }
+
+    public FalconRuntimException(String message, Throwable e) {
+        super(message);
+    }
 
 }

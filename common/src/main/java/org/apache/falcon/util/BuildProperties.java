@@ -27,26 +27,26 @@ public class BuildProperties extends ApplicationProperties {
     private static final String PROPERTY_FILE = "falcon-buildinfo.properties";
 
     private static final AtomicReference<BuildProperties> instance =
-        new AtomicReference<BuildProperties>();
+            new AtomicReference<BuildProperties>();
 
     private BuildProperties() throws FalconException {
-      super();
+        super();
     }
 
     @Override
     protected String getPropertyFile() {
-      return PROPERTY_FILE;
+        return PROPERTY_FILE;
     }
 
     public static Properties get() {
-      try {
-        if (instance.get() == null) {
-          instance.compareAndSet(null, new BuildProperties());
+        try {
+            if (instance.get() == null) {
+                instance.compareAndSet(null, new BuildProperties());
+            }
+            return instance.get();
+        } catch (FalconException e) {
+            throw new RuntimeException("Unable to read application " +
+                    "falcon build information properties", e);
         }
-        return instance.get();
-      } catch (FalconException e) {
-        throw new RuntimeException("Unable to read application " +
-            "falcon build information properties", e);
-      }
     }
 }

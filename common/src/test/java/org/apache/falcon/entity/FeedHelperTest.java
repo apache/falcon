@@ -31,7 +31,7 @@ public class FeedHelperTest {
         Assert.assertEquals(FeedHelper.normalizePartitionExpression(null, "  /b// "), "b");
         Assert.assertEquals(FeedHelper.normalizePartitionExpression(null, null), "");
     }
-    
+
     @Test
     public void testEvaluateExpression() throws Exception {
         Cluster cluster = new Cluster();
@@ -42,9 +42,10 @@ public class FeedHelperTest {
         prop.setName("pname");
         prop.setValue("pvalue");
         cluster.getProperties().getProperties().add(prop);
-        
+
         Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster, "${cluster.colo}/*/US"), "colo/*/US");
-        Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster, "${cluster.name}/*/${cluster.pname}"), "name/*/pvalue");
+        Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster, "${cluster.name}/*/${cluster.pname}"),
+                "name/*/pvalue");
         Assert.assertEquals(FeedHelper.evaluateClusterExp(cluster, "IN"), "IN");
     }
 }

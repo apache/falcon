@@ -79,15 +79,15 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         System.out.println(stringWriter.toString());
         parser.parseAndValidate(stringWriter.toString());
     }
-    
+
     @BeforeClass
     public void init() throws Exception {
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
         this.conf = dfsCluster.getConf();
     }
-    
-	@AfterClass
-	public void tearDown() {
-		this.dfsCluster.shutdown();
-	}
+
+    @AfterClass
+    public void tearDown() {
+        this.dfsCluster.shutdown();
+    }
 }

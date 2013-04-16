@@ -25,7 +25,7 @@
             <main-class>org.apache.falcon.messaging.MessageProducer</main-class>
             <arg>${wf:name()}</arg>
             <arg>${wf:appPath()}</arg>
-	    <arg>${timestamp()}</arg>
+            <arg>${timestamp()}</arg>
 
         </java>
         <ok to="end"/>

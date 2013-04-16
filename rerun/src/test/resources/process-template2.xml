@@ -17,36 +17,36 @@
   limitations under the License.
   -->
 
-<process name="sample2" xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="sample2" xmlns="uri:falcon:process:0.1">
     <clusters>
         <cluster name="testCluster">
-            <validity end="2013-01-01T01:20Z" start="2010-01-01T01:00Z" />
+            <validity end="2013-01-01T01:20Z" start="2010-01-01T01:00Z"/>
         </cluster>
     </clusters>
     <concurrency>1</concurrency>
     <execution>FIFO</execution>
     <frequency>minutes(5)</frequency>
     <timezone>UTC</timezone>
-	<inputs>
-		<input end-instance="yesterday(4,20)" start-instance="yesterday(0,0)"
-			feed="raw-logs" name="inputData" />
-		<input end-instance="yesterday(16,0)" start-instance="yesterday(12,0)"
-			feed="raw-logs" name="inputData2" />
-	</inputs>
-	<outputs>
-		<output instance="now(0,0)" feed="agg-logs" name="outputData" />
-	</outputs>
-	<properties>
-		<property name="queueName" value="default" />
-		<property name="field1" value="value1" />
-		<property name="field3" value="value3" />
-		<property name="field7" value="value7" />
-	</properties>
-	<workflow path="/examples/apps/aggregator" />
-	<retry policy="exp-backoff" delay="minutes(2)"	attempts="2" />
+    <inputs>
+        <input end-instance="yesterday(4,20)" start-instance="yesterday(0,0)"
+               feed="raw-logs" name="inputData"/>
+        <input end-instance="yesterday(16,0)" start-instance="yesterday(12,0)"
+               feed="raw-logs" name="inputData2"/>
+    </inputs>
+    <outputs>
+        <output instance="now(0,0)" feed="agg-logs" name="outputData"/>
+    </outputs>
+    <properties>
+        <property name="queueName" value="default"/>
+        <property name="field1" value="value1"/>
+        <property name="field3" value="value3"/>
+        <property name="field7" value="value7"/>
+    </properties>
+    <workflow path="/examples/apps/aggregator"/>
+    <retry policy="exp-backoff" delay="minutes(2)" attempts="2"/>
 
-	<late-process policy="exp-backoff" delay="hours(1)">
-		<late-input feed="inputData" workflow-path="hdfs://impression/late/workflow" />
-		<late-input feed="inputData2" workflow-path="hdfs://impression/late/workflow" />
-	</late-process>
+    <late-process policy="exp-backoff" delay="hours(1)">
+        <late-input feed="inputData" workflow-path="hdfs://impression/late/workflow"/>
+        <late-input feed="inputData2" workflow-path="hdfs://impression/late/workflow"/>
+    </late-process>
 </process>

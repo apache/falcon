@@ -19,7 +19,6 @@
 package org.apache.falcon.rerun.handler;
 
 import com.sun.jersey.api.client.WebResource;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -30,6 +29,7 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
 
@@ -40,32 +40,33 @@ import java.io.StringWriter;
 import java.util.Collection;
 
 public class TestLateData {
-	
-	protected static final String FEED_XML = "/feed-template.xml";
+
+    protected static final String FEED_XML = "/feed-template.xml";
     protected static String CLUSTER_XML = "/cluster-template.xml";
     protected static final String PROCESS_XML = "/process-template.xml";
     protected static final String PROCESS_XML2 = "/process-template2.xml";
-    
+
     protected WebResource service = null;
     protected Configuration conf = new Configuration();
 
     @BeforeClass
     public void initConfigStore() throws Exception {
-    	MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.initMocks(this);
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
-        StartupProperties.get().setProperty("configstore.listeners", 
+        StartupProperties.get().setProperty("configstore.listeners",
                 listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
         ConfigurationStore.get().init();
-        
+
     }
-    
+
     protected void cleanupStore() throws FalconException {
         ConfigurationStore store = ConfigurationStore.get();
-        for(EntityType type:EntityType.values()) {
+        for (EntityType type : EntityType.values()) {
             Collection<String> entities = store.getEntities(type);
-            for(String entity:entities)
+            for (String entity : entities) {
                 store.remove(type, entity);
+            }
         }
     }
 
@@ -73,8 +74,8 @@ public class TestLateData {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(type, name);
-		switch (type) {
-		case CLUSTER:
+        switch (type) {
+            case CLUSTER:
                 Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
                 cluster.setName(name);
                 ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
@@ -96,14 +97,14 @@ public class TestLateData {
     }
 
     public void setup() throws Exception {
-		ConfigurationStore store = ConfigurationStore.get();
-		for (EntityType type : EntityType.values()) {
-			for (String name : store.getEntities(type)) {
-				store.remove(type, name);
-			}
-		}
-		storeEntity(EntityType.CLUSTER , "testCluster");
-		storeEntity(EntityType.PROCESS, "sample");
+        ConfigurationStore store = ConfigurationStore.get();
+        for (EntityType type : EntityType.values()) {
+            for (String name : store.getEntities(type)) {
+                store.remove(type, name);
+            }
+        }
+        storeEntity(EntityType.CLUSTER, "testCluster");
+        storeEntity(EntityType.PROCESS, "sample");
         storeEntity(EntityType.FEED, "raw-logs");
         storeEntity(EntityType.FEED, "clicks");
         Unmarshaller unmarshaller = EntityType.PROCESS.getUnmarshaller();
@@ -112,14 +113,14 @@ public class TestLateData {
         store.publish(EntityType.PROCESS, process);
     }
 
-	public String marshallEntity(final Entity entity) throws FalconException,
-			JAXBException {
-		Marshaller marshaller = entity.getEntityType().getMarshaller();
-		StringWriter stringWriter = new StringWriter();
-		marshaller.marshal(entity, stringWriter);
-		return stringWriter.toString();
-	}
-	
+    public String marshallEntity(final Entity entity) throws FalconException,
+                                                             JAXBException {
+        Marshaller marshaller = entity.getEntityType().getMarshaller();
+        StringWriter stringWriter = new StringWriter();
+        marshaller.marshal(entity, stringWriter);
+        return stringWriter.toString();
+    }
+
 //	@Test
 //	private void TestLateWhenInstanceRunning() throws Exception
 //	{
@@ -189,5 +190,5 @@ public class TestLateData {
 //		Assert.assertNotSame(noFilesBefore, noFilesAfterRetry);
 //
 //	}
-	
+
 }

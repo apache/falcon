@@ -16,83 +16,106 @@
   ~ limitations under the License.
   -->
 <workflow-app xmlns='uri:oozie:workflow:0.3' name='falcon-process-parent-workflow'>
-	<start to='should-record' />
-	<decision name='should-record'>
+    <start to='should-record'/>
+    <decision name='should-record'>
         <switch>
-            <case to="recordsize"> 
-              ${shouldRecord=="true"}
+            <case to="recordsize">
+                ${shouldRecord=="true"}
             </case>
             <default to="user-workflow"/>
         </switch>
     </decision>
-	<action name='recordsize'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<configuration>
-				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
-					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${jobPriority}</value>
-				</property>
-			</configuration>
-			<main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
-			<arg>-out</arg><arg>${logDir}/latedata/${nominalTime}</arg>
-			<arg>-paths</arg><arg>${falconInPaths}</arg>
-			<arg>-falconInputFeeds</arg><arg>${falconInputFeeds}</arg>
-			<capture-output />
-		</java>
-		<ok to="user-workflow" />
-		<error to="fail" />
-	</action>
+    <action name='recordsize'>
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
+            <arg>-out</arg>
+            <arg>${logDir}/latedata/${nominalTime}</arg>
+            <arg>-paths</arg>
+            <arg>${falconInPaths}</arg>
+            <arg>-falconInputFeeds</arg>
+            <arg>${falconInputFeeds}</arg>
+            <capture-output/>
+        </java>
+        <ok to="user-workflow"/>
+        <error to="fail"/>
+    </action>
 
-	<action name='user-workflow'>
-		<sub-workflow>
-			<app-path>#USER_WF_PATH#</app-path>
-			<propagate-configuration />
-		</sub-workflow>
-		<ok to="succeeded-post-processing" />
-		<error to="failed-post-processing" />
-	</action>
+    <action name='user-workflow'>
+        <sub-workflow>
+            <app-path>#USER_WF_PATH#</app-path>
+            <propagate-configuration/>
+        </sub-workflow>
+        <ok to="succeeded-post-processing"/>
+        <error to="failed-post-processing"/>
+    </action>
 
-	<action name='succeeded-post-processing'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<configuration>
-				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
-					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${jobPriority}</value>
-				</property>
-			</configuration>
-			<main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
-			<arg>-cluster</arg><arg>${cluster}</arg>
-			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-entityName</arg><arg>${entityName}</arg>
-			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
-			<arg>-operation</arg><arg>GENERATE</arg>
-			<arg>-workflowId</arg><arg>${wf:id()}</arg>
-			<arg>-runId</arg><arg>${wf:run()}</arg>
-			<arg>-status</arg><arg>SUCCEEDED</arg>
-			<arg>-timeStamp</arg><arg>${timeStamp}</arg>			
-			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
-			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
-			<arg>-userBrokerImplClass</arg><arg>${userBrokerImplClass}</arg>
-			<arg>-userBrokerUrl</arg><arg>${userBrokerUrl}</arg>
-			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
-			<arg>-feedNames</arg><arg>${feedNames}</arg>
-			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>			
-			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
-			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
-			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
-			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
+    <action name='succeeded-post-processing'>
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
+            <arg>-cluster</arg>
+            <arg>${cluster}</arg>
+            <arg>-entityType</arg>
+            <arg>${entityType}</arg>
+            <arg>-entityName</arg>
+            <arg>${entityName}</arg>
+            <arg>-nominalTime</arg>
+            <arg>${nominalTime}</arg>
+            <arg>-operation</arg>
+            <arg>GENERATE</arg>
+            <arg>-workflowId</arg>
+            <arg>${wf:id()}</arg>
+            <arg>-runId</arg>
+            <arg>${wf:run()}</arg>
+            <arg>-status</arg>
+            <arg>SUCCEEDED</arg>
+            <arg>-timeStamp</arg>
+            <arg>${timeStamp}</arg>
+            <arg>-brokerImplClass</arg>
+            <arg>${wf:conf("broker.impl.class")}</arg>
+            <arg>-brokerUrl</arg>
+            <arg>${wf:conf("broker.url")}</arg>
+            <arg>-userBrokerImplClass</arg>
+            <arg>${userBrokerImplClass}</arg>
+            <arg>-userBrokerUrl</arg>
+            <arg>${userBrokerUrl}</arg>
+            <arg>-brokerTTL</arg>
+            <arg>${wf:conf("broker.ttlInMins")}</arg>
+            <arg>-feedNames</arg>
+            <arg>${feedNames}</arg>
+            <arg>-feedInstancePaths</arg>
+            <arg>${feedInstancePaths}</arg>
+            <arg>-logFile</arg>
+            <arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+            <arg>-workflowEngineUrl</arg>
+            <arg>${workflowEngineUrl}</arg>
+            <arg>-subflowId</arg>
+            <arg>${wf:id()}@user-workflow</arg>
+            <arg>-logDir</arg>
+            <arg>${logDir}/job-${nominalTime}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/ant.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
@@ -100,45 +123,65 @@
             <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
             <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
             <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
-		</java>
-		<ok to="end" />
-		<error to="fail" />
-	</action>
-		<action name='failed-post-processing'>
-		<java>
-			<job-tracker>${jobTracker}</job-tracker>
-			<name-node>${nameNode}</name-node>
-			<configuration>
-				<property>
-					<name>mapred.job.queue.name</name>
-					<value>${queueName}</value>
-				</property>
-				<property>
-					<name>oozie.launcher.mapred.job.priority</name>
-					<value>${jobPriority}</value>
-				</property>
-			</configuration>
-			<main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
-			<arg>-cluster</arg><arg>${cluster}</arg>
-			<arg>-entityType</arg><arg>${entityType}</arg>
-			<arg>-entityName</arg><arg>${entityName}</arg>
-			<arg>-nominalTime</arg><arg>${nominalTime}</arg>
-			<arg>-operation</arg><arg>GENERATE</arg>
-			<arg>-workflowId</arg><arg>${wf:id()}</arg>
-			<arg>-runId</arg><arg>${wf:run()}</arg>
-			<arg>-status</arg><arg>FAILED</arg>
-			<arg>-timeStamp</arg><arg>${timeStamp}</arg>			
-			<arg>-brokerImplClass</arg><arg>${wf:conf("broker.impl.class")}</arg>
-			<arg>-brokerUrl</arg><arg>${wf:conf("broker.url")}</arg>
-			<arg>-userBrokerImplClass</arg><arg>${userBrokerImplClass}</arg>
-			<arg>-userBrokerUrl</arg><arg>${userBrokerUrl}</arg>
-			<arg>-brokerTTL</arg><arg>${wf:conf("broker.ttlInMins")}</arg>
-			<arg>-feedNames</arg><arg>${feedNames}</arg>
-			<arg>-feedInstancePaths</arg><arg>${feedInstancePaths}</arg>			
-			<arg>-logFile</arg><arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
-			<arg>-workflowEngineUrl</arg> <arg>${workflowEngineUrl}</arg>
-			<arg>-subflowId</arg> <arg>${wf:id()}@user-workflow</arg>
-			<arg>-logDir</arg> <arg>${logDir}/job-${nominalTime}/</arg>
+        </java>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <action name='failed-post-processing'>
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <main-class>org.apache.falcon.workflow.FalconPostProcessing</main-class>
+            <arg>-cluster</arg>
+            <arg>${cluster}</arg>
+            <arg>-entityType</arg>
+            <arg>${entityType}</arg>
+            <arg>-entityName</arg>
+            <arg>${entityName}</arg>
+            <arg>-nominalTime</arg>
+            <arg>${nominalTime}</arg>
+            <arg>-operation</arg>
+            <arg>GENERATE</arg>
+            <arg>-workflowId</arg>
+            <arg>${wf:id()}</arg>
+            <arg>-runId</arg>
+            <arg>${wf:run()}</arg>
+            <arg>-status</arg>
+            <arg>FAILED</arg>
+            <arg>-timeStamp</arg>
+            <arg>${timeStamp}</arg>
+            <arg>-brokerImplClass</arg>
+            <arg>${wf:conf("broker.impl.class")}</arg>
+            <arg>-brokerUrl</arg>
+            <arg>${wf:conf("broker.url")}</arg>
+            <arg>-userBrokerImplClass</arg>
+            <arg>${userBrokerImplClass}</arg>
+            <arg>-userBrokerUrl</arg>
+            <arg>${userBrokerUrl}</arg>
+            <arg>-brokerTTL</arg>
+            <arg>${wf:conf("broker.ttlInMins")}</arg>
+            <arg>-feedNames</arg>
+            <arg>${feedNames}</arg>
+            <arg>-feedInstancePaths</arg>
+            <arg>${feedInstancePaths}</arg>
+            <arg>-logFile</arg>
+            <arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+            <arg>-workflowEngineUrl</arg>
+            <arg>${workflowEngineUrl}</arg>
+            <arg>-subflowId</arg>
+            <arg>${wf:id()}@user-workflow</arg>
+            <arg>-logDir</arg>
+            <arg>${logDir}/job-${nominalTime}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/ant.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
@@ -146,14 +189,14 @@
             <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
             <file>${wf:conf("falcon.libpath")}/oozie-client.jar</file>
             <file>${wf:conf("falcon.libpath")}/spring-jms.jar</file>
-		</java>
-		<ok to="fail" />
-		<error to="fail" />
-	</action>
-	<kill name="fail">
-		<message>Workflow failed, error
-			message[${wf:errorMessage(wf:lastErrorNode())}]
-		</message>
-	</kill>
-	<end name='end' />
+        </java>
+        <ok to="fail"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Workflow failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end'/>
 </workflow-app>

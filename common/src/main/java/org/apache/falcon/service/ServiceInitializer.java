@@ -33,13 +33,15 @@ public class ServiceInitializer {
                 getProperty("application.services", "org.apache.falcon.entity.store.ConfigurationStore");
         for (String serviceClassName : serviceClassNames.split(",")) {
             serviceClassName = serviceClassName.trim();
-            if (serviceClassName.isEmpty()) continue;
+            if (serviceClassName.isEmpty()) {
+                continue;
+            }
             FalconService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
             services.register(service);
             LOG.info("Initializing service : " + serviceClassName);
             try {
                 service.init();
-            } catch(Throwable t) {
+            } catch (Throwable t) {
                 LOG.fatal("Failed to initialize service " + serviceClassName, t);
                 throw new FalconException(t);
             }
@@ -52,7 +54,7 @@ public class ServiceInitializer {
             LOG.info("Destroying service : " + service.getClass().getName());
             try {
                 service.destroy();
-            } catch(Throwable t) {
+            } catch (Throwable t) {
                 LOG.fatal("Failed to destroy service " + service.getClass().getName(), t);
                 throw new FalconException(t);
             }

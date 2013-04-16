@@ -29,44 +29,44 @@ import org.apache.log4j.Logger;
 
 public abstract class AbstractRerunHandler<T extends RerunEvent, M extends DelayedQueue<T>> {
 
-	protected static final Logger LOG = Logger
-			.getLogger(LateRerunHandler.class);
-	protected M delayQueue;
-	private AbstractWorkflowEngine wfEngine;
+    protected static final Logger LOG = Logger
+            .getLogger(LateRerunHandler.class);
+    protected M delayQueue;
+    private AbstractWorkflowEngine wfEngine;
 
-	public void init(M delayQueue) throws FalconException {
-		this.wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-		this.delayQueue = delayQueue;
-		this.delayQueue.init();
-	}
+    public void init(M delayQueue) throws FalconException {
+        this.wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+        this.delayQueue = delayQueue;
+        this.delayQueue.init();
+    }
 
-	public abstract void handleRerun(String cluster, String entityType,
-			String entityName, String nominalTime, String runId, String wfId,
-			long msgReceivedTime);
+    public abstract void handleRerun(String cluster, String entityType,
+                                     String entityName, String nominalTime, String runId, String wfId,
+                                     long msgReceivedTime);
 
-	public AbstractWorkflowEngine getWfEngine() {
-		return wfEngine;
-	}
+    public AbstractWorkflowEngine getWfEngine() {
+        return wfEngine;
+    }
 
-	public boolean offerToQueue(T event) throws FalconException {
-		return delayQueue.offer(event);
-	}
+    public boolean offerToQueue(T event) throws FalconException {
+        return delayQueue.offer(event);
+    }
 
-	public T takeFromQueue() throws FalconException {
-		return delayQueue.take();
-	}
-	
-	public void reconnect() throws FalconException {
-		delayQueue.reconnect();
-	}
+    public T takeFromQueue() throws FalconException {
+        return delayQueue.take();
+    }
 
-	public Entity getEntity(String entityType, String entityName)
-			throws FalconException {
-		return EntityUtil.getEntity(entityType, entityName);
-	}
+    public void reconnect() throws FalconException {
+        delayQueue.reconnect();
+    }
 
-	public Retry getRetry(Entity entity) throws FalconException {
-		return EntityUtil.getRetry(entity);
-	}
+    public Entity getEntity(String entityType, String entityName)
+            throws FalconException {
+        return EntityUtil.getEntity(entityType, entityName);
+    }
+
+    public Retry getRetry(Entity entity) throws FalconException {
+        return EntityUtil.getRetry(entity);
+    }
 
 }

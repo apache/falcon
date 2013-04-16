@@ -17,19 +17,17 @@
   limitations under the License.
   -->
 <jaxb:bindings
-    jaxb:version="2.1"
-    jaxb:extensionBindingPrefixes="xjc jaxb xs inheritance annox"
-    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
-    xmlns:annox="http://annox.dev.java.net"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    
+        jaxb:version="2.1"
+        jaxb:extensionBindingPrefixes="xjc jaxb xs inheritance annox"
+        xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+        xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+        xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
     <jaxb:bindings schemaLocation="cluster-0.1.xsd" node="//xs:complexType[@name='cluster']">
         <inheritance:extends>org.apache.falcon.entity.v0.Entity</inheritance:extends>
     </jaxb:bindings>
-    
+
     <jaxb:bindings schemaLocation="feed-0.1.xsd" node="//xs:complexType[@name='feed']">
         <inheritance:extends>org.apache.falcon.entity.v0.Entity</inheritance:extends>
     </jaxb:bindings>
@@ -38,8 +36,8 @@
         <inheritance:extends>org.apache.falcon.entity.v0.Entity</inheritance:extends>
     </jaxb:bindings>
 
-      <jaxb:globalBindings>
+    <jaxb:globalBindings>
         <xjc:simple/>
-      </jaxb:globalBindings>
-      
-    </jaxb:bindings>
+    </jaxb:globalBindings>
+
+</jaxb:bindings>

@@ -18,18 +18,21 @@
 
 package org.apache.falcon.workflow.engine;
 
-import java.util.*;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.resource.InstancesResult;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Workflow engine should minimally support the
  * following operations
  */
 public abstract class AbstractWorkflowEngine {
-	
+
     public static final String NAME_NODE = "nameNode";
     public static final String JOB_TRACKER = "jobTracker";
 
@@ -46,9 +49,9 @@ public abstract class AbstractWorkflowEngine {
     public abstract String resume(Entity entity) throws FalconException;
 
     public abstract String delete(Entity entity) throws FalconException;
-    
+
     public abstract String delete(Entity entity, String cluster) throws FalconException;
-    
+
     public abstract void reRun(String cluster, String wfId, Properties props) throws FalconException;
 
     public abstract boolean isActive(Entity entity) throws FalconException;
@@ -56,22 +59,26 @@ public abstract class AbstractWorkflowEngine {
     public abstract boolean isSuspended(Entity entity) throws FalconException;
 
     public abstract InstancesResult getRunningInstances(Entity entity) throws FalconException;
-    
-    public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props) throws FalconException;
-    
-    public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props) throws FalconException;
 
-    public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props) throws FalconException;
+    public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props)
+            throws FalconException;
 
-    public abstract InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props) throws FalconException;
+    public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props)
+            throws FalconException;
+
+    public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props)
+            throws FalconException;
+
+    public abstract InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props)
+            throws FalconException;
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException;
 
-	public abstract void update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
+    public abstract void update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
 
-	public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
-	
-	public abstract String getWorkflowProperty(String cluster, String jobId , String property) throws FalconException;
-	
-	public abstract InstancesResult  getJobDetails(String cluster, String jobId) throws FalconException;
+    public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
+
+    public abstract String getWorkflowProperty(String cluster, String jobId, String property) throws FalconException;
+
+    public abstract InstancesResult getJobDetails(String cluster, String jobId) throws FalconException;
 }

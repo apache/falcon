@@ -17,8 +17,6 @@
  */
 package org.apache.falcon.rerun.service;
 
-import java.io.File;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.event.RerunEvent.RerunType;
@@ -29,42 +27,44 @@ import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
 
+import java.io.File;
+
 public class LateRunService implements FalconService {
 
-	private static final Logger LOG = Logger.getLogger(LateRunService.class);
+    private static final Logger LOG = Logger.getLogger(LateRunService.class);
 
-	@Override
-	public String getName() {
-		return LateRunService.class.getName();
-	}
+    @Override
+    public String getName() {
+        return LateRunService.class.getName();
+    }
 
-	@Override
-	public void init() throws FalconException {
-		AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler = RerunHandlerFactory
-				.getRerunHandler(RerunType.LATE);
-		ActiveMQueue<LaterunEvent> queue = new ActiveMQueue<LaterunEvent>(
-				StartupProperties
-						.get()
-						.getProperty("broker.url",
-								"failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
-				"falcon.late.queue");
-		rerunHandler.init(queue);
-	}
+    @Override
+    public void init() throws FalconException {
+        AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler = RerunHandlerFactory
+                .getRerunHandler(RerunType.LATE);
+        ActiveMQueue<LaterunEvent> queue = new ActiveMQueue<LaterunEvent>(
+                StartupProperties
+                        .get()
+                        .getProperty("broker.url",
+                                "failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
+                "falcon.late.queue");
+        rerunHandler.init(queue);
+    }
 
-	@Override
-	public void destroy() throws FalconException {
-		LOG.info("LateRun  thread destroyed");
-	}
+    @Override
+    public void destroy() throws FalconException {
+        LOG.info("LateRun  thread destroyed");
+    }
 
-	private File getBasePath() {
-		File basePath = new File(StartupProperties.get().getProperty(
-				"rerun.recorder.path", "/tmp/falcon/rerun"));
-		if ((!basePath.exists() && !basePath.mkdirs())
-				|| (basePath.exists() && !basePath.canWrite())) {
-			throw new RuntimeException("Unable to initialize late recorder @"
-					+ basePath);
-		}
-		return basePath;
-	}
+    private File getBasePath() {
+        File basePath = new File(StartupProperties.get().getProperty(
+                "rerun.recorder.path", "/tmp/falcon/rerun"));
+        if ((!basePath.exists() && !basePath.mkdirs())
+                || (basePath.exists() && !basePath.canWrite())) {
+            throw new RuntimeException("Unable to initialize late recorder @"
+                    + basePath);
+        }
+        return basePath;
+    }
 
 }

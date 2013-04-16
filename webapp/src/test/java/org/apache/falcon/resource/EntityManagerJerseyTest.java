@@ -17,27 +17,7 @@
  */
 package org.apache.falcon.resource;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FsShell;
-import org.apache.hadoop.fs.Path;
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -47,20 +27,33 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FsShell;
+import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.sun.jersey.api.client.ClientResponse;
+import javax.servlet.ServletInputStream;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-public class EntityManagerJerseyTest extends AbstractTestBase{
+public class EntityManagerJerseyTest extends AbstractTestBase {
     /**
      * Tests should be enabled only in local environments as they need running
      * instance of webserver
      */
-    
+
     @Test
     public void testUpdateCheckUser() throws Exception {
         Map<String, String> overlay = getUniqueOverlay();
@@ -72,37 +65,39 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         scheduleProcess(tmpFile.getAbsolutePath(), overlay);
         waitForBundleStart(Status.RUNNING);
-        
+
         List<BundleJob> bundles = getBundles();
         Assert.assertEquals(bundles.size(), 1);
         Assert.assertEquals(bundles.get(0).getUser(), REMOTE_USER);
-        
-        ClientResponse response = this.service.path("api/entities/definition/feed/" + outputFeedName).header("Remote-User", REMOTE_USER)
+
+        ClientResponse response = this.service.path("api/entities/definition/feed/" + outputFeedName).header(
+                "Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Feed feed = (Feed) EntityType.FEED.getUnmarshaller()
                 .unmarshal(new StringReader(response.getEntity(String.class)));
-        
+
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
         tmpFile = getTempFile();
         EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
-        response = this.service.path("api/entities/update/feed/" + outputFeedName).header("Remote-User", "testuser").accept(MediaType.TEXT_XML)
+        response = this.service.path("api/entities/update/feed/" + outputFeedName).header("Remote-User",
+                "testuser").accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
-        assertSuccessful(response);    
-        
+        assertSuccessful(response);
+
         bundles = getBundles();
         Assert.assertEquals(bundles.size(), 2);
         Assert.assertEquals(bundles.get(0).getUser(), REMOTE_USER);
         Assert.assertEquals(bundles.get(1).getUser(), REMOTE_USER);
     }
-    
-    
+
+
     @Test(enabled = false)
     public void testOptionalInput() throws Exception {
         Map<String, String> overlay = getUniqueOverlay();
         String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
-        
+
         Input in1 = process.getInputs().getInputs().get(0);
         Input in2 = new Input();
         in2.setFeed(in1.getFeed());
@@ -112,51 +107,53 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         in2.setStart("now(-1,0)");
         in2.setEnd("now(0,0)");
         process.getInputs().getInputs().add(in2);
-        
+
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         scheduleProcess(tmpFile.getAbsolutePath(), overlay);
         waitForWorkflowStart(processName);
     }
-    
-	@Test
-	public void testProcessDeleteAndSchedule() throws Exception {
-		//Submit process with invalid property so that coord submit fails and bundle goes to failed state
-		Map<String, String> overlay = getUniqueOverlay();
+
+    @Test
+    public void testProcessDeleteAndSchedule() throws Exception {
+        //Submit process with invalid property so that coord submit fails and bundle goes to failed state
+        Map<String, String> overlay = getUniqueOverlay();
         String tmpFileName = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
-		Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
-		Property prop = new Property();
-		prop.setName("newProp");
-		prop.setValue("${formatTim()}");
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
+        Property prop = new Property();
+        prop.setName("newProp");
+        prop.setValue("${formatTim()}");
         process.getProperties().getProperties().add(prop);
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         scheduleProcess(tmpFile.getAbsolutePath(), overlay);
         waitForBundleStart(Status.FAILED);
-        
+
         //Delete and re-submit the process with correct workflow
-        ClientResponse clientRepsonse = this.service.path("api/entities/delete/process/" + processName).header("Remote-User", REMOTE_USER)
+        ClientResponse clientRepsonse = this.service.path("api/entities/delete/process/" + processName).header(
+                "Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-		assertSuccessful(clientRepsonse);
-		process.getWorkflow().setPath("/falcon/test/workflow");
+        assertSuccessful(clientRepsonse);
+        process.getWorkflow().setPath("/falcon/test/workflow");
         tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         clientRepsonse = this.service.path("api/entities/submitAndSchedule/process").header("Remote-User", REMOTE_USER)
-        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
-        assertSuccessful(clientRepsonse);    
-        
+        assertSuccessful(clientRepsonse);
+
         //Assert that new schedule creates new bundle
         List<BundleJob> bundles = getBundles();
         Assert.assertEquals(bundles.size(), 2);
-	}
-	
+    }
+
     @Test
     public void testProcessInputUpdate() throws Exception {
         scheduleProcess();
         waitForBundleStart(Job.Status.RUNNING);
-        
-        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
+
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header(
+                "Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller()
                 .unmarshal(new StringReader(response.getEntity(String.class)));
@@ -179,21 +176,23 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML)
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User",
+                REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
-        assertSuccessful(response);    
-        
+        assertSuccessful(response);
+
         //Assert that update creates new bundle
         List<BundleJob> bundles = getBundles();
         Assert.assertEquals(bundles.size(), 2);
     }
-    
+
     @Test
     public void testProcessEndtimeUpdate() throws Exception {
         scheduleProcess();
         waitForBundleStart(Job.Status.RUNNING);
-        
-        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header("Remote-User", REMOTE_USER)
+
+        ClientResponse response = this.service.path("api/entities/definition/process/" + processName).header(
+                "Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller()
                 .unmarshal(new StringReader(response.getEntity(String.class)));
@@ -202,15 +201,16 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
         File tmpFile = getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML)
+        response = this.service.path("api/entities/update/process/" + processName).header("Remote-User",
+                REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, getServletInputStream(tmpFile.getAbsolutePath()));
-        assertSuccessful(response);    
-        
+        assertSuccessful(response);
+
         //Assert that update does not create new bundle
         List<BundleJob> bundles = getBundles();
         Assert.assertEquals(bundles.size(), 1);
     }
-    
+
     @Test
     public void testStatus() throws Exception {
         ClientResponse response;
@@ -227,12 +227,12 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
                 .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
 
-        APIResult result = (APIResult)unmarshaller.
+        APIResult result = (APIResult) unmarshaller.
                 unmarshal(new StringReader(response.getEntity(String.class)));
         Assert.assertTrue(result.getMessage().contains("SUBMITTED"));
-        
+
     }
-    
+
     @Test
     public void testIdempotentSubmit() throws Exception {
         ClientResponse response;
@@ -242,33 +242,31 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
 
         response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
-        assertSuccessful(response);        
+        assertSuccessful(response);
     }
-        
+
     @Test
-    public void testNotFoundStatus() throws FalconWebException
-    {
-    	ClientResponse response;
-    	String feed1 = "f1" + System.currentTimeMillis();
-    	response = this.service
+    public void testNotFoundStatus() throws FalconWebException {
+        ClientResponse response;
+        String feed1 = "f1" + System.currentTimeMillis();
+        response = this.service
                 .path("api/entities/status/feed/" + feed1)
                 .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
-    	Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-  
+        Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+
     }
 
     @Test
-    public void testVersion() throws FalconWebException
-    {
-    	ClientResponse response;
-    	response = this.service
+    public void testVersion() throws FalconWebException {
+        ClientResponse response;
+        response = this.service
                 .path("api/admin/version")
                 .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
-    	Assert.assertEquals(status, "{Version:\"" +
+        Assert.assertEquals(status, "{Version:\"" +
                 BuildProperties.get().getProperty("build.version") + "\",Mode:\"" +
                 DeploymentProperties.get().getProperty("deploy.mode") + "\"}");
 
@@ -304,42 +302,42 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(clientRepsonse);
     }
 
-	@Test
-	public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
-		ClientResponse clientRepsonse;
+    @Test
+    public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
+        ClientResponse clientRepsonse;
         Map<String, String> overlay = getUniqueOverlay();
 
-		clientRepsonse = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay,
-				EntityType.CLUSTER);
-		assertSuccessful(clientRepsonse);
+        clientRepsonse = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay,
+                EntityType.CLUSTER);
+        assertSuccessful(clientRepsonse);
 
-		clientRepsonse = this.service
-				.path("api/entities/schedule/cluster/" + clusterName)
+        clientRepsonse = this.service
+                .path("api/entities/schedule/cluster/" + clusterName)
                 .header("Remote-User", REMOTE_USER)
-				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-				.post(ClientResponse.class);
-		assertFailure(clientRepsonse);
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        assertFailure(clientRepsonse);
 
-		clientRepsonse = this.service
-				.path("api/entities/suspend/cluster/" + clusterName)
+        clientRepsonse = this.service
+                .path("api/entities/suspend/cluster/" + clusterName)
                 .header("Remote-User", REMOTE_USER)
-				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-				.post(ClientResponse.class);
-		assertFailure(clientRepsonse);
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        assertFailure(clientRepsonse);
 
-		clientRepsonse = this.service
-				.path("api/entities/resume/cluster/" + clusterName)
+        clientRepsonse = this.service
+                .path("api/entities/resume/cluster/" + clusterName)
                 .header("Remote-User", REMOTE_USER)
-				.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-				.post(ClientResponse.class);
-		assertFailure(clientRepsonse);
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        assertFailure(clientRepsonse);
 
-		clientRepsonse = this.service
-				.path("api/entities/delete/cluster/" + clusterName)
+        clientRepsonse = this.service
+                .path("api/entities/delete/cluster/" + clusterName)
                 .header("Remote-User", REMOTE_USER)
-				.accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-		assertSuccessful(clientRepsonse);
-	}
+                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
+        assertSuccessful(clientRepsonse);
+    }
 
     @Test
     public void testSubmit() throws Exception {
@@ -378,7 +376,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         String feedXML = response.getEntity(String.class);
         try {
-            Feed result = (Feed)unmarshaller.
+            Feed result = (Feed) unmarshaller.
                     unmarshal(new StringReader(feedXML));
             Assert.assertEquals(result.getName(), overlay.get("inputFeedName"));
         } catch (JAXBException e) {
@@ -398,7 +396,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
     @Test
     public void testScheduleSuspendResume() throws Exception {
         scheduleProcess();
-        
+
         ClientResponse clientRepsonse = this.service
                 .path("api/entities/suspend/process/" + processName)
                 .header("Remote-User", REMOTE_USER)
@@ -412,7 +410,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(clientRepsonse);
     }
 
-    @Test  (enabled = true)
+    @Test(enabled = true)
     public void testFeedSchedule() throws Exception {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
@@ -425,10 +423,10 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
 
         createTestData();
         ClientResponse clientRepsonse = this.service
-        		.path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
+                .path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
                 .header("Remote-User", REMOTE_USER)
-        		.accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-        		.post(ClientResponse.class);
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
         assertSuccessful(clientRepsonse);
     }
 
@@ -479,7 +477,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        new FsShell(conf).run(new String[] {"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
+        new FsShell(conf).run(new String[]{"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
         return list;
     }
 
@@ -557,26 +555,26 @@ public class EntityManagerJerseyTest extends AbstractTestBase{
         assertSuccessful(response);
 
     }
-    
+
     @Test
     public void testGetDependencies() throws Exception {
-    	ClientResponse response;
-    	response = this.service
+        ClientResponse response;
+        response = this.service
                 .path("api/entities/list/process/")
                 .header("Remote-User", REMOTE_USER).type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-    	Assert.assertEquals(response.getStatus(), 200);
-    	
-    	Map<String, String> overlay = getUniqueOverlay();
+        Assert.assertEquals(response.getStatus(), 200);
+
+        Map<String, String> overlay = getUniqueOverlay();
 
         response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
-        
+
         response = this.service
                 .path("api/entities/list/cluster/")
                 .header("Remote-User", REMOTE_USER).type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
-        
+
     }
 }

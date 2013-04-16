@@ -18,11 +18,10 @@
 
 package org.apache.falcon.entity.v0;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 public abstract class Entity {
     public abstract String getName();
@@ -38,18 +37,17 @@ public abstract class Entity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o==null || !o.getClass().equals(this.getClass()))
+        }
+        if (o == null || !o.getClass().equals(this.getClass())) {
             return false;
+        }
 
         Entity entity = (Entity) o;
 
         String name = getName();
-        if (name != null ? !name.equals(entity.getName()) : entity.getName() != null)
-            return false;
-
-        return true;
+        return !(name != null ? !name.equals(entity.getName()) : entity.getName() != null);
     }
 
     @Override

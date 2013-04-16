@@ -16,36 +16,36 @@
   limitations under the License.
   -->
 <coordinator-app name="#NAME#" frequency="#FREQUENCY#"
-	start="#START_TIME#" end="#END_TIME" timezone="#TIMEZONE#"
-	xmlns="uri:oozie:coordinator:0.3">
-	<controls>
-		<concurrency>1</concurrency>
-		<execution>FIFO</execution>
-	</controls>
-	<datasets>
-		<dataset name="input-dataset" frequency="#FEED_FREQ#"
-			initial-instance="#START_TIME#" timezone="#TIMEZONE#">
-			<uri-template>#FEED_PATH#</uri-template>
-		</dataset>
-		<dataset name="output-dataset" frequency="#FEED_FREQ#"
-			initial-instance="#START_TIME#" timezone="#TIMEZONE#">
-			<uri-template>#FEED_PATH#</uri-template>
-		</dataset>
-	</datasets>
-	<input-events>
-		<data-in name="input" dataset="input-dataset">
-			<instance>${coord:current(0)}</instance>
-		</data-in>
-	</input-events>
-	<output-events>
-		<data-out name="output" dataset="output-dataset">
-			<instance>${coord:current(0)}</instance>
-		</data-out>
-	</output-events>
-	<action>
-		<workflow>
-			<app-path>#WF_PATH#</app-path>
-			<configuration />
-		</workflow>
-	</action>
+                 start="#START_TIME#" end="#END_TIME" timezone="#TIMEZONE#"
+                 xmlns="uri:oozie:coordinator:0.3">
+    <controls>
+        <concurrency>1</concurrency>
+        <execution>FIFO</execution>
+    </controls>
+    <datasets>
+        <dataset name="input-dataset" frequency="#FEED_FREQ#"
+                 initial-instance="#START_TIME#" timezone="#TIMEZONE#">
+            <uri-template>#FEED_PATH#</uri-template>
+        </dataset>
+        <dataset name="output-dataset" frequency="#FEED_FREQ#"
+                 initial-instance="#START_TIME#" timezone="#TIMEZONE#">
+            <uri-template>#FEED_PATH#</uri-template>
+        </dataset>
+    </datasets>
+    <input-events>
+        <data-in name="input" dataset="input-dataset">
+            <instance>${coord:current(0)}</instance>
+        </data-in>
+    </input-events>
+    <output-events>
+        <data-out name="output" dataset="output-dataset">
+            <instance>${coord:current(0)}</instance>
+        </data-out>
+    </output-events>
+    <action>
+        <workflow>
+            <app-path>#WF_PATH#</app-path>
+            <configuration/>
+        </workflow>
+    </action>
 </coordinator-app>

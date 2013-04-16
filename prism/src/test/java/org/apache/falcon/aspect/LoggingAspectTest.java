@@ -18,67 +18,66 @@
 
 package org.apache.falcon.aspect;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import junit.framework.Assert;
-
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractEntityManager;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LoggingAspectTest {
 
-	
-	private AbstractEntityManager em = new AbstractEntityManager() {
+
+    private AbstractEntityManager em = new AbstractEntityManager() {
     };
 
-	private volatile Exception threadException;
+    private volatile Exception threadException;
 
-	@Test(expectedExceptions=FalconWebException.class)
-	public void testBeanLoading() {
+    @Test(expectedExceptions = FalconWebException.class)
+    public void testBeanLoading() {
 
-		APIResult result = em.getStatus("type", "entity", "colo");
-	}
+        APIResult result = em.getStatus("type", "entity", "colo");
+    }
 
-	@Test
-	public void testExceptionBeanLoading() {
-		try {
-			em.getStatus("type", "entity", "colo");
-			System.out.println();
-			
-		} catch (Exception e) {
-			return;
-		}
-		Assert.fail("Exepected excpetion");
-	}
-	
-	@Test(expectedExceptions=FalconWebException.class)
-	public void testConcurrentRequests() throws Exception{
+    @Test
+    public void testExceptionBeanLoading() {
+        try {
+            em.getStatus("type", "entity", "colo");
+            System.out.println();
+
+        } catch (Exception e) {
+            return;
+        }
+        Assert.fail("Exepected excpetion");
+    }
+
+    @Test(expectedExceptions = FalconWebException.class)
+    public void testConcurrentRequests() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
         for (int i = 0; i < 5; i++) {
             threadList.add(new Thread() {
                 public void run() {
                     try {
-                    	testBeanLoading();
+                        testBeanLoading();
                     } catch (Exception e) {
-                    	e.printStackTrace();
-                    	threadException =e;
+                        e.printStackTrace();
+                        threadException = e;
                         throw new RuntimeException(e);
                     }
                 }
             });
         }
-        
-        for(Thread thread:threadList) {
+
+        for (Thread thread : threadList) {
             thread.start();
             thread.join();
         }
-		
-		if (threadException != null) {
-			throw threadException;
-		}
-	}
+
+        if (threadException != null) {
+            throw threadException;
+        }
+    }
 
 }

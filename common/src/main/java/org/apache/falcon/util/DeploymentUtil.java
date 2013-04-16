@@ -18,11 +18,11 @@
 
 package org.apache.falcon.util;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.falcon.entity.ColoClusterRelation;
 import org.apache.log4j.Logger;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class DeploymentUtil {
     private static final Logger LOG = Logger.getLogger(DeploymentUtil.class);
@@ -35,7 +35,7 @@ public class DeploymentUtil {
     protected final static String currentColo;
     protected final static boolean embeddedMode;
     protected static boolean prism = false;
-    
+
     static {
         DEFAULT_ALL_COLOS.add(DEFAULT_COLO);
         embeddedMode = DeploymentProperties.get().
@@ -44,33 +44,33 @@ public class DeploymentUtil {
             currentColo = DEFAULT_COLO;
         } else {
             currentColo = StartupProperties.get().
-                getProperty("current.colo", DEFAULT_COLO);
+                    getProperty("current.colo", DEFAULT_COLO);
         }
         LOG.info("Running in embedded mode? " + embeddedMode);
         LOG.info("Current colo: " + currentColo);
     }
-    
+
     public static void setPrismMode() {
-    	prism = true;
+        prism = true;
     }
-    
+
     public static boolean isPrism() {
-    	return !embeddedMode && prism;
+        return !embeddedMode && prism;
     }
-    
+
     public static String getCurrentColo() {
         return currentColo;
     }
-    
+
     public static Set<String> getCurrentClusters() {
         String colo = getCurrentColo();
         return ColoClusterRelation.get().getClusters(colo);
     }
-    
+
     public static boolean isEmbeddedMode() {
         return embeddedMode;
     }
-    
+
     public static String getDefaultColo() {
         return DEFAULT_COLO;
     }

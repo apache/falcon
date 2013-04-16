@@ -18,42 +18,41 @@
 
 package org.apache.falcon.messaging;
 
-import java.util.Map.Entry;
+import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
-
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
+import java.util.Map.Entry;
 
 /**
  * Falcon JMS message creator- creates JMS TextMessage
  */
 public class EntityInstanceMessageCreator {
 
-	private MapMessage mapMessage;
+    private MapMessage mapMessage;
 
-	private final EntityInstanceMessage instanceMessage;
+    private final EntityInstanceMessage instanceMessage;
 
-	public EntityInstanceMessageCreator(EntityInstanceMessage instanceMessage) {
-		this.instanceMessage = instanceMessage;
-	}
+    public EntityInstanceMessageCreator(EntityInstanceMessage instanceMessage) {
+        this.instanceMessage = instanceMessage;
+    }
 
-	public Message createMessage(Session session) throws JMSException {
-		mapMessage = session.createMapMessage();
-		for (Entry<ARG, String> entry : instanceMessage.getKeyValueMap()
-				.entrySet()) {
-			mapMessage.setString(entry.getKey().getArgName(), instanceMessage
-					.getKeyValueMap().get(entry.getKey()));
-		}
-		return mapMessage;
+    public Message createMessage(Session session) throws JMSException {
+        mapMessage = session.createMapMessage();
+        for (Entry<ARG, String> entry : instanceMessage.getKeyValueMap()
+                .entrySet()) {
+            mapMessage.setString(entry.getKey().getArgName(), instanceMessage
+                    .getKeyValueMap().get(entry.getKey()));
+        }
+        return mapMessage;
 
-	}
+    }
 
-	@Override
-	public String toString() {
-		return this.mapMessage.toString();
-	}
+    @Override
+    public String toString() {
+        return this.mapMessage.toString();
+    }
 
 }

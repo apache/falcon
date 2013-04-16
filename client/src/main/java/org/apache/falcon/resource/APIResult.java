@@ -18,8 +18,7 @@
 
 package org.apache.falcon.resource;
 
-import java.io.StringWriter;
-import java.util.UUID;
+import org.apache.log4j.NDC;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -27,11 +26,10 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.NDC;
+import java.io.StringWriter;
+import java.util.UUID;
 
 /**
- * 
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
  * message- detailed message
  */

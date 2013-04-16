@@ -16,8 +16,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<process name="late-process2"  xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<!-- where -->
+<process name="late-process2" xmlns="uri:falcon:process:0.1">
+    <!-- where -->
     <clusters>
         <cluster name="late-cluster">
             <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"/>
@@ -32,25 +32,26 @@
 
     <!-- what -->
     <inputs>
-        <input name="impression" feed="late-feed1" start-instance="today(0,0)" end-instance="today(0,2)" /> 
-        <input name="clicks" feed="late-feed2" start-instance="yesterday(0,0)" end-instance="today(0,0)" partition="*/US"/>
+        <input name="impression" feed="late-feed1" start-instance="today(0,0)" end-instance="today(0,2)"/>
+        <input name="clicks" feed="late-feed2" start-instance="yesterday(0,0)" end-instance="today(0,0)"
+               partition="*/US"/>
     </inputs>
 
     <outputs>
-        <output name="clicksummary" feed="late-feed3" instance="today(0,0)" />
+        <output name="clicksummary" feed="late-feed3" instance="today(0,0)"/>
     </outputs>
 
     <!-- how -->
     <properties>
-    	<property name="procprop" value="procprop"/>
+        <property name="procprop" value="procprop"/>
     </properties>
-    
-    <workflow engine="oozie" path="/user/guest/workflow" />
 
-    <retry policy="periodic" delay="hours(10)" attempts="3" />
+    <workflow engine="oozie" path="/user/guest/workflow"/>
+
+    <retry policy="periodic" delay="hours(10)" attempts="3"/>
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow" />
-        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow" />
+        <late-input feed="impression" workflow-path="hdfs://impression/late/workflow"/>
+        <late-input feed="clicks" workflow-path="hdfs://clicks/late/workflow"/>
     </late-process>
 </process>

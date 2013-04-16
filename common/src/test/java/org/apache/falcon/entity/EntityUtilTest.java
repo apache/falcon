@@ -18,11 +18,6 @@
 
 package org.apache.falcon.entity;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -32,7 +27,12 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class EntityUtilTest extends AbstractTestBase{
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+public class EntityUtilTest extends AbstractTestBase {
     private static TimeZone tz = TimeZone.getTimeZone("UTC");
 
     @Test
@@ -50,7 +50,7 @@ public class EntityUtilTest extends AbstractTestBase{
         Assert.assertEquals(newProcess.getClusters().getClusters().size(), 1);
         Assert.assertEquals(newProcess.getClusters().getClusters().get(0).getName(), currentCluster);
     }
-    
+
     @Test
     public void testFeedView() throws Exception {
         Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
@@ -58,11 +58,11 @@ public class EntityUtilTest extends AbstractTestBase{
         Feed view = EntityUtil.getClusterView(feed, "testCluster");
         Assert.assertEquals(view.getClusters().getClusters().size(), 1);
         Assert.assertEquals(view.getClusters().getClusters().get(0).getName(), "testCluster");
-        
+
         view = EntityUtil.getClusterView(feed, "backupCluster");
         Assert.assertEquals(view.getClusters().getClusters().size(), 2);
     }
-    
+
     @Test
     public void testEquals() throws Exception {
         Process process1 = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
@@ -72,10 +72,11 @@ public class EntityUtilTest extends AbstractTestBase{
         Assert.assertTrue(EntityUtil.equals(process1, process2));
         Assert.assertTrue(EntityUtil.md5(process1).equals(EntityUtil.md5(process2)));
 
-        process2.getClusters().getClusters().get(0).getValidity().setEnd(SchemaHelper.parseDateUTC("2013-04-21T00:00Z"));
+        process2.getClusters().getClusters().get(0).getValidity().setEnd(
+                SchemaHelper.parseDateUTC("2013-04-21T00:00Z"));
         Assert.assertFalse(EntityUtil.equals(process1, process2));
         Assert.assertFalse(EntityUtil.md5(process1).equals(EntityUtil.md5(process2)));
-        Assert.assertTrue(EntityUtil.equals(process1, process2, new String[] {"clusters.clusters[\\d+].validity.end"}));
+        Assert.assertTrue(EntityUtil.equals(process1, process2, new String[]{"clusters.clusters[\\d+].validity.end"}));
     }
 
     private static Date getDate(String date) throws Exception {
@@ -145,7 +146,7 @@ public class EntityUtilTest extends AbstractTestBase{
 
         Frequency frequency = Frequency.fromString("hours(1)");
         Assert.assertEquals(198, EntityUtil.getInstanceSequence(start,
-                frequency,tz, instance));
+                frequency, tz, instance));
     }
 
     @Test

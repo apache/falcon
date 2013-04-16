@@ -16,8 +16,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="uri:falcon:process:0.1" xmlns="uri:falcon:process:0.1"
-    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="uri:falcon:process:0.1" xmlns="uri:falcon:process:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
     <xs:annotation>
         <xs:documentation>
             Licensed to the Apache Software Foundation (ASF) under one or more
@@ -43,7 +44,7 @@
         </xs:documentation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="org.apache.falcon.entity.v0.process" />
+                <jaxb:package name="org.apache.falcon.entity.v0.process"/>
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
@@ -92,8 +93,8 @@
                 </xs:annotation>
                 <xs:simpleType>
                     <xs:restriction base="xs:unsignedShort">
-                        <xs:minInclusive value="1" />
-                        <xs:maxInclusive value="12" />
+                        <xs:minInclusive value="1"/>
+                        <xs:maxInclusive value="12"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -119,16 +120,17 @@
                 <xs:simpleType>
                     <xs:annotation>
                         <xs:appinfo>
-                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" 
-                                        printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId" />
+                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone"
+                                           printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId"/>
                         </xs:appinfo>
                     </xs:annotation>
-                    <xs:restriction base="xs:string" />
+                    <xs:restriction base="xs:string"/>
                 </xs:simpleType>
             </xs:element>
             <xs:element type="inputs" name="inputs" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Defines inputs for the workflow. The workflow will run only when the scheduled time is up and all the inputs are available
+                    <xs:documentation>Defines inputs for the workflow. The workflow will run only when the scheduled
+                        time is up and all the inputs are available
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -142,15 +144,18 @@
             </xs:element>
             <xs:element type="workflow" name="workflow">
                 <xs:annotation>
-                    <xs:documentation>Defines the workflow that should run. The workflow should be defined with respect to the workflow specification of the workflow engine.
+                    <xs:documentation>Defines the workflow that should run. The workflow should be defined with respect
+                        to the workflow specification of the workflow engine.
                         Only
-                        oozie workflow engine is supported as of now. The workflow path is the path on hdfs which contains the workflow xml
+                        oozie workflow engine is supported as of now. The workflow path is the path on hdfs which
+                        contains the workflow xml
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
             <xs:element type="retry" name="retry" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Retry defines how to handle workflow failures. Policy type - backoff, exponention backoff along with the delay define how frequenctly
+                    <xs:documentation>Retry defines how to handle workflow failures. Policy type - backoff, exponention
+                        backoff along with the delay define how frequenctly
                         the
                         workflow should be re-tried. Number of attempts define how many times to re-try the failures.
                     </xs:documentation>
@@ -158,19 +163,21 @@
             </xs:element>
             <xs:element type="late-process" name="late-process" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Late process defines how the late data should be handled. Late policy - backoff, exponential backoff, final along with delay
+                    <xs:documentation>Late process defines how the late data should be handled. Late policy - backoff,
+                        exponential backoff, final along with delay
                         define how
-                        frequently Falcon should check for late data. The late data handling can be customized for each input separatly.
+                        frequently Falcon should check for late data. The late data handling can be customized for each
+                        input separatly.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
 
     <xs:simpleType name="IDENTIFIER">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})" />
+            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -189,13 +196,14 @@
     <xs:complexType name="cluster">
         <xs:annotation>
             <xs:documentation>
-                Defines the cluster where the workflow should run. In addition, it also defines the validity of the workflow on this cluster
+                Defines the cluster where the workflow should run. In addition, it also defines the validity of the
+                workflow on this cluster
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="validity" name="validity" />
+            <xs:element type="validity" name="validity"/>
         </xs:sequence>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="validity">
@@ -204,37 +212,41 @@
                 Defines the vailidity of the workflow as start and end time
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="date-time-type" name="start" use="required" />
-        <xs:attribute type="date-time-type" name="end" use="required" />
+        <xs:attribute type="date-time-type" name="start" use="required"/>
+        <xs:attribute type="date-time-type" name="end" use="required"/>
     </xs:complexType>
 
     <xs:simpleType name="date-time-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC" printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC" />
+                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC"
+                               printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC"/>
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:pattern value="((1|2)\d\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z" />
+            <xs:pattern
+                    value="((1|2)\d\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z"/>
         </xs:restriction>
     </xs:simpleType>
 
     <xs:simpleType name="execution-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="FIFO" />
-            <xs:enumeration value="LIFO" />
-            <xs:enumeration value="ONLYLAST" />
+            <xs:enumeration value="FIFO"/>
+            <xs:enumeration value="LIFO"/>
+            <xs:enumeration value="ONLYLAST"/>
         </xs:restriction>
     </xs:simpleType>
 
     <xs:simpleType name="frequency-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency" parseMethod="org.apache.falcon.entity.v0.Frequency.fromString" printMethod="org.apache.falcon.entity.v0.Frequency.toString" />
+                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency"
+                               parseMethod="org.apache.falcon.entity.v0.Frequency.fromString"
+                               printMethod="org.apache.falcon.entity.v0.Frequency.toString"/>
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)" />
+            <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -242,9 +254,11 @@
         <xs:sequence>
             <xs:element type="input" name="input" maxOccurs="unbounded" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Defines input for the workflow. Each input maps to a feed. Input path and frequency are picked from feed definition.
+                    <xs:documentation>Defines input for the workflow. Each input maps to a feed. Input path and
+                        frequency are picked from feed definition.
                         The input specifies the
-                        start and end instance for the workflow. Falcon creates a property with input name which contains paths of all input
+                        start and end instance for the workflow. Falcon creates a property with input name which
+                        contains paths of all input
                         instances between start and end. This
                         property will be available for the workflow to read inputs.
                         Input can also optionally specify the specific partition of feed that the workflow needs.
@@ -255,11 +269,11 @@
     </xs:complexType>
 
     <xs:complexType name="input">
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="IDENTIFIER" name="feed" use="required" />
-        <xs:attribute type="xs:string" name="start" use="required" />
-        <xs:attribute type="xs:string" name="end" use="required" />
-        <xs:attribute type="xs:string" name="partition" use="optional" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="IDENTIFIER" name="feed" use="required"/>
+        <xs:attribute type="xs:string" name="start" use="required"/>
+        <xs:attribute type="xs:string" name="end" use="required"/>
+        <xs:attribute type="xs:string" name="partition" use="optional"/>
         <xs:attribute type="xs:boolean" name="optional" use="optional" default="false"/>
     </xs:complexType>
 
@@ -267,7 +281,8 @@
         <xs:sequence>
             <xs:element type="output" name="output" maxOccurs="unbounded" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation> Each output maps to a feed. The Output path and frequency are picked from the corresponding feed definition.
+                    <xs:documentation>Each output maps to a feed. The Output path and frequency are picked from the
+                        corresponding feed definition.
                         The output also specifies the
                         instance that is created in terms of EL expression.
                         For each output, Falcon creates a property with the output name which can be used in workflows
@@ -278,40 +293,40 @@
     </xs:complexType>
 
     <xs:complexType name="output">
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="IDENTIFIER" name="feed" use="required" />
-        <xs:attribute type="xs:string" name="instance" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="IDENTIFIER" name="feed" use="required"/>
+        <xs:attribute type="xs:string" name="instance" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="workflow">
-        <xs:attribute type="engine-type" name="engine" use="optional" />
-        <xs:attribute type="xs:string" name="path" use="required" />
-        <xs:attribute type="xs:string" name="lib" use="optional" />
+        <xs:attribute type="engine-type" name="engine" use="optional"/>
+        <xs:attribute type="xs:string" name="path" use="required"/>
+        <xs:attribute type="xs:string" name="lib" use="optional"/>
     </xs:complexType>
 
     <xs:simpleType name="engine-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="oozie" />
+            <xs:enumeration value="oozie"/>
         </xs:restriction>
     </xs:simpleType>
 
     <xs:complexType name="retry">
-        <xs:attribute type="policy-type" name="policy" use="required" />
-        <xs:attribute type="frequency-type" name="delay" use="required" />
+        <xs:attribute type="policy-type" name="policy" use="required"/>
+        <xs:attribute type="frequency-type" name="delay" use="required"/>
         <xs:attribute name="attempts" use="required">
             <xs:simpleType>
                 <xs:restriction base="xs:unsignedShort">
-                    <xs:minInclusive value="1" />
+                    <xs:minInclusive value="1"/>
                 </xs:restriction>
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
-	
+
     <xs:simpleType name="policy-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="periodic" />
-            <xs:enumeration value="exp-backoff" />
-            <xs:enumeration value="final" />
+            <xs:enumeration value="periodic"/>
+            <xs:enumeration value="exp-backoff"/>
+            <xs:enumeration value="final"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -325,22 +340,22 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
-        <xs:attribute type="policy-type" name="policy" use="required" />
-        <xs:attribute type="frequency-type" name="delay" use="required" />
+        <xs:attribute type="policy-type" name="policy" use="required"/>
+        <xs:attribute type="frequency-type" name="delay" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="late-input">
-        <xs:attribute type="IDENTIFIER" name="input" use="required" />
-        <xs:attribute type="xs:string" name="workflow-path" use="required" />
+        <xs:attribute type="IDENTIFIER" name="input" use="required"/>
+        <xs:attribute type="xs:string" name="workflow-path" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="properties">
         <xs:sequence>
-            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0" />
+            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="property">
-        <xs:attribute type="xs:string" name="name" use="required" />
-        <xs:attribute type="xs:string" name="value" use="required" />
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
     </xs:complexType>
 </xs:schema>

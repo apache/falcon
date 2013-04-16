@@ -19,34 +19,30 @@ package org.apache.falcon;
 
 /**
  * Common Exception thrown from Parsers. To the Falcon API class
- * 
  */
 public class FalconException extends Exception {
 
-	/**
-	 * 
-	 * @param e Exception
-	 */
-	public FalconException(Throwable e) {
-		super(e);
-	}
+    /**
+     * @param e Exception
+     */
+    public FalconException(Throwable e) {
+        super(e);
+    }
 
-	public FalconException(String message, Throwable e) {
-		super(message, e);
-	}
+    public FalconException(String message, Throwable e) {
+        super(message, e);
+    }
 
-	/**
-	 * 
-	 * @param message
-	 *            - custom exception message
-	 */
-	public FalconException(String message) {
-		super(message);
-	}
+    /**
+     * @param message - custom exception message
+     */
+    public FalconException(String message) {
+        super(message);
+    }
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1475818869309247014L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = -1475818869309247014L;
 
 }

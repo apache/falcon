@@ -18,15 +18,15 @@
 
 package org.apache.falcon.client;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
- * Exception thrown by FalconClient
+ * Exception thrown by FalconClient.
  */
 public class FalconCLIException extends Exception {
 
@@ -40,9 +40,9 @@ public class FalconCLIException extends Exception {
         super(msg, throwable);
     }
 
-	public static FalconCLIException fromReponse(ClientResponse clientResponse) {
+    public static FalconCLIException fromReponse(ClientResponse clientResponse) {
         return new FalconCLIException(getMessage(clientResponse));
-	}
+    }
 
     private static String getMessage(ClientResponse clientResponse) {
         String message;

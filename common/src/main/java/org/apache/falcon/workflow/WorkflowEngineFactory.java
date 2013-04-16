@@ -27,11 +27,12 @@ public class WorkflowEngineFactory {
 
     private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
 
-    private WorkflowEngineFactory() { }
+    private WorkflowEngineFactory() {
+    }
 
-	public static AbstractWorkflowEngine getWorkflowEngine()
+    public static AbstractWorkflowEngine getWorkflowEngine()
             throws FalconException {
         return ReflectionUtils.getInstance(WORKFLOW_ENGINE);
-	}
+    }
 
 }

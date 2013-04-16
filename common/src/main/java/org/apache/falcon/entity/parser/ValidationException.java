@@ -21,22 +21,20 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 
 /**
- * 
  * ValidationException during parsing
- * 
  */
 public class ValidationException extends FalconException {
 
-	public ValidationException(String message) {
-		super(message);
-	}
-
-	public ValidationException(Exception e) {
-	    super(e);
+    public ValidationException(String message) {
+        super(message);
     }
 
-	public ValidationException(String message, Exception e) {
-	    super(message, e);
+    public ValidationException(Exception e) {
+        super(e);
+    }
+
+    public ValidationException(String message, Exception e) {
+        super(message, e);
     }
 
     private static final long serialVersionUID = -4502166408759507355L;

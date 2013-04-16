@@ -18,12 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.List;
-
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -31,11 +25,15 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.log4j.Logger;
 
+import javax.xml.bind.Unmarshaller;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.List;
+
 /**
- * 
  * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER
  * Should extend this parser to implement specific parsing.
- * 
+ *
  * @param <T>
  */
 public abstract class EntityParser<T extends Entity> {
@@ -46,9 +44,8 @@ public abstract class EntityParser<T extends Entity> {
 
     /**
      * Constructor
-     * 
-     * @param entityType
-     *            - can be FEED or PROCESS
+     *
+     * @param entityType - can be FEED or PROCESS
      */
     protected EntityParser(EntityType entityType) {
         this.entityType = entityType;
@@ -60,9 +57,8 @@ public abstract class EntityParser<T extends Entity> {
 
     /**
      * Parses a sent XML and validates it using JAXB.
-     * 
-     * @param xmlString
-     *            - Entity XML
+     *
+     * @param xmlString - Entity XML
      * @return Entity - JAVA Object
      * @throws FalconException
      */
@@ -71,10 +67,10 @@ public abstract class EntityParser<T extends Entity> {
         Entity entity = parseAndValidate(inputStream);
         return entity;
     }
-    
+
     /**
      * Parses xml stream
-     * 
+     *
      * @param xmlStream
      * @return entity
      * @throws FalconException
@@ -86,7 +82,7 @@ public abstract class EntityParser<T extends Entity> {
             T entity = (T) unmarshaller.unmarshal(xmlStream);
             LOG.info("Parsed Entity: " + entity.getName());
             return entity;
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new FalconException(e);
         }
     }
@@ -96,19 +92,20 @@ public abstract class EntityParser<T extends Entity> {
         validate(entity);
         return entity;
     }
-    
+
     protected void validateEntityExists(EntityType type, String name) throws FalconException {
-        if(ConfigurationStore.get().get(type, name) == null)
-            throw new ValidationException("Referenced " + type + " " + name + " is not registered");        
+        if (ConfigurationStore.get().get(type, name) == null) {
+            throw new ValidationException("Referenced " + type + " " + name + " is not registered");
+        }
     }
-    
+
     protected void validateEntitiesExist(List<Pair<EntityType, String>> entities) throws FalconException {
-        if(entities != null) {
-            for(Pair<EntityType, String> entity:entities) {
+        if (entities != null) {
+            for (Pair<EntityType, String> entity : entities) {
                 validateEntityExists(entity.first, entity.second);
             }
         }
     }
-    
+
     public abstract void validate(T entity) throws FalconException;
 }

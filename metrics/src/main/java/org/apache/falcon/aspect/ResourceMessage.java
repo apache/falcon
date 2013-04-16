@@ -23,43 +23,44 @@ import java.util.Map;
 //Message to be sent to logging system
 public class ResourceMessage {
 
-	private String action;
-	private Map<String, String> dimensions;
-	private Status status;
-	private long executionTime;
-	
-	public enum Status{
-		SUCCEEDED, FAILED
-	}
+    private String action;
+    private Map<String, String> dimensions;
+    private Status status;
+    private long executionTime;
 
-	public ResourceMessage(String action, Map<String, String> dimensions,
-			Status status, long executionTime) {
-		this.action = action;
-		this.dimensions = dimensions;
-		this.status = status;
-		this.executionTime = executionTime;
-	}
-	
-	public String getAction() {
-		return action;
-	}
+    public enum Status {
+        SUCCEEDED, FAILED
+    }
 
-	public Map<String, String> getDimensions() {
-		return dimensions;
-	}
+    public ResourceMessage(String action, Map<String, String> dimensions,
+                           Status status, long executionTime) {
+        this.action = action;
+        this.dimensions = dimensions;
+        this.status = status;
+        this.executionTime = executionTime;
+    }
 
-	public Status getStatus() {
-		return status;
-	}
+    public String getAction() {
+        return action;
+    }
 
-	public long getExecutionTime() {
-		return executionTime;
-	}
+    public Map<String, String> getDimensions() {
+        return dimensions;
+    }
 
-	@Override
-	public String toString() {
-		return "{Action:"+action+", Dimensions:"+dimensions+", Status: "+status.name()+", Time-taken:"+executionTime+" ns}";
-	}
+    public Status getStatus() {
+        return status;
+    }
+
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    @Override
+    public String toString() {
+        return "{Action:" + action + ", Dimensions:" + dimensions + ", Status: " + status.name() + ", Time-taken:"
+                + executionTime + " ns}";
+    }
 
 
 }

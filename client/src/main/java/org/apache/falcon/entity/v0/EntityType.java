@@ -18,25 +18,20 @@
 
 package org.apache.falcon.entity.v0;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+
+import javax.xml.bind.*;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 /**
  * Enum for types of entities in Falcon Process, Feed and Cluster
  */
 public enum EntityType {
-    FEED(Feed.class, "/feed-0.1.xsd", "name"), 
-    PROCESS(Process.class, "/process-0.1.xsd", "name"), 
+    FEED(Feed.class, "/feed-0.1.xsd", "name"),
+    PROCESS(Process.class, "/process-0.1.xsd", "name"),
     CLUSTER(Cluster.class, "/cluster-0.1.xsd", "name");
 
     //Fail unmarshalling of whole xml if unmarshalling of any element fails
@@ -46,7 +41,7 @@ public enum EntityType {
             return false;
         }
     }
-    
+
     private static final String NS = "http://www.w3.org/2001/XMLSchema";
 
     private final Class<? extends Entity> clazz;
@@ -62,7 +57,7 @@ public enum EntityType {
         this.schemaFile = schemaFile;
         try {
             jaxbContext = JAXBContext.newInstance(typeClass);
-            synchronized(this) {
+            synchronized (this) {
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(NS);
                 schema = schemaFactory.newSchema(getClass().getResource(schemaFile));
             }
@@ -78,24 +73,24 @@ public enum EntityType {
     public String getSchemaFile() {
         return schemaFile;
     }
-    
+
     public Marshaller getMarshaller() throws JAXBException {
         Marshaller marshaller = jaxbContext.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         return marshaller;
     }
-    
+
     public Unmarshaller getUnmarshaller() throws JAXBException {
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         unmarshaller.setSchema(schema);
         unmarshaller.setEventHandler(new EventHandler());
         return unmarshaller;
     }
-    
+
     public boolean isSchedulable() {
         return this != EntityType.CLUSTER;
     }
-    
+
     public String[] getImmutableProperties() {
         return immutableProperties;
     }

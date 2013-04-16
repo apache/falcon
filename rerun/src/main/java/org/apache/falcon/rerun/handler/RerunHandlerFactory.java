@@ -17,29 +17,31 @@
  */
 package org.apache.falcon.rerun.handler;
 
-import org.apache.falcon.rerun.event.RerunEvent.RerunType;
 import org.apache.falcon.rerun.event.LaterunEvent;
+import org.apache.falcon.rerun.event.RerunEvent.RerunType;
 import org.apache.falcon.rerun.event.RetryEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 
 public class RerunHandlerFactory {
 
-	private static final RetryHandler<DelayedQueue<RetryEvent>> retryHandler = new RetryHandler<DelayedQueue<RetryEvent>>();
-	private static final LateRerunHandler<DelayedQueue<LaterunEvent>> lateHandler = new LateRerunHandler<DelayedQueue<LaterunEvent>>();
+    private static final RetryHandler<DelayedQueue<RetryEvent>> retryHandler
+            = new RetryHandler<DelayedQueue<RetryEvent>>();
+    private static final LateRerunHandler<DelayedQueue<LaterunEvent>> lateHandler
+            = new LateRerunHandler<DelayedQueue<LaterunEvent>>();
 
-	private RerunHandlerFactory() {
+    private RerunHandlerFactory() {
 
-	}
+    }
 
-	public static AbstractRerunHandler getRerunHandler(RerunType type) {
-		switch (type) {
-		case RETRY:
-			return retryHandler;
-		case LATE:
-			return lateHandler;
-		default:
-			throw new RuntimeException("Invalid handler:" + type);
-		}
+    public static AbstractRerunHandler getRerunHandler(RerunType type) {
+        switch (type) {
+            case RETRY:
+                return retryHandler;
+            case LATE:
+                return lateHandler;
+            default:
+                throw new RuntimeException("Invalid handler:" + type);
+        }
 
-	}
+    }
 }

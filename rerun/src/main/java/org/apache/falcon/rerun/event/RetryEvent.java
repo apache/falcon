@@ -19,39 +19,39 @@ package org.apache.falcon.rerun.event;
 
 public class RetryEvent extends RerunEvent {
 
-	private int attempts;
-	private int failRetryCount;
+    private int attempts;
+    private int failRetryCount;
 
-	public RetryEvent(String clusterName, String wfId, long msgInsertTime,
-			long delay, String entityType, String entityName, String instance,
-			int runId, int attempts, int failRetryCount) {
-		super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
-				instance, runId);
-		this.attempts = attempts;
-		this.failRetryCount = failRetryCount;
-	}
+    public RetryEvent(String clusterName, String wfId, long msgInsertTime,
+                      long delay, String entityType, String entityName, String instance,
+                      int runId, int attempts, int failRetryCount) {
+        super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
+                instance, runId);
+        this.attempts = attempts;
+        this.failRetryCount = failRetryCount;
+    }
 
-	public int getAttempts() {
-		return attempts;
-	}
+    public int getAttempts() {
+        return attempts;
+    }
 
-	public int getFailRetryCount() {
-		return failRetryCount;
-	}
+    public int getFailRetryCount() {
+        return failRetryCount;
+    }
 
-	public void setFailRetryCount(int failRetryCount) {
-		this.failRetryCount = failRetryCount;
-	}
+    public void setFailRetryCount(int failRetryCount) {
+        this.failRetryCount = failRetryCount;
+    }
 
-	@Override
-	public String toString() {
+    @Override
+    public String toString() {
 
-		return "clusterName=" + clusterName + SEP + "wfId=" + wfId + SEP
-				+ "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
-				+ delayInMilliSec + SEP + "entityType=" + entityType + SEP
-				+ "entityName=" + entityName + SEP + "instance=" + instance
-				+ SEP + "runId=" + runId + SEP + "attempts=" + attempts + SEP
-				+ "failRetryCount=" + failRetryCount;
-	}
+        return "clusterName=" + clusterName + SEP + "wfId=" + wfId + SEP
+                + "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
+                + delayInMilliSec + SEP + "entityType=" + entityType + SEP
+                + "entityName=" + entityName + SEP + "instance=" + instance
+                + SEP + "runId=" + runId + SEP + "attempts=" + attempts + SEP
+                + "failRetryCount=" + failRetryCount;
+    }
 
 }

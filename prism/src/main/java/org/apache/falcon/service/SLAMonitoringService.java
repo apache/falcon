@@ -118,7 +118,7 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
     private void removeFromPendingList(Entity entity, String cluster, Date nominalTime) {
         ConcurrentMap<Date, Date> pendingInstances = pendingJobs.get(getKey(entity, cluster));
         if (pendingInstances != null) {
-            LOG.debug("Removing from pending jobs: " + getKey(entity,  cluster) + " ---> " +
+            LOG.debug("Removing from pending jobs: " + getKey(entity, cluster) + " ---> " +
                     SchemaHelper.formatDateUTC(nominalTime));
             pendingInstances.remove(nominalTime);
         }
@@ -129,7 +129,9 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
         @Override
         public void run() {
             try {
-                if (monitoredEntities.isEmpty()) return;
+                if (monitoredEntities.isEmpty()) {
+                    return;
+                }
                 Set<String> keys = new HashSet<String>(monitoredEntities.keySet());
                 checkSLAMissOnPendingEntities(keys);
                 addNewPendingEntities(keys);
@@ -142,7 +144,9 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
             Date now = new Date();
             for (String key : keys) {
                 ConcurrentMap<Date, Date> pendingInstances = pendingJobs.get(key);
-                if (pendingInstances == null) continue;
+                if (pendingInstances == null) {
+                    continue;
+                }
                 ConcurrentMap<Date, Date> interim =
                         new ConcurrentHashMap<Date, Date>(pendingInstances);
                 for (Map.Entry<Date, Date> entry : interim.entrySet()) {
@@ -174,7 +178,9 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
                 Frequency frequency = EntityUtil.getFrequency(entity);
                 TimeZone timeZone = EntityUtil.getTimeZone(entity);
                 Date nextStart = EntityUtil.getNextStartTime(startTime, frequency, timeZone, now);
-                if (nextStart.after(windowEndTime)) continue;
+                if (nextStart.after(windowEndTime)) {
+                    continue;
+                }
                 ConcurrentMap<Date, Date> pendingInstances = pendingJobs.get(key);
                 while (!nextStart.after(windowEndTime)) {
                     if (pendingInstances == null) {
@@ -182,7 +188,9 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
                         pendingInstances = pendingJobs.get(key);
                     }
                     Long latency = monitoredEntities.get(key);
-                    if (latency == null) break;
+                    if (latency == null) {
+                        break;
+                    }
                     pendingInstances.putIfAbsent(nextStart, new Date(nextStart.getTime() +
                             latency * 1500));  //1.5 times latency is when it is supposed to have breached
                     LOG.debug("Adding to pending jobs: " + key + " ---> " +

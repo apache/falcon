@@ -17,12 +17,6 @@
  */
 package org.apache.falcon.group;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.FeedHelper;
@@ -33,88 +27,94 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.service.ConfigurationChangeListener;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Has 2 way mappings from feed to group and group to feed
  */
 public class FeedGroupMap implements ConfigurationChangeListener {
 
-	private static final FeedGroupMap instance = new FeedGroupMap();
-	private Map<String, FeedGroup> groupsMapping = new ConcurrentHashMap<String, FeedGroup>();
+    private static final FeedGroupMap instance = new FeedGroupMap();
+    private Map<String, FeedGroup> groupsMapping = new ConcurrentHashMap<String, FeedGroup>();
 
-	private FeedGroupMap() {
-		// singleton
-	}
+    private FeedGroupMap() {
+        // singleton
+    }
 
-	public static FeedGroupMap get() {
-		return instance;
-	}
+    public static FeedGroupMap get() {
+        return instance;
+    }
 
-	public Map<String, FeedGroup> getGroupsMapping() {
-		return Collections.unmodifiableMap(groupsMapping);
-	}
+    public Map<String, FeedGroup> getGroupsMapping() {
+        return Collections.unmodifiableMap(groupsMapping);
+    }
 
-	@Override
-	public void onAdd(Entity entity) throws FalconException {
+    @Override
+    public void onAdd(Entity entity) throws FalconException {
 
-		if (entity.getEntityType().equals(EntityType.FEED)) {
-			Feed feed = (Feed) entity;
-			if (feed.getGroups() == null || feed.getGroups().equals("")) {
-				return;
-			}
-			Set<FeedGroup> groupSet = getGroups(feed);
-			addGroups(feed.getName(), groupSet);
-		}
+        if (entity.getEntityType().equals(EntityType.FEED)) {
+            Feed feed = (Feed) entity;
+            if (feed.getGroups() == null || feed.getGroups().equals("")) {
+                return;
+            }
+            Set<FeedGroup> groupSet = getGroups(feed);
+            addGroups(feed.getName(), groupSet);
+        }
 
-	}
+    }
 
-	@Override
-	public void onRemove(Entity entity) throws FalconException {
-		if (entity.getEntityType().equals(EntityType.FEED)) {
-			Feed feed = (Feed) entity;
-			if (StringUtils.isEmpty(feed.getGroups())) {
-				return;
-			}
-			String[] groups = feed.getGroups().split(",");
-			for (String group : groups) {
-				groupsMapping.get(group).getFeeds().remove(entity.getName());
-				if (groupsMapping.get(group).getFeeds().size() == 0) {
-					groupsMapping.remove(group);
-				}
-			}
+    @Override
+    public void onRemove(Entity entity) throws FalconException {
+        if (entity.getEntityType().equals(EntityType.FEED)) {
+            Feed feed = (Feed) entity;
+            if (StringUtils.isEmpty(feed.getGroups())) {
+                return;
+            }
+            String[] groups = feed.getGroups().split(",");
+            for (String group : groups) {
+                groupsMapping.get(group).getFeeds().remove(entity.getName());
+                if (groupsMapping.get(group).getFeeds().size() == 0) {
+                    groupsMapping.remove(group);
+                }
+            }
 
-		}
+        }
 
-	}
+    }
 
-	@Override
-	public void onChange(Entity oldEntity, Entity newEntity)
-			throws FalconException {
-		onRemove(oldEntity);
-		onAdd(newEntity);
-	}
+    @Override
+    public void onChange(Entity oldEntity, Entity newEntity)
+            throws FalconException {
+        onRemove(oldEntity);
+        onAdd(newEntity);
+    }
 
-	private void addGroups(String feed, Set<FeedGroup> groups) {
-		for (FeedGroup group : groups) {
-			if (groupsMapping.containsKey(group.getName())) {
-				groupsMapping.get(group.getName()).getFeeds().add(feed);
-			} else {
-				group.getFeeds().add(feed);
-				groupsMapping.put(group.getName(), group);
-			}
-		}
-	}
+    private void addGroups(String feed, Set<FeedGroup> groups) {
+        for (FeedGroup group : groups) {
+            if (groupsMapping.containsKey(group.getName())) {
+                groupsMapping.get(group.getName()).getFeeds().add(feed);
+            } else {
+                group.getFeeds().add(feed);
+                groupsMapping.put(group.getName(), group);
+            }
+        }
+    }
 
-	public Set<FeedGroup> getGroups(String groups, Frequency frequency, String path) {
-		Set<FeedGroup> groupSet = new HashSet<FeedGroup>();
-		String[] groupArray = groups.split(",");
-		for (String group : groupArray) {
-			groupSet.add(new FeedGroup(group, frequency, path));
-		}
-		return groupSet;
-	}
+    public Set<FeedGroup> getGroups(String groups, Frequency frequency, String path) {
+        Set<FeedGroup> groupSet = new HashSet<FeedGroup>();
+        String[] groupArray = groups.split(",");
+        for (String group : groupArray) {
+            groupSet.add(new FeedGroup(group, frequency, path));
+        }
+        return groupSet;
+    }
 
-	public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed) {
-		return getGroups(feed.getGroups(), feed.getFrequency(),
-				FeedHelper.getLocation(feed, LocationType.DATA).getPath());
-	}
+    public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed) {
+        return getGroups(feed.getGroups(), feed.getFrequency(),
+                FeedHelper.getLocation(feed, LocationType.DATA).getPath());
+    }
 }

@@ -32,7 +32,7 @@ public class FalconWebException extends WebApplicationException {
     private static final Logger LOG = Logger.getLogger(FalconWebException.class);
 
     public static FalconWebException newException(Throwable e,
-                                                 Response.Status status) {
+                                                  Response.Status status) {
         LOG.error("Failure reason", e);
         return newException(e.getMessage() + "\n" + getAddnInfo(e), status);
     }
@@ -44,14 +44,14 @@ public class FalconWebException extends WebApplicationException {
 
 
     public static FalconWebException newException(APIResult result,
-                                                 Response.Status status) {
+                                                  Response.Status status) {
         LOG.error("Action failed: " + status + "\nError:" + result.getMessage());
         return new FalconWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newException(String message,
-                                                 Response.Status status) {
+                                                  Response.Status status) {
         LOG.error("Action failed: " + status + "\nError:" + message);
         APIResult result = new APIResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).
@@ -65,8 +65,9 @@ public class FalconWebException extends WebApplicationException {
     }
 
     private static String getMessage(Throwable e) {
-        if(StringUtils.isEmpty(e.getMessage()))
+        if (StringUtils.isEmpty(e.getMessage())) {
             return e.getClass().getName();
+        }
         return e.getMessage();
     }
 

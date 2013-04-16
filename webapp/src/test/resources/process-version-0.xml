@@ -16,12 +16,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<process name="sample"  xmlns="uri:falcon:process:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<process name="sample" xmlns="uri:falcon:process:0.1">
     <!-- where -->
     <clusters>
-    <cluster name="testCluster">
-    <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z"/>
-    </cluster>
+        <cluster name="testCluster">
+            <validity start="2011-11-01T00:00Z" end="2011-12-31T23:59Z"/>
+        </cluster>
     </clusters>
 
     <!-- when -->
@@ -29,30 +29,30 @@
     <order>LIFO</order>
     <frequency>hours(1)</frequency>
     <timezone>UTC</timezone>
-    
+
     <!-- what -->
     <inputs>
-        <input name="input1" feed="inputFeed1" start="$ptime-6" end="$ptime" /> 
-        <input name="input2" feed="inputFeed2" start="$ptime" end="$ptime" />
+        <input name="input1" feed="inputFeed1" start="$ptime-6" end="$ptime"/>
+        <input name="input2" feed="inputFeed2" start="$ptime" end="$ptime"/>
     </inputs>
 
     <outputs>
-        <output name="output1" feed="outputFeed1" instance="$ptime" />
-        <output name="output2" feed="outputFeed2" instance="$ptime" />
+        <output name="output1" feed="outputFeed1" instance="$ptime"/>
+        <output name="output2" feed="outputFeed2" instance="$ptime"/>
     </outputs>
 
     <!-- how -->
     <properties>
-        <property name="name" value="value" />
-        <property name="name" value="value" />
+        <property name="name" value="value"/>
+        <property name="name" value="value"/>
     </properties>
 
-    <workflow engine="oozie" path="hdfs://path/to/workflow" />
+    <workflow engine="oozie" path="hdfs://path/to/workflow"/>
 
-    <retry policy="periodic" delay="minutes(10)" attempts="3" />
+    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
 
     <late-process policy="exp-backoff" delay="hours(1)">
-        <late-input input="impression" workflow-path="/impression/late/workflow" />
-        <late-input input="clicks" workflow-path="/clicks/late/workflow" />
+        <late-input input="impression" workflow-path="/impression/late/workflow"/>
+        <late-input input="clicks" workflow-path="/clicks/late/workflow"/>
     </late-process>
 </process>

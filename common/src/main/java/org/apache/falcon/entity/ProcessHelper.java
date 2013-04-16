@@ -23,9 +23,11 @@ import org.apache.falcon.entity.v0.process.Process;
 
 public class ProcessHelper {
     public static Cluster getCluster(Process process, String clusterName) {
-        for(Cluster cluster:process.getClusters().getClusters())
-            if(cluster.getName().equals(clusterName))
+        for (Cluster cluster : process.getClusters().getClusters()) {
+            if (cluster.getName().equals(clusterName)) {
                 return cluster;
+            }
+        }
         return null;
     }
 }

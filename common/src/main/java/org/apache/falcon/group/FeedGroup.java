@@ -17,6 +17,11 @@
  */
 package org.apache.falcon.group;
 
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.feed.LocationType;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,80 +29,75 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.common.FeedDataPath;
-import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.feed.LocationType;
-
 /**
  * Group, which represents a logical group of feeds which can belong to this
  * group.
  */
 public class FeedGroup {
-	
-	public FeedGroup(String group, Frequency frequency, String path) {
-		this.name = group;
-		this.frequency = frequency;
-		this.datePattern = getDatePattern(path);
-		this.feeds = Collections
-				.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-	}
 
-	public static String getDatePattern(String path) {
-		Matcher matcher = FeedDataPath.PATTERN.matcher(path);
-		List<String> fields = new ArrayList<String>();
-		while (matcher.find()) {
-			String var = path.substring(matcher.start(), matcher.end());
-			fields.add(var);
-		}
-		Collections.sort(fields);
-		return fields.toString();
-	}
+    public FeedGroup(String group, Frequency frequency, String path) {
+        this.name = group;
+        this.frequency = frequency;
+        this.datePattern = getDatePattern(path);
+        this.feeds = Collections
+                .newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    }
 
-	private String name;
-	private Frequency frequency;
-	private String datePattern;
-	private Set<String> feeds;
+    public static String getDatePattern(String path) {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(path);
+        List<String> fields = new ArrayList<String>();
+        while (matcher.find()) {
+            String var = path.substring(matcher.start(), matcher.end());
+            fields.add(var);
+        }
+        Collections.sort(fields);
+        return fields.toString();
+    }
 
-	public Set<String> getFeeds() {
-		return feeds;
-	}
+    private String name;
+    private Frequency frequency;
+    private String datePattern;
+    private Set<String> feeds;
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof FeedGroup) || obj == null) {
-			return false;
-		}
-		FeedGroup group = (FeedGroup) obj;
-		return (this.name.equals(group.getName())
-				&& this.frequency.equals(group.frequency)
-				&& this.datePattern
-					.equals(group.datePattern));
+    public Set<String> getFeeds() {
+        return feeds;
+    }
 
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FeedGroup) || obj == null) {
+            return false;
+        }
+        FeedGroup group = (FeedGroup) obj;
+        return (this.name.equals(group.getName())
+                && this.frequency.equals(group.frequency)
+                && this.datePattern
+                .equals(group.datePattern));
 
-	@Override
-	public int hashCode() {
-		return 127 * name.hashCode() + 31 * frequency.hashCode() + datePattern.hashCode();
-	}
+    }
 
-	public String getName() {
-		return name;
-	}
+    @Override
+    public int hashCode() {
+        return 127 * name.hashCode() + 31 * frequency.hashCode() + datePattern.hashCode();
+    }
 
-	public Frequency getFrequency() {
-		return frequency;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getDatePattern() {
-		return datePattern;
-	}
+    public Frequency getFrequency() {
+        return frequency;
+    }
 
-	public boolean canContainFeed(org.apache.falcon.entity.v0.feed.Feed feed) {
-		if (this.frequency.equals(feed.getFrequency())
-				&& this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()))) {
-			return true;
-		}
-		return false;
-	}
+    public String getDatePattern() {
+        return datePattern;
+    }
+
+    public boolean canContainFeed(org.apache.falcon.entity.v0.feed.Feed feed) {
+        if (this.frequency.equals(feed.getFrequency())
+                && this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()))) {
+            return true;
+        }
+        return false;
+    }
 }

@@ -27,7 +27,7 @@ import java.util.LinkedList;
 
 public class InMemoryQueueTest {
 
-    @Test (timeOut = 10000)
+    @Test(timeOut = 10000)
     public void testDelayedQueue() throws Exception {
         runTest();
     }

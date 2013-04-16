@@ -30,7 +30,7 @@ public abstract class AbstractChannel implements Channel {
 
     protected Method getMethod(Class service, String methodName, Object... args)
             throws FalconException {
-        MethodKey methodKey = new MethodKey(methodName,  args);
+        MethodKey methodKey = new MethodKey(methodName, args);
         Method method = methods.get(methodKey);
         if (method == null) {
             for (Method item : service.getDeclaredMethods()) {

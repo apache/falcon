@@ -18,6 +18,9 @@
 
 package org.apache.falcon.oozie.bundle;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
@@ -25,17 +28,16 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 public class BundleUnmarshallingTest {
     @Test
     public void testValidBundleUnamrashalling() throws Exception {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(org.apache.falcon.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
+        Unmarshaller unmarshaller = JAXBContext.newInstance(
+                org.apache.falcon.oozie.bundle.BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
         Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-bundle-0.1.xsd"));
         unmarshaller.setSchema(schema);
-        Object bundle = unmarshaller.unmarshal(new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/bundle.xml")),
+        Object bundle = unmarshaller.unmarshal(
+                new StreamSource(BundleUnmarshallingTest.class.getResourceAsStream("/oozie/xmls/bundle.xml")),
                 BUNDLEAPP.class);
         BUNDLEAPP bundleApp = ((JAXBElement<BUNDLEAPP>) bundle).getValue();
 

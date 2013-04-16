@@ -17,26 +17,27 @@
   ~ limitations under the License.
   -->
 
-<cluster colo="gs" description="" name="corp" xmlns="uri:falcon:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<interfaces>
-		<interface type="readonly" endpoint="hftp://localhost:50010"
-			version="0.20.2" />
-		<interface type="write" endpoint="hdfs://localhost:8020"
-			version="0.20.2" />
-		<interface type="execute" endpoint="localhost:8021" version="0.20.2" />
-		<interface type="workflow" endpoint="http://localhost:11000/oozie/"
-			version="3.1" />
-		<interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
-			version="5.1.6" />
-		<interface type="registry" endpoint="Hcat" version="1" />
-	</interfaces>
-	<locations>
-		<location name="staging" path="/projects/falcon/staging" />
-		<location name="temp" path="/tmp" />
-		<location name="working" path="/projects/falcon/working" />
-	</locations>
-	<properties>
-		<property name="field1" value="value1" />
-		<property name="field2" value="value2" />
-	</properties>
+<cluster colo="gs" description="" name="corp" xmlns="uri:falcon:cluster:0.1"
+        >
+    <interfaces>
+        <interface type="readonly" endpoint="hftp://localhost:50010"
+                   version="0.20.2"/>
+        <interface type="write" endpoint="hdfs://localhost:8020"
+                   version="0.20.2"/>
+        <interface type="execute" endpoint="localhost:8021" version="0.20.2"/>
+        <interface type="workflow" endpoint="http://localhost:11000/oozie/"
+                   version="3.1"/>
+        <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
+                   version="5.1.6"/>
+        <interface type="registry" endpoint="Hcat" version="1"/>
+    </interfaces>
+    <locations>
+        <location name="staging" path="/projects/falcon/staging"/>
+        <location name="temp" path="/tmp"/>
+        <location name="working" path="/projects/falcon/working"/>
+    </locations>
+    <properties>
+        <property name="field1" value="value1"/>
+        <property name="field2" value="value2"/>
+    </properties>
 </cluster>

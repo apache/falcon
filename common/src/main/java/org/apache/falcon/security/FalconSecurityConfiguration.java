@@ -27,7 +27,7 @@ public class FalconSecurityConfiguration extends Configuration {
     private static final AppConfigurationEntry OS_SPECIFIC_LOGIN =
             new AppConfigurationEntry(SecurityConstants.OS_LOGIN_MODULE_NAME,
                     AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
-                    new HashMap<String,String>());
+                    new HashMap<String, String>());
 
     private static final AppConfigurationEntry[] SIMPLE_CONF =
             new AppConfigurationEntry[]{OS_SPECIFIC_LOGIN};

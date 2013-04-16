@@ -18,20 +18,8 @@
 
 package org.apache.falcon.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
@@ -54,7 +42,14 @@ import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 public abstract class AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
@@ -74,14 +69,16 @@ public abstract class AbstractEntityManager {
 
     protected void checkColo(String colo) throws FalconWebException {
         if (!DeploymentUtil.getCurrentColo().equals(colo)) {
-            throw FalconWebException.newException("Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
+            throw FalconWebException.newException(
+                    "Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
                     Response.Status.BAD_REQUEST);
         }
     }
 
     protected Set<String> getAllColos() {
-        if (DeploymentUtil.isEmbeddedMode())
+        if (DeploymentUtil.isEmbeddedMode()) {
             return DeploymentUtil.getDefaultColos();
+        }
         String[] colos = RuntimeProperties.get().getProperty("all.colos", DeploymentUtil.getDefaultColo()).split(",");
         return new HashSet<String>(Arrays.asList(colos));
     }
@@ -95,28 +92,32 @@ public abstract class AbstractEntityManager {
         }
         return colos;
     }
-    
+
     protected Set<String> getApplicableColos(String type, String name) throws FalconWebException {
         try {
-            if (DeploymentUtil.isEmbeddedMode())
+            if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
+            }
 
-            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER) {
                 return getAllColos();
+            }
 
             return getApplicableColos(type, EntityUtil.getEntity(type, name));
         } catch (FalconException e) {
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
-    
+
     protected Set<String> getApplicableColos(String type, Entity entity) throws FalconWebException {
         try {
-            if (DeploymentUtil.isEmbeddedMode())
+            if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
+            }
 
-            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER)
+            if (EntityType.valueOf(type.toUpperCase()) == EntityType.CLUSTER) {
                 return getAllColos();
+            }
 
             Set<String> clusters = EntityUtil.getClustersDefined(entity);
             Set<String> colos = new HashSet<String>();
@@ -134,16 +135,13 @@ public abstract class AbstractEntityManager {
      * Submit a new entity. Entities can be of type feed, process or data end
      * points. Entity definitions are validated structurally against schema and
      * subsequently for other rules before they are admitted into the system
-     * 
+     * <p/>
      * Entity name acts as the key and an entity once added, can't be added
      * again unless deleted.
-     * 
-     * @param request
-     *            - Servlet Request
-     * @param type
-     *            - entity type - feed, process or data end point
-     * @param colo
-     *            - applicable colo
+     *
+     * @param request - Servlet Request
+     * @param type    - entity type - feed, process or data end point
+     * @param colo    - applicable colo
      * @return result of the operation
      */
     public APIResult submit(HttpServletRequest request, String type, String colo) {
@@ -162,7 +160,7 @@ public abstract class AbstractEntityManager {
     /**
      * Post an entity XML with entity type. Validates the XML which can be
      * Process, Feed or Dataendpoint
-     * 
+     *
      * @param type
      * @return APIResule -Succeeded or Failed
      */
@@ -171,7 +169,8 @@ public abstract class AbstractEntityManager {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity entity = deserializeEntity(request, entityType);
             validate(entity);
-            return new APIResult(APIResult.Status.SUCCEEDED, "Validated successfully (" + entityType + ") " + entity.getName());
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
             LOG.error("Validation failed for entity (" + type + ") ", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -181,7 +180,7 @@ public abstract class AbstractEntityManager {
     /**
      * Deletes a scheduled entity, a deleted entity is removed completely from
      * execution pool.
-     * 
+     *
      * @param type
      * @param entity
      * @return APIResult
@@ -204,10 +203,12 @@ public abstract class AbstractEntityManager {
 
                 configStore.remove(entityType, entity);
             } catch (EntityNotRegisteredException e) { // already deleted
-                return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") doesn't exist. Nothing to do");
+                return new APIResult(APIResult.Status.SUCCEEDED,
+                        entity + "(" + type + ") doesn't exist. Nothing to do");
             }
 
-            return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") removed successfully " + removedFromEngine);
+            return new APIResult(APIResult.Status.SUCCEEDED,
+                    entity + "(" + type + ") removed successfully " + removedFromEngine);
         } catch (Throwable e) {
             LOG.error("Unable to reach workflow engine for deletion or " + "deletion failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -229,7 +230,7 @@ public abstract class AbstractEntityManager {
             if (!EntityUtil.equals(oldEntity, newEntity)) {
                 configStore.initiateUpdate(newEntity);
                 //Update in workflow engine
-            	if(! DeploymentUtil.isPrism()) {
+                if (!DeploymentUtil.isPrism()) {
                     Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
                     Set<String> newClusters = EntityUtil.getClustersDefinedInColos(newEntity);
                     newClusters.retainAll(oldClusters); //common clusters for update
@@ -238,11 +239,11 @@ public abstract class AbstractEntityManager {
                     for (String cluster : newClusters) {
                         getWorkflowEngine().update(oldEntity, newEntity, cluster);
                     }
-                    for(String cluster:oldClusters) {
+                    for (String cluster : oldClusters) {
                         getWorkflowEngine().delete(oldEntity, cluster);
                     }
-            	}
-            	
+                }
+
                 configStore.update(entityType, newEntity);
             }
 
@@ -256,11 +257,14 @@ public abstract class AbstractEntityManager {
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {
-        if (oldEntity.getEntityType() != newEntity.getEntityType() || !oldEntity.equals(newEntity))
-            throw new FalconException(oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString());
+        if (oldEntity.getEntityType() != newEntity.getEntityType() || !oldEntity.equals(newEntity)) {
+            throw new FalconException(
+                    oldEntity.toShortString() + " can't be updated with " + newEntity.toShortString());
+        }
 
-        if (oldEntity.getEntityType() == EntityType.CLUSTER)
+        if (oldEntity.getEntityType() == EntityType.CLUSTER) {
             throw new FalconException("Update not supported for clusters");
+        }
 
         String[] props = oldEntity.getEntityType().getImmutableProperties();
         for (String prop : props) {
@@ -271,8 +275,9 @@ public abstract class AbstractEntityManager {
             } catch (Exception e) {
                 throw new FalconException(e);
             }
-            if (!ObjectUtils.equals(oldProp, newProp))
+            if (!ObjectUtils.equals(oldProp, newProp)) {
                 throw new ValidationException(oldEntity.toShortString() + ": " + prop + " can't be changed");
+            }
         }
     }
 
@@ -283,23 +288,27 @@ public abstract class AbstractEntityManager {
             for (Pair<String, EntityType> ref : referencedBy) {
                 messages.append(ref).append("\n");
             }
-            throw new FalconException(entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
-                    + messages);
+            throw new FalconException(
+                    entity.getName() + "(" + entity.getEntityType() + ") cant " + "be removed as it is referred by "
+                            + messages);
         }
     }
 
-    protected synchronized Entity submitInternal(HttpServletRequest request, String type) throws IOException, FalconException {
+    protected synchronized Entity submitInternal(HttpServletRequest request, String type)
+            throws IOException, FalconException {
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
 
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
-            if (EntityUtil.equals(existingEntity, entity))
+            if (EntityUtil.equals(existingEntity, entity)) {
                 return existingEntity;
+            }
 
-            throw new EntityAlreadyExistsException(entity.toShortString() + " already registered with configuration store. "
-                    + "Can't be submitted again. Try removing before submitting.");
+            throw new EntityAlreadyExistsException(
+                    entity.toShortString() + " already registered with configuration store. "
+                            + "Can't be submitted again. Try removing before submitting.");
         }
 
         validate(entity);
@@ -308,7 +317,8 @@ public abstract class AbstractEntityManager {
         return entity;
     }
 
-    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType) throws IOException, FalconException {
+    protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType)
+            throws IOException, FalconException {
 
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         InputStream xmlStream = request.getInputStream();
@@ -330,7 +340,7 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void validate(Entity entity) throws FalconException {
         EntityParser entityParser = EntityParserFactory.getParser(entity.getEntityType());
         entityParser.validate(entity);
@@ -356,7 +366,7 @@ public abstract class AbstractEntityManager {
 
     /**
      * Returns the status of requested entity.
-     * 
+     *
      * @param type
      * @param entity
      * @return String
@@ -395,7 +405,7 @@ public abstract class AbstractEntityManager {
 
     /**
      * Returns dependencies.
-     * 
+     *
      * @param type
      * @param entity
      * @return EntityList
@@ -406,7 +416,7 @@ public abstract class AbstractEntityManager {
             Entity entityObj = EntityUtil.getEntity(type, entity);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
             Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
-            return new EntityList(entities == null ? new Entity[] {} : entities);
+            return new EntityList(entities == null ? new Entity[]{} : entities);
         } catch (Exception e) {
             LOG.error("Unable to get dependencies for entity " + entity + "(" + type + ")", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -415,7 +425,7 @@ public abstract class AbstractEntityManager {
 
     /**
      * Returns the list of entities registered of a given type.
-     * 
+     *
      * @param type
      * @return String
      */
@@ -424,7 +434,7 @@ public abstract class AbstractEntityManager {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Collection<String> entityNames = configStore.getEntities(entityType);
             if (entityNames == null || entityNames.equals("")) {
-                return new EntityList(new Entity[] {});
+                return new EntityList(new Entity[]{});
             }
             Entity[] entities = new Entity[entityNames.size()];
             int index = 0;
@@ -440,7 +450,7 @@ public abstract class AbstractEntityManager {
 
     /**
      * Returns the entity definition as an XML based on name
-     * 
+     *
      * @param type
      * @param entityName
      * @return String

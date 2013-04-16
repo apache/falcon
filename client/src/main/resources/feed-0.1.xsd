@@ -16,8 +16,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="uri:falcon:feed:0.1" xmlns="uri:falcon:feed:0.1"
-    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified"
+           targetNamespace="uri:falcon:feed:0.1" xmlns="uri:falcon:feed:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
 
     <xs:annotation>
         <xs:documentation>
@@ -44,7 +45,7 @@
         </xs:documentation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="org.apache.falcon.entity.v0.feed" />
+                <jaxb:package name="org.apache.falcon.entity.v0.feed"/>
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
@@ -76,30 +77,30 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="partitions" name="partitions" minOccurs="0" />
-            <xs:element type="group-type" name="groups" minOccurs="0" />
-            <xs:element type="xs:string" name="availabilityFlag" minOccurs="0" />
-            <xs:element type="frequency-type" name="frequency" />
+            <xs:element type="partitions" name="partitions" minOccurs="0"/>
+            <xs:element type="group-type" name="groups" minOccurs="0"/>
+            <xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
+            <xs:element type="frequency-type" name="frequency"/>
             <xs:element name="timezone" minOccurs="0" default="UTC">
                 <xs:simpleType>
                     <xs:annotation>
                         <xs:appinfo>
-                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone" 
-                                        printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId" />
+                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone"
+                                           printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId"/>
                         </xs:appinfo>
                     </xs:annotation>
-                    <xs:restriction base="xs:string" />
+                    <xs:restriction base="xs:string"/>
                 </xs:simpleType>
             </xs:element>
-            <xs:element type="late-arrival" name="late-arrival" minOccurs="0" />
-            <xs:element type="clusters" name="clusters" />
-            <xs:element type="locations" name="locations" />
-            <xs:element type="ACL" name="ACL" />
-            <xs:element type="schema" name="schema" />
-            <xs:element type="properties" name="properties" minOccurs="0" />
+            <xs:element type="late-arrival" name="late-arrival" minOccurs="0"/>
+            <xs:element type="clusters" name="clusters"/>
+            <xs:element type="locations" name="locations"/>
+            <xs:element type="ACL" name="ACL"/>
+            <xs:element type="schema" name="schema"/>
+            <xs:element type="properties" name="properties" minOccurs="0"/>
         </xs:sequence>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="xs:string" name="description" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="description"/>
     </xs:complexType>
 
     <xs:complexType name="cluster">
@@ -118,19 +119,20 @@
                 specified by expression frequency(times), ex: if
                 feed should be retained for at least 6 hours then retention's limit="hours(6)".
                 The field partitionExp contains
-                partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema.
+                partition tags. Number of partition tags has to be equal to number of partitions specified in feed
+                schema.
                 A partition tag can be a wildcard(*), a static string or
                 an expression. Atleast one of the strings has to be an expression.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="validity" name="validity" />
-            <xs:element type="retention" name="retention" />
+            <xs:element type="validity" name="validity"/>
+            <xs:element type="retention" name="retention"/>
             <xs:element type="locations" name="locations" minOccurs="0"/>
         </xs:sequence>
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
-        <xs:attribute type="cluster-type" name="type" use="optional" />
-        <xs:attribute type="xs:string" name="partition" use="optional" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="cluster-type" name="type" use="optional"/>
+        <xs:attribute type="xs:string" name="partition" use="optional"/>
     </xs:complexType>
     <xs:complexType name="partitions">
         <xs:annotation>
@@ -140,7 +142,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="partition" name="partition" maxOccurs="unbounded" minOccurs="0" />
+            <xs:element type="partition" name="partition" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="schema">
@@ -149,8 +151,8 @@
                 for a feed and the provider of schema like protobuf, thrift etc.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="xs:string" name="location" use="required" />
-        <xs:attribute type="xs:string" name="provider" use="required" />
+        <xs:attribute type="xs:string" name="location" use="required"/>
+        <xs:attribute type="xs:string" name="provider" use="required"/>
     </xs:complexType>
     <xs:complexType name="properties">
         <xs:annotation>
@@ -159,7 +161,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0" />
+            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="validity">
@@ -174,8 +176,8 @@
                 validation.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="date-time-type" name="start" use="required" />
-        <xs:attribute type="date-time-type" name="end" use="required" />
+        <xs:attribute type="date-time-type" name="start" use="required"/>
+        <xs:attribute type="date-time-type" name="end" use="required"/>
     </xs:complexType>
     <xs:complexType name="locations">
         <xs:annotation>
@@ -184,7 +186,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:choice maxOccurs="unbounded" minOccurs="0">
-            <xs:element type="location" name="location" />
+            <xs:element type="location" name="location"/>
         </xs:choice>
     </xs:complexType>
     <xs:complexType name="late-arrival">
@@ -201,7 +203,7 @@
                 upto 8 hours then late-arrival's cut-off="hours(8)"
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="frequency-type" name="cut-off" use="required" />
+        <xs:attribute type="frequency-type" name="cut-off" use="required"/>
     </xs:complexType>
     <xs:complexType name="property">
         <xs:annotation>
@@ -210,8 +212,8 @@
                 workflow engine.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="xs:string" name="name" use="required" />
-        <xs:attribute type="xs:string" name="value" use="required" />
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
     </xs:complexType>
     <xs:complexType name="clusters">
         <xs:annotation>
@@ -225,13 +227,13 @@
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="retention">
-        <xs:attribute type="retention-type" name="type" default="instance" />
-        <xs:attribute type="frequency-type" name="limit" use="required" />
-        <xs:attribute type="action-type" name="action" use="required" />
+        <xs:attribute type="retention-type" name="type" default="instance"/>
+        <xs:attribute type="frequency-type" name="limit" use="required"/>
+        <xs:attribute type="action-type" name="action" use="required"/>
     </xs:complexType>
     <xs:simpleType name="retention-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="instance" />
+            <xs:enumeration value="instance"/>
             <!-- <xs:enumeration value="age" /> -->
         </xs:restriction>
     </xs:simpleType>
@@ -246,11 +248,11 @@
                 periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="location-type" name="type" use="required" />
-        <xs:attribute type="xs:string" name="path" use="required" />
+        <xs:attribute type="location-type" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="path" use="required"/>
     </xs:complexType>
     <xs:complexType name="partition">
-        <xs:attribute type="IDENTIFIER" name="name" use="required" />
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
     <xs:complexType name="ACL">
         <xs:annotation>
@@ -258,9 +260,9 @@
                 Access control list for this feed.
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute type="xs:string" name="owner" />
-        <xs:attribute type="xs:string" name="group" />
-        <xs:attribute type="xs:string" name="permission" />
+        <xs:attribute type="xs:string" name="owner"/>
+        <xs:attribute type="xs:string" name="group"/>
+        <xs:attribute type="xs:string" name="permission"/>
     </xs:complexType>
     <xs:simpleType name="action-type">
         <xs:restriction base="xs:string">
@@ -273,10 +275,10 @@
                     archive, delete, chown and chmod.
                 </xs:documentation>
             </xs:annotation>
-            <xs:enumeration value="archive" />
-            <xs:enumeration value="delete" />
-            <xs:enumeration value="chown" />
-            <xs:enumeration value="chmod" />
+            <xs:enumeration value="archive"/>
+            <xs:enumeration value="delete"/>
+            <xs:enumeration value="chown"/>
+            <xs:enumeration value="chmod"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="cluster-type">
@@ -291,47 +293,50 @@
             </xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:enumeration value="source" />
-            <xs:enumeration value="target" />
+            <xs:enumeration value="source"/>
+            <xs:enumeration value="target"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="location-type">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="data" />
-            <xs:enumeration value="stats" />
-            <xs:enumeration value="meta" />
-            <xs:enumeration value="tmp" />
+            <xs:enumeration value="data"/>
+            <xs:enumeration value="stats"/>
+            <xs:enumeration value="meta"/>
+            <xs:enumeration value="tmp"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="IDENTIFIER">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})" />
+            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="frequency-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency" parseMethod="org.apache.falcon.entity.v0.Frequency.fromString"
-                        printMethod="org.apache.falcon.entity.v0.Frequency.toString" />
+                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency"
+                               parseMethod="org.apache.falcon.entity.v0.Frequency.fromString"
+                               printMethod="org.apache.falcon.entity.v0.Frequency.toString"/>
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)" />
+            <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="date-time-type">
         <xs:annotation>
             <xs:appinfo>
-                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC" printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC" />
+                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC"
+                               printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC"/>
             </xs:appinfo>
         </xs:annotation>
         <xs:restriction base="xs:string">
-            <xs:pattern value="((19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z" />
+            <xs:pattern
+                    value="((19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="group-type">
         <xs:restriction base="xs:string">
-            <xs:pattern value="(\w+(,\w+)*)" />
+            <xs:pattern value="(\w+(,\w+)*)"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
