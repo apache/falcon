@@ -18,7 +18,11 @@
 
 package org.apache.falcon;
 
-
+/**
+ * Simple pair class to hold a pair of object of specific class.
+ * @param <A> - First element in pair.
+ * @param <B> - Second element in pair
+ */
 public class Pair<A, B> {
     public final A first;
     public final B second;

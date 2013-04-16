@@ -24,7 +24,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class SchemaHelper {
+/**
+ * Support function to parse and format date in xsd string.
+ */
+public final class SchemaHelper {
+
+    private SchemaHelper() {}
+
     public static String getTimeZoneId(TimeZone tz) {
         return tz.getID();
     }

@@ -95,11 +95,11 @@ public class FalconCLI {
     }
 
     // TODO help and headers
-    private static final String[] FALCON_HELP = {
-            "the env variable '" + FALCON_URL
-                    + "' is used as default value for the '-" + URL_OPTION + "' option",
-            "custom headers for Falcon web services can be specified using '-D"
-                    + FalconClient.WS_HEADER_PREFIX + "NAME=VALUE'"};
+    private static final String[] FALCON_HELP = { "the env variable '" + FALCON_URL
+                                                          + "' is used as default value for the '-" + URL_OPTION
+                                                          + "' option",
+                                                  "custom headers for Falcon web services can be specified using '-D"
+                                                          + FalconClient.WS_HEADER_PREFIX + "NAME=VALUE'", };
 
     /**
      * Run a CLI programmatically.
@@ -182,8 +182,7 @@ public class FalconCLI {
 
         colo = getColo(colo);
 
-        validateInstanceCommands(optionsList, entity, type, start, end,
-                filePath, colo, clusters, sourceClusters);
+        validateInstanceCommands(optionsList, entity, type, start, colo);
 
         if (optionsList.contains(RUNNING_OPT)) {
             result = client.getRunningInstances(type, entity, colo);
@@ -209,9 +208,9 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
-    private void validateInstanceCommands(Set<String> optionsList, String entity, String type,
-                                          String start, String end, String filePath, String colo,
-                                          String clusters, String sourceClusters) throws FalconCLIException {
+    private void validateInstanceCommands(Set<String> optionsList,
+                                          String entity, String type,
+                                          String start, String colo) throws FalconCLIException {
 
         if (entity == null || entity.equals("")) {
             throw new FalconCLIException("Missing argument: name");
@@ -249,7 +248,8 @@ public class FalconCLI {
     }
 
     private void entityCommand(CommandLine commandLine)
-            throws FalconCLIException, IOException {
+        throws FalconCLIException, IOException {
+
         String falconUrl = getFalconEndpoint(commandLine);
         FalconClient client = new FalconClient(falconUrl);
 
@@ -265,52 +265,52 @@ public class FalconCLI {
         String colo = commandLine.getOptionValue(COLO_OPT);
 
 
-        validateEntityType(optionsList, entityType);
+        validateEntityType(entityType);
 
         if (optionsList.contains(SUBMIT_OPT)) {
-            validateFilePath(optionsList, filePath);
+            validateFilePath(filePath);
             validateColo(optionsList);
             result = client.submit(entityType, filePath);
         } else if (optionsList.contains(UPDATE_OPT)) {
-            validateFilePath(optionsList, filePath);
+            validateFilePath(filePath);
             validateColo(optionsList);
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             result = client.update(entityType, entityName, filePath);
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
-            validateFilePath(optionsList, filePath);
+            validateFilePath(filePath);
             validateColo(optionsList);
             result = client.submitAndSchedule(entityType, filePath);
         } else if (optionsList.contains(VALIDATE_OPT)) {
-            validateFilePath(optionsList, filePath);
+            validateFilePath(filePath);
             validateColo(optionsList);
             result = client.validate(entityType, filePath);
         } else if (optionsList.contains(SCHEDULE_OPT)) {
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             colo = getColo(colo);
             result = client.schedule(entityType, entityName, colo);
         } else if (optionsList.contains(SUSPEND_OPT)) {
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             colo = getColo(colo);
             result = client.suspend(entityType, entityName, colo);
         } else if (optionsList.contains(RESUME_OPT)) {
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             colo = getColo(colo);
             result = client.resume(entityType, entityName, colo);
         } else if (optionsList.contains(DELETE_OPT)) {
             validateColo(optionsList);
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             result = client.delete(entityType, entityName);
         } else if (optionsList.contains(STATUS_OPT)) {
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             colo = getColo(colo);
             result = client.getStatus(entityType, entityName, colo);
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             result = client.getDefinition(entityType, entityName);
         } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateColo(optionsList);
-            validateEntityName(optionsList, entityName);
+            validateEntityName(entityName);
             result = client.getDependency(entityType, entityName);
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
@@ -331,29 +331,33 @@ public class FalconCLI {
         return colo;
     }
 
-    private void validateFilePath(Set<String> optionsList, String filePath)
-            throws FalconCLIException {
+    private void validateFilePath(String filePath)
+        throws FalconCLIException {
+
         if (filePath == null || filePath.equals("")) {
             throw new FalconCLIException("Missing argument: file");
         }
     }
 
     private void validateColo(Set<String> optionsList)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         if (optionsList.contains(COLO_OPT)) {
             throw new FalconCLIException("Invalid argument : " + COLO_OPT);
         }
     }
 
-    private void validateEntityName(Set<String> optionsList, String entityName)
-            throws FalconCLIException {
+    private void validateEntityName(String entityName)
+        throws FalconCLIException {
+
         if (entityName == null || entityName.equals("")) {
             throw new FalconCLIException("Missing argument: name");
         }
     }
 
-    private void validateEntityType(Set<String> optionsList, String entityType)
-            throws FalconCLIException {
+    private void validateEntityType(String entityType)
+        throws FalconCLIException {
+
         if (entityType == null || entityType.equals("")) {
             throw new FalconCLIException("Missing argument: type");
         }

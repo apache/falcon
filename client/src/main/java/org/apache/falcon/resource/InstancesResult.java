@@ -22,8 +22,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
+/**
+ * Pojo for JAXB marshalling / unmarshalling.
+ */
 @XmlRootElement
 public class InstancesResult extends APIResult {
+
+    /**
+     * Workflow status as being set in result object.
+     */
     public static enum WorkflowStatus {
         WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR
     }
@@ -58,6 +65,9 @@ public class InstancesResult extends APIResult {
         this.instances = instances;
     }
 
+    /**
+     * A single instance object inside instance result.
+     */
     @XmlRootElement(name = "instance")
     public static class Instance {
         @XmlElement
@@ -147,6 +157,9 @@ public class InstancesResult extends APIResult {
         }
     }
 
+    /**
+     * Instance action inside an instance object.
+     */
     @XmlRootElement(name = "actions")
     public static class InstanceAction {
         @XmlElement

@@ -31,7 +31,7 @@ import java.util.UUID;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
- * message- detailed message
+ * message- detailed message.
  */
 @XmlRootElement(name = "result")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -43,16 +43,19 @@ public class APIResult {
 
     private String requestId;
 
-    private static final JAXBContext jc;
+    private static final JAXBContext JAXB_CONTEXT;
 
     static {
         try {
-            jc = JAXBContext.newInstance(APIResult.class);
+            JAXB_CONTEXT = JAXBContext.newInstance(APIResult.class);
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * API Result status.
+     */
     public static enum Status {
         SUCCEEDED, PARTIAL, FAILED
     }
@@ -93,7 +96,7 @@ public class APIResult {
     public String toString() {
         try {
             StringWriter stringWriter = new StringWriter();
-            Marshaller marshaller = jc.createMarshaller();
+            Marshaller marshaller = JAXB_CONTEXT.createMarshaller();
             marshaller.marshal(this, stringWriter);
             return stringWriter.toString();
         } catch (JAXBException e) {

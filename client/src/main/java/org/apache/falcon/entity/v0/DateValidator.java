@@ -23,11 +23,11 @@ import java.util.regex.Pattern;
 /**
  * Date utility class.
  */
-public class DateValidator {
+public final class DateValidator {
 
     private static final String DATE_PATTERN =
             "(2\\d\\d\\d|19\\d\\d)-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9])Z";
-    private static final Pattern pattern = Pattern.compile(DATE_PATTERN);
+    private static final Pattern PATTERN = Pattern.compile(DATE_PATTERN);
 
     private DateValidator() {
     }
@@ -40,7 +40,7 @@ public class DateValidator {
      */
     public static boolean validate(final String date) {
 
-        Matcher matcher = pattern.matcher(date);
+        Matcher matcher = PATTERN.matcher(date);
 
         if (matcher.matches()) {
 
@@ -60,17 +60,9 @@ public class DateValidator {
                 } else if (month.equals("2") || month.equals("02")) {
                     // leap year
                     if (year % 4 == 0) {
-                        if (day.equals("30") || day.equals("31")) {
-                            return false;
-                        } else {
-                            return true;
-                        }
+                        return !(day.equals("30") || day.equals("31"));
                     } else {
-                        if (day.equals("29") || day.equals("30") || day.equals("31")) {
-                            return false;
-                        } else {
-                            return true;
-                        }
+                        return !(day.equals("29") || day.equals("30") || day.equals("31"));
                     }
                 } else {
                     return true;

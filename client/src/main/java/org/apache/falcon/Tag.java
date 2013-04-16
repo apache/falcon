@@ -20,6 +20,9 @@ package org.apache.falcon;
 
 import org.apache.falcon.entity.v0.EntityType;
 
+/**
+ * Tag to include in the entity type.
+ */
 public enum Tag {
     DEFAULT(EntityType.PROCESS), RETENTION(EntityType.FEED), REPLICATION(EntityType.FEED);
 

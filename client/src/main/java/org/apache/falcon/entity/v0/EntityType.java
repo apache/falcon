@@ -27,7 +27,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 /**
- * Enum for types of entities in Falcon Process, Feed and Cluster
+ * Enum for types of entities in Falcon Process, Feed and Cluster.
  */
 public enum EntityType {
     FEED(Feed.class, "/feed-0.1.xsd", "name"),

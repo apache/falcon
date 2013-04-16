@@ -25,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Entity list used for marshalling / unmarshalling with REST calls.
+ */
 @XmlRootElement(name = "entities")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EntityList {
@@ -32,6 +35,9 @@ public class EntityList {
     @XmlElement(name = "entity")
     private EntityElement[] elements;
 
+    /**
+     * Element within an entity.
+     */
     public static class EntityElement {
         @XmlElement
         public String type;

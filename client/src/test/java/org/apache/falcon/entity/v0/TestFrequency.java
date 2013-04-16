@@ -21,6 +21,9 @@ package org.apache.falcon.entity.v0;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Test frequency.
+ */
 @Test
 public class TestFrequency {
 

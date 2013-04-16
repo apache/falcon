@@ -22,10 +22,15 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+/**
+ * Frequency as supported in the xsd definitions.
+ */
 public class Frequency {
     private static final Pattern PATTERN = Pattern.compile("(minutes|hours|days|months)\\((\\d+)\\)");
 
+    /**
+     * TimeUnit corresponding to the frequency.
+     */
     public static enum TimeUnit {
         minutes(Calendar.MINUTE), hours(Calendar.HOUR), days(Calendar.DATE), months(Calendar.MONTH);
 
@@ -90,11 +95,15 @@ public class Frequency {
         }
 
         Frequency freq = (Frequency) obj;
-        if (this == freq) {
-            return true;
-        }
+        return this == freq || this.getFrequency() == freq.getFrequency()
+                && this.getTimeUnit() == freq.getTimeUnit();
 
-        return this.getFrequency() == freq.getFrequency() &&
-                this.getTimeUnit() == freq.getTimeUnit();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = timeUnit.hashCode();
+        result = 31 * result + frequency;
+        return result;
     }
 }

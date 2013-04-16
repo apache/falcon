@@ -23,7 +23,10 @@ import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-public abstract class Entity {
+/**
+ * Base class that all entity jaxb object will extend.
+ */
+public abstract class Entity implements Cloneable{
     public abstract String getName();
 
     public EntityType getEntityType() {
@@ -86,7 +89,8 @@ public abstract class Entity {
     }
 
     @Override
-    public Entity clone() {
+    public Entity clone() throws CloneNotSupportedException {
+        Object ignore = super.clone();
         return fromString(getEntityType(), toString());
     }
 }

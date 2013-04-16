@@ -31,7 +31,14 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 /**
@@ -40,7 +47,6 @@ import java.util.Properties;
  */
 public class FalconClient {
 
-    private String baseUrl;
     protected static WebResource service;
     public static final String WS_HEADER_PREFIX = "header:";
     private static final String REMOTE_USER = "Remote-User";
@@ -55,9 +61,9 @@ public class FalconClient {
      * @throws IOException
      */
     public FalconClient(String falconUrl) throws IOException {
-        this.baseUrl = notEmpty(falconUrl, "FalconUrl");
-        if (!this.baseUrl.endsWith("/")) {
-            this.baseUrl += "/";
+        String baseUrl = notEmpty(falconUrl, "FalconUrl");
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/";
         }
         Client client = Client.create(new DefaultClientConfig());
         setFalconTimeOut(client);
@@ -72,8 +78,8 @@ public class FalconClient {
         Properties prop = new Properties();
         InputStream input = FalconClient.class
                 .getResourceAsStream("/client.properties");
-        int readTimeout = 0;
-        int connectTimeout = 0;
+        int readTimeout;
+        int connectTimeout;
         if (input != null) {
             prop.load(input);
             readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
@@ -172,23 +178,8 @@ public class FalconClient {
         return str;
     }
 
-    /**
-     * Check if the object is not null.
-     *
-     * @param <T>
-     * @param obj
-     * @param name
-     * @return string
-     */
-    public static <T> T notNull(T obj, String name) {
-        if (obj == null) {
-            throw new IllegalArgumentException(name + " cannot be null");
-        }
-        return obj;
-    }
-
     public String schedule(String entityType, String entityName, String colo)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendEntityRequest(Entities.SCHEDULE, entityType, entityName,
                 colo);
@@ -196,63 +187,67 @@ public class FalconClient {
     }
 
     public String suspend(String entityType, String entityName, String colo)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendEntityRequest(Entities.SUSPEND, entityType, entityName, colo);
 
     }
 
     public String resume(String entityType, String entityName, String colo)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendEntityRequest(Entities.RESUME, entityType, entityName, colo);
 
     }
 
     public String delete(String entityType, String entityName)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendEntityRequest(Entities.DELETE, entityType, entityName, null);
 
     }
 
     public String validate(String entityType, String filePath)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.VALIDATE, entityType,
                 entityStream, null);
     }
 
     public String submit(String entityType, String filePath)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMIT, entityType,
                 entityStream, null);
     }
 
     public String update(String entityType, String entityName, String filePath)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithNameAndObject(Entities.UPDATE, entityType,
                 entityName, entityStream);
     }
 
     public String submitAndSchedule(String entityType, String filePath)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         InputStream entityStream = getServletInputStream(filePath);
         return sendEntityRequestWithObject(Entities.SUBMITandSCHEDULE,
                 entityType, entityStream, null);
     }
 
     public String getStatus(String entityType, String entityName, String colo)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendEntityRequest(Entities.STATUS, entityType, entityName, colo);
 
     }
 
     public String getDefinition(String entityType, String entityName)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendDefinitionRequest(Entities.DEFINITION, entityType,
                 entityName);
@@ -260,7 +255,8 @@ public class FalconClient {
     }
 
     public String getDependency(String entityType, String entityName)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         return sendDependencyRequest(Entities.DEPENDENCY, entityType,
                 entityName);
     }
@@ -270,70 +266,78 @@ public class FalconClient {
     }
 
     public String getRunningInstances(String type, String entity, String colo)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return sendInstanceRequest(Instances.RUNNING, type, entity, null, null,
                 null, null, colo);
     }
 
     public String getStatusOfInstances(String type, String entity,
-                                       String start, String end, String runid, String colo)
-            throws FalconCLIException {
+                                       String start, String end,
+                                       String runid, String colo)
+        throws FalconCLIException {
 
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
                 null, null, colo);
     }
 
     public String killInstances(String type, String entity, String start,
-                                String end, String colo, String clusters, String sourceClusters)
-            throws FalconCLIException, UnsupportedEncodingException {
+                                String end, String colo, String clusters,
+                                String sourceClusters)
+        throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.KILL, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
     public String suspendInstances(String type, String entity, String start,
-                                   String end, String colo, String clusters, String sourceClusters)
-            throws FalconCLIException, UnsupportedEncodingException {
+                                   String end, String colo, String clusters,
+                                   String sourceClusters)
+        throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.SUSPEND, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
     public String resumeInstances(String type, String entity, String start,
-                                  String end, String colo, String clusters, String sourceClusters)
-            throws FalconCLIException, UnsupportedEncodingException {
+                                  String end, String colo, String clusters,
+                                  String sourceClusters)
+        throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.RESUME, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
     public String rerunInstances(String type, String entity, String start,
-                                 String end, String filePath, String colo, String clusters,
-                                 String sourceClusters) throws FalconCLIException, IOException {
-        StringBuffer sb = new StringBuffer();
+                                 String end, String filePath, String colo,
+                                 String clusters, String sourceClusters)
+        throws FalconCLIException, IOException {
+
+        StringBuilder buffer = new StringBuilder();
         if (filePath != null) {
             BufferedReader in = new BufferedReader(new FileReader(filePath));
             String str;
             while ((str = in.readLine()) != null) {
-                sb.append(str).append("\n");
+                buffer.append(str).append("\n");
             }
             in.close();
         }
-        String temp = (sb.length() == 0) ? null : sb.toString();
+        String temp = (buffer.length() == 0) ? null : buffer.toString();
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, temp), null, colo);
     }
 
     public String rerunInstances(String type, String entity, String start,
                                  String end, String colo, String clusters, String sourceClusters)
-            throws FalconCLIException, UnsupportedEncodingException {
+        throws FalconCLIException, UnsupportedEncodingException {
+
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo);
     }
 
     public String getLogsOfInstances(String type, String entity, String start,
-                                     String end, String colo, String runId) throws FalconCLIException {
+                                     String end, String colo, String runId)
+        throws FalconCLIException {
 
         return sendInstanceRequest(Instances.LOG, type, entity, start, end,
                 null, runId, colo);
@@ -350,44 +354,42 @@ public class FalconClient {
     /**
      * Converts a InputStream into ServletInputStream.
      *
-     * @param filePath
+     * @param filePath - Path of file to stream
      * @return ServletInputStream
      * @throws FalconCLIException
-     * @throws java.io.IOException
      */
     private InputStream getServletInputStream(String filePath)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         if (filePath == null) {
             return null;
         }
-        InputStream stream = null;
+        InputStream stream;
         try {
             stream = new FileInputStream(filePath);
         } catch (FileNotFoundException e) {
             throw new FalconCLIException("File not found:", e);
-        } catch (IOException e) {
-            throw new FalconCLIException("Unable to read file: ", e);
         }
         return stream;
     }
 
     private InputStream getServletInputStream(String clusters,
-                                              String sourceClusters, String properties) throws FalconCLIException,
-                                                                                               UnsupportedEncodingException {
+                                              String sourceClusters, String properties)
+        throws FalconCLIException, UnsupportedEncodingException {
 
-        InputStream stream = null;
-        StringBuffer sb = new StringBuffer();
+        InputStream stream;
+        StringBuilder buffer = new StringBuilder();
         if (clusters != null) {
-            sb.append(FALCON_INSTANCE_ACTION_CLUSTERS + "=" + clusters + "\n");
+            buffer.append(FALCON_INSTANCE_ACTION_CLUSTERS).append('=').append(clusters).append('\n');
         }
         if (sourceClusters != null) {
-            sb.append(FALCON_INSTANCE_SOURCE_CLUSTERS + "=" + sourceClusters + "\n");
+            buffer.append(FALCON_INSTANCE_SOURCE_CLUSTERS).append('=').append(sourceClusters).append('\n');
         }
         if (properties != null) {
-            sb.append(properties);
+            buffer.append(properties);
         }
-        stream = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
-        return (sb.length() == 0) ? null : stream;
+        stream = new ByteArrayInputStream(buffer.toString().getBytes("UTF-8"));
+        return (buffer.length() == 0) ? null : stream;
     }
     // private ServletInputStream getServletInputStream(final InputStream
     // stream)
@@ -538,7 +540,7 @@ public class FalconClient {
     }
 
     private String sendAdminRequest(AdminOperations job)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         ClientResponse clientResponse = service.path(job.path)
                 .header(REMOTE_USER, USER).accept(job.mimeType)
@@ -547,14 +549,14 @@ public class FalconClient {
     }
 
     private String parseAPIResult(ClientResponse clientResponse)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         APIResult result = clientResponse.getEntity(APIResult.class);
         return result.getMessage();
     }
 
     private String parseEntityList(ClientResponse clientResponse)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         EntityList result = clientResponse.getEntity(EntityList.class);
         if (result == null || result.getElements() == null) {
@@ -565,7 +567,7 @@ public class FalconClient {
     }
 
     private String parseStringResult(ClientResponse clientResponse)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         return clientResponse.getEntity(String.class);
     }

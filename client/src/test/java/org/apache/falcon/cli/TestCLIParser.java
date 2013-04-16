@@ -24,6 +24,9 @@ import org.apache.commons.cli.ParseException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Command parser for CLI.
+ */
 public class TestCLIParser {
 
     @Test
