@@ -37,6 +37,10 @@ public class FalconLoginModule implements LoginModule {
 
     private Subject subject;
 
+    public Subject getSubject() {
+        return subject;
+    }
+
     @Override
     public boolean abort() throws LoginException {
         return true;
@@ -65,13 +69,13 @@ public class FalconLoginModule implements LoginModule {
         throw new LoginException("No such user " + subject);
     }
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK HiddenFieldCheck
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
     }
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK HiddenFieldCheck
 
     @Override
     public boolean login() throws LoginException {

@@ -41,7 +41,6 @@ public class WorkflowNameBuilder<T extends Entity> {
         this.entity = entity;
     }
 
-    //SUSPEND CHECKSTYLE CHECK
     public void setTag(Tag tag) {
         this.tag = tag;
     }
@@ -49,7 +48,6 @@ public class WorkflowNameBuilder<T extends Entity> {
     public void setSuffixes(List<String> suffixes) {
         this.suffixes = suffixes;
     }
-    //RESUME CHECKSTYLE CHECK
 
     public WorkflowName getWorkflowName() {
         return new WorkflowName(PREFIX, entity.getEntityType().name(),

@@ -117,7 +117,6 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         // TODO for retry and late policy
     }
 
-    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testELExpressions() throws Exception {
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
@@ -126,6 +125,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) {
+            //ignore
         }
 
         process.getInputs().getInputs().get(0).setStart("today(0,0)");
@@ -134,6 +134,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) {
+            //ignore
         }
 
         process.getInputs().getInputs().get(0).setStart("today(2,0)");
@@ -142,9 +143,9 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             parser.validate(process);
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) {
+            //ignore
         }
     }
-    //RESUME CHECKSTYLE CHECK
 
     @Test(expectedExceptions = FalconException.class)
     public void doParseInvalidXML() throws IOException, FalconException {
@@ -165,7 +166,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         parser.parseAndValidate("<process></process>");
     }
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK HiddenFieldCheck
     @Test
     public void testConcurrentParsing() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
@@ -189,7 +190,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             thread.join();
         }
     }
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK HiddenFieldCheck
 
     @Test(expectedExceptions = ValidationException.class)
     public void testInvalidProcessValidity() throws Exception {

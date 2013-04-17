@@ -112,7 +112,6 @@ public class FeedUpdateTest extends AbstractTestBase {
         }
     }
 
-    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testFeedUpdateWithViolations() throws Exception {
         ConfigurationStore.get().remove(EntityType.FEED, "clicks");
@@ -137,7 +136,7 @@ public class FeedUpdateTest extends AbstractTestBase {
                     .getResourceAsStream(FEED1_XML));
             Assert.fail("Expected feed parsing to fail");
         } catch (ValidationException ignore) {
+            //ignore
         }
     }
-    //RESUME CHECKSTYLE CHECK
 }
