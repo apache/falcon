@@ -31,7 +31,7 @@ public final class GenericAlert {
 
     private GenericAlert() {}
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @Monitored(event = "retry-instance-failed")
     public static String alertRetryFailed(
             @Dimension(value = "entity-type") String entityType,
@@ -88,7 +88,7 @@ public final class GenericAlert {
 
         return "IGNORE";
     }
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     @Monitored(event = "rerun-queue-failed")
     public static String alertRerunConsumerFailed(
