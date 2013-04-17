@@ -35,12 +35,15 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Host shared libraries in oozie shared lib dir upon creation or modification of cluster.
+ */
 public class SharedLibraryHostingService implements ConfigurationChangeListener {
-    private static Logger LOG = Logger.getLogger(SharedLibraryHostingService.class);
+    private static final Logger LOG = Logger.getLogger(SharedLibraryHostingService.class);
 
     private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
 
-    private static final FalconPathFilter nonFalconJarFilter = new FalconPathFilter() {
+    private static final FalconPathFilter NON_FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
             for (String jarName : LIBS) {
@@ -65,14 +68,15 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     private void addLibsTo(Cluster cluster) throws FalconException {
         String libLocation = ClusterHelper.getLocation(cluster, "working") + "/lib";
         try {
-            pushLibsToHDFS(libLocation, cluster, nonFalconJarFilter);
+            pushLibsToHDFS(libLocation, cluster, NON_FALCON_JAR_FILTER);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs to cluster " + cluster.getName(), e);
         }
     }
 
     public static void pushLibsToHDFS(String path, Cluster cluster, FalconPathFilter pathFilter)
-            throws IOException, FalconException {
+        throws IOException, FalconException {
+
         String localPaths = StartupProperties.get().getProperty("system.lib.location");
         assert localPaths != null && !localPaths.isEmpty() : "Invalid value for system.lib.location";
         if (!new File(localPaths).isDirectory()) {

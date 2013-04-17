@@ -29,7 +29,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 /**
- * Class to test if generated coordinator.xml is valid
+ * Class to test if generated coordinator.xml is valid.
  */
 public class CoordinatorUnmarshallingTest {
 

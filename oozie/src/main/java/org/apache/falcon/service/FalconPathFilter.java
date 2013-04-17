@@ -21,6 +21,9 @@ package org.apache.falcon.service;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 
+/**
+ * Path filter for considering jars for inclusion / exclusion while staging lib in oozie.
+ */
 public interface FalconPathFilter extends PathFilter {
 
     String getJarName(Path path);

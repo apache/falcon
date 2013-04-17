@@ -29,9 +29,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
+/**
+ * Service that cleans up artifacts that falcon dropped on hdfs for oozie's use.
+ */
 public class OozieHouseKeepingService implements WorkflowEngineActionListener {
 
-    private static Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
+    private static final Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
 
     @Override
     public void beforeSchedule(Entity entity, String cluster) throws FalconException {

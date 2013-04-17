@@ -37,13 +37,16 @@ import org.mortbay.log.Log;
 
 import java.io.IOException;
 
+/**
+ * Get oozie action execution logs corresponding to a run as saved by the log mover.
+ */
 public final class LogProvider {
     private static final Logger LOG = Logger.getLogger(LogProvider.class);
 
     public Instance populateLogUrls(Entity entity, Instance instance,
                                     String runId) throws FalconException {
 
-        Cluster clusterObj = (Cluster) ConfigurationStore.get().get(
+        Cluster clusterObj = ConfigurationStore.get().get(
                 EntityType.CLUSTER, instance.cluster);
         String resolvedRunId = "-";
         try {
@@ -72,7 +75,8 @@ public final class LogProvider {
 
     public String getResolvedRunId(FileSystem fs, Cluster cluster,
                                    Entity entity, Instance instance, String runId)
-            throws FalconException, IOException {
+        throws FalconException, IOException {
+
         if (StringUtils.isEmpty(runId)) {
             Path jobPath = new Path(ClusterHelper.getStorageUrl(cluster),
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
@@ -104,7 +108,7 @@ public final class LogProvider {
 
     private Instance populateActionLogUrls(FileSystem fs, Cluster cluster,
                                            Entity entity, Instance instance, String formatedRunId)
-            throws FalconException, OozieClientException, IOException {
+        throws FalconException, OozieClientException, IOException {
 
         Path actionPaths = new Path(ClusterHelper.getStorageUrl(cluster),
                 EntityUtil.getLogPath(cluster, entity) + "/job-"

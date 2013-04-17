@@ -29,6 +29,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+/**
+ * Test to verify workflow xml unmarshalling.
+ */
 public class WorkflowUnmarshallingTest {
 
     @Test

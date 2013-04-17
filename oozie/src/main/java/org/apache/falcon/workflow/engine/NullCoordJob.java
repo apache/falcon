@@ -24,6 +24,9 @@ import org.apache.oozie.client.CoordinatorJob;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Default coord job.
+ */
 public class NullCoordJob implements CoordinatorJob {
 
     @Override

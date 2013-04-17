@@ -22,6 +22,9 @@ import org.testng.annotations.Test;
 
 import java.util.Properties;
 
+/**
+ * Test to verify if the oozie client provided via CustomOozieClient is valid.
+ */
 public class CustomOozieClientTest {
 
     @Test(enabled = false)

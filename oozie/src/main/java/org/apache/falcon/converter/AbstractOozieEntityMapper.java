@@ -52,9 +52,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Entity mapper base class that allows an entity to be mapped to oozie bundle.
+ * @param <T>
+ */
 public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
-    private static Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
+    private static final Logger LOG = Logger.getLogger(AbstractOozieEntityMapper.class);
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
 
@@ -63,11 +67,11 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final String MR_QUEUE_NAME = "queueName";
     protected static final String MR_JOB_PRIORITY = "jobPriority";
 
-    protected static final JAXBContext workflowJaxbContext;
-    protected static final JAXBContext coordJaxbContext;
-    protected static final JAXBContext bundleJaxbContext;
+    protected static final JAXBContext WORKFLOW_JAXB_CONTEXT;
+    protected static final JAXBContext COORD_JAXB_CONTEXT;
+    protected static final JAXBContext BUNDLE_JAXB_CONTEXT;
 
-    protected static final FalconPathFilter falconJarFilter = new FalconPathFilter() {
+    protected static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
             if (path.getName().startsWith("falcon")) {
@@ -88,9 +92,9 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     static {
         try {
-            workflowJaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-            coordJaxbContext = JAXBContext.newInstance(COORDINATORAPP.class);
-            bundleJaxbContext = JAXBContext.newInstance(BUNDLEAPP.class);
+            WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
+            COORD_JAXB_CONTEXT = JAXBContext.newInstance(COORDINATORAPP.class);
+            BUNDLE_JAXB_CONTEXT = JAXBContext.newInstance(BUNDLEAPP.class);
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to create JAXB context", e);
         }
@@ -147,7 +151,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
                 fs.mkdirs(libPath);
             }
 
-            SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, falconJarFilter);
+            SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, FALCON_JAR_FILTER);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
             throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(), e);
@@ -158,7 +162,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected org.apache.falcon.oozie.coordinator.CONFIGURATION getCoordConfig(Map<String, String> propMap) {
         org.apache.falcon.oozie.coordinator.CONFIGURATION conf
-                = new org.apache.falcon.oozie.coordinator.CONFIGURATION();
+            = new org.apache.falcon.oozie.coordinator.CONFIGURATION();
         List<org.apache.falcon.oozie.coordinator.CONFIGURATION.Property> props = conf.getProperty();
         for (Entry<String, String> prop : propMap.entrySet()) {
             props.add(createCoordProperty(prop.getKey(), prop.getValue()));
@@ -219,7 +223,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected org.apache.falcon.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name,
                                                                                              String value) {
         org.apache.falcon.oozie.coordinator.CONFIGURATION.Property prop
-                = new org.apache.falcon.oozie.coordinator.CONFIGURATION.Property();
+            = new org.apache.falcon.oozie.coordinator.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
@@ -227,14 +231,15 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected org.apache.falcon.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
         org.apache.falcon.oozie.bundle.CONFIGURATION.Property prop
-                = new org.apache.falcon.oozie.bundle.CONFIGURATION.Property();
+            = new org.apache.falcon.oozie.bundle.CONFIGURATION.Property();
         prop.setName(name);
         prop.setValue(value);
         return prop;
     }
 
     protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
-            throws FalconException {
+        throws FalconException {
+
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -274,13 +279,14 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             name = "coordinator";
         }
         name = name + ".xml";
-        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), coordJaxbContext, new Path(outPath, name));
+        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), COORD_JAXB_CONTEXT, new Path(outPath, name));
         return name;
     }
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
 
-        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle), bundleJaxbContext,
+        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
+                BUNDLE_JAXB_CONTEXT,
                 new Path(
                         outPath, "bundle.xml"));
     }
@@ -288,7 +294,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
 
         marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
-                workflowJaxbContext,
+                WORKFLOW_JAXB_CONTEXT,
                 new Path(outPath, "workflow.xml"));
     }
 
@@ -310,7 +316,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected WORKFLOWAPP getWorkflowTemplate(String template) throws FalconException {
         try {
-            Unmarshaller unmarshaller = workflowJaxbContext.createUnmarshaller();
+            Unmarshaller unmarshaller = WORKFLOW_JAXB_CONTEXT.createUnmarshaller();
             @SuppressWarnings("unchecked")
             JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(this.getClass()
                     .getResourceAsStream(template));
@@ -322,7 +328,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected COORDINATORAPP getCoordinatorTemplate(String template) throws FalconException {
         try {
-            Unmarshaller unmarshaller = coordJaxbContext.createUnmarshaller();
+            Unmarshaller unmarshaller = COORD_JAXB_CONTEXT.createUnmarshaller();
             @SuppressWarnings("unchecked")
             JAXBElement<COORDINATORAPP> jaxbElement = (JAXBElement<COORDINATORAPP>) unmarshaller
                     .unmarshal(AbstractOozieEntityMapper.class.getResourceAsStream(template));

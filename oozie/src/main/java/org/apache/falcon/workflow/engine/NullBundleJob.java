@@ -24,6 +24,9 @@ import org.apache.oozie.client.CoordinatorJob;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Default Bundle Job.
+ */
 public class NullBundleJob implements BundleJob {
 
     @Override

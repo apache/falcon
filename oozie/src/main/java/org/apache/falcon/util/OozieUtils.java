@@ -23,7 +23,12 @@ import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Help methods relating to oozie configuration.
+ */
 public final class OozieUtils {
+
+    private OozieUtils() {}
 
     public static Properties toProperties(String properties) {
         Configuration conf = new Configuration(false);

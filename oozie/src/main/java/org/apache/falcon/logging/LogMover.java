@@ -17,13 +17,21 @@
  */
 package org.apache.falcon.logging;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobID;
+import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -40,17 +48,23 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
+/**
+ * Utitlity called in the post process of oozie workflow to move oozie action executor log.
+ */
 public class LogMover extends Configured implements Tool {
 
     private static final Logger LOG = Logger.getLogger(LogMover.class);
 
+    /**
+     * Args to the command.
+     */
     private static class ARGS {
-        String oozieUrl;
-        String subflowId;
-        String runId;
-        String logDir;
-        String status;
-        String entityType;
+        private String oozieUrl;
+        private String subflowId;
+        private String runId;
+        private String logDir;
+        private String status;
+        private String entityType;
     }
 
     public static void main(String[] args) throws Exception {
@@ -63,7 +77,7 @@ public class LogMover extends Configured implements Tool {
             ARGS args = new ARGS();
             setupArgs(arguments, args);
             OozieClient client = new OozieClient(args.oozieUrl);
-            WorkflowJob jobInfo = null;
+            WorkflowJob jobInfo;
             try {
                 jobInfo = client.getJobInfo(args.subflowId);
             } catch (OozieClientException e) {

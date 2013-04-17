@@ -28,6 +28,9 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+/**
+ * Test to verify if the bundle xml is geting unmarshalled.
+ */
 public class BundleUnmarshallingTest {
     @Test
     public void testValidBundleUnamrashalling() throws Exception {

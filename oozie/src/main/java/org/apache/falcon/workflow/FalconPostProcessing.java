@@ -29,9 +29,15 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility called by oozie workflow engine post workflow execution in parent workflow.
+ */
 public class FalconPostProcessing extends Configured implements Tool {
     private static final Logger LOG = Logger.getLogger(FalconPostProcessing.class);
 
+    /**
+     * Args that the utility understands.
+     */
     public enum Arg {
         CLUSTER("cluster", "name of the current cluster"),
         ENTITY_TYPE("entityType", "type of the entity"),
@@ -170,7 +176,8 @@ public class FalconPostProcessing extends Configured implements Tool {
     }
 
     private static CommandLine getCommand(String[] arguments)
-            throws ParseException {
+        throws ParseException {
+
         Options options = new Options();
         addOption(options, Arg.CLUSTER);
         addOption(options, Arg.ENTITY_TYPE);

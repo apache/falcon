@@ -32,9 +32,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Wrapped Oozie Client.
+ */
 public class CustomOozieClient extends OozieClient {
 
-    private static final Map<String, String> none = new HashMap<String, String>();
+    private static final Map<String, String> NONE = new HashMap<String, String>();
 
     public CustomOozieClient(String oozieUrl) {
         super(oozieUrl);
@@ -64,7 +67,7 @@ public class CustomOozieClient extends OozieClient {
     private class OozieConfiguration extends ClientCallable<Properties> {
 
         public OozieConfiguration(String resource) {
-            super("GET", RestConstants.ADMIN, resource, none);
+            super("GET", RestConstants.ADMIN, resource, NONE);
         }
 
         @Override

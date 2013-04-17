@@ -28,6 +28,9 @@ import org.testng.annotations.Test;
 
 import javax.jms.*;
 
+/**
+ * Test for validating the falcon post processing utility.
+ */
 public class FalconPostProcessingTest {
 
     private String[] args;
@@ -65,7 +68,7 @@ public class FalconPostProcessingTest {
                             "-" + Arg.WF_ENGINE_URL.getOptionName(),
                             "http://localhost:11000/oozie/",
                             "-" + Arg.LOG_DIR.getOptionName(), "target/log",
-                            "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test"};
+                            "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test", };
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
@@ -91,7 +94,7 @@ public class FalconPostProcessingTest {
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
-
+                    error = null;
                 }
             }
         };
@@ -117,7 +120,7 @@ public class FalconPostProcessingTest {
 
         // wait till you get atleast one message
         MapMessage m;
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());

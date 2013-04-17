@@ -35,10 +35,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Base workflow builder for falcon entities.
+ * @param <T>
+ */
 public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBuilder<T> {
 
-    private static Logger LOG = Logger.getLogger(OozieWorkflowBuilder.class);
-    protected static final ConfigurationStore configStore = ConfigurationStore.get();
+    private static final Logger LOG = Logger.getLogger(OozieWorkflowBuilder.class);
+    protected static final ConfigurationStore CONFIG_STORE = ConfigurationStore.get();
 
     protected Properties createAppProperties(String clusterName, Path bundlePath, String user) throws FalconException {
 
