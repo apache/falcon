@@ -33,6 +33,9 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.*;
 
+/**
+ * Workflow definition builder for feed replication & retention.
+ */
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
@@ -53,11 +56,10 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     @Override
     public Properties newWorkflowSchedule(Feed feed, Date startDate, String clusterName, String user)
-            throws FalconException {
+        throws FalconException {
+
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-        if (!startDate.before(feedCluster.getValidity().getEnd()))
-        // start time >= end time
-        {
+        if (!startDate.before(feedCluster.getValidity().getEnd())) {
             return null;
         }
 
@@ -84,6 +86,6 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
     public String[] getWorkflowNames(Feed entity) {
         return new String[]{
                 EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString(),
-                EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString()};
+                EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString(), };
     }
 }

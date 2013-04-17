@@ -47,9 +47,13 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Mapper which maps feed definition to oozie workflow definitions for
+ * replication & retention.
+ */
 public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
-    private static Logger LOG = Logger.getLogger(OozieFeedMapper.class);
+    private static final Logger LOG = Logger.getLogger(OozieFeedMapper.class);
 
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
@@ -150,7 +154,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath)
-            throws FalconException {
+        throws FalconException {
+
         Feed feed = getEntity();
         List<COORDINATORAPP> replicationCoords = new ArrayList<COORDINATORAPP>();
 
@@ -176,7 +181,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private COORDINATORAPP createAndGetCoord(Feed feed, Cluster srcCluster, Cluster trgCluster, Path bundlePath)
-            throws FalconException {
+        throws FalconException {
+
         COORDINATORAPP replicationCoord;
         String coordName;
         try {
@@ -186,14 +192,14 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             replicationCoord.setName(coordName);
             replicationCoord.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
-            long frequency_ms = ExpressionHelper.get().
+            long frequencyInMillis = ExpressionHelper.get().
                     evaluate(feed.getFrequency().toString(), Long.class);
-            long timeout_ms = frequency_ms * 6;
-            if (timeout_ms < THIRTY_MINUTES) {
-                timeout_ms = THIRTY_MINUTES;
+            long timeoutInMillis = frequencyInMillis * 6;
+            if (timeoutInMillis < THIRTY_MINUTES) {
+                timeoutInMillis = THIRTY_MINUTES;
             }
-            replicationCoord.getControls().setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
-            replicationCoord.getControls().setThrottle(String.valueOf(timeout_ms / frequency_ms * 2));
+            replicationCoord.getControls().setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
+            replicationCoord.getControls().setThrottle(String.valueOf(timeoutInMillis / frequencyInMillis * 2));
 
             Date srcStartDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getStart();
             Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
@@ -218,11 +224,10 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-            inputDataset.setUriTemplate(new Path(ClusterHelper
-                    .getStorageUrl(srcCluster), FeedHelper.getLocation(feed,
-                    LocationType.DATA, srcCluster.getName()).getPath()).toString());
-            outputDataset.setUriTemplate(getStoragePath(FeedHelper.getLocation(
-                    feed, LocationType.DATA, trgCluster.getName()).getPath()));
+            inputDataset.setUriTemplate(new Path(ClusterHelper.getStorageUrl(srcCluster),
+                FeedHelper.getLocation(feed, LocationType.DATA, srcCluster.getName()).getPath()).toString());
+            outputDataset.setUriTemplate(getStoragePath(
+                FeedHelper.getLocation(feed, LocationType.DATA, trgCluster.getName()).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
             if (feed.getAvailabilityFlag() == null) {
@@ -248,7 +253,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath, String wfName)
-            throws FalconException {
+        throws FalconException {
+
         ACTION replicationAction = new ACTION();
         WORKFLOW replicationWF = new WORKFLOW();
         try {

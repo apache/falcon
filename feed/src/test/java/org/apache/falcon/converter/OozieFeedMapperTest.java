@@ -41,13 +41,16 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 
+/**
+ * Tests for Oozie workflow definition for feed replication & retention.
+ */
 public class OozieFeedMapperTest {
     private EmbeddedCluster srcMiniDFS;
     private EmbeddedCluster trgMiniDFS;
-    ConfigurationStore store = ConfigurationStore.get();
-    Cluster srcCluster;
-    Cluster trgCluster;
-    Feed feed;
+    private ConfigurationStore store = ConfigurationStore.get();
+    private Cluster srcCluster;
+    private Cluster trgCluster;
+    private Feed feed;
 
     private static final String SRC_CLUSTER_PATH = "/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/trg-cluster.xml";
