@@ -39,12 +39,12 @@ public class EntityList {
      * Element within an entity.
      */
     public static class EntityElement {
-        //SUSPEND CHECKSTYLE CHECK
+        //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         @XmlElement
         public String type;
         @XmlElement
         public String name;
-        //RESUME CHECKSTYLE CHECK
+        //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
         public EntityElement() {
 

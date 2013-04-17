@@ -308,7 +308,7 @@ public class FalconClient {
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     public String rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
                                  String clusters, String sourceClusters)
@@ -327,7 +327,7 @@ public class FalconClient {
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, temp), null, colo);
     }
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     public String rerunInstances(String type, String entity, String start,
                                  String end, String colo, String clusters, String sourceClusters)
@@ -503,7 +503,7 @@ public class FalconClient {
                 .method(instances.method, InstancesResult.class);
     }
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     private String sendInstanceRequest(Instances instances, String type,
                                        String entity, String start, String end, InputStream props,
                                        String runid, String colo) throws FalconCLIException {
@@ -541,7 +541,7 @@ public class FalconClient {
         }
 
     }
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     private String sendAdminRequest(AdminOperations job)
         throws FalconCLIException {

@@ -25,10 +25,10 @@ package org.apache.falcon;
  */
 public class Pair<A, B> {
 
-    //SUSPEND CHECKSTYLE CHECK
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     public final A first;
     public final B second;
-    //RESUME CHECKSTYLE CHECK
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     public Pair(A fst, B snd) {
         this.first = fst;
