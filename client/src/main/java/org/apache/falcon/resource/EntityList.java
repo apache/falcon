@@ -39,10 +39,12 @@ public class EntityList {
      * Element within an entity.
      */
     public static class EntityElement {
+        //SUSPEND CHECKSTYLE CHECK
         @XmlElement
         public String type;
         @XmlElement
         public String name;
+        //RESUME CHECKSTYLE CHECK
 
         public EntityElement() {
 

@@ -222,5 +222,10 @@
     </module>
 
     <!-- allow warnings to be suppressed -->
-    <module name="SuppressionCommentFilter"/>
+    <module name="SuppressionCommentFilter">
+        <property name="offCommentFormat" value="SUSPEND CHECKSTYLE CHECK"/>
+        <property name="onCommentFormat" value="RESUME CHECKSTYLE CHECK"/>
+        <property name="checkFormat" value="ParameterNumberCheck|VisibilityModifierCheck|HiddenFieldCheck|EmptyBlockCheck"/>
+    </module>
+
 </module>

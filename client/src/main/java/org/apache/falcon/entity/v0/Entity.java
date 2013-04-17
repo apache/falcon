@@ -88,8 +88,7 @@ public abstract class Entity {
         return "(" + getEntityType().name().toLowerCase() + ") " + getName();
     }
 
-    @Override
-    public Entity clone() {
+    public Entity copy() {
         return fromString(getEntityType(), toString());
     }
 }

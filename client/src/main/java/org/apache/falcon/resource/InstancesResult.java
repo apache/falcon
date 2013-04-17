@@ -25,6 +25,7 @@ import java.util.Date;
 /**
  * Pojo for JAXB marshalling / unmarshalling.
  */
+//SUSPEND CHECKSTYLE CHECK
 @XmlRootElement
 public class InstancesResult extends APIResult {
 
@@ -198,3 +199,4 @@ public class InstancesResult extends APIResult {
         }
     }
 }
+//RESUME CHECKSTYLE CHECK

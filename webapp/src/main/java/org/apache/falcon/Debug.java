@@ -71,7 +71,7 @@ public class Debug {
 
         entity = args[2];
         Entity obj = EntityUtil.getEntity(type, entity);
-        Process newEntity = (Process) obj.clone();
+        Process newEntity = (Process) obj.copy();
         newEntity.setFrequency(Frequency.fromString("minutes(5)"));
         System.out.println("##############OLD ENTITY " + EntityUtil.md5(obj));
         System.out.println("##############NEW ENTITY " + EntityUtil.md5(newEntity));

@@ -308,6 +308,7 @@ public class FalconClient {
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     public String rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
                                  String clusters, String sourceClusters)
@@ -326,6 +327,7 @@ public class FalconClient {
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, temp), null, colo);
     }
+    //RESUME CHECKSTYLE CHECK
 
     public String rerunInstances(String type, String entity, String start,
                                  String end, String colo, String clusters, String sourceClusters)
@@ -446,7 +448,7 @@ public class FalconClient {
     }
 
     private String sendListRequest(Entities entities, String entityType)
-            throws FalconCLIException {
+        throws FalconCLIException {
 
         ClientResponse clientResponse = service.path(entities.path)
                 .path(entityType).header(REMOTE_USER, USER)
@@ -501,6 +503,7 @@ public class FalconClient {
                 .method(instances.method, InstancesResult.class);
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     private String sendInstanceRequest(Instances instances, String type,
                                        String entity, String start, String end, InputStream props,
                                        String runid, String colo) throws FalconCLIException {
@@ -538,6 +541,7 @@ public class FalconClient {
         }
 
     }
+    //RESUME CHECKSTYLE CHECK
 
     private String sendAdminRequest(AdminOperations job)
         throws FalconCLIException {
@@ -669,7 +673,8 @@ public class FalconClient {
     }
 
     private void checkIfSuccessfull(ClientResponse clientResponse)
-            throws FalconCLIException {
+        throws FalconCLIException {
+
         if (clientResponse.getStatus() == Response.Status.BAD_REQUEST
                 .getStatusCode()) {
             throw FalconCLIException.fromReponse(clientResponse);

@@ -107,7 +107,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         Cluster cluster = configStore.get(EntityType.CLUSTER, processCluster.getName());
         Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(process));
-        Process processClone = (Process) process.clone();
+        Process processClone = (Process) process.copy();
         EntityUtil.setStartDate(processClone, clusterName, startDate);
 
         OozieProcessMapper mapper = new OozieProcessMapper(processClone);

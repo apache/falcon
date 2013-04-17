@@ -24,8 +24,11 @@ package org.apache.falcon;
  * @param <B> - Second element in pair
  */
 public class Pair<A, B> {
+
+    //SUSPEND CHECKSTYLE CHECK
     public final A first;
     public final B second;
+    //RESUME CHECKSTYLE CHECK
 
     public Pair(A fst, B snd) {
         this.first = fst;
