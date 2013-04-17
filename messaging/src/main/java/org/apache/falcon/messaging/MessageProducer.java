@@ -28,6 +28,9 @@ import org.apache.log4j.Logger;
 import javax.jms.*;
 import java.lang.reflect.InvocationTargetException;
 
+/**
+ * Message producer used in the workflow to send a message to the queue/topic.
+ */
 public class MessageProducer extends Configured implements Tool {
 
     private Connection connection;
@@ -35,13 +38,13 @@ public class MessageProducer extends Configured implements Tool {
     private static final long DEFAULT_TTL = 3 * 24 * 60 * 60 * 1000;
 
     /**
-     * @param arguments - Accepts a Message to be send to JMS topic, creates a new
+     * @param entityInstanceMessage - Accepts a Message to be send to JMS topic, creates a new
      *                  Topic based on topic name if it does not exist or else
      *                  existing topic with the same name is used to send the message.
      * @throws JMSException
      */
     protected void sendMessage(EntityInstanceMessage entityInstanceMessage)
-            throws JMSException {
+        throws JMSException {
 
         Session session = connection.createSession(false,
                 Session.AUTO_ACKNOWLEDGE);
@@ -69,15 +72,10 @@ public class MessageProducer extends Configured implements Tool {
         ToolRunner.run(new MessageProducer(), args);
     }
 
-    private void createAndStartConnection(String implementation,
-                                          String userName, String password, String url) throws JMSException,
-                                                                                               ClassNotFoundException,
-                                                                                               IllegalArgumentException,
-                                                                                               SecurityException,
-                                                                                               InstantiationException,
-                                                                                               IllegalAccessException,
-                                                                                               InvocationTargetException,
-                                                                                               NoSuchMethodException {
+    private void createAndStartConnection(String implementation, String userName,
+                                          String password, String url)
+        throws JMSException, ClassNotFoundException, InstantiationException,
+               IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
         Class<ConnectionFactory> clazz = (Class<ConnectionFactory>) MessageProducer.class
                 .getClassLoader().loadClass(implementation);
@@ -91,7 +89,8 @@ public class MessageProducer extends Configured implements Tool {
     }
 
     private static CommandLine getCommand(String[] arguments)
-            throws ParseException {
+        throws ParseException {
+
         Options options = new Options();
         addOption(options, new Option(ARG.brokerImplClass.getArgName(), true,
                 "message broker Implementation class"));

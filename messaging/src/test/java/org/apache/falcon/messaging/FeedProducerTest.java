@@ -36,6 +36,9 @@ import javax.jms.*;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * Test for feed message producer.
+ */
 public class FeedProducerTest {
 
     private String[] args;
@@ -76,7 +79,7 @@ public class FeedProducerTest {
                             "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                             "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                             "-" + ARG.brokerTTL.getArgName(), "10",
-                            "-" + ARG.cluster.getArgName(), "corp"};
+                            "-" + ARG.cluster.getArgName(), "corp", };
 
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
@@ -125,7 +128,7 @@ public class FeedProducerTest {
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
-
+                    error = null;
                 }
             }
         };
@@ -151,7 +154,7 @@ public class FeedProducerTest {
 
         // wait till you get atleast one message
         MapMessage m;
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
@@ -159,7 +162,7 @@ public class FeedProducerTest {
         Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/20");
 
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
@@ -167,7 +170,7 @@ public class FeedProducerTest {
         Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/21");
 
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
@@ -175,7 +178,7 @@ public class FeedProducerTest {
         Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/22");
 
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());

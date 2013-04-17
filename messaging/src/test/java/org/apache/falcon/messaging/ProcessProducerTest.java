@@ -28,6 +28,9 @@ import org.testng.annotations.Test;
 
 import javax.jms.*;
 
+/**
+ * Test for process message producer.
+ */
 public class ProcessProducerTest {
 
     private String[] args;
@@ -58,7 +61,7 @@ public class ProcessProducerTest {
                             "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                             "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                             "-" + ARG.brokerTTL.getArgName(), "10",
-                            "-" + ARG.cluster.getArgName(), "corp"};
+                            "-" + ARG.cluster.getArgName(), "corp", };
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
@@ -84,7 +87,7 @@ public class ProcessProducerTest {
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
-
+                    error = null;
                 }
             }
         };
@@ -110,7 +113,7 @@ public class ProcessProducerTest {
 
         // wait till you get atleast one message
         MapMessage m;
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
@@ -120,7 +123,7 @@ public class ProcessProducerTest {
         Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
                 "/click-logs/10/05/05/00/20");
 
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());

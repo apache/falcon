@@ -36,7 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Value Object which is stored in JMS Topic as MapMessage
+ * Value Object which is stored in JMS Topic as MapMessage.
  */
 public class EntityInstanceMessage {
 
@@ -45,10 +45,16 @@ public class EntityInstanceMessage {
             .getLogger(EntityInstanceMessage.class);
     private static final String FALCON_ENTITY_TOPIC_NAME = "FALCON.ENTITY.TOPIC";
 
+    /**
+     * Feed Entity operations supported.
+     */
     public enum EntityOps {
         GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
     }
 
+    /**
+     * properties available in feed entity operation workflow.
+     */
     public enum ARG {
         entityName("entityName"), feedNames("feedNames"), feedInstancePaths(
                 "feedInstancePaths"), workflowId("workflowId"), runId("runId"), nominalTime(
@@ -122,7 +128,8 @@ public class EntityInstanceMessage {
     }
 
     public static EntityInstanceMessage[] getMessages(CommandLine cmd)
-            throws ParseException {
+        throws ParseException {
+
         String[] feedNames = getFeedNames(cmd);
         if (feedNames == null) {
             return null;
@@ -181,16 +188,12 @@ public class EntityInstanceMessage {
         if (topicName.equals(FALCON_ENTITY_TOPIC_NAME)) {
             LOG.debug("Returning instance paths for Falcon Topic: "
                     + cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
-            return new String[]{cmd.getOptionValue(ARG.feedInstancePaths
-                    .getArgName())};
+            return new String[]{cmd.getOptionValue(ARG.feedInstancePaths.getArgName()), };
         }
 
-        if (operation.equals(EntityOps.GENERATE.name())
-                || operation.equals(EntityOps.REPLICATE.name())) {
-            LOG.debug("Returning instance paths: "
-                    + cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
-            return cmd.getOptionValue(ARG.feedInstancePaths.getArgName())
-                    .split(",");
+        if (operation.equals(EntityOps.GENERATE.name()) || operation.equals(EntityOps.REPLICATE.name())) {
+            LOG.debug("Returning instance paths: " + cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
+            return cmd.getOptionValue(ARG.feedInstancePaths.getArgName()).split(",");
         }
         //else case of feed retention
         Path logFile = new Path(cmd.getOptionValue(ARG.logFile.getArgName()));

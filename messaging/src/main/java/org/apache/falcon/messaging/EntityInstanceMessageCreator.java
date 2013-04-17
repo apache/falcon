@@ -27,7 +27,7 @@ import javax.jms.Session;
 import java.util.Map.Entry;
 
 /**
- * Falcon JMS message creator- creates JMS TextMessage
+ * Falcon JMS message creator- creates JMS TextMessage.
  */
 public class EntityInstanceMessageCreator {
 

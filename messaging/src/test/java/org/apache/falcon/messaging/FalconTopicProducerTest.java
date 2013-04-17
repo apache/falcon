@@ -27,6 +27,9 @@ import org.testng.annotations.Test;
 
 import javax.jms.*;
 
+/**
+ * Test for falcon topic message producer.
+ */
 public class FalconTopicProducerTest {
 
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
@@ -71,7 +74,7 @@ public class FalconTopicProducerTest {
                                      "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                                      "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                                      "-" + ARG.brokerTTL.getArgName(), "10",
-                                     "-" + ARG.cluster.getArgName(), "corp"};
+                                     "-" + ARG.cluster.getArgName(), "corp", };
         testProcessMessageCreator(args);
     }
 
@@ -93,7 +96,7 @@ public class FalconTopicProducerTest {
                                      "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                                      "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                                      "-" + ARG.brokerTTL.getArgName(), "10",
-                                     "-" + ARG.cluster.getArgName(), "corp"};
+                                     "-" + ARG.cluster.getArgName(), "corp", };
         testProcessMessageCreator(args);
     }
 
@@ -107,7 +110,7 @@ public class FalconTopicProducerTest {
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
-
+                    error = null;
                 }
             }
         };
@@ -133,7 +136,7 @@ public class FalconTopicProducerTest {
 
         // wait till you get atleast one message
         MapMessage m;
-        for (m = null; m == null; ) {
+        for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
