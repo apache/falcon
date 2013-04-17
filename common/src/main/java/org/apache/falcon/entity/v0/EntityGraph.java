@@ -34,9 +34,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class EntityGraph implements ConfigurationChangeListener {
+/**
+ * An in-memory graph of entities and relationship among themselves.
+ */
+public final class EntityGraph implements ConfigurationChangeListener {
 
-    private static Logger LOG = Logger.getLogger(EntityGraph.class);
+    private static final Logger LOG = Logger.getLogger(EntityGraph.class);
 
     private static EntityGraph instance = new EntityGraph();
 
@@ -69,12 +72,13 @@ public class EntityGraph implements ConfigurationChangeListener {
     public void onAdd(Entity entity) throws FalconException {
         Map<Node, Set<Node>> nodeEdges = null;
         switch (entity.getEntityType()) {
-            case PROCESS:
-                nodeEdges = getEdgesFor((Process) entity);
-                break;
-            case FEED:
-                nodeEdges = getEdgesFor((Feed) entity);
-                break;
+        case PROCESS:
+            nodeEdges = getEdgesFor((Process) entity);
+            break;
+        case FEED:
+            nodeEdges = getEdgesFor((Feed) entity);
+            break;
+        default:
         }
         if (nodeEdges == null) {
             return;
@@ -95,12 +99,13 @@ public class EntityGraph implements ConfigurationChangeListener {
     public void onRemove(Entity entity) throws FalconException {
         Map<Node, Set<Node>> nodeEdges = null;
         switch (entity.getEntityType()) {
-            case PROCESS:
-                nodeEdges = getEdgesFor((Process) entity);
-                break;
-            case FEED:
-                nodeEdges = getEdgesFor((Feed) entity);
-                break;
+        case PROCESS:
+            nodeEdges = getEdgesFor((Process) entity);
+            break;
+        case FEED:
+            nodeEdges = getEdgesFor((Feed) entity);
+            break;
+        default:
         }
         if (nodeEdges == null) {
             return;
@@ -178,7 +183,10 @@ public class EntityGraph implements ConfigurationChangeListener {
         return nodeEdges;
     }
 
-    private static class Node {
+    /**
+     * Node element in the graph.
+     */
+    private static final class Node {
 
         private final EntityType type;
         private final String name;

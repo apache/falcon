@@ -20,6 +20,9 @@ package org.apache.falcon.entity.store;
 
 import org.apache.falcon.FalconException;
 
+/**
+ * Exception when there in issue accessing the persistent store.
+ */
 public class StoreAccessException extends FalconException {
 
     /**

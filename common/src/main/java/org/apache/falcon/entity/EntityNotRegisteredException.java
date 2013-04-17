@@ -20,6 +20,9 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 
+/**
+ * Exception thrown by falcon when entity is not registered already in config store.
+ */
 public class EntityNotRegisteredException extends FalconException {
 
     public EntityNotRegisteredException(String message) {

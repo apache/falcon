@@ -26,6 +26,9 @@ import org.testng.annotations.Test;
 
 import java.util.Set;
 
+/**
+ * Tests for validating relationship between cluster to data center/co-location.
+ */
 @Test
 public class ColoClusterRelationTest extends AbstractTestBase {
     private Cluster newCluster(String name, String colo) {

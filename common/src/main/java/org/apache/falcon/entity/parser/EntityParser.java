@@ -31,10 +31,10 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER
- * Should extend this parser to implement specific parsing.
+ * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER should extend this parser
+ * to implement specific parsing.
  *
- * @param <T>
+ * @param <T> of type Entity
  */
 public abstract class EntityParser<T extends Entity> {
 
@@ -42,11 +42,6 @@ public abstract class EntityParser<T extends Entity> {
 
     private final EntityType entityType;
 
-    /**
-     * Constructor
-     *
-     * @param entityType - can be FEED or PROCESS
-     */
     protected EntityParser(EntityType entityType) {
         this.entityType = entityType;
     }
@@ -69,7 +64,7 @@ public abstract class EntityParser<T extends Entity> {
     }
 
     /**
-     * Parses xml stream
+     * Parses xml stream.
      *
      * @param xmlStream
      * @return entity

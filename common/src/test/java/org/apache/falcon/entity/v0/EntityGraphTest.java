@@ -30,6 +30,9 @@ import org.testng.annotations.Test;
 
 import java.util.Set;
 
+/**
+ * Entity graph tests.
+ */
 public class EntityGraphTest extends AbstractTestBase {
 
     private ConfigurationStore store = ConfigurationStore.get();
@@ -130,10 +133,10 @@ public class EntityGraphTest extends AbstractTestBase {
         if (process.getOutputs() == null) {
             process.setOutputs(new Outputs());
         }
-        Outputs Outputs = process.getOutputs();
-        Output Output = new Output();
-        Output.setFeed(feed);
-        Outputs.getOutputs().add(Output);
+        Outputs outputs = process.getOutputs();
+        Output output = new Output();
+        output.setFeed(feed);
+        outputs.getOutputs().add(output);
         Feed f1 = new Feed();
         f1.setName(feed);
         Clusters clusters = new Clusters();

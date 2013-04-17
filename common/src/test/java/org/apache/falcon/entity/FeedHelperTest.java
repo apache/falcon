@@ -24,6 +24,9 @@ import org.apache.falcon.entity.v0.cluster.Property;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Test for feed helper methods.
+ */
 public class FeedHelperTest {
     @Test
     public void testPartitionExpression() {

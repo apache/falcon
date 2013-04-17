@@ -34,6 +34,9 @@ import org.testng.annotations.Test;
 import javax.xml.bind.JAXBException;
 import java.util.Map;
 
+/**
+ * Feed group map tests.
+ */
 public class FeedGroupMapTest extends AbstractTestBase {
     private ConfigurationStore store = ConfigurationStore.get();
     private static Cluster cluster;

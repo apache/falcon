@@ -23,10 +23,13 @@ import org.apache.falcon.FalconException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class BuildProperties extends ApplicationProperties {
+/**
+ * Application build info properties are exposed through this.
+ */
+public final class BuildProperties extends ApplicationProperties {
     private static final String PROPERTY_FILE = "falcon-buildinfo.properties";
 
-    private static final AtomicReference<BuildProperties> instance =
+    private static final AtomicReference<BuildProperties> INSTANCE =
             new AtomicReference<BuildProperties>();
 
     private BuildProperties() throws FalconException {
@@ -40,13 +43,13 @@ public class BuildProperties extends ApplicationProperties {
 
     public static Properties get() {
         try {
-            if (instance.get() == null) {
-                instance.compareAndSet(null, new BuildProperties());
+            if (INSTANCE.get() == null) {
+                INSTANCE.compareAndSet(null, new BuildProperties());
             }
-            return instance.get();
+            return INSTANCE.get();
         } catch (FalconException e) {
-            throw new RuntimeException("Unable to read application " +
-                    "falcon build information properties", e);
+            throw new RuntimeException("Unable to read application "
+                + "falcon build information properties", e);
         }
     }
 }

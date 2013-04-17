@@ -34,11 +34,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Has 2 way mappings from feed to group and group to feed
+ * Has 2 way mappings from feed to group and group to feed.
  */
-public class FeedGroupMap implements ConfigurationChangeListener {
+public final class FeedGroupMap implements ConfigurationChangeListener {
 
-    private static final FeedGroupMap instance = new FeedGroupMap();
+    private static final FeedGroupMap INSTANCE = new FeedGroupMap();
     private Map<String, FeedGroup> groupsMapping = new ConcurrentHashMap<String, FeedGroup>();
 
     private FeedGroupMap() {
@@ -46,7 +46,7 @@ public class FeedGroupMap implements ConfigurationChangeListener {
     }
 
     public static FeedGroupMap get() {
-        return instance;
+        return INSTANCE;
     }
 
     public Map<String, FeedGroup> getGroupsMapping() {
@@ -88,7 +88,8 @@ public class FeedGroupMap implements ConfigurationChangeListener {
 
     @Override
     public void onChange(Entity oldEntity, Entity newEntity)
-            throws FalconException {
+        throws FalconException {
+
         onRemove(oldEntity);
         onAdd(newEntity);
     }

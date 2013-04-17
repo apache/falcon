@@ -28,7 +28,12 @@ import org.apache.falcon.expression.ExpressionHelper;
 
 import java.util.Date;
 
+/**
+ * Validation helper functions to validate across process, feed and cluster definitions.
+ */
 public final class CrossEntityValidations {
+
+    private CrossEntityValidations() {}
 
     public static void validateInstanceRange(Process process, Input input, Feed feed) throws FalconException {
 
@@ -78,7 +83,8 @@ public final class CrossEntityValidations {
     }
 
     public static void validateFeedRetentionPeriod(String startInstance, Feed feed, String clusterName)
-            throws FalconException {
+        throws FalconException {
+
         String feedRetention = FeedHelper.getCluster(feed, clusterName).getRetention().getLimit().toString();
         ExpressionHelper evaluator = ExpressionHelper.get();
 

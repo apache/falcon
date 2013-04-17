@@ -28,21 +28,24 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ColoClusterRelation implements ConfigurationChangeListener {
-    private static final ConcurrentHashMap<String, Set<String>> coloClusterMap
-            = new ConcurrentHashMap<String, Set<String>>();
-    private static final ColoClusterRelation instance = new ColoClusterRelation();
+/**
+ * Map of clusters in each colocation/ datacenter.
+ */
+public final class ColoClusterRelation implements ConfigurationChangeListener {
+    private static final ConcurrentHashMap<String, Set<String>> COLO_CLUSTER_MAP =
+        new ConcurrentHashMap<String, Set<String>>();
+    private static final ColoClusterRelation INSTANCE = new ColoClusterRelation();
 
     private ColoClusterRelation() {
     }
 
     public static ColoClusterRelation get() {
-        return instance;
+        return INSTANCE;
     }
 
     public Set<String> getClusters(String colo) {
-        if (coloClusterMap.containsKey(colo)) {
-            return coloClusterMap.get(colo);
+        if (COLO_CLUSTER_MAP.containsKey(colo)) {
+            return COLO_CLUSTER_MAP.get(colo);
         }
         return new HashSet<String>();
     }
@@ -54,8 +57,8 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
         }
 
         Cluster cluster = (Cluster) entity;
-        coloClusterMap.putIfAbsent(cluster.getColo(), new HashSet<String>());
-        coloClusterMap.get(cluster.getColo()).add(cluster.getName());
+        COLO_CLUSTER_MAP.putIfAbsent(cluster.getColo(), new HashSet<String>());
+        COLO_CLUSTER_MAP.get(cluster.getColo()).add(cluster.getName());
     }
 
     @Override
@@ -65,9 +68,9 @@ public class ColoClusterRelation implements ConfigurationChangeListener {
         }
 
         Cluster cluster = (Cluster) entity;
-        coloClusterMap.get(cluster.getColo()).remove(cluster.getName());
-        if (coloClusterMap.get(cluster.getColo()).isEmpty()) {
-            coloClusterMap.remove(cluster.getColo());
+        COLO_CLUSTER_MAP.get(cluster.getColo()).remove(cluster.getName());
+        if (COLO_CLUSTER_MAP.get(cluster.getColo()).isEmpty()) {
+            COLO_CLUSTER_MAP.remove(cluster.getColo());
         }
     }
 

@@ -20,6 +20,9 @@ package org.apache.falcon.security;
 
 import java.security.Principal;
 
+/**
+ * Falcon JAAS principal object.
+ */
 public class FalconPrincipal implements Principal {
 
     private final String user;

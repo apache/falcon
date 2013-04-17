@@ -30,9 +30,12 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * Base class for reading application properties.
+ */
 public abstract class ApplicationProperties extends Properties {
 
-    private static Logger LOG = Logger.getLogger(ApplicationProperties.class);
+    private static final Logger LOG = Logger.getLogger(ApplicationProperties.class);
 
     protected enum LocationType {
         FILE, HOME, CLASSPATH
@@ -81,12 +84,10 @@ public abstract class ApplicationProperties extends Properties {
         try {
             if (location == LocationType.CLASSPATH) {
                 if (getClass().getResource(propertyFile) != null) {
-                    LOG.info("Property file being loaded from " +
-                            getClass().getResource(propertyFile));
+                    LOG.info("Property file being loaded from " + getClass().getResource(propertyFile));
                     resource = getClass().getResourceAsStream(propertyFile);
                 } else {
-                    LOG.info("Property file being loaded from " +
-                            getClass().getResource("/" + propertyFile));
+                    LOG.info("Property file being loaded from " + getClass().getResource("/" + propertyFile));
                     resource = getClass().getResourceAsStream("/" + propertyFile);
                 }
             } else {

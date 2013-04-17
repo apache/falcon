@@ -28,7 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class FeedHelper {
+/**
+ * Feed entity helper methods.
+ */
+public final class FeedHelper {
+
+    private FeedHelper() {}
+
     public static Cluster getCluster(Feed feed, String clusterName) {
         for (Cluster cluster : feed.getClusters().getClusters()) {
             if (cluster.getName().equals(clusterName)) {
@@ -93,7 +99,8 @@ public class FeedHelper {
     }
 
     public static String evaluateClusterExp(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity, String exp)
-            throws FalconException {
+        throws FalconException {
+
         Properties properties = loadClusterProperties(clusterEntity);
         ExpressionHelper expHelp = ExpressionHelper.get();
         expHelp.setPropertiesForVariable(properties);

@@ -22,7 +22,12 @@ import org.apache.falcon.FalconException;
 
 import java.lang.reflect.Method;
 
+/**
+ * Helper methods for class instantiation through reflection.
+ */
 public final class ReflectionUtils {
+
+    private ReflectionUtils() {}
 
     public static <T> T getInstance(String classKey) throws FalconException {
         String clazzName = StartupProperties.get().getProperty(classKey);

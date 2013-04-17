@@ -26,10 +26,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Convenient builder for workflow name.
+ * @param <T>
+ */
 public class WorkflowNameBuilder<T extends Entity> {
     private static final String PREFIX = "FALCON";
 
-    T entity;
+    private T entity;
     private Tag tag;
     private List<String> suffixes;
 
@@ -37,6 +41,7 @@ public class WorkflowNameBuilder<T extends Entity> {
         this.entity = entity;
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     public void setTag(Tag tag) {
         this.tag = tag;
     }
@@ -44,6 +49,7 @@ public class WorkflowNameBuilder<T extends Entity> {
     public void setSuffixes(List<String> suffixes) {
         this.suffixes = suffixes;
     }
+    //RESUME CHECKSTYLE CHECK
 
     public WorkflowName getWorkflowName() {
         return new WorkflowName(PREFIX, entity.getEntityType().name(),
@@ -61,6 +67,9 @@ public class WorkflowNameBuilder<T extends Entity> {
                 : WorkflowName.getTagAndSuffixes(entity, workflowName).second;
     }
 
+    /**
+     * Workflow name.
+     */
     public static class WorkflowName {
         private static final String SEPARATOR = "_";
 

@@ -33,10 +33,13 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Log cleanup service.
+ */
 public class LogCleanupService implements FalconService {
 
     private static final Logger LOG = Logger.getLogger(LogCleanupService.class);
-    private final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    private final ExpressionEvaluator evaluator = new ExpressionEvaluatorImpl();
     private final ExpressionHelper resolver = ExpressionHelper.get();
 
     @Override
@@ -80,7 +83,7 @@ public class LogCleanupService implements FalconService {
         String delay = StartupProperties.get().getProperty(
                 "falcon.cleanup.service.frequency", "days(1)");
         try {
-            return (Long) EVALUATOR.evaluate("${" + delay + "}", Long.class,
+            return (Long) evaluator.evaluate("${" + delay + "}", Long.class,
                     resolver, resolver);
         } catch (ELException e) {
             throw new FalconException("Exception in EL evaluation", e);

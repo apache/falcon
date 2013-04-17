@@ -20,6 +20,9 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
 
+/**
+ * Falcon service initialized at startup.
+ */
 public interface FalconService {
 
     String getName();

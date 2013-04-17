@@ -40,6 +40,9 @@ import javax.xml.bind.Unmarshaller;
 import java.io.StringWriter;
 import java.util.Collection;
 
+/**
+ * Base class for config store test.
+ */
 public class AbstractTestBase {
     protected static final String PROCESS_XML = "/config/process/process-0.1.xml";
     protected static final String FEED_XML = "/config/feed/feed-0.1.xml";
@@ -71,29 +74,30 @@ public class AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(type, name);
         switch (type) {
-            case CLUSTER:
-                Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
-                cluster.setName(name);
-                ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
-                store.publish(type, cluster);
-                break;
+        case CLUSTER:
+            Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+            cluster.setName(name);
+            ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
+            store.publish(type, cluster);
+            break;
 
-            case FEED:
-                Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
-                feed.setName(name);
-                store.publish(type, feed);
-                break;
+        case FEED:
+            Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
+            feed.setName(name);
+            store.publish(type, feed);
+            break;
 
-            case PROCESS:
-                Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
-                process.setName(name);
-                FileSystem fs = dfsCluster.getFileSystem();
-                fs.mkdirs(new Path(process.getWorkflow().getPath()));
-                if (!fs.exists(new Path(process.getWorkflow() + "/lib"))) {
-                    fs.mkdirs(new Path(process.getWorkflow() + "/lib"));
-                }
-                store.publish(type, process);
-                break;
+        case PROCESS:
+            Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
+            process.setName(name);
+            FileSystem fs = dfsCluster.getFileSystem();
+            fs.mkdirs(new Path(process.getWorkflow().getPath()));
+            if (!fs.exists(new Path(process.getWorkflow() + "/lib"))) {
+                fs.mkdirs(new Path(process.getWorkflow() + "/lib"));
+            }
+            store.publish(type, process);
+            break;
+        default:
         }
     }
 

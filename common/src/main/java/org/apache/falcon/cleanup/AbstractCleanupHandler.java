@@ -38,20 +38,25 @@ import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
 import java.io.IOException;
 
+/**
+ * Falcon cleanup handler for cleaning up work, temp and log files
+ * left behind by falcon.
+ */
 public abstract class AbstractCleanupHandler {
 
     protected static final Logger LOG = Logger
             .getLogger(AbstractCleanupHandler.class);
-    protected final ConfigurationStore STORE = ConfigurationStore.get();
+    protected static final ConfigurationStore STORE = ConfigurationStore.get();
     public static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
-    public static final ExpressionHelper resolver = ExpressionHelper.get();
+    public static final ExpressionHelper RESOLVER = ExpressionHelper.get();
 
     protected long getRetention(Entity entity, TimeUnit timeUnit)
-            throws FalconException {
+        throws FalconException {
+
         String retention = getRetentionValue(timeUnit);
         try {
             return (Long) EVALUATOR.evaluate("${" + retention + "}",
-                    Long.class, resolver, resolver);
+                    Long.class, RESOLVER, RESOLVER);
         } catch (ELException e) {
             throw new FalconException("Unable to evalue retention limit: "
                     + retention + " for entity: " + entity.getName());
@@ -64,9 +69,9 @@ public abstract class AbstractCleanupHandler {
 
     }
 
-    protected FileStatus[] getAllLogs(
-            org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-            throws FalconException {
+    protected FileStatus[] getAllLogs(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+
         String stagingPath = ClusterHelper.getLocation(cluster, "staging");
         Path logPath = getLogPath(entity, stagingPath);
         FileSystem fs = getFileSystem(cluster);
@@ -79,9 +84,8 @@ public abstract class AbstractCleanupHandler {
         return paths;
     }
 
-    private FileSystem getFileSystem(
-            org.apache.falcon.entity.v0.cluster.Cluster cluster)
-            throws FalconException {
+    private FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
+        throws FalconException {
 
         FileSystem fs;
         try {
@@ -94,7 +98,7 @@ public abstract class AbstractCleanupHandler {
     }
 
     protected void delete(Cluster cluster, Entity entity, long retention)
-            throws FalconException {
+        throws FalconException {
 
         FileStatus[] logs = getAllLogs(cluster, entity);
         long now = System.currentTimeMillis();
@@ -104,7 +108,7 @@ public abstract class AbstractCleanupHandler {
                 try {
                     boolean isDeleted = getFileSystem(cluster).delete(
                             log.getPath(), true);
-                    if (isDeleted == false) {
+                    if (!isDeleted) {
                         LOG.error("Unable to delete path: " + log.getPath());
                     } else {
                         LOG.info("Deleted path: " + log.getPath());

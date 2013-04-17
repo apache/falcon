@@ -37,27 +37,35 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConfigurationStore implements FalconService {
+/**
+ * Persistent store for falcon entities.
+ */
+public final class ConfigurationStore implements FalconService {
 
     private static final Logger LOG = Logger.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
     private static final String UTF_8 = "UTF-8";
 
-    private static final ConfigurationStore store = new ConfigurationStore();
+    private static final ConfigurationStore STORE = new ConfigurationStore();
 
     private Set<ConfigurationChangeListener> listeners = new LinkedHashSet<ConfigurationChangeListener>();
 
     private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<Entity>();
 
     public static ConfigurationStore get() {
-        return store;
+        return STORE;
     }
 
     private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary
-            = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
+        = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
 
     private final FileSystem fs;
     private final Path storePath;
@@ -69,15 +77,9 @@ public class ConfigurationStore implements FalconService {
         }
     };
 
-    @SuppressWarnings("unchecked")
     private ConfigurationStore() {
-        Class<? extends Entity>[] entityClasses = new Class[EntityType.values().length];
-
-        int index = 0;
-
         for (EntityType type : EntityType.values()) {
             dictionary.put(type, new ConcurrentHashMap<String, Entity>());
-            entityClasses[index++] = type.getEntityClass();
         }
 
         String uri = StartupProperties.get().getProperty("config.store.uri");
@@ -221,7 +223,7 @@ public class ConfigurationStore implements FalconService {
             T entity = (T) entityMap.get(name);
             if (entity == NULL) { // Object equality being checked
                 try {
-                    entity = this.<T>restore(type, name);
+                    entity = this.restore(type, name);
                 } catch (IOException e) {
                     throw new StoreAccessException(e);
                 }
@@ -240,7 +242,7 @@ public class ConfigurationStore implements FalconService {
     }
 
     /**
-     * Remove an entity which is already stored in the config store
+     * Remove an entity which is already stored in the config store.
      *
      * @param type - Entity type being removed
      * @param name - Name of the entity object being removed
@@ -283,7 +285,7 @@ public class ConfigurationStore implements FalconService {
      * @return - Array of entity types
      */
     public Entity[] search(EntityType type, String... keywords) {
-        return null;// TODO
+        return null;
     }
 
     /**
@@ -310,7 +312,7 @@ public class ConfigurationStore implements FalconService {
     }
 
     /**
-     * Archive removed configuration in the persistent store
+     * Archive removed configuration in the persistent store.
      *
      * @param type - Entity type to archive
      * @param name - name
@@ -335,7 +337,7 @@ public class ConfigurationStore implements FalconService {
      */
     @SuppressWarnings("unchecked")
     private synchronized <T extends Entity> T restore(EntityType type, String name)
-            throws IOException, FalconException {
+        throws IOException, FalconException {
 
         InputStream in = fs.open(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"));
         try {

@@ -26,6 +26,9 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 
+/**
+ * Cleanup files relating to feed management workflows.
+ */
 public class FeedCleanupHandler extends AbstractCleanupHandler {
 
     @Override

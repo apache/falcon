@@ -43,6 +43,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 
+/**
+ * Parser that parses feed entity definition.
+ */
 public class FeedEntityParser extends EntityParser<Feed> {
 
     private static final Logger LOG = Logger.getLogger(FeedEntityParser.class);
@@ -112,20 +115,16 @@ public class FeedEntityParser extends EntityParser<Feed> {
                             cluster.getName()).getPath()).equals(
                     FeedGroup.getDatePattern(defaultPath))) {
                 throw new ValidationException("Feeds default path pattern: "
-                        + FeedHelper.getLocation(feed, LocationType.DATA)
-                        .getPath()
+                        + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
                         + ", does not match with cluster: "
                         + cluster.getName()
                         + " path pattern: "
-                        + FeedHelper.getLocation(feed, LocationType.DATA,
-                        cluster.getName()).getPath());
+                        + FeedHelper.getLocation(feed, LocationType.DATA, cluster.getName()).getPath());
             }
         }
         for (String groupName : groupNames) {
             FeedGroup group = FeedGroupMap.get().getGroupsMapping().get(groupName);
-            if (group == null || group.canContainFeed(feed)) {
-                continue;
-            } else {
+            if (group != null && !group.canContainFeed(feed)) {
                 throw new ValidationException(
                         "Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
                                 + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
@@ -242,8 +241,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
                 String part = FeedHelper.normalizePartitionExpression(cluster.getPartition());
                 if (StringUtils.split(part, '/').length == 0) {
                     throw new ValidationException(
-                            "Partition expression has to be specified for cluster " + cluster.getName() +
-                                    " as there are more than one source clusters");
+                            "Partition expression has to be specified for cluster " + cluster.getName()
+                                    + " as there are more than one source clusters");
                 }
                 validateClusterExpDefined(cluster);
 
@@ -256,8 +255,8 @@ public class FeedEntityParser extends EntityParser<Feed> {
                         int numParts = StringUtils.split(part, '/').length;
                         if (numParts > feedParts) {
                             throw new ValidationException(
-                                    "Partition for " + src.getName() + " and " + cluster.getName() +
-                                            "clusters is more than the number of partitions defined in feed");
+                                    "Partition for " + src.getName() + " and " + cluster.getName()
+                                            + "clusters is more than the number of partitions defined in feed");
                         }
                     }
                 }

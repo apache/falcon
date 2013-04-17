@@ -26,7 +26,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class EntityIntegrityChecker {
+/**
+ * Helper methods to check integrity of entity.
+ */
+public final class EntityIntegrityChecker {
+
+    private EntityIntegrityChecker() {}
 
     public static Pair<String, EntityType>[] referencedBy(Entity entity) throws FalconException {
         Set<Entity> deps = EntityGraph.get().getDependents(entity);
@@ -35,14 +40,14 @@ public class EntityIntegrityChecker {
         }
 
         switch (entity.getEntityType()) {
-            case CLUSTER:
-                return filter(deps, EntityType.FEED, EntityType.PROCESS);
+        case CLUSTER:
+            return filter(deps, EntityType.FEED, EntityType.PROCESS);
 
-            case FEED:
-                return filter(deps, EntityType.PROCESS);
+        case FEED:
+            return filter(deps, EntityType.PROCESS);
 
-            default:
-                return null;
+        default:
+            return null;
         }
     }
 

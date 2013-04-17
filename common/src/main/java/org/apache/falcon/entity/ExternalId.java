@@ -25,6 +25,9 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 
 import java.util.Date;
 
+/**
+ * External id as represented by workflow engine.
+ */
 public class ExternalId {
     private static final String SEPARATOR = "/";
     private String id;

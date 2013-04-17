@@ -36,37 +36,39 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Helper methods to facilitate entity updates.
+ */
 public final class UpdateHelper {
     private static final Logger LOG = Logger.getLogger(UpdateHelper.class);
+
     private static final String[] FEED_FIELDS = new String[]{"partitions", "groups", "lateArrival.cutOff",
                                                              "schema.location", "schema.provider",
-                                                             "ACL.group", "ACL.owner", "ACL.permission"};
+                                                             "ACL.group", "ACL.owner", "ACL.permission", };
     private static final String[] PROCESS_FIELDS = new String[]{"retry.policy", "retry.delay", "retry.attempts",
                                                                 "lateProcess.policy", "lateProcess.delay",
                                                                 "lateProcess.lateInputs[\\d+].input",
-                                                                "lateProcess.lateInputs[\\d+].workflowPath"};
+                                                                "lateProcess.lateInputs[\\d+].workflowPath", };
+
+    private UpdateHelper() {}
 
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
         Entity oldView = EntityUtil.getClusterView(oldEntity, cluster);
         Entity newView = EntityUtil.getClusterView(newEntity, cluster);
         switch (oldEntity.getEntityType()) {
-            case FEED:
-                if (EntityUtil.equals(oldView, newView, FEED_FIELDS)) {
-                    return false;
-                }
-                return true;
+        case FEED:
+            return !EntityUtil.equals(oldView, newView, FEED_FIELDS);
 
-            case PROCESS:
-                if (EntityUtil.equals(oldView, newView, PROCESS_FIELDS)) {
-                    return false;
-                }
-                return true;
+        case PROCESS:
+            return !EntityUtil.equals(oldView, newView, PROCESS_FIELDS);
+        default:
         }
         throw new IllegalArgumentException("Unhandled entity type " + oldEntity.getEntityType());
     }
 
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, Entity affectedEntity)
-            throws FalconException {
+        throws FalconException {
+
         if (oldEntity.getEntityType() == EntityType.FEED && affectedEntity.getEntityType() == EntityType.PROCESS) {
             return shouldUpdate((Feed) oldEntity, (Feed) newEntity, (Process) affectedEntity);
         } else {
@@ -77,26 +79,14 @@ public final class UpdateHelper {
     }
 
     public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess) {
-        if (!FeedHelper
-                .getLocation(oldFeed.getLocations(), LocationType.DATA)
-                .getPath()
-                .equals(FeedHelper.getLocation(newFeed.getLocations(),
-                        LocationType.DATA).getPath())
-                || !FeedHelper
-                .getLocation(oldFeed.getLocations(), LocationType.META)
-                .getPath()
-                .equals(FeedHelper.getLocation(newFeed.getLocations(),
-                        LocationType.META).getPath())
-                || !FeedHelper
-                .getLocation(oldFeed.getLocations(), LocationType.STATS)
-                .getPath()
-                .equals(FeedHelper.getLocation(newFeed.getLocations(),
-                        LocationType.STATS).getPath())
-                || !FeedHelper
-                .getLocation(oldFeed.getLocations(), LocationType.TMP)
-                .getPath()
-                .equals(FeedHelper.getLocation(newFeed.getLocations(),
-                        LocationType.TMP).getPath())) {
+        if (!FeedHelper.getLocation(oldFeed.getLocations(), LocationType.DATA)
+            .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.DATA).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.META)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.META).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.STATS)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.STATS).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.TMP)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.TMP).getPath())) {
             return true;
         }
         LOG.debug(oldFeed.toShortString() + ": Location identical. Ignoring...");
@@ -139,27 +129,16 @@ public final class UpdateHelper {
 
         for (Cluster cluster : affectedProcess.getClusters().getClusters()) {
             if (!FeedHelper
-                    .getCluster(oldFeed, cluster.getName())
-                    .getValidity()
-                    .getStart()
-                    .equals(FeedHelper.getCluster(newFeed, cluster.getName())
-                            .getValidity().getStart())
-                    || !FeedHelper.getLocation(oldFeed, LocationType.DATA,
-                    cluster.getName()).getPath().equals(
-                    FeedHelper.getLocation(newFeed, LocationType.DATA,
-                            cluster.getName()).getPath())
-                    || !FeedHelper.getLocation(oldFeed, LocationType.META,
-                    cluster.getName()).getPath().equals(
-                    FeedHelper.getLocation(newFeed, LocationType.META,
-                            cluster.getName()).getPath())
-                    || !FeedHelper.getLocation(oldFeed, LocationType.STATS,
-                    cluster.getName()).getPath().equals(
-                    FeedHelper.getLocation(newFeed, LocationType.STATS,
-                            cluster.getName()).getPath())
-                    || !FeedHelper.getLocation(oldFeed, LocationType.TMP,
-                    cluster.getName()).getPath().equals(
-                    FeedHelper.getLocation(newFeed, LocationType.TMP,
-                            cluster.getName()).getPath())) {
+                    .getCluster(oldFeed, cluster.getName()).getValidity().getStart()
+                    .equals(FeedHelper.getCluster(newFeed, cluster.getName()).getValidity().getStart())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.DATA, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.DATA, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.META, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.META, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.STATS, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.STATS, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.TMP, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.TMP, cluster.getName()).getPath())) {
                 return true;
             }
             LOG.debug(oldFeed.toShortString() + ": Feed on cluster" + cluster.getName() + " identical. Ignoring...");

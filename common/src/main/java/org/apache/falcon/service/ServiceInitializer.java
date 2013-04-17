@@ -23,9 +23,12 @@ import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
 
+/**
+ * Initializer that Falcon uses at startup to bring up all the falcon startup services.
+ */
 public class ServiceInitializer {
 
-    private static Logger LOG = Logger.getLogger(ServiceInitializer.class);
+    private static final Logger LOG = Logger.getLogger(ServiceInitializer.class);
     private final Services services = Services.get();
 
     public void initialize() throws FalconException {

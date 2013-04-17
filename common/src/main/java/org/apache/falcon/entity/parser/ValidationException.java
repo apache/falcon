@@ -21,7 +21,7 @@ package org.apache.falcon.entity.parser;
 import org.apache.falcon.FalconException;
 
 /**
- * ValidationException during parsing
+ * ValidationException during parsing.
  */
 public class ValidationException extends FalconException {
 

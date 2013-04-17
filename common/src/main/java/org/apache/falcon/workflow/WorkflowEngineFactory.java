@@ -22,16 +22,18 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 
+/**
+ * Factory for providing appropriate workflow engine to the falcon service.
+ */
 @SuppressWarnings("unchecked")
-public class WorkflowEngineFactory {
+public final class WorkflowEngineFactory {
 
     private static final String WORKFLOW_ENGINE = "workflow.engine.impl";
 
     private WorkflowEngineFactory() {
     }
 
-    public static AbstractWorkflowEngine getWorkflowEngine()
-            throws FalconException {
+    public static AbstractWorkflowEngine getWorkflowEngine() throws FalconException {
         return ReflectionUtils.getInstance(WORKFLOW_ENGINE);
     }
 

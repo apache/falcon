@@ -23,10 +23,14 @@ import org.apache.falcon.FalconException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class DeploymentProperties extends ApplicationProperties {
+/**
+ * Application deployment properties. particularly relating to
+ * whether the server is in embedded mode or distributed mode.
+ */
+public final class DeploymentProperties extends ApplicationProperties {
     private static final String PROPERTY_FILE = "deploy.properties";
 
-    private static final AtomicReference<DeploymentProperties> instance =
+    private static final AtomicReference<DeploymentProperties> INSTANCE =
             new AtomicReference<DeploymentProperties>();
 
     private DeploymentProperties() throws FalconException {
@@ -40,13 +44,12 @@ public class DeploymentProperties extends ApplicationProperties {
 
     public static Properties get() {
         try {
-            if (instance.get() == null) {
-                instance.compareAndSet(null, new DeploymentProperties());
+            if (INSTANCE.get() == null) {
+                INSTANCE.compareAndSet(null, new DeploymentProperties());
             }
-            return instance.get();
+            return INSTANCE.get();
         } catch (FalconException e) {
-            throw new RuntimeException("Unable to read application " +
-                    "startup properties", e);
+            throw new RuntimeException("Unable to read application " + "startup properties", e);
         }
     }
 }

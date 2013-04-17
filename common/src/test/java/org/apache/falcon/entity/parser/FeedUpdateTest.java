@@ -30,6 +30,9 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * Test for feed update helper methods.
+ */
 public class FeedUpdateTest extends AbstractTestBase {
 
     private final FeedEntityParser parser = (FeedEntityParser)
@@ -81,8 +84,7 @@ public class FeedUpdateTest extends AbstractTestBase {
             storeEntity(EntityType.PROCESS, "sample");
 
             //Try parsing the same feed xml
-            parser.parseAndValidate(this.getClass()
-                    .getResourceAsStream(FEED_XML));
+            parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
         } catch (Exception e) {
             Assert.fail("Didn't expect feed parsing to fail", e);
         }
@@ -110,6 +112,7 @@ public class FeedUpdateTest extends AbstractTestBase {
         }
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testFeedUpdateWithViolations() throws Exception {
         ConfigurationStore.get().remove(EntityType.FEED, "clicks");
@@ -124,7 +127,7 @@ public class FeedUpdateTest extends AbstractTestBase {
         Process process = processParser.parseAndValidate(this.getClass()
                 .getResourceAsStream(PROCESS1_XML));
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
-        Process p1 = (Process) process.clone();
+        Process p1 = (Process) process.copy();
         p1.setName("sample2");
         ConfigurationStore.get().publish(EntityType.PROCESS, p1);
 
@@ -136,4 +139,5 @@ public class FeedUpdateTest extends AbstractTestBase {
         } catch (ValidationException ignore) {
         }
     }
+    //RESUME CHECKSTYLE CHECK
 }

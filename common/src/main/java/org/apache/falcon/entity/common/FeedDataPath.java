@@ -19,8 +19,16 @@ package org.apache.falcon.entity.common;
 
 import java.util.regex.Pattern;
 
-public class FeedDataPath {
+/**
+ * Helper to map feed path and the time component.
+ */
+public final class FeedDataPath {
 
+    private FeedDataPath() {}
+
+    /**
+     * Standard variables for feed time components.
+     */
     public static enum VARS {
         YEAR("yyyy"), MONTH("MM"), DAY("dd"), HOUR("HH"), MINUTE("mm");
 

@@ -23,6 +23,9 @@ import org.testng.annotations.Test;
 
 import static org.testng.AssertJUnit.assertEquals;
 
+/**
+ * Test for startup properties test.
+ */
 @Test
 public class StartupPropertiesTest {
     @BeforeClass

@@ -72,7 +72,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 String srcClusterName = this.getWfEngine().getWorkflowProperty(
                         cluster, wfId, "srcClusterName");
                 Path lateLogPath = this.getLateLogPath(logDir,
-                        EntityUtil.UTCtoURIDate(nominalTime), srcClusterName);
+                        EntityUtil.fromUTCtoURIDate(nominalTime), srcClusterName);
                 LOG.info("Going to delete path:" + lateLogPath);
                 FileSystem fs = FileSystem.get(getConfiguration(cluster,
                         wfId));

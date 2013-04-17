@@ -34,19 +34,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Helper for evaluating expressions.
+ */
 public final class ExpressionHelper implements FunctionMapper, VariableResolver {
 
-    private static final ExpressionHelper instance = new ExpressionHelper();
+    private static final ExpressionHelper INSTANCE = new ExpressionHelper();
 
     private ThreadLocal<Properties> threadVariables = new ThreadLocal<Properties>();
 
-    private static final Pattern sysPropertyPattern = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
+    private static final Pattern SYS_PROPERTY_PATTERN = Pattern.compile("\\$\\{[A-Za-z0-9_.]+\\}");
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
-    private static final ExpressionHelper resolver = ExpressionHelper.get();
+    private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
 
     public static ExpressionHelper get() {
-        return instance;
+        return INSTANCE;
     }
 
     private ExpressionHelper() {
@@ -59,7 +62,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     @SuppressWarnings("unchecked")
     public <T> T evaluateFullExpression(String expression, Class<T> clazz) throws FalconException {
         try {
-            return (T) EVALUATOR.evaluate(expression, clazz, resolver, resolver);
+            return (T) EVALUATOR.evaluate(expression, clazz, RESOLVER, RESOLVER);
         } catch (ELException e) {
             throw new FalconException("Unable to evaluate " + expression, e);
         }
@@ -94,21 +97,21 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         Calendar dsInstanceCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         dsInstanceCal.setTime(date);
         switch (boundary) {
-            case Calendar.YEAR:
-                dsInstanceCal.set(Calendar.MONTH, 0);
-            case Calendar.MONTH:
-                dsInstanceCal.set(Calendar.DAY_OF_MONTH, 1);
-            case Calendar.DAY_OF_MONTH:
-                dsInstanceCal.set(Calendar.HOUR_OF_DAY, 0);
-            case Calendar.HOUR:
-                dsInstanceCal.set(Calendar.MINUTE, 0);
-                dsInstanceCal.set(Calendar.SECOND, 0);
-                dsInstanceCal.set(Calendar.MILLISECOND, 0);
-                break;
-            case Calendar.SECOND:
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid boundary " + boundary);
+        case Calendar.YEAR:
+            dsInstanceCal.set(Calendar.MONTH, 0);
+        case Calendar.MONTH:
+            dsInstanceCal.set(Calendar.DAY_OF_MONTH, 1);
+        case Calendar.DAY_OF_MONTH:
+            dsInstanceCal.set(Calendar.HOUR_OF_DAY, 0);
+        case Calendar.HOUR:
+            dsInstanceCal.set(Calendar.MINUTE, 0);
+            dsInstanceCal.set(Calendar.SECOND, 0);
+            dsInstanceCal.set(Calendar.MILLISECOND, 0);
+            break;
+        case Calendar.SECOND:
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid boundary " + boundary);
         }
 
         dsInstanceCal.add(Calendar.YEAR, 0);
@@ -182,7 +185,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public static String substitute(String originalValue, Properties properties) {
-        Matcher envVarMatcher = sysPropertyPattern.matcher(originalValue);
+        Matcher envVarMatcher = SYS_PROPERTY_PATTERN.matcher(originalValue);
         while (envVarMatcher.find()) {
             String envVar = originalValue.substring(envVarMatcher.start() + 2,
                     envVarMatcher.end() - 1);
@@ -191,7 +194,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
             envVar = "\\$\\{" + envVar + "\\}";
             if (envVal != null) {
                 originalValue = originalValue.replaceAll(envVar, Matcher.quoteReplacement(envVal));
-                envVarMatcher = sysPropertyPattern.matcher(originalValue);
+                envVarMatcher = SYS_PROPERTY_PATTERN.matcher(originalValue);
             }
         }
         return originalValue;

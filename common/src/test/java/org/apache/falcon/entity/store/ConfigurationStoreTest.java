@@ -32,9 +32,12 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 
+/**
+ * Tests for validating configuration store.
+ */
 public class ConfigurationStoreTest {
 
-    private static Logger LOG = Logger.getLogger(ConfigurationStoreTest.class);
+    private static final Logger LOG = Logger.getLogger(ConfigurationStoreTest.class);
 
     private ConfigurationStore store = ConfigurationStore.get();
 

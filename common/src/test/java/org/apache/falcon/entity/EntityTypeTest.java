@@ -22,6 +22,9 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Test for validating entity types.
+ */
 public class EntityTypeTest {
 
     @Test

@@ -24,7 +24,10 @@ import org.apache.log4j.Logger;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DeploymentUtil {
+/**
+ * Helper methods to deployment properties.
+ */
+public final class DeploymentUtil {
     private static final Logger LOG = Logger.getLogger(DeploymentUtil.class);
 
     protected static final String DEFAULT_COLO = "default";
@@ -32,34 +35,36 @@ public class DeploymentUtil {
     protected static final String DEPLOY_MODE = "deploy.mode";
     private static final Set<String> DEFAULT_ALL_COLOS = new HashSet<String>();
 
-    protected final static String currentColo;
-    protected final static boolean embeddedMode;
+    protected static final String CURRENT_COLO;
+    protected static final boolean EMBEDDED_MODE;
     protected static boolean prism = false;
 
     static {
         DEFAULT_ALL_COLOS.add(DEFAULT_COLO);
-        embeddedMode = DeploymentProperties.get().
+        EMBEDDED_MODE = DeploymentProperties.get().
                 getProperty(DEPLOY_MODE, EMBEDDED).equals(EMBEDDED);
-        if (embeddedMode) {
-            currentColo = DEFAULT_COLO;
+        if (EMBEDDED_MODE) {
+            CURRENT_COLO = DEFAULT_COLO;
         } else {
-            currentColo = StartupProperties.get().
+            CURRENT_COLO = StartupProperties.get().
                     getProperty("current.colo", DEFAULT_COLO);
         }
-        LOG.info("Running in embedded mode? " + embeddedMode);
-        LOG.info("Current colo: " + currentColo);
+        LOG.info("Running in embedded mode? " + EMBEDDED_MODE);
+        LOG.info("Current colo: " + CURRENT_COLO);
     }
+
+    private DeploymentUtil() {}
 
     public static void setPrismMode() {
         prism = true;
     }
 
     public static boolean isPrism() {
-        return !embeddedMode && prism;
+        return !EMBEDDED_MODE && prism;
     }
 
     public static String getCurrentColo() {
-        return currentColo;
+        return CURRENT_COLO;
     }
 
     public static Set<String> getCurrentClusters() {
@@ -68,7 +73,7 @@ public class DeploymentUtil {
     }
 
     public static boolean isEmbeddedMode() {
-        return embeddedMode;
+        return EMBEDDED_MODE;
     }
 
     public static String getDefaultColo() {

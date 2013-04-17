@@ -27,6 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Builder for building workflow definition for the underlying scheduler.
+ * @param <T>
+ */
 public abstract class WorkflowBuilder<T extends Entity> {
 
     public static WorkflowBuilder<Entity> getBuilder(String engine, Entity entity) throws FalconException {
@@ -37,7 +41,7 @@ public abstract class WorkflowBuilder<T extends Entity> {
     public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws FalconException;
 
     public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName, String user)
-            throws FalconException;
+        throws FalconException;
 
     public abstract String[] getWorkflowNames(T entity);
 }

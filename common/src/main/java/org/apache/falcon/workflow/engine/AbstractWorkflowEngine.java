@@ -29,7 +29,7 @@ import java.util.Set;
 
 /**
  * Workflow engine should minimally support the
- * following operations
+ * following operations.
  */
 public abstract class AbstractWorkflowEngine {
 
@@ -61,16 +61,16 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesResult getRunningInstances(Entity entity) throws FalconException;
 
     public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props)
-            throws FalconException;
+        throws FalconException;
 
     public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props)
-            throws FalconException;
+        throws FalconException;
 
     public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props)
-            throws FalconException;
+        throws FalconException;
 
     public abstract InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props)
-            throws FalconException;
+        throws FalconException;
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException;
 

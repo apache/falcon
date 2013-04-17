@@ -22,7 +22,12 @@ import com.sun.security.auth.UnixPrincipal;
 
 import java.security.Principal;
 
-public class SecurityConstants {
+/**
+ * Constants for the security module.
+ */
+public final class SecurityConstants {
+
+    private SecurityConstants() {}
 
     public static final String OS_LOGIN_MODULE_NAME =
             "com.sun.security.auth.module.UnixLoginModule";

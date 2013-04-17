@@ -20,34 +20,34 @@ package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.util.ReflectionUtils;
-import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-
+/**
+ * Repository of services initialized at startup.
+ */
 public final class Services implements Iterable<FalconService> {
-    private static final Logger LOG = Logger.getLogger(Services.class);
 
-    private static Services instance = new Services();
+    private static final Services INSTANCE = new Services();
 
     private Services() {
     }
 
     public static Services get() {
-        return instance;
+        return INSTANCE;
     }
 
     private final Map<String, FalconService> services =
             new LinkedHashMap<String, FalconService>();
 
     public synchronized void register(FalconService service)
-            throws FalconException {
+        throws FalconException {
+
         if (services.containsKey(service.getName())) {
-            throw new FalconException("Service " + service.getName() +
-                    " already registered");
+            throw new FalconException("Service " + service.getName() + " already registered");
         } else {
             services.put(service.getName(), service);
         }
@@ -58,8 +58,7 @@ public final class Services implements Iterable<FalconService> {
         if (services.containsKey(serviceName)) {
             return (T) services.get(serviceName);
         } else {
-            throw new NoSuchElementException("Service " + serviceName +
-                    " not registered with registry");
+            throw new NoSuchElementException("Service " + serviceName + " not registered with registry");
         }
     }
 
@@ -74,8 +73,7 @@ public final class Services implements Iterable<FalconService> {
 
     public FalconService init(String serviceName) throws FalconException {
         if (isRegistered(serviceName)) {
-            throw new FalconException("Service is already initialized " +
-                    serviceName);
+            throw new FalconException("Service is already initialized " + serviceName);
         }
         FalconService service = ReflectionUtils.getInstance(serviceName + ".impl");
         register(service);

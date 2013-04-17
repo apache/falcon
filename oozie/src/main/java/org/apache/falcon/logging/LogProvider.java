@@ -76,7 +76,7 @@ public final class LogProvider {
         if (StringUtils.isEmpty(runId)) {
             Path jobPath = new Path(ClusterHelper.getStorageUrl(cluster),
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
-                            + EntityUtil.UTCtoURIDate(instance.instance) + "/*");
+                            + EntityUtil.fromUTCtoURIDate(instance.instance) + "/*");
 
             FileStatus[] runs = fs.globStatus(jobPath);
             if (runs.length > 0) {
@@ -90,7 +90,7 @@ public final class LogProvider {
         } else {
             Path jobPath = new Path(ClusterHelper.getStorageUrl(cluster),
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
-                            + EntityUtil.UTCtoURIDate(instance.instance) + "/"
+                            + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                             + getFormatedRunId(runId));
             if (fs.exists(jobPath)) {
                 return getFormatedRunId(runId);
@@ -108,7 +108,7 @@ public final class LogProvider {
 
         Path actionPaths = new Path(ClusterHelper.getStorageUrl(cluster),
                 EntityUtil.getLogPath(cluster, entity) + "/job-"
-                        + EntityUtil.UTCtoURIDate(instance.instance) + "/"
+                        + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                         + formatedRunId + "/*");
         FileStatus[] actions = fs.globStatus(actionPaths);
         InstanceAction[] instanceActions = new InstanceAction[actions.length - 1];
@@ -119,7 +119,7 @@ public final class LogProvider {
             String dfsBrowserUrl = getDFSbrowserUrl(
                     ClusterHelper.getStorageUrl(cluster),
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
-                            + EntityUtil.UTCtoURIDate(instance.instance) + "/"
+                            + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
                             + formatedRunId, file.getPath().getName());
             if (filePath.getName().equals("oozie.log")) {
                 instance.logFile = dfsBrowserUrl;

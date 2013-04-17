@@ -39,6 +39,9 @@ import java.io.StringWriter;
 
 import static org.testng.AssertJUnit.assertEquals;
 
+/**
+ * Test for validating cluster entity parsing.
+ */
 public class ClusterEntityParserTest extends AbstractTestBase {
 
     private final ClusterEntityParser parser = (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);

@@ -24,13 +24,16 @@ import org.apache.log4j.Logger;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class RuntimeProperties extends ApplicationProperties {
+/**
+ * Dynamic properties that may be modified while the server is running.
+ */
+public final class RuntimeProperties extends ApplicationProperties {
 
-    private static Logger LOG = Logger.getLogger(RuntimeProperties.class);
+    private static final Logger LOG = Logger.getLogger(RuntimeProperties.class);
 
     private static final String PROPERTY_FILE = "runtime.properties";
 
-    private static final AtomicReference<RuntimeProperties> instance =
+    private static final AtomicReference<RuntimeProperties> INSTANCE =
             new AtomicReference<RuntimeProperties>();
 
     private RuntimeProperties() throws FalconException {
@@ -46,17 +49,19 @@ public class RuntimeProperties extends ApplicationProperties {
 
     public static Properties get() {
         try {
-            if (instance.get() == null) {
-                instance.compareAndSet(null, new RuntimeProperties());
+            if (INSTANCE.get() == null) {
+                INSTANCE.compareAndSet(null, new RuntimeProperties());
             }
-            return instance.get();
+            return INSTANCE.get();
         } catch (FalconException e) {
-            throw new RuntimeException("Unable to read application " +
-                    "runtime properties", e);
+            throw new RuntimeException("Unable to read application " + "runtime properties", e);
         }
     }
 
-    private class DynamicLoader implements Runnable {
+    /**
+     * Thread for loading properties periodically.
+     */
+    private final class DynamicLoader implements Runnable {
 
         private static final long REFRESH_DELAY = 300000L;
         private static final int MAX_ITER = 20;  //1hr

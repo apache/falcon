@@ -23,11 +23,14 @@ import org.apache.falcon.FalconException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class StartupProperties extends ApplicationProperties {
+/**
+ * Properties read during application startup.
+ */
+public final class StartupProperties extends ApplicationProperties {
 
     private static final String PROPERTY_FILE = "startup.properties";
 
-    private static final AtomicReference<StartupProperties> instance =
+    private static final AtomicReference<StartupProperties> INSTANCE =
             new AtomicReference<StartupProperties>();
 
     private StartupProperties() throws FalconException {
@@ -41,13 +44,12 @@ public class StartupProperties extends ApplicationProperties {
 
     public static Properties get() {
         try {
-            if (instance.get() == null) {
-                instance.compareAndSet(null, new StartupProperties());
+            if (INSTANCE.get() == null) {
+                INSTANCE.compareAndSet(null, new StartupProperties());
             }
-            return instance.get();
+            return INSTANCE.get();
         } catch (FalconException e) {
-            throw new RuntimeException("Unable to read application " +
-                    "startup properties", e);
+            throw new RuntimeException("Unable to read application " + "startup properties", e);
         }
     }
 }

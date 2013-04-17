@@ -21,7 +21,13 @@ package org.apache.falcon.entity;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 
-public class ProcessHelper {
+/**
+ * Helper methods for accessing process members.
+ */
+public final class ProcessHelper {
+
+    private ProcessHelper() {}
+
     public static Cluster getCluster(Process process, String clusterName) {
         for (Cluster cluster : process.getClusters().getClusters()) {
             if (cluster.getName().equals(clusterName)) {

@@ -26,6 +26,9 @@ import org.apache.falcon.entity.v0.process.Process;
 
 import javax.xml.bind.Unmarshaller;
 
+/**
+ * Base for falcon unit tests involving configuration store.
+ */
 public class AbstractTestBase {
     private static final String PROCESS_XML = "/config/process/process-0.1.xml";
     private static final String FEED_XML = "/config/feed/feed-0.1.xml";
@@ -37,23 +40,24 @@ public class AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(type, name);
         switch (type) {
-            case CLUSTER:
-                Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
-                cluster.setName(name);
-                store.publish(type, cluster);
-                break;
+        case CLUSTER:
+            Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+            cluster.setName(name);
+            store.publish(type, cluster);
+            break;
 
-            case FEED:
-                Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
-                feed.setName(name);
-                store.publish(type, feed);
-                break;
+        case FEED:
+            Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
+            feed.setName(name);
+            store.publish(type, feed);
+            break;
 
-            case PROCESS:
-                Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
-                process.setName(name);
-                store.publish(type, process);
-                break;
+        case PROCESS:
+            Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
+            process.setName(name);
+            store.publish(type, process);
+            break;
+        default:
         }
     }
 

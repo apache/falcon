@@ -33,34 +33,28 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 
+/**
+ * Test for log cleanup service.
+ */
 public class LogCleanupServiceTest extends AbstractTestBase {
 
     private FileSystem fs;
     private FileSystem tfs;
     private EmbeddedCluster targetDfsCluster;
-    Path instanceLogPath = new Path(
-            "/projects/falcon/staging/falcon/workflows/process/" + "sample"
-                    + "/logs/job-2010-01-01-01-00/000");
-    Path instanceLogPath1 = new Path(
-            "/projects/falcon/staging/falcon/workflows/process/" + "sample"
-                    + "/logs/job-2010-01-01-01-00/001");
-    Path instanceLogPath2 = new Path(
-            "/projects/falcon/staging/falcon/workflows/process/" + "sample"
-                    + "/logs/job-2010-01-01-02-00/001");
-    Path instanceLogPath3 = new Path(
-            "/projects/falcon/staging/falcon/workflows/process/" + "sample2"
-                    + "/logs/job-2010-01-01-01-00/000");
-    Path instanceLogPath4 = new Path(
-            "/projects/falcon/staging/falcon/workflows/process/" + "sample"
-                    + "/logs/latedata/2010-01-01-01-00");
-    Path feedInstanceLogPath = new Path(
-            "/projects/falcon/staging/falcon/workflows/feed/"
-                    + "impressionFeed"
-                    + "/logs/job-2010-01-01-01-00/testCluster/000");
-    Path feedInstanceLogPath1 = new Path(
-            "/projects/falcon/staging/falcon/workflows/feed/"
-                    + "impressionFeed2"
-                    + "/logs/job-2010-01-01-01-00/testCluster/000");
+    private Path instanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/process/"
+        + "sample" + "/logs/job-2010-01-01-01-00/000");
+    private Path instanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+        + "sample" + "/logs/job-2010-01-01-01-00/001");
+    private Path instanceLogPath2 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+        + "sample" + "/logs/job-2010-01-01-02-00/001");
+    private Path instanceLogPath3 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+        + "sample2" + "/logs/job-2010-01-01-01-00/000");
+    private Path instanceLogPath4 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+        + "sample" + "/logs/latedata/2010-01-01-01-00");
+    private Path feedInstanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/feed/"
+        + "impressionFeed" + "/logs/job-2010-01-01-01-00/testCluster/000");
+    private Path feedInstanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/feed/"
+        + "impressionFeed2" + "/logs/job-2010-01-01-01-00/testCluster/000");
 
 
     @AfterClass
@@ -76,8 +70,7 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         fs = dfsCluster.getFileSystem();
 
         storeEntity(EntityType.CLUSTER, "testCluster");
-        System.setProperty("test.build.data",
-                "target/tdfs/data" + System.currentTimeMillis());
+        System.setProperty("test.build.data", "target/tdfs/data" + System.currentTimeMillis());
         this.targetDfsCluster = EmbeddedCluster.newCluster("backupCluster", false);
         conf = targetDfsCluster.getConf();
 
@@ -87,9 +80,8 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
         storeEntity(EntityType.PROCESS, "sample");
-        Process process = ConfigurationStore.get().get(EntityType.PROCESS,
-                "sample");
-        Process otherProcess = (Process) process.clone();
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "sample");
+        Process otherProcess = (Process) process.copy();
         otherProcess.setName("sample2");
         otherProcess.setFrequency(new Frequency("days(1)"));
         ConfigurationStore.get().remove(EntityType.PROCESS,
@@ -115,13 +107,10 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         tfs.createNewFile(new Path(feedInstanceLogPath, "oozie.log"));
 
         Thread.sleep(61000);
-
-
     }
 
     @Test
-    public void testProcessLogs() throws IOException, FalconException,
-                                         InterruptedException {
+    public void testProcessLogs() throws IOException, FalconException, InterruptedException {
 
         AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
         processCleanupHandler.cleanup();
@@ -134,8 +123,7 @@ public class LogCleanupServiceTest extends AbstractTestBase {
     }
 
     @Test
-    public void testFeedLogs() throws IOException, FalconException,
-                                      InterruptedException {
+    public void testFeedLogs() throws IOException, FalconException, InterruptedException {
 
         AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
         feedCleanupHandler.cleanup();

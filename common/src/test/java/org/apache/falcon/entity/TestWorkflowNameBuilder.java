@@ -25,6 +25,9 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 
+/**
+ * Test for workflow name builder.
+ */
 public class TestWorkflowNameBuilder {
 
     @Test
@@ -60,7 +63,7 @@ public class TestWorkflowNameBuilder {
     }
 
     @Test
-    public void WorkflowNameTest() {
+    public void workflowNameTest() {
         Feed feed = new Feed();
         feed.setName("raw-logs");
 

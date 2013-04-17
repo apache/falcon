@@ -33,20 +33,20 @@ public final class EntityParserFactory {
      * unmarshalled easily by concrete classes based on the class type using
      * JAXB.
      *
-     * @param entityType
+     * @param entityType - entity type
      * @return concrete parser based on entity type
      */
     public static EntityParser getParser(final EntityType entityType) {
 
         switch (entityType) {
-            case PROCESS:
-                return new ProcessEntityParser();
-            case FEED:
-                return new FeedEntityParser();
-            case CLUSTER:
-                return new ClusterEntityParser();
-            default:
-                throw new IllegalArgumentException("Unhandled entity type: " + entityType);
+        case PROCESS:
+            return new ProcessEntityParser();
+        case FEED:
+            return new FeedEntityParser();
+        case CLUSTER:
+            return new ClusterEntityParser();
+        default:
+            throw new IllegalArgumentException("Unhandled entity type: " + entityType);
         }
     }
 

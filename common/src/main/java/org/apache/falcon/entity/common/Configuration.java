@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Property k/v.
+ */
 public class Configuration implements Iterable<Map.Entry<String, String>>, Cloneable {
 
     private final Map<String, String> properties;

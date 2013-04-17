@@ -29,8 +29,11 @@ import javax.security.auth.spi.LoginModule;
 import java.security.Principal;
 import java.util.Map;
 
+/**
+ * Falcon JAAS login module.
+ */
 public class FalconLoginModule implements LoginModule {
-    private static Logger LOG = Logger.getLogger(FalconLoginModule.class);
+    private static final Logger LOG = Logger.getLogger(FalconLoginModule.class);
 
     private Subject subject;
 
@@ -62,11 +65,13 @@ public class FalconLoginModule implements LoginModule {
         throw new LoginException("No such user " + subject);
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Override
     public boolean login() throws LoginException {

@@ -22,6 +22,9 @@ import org.apache.falcon.entity.v0.cluster.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
+/**
+ * Helper to get end points relating to the cluster.
+ */
 public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 

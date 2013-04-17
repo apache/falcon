@@ -36,6 +36,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+/**
+ * Test for Update helper methods.
+ */
 public class UpdateHelperTest extends AbstractTestBase {
     private final FeedEntityParser parser = (FeedEntityParser)
             EntityParserFactory.getParser(EntityType.FEED);
@@ -69,7 +72,7 @@ public class UpdateHelperTest extends AbstractTestBase {
         Feed oldFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
         String cluster = "testCluster";
-        Feed newFeed = (Feed) oldFeed.clone();
+        Feed newFeed = (Feed) oldFeed.copy();
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, cluster));
 
         newFeed.setGroups("newgroups");
@@ -81,7 +84,7 @@ public class UpdateHelperTest extends AbstractTestBase {
 
         Process oldProcess = processParser.parseAndValidate(this.getClass().
                 getResourceAsStream(PROCESS_XML));
-        Process newProcess = (Process) oldProcess.clone();
+        Process newProcess = (Process) oldProcess.copy();
 
         newProcess.getRetry().setPolicy(PolicyType.FINAL);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
@@ -98,7 +101,7 @@ public class UpdateHelperTest extends AbstractTestBase {
         Feed oldFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
 
-        Feed newFeed = (Feed) oldFeed.clone();
+        Feed newFeed = (Feed) oldFeed.copy();
         Process process = processParser.parseAndValidate(this.getClass().
                 getResourceAsStream(PROCESS_XML));
 

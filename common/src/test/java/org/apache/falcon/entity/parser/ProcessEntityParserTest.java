@@ -40,14 +40,16 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tests for validating process entity parser.
+ */
 public class ProcessEntityParserTest extends AbstractTestBase {
 
     private final ProcessEntityParser parser = (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
-    private String INVALID_PROCESS_XML = "/config/process/process-invalid.xml";
 
     @Test
     public void testNotNullgetUnmarshaller() throws Exception {
-        final Unmarshaller unmarshaller = EntityType.PROCESS.getUnmarshaller();
+        Unmarshaller unmarshaller = EntityType.PROCESS.getUnmarshaller();
         Assert.assertNotNull(unmarshaller);
     }
 
@@ -115,6 +117,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         // TODO for retry and late policy
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testELExpressions() throws Exception {
         Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
@@ -140,13 +143,14 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             throw new AssertionError("Expected ValidationException!");
         } catch (ValidationException e) {
         }
-
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Test(expectedExceptions = FalconException.class)
     public void doParseInvalidXML() throws IOException, FalconException {
 
-        parser.parseAndValidate(this.getClass().getResourceAsStream(INVALID_PROCESS_XML));
+        String invalidProcessXml = "/config/process/process-invalid.xml";
+        parser.parseAndValidate(this.getClass().getResourceAsStream(invalidProcessXml));
     }
 
     @Test(expectedExceptions = ValidationException.class)
@@ -161,6 +165,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         parser.parseAndValidate("<process></process>");
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testConcurrentParsing() throws Exception {
         List<Thread> threadList = new ArrayList<Thread>();
@@ -184,6 +189,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             thread.join();
         }
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Test(expectedExceptions = ValidationException.class)
     public void testInvalidProcessValidity() throws Exception {

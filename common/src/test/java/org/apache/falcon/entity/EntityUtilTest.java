@@ -32,6 +32,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+/**
+ * Test for validating Entity util helper methods.
+ */
 public class EntityUtilTest extends AbstractTestBase {
     private static TimeZone tz = TimeZone.getTimeZone("UTC");
 

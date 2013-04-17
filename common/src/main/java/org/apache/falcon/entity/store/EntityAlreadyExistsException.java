@@ -20,6 +20,9 @@ package org.apache.falcon.entity.store;
 
 import org.apache.falcon.FalconException;
 
+/**
+ * Exception to thrown when entity being sought for addition is already present in config store.
+ */
 public class EntityAlreadyExistsException extends FalconException {
 
     public EntityAlreadyExistsException(Exception e) {

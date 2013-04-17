@@ -21,6 +21,9 @@ package org.apache.falcon.service;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 
+/**
+ * Configuration change notification listener.
+ */
 public interface ConfigurationChangeListener {
 
     void onAdd(Entity entity) throws FalconException;

@@ -22,14 +22,19 @@ import org.apache.log4j.Logger;
 
 import javax.security.auth.Subject;
 
+/**
+ * Current authenticated user via REST.
+ */
 public final class CurrentUser {
 
-    private static Logger LOG = Logger.getLogger(CurrentUser.class);
+    private static final Logger LOG = Logger.getLogger(CurrentUser.class);
 
-    private static final CurrentUser instance = new CurrentUser();
+    private static final CurrentUser INSTANCE = new CurrentUser();
+
+    private CurrentUser() {}
 
     public static CurrentUser get() {
-        return instance;
+        return INSTANCE;
     }
 
     private final ThreadLocal<Subject> currentSubject =
@@ -37,8 +42,7 @@ public final class CurrentUser {
 
     public static void authenticate(String user) {
         if (user == null || user.isEmpty()) {
-            throw new IllegalStateException
-                    ("Bad user name sent for authentication");
+            throw new IllegalStateException("Bad user name sent for authentication");
         }
         if (user.equals(getUserInternal())) {
             return;
@@ -47,11 +51,11 @@ public final class CurrentUser {
         Subject subject = new Subject();
         subject.getPrincipals().add(new FalconPrincipal(user));
         LOG.info("Logging in " + user);
-        instance.currentSubject.set(subject);
+        INSTANCE.currentSubject.set(subject);
     }
 
     public static Subject getSubject() {
-        return instance.currentSubject.get();
+        return INSTANCE.currentSubject.get();
     }
 
     public static String getUser() {

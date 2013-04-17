@@ -21,6 +21,10 @@ package org.apache.falcon.workflow.engine;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 
+/**
+ * Listener that will be notified before and after
+ * workflow life cycle operations are performed.
+ */
 public interface WorkflowEngineActionListener {
 
     void beforeSchedule(Entity entity, String cluster) throws FalconException;

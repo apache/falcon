@@ -26,6 +26,9 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 
+/**
+ * Handler to cleanup files left behind by falcon relating to process.
+ */
 public class ProcessCleanupHandler extends AbstractCleanupHandler {
 
     @Override

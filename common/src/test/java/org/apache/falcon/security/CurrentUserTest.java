@@ -21,6 +21,9 @@ package org.apache.falcon.security;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Test for current user's thread safety.
+ */
 public class CurrentUserTest {
 
     @Test(threadPoolSize = 10, invocationCount = 10, timeOut = 10000)

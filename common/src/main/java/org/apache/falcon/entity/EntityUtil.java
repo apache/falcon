@@ -44,11 +44,16 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class EntityUtil {
+/**
+ * Helper to get entity object.
+ */
+public final class EntityUtil {
     private static final long MINUTE_IN_MS = 60000L;
     private static final long HOUR_IN_MS = 3600000L;
     private static final long DAY_IN_MS = 86400000L;
     private static final long MONTH_IN_MS = 2592000000L;
+
+    private EntityUtil() {}
 
     public static <T extends Entity> T getEntity(EntityType type, String entityName) throws FalconException {
         ConfigurationStore configStore = ConfigurationStore.get();
@@ -233,19 +238,19 @@ public class EntityUtil {
 
         int count = 0;
         switch (frequency.getTimeUnit()) {
-            case months:
-                count = (int) ((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
-                break;
-            case days:
-                count = (int) ((now.getTime() - startTime.getTime()) / DAY_IN_MS);
-                break;
-            case hours:
-                count = (int) ((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
-                break;
-            case minutes:
-                count = (int) ((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
-                break;
-            default:
+        case months:
+            count = (int) ((now.getTime() - startTime.getTime()) / MONTH_IN_MS);
+            break;
+        case days:
+            count = (int) ((now.getTime() - startTime.getTime()) / DAY_IN_MS);
+            break;
+        case hours:
+            count = (int) ((now.getTime() - startTime.getTime()) / HOUR_IN_MS);
+            break;
+        case minutes:
+            count = (int) ((now.getTime() - startTime.getTime()) / MINUTE_IN_MS);
+            break;
+        default:
         }
 
         if (count > 2) {
@@ -268,19 +273,19 @@ public class EntityUtil {
 
         int count = 0;
         switch (frequency.getTimeUnit()) {
-            case months:
-                count = (int) ((instanceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
-                break;
-            case days:
-                count = (int) ((instanceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
-                break;
-            case hours:
-                count = (int) ((instanceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
-                break;
-            case minutes:
-                count = (int) ((instanceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
-                break;
-            default:
+        case months:
+            count = (int) ((instanceTime.getTime() - startTime.getTime()) / MONTH_IN_MS);
+            break;
+        case days:
+            count = (int) ((instanceTime.getTime() - startTime.getTime()) / DAY_IN_MS);
+            break;
+        case hours:
+            count = (int) ((instanceTime.getTime() - startTime.getTime()) / HOUR_IN_MS);
+            break;
+        case minutes:
+            count = (int) ((instanceTime.getTime() - startTime.getTime()) / MINUTE_IN_MS);
+            break;
+        default:
         }
 
         if (count > 2) {
@@ -340,7 +345,8 @@ public class EntityUtil {
 
     @SuppressWarnings("rawtypes")
     private static void mapToProperties(Object obj, String name, Map<String, String> propMap, String[] filterProps)
-            throws FalconException {
+        throws FalconException {
+
         if (obj == null) {
             return;
         }
@@ -429,36 +435,38 @@ public class EntityUtil {
 
     public static <T extends Entity> T getClusterView(T entity, String clusterName) {
         switch (entity.getEntityType()) {
-            case CLUSTER:
-                return entity;
+        case CLUSTER:
+            return entity;
 
-            case FEED:
-                Feed feed = (Feed) entity.clone();
-                Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-                Iterator<Cluster> itr = feed.getClusters().getClusters().iterator();
-                while (itr.hasNext()) {
-                    Cluster cluster = itr.next();
-                    //In addition to retaining the required clster, retain the sources clusters if this is the target
-                    // cluster
-                    //1. Retain cluster if cluster n
-                    if (!(cluster.getName().equals(clusterName) ||
-                            (feedCluster.getType() == ClusterType.TARGET && cluster.getType() == ClusterType.SOURCE))) {
-                        itr.remove();
-                    }
+        case FEED:
+            Feed feed = (Feed) entity.copy();
+            Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+            Iterator<Cluster> itr = feed.getClusters().getClusters().iterator();
+            while (itr.hasNext()) {
+                Cluster cluster = itr.next();
+                //In addition to retaining the required clster, retain the sources clusters if this is the target
+                // cluster
+                //1. Retain cluster if cluster n
+                if (!(cluster.getName().equals(clusterName)
+                        || (feedCluster.getType() == ClusterType.TARGET
+                        && cluster.getType() == ClusterType.SOURCE))) {
+                    itr.remove();
                 }
-                return (T) feed;
+            }
+            return (T) feed;
 
-            case PROCESS:
-                Process process = (Process) entity.clone();
-                Iterator<org.apache.falcon.entity.v0.process.Cluster> procItr
-                        = process.getClusters().getClusters().iterator();
-                while (procItr.hasNext()) {
-                    org.apache.falcon.entity.v0.process.Cluster cluster = procItr.next();
-                    if (!cluster.getName().equals(clusterName)) {
-                        procItr.remove();
-                    }
+        case PROCESS:
+            Process process = (Process) entity.copy();
+            Iterator<org.apache.falcon.entity.v0.process.Cluster> procItr =
+                process.getClusters().getClusters().iterator();
+            while (procItr.hasNext()) {
+                org.apache.falcon.entity.v0.process.Cluster cluster = procItr.next();
+                if (!cluster.getName().equals(clusterName)) {
+                    procItr.remove();
                 }
-                return (T) process;
+            }
+            return (T) process;
+        default:
         }
         throw new UnsupportedOperationException("Not supported for entity type " + entity.getEntityType());
     }
@@ -466,23 +474,24 @@ public class EntityUtil {
     public static Set<String> getClustersDefined(Entity entity) {
         Set<String> clusters = new HashSet<String>();
         switch (entity.getEntityType()) {
-            case CLUSTER:
-                clusters.add(entity.getName());
-                break;
+        case CLUSTER:
+            clusters.add(entity.getName());
+            break;
 
-            case FEED:
-                Feed feed = (Feed) entity;
-                for (Cluster cluster : feed.getClusters().getClusters()) {
-                    clusters.add(cluster.getName());
-                }
-                break;
+        case FEED:
+            Feed feed = (Feed) entity;
+            for (Cluster cluster : feed.getClusters().getClusters()) {
+                clusters.add(cluster.getName());
+            }
+            break;
 
-            case PROCESS:
-                Process process = (Process) entity;
-                for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
-                    clusters.add(cluster.getName());
-                }
-                break;
+        case PROCESS:
+            Process process = (Process) entity;
+            for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
+                clusters.add(cluster.getName());
+            }
+            break;
+        default:
         }
         return clusters;
     }
@@ -503,9 +512,33 @@ public class EntityUtil {
         return applicableClusters;
     }
 
-    public static Path getStagingPath(
-            org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-            throws FalconException {
+    public static Retry getRetry(Entity entity) throws FalconException {
+        switch (entity.getEntityType()) {
+        case FEED:
+            if (!RuntimeProperties.get()
+                    .getProperty("feed.retry.allowed", "true")
+                    .equalsIgnoreCase("true")) {
+                return null;
+            }
+            Retry retry = new Retry();
+            retry.setAttempts(Integer.parseInt(RuntimeProperties.get()
+                    .getProperty("feed.retry.attempts", "3")));
+            retry.setDelay(new Frequency(RuntimeProperties.get().getProperty(
+                    "feed.retry.frequency", "minutes(5)")));
+            retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
+                    .getProperty("feed.retry.policy", "exp-backoff")));
+            return retry;
+        case PROCESS:
+            Process process = (Process) entity;
+            return process.getRetry();
+        default:
+            throw new FalconException("Cannot create Retry for entity:" + entity.getName());
+        }
+    }
+
+    public static Path getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+
         try {
             return new Path(ClusterHelper.getLocation(cluster, "staging"),
                     EntityUtil.getStagingPath(entity));
@@ -514,67 +547,43 @@ public class EntityUtil {
         }
     }
 
-    public static Retry getRetry(Entity entity) throws FalconException {
-        switch (entity.getEntityType()) {
-            case FEED:
-                if (!RuntimeProperties.get()
-                        .getProperty("feed.retry.allowed", "true")
-                        .equalsIgnoreCase("true")) {
-                    return null;
-                }
-                Retry retry = new Retry();
-                retry.setAttempts(Integer.parseInt(RuntimeProperties.get()
-                        .getProperty("feed.retry.attempts", "3")));
-                retry.setDelay(new Frequency(RuntimeProperties.get().getProperty(
-                        "feed.retry.frequency", "minutes(5)")));
-                retry.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
-                        .getProperty("feed.retry.policy", "exp-backoff")));
-                return retry;
-            case PROCESS:
-                Process process = (Process) entity;
-                return process.getRetry();
-            default:
-                throw new FalconException("Cannot create Retry for entity:" + entity.getName());
-        }
-    }
-
     public static LateProcess getLateProcess(Entity entity)
-            throws FalconException {
+        throws FalconException {
+
         switch (entity.getEntityType()) {
-            case FEED:
-                if (!RuntimeProperties.get()
-                        .getProperty("feed.late.allowed", "true")
-                        .equalsIgnoreCase("true")) {
-                    return null;
-                }
-                LateProcess lateProcess = new LateProcess();
-                lateProcess.setDelay(new Frequency(RuntimeProperties.get()
-                        .getProperty("feed.late.frequency", "hours(3)")));
-                lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
-                        .getProperty("feed.late.policy", "exp-backoff")));
-                LateInput lateInput = new LateInput();
-                lateInput.setInput(entity.getName());
-                //TODO - Assuming the late workflow is not used
-                lateInput.setWorkflowPath("ignore.xml");
-                lateProcess.getLateInputs().add(lateInput);
-                return lateProcess;
-            case PROCESS:
-                Process process = (Process) entity;
-                return process.getLateProcess();
-            default:
-                throw new FalconException("Cannot create Late Process for entity:" + entity.getName());
+        case FEED:
+            if (!RuntimeProperties.get()
+                    .getProperty("feed.late.allowed", "true")
+                    .equalsIgnoreCase("true")) {
+                return null;
+            }
+            LateProcess lateProcess = new LateProcess();
+            lateProcess.setDelay(new Frequency(RuntimeProperties.get()
+                    .getProperty("feed.late.frequency", "hours(3)")));
+            lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
+                    .getProperty("feed.late.policy", "exp-backoff")));
+            LateInput lateInput = new LateInput();
+            lateInput.setInput(entity.getName());
+            //TODO - Assuming the late workflow is not used
+            lateInput.setWorkflowPath("ignore.xml");
+            lateProcess.getLateInputs().add(lateInput);
+            return lateProcess;
+        case PROCESS:
+            Process process = (Process) entity;
+            return process.getLateProcess();
+        default:
+            throw new FalconException("Cannot create Late Process for entity:" + entity.getName());
         }
     }
 
-    public static Path getLogPath(
-            org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-            throws FalconException {
-        Path logPath = new Path(ClusterHelper.getLocation(cluster,
+    public static Path getLogPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+
+        return new Path(ClusterHelper.getLocation(cluster,
                 "staging"), EntityUtil.getStagingPath(entity) + "/../logs");
-        return logPath;
     }
 
-    public static String UTCtoURIDate(String utc) throws FalconException {
+    public static String fromUTCtoURIDate(String utc) throws FalconException {
         DateFormat utcFormat = new SimpleDateFormat(
                 "yyyy'-'MM'-'dd'T'HH':'mm'Z'");
         Date utcDate;

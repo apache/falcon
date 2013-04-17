@@ -22,6 +22,9 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import java.util.HashMap;
 
+/**
+ * Falcon JAAS security configuration.
+ */
 public class FalconSecurityConfiguration extends Configuration {
 
     private static final AppConfigurationEntry OS_SPECIFIC_LOGIN =

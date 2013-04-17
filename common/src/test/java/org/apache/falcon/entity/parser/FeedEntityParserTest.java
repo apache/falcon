@@ -18,10 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-/**
- * Test Cases for ProcessEntityParser
- */
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.FeedHelper;
@@ -44,6 +40,9 @@ import java.io.StringWriter;
 
 import static org.testng.AssertJUnit.assertEquals;
 
+/**
+ * Test Cases for Feed entity parser.
+ */
 public class FeedEntityParserTest extends AbstractTestBase {
 
     private final FeedEntityParser parser = (FeedEntityParser) EntityParserFactory
@@ -146,6 +145,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
     }
 
 
+    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testPartitionExpression() throws FalconException {
         Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class
@@ -160,7 +160,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         try {
             parser.validate(feed);
             Assert.fail("Expected ValidationException");
-        } catch (ValidationException e) {
+        } catch (ValidationException ignore) {
         }
 
         //When there are more than 1 src clusters, the partition expression should contain cluster variable
@@ -168,7 +168,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         try {
             parser.validate(feed);
             Assert.fail("Expected ValidationException");
-        } catch (ValidationException e) {
+        } catch (ValidationException ignore) {
         }
 
         //When there are more than 1 target cluster, there should be partition expre
@@ -176,7 +176,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         try {
             parser.validate(feed);
             Assert.fail("Expected ValidationException");
-        } catch (ValidationException e) {
+        } catch (ValidationException ignore) {
         }
 
         //When there are more than 1 target clusters, the partition expression should contain cluster variable
@@ -184,7 +184,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         try {
             parser.validate(feed);
             Assert.fail("Expected ValidationException");
-        } catch (ValidationException e) {
+        } catch (ValidationException ignore) {
         }
 
         //Number of parts in partition expression < number of partitions defined for feed
@@ -192,7 +192,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         try {
             parser.validate(feed);
             Assert.fail("Expected ValidationException");
-        } catch (ValidationException e) {
+        } catch (ValidationException ignore) {
         }
 
         feed.getClusters().getClusters().get(0).setPartition(null);
@@ -201,6 +201,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         feed.setPartitions(null);
         parser.validate(feed);
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Test
     public void testInvalidClusterValidityTime() {
@@ -332,6 +333,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         ConfigurationStore.get().publish(EntityType.FEED, feed1);
     }
 
+    //SUSPEND CHECKSTYLE CHECK
     @Test
     public void testInvalidGroupNames() throws FalconException, JAXBException {
         Feed feed1 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
@@ -361,6 +363,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
         }
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Test
     public void testClusterPartitionExp() throws FalconException {

@@ -27,6 +27,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
+/**
+ * Parser that parses cluster entity definition.
+ */
 public class ClusterEntityParser extends EntityParser<Cluster> {
 
     private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);

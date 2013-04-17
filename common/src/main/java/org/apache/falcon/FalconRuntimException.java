@@ -19,7 +19,7 @@
 package org.apache.falcon;
 
 /**
- * Runtime Execption class for Falcon application
+ * Runtime Exception class for Falcon application.
  */
 public class FalconRuntimException extends RuntimeException {
 
