@@ -19,6 +19,9 @@ package org.apache.falcon.plugin;
 
 import org.apache.falcon.aspect.ResourceMessage;
 
+/**
+ * Generic interface to receiving monitoring and metric messages.
+ */
 public interface MonitoringPlugin {
 
     void monitor(ResourceMessage message);

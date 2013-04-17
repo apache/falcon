@@ -21,6 +21,9 @@ package org.apache.falcon.plugin;
 import org.apache.falcon.aspect.ResourceMessage;
 import org.apache.log4j.Logger;
 
+/**
+ * Plugin for logging metrics using log4j.
+ */
 public class LoggingPlugin implements MonitoringPlugin {
     private static final Logger METRIC = Logger.getLogger("METRIC");
 

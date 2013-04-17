@@ -32,13 +32,11 @@ import java.util.Map;
  * Builds a cached of methods annotated with Monitored and params of methods
  * annotated with Dimension.
  */
-public class ResourcesReflectionUtil {
+public final class ResourcesReflectionUtil {
 
-    private static final Map<String, MethodAnnotation> methods = new HashMap<String, MethodAnnotation>();
+    private static final Map<String, MethodAnnotation> METHODS = new HashMap<String, MethodAnnotation>();
 
-    private ResourcesReflectionUtil() {
-
-    }
+    private ResourcesReflectionUtil() { }
 
     static {
         //TODO load these classes from properties file
@@ -50,18 +48,21 @@ public class ResourcesReflectionUtil {
     }
 
     public static Map<Integer, String> getResourceDimensionsName(String methodName) {
-        return methods.get(methodName) != null ? Collections.unmodifiableMap(methods.get(methodName).params) : null;
+        return METHODS.get(methodName) != null ? Collections.unmodifiableMap(METHODS.get(methodName).params) : null;
     }
 
     public static String getResourceMonitorName(String methodName) {
-        return methods.get(methodName) != null ? methods.get(methodName).monitoredName : null;
+        return METHODS.get(methodName) != null ? METHODS.get(methodName).monitoredName : null;
     }
 
     public static Integer getResourceTimeTakenName(String methodName) {
-        return methods.get(methodName) != null ? methods.get(methodName).timeTakenArgIndex
+        return METHODS.get(methodName) != null ? METHODS.get(methodName).timeTakenArgIndex
                 : null;
     }
 
+    /**
+     * Holder class for method annotation.
+     */
     public static class MethodAnnotation {
         private String monitoredName;
         // argument <index,DimensionValue>
@@ -101,7 +102,7 @@ public class ResourcesReflectionUtil {
                             .getParameterAnnotations();
                     // scan every param
                     annotation.params = getDeclaredParamAnnots(paramAnnots, annotation);
-                    methods.put(
+                    METHODS.put(
                             clazz.getSimpleName() + "."
                                     + declMethod.getName(), annotation);
                 }

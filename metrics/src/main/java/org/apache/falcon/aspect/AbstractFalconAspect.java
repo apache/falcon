@@ -34,8 +34,7 @@ import java.util.Map;
 @Aspect
 public abstract class AbstractFalconAspect {
 
-    private static final Logger LOG = Logger
-            .getLogger(AbstractFalconAspect.class);
+    private static final Logger LOG = Logger.getLogger(AbstractFalconAspect.class);
 
     @Around("@annotation(org.apache.falcon.monitors.Monitored)")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -88,11 +87,9 @@ public abstract class AbstractFalconAspect {
         }
         Integer timeTakenArg = ResourcesReflectionUtil
                 .getResourceTimeTakenName(methodName);
-        return timeTakenArg == null ? new ResourceMessage(action, dimensions,
-                status, executionTime) : new ResourceMessage(action,
-                dimensions, status, Long.valueOf(args[timeTakenArg]
-                .toString()));
+        return timeTakenArg == null ? new ResourceMessage(action, dimensions, status, executionTime)
+            : new ResourceMessage(action, dimensions, status, Long.valueOf(args[timeTakenArg].toString()));
     }
 
-    abstract public void publishMessage(ResourceMessage message);
+    public abstract void publishMessage(ResourceMessage message);
 }

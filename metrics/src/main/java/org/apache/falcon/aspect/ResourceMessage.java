@@ -20,7 +20,9 @@ package org.apache.falcon.aspect;
 
 import java.util.Map;
 
-//Message to be sent to logging system
+/**
+ * Message to be sent to logging system.
+ */
 public class ResourceMessage {
 
     private String action;
@@ -28,6 +30,9 @@ public class ResourceMessage {
     private Status status;
     private long executionTime;
 
+    /**
+     * Convenient enum for resource message status.
+     */
     public enum Status {
         SUCCEEDED, FAILED
     }

@@ -27,8 +27,11 @@ import org.aspectj.lang.annotation.Aspect;
  * and iMon, invoke this method from code.
  */
 @Aspect
-public class GenericAlert {
+public final class GenericAlert {
 
+    private GenericAlert() {}
+
+    //SUSPEND CHECKSTYLE CHECK
     @Monitored(event = "retry-instance-failed")
     public static String alertRetryFailed(
             @Dimension(value = "entity-type") String entityType,
@@ -65,7 +68,8 @@ public class GenericAlert {
             @Dimension(value = "error-message") String errorMessage,
             @Dimension(value = "message") String message,
             @TimeTaken long timeTaken)
-            throws Exception {
+        throws Exception {
+
         return "IGNORE";
     }
 
@@ -80,9 +84,11 @@ public class GenericAlert {
             @Dimension(value = "operation") String operation,
             @Dimension(value = "start-time") String startTime,
             @TimeTaken long timeTaken)
-            throws Exception {
+        throws Exception {
+
         return "IGNORE";
     }
+    //RESUME CHECKSTYLE CHECK
 
     @Monitored(event = "rerun-queue-failed")
     public static String alertRerunConsumerFailed(
