@@ -63,7 +63,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             return null;
         }
 
-        Cluster cluster = configStore.get(EntityType.CLUSTER, feedCluster.getName());
+        Cluster cluster = CONFIG_STORE.get(EntityType.CLUSTER, feedCluster.getName());
         Path bundlePath = new Path(ClusterHelper.getLocation(cluster, "staging"), EntityUtil.getStagingPath(feed));
         Feed feedClone = (Feed) feed.copy();
         EntityUtil.setStartDate(feedClone, clusterName, startDate);
