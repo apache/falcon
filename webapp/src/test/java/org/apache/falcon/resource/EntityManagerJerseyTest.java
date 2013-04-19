@@ -432,9 +432,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
 
     private List<Path> createTestData() throws Exception {
         List<Path> list = new ArrayList<Path>();
-        Configuration conf = new Configuration();
-        conf.set("fs.default.name", "hdfs://localhost:8020");
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem fs = cluster.getFileSystem();
         fs.mkdirs(new Path("/user/guest"));
         fs.setOwner(new Path("/user/guest"), REMOTE_USER, "users");
 
@@ -477,7 +475,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         path = new Path("/examples/input-data/rawLogs/" + formatter.format(date) + "/file");
         list.add(path);
         fs.create(path).close();
-        new FsShell(conf).run(new String[]{"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
+        new FsShell(cluster.getConf()).run(new String[]{"-chown", "-R", "guest:users", "/examples/input-data/rawLogs"});
         return list;
     }
 

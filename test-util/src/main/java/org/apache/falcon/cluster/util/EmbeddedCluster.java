@@ -81,7 +81,8 @@ public class EmbeddedCluster {
             System.setProperty("test.build.data", "webapp/target/" + name + "/data");
         }
         String user = System.getProperty("user.name");
-        cluster.conf.set("hadoop.log.dir", "/tmp");
+        cluster.conf.set("hadoop.tmp.dir", target.getAbsolutePath());
+        cluster.conf.set("hadoop.log.dir", new File(target, "tmp").getAbsolutePath());
         cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
         cluster.conf.set("hadoop.proxyuser.oozie.hosts", "127.0.0.1");
         cluster.conf.set("hadoop.proxyuser.hdfs.groups", "*");

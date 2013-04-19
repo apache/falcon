@@ -691,6 +691,7 @@
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
                         <exclude>**/activemq-data/**</exclude>
+                        <exclude>**/build/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
