@@ -38,42 +38,38 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
+/**
+ * A Channel implementation for HTTP.
+ */
 public class HTTPChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
 
     private static final String REMOTE_USER = "Remote-User";
 
-    private static final HttpServletRequest DEFAULT_NULL_REQUEST =
-            new NullServletRequest();
+    private static final HttpServletRequest DEFAULT_NULL_REQUEST = new NullServletRequest();
 
-    private static final Properties deploymentProperties = DeploymentProperties.get();
+    private static final Properties DEPLOYMENT_PROPERTIES = DeploymentProperties.get();
 
     private Class service;
     private String urlPrefix;
 
     public void init(String colo, String serviceName) throws FalconException {
-        String prefixPath = deploymentProperties.
-                getProperty(serviceName + ".path");
-        String falconEndPoint = RuntimeProperties.get().
-                getProperty("falcon." + colo + ".endpoint");
+        String prefixPath = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".path");
+        String falconEndPoint = RuntimeProperties.get().getProperty("falcon." + colo + ".endpoint");
         urlPrefix = falconEndPoint + "/" + prefixPath;
 
         try {
-            String proxyClassName = deploymentProperties.
-                    getProperty(serviceName + ".proxy");
+            String proxyClassName = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".proxy");
             service = Class.forName(proxyClassName);
             LOG.info("Service: " + serviceName + ", url = " + urlPrefix);
         } catch (Exception e) {
-            throw new FalconException("Unable to initialize channel for "
-                    + serviceName, e);
+            throw new FalconException("Unable to initialize channel for " + serviceName, e);
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T invoke(String methodName, Object... args)
-            throws FalconException {
-
+    public <T> T invoke(String methodName, Object... args) throws FalconException {
         try {
             Method method = getMethod(service, methodName, args);
             String url = urlPrefix + "/" + pathValue(method, args);
@@ -96,8 +92,8 @@ public class HTTPChannel extends AbstractChannel {
             Family status = response.getClientResponseStatus().getFamily();
             if (status == Family.INFORMATIONAL || status == Family.SUCCESSFUL) {
                 return (T) response.getEntity(method.getReturnType());
-            } else if (response.getClientResponseStatus().getStatusCode() ==
-                    Response.Status.BAD_REQUEST.getStatusCode()) {
+            } else if (response.getClientResponseStatus().getStatusCode()
+                    == Response.Status.BAD_REQUEST.getStatusCode()) {
                 LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
                 return (T) response.getEntity(method.getReturnType());
             } else {
@@ -111,14 +107,10 @@ public class HTTPChannel extends AbstractChannel {
     }
 
     private boolean isPost(String httpMethod) {
-        if (httpMethod.equals("POST") || httpMethod.equals("PUT")) {
-            return true;
-        }
-        return false;
+        return httpMethod.equals("POST") || httpMethod.equals("PUT");
     }
 
-    private String pathValue(Method method, Object... args)
-            throws FalconException {
+    private String pathValue(Method method, Object... args) throws FalconException {
 
         Path pathParam = method.getAnnotation(Path.class);
         if (pathParam == null) {
@@ -139,8 +131,8 @@ public class HTTPChannel extends AbstractChannel {
                         queryString.append(getAnnotationValue(paramAnnotation, "value")).
                                 append('=').append(arg).append("&");
                     } else if (annotationClass.equals(PathParam.class.getName())) {
-                        pathValue = pathValue.replace("{" +
-                                getAnnotationValue(paramAnnotation, "value") + "}", arg);
+                        pathValue = pathValue.replace("{"
+                                + getAnnotationValue(paramAnnotation, "value") + "}", arg);
                     }
                 }
             }
@@ -149,15 +141,13 @@ public class HTTPChannel extends AbstractChannel {
     }
 
     private String getAnnotationValue(Annotation paramAnnotation,
-                                      String annotationAttribute)
-            throws FalconException {
-
+                                      String annotationAttribute) throws FalconException {
         try {
             return String.valueOf(paramAnnotation.annotationType().
                     getMethod(annotationAttribute).invoke(paramAnnotation));
         } catch (Exception e) {
-            throw new FalconException("Unable to get attribute value for " +
-                    paramAnnotation + "[" + annotationAttribute + "]");
+            throw new FalconException("Unable to get attribute value for "
+                    + paramAnnotation + "[" + annotationAttribute + "]");
         }
     }
 
@@ -204,5 +194,4 @@ public class HTTPChannel extends AbstractChannel {
         }
         return produces.value()[0];
     }
-
 }

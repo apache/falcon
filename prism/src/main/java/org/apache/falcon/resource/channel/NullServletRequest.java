@@ -31,6 +31,9 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * A null implementation of a ServletRequest.
+ */
 public class NullServletRequest implements HttpServletRequest {
 
     @Override

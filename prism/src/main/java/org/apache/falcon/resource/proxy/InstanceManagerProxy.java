@@ -37,6 +37,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
+/**
+ * A proxy implementation of the entity instance operations.
+ */
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
 

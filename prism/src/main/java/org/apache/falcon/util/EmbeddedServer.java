@@ -24,6 +24,9 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
+/**
+ * This class embeds a Jetty server and a connector.
+ */
 public class EmbeddedServer {
     private Server server = new Server();
     private Connector connector = new SocketConnector();

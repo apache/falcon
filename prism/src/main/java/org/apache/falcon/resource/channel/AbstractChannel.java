@@ -23,13 +23,15 @@ import org.apache.falcon.FalconException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A base class for Channel.
+ */
 public abstract class AbstractChannel implements Channel {
 
-    private final ConcurrentHashMap<MethodKey, Method> methods
-            = new ConcurrentHashMap<MethodKey, Method>();
+    private final ConcurrentHashMap<MethodKey, Method> methods = new ConcurrentHashMap<MethodKey, Method>();
 
     protected Method getMethod(Class service, String methodName, Object... args)
-            throws FalconException {
+        throws FalconException {
         MethodKey methodKey = new MethodKey(methodName, args);
         Method method = methods.get(methodKey);
         if (method == null) {
@@ -41,8 +43,8 @@ public abstract class AbstractChannel implements Channel {
                     return item;
                 }
             }
-            throw new FalconException("Lookup for " + methodKey +
-                    " in service " + service.getName() + " found no match");
+            throw new FalconException("Lookup for " + methodKey
+                    + " in service " + service.getName() + " found no match");
         }
         return method;
     }

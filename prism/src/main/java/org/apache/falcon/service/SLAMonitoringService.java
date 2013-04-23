@@ -35,15 +35,17 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+/**
+ * A service implementation for SLA Monitoring.
+ */
 public class SLAMonitoringService implements FalconService, WorkflowEngineActionListener {
     private static final Logger LOG = Logger.getLogger(SLAMonitoringService.class);
     public static final String SERVICE_NAME = "SLAMonitor";
 
-    private ConcurrentMap<String, Long> monitoredEntities =
-            new ConcurrentHashMap<String, Long>();
+    private ConcurrentMap<String, Long> monitoredEntities = new ConcurrentHashMap<String, Long>();
 
-    private ConcurrentMap<String, ConcurrentMap<Date, Date>> pendingJobs =
-            new ConcurrentHashMap<String, ConcurrentMap<Date, Date>>();
+    private ConcurrentMap<String, ConcurrentMap<Date, Date>> pendingJobs
+        = new ConcurrentHashMap<String, ConcurrentMap<Date, Date>>();
 
     private static final long INITIAL_LATENCY_SECS = 12 * 3600;
 
@@ -118,8 +120,8 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
     private void removeFromPendingList(Entity entity, String cluster, Date nominalTime) {
         ConcurrentMap<Date, Date> pendingInstances = pendingJobs.get(getKey(entity, cluster));
         if (pendingInstances != null) {
-            LOG.debug("Removing from pending jobs: " + getKey(entity, cluster) + " ---> " +
-                    SchemaHelper.formatDateUTC(nominalTime));
+            LOG.debug("Removing from pending jobs: " + getKey(entity, cluster) + " ---> "
+                    + SchemaHelper.formatDateUTC(nominalTime));
             pendingInstances.remove(nominalTime);
         }
     }
@@ -155,8 +157,8 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
                         String cluster = getCluster(key);
                         GenericAlert.alertOnLikelySLAMiss(cluster, entity.getEntityType().name(),
                                 entity.getName(), SchemaHelper.formatDateUTC(entry.getKey()));
-                        LOG.debug("Removing from pending jobs: " + key + " ---> " +
-                                SchemaHelper.formatDateUTC(entry.getKey()));
+                        LOG.debug("Removing from pending jobs: " + key + " ---> "
+                                + SchemaHelper.formatDateUTC(entry.getKey()));
                         pendingInstances.remove(entry.getKey());
                     }
                 }
@@ -191,10 +193,9 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
                     if (latency == null) {
                         break;
                     }
-                    pendingInstances.putIfAbsent(nextStart, new Date(nextStart.getTime() +
-                            latency * 1500));  //1.5 times latency is when it is supposed to have breached
-                    LOG.debug("Adding to pending jobs: " + key + " ---> " +
-                            SchemaHelper.formatDateUTC(nextStart));
+                    // 1.5 times latency is when it is supposed to have breached
+                    pendingInstances.putIfAbsent(nextStart, new Date(nextStart.getTime() + latency * 1500));
+                    LOG.debug("Adding to pending jobs: " + key + " ---> " + SchemaHelper.formatDateUTC(nextStart));
                     Calendar startCal = Calendar.getInstance(timeZone);
                     startCal.setTime(nextStart);
                     startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
@@ -204,17 +205,17 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
         }
     }
 
-    private static final Pattern regex = Pattern.compile("[()\\s/]");
+    private static final Pattern PATTERN = Pattern.compile("[()\\s/]");
 
     private Entity getEntity(String key) throws FalconException {
-        String[] parts = regex.split(key);
+        String[] parts = PATTERN.split(key);
         String name = parts[3];
         String type = parts[1];
         return EntityUtil.getEntity(type, name);
     }
 
     private String getCluster(String key) throws FalconException {
-        String[] parts = regex.split(key);
+        String[] parts = PATTERN.split(key);
         return parts[4];
     }
 

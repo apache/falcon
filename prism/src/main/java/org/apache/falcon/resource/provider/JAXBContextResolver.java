@@ -30,12 +30,19 @@ import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+/**
+ * An implementation of Context Resolver for JAXB.
+ */
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
 public class JAXBContextResolver implements ContextResolver<JAXBContext> {
+
     private static JAXBContext context;
-    private static Class<?>[] types = {InstancesResult.class, APIResult.class, InstancesResult.Instance.class,
-                                       InstancesResult.WorkflowStatus.class};
+    private static Class<?>[] types = {
+        InstancesResult.class,
+        APIResult.class,
+        InstancesResult.Instance.class,
+        InstancesResult.WorkflowStatus.class, };
 
     static {
         try {

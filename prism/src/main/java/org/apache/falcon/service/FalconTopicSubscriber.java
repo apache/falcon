@@ -34,9 +34,11 @@ import javax.jms.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
+/**
+ * Subscribes to the falcon topic for handling retries and alerts.
+ */
 public class FalconTopicSubscriber implements MessageListener, ExceptionListener {
-    private static final Logger LOG = Logger
-            .getLogger(FalconTopicSubscriber.class);
+    private static final Logger LOG = Logger.getLogger(FalconTopicSubscriber.class);
 
     private TopicSubscriber subscriber;
     private String implementation;
@@ -46,10 +48,8 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     private String topicName;
     private Connection connection;
 
-    private AbstractRerunHandler retryHandler = RerunHandlerFactory
-            .getRerunHandler(RerunType.RETRY);
-    private AbstractRerunHandler latedataHandler = RerunHandlerFactory
-            .getRerunHandler(RerunType.LATE);
+    private AbstractRerunHandler retryHandler = RerunHandlerFactory.getRerunHandler(RerunType.RETRY);
+    private AbstractRerunHandler latedataHandler = RerunHandlerFactory.getRerunHandler(RerunType.LATE);
 
     public FalconTopicSubscriber(String implementation, String userName,
                                  String password, String url, String topicName) {
@@ -140,7 +140,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     }
 
     private SLAMonitoringService getSLAMonitoringService() {
-        return (SLAMonitoringService) Services.get().getService(SLAMonitoringService.SERVICE_NAME);
+        return Services.get().getService(SLAMonitoringService.SERVICE_NAME);
     }
 
     private void debug(MapMessage mapMessage) throws JMSException {
@@ -159,9 +159,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
 
     @Override
     public void onException(JMSException ignore) {
-        LOG.info(
-                "Error in onException for subscriber of topic: "
-                        + this.toString(), ignore);
+        LOG.info("Error in onException for subscriber of topic: " + this.toString(), ignore);
     }
 
     public void closeSubscriber() throws FalconException {
@@ -177,14 +175,9 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     }
 
     private static Connection createAndGetConnection(String implementation,
-                                                     String userName, String password, String url) throws JMSException,
-                                                                                                          ClassNotFoundException,
-                                                                                                          IllegalArgumentException,
-                                                                                                          SecurityException,
-                                                                                                          InstantiationException,
-                                                                                                          IllegalAccessException,
-                                                                                                          InvocationTargetException,
-                                                                                                          NoSuchMethodException {
+                                                     String userName, String password, String url)
+        throws JMSException, ClassNotFoundException, InstantiationException,
+            IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
         @SuppressWarnings("unchecked")
         Class<ConnectionFactory> clazz = (Class<ConnectionFactory>) FalconTopicSubscriber.class
@@ -201,5 +194,4 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     public String toString() {
         return topicName;
     }
-
 }

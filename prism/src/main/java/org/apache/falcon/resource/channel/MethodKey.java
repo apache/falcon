@@ -20,6 +20,9 @@ package org.apache.falcon.resource.channel;
 
 import java.util.Arrays;
 
+/**
+ * This class represents a tuple of method name and class objects.
+ */
 public class MethodKey {
 
     private final String name;
@@ -45,24 +48,25 @@ public class MethodKey {
         if (this == methodRHS) {
             return true;
         }
-        if (methodRHS == null ||
-                getClass() != methodRHS.getClass()) {
+
+        if (methodRHS == null || getClass() != methodRHS.getClass()) {
             return false;
         }
 
         MethodKey methodKey = (MethodKey) methodRHS;
 
-        if (name != null ? !name.equals(methodKey.name) :
-                methodKey.name != null) {
+        if (name != null ? !name.equals(methodKey.name) : methodKey.name != null) {
             return false;
         }
+
         boolean matching = true;
         for (int index = 0; index < argClasses.length; index++) {
-            if (argClasses[index] != null && methodKey.argClasses[index] != null &&
-                    !methodKey.argClasses[index].isAssignableFrom(argClasses[index])) {
+            if (argClasses[index] != null && methodKey.argClasses[index] != null
+                    && !methodKey.argClasses[index].isAssignableFrom(argClasses[index])) {
                 matching = false;
             }
         }
+
         return matching;
     }
 
@@ -75,9 +79,7 @@ public class MethodKey {
 
     @Override
     public String toString() {
-        return "MethodKey{" +
-                "name='" + name + '\'' +
-                ", argClasses=" + (argClasses == null ? null : Arrays.asList(argClasses)) +
-                '}';
+        return "MethodKey{name='" + name + '\'' + ", argClasses="
+                + (argClasses == null ? null : Arrays.asList(argClasses)) + '}';
     }
 }

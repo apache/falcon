@@ -51,6 +51,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * A base class for managing Entity operations.
+ */
 public abstract class AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = Logger.getLogger("AUDIT");
@@ -67,7 +70,7 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected void checkColo(String colo) throws FalconWebException {
+    protected void checkColo(String colo) {
         if (!DeploymentUtil.getCurrentColo().equals(colo)) {
             throw FalconWebException.newException(
                     "Current colo (" + DeploymentUtil.getCurrentColo() + ") is not " + colo,
@@ -93,7 +96,7 @@ public abstract class AbstractEntityManager {
         return colos;
     }
 
-    protected Set<String> getApplicableColos(String type, String name) throws FalconWebException {
+    protected Set<String> getApplicableColos(String type, String name) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
@@ -109,7 +112,7 @@ public abstract class AbstractEntityManager {
         }
     }
 
-    protected Set<String> getApplicableColos(String type, Entity entity) throws FalconWebException {
+    protected Set<String> getApplicableColos(String type, Entity entity) {
         try {
             if (DeploymentUtil.isEmbeddedMode()) {
                 return DeploymentUtil.getDefaultColos();
@@ -295,7 +298,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected synchronized Entity submitInternal(HttpServletRequest request, String type)
-            throws IOException, FalconException {
+        throws IOException, FalconException {
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
@@ -318,7 +321,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType)
-            throws IOException, FalconException {
+        throws IOException, FalconException {
 
         EntityParser<?> entityParser = EntityParserFactory.getParser(entityType);
         InputStream xmlStream = request.getInputStream();
@@ -334,6 +337,7 @@ public abstract class AbstractEntityManager {
                     String xmlData = getAsString(xmlStream);
                     LOG.debug("XML DUMP for (" + entityType + "): " + xmlData, e);
                 } catch (IOException ignore) {
+                    // ignore
                 }
             }
             throw e;
@@ -449,7 +453,7 @@ public abstract class AbstractEntityManager {
     }
 
     /**
-     * Returns the entity definition as an XML based on name
+     * Returns the entity definition as an XML based on name.
      *
      * @param type
      * @param entityName
@@ -473,5 +477,4 @@ public abstract class AbstractEntityManager {
     protected AbstractWorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;
     }
-
 }

@@ -29,6 +29,9 @@ import org.testng.annotations.Test;
 
 import javax.jms.*;
 
+/**
+ * Test for FalconTopicSubscriber.
+ */
 public class FalconTopicSubscriberTest {
 
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
@@ -73,7 +76,6 @@ public class FalconTopicSubscriberTest {
         message.getKeyValueMap().put(ARG.status, "FAILED");
         TextMessage textMessage = session.createTextMessage(message.toString());
         producer.send(textMessage);
-
     }
 
     private EntityInstanceMessage getMockFalconMessage(int i) {
@@ -104,12 +106,10 @@ public class FalconTopicSubscriberTest {
         subscriber1.startSubscriber();
         sendMessages();
         subscriber1.closeSubscriber();
-
     }
 
     @AfterClass
     public void tearDown() throws Exception {
         broker.stop();
     }
-
 }

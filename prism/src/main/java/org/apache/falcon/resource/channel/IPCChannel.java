@@ -27,6 +27,9 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
 
+/**
+ * Inter-process implementation of a Channel.
+ */
 public class IPCChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(IPCChannel.class);
     private AbstractEntityManager service;
@@ -37,11 +40,10 @@ public class IPCChannel extends AbstractChannel {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T invoke(String methodName, Object... args)
-            throws FalconException {
-        LOG.debug("Invoking method " + methodName + " on service " +
-                service.getClass().getName());
+    public <T> T invoke(String methodName, Object... args) throws FalconException {
+        LOG.debug("Invoking method " + methodName + " on service " + service.getClass().getName());
         Method method = getMethod(service.getClass(), methodName, args);
+
         try {
             return (T) method.invoke(service, args);
         } catch (Exception e) {
@@ -57,8 +59,8 @@ public class IPCChannel extends AbstractChannel {
                     throw (FalconException) cause;
                 }
             }
-            throw new FalconException("Unable to invoke on the channel " + methodName +
-                    " on service : " + service.getClass().getName() + cause);
+            throw new FalconException("Unable to invoke on the channel " + methodName
+                    + " on service : " + service.getClass().getName() + cause);
         }
     }
 }

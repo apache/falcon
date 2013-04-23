@@ -36,6 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Jersey Resource for admin operations.
+ */
 @Path("admin")
 public class AdminResource {
 
@@ -68,8 +71,8 @@ public class AdminResource {
     @Produces(MediaType.TEXT_PLAIN)
     public String getVersion() {
         if (version == null) {
-            version = "{Version:\"" + BuildProperties.get().getProperty("build.version") +
-                    "\",Mode:\"" + DeploymentProperties.get().getProperty("deploy.mode") + "\"}";
+            version = "{Version:\"" + BuildProperties.get().getProperty("build.version")
+                    + "\",Mode:\"" + DeploymentProperties.get().getProperty("deploy.mode") + "\"}";
         }
         return version;
     }
@@ -105,16 +108,20 @@ public class AdminResource {
         return propertyList;
     }
 
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
     private static class Property {
         public String key;
         public String value;
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
     private static class PropertyList {
         public List<Property> properties;
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 }

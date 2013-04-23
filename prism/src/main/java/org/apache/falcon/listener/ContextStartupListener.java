@@ -31,9 +31,12 @@ import javax.servlet.ServletContextListener;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Listener for bootstrapping Falcon Services and configuration properties.
+ */
 public class ContextStartupListener implements ServletContextListener {
 
-    private static Logger LOG = Logger.getLogger(ContextStartupListener.class);
+    private static final Logger LOG = Logger.getLogger(ContextStartupListener.class);
 
     private final ServiceInitializer startupServices = new ServiceInitializer();
 

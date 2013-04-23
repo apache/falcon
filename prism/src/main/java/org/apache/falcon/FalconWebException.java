@@ -27,6 +27,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+/**
+ * Exception for REST APIs.
+ */
 public class FalconWebException extends WebApplicationException {
 
     private static final Logger LOG = Logger.getLogger(FalconWebException.class);
@@ -74,8 +77,7 @@ public class FalconWebException extends WebApplicationException {
     private static String getAddnInfo(Throwable e) {
         String addnInfo = "";
         Throwable cause = e.getCause();
-        if (cause != null && cause.getMessage() != null &&
-                !getMessage(e).contains(cause.getMessage())) {
+        if (cause != null && cause.getMessage() != null && !getMessage(e).contains(cause.getMessage())) {
             addnInfo = cause.getMessage();
         }
         return addnInfo;
@@ -84,5 +86,4 @@ public class FalconWebException extends WebApplicationException {
     public FalconWebException(Response response) {
         super(response);
     }
-
 }

@@ -30,6 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class implements the chain of responsibility for configured implementations
+ * of {@link MonitoringPlugin}. {@link LoggingPlugin} is the default.
+ */
 @Aspect
 public class ChainableMonitoringPlugin extends AbstractFalconAspect implements MonitoringPlugin {
     private static final Logger LOG = Logger.getLogger(ChainableMonitoringPlugin.class);

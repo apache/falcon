@@ -20,25 +20,24 @@ package org.apache.falcon.aspect;
 
 import junit.framework.Assert;
 import org.apache.falcon.FalconWebException;
-import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractEntityManager;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Test class for LoggingAspect.
+ */
 public class LoggingAspectTest {
 
-
-    private AbstractEntityManager em = new AbstractEntityManager() {
-    };
+    private AbstractEntityManager em = new AbstractEntityManager() {};
 
     private volatile Exception threadException;
 
     @Test(expectedExceptions = FalconWebException.class)
     public void testBeanLoading() {
-
-        APIResult result = em.getStatus("type", "entity", "colo");
+        em.getStatus("type", "entity", "colo");
     }
 
     @Test
@@ -79,5 +78,4 @@ public class LoggingAspectTest {
             throw threadException;
         }
     }
-
 }

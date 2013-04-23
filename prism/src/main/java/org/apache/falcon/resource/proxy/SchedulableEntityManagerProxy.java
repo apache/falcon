@@ -45,6 +45,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * A proxy implementation of the schedulable entity operations.
+ */
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
     private static final String PRISM_TAG = "prism";
@@ -252,7 +255,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") final String type,
                                @Dimension("entityName") @PathParam("entity") final String entity,
-                               @Dimension("colo") @QueryParam("colo") final String coloExpr) throws FalconWebException {
+                               @Dimension("colo") @QueryParam("colo") final String coloExpr) {
         return new EntityProxy(type, entity) {
             @Override
             protected Set<String> getColosToApply() {

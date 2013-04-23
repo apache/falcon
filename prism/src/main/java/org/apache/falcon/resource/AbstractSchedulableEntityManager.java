@@ -33,15 +33,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 /**
- * REST resource of allowed actions on Schedulable Entities Only Process and
- * Feed can have schedulable actions
+ * REST resource of allowed actions on Schedulable Entities, Only Process and
+ * Feed can have schedulable actions.
  */
 public abstract class AbstractSchedulableEntityManager extends AbstractEntityManager {
 
     private static final Logger LOG = Logger.getLogger(AbstractSchedulableEntityManager.class);
 
     /**
-     * Schedules an submitted entity immediately
+     * Schedules an submitted entity immediately.
      *
      * @param type
      * @param entity
@@ -69,7 +69,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     }
 
     /**
-     * Submits a new entity and schedules it immediately
+     * Submits a new entity and schedules it immediately.
      *
      * @param type
      * @return
@@ -92,7 +92,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     }
 
     /**
-     * Suspends a running entity
+     * Suspends a running entity.
      *
      * @param type
      * @param entity
@@ -120,7 +120,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     }
 
     /**
-     * Resumes a suspended entity
+     * Resumes a suspended entity.
      *
      * @param type
      * @param entity

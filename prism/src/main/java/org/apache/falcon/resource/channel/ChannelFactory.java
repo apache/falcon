@@ -24,21 +24,28 @@ import org.apache.falcon.util.DeploymentProperties;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChannelFactory {
+/**
+ * A factory implementation for doling out {@link Channel} objects.
+ */
+public final class ChannelFactory {
 
     private static Map<String, Channel> channels = new HashMap<String, Channel>();
 
     private static final String EMBEDDED = "embedded";
     private static final String MODE = "deploy.mode";
 
-    public synchronized static Channel get(String serviceName, String colo)
-            throws FalconException {
-        Channel channel;
-        if ((channel = channels.get(colo + "/" + serviceName)) == null) {
+    private ChannelFactory() {
+    }
+
+    public static synchronized Channel get(String serviceName, String colo)
+        throws FalconException {
+        Channel channel = channels.get(colo + "/" + serviceName);
+        if (channel == null) {
             channel = getChannel(DeploymentProperties.get().getProperty(MODE));
             channel.init(colo, serviceName);
             channels.put(colo + "/" + serviceName, channel);
         }
+
         return channel;
     }
 
@@ -49,6 +56,7 @@ public class ChannelFactory {
         } else {
             channel = new HTTPChannel();
         }
+
         return channel;
     }
 }

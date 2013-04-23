@@ -20,6 +20,9 @@ package org.apache.falcon.resource.channel;
 
 import org.apache.falcon.FalconException;
 
+/**
+ * Interface for a Channel.
+ */
 public interface Channel {
 
     void init(String colo, String serviceName) throws FalconException;

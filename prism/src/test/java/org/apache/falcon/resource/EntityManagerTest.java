@@ -60,8 +60,7 @@ public class EntityManagerTest extends AbstractEntityManager {
     }
 
     /**
-     * Run this testcase for different types of VALID entity xmls like process,
-     * feed, dataEndPoint
+     * Run this testcase for different types of VALID entity xmls like process, feed, dataEndPoint.
      *
      * @param stream
      * @throws IOException
@@ -84,6 +83,7 @@ public class EntityManagerTest extends AbstractEntityManager {
                     EntityType.PROCESS.name());
             Assert.fail("Invalid entity type was accepted by the system");
         } catch (FalconWebException ignore) {
+            // ignore
         }
     }
 
@@ -98,19 +98,18 @@ public class EntityManagerTest extends AbstractEntityManager {
                     "InvalidEntityType");
             Assert.fail("Invalid entity type was accepted by the system");
         } catch (FalconWebException ignore) {
+            // ignore
         }
     }
 
     /**
-     * Converts a InputStream into ServletInputStream
+     * Converts a InputStream into ServletInputStream.
      *
      * @param resourceName
      * @return ServletInputStream
      */
     private ServletInputStream getServletInputStream(String resourceName) {
-        final InputStream stream = this.getClass().getResourceAsStream(
-                resourceName);
-
+        final InputStream stream = this.getClass().getResourceAsStream(resourceName);
         return new ServletInputStream() {
 
             @Override
@@ -119,5 +118,4 @@ public class EntityManagerTest extends AbstractEntityManager {
             }
         };
     }
-
 }

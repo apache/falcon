@@ -40,6 +40,9 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * A base class for managing Entity's Instance operations.
+ */
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = Logger.getLogger(AbstractInstanceManager.class);
 
@@ -232,8 +235,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         validateDateRange(entityObject, startStr, endStr);
     }
 
-    private void validateDateRange(Entity entity, String start, String end)
-            throws FalconException {
+    private void validateDateRange(Entity entity, String start, String end) throws FalconException {
         Set<String> clusters = EntityUtil.getClustersDefined(entity);
         Pair<Date, String> clusterMinStartDate = null;
         Pair<Date, String> clusterMaxEndDate = null;
@@ -253,7 +255,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private void validateDateRangeFor(Entity entity, Pair<Date, String> clusterMinStart,
                                       Pair<Date, String> clusterMaxEnd, String start, String end)
-            throws FalconException {
+        throws FalconException {
 
         Date instStart = EntityUtil.parseDateUTC(start);
         if (instStart.before(clusterMinStart.first)) {

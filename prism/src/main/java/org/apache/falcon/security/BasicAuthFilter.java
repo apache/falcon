@@ -32,6 +32,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * This enforces authentication as part of the filter before processing the request.
+ */
 public class BasicAuthFilter implements Filter {
 
     private static final Logger LOG = Logger.getLogger(BasicAuthFilter.class);
@@ -41,27 +44,20 @@ public class BasicAuthFilter implements Filter {
     private static final Set<String> BLACK_LISTED_USER = new HashSet<String>(
             Arrays.asList(new String[]{"hdfs", "mapred", "oozie", "falcon"}));
 
-    private boolean secure;
-
-    private String colo;
+    private boolean isSecure;
 
     @Override
-    public void init(FilterConfig filterConfig)
-            throws ServletException {
-        String secure = StartupProperties.get().getProperty("security.enabled",
-                "true");
-        colo = StartupProperties.get().getProperty("current.colo", "default");
-        this.secure = Boolean.parseBoolean(secure);
+    public void init(FilterConfig filterConfig) throws ServletException {
+        String secure = StartupProperties.get().getProperty("security.enabled", "true");
+        this.isSecure = Boolean.parseBoolean(secure);
     }
 
     @Override
     public void doFilter(ServletRequest request,
                          ServletResponse response,
-                         FilterChain chain)
-            throws IOException, ServletException {
+                         FilterChain chain) throws IOException, ServletException {
 
-        if (!(request instanceof HttpServletRequest) ||
-                !(response instanceof HttpServletResponse)) {
+        if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
             throw new IllegalStateException("Invalid request/response object");
         }
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -70,7 +66,7 @@ public class BasicAuthFilter implements Filter {
         String user;
         String requestId = UUID.randomUUID().toString();
 
-        if (!secure) {
+        if (!isSecure) {
             user = GUEST;
         } else {
             user = httpRequest.getHeader("Remote-User");
@@ -87,9 +83,8 @@ public class BasicAuthFilter implements Filter {
             try {
                 NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
                 NDC.push(requestId);
-                LOG.info("Request from user: " + user + ", path=" +
-                        httpRequest.getPathInfo() + ", query=" +
-                        httpRequest.getQueryString());
+                LOG.info("Request from user: " + user + ", path=" + httpRequest.getPathInfo()
+                        + ", query=" + httpRequest.getQueryString());
                 chain.doFilter(request, response);
             } finally {
                 NDC.pop();

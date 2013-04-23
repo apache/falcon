@@ -33,6 +33,9 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * A buffered implementation of HttpServletRequest.
+ */
 public class BufferedRequest implements HttpServletRequest {
 
     private final HttpServletRequest request;
@@ -47,7 +50,7 @@ public class BufferedRequest implements HttpServletRequest {
                 }
             };
 
-    public BufferedRequest(HttpServletRequest request) throws FalconWebException {
+    public BufferedRequest(HttpServletRequest request) {
         try {
             this.request = request;
             ByteArrayOutputStream copyBuffer = streams.get();

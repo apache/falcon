@@ -20,11 +20,14 @@ package org.apache.falcon.service;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.util.StartupProperties;
 
+/**
+ * An Ivory Service that initializes and starts a topic subscriber.
+ */
 public class ProcessSubscriberService implements FalconService {
 
     private FalconTopicSubscriber subscriber;
 
-    private static enum JMSprops {
+    private static enum JMSProps {
         FalconBrokerImplClass("broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory"),
         FalconBrokerUrl("broker.url", "tcp://localhost:61616?daemon=true"),
         FalconEntityTopic("entity.topic", "FALCON.ENTITY.TOPIC");
@@ -32,11 +35,10 @@ public class ProcessSubscriberService implements FalconService {
         private String propName;
         private String defaultPropValue;
 
-        private JMSprops(String propName, String defaultPropValue) {
+        private JMSProps(String propName, String defaultPropValue) {
             this.propName = propName;
             this.defaultPropValue = defaultPropValue;
         }
-
     }
 
     @Override
@@ -46,18 +48,16 @@ public class ProcessSubscriberService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        String falconBrokerImplClass = getPropertyValue(JMSprops.FalconBrokerImplClass);
-        String falconBrokerUrl = getPropertyValue(JMSprops.FalconBrokerUrl);
-        String falconEntityTopic = getPropertyValue(JMSprops.FalconEntityTopic);
+        String falconBrokerImplClass = getPropertyValue(JMSProps.FalconBrokerImplClass);
+        String falconBrokerUrl = getPropertyValue(JMSProps.FalconBrokerUrl);
+        String falconEntityTopic = getPropertyValue(JMSProps.FalconEntityTopic);
 
-        subscriber = new FalconTopicSubscriber(falconBrokerImplClass, "", "",
-                falconBrokerUrl, falconEntityTopic);
+        subscriber = new FalconTopicSubscriber(falconBrokerImplClass, "", "", falconBrokerUrl, falconEntityTopic);
         subscriber.startSubscriber();
     }
 
-    private String getPropertyValue(JMSprops prop) {
-        return StartupProperties.get().getProperty(prop.propName,
-                prop.defaultPropValue);
+    private String getPropertyValue(JMSProps prop) {
+        return StartupProperties.get().getProperty(prop.propName, prop.defaultPropValue);
     }
 
     @Override

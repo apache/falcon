@@ -20,10 +20,30 @@ package org.apache.falcon;
 
 import org.apache.falcon.util.EmbeddedServer;
 
-public class Prism {
+/**
+ * Driver for running Prism as a standalone server.
+ */
+public final class Prism {
 
-    public static void main(String[] args) throws Exception {
-        EmbeddedServer server = new EmbeddedServer(16000,
+    /**
+     * Default port number for embedded server.
+     */
+    private static final int PORT = 16000;
+
+    /**
+     * Prevent users from constructing this.
+     */
+    private Prism() {
+    }
+
+    /**
+     * Main method.
+     *
+     * @param args argument array
+     * @throws Exception exception
+     */
+    public static void main(final String[] args) throws Exception {
+        EmbeddedServer server = new EmbeddedServer(PORT,
                 "prism/target/falcon-prism-0.2-SNAPSHOT");
         server.start();
     }
