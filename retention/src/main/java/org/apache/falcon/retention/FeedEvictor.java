@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,27 +54,25 @@ import java.util.regex.Pattern;
  */
 public class FeedEvictor extends Configured implements Tool {
 
-    private static Logger LOG = Logger.getLogger(FeedEvictor.class);
+    private static final Logger LOG = Logger.getLogger(FeedEvictor.class);
 
-    private static final ExpressionEvaluator EVALUATOR = new
-            ExpressionEvaluatorImpl();
-    private static final ExpressionHelper resolver = ExpressionHelper.get();
+    private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
+    private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
 
-    static PrintStream stream = System.out;
+    public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
+//    static PrintStream stream = System.out;
 
-    private static final String format = "yyyyMMddHHmm";
+    private static final String FORMAT = "yyyyMMddHHmm";
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found ? " +
-                confPath.getFileSystem(conf).exists(confPath));
+        LOG.info(confPath + " found ? " + confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
         int ret = ToolRunner.run(conf, new FeedEvictor(), args);
         if (ret != 0) {
-            throw new Exception("Unable to perform eviction action args: " +
-                    Arrays.toString(args));
+            throw new Exception("Unable to perform eviction action args: " + Arrays.toString(args));
         }
     }
 
@@ -98,12 +97,12 @@ public class FeedEvictor extends Configured implements Tool {
             evictor(path, retentionType, retentionLimit, timeZone, frequency, logFile);
         }
 
-        logInstancePaths(new Path(logFile), instancePaths.toString());
+        logInstancePaths(new Path(logFile));
         int len = buffer.length();
         if (len > 0) {
-            stream.println("instances=" + buffer.substring(0, len - 1));
+            OUT.get().println("instances=" + buffer.substring(0, len - 1));
         } else {
-            stream.println("instances=NULL");
+            OUT.get().println("instances=NULL");
         }
         return 0;
     }
@@ -124,7 +123,7 @@ public class FeedEvictor extends Configured implements Tool {
                 + retentionType + ", Limit: " + retentionLimit + ", timezone: "
                 + timeZone + ", frequency: " + frequency);
 
-        DateFormat dateFormat = new SimpleDateFormat(format);
+        DateFormat dateFormat = new SimpleDateFormat(FORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
         for (Path path : toBeDeleted) {
             if (deleteInstance(path)) {
@@ -137,27 +136,26 @@ public class FeedEvictor extends Configured implements Tool {
 
     }
 
-    private void logInstancePaths(Path path, String instancePaths) throws IOException {
+    private void logInstancePaths(Path path) throws IOException {
         LOG.info("Writing deleted instances to path " + path);
         OutputStream out = fs.create(path);
-        out.write(instancePaths.getBytes());
+        out.write(instancePaths.toString().getBytes());
         out.close();
         if (LOG.isDebugEnabled()) {
-            debug(path, fs);
+            debug(path);
         }
     }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
         Long duration = (Long) EVALUATOR.evaluate("${" + period + "}",
-                Long.class, resolver, resolver);
+                Long.class, RESOLVER, RESOLVER);
         Date end = new Date();
         Date start = new Date(end.getTime() - duration);
         return Pair.of(start, end);
     }
 
     private List<Path> discoverInstanceToDelete(String inPath, String timeZone,
-                                                String dateMask, Date start)
-            throws IOException {
+                                                String dateMask, Date start) throws IOException {
 
         FileStatus[] files = findFilesForFeed(inPath);
         if (files == null || files.length == 0) {
@@ -187,8 +185,7 @@ public class FeedEvictor extends Configured implements Tool {
                 .replaceAll(VARS.MINUTE.regex(), "mm");
     }
 
-    private FileStatus[] findFilesForFeed(String feedBasePath)
-            throws IOException {
+    private FileStatus[] findFilesForFeed(String feedBasePath) throws IOException {
 
         Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         while (matcher.find()) {
@@ -234,7 +231,7 @@ public class FeedEvictor extends Configured implements Tool {
         }
 
         try {
-            DateFormat dateFormat = new SimpleDateFormat(format.
+            DateFormat dateFormat = new SimpleDateFormat(FORMAT.
                     substring(0, date.length()));
             dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
             return dateFormat.parse(date);
@@ -268,7 +265,7 @@ public class FeedEvictor extends Configured implements Tool {
         return fs.delete(path, true);
     }
 
-    private void debug(Path outPath, FileSystem fs) throws IOException {
+    private void debug(Path outPath) throws IOException {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream instance = fs.open(outPath);
         IOUtils.copyBytes(instance, writer, 4096, true);
@@ -276,8 +273,7 @@ public class FeedEvictor extends Configured implements Tool {
         LOG.debug("Written " + writer);
     }
 
-    private CommandLine getCommand(String[] args)
-            throws org.apache.commons.cli.ParseException {
+    private CommandLine getCommand(String[] args) throws org.apache.commons.cli.ParseException {
         Options options = new Options();
         Option opt;
         opt = new Option("feedBasePath", true,
@@ -304,5 +300,4 @@ public class FeedEvictor extends Configured implements Tool {
         options.addOption(opt);
         return new GnuParser().parse(options, args);
     }
-
 }

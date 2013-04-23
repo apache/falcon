@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,6 +35,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Test for FeedEvictor.
+ */
 public class FeedEvictorTest {
 
     private EmbeddedCluster cluster;
@@ -44,7 +47,7 @@ public class FeedEvictorTest {
     @BeforeClass
     public void start() throws Exception {
         cluster = EmbeddedCluster.newCluster("test", false);
-        FeedEvictor.stream = stream;
+        FeedEvictor.OUT.set(stream);
     }
 
     @AfterClass
@@ -58,12 +61,14 @@ public class FeedEvictorTest {
             FeedEvictor.main(null);
             Assert.fail("Expected an exception to be thrown");
         } catch (Exception ignore) {
+            // ignore
         }
 
         try {
             FeedEvictor.main(new String[]{"1", "2"});
             Assert.fail("Expected an exception to be thrown");
         } catch (Exception ignore) {
+            // ignore
         }
     }
 
@@ -71,7 +76,8 @@ public class FeedEvictorTest {
     public void testEviction1() throws Exception {
         try {
             FeedEvictor.main(new String[]{"1", "2", "3", "4", "5", "6", "7"});
-        } catch (Exception e) {
+        } catch (Exception ignore) {
+            // ignore
         }
     }
 
@@ -89,17 +95,14 @@ public class FeedEvictorTest {
             String logFile = "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
 
             FeedEvictor.main(new String[]{
-                    "-feedBasePath", cluster.getConf().get("fs.default.name")
-                    + dataPath,
-                    "-retentionType", "instance", "-retentionLimit", "days(10)", "-timeZone", "UTC", "-frequency",
-                    "daily",
-                    "-logFile", logFile});
+                "-feedBasePath", cluster.getConf().get("fs.default.name") + dataPath,
+                "-retentionType", "instance", "-retentionLimit", "days(10)", "-timeZone", "UTC", "-frequency",
+                "daily", "-logFile", logFile, });
 
             assertFailures(fs, pair);
             compare(map.get("feed1"), stream.getBuffer());
 
             Assert.assertEquals(readLogFile(new Path(logFile)), getExpectedInstancePaths(dataPath));
-
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
@@ -170,15 +173,12 @@ public class FeedEvictorTest {
 
             Pair<List<String>, List<String>> pair;
             pair = createTestData("feed2", "yyyyMMddHH/'more'/yyyy", 5, TimeUnit.HOURS, "/data");
-            String dataPath = "/data/YYYY/feed2/mmHH/dd/MM/" +
-                    "?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
+            String dataPath = "/data/YYYY/feed2/mmHH/dd/MM/?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
             String logFile = "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[]{
-                    "-feedBasePath", cluster.getConf().get("fs.default.name")
-                    + dataPath,
-                    "-retentionType", "instance", "-retentionLimit", "hours(5)", "-timeZone", "UTC", "-frequency",
-                    "hourly",
-                    "-logFile", logFile});
+                "-feedBasePath", cluster.getConf().get("fs.default.name") + dataPath,
+                "-retentionType", "instance", "-retentionLimit", "hours(5)", "-timeZone", "UTC", "-frequency",
+                "hourly", "-logFile", logFile, });
             assertFailures(fs, pair);
 
             compare(map.get("feed2"), stream.getBuffer());
@@ -201,25 +201,19 @@ public class FeedEvictorTest {
 
             Pair<List<String>, List<String>> pair;
             pair = createTestData("/data");
-            FeedEvictor.main(new String[]{
-                    "-feedBasePath",
-                    cluster.getConf().get("fs.default.name")
-                            + "/data/YYYY/feed3/dd/MM/"
-                            + "?{MONTH}/more/?{HOUR}", "-retentionType",
-                    "instance", "-retentionLimit", "months(5)", "-timeZone",
-                    "UTC", "-frequency", "hourly", "-logFile",
-                    "/falcon/staging/feed/2012-01-01-04-00"});
+            FeedEvictor.main(new String[] {
+                "-feedBasePath",
+                cluster.getConf().get("fs.default.name") + "/data/YYYY/feed3/dd/MM/?{MONTH}/more/?{HOUR}",
+                "-retentionType", "instance", "-retentionLimit", "months(5)", "-timeZone",
+                "UTC", "-frequency", "hourly", "-logFile", "/falcon/staging/feed/2012-01-01-04-00", });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             stream.clear();
-            String dataPath = "/data/YYYY/feed4/dd/MM/" +
-                    "02/more/hello";
+            String dataPath = "/data/YYYY/feed4/dd/MM/02/more/hello";
             String logFile = "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
-            FeedEvictor.main(new String[]{"-feedBasePath",
-                                          cluster.getConf().get("fs.default.name") + dataPath,
-                                          "-retentionType", "instance", "-retentionLimit",
-                                          "hours(5)", "-timeZone", "UTC", "-frequency", "hourly",
-                                          "-logFile", logFile});
+            FeedEvictor.main(new String[] {"-feedBasePath",
+                cluster.getConf().get("fs.default.name") + dataPath, "-retentionType", "instance",
+                "-retentionLimit", "hours(5)", "-timeZone", "UTC", "-frequency", "hourly", "-logFile", logFile, });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             Assert.assertEquals(readLogFile(new Path(logFile)), getExpectedInstancePaths(dataPath));
@@ -243,26 +237,23 @@ public class FeedEvictorTest {
             statsPair = createTestData("/stats");
             metaPair = createTestData("/meta");
             tmpPair = createTestData("/tmp");
-            FeedEvictor.main(new String[]{
-                    "-feedBasePath",
-                    getFeedBasePath(cluster, "/data") + "#"
-                            + getFeedBasePath(cluster, "/stats") + "#"
-                            + getFeedBasePath(cluster, "/meta") + "#"
-                            + getFeedBasePath(cluster, "/tmp"),
-                    "-retentionType", "instance", "-retentionLimit",
-                    "months(5)", "-timeZone", "UTC", "-frequency", "hourly",
-                    "-logFile", "/falcon/staging/feed/2012-01-01-04-00"});
+            FeedEvictor.main(new String[] {"-feedBasePath",
+                getFeedBasePath("/data") + "#"
+                    + getFeedBasePath("/stats") + "#"
+                    + getFeedBasePath("/meta") + "#"
+                    + getFeedBasePath("/tmp"),
+                "-retentionType", "instance", "-retentionLimit", "months(5)", "-timeZone",
+                "UTC", "-frequency", "hourly", "-logFile", "/falcon/staging/feed/2012-01-01-04-00", });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             stream.clear();
-            String dataPath = "/data/YYYY/feed4/dd/MM/" +
-                    "02/more/hello";
+            String dataPath = "/data/YYYY/feed4/dd/MM/02/more/hello";
             String logFile = "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[]{"-feedBasePath",
                                           cluster.getConf().get("fs.default.name") + dataPath,
                                           "-retentionType", "instance", "-retentionLimit",
                                           "hours(5)", "-timeZone", "UTC", "-frequency", "hourly",
-                                          "-logFile", logFile});
+                                          "-logFile", logFile, });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             Assert.assertEquals(readLogFile(new Path(logFile)), getExpectedInstancePaths(dataPath));
@@ -295,12 +286,8 @@ public class FeedEvictorTest {
                     + "/meta/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
             String logFile = "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
 
-            FeedEvictor.main(new String[]{
-                    "-feedBasePath",
-                    dataPath,
-                    "-retentionType", "instance", "-retentionLimit", "days(10)", "-timeZone", "UTC", "-frequency",
-                    "daily",
-                    "-logFile", logFile});
+            FeedEvictor.main(new String[] {"-feedBasePath", dataPath, "-retentionType", "instance",
+                "-retentionLimit", "days(10)", "-timeZone", "UTC", "-frequency", "daily", "-logFile", logFile, });
 
             assertFailures(fs, pair);
 
@@ -333,12 +320,9 @@ public class FeedEvictorTest {
         return Pair.of(inRange, outOfRange);
     }
 
-    private Pair<List<String>, List<String>> createTestData(String feed,
-                                                            String mask,
-                                                            int period,
-                                                            TimeUnit timeUnit, String locationType)
-            throws Exception {
-
+    private Pair<List<String>, List<String>> createTestData(String feed, String mask,
+                                                            int period, TimeUnit timeUnit,
+                                                            String locationType) throws Exception {
         Configuration conf = cluster.getConf();
         FileSystem fs = FileSystem.get(conf);
 
@@ -370,12 +354,11 @@ public class FeedEvictorTest {
                 SimpleDateFormat(timeUnit == TimeUnit.HOURS ? "yyyyMMddHH" : "yyyyMMdd");
         displayFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (long date = now;
              date > now - timeUnit.toMillis(range + 6);
              date -= timeUnit.toMillis(1)) {
-            String path = locationType + "/YYYY/" + feed + "/mmHH/dd/MM/" +
-                    format.format(date);
+            String path = locationType + "/YYYY/" + feed + "/mmHH/dd/MM/" + format.format(date);
             touch(fs, path);
             if (date <= now && date > now - timeUnit.toMillis(range)) {
                 outOfRange.add(path);
@@ -393,7 +376,7 @@ public class FeedEvictorTest {
         fs.create(new Path(path)).close();
     }
 
-    private String getFeedBasePath(EmbeddedCluster cluster, String locationType) {
+    private String getFeedBasePath(String locationType) {
         return cluster.getConf().get("fs.default.name")
                 + "/data/YYYY/feed3/dd/MM/"
                 + "?{MONTH}/more/?{HOUR}";
