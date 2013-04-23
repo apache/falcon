@@ -28,14 +28,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
 
+/**
+ * An in-memory implementation of a DelayedQueue.
+ * @param <T>
+ */
 public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
     public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
-    protected DelayQueue<T> QUEUE = new DelayQueue<T>();
+
+    protected DelayQueue<T> delayQueue = new DelayQueue<T>();
     private File serializeFilePath;
 
     @Override
     public boolean offer(T event) {
-        boolean flag = QUEUE.offer(event);
+        boolean flag = delayQueue.offer(event);
         beforeRetry(event);
         LOG.debug("Enqueued Message:" + event.toString());
         return flag;
@@ -45,7 +50,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
     public T take() throws FalconException {
         T event;
         try {
-            event = QUEUE.take();
+            event = delayQueue.take();
             LOG.debug("Dequeued Message:" + event.toString());
             afterRetry(event);
         } catch (InterruptedException e) {
@@ -60,16 +65,14 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     public void populateQueue(List<T> events) {
         for (T event : events) {
-            QUEUE.offer(event);
+            delayQueue.offer(event);
         }
-
     }
 
     @Override
     public void init() {
         List<T> events = bootstrap();
         populateQueue(events);
-
     }
 
     @Override
@@ -135,7 +138,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
                                 + rerunFile.getAbsolutePath(), e);
             }
         }
-        return rerunEvents;
 
+        return rerunEvents;
     }
 }

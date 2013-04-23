@@ -23,23 +23,22 @@ import org.apache.falcon.expression.ExpressionHelper;
 
 import java.util.Date;
 
+/**
+ * An implementation of the Rerun policy that backs off exponentially.
+ */
 public class ExpBackoffPolicy extends AbstractRerunPolicy {
 
     @Override
-    public long getDelay(Frequency delay, int eventNumber)
-            throws FalconException {
-        return (long) (getDurationInMilliSec(delay) * Math.pow(getPower(),
-                eventNumber));
+    public long getDelay(Frequency delay, int eventNumber) throws FalconException {
+        return (long) (getDurationInMilliSec(delay) * Math.pow(getPower(), eventNumber));
     }
 
     @Override
-    public long getDelay(Frequency delay, Date nominalTime, Date cutOffTime)
-            throws FalconException {
+    public long getDelay(Frequency delay, Date nominalTime, Date cutOffTime) throws FalconException {
         ExpressionHelper evaluator = ExpressionHelper.get();
         Date now = new Date();
         Date lateTime = nominalTime;
-        long delayMilliSeconds = evaluator.evaluate(delay.toString(),
-                Long.class);
+        long delayMilliSeconds = evaluator.evaluate(delay.toString(), Long.class);
         int factor = 1;
         // TODO we can get rid of this using formula
         while (lateTime.compareTo(now) <= 0) {
@@ -49,12 +48,11 @@ public class ExpBackoffPolicy extends AbstractRerunPolicy {
         if (lateTime.after(cutOffTime)) {
             lateTime = cutOffTime;
         }
-        return (lateTime.getTime() - nominalTime.getTime());
 
+        return (lateTime.getTime() - nominalTime.getTime());
     }
 
     protected int getPower() {
         return 2;
     }
-
 }

@@ -25,6 +25,11 @@ import org.apache.falcon.util.StartupProperties;
 
 import java.util.Date;
 
+/**
+ * A consumer of retry events which reruns the workflow in the workflow engine.
+ *
+ * @param <T>
+ */
 public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
         extends AbstractRerunConsumer<RetryEvent, T> {
 
@@ -90,9 +95,6 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
                         Integer.toString(message.getRunId()),
                         "Failure retry attempts exhausted");
             }
-
         }
-
     }
-
 }

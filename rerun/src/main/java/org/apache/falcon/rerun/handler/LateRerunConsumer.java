@@ -31,6 +31,11 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.*;
 
+/**
+ * A consumer of late reruns.
+ *
+ * @param <T>
+ */
 public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEvent>>>
         extends AbstractRerunConsumer<LaterunEvent, T> {
 
@@ -140,5 +145,4 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
         return late.detectChanges(lateLogPath, feedSizes, conf);
     }
-
 }

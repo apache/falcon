@@ -21,10 +21,16 @@ import java.util.Date;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Event representing a rerun.
+ */
 public class RerunEvent implements Delayed {
 
     protected static final String SEP = "*";
 
+    /**
+     * Rerun Event type.
+     */
     public enum RerunType {
         RETRY, LATE
     }
@@ -38,9 +44,9 @@ public class RerunEvent implements Delayed {
     protected String instance;
     protected int runId;
 
-    public RerunEvent(String clusterName, String wfId,
-                      long msgInsertTime, long delay, String entityType, String entityName,
-                      String instance, int runId) {
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    public RerunEvent(String clusterName, String wfId, long msgInsertTime, long delay,
+                      String entityType, String entityName, String instance, int runId) {
         this.clusterName = clusterName;
         this.wfId = wfId;
         this.msgInsertTime = msgInsertTime;
@@ -50,6 +56,7 @@ public class RerunEvent implements Delayed {
         this.runId = runId;
         this.entityType = entityType;
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     public String getClusterName() {
         return clusterName;

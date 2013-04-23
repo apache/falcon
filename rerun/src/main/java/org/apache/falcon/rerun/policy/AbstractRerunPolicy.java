@@ -23,21 +23,21 @@ import org.apache.falcon.expression.ExpressionHelper;
 
 import java.util.Date;
 
+/**
+ * Base class for Rerun Policy.
+ */
 public abstract class AbstractRerunPolicy {
 
-    public long getDurationInMilliSec(Frequency frequency)
-            throws FalconException {
+    public long getDurationInMilliSec(Frequency frequency) throws FalconException {
         ExpressionHelper helper = ExpressionHelper.get();
         return helper.evaluate(frequency.toString(), Long.class);
-
     }
 
     public static Date addTime(Date date, int milliSecondsToAdd) {
         return new Date(date.getTime() + milliSecondsToAdd);
     }
 
-    public abstract long getDelay(Frequency delay, int eventNumber)
-            throws FalconException;
+    public abstract long getDelay(Frequency delay, int eventNumber) throws FalconException;
 
     public abstract long getDelay(Frequency delay, Date nominaltime,
                                   Date cutOffTime) throws FalconException;

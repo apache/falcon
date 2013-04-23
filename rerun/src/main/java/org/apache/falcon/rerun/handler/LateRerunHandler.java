@@ -40,6 +40,11 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.Date;
 
+/**
+ * An implementation of handler for late reruns.
+ *
+ * @param <M>
+ */
 public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
 
@@ -78,9 +83,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                         wfId));
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
-                    if (deleted == true) {
-                        LOG.info("Successfully deleted late file path:"
-                                + lateLogPath);
+                    if (deleted) {
+                        LOG.info("Successfully deleted late file path:" + lateLogPath);
                     }
                 }
                 return;
@@ -102,8 +106,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         }
     }
 
-    private long getEventDelay(Entity entity, String nominalTime)
-            throws FalconException {
+    private long getEventDelay(Entity entity, String nominalTime) throws FalconException {
 
         Date instanceDate = EntityUtil.parseDateUTC(nominalTime);
         LateProcess lateProcess = EntityUtil.getLateProcess(entity);
@@ -135,8 +138,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         return new Date(date.getTime() + milliSecondsToAdd);
     }
 
-    public static Date getCutOffTime(Entity entity, String nominalTime)
-            throws FalconException {
+    public static Date getCutOffTime(Entity entity, String nominalTime) throws FalconException {
 
         ConfigurationStore store = ConfigurationStore.get();
         ExpressionHelper evaluator = ExpressionHelper.get();
@@ -193,8 +195,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
     }
 
     @Override
-    public void init(M delayQueue) throws FalconException {
-        super.init(delayQueue);
+    public void init(M aDelayQueue) throws FalconException {
+        super.init(aDelayQueue);
         Thread daemon = new Thread(new LateRerunConsumer(this));
         daemon.setName("LaterunHandler");
         daemon.setDaemon(true);
@@ -211,8 +213,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
     }
 
-    public Configuration getConfiguration(String cluster, String wfId)
-            throws FalconException {
+    public Configuration getConfiguration(String cluster, String wfId) throws FalconException {
         Configuration conf = new Configuration();
         conf.set(
                 CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
@@ -220,5 +221,4 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                         AbstractWorkflowEngine.NAME_NODE));
         return conf;
     }
-
 }

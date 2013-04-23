@@ -17,7 +17,11 @@
  */
 package org.apache.falcon.rerun.policy;
 
+/**
+ * An implementation of the Rerun policy that is periodic.
+ */
 public class PeriodicPolicy extends ExpBackoffPolicy {
+
     @Override
     protected int getPower() {
         return 1;

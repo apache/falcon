@@ -28,6 +28,11 @@ import javax.jms.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * An ActiveMQ implementation for DelayedQueue.
+ *
+ * @param <T>
+ */
 public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     private ActiveMQConnection connection;
@@ -65,8 +70,8 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
         if (connection == null) {
             init();
         }
-        Session session = connection.createSession(false,
-                Session.AUTO_ACKNOWLEDGE);
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         return session;
     }
 
@@ -87,8 +92,6 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     @Override
     public void populateQueue(List<T> events) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -127,21 +130,25 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
             producer.close();
             LOG.info("Producer closed successfully");
         } catch (Exception ignore) {
+            LOG.info("Producer could not be closed");
         }
+
         try {
             LOG.info("Attempting to close consumer");
             consumer.close();
             LOG.info("Consumer closed successfully");
         } catch (Exception ignore) {
+            LOG.info("Consumer could not be closed");
         }
+
         try {
             LOG.info("Attempting to close connection");
             connection.close();
             LOG.info("Connection closed successfully");
         } catch (Exception ignore) {
+            LOG.info("Connection could not be closed");
         }
 
         init();
-
     }
 }

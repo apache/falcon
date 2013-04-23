@@ -19,7 +19,10 @@ package org.apache.falcon.rerun.policy;
 
 import org.apache.falcon.entity.v0.process.PolicyType;
 
-public class RerunPolicyFactory {
+/**
+ * A factory implementation to dole out rerun/retry policy.
+ */
+public final class RerunPolicyFactory {
 
     private RerunPolicyFactory() {
         // factory
@@ -27,15 +30,17 @@ public class RerunPolicyFactory {
 
     public static AbstractRerunPolicy getRetryPolicy(PolicyType latePolicy) {
         switch (latePolicy) {
-            case PERIODIC:
-                return new PeriodicPolicy();
+        case PERIODIC:
+            return new PeriodicPolicy();
 
-            case EXP_BACKOFF:
-                return new ExpBackoffPolicy();
+        case EXP_BACKOFF:
+            return new ExpBackoffPolicy();
 
-            case FINAL:
-                return new FinalPolicy();
+        case FINAL:
+            return new FinalPolicy();
+
+        default:
+            throw new IllegalArgumentException("Unhandled Retry policy: " + latePolicy);
         }
-        throw new IllegalArgumentException("Unhandled Retry policy: " + latePolicy);
     }
 }

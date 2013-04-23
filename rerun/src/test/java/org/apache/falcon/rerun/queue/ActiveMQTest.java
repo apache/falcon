@@ -24,11 +24,14 @@ import org.apache.falcon.rerun.event.RerunEvent;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+/**
+ * Test class for ActiveMQ delayed queue implementation.
+ */
 public class ActiveMQTest {
 
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
     private BrokerService broker;
-    private static final String DESTI = "activemq.topic";
+    private static final String DESTINATION = "activemq.topic";
 
     @BeforeClass
     private void setup() throws Exception {
@@ -43,8 +46,9 @@ public class ActiveMQTest {
     @Test
     public void testBrokerStartAndEnqueue() {
         ActiveMQueue<RerunEvent> activeMQueue = new ActiveMQueue<RerunEvent>(
-                BROKER_URL, DESTI);
+                BROKER_URL, DESTINATION);
         activeMQueue.init();
+
         RerunEvent event = new LaterunEvent("clusterName", "wfId",
                 System.currentTimeMillis(), 60 * 1000, "entityType",
                 "entityName", "instance", 0);
@@ -58,7 +62,5 @@ public class ActiveMQTest {
         } catch (Exception e) {
             Assert.fail();
         }
-
-
     }
 }

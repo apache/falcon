@@ -23,6 +23,9 @@ import org.apache.falcon.entity.v0.Frequency;
 
 import java.util.Date;
 
+/**
+ * An implementation of the Rerun policy that does rerun only once.
+ */
 public class FinalPolicy extends AbstractRerunPolicy {
 
     @Override

@@ -27,23 +27,23 @@ import org.testng.annotations.Test;
 
 import java.util.Date;
 
+/**
+ * Base test class for Rerun Policy.
+ */
 public class AbstractRerunPolicyTest {
 
     @Test
-    public void TestGetDurationInMillis() throws FalconException {
+    public void testGetDurationInMillis() throws FalconException {
         AbstractRerunPolicy policy = new AbstractRerunPolicy() {
 
             @Override
             public long getDelay(Frequency delay, Date nominaltime,
                                  Date cutOffTime) throws FalconException {
-                // TODO Auto-generated method stub
                 return 0;
             }
 
             @Override
-            public long getDelay(Frequency delay, int eventNumber)
-                    throws FalconException {
-                // TODO Auto-generated method stub
+            public long getDelay(Frequency delay, int eventNumber) throws FalconException {
                 return 0;
             }
         };
@@ -57,26 +57,26 @@ public class AbstractRerunPolicyTest {
     }
 
     @Test
-    public void TestExpBackoffPolicy() throws FalconException {
+    public void testExpBackoffPolicy() throws FalconException {
         AbstractRerunPolicy backoff = new ExpBackoffPolicy();
         long delay = backoff.getDelay(new Frequency("minutes(2)"), 2);
         Assert.assertEquals(delay, 480000);
 
         long currentTime = System.currentTimeMillis();
-        delay = backoff.getDelay(new Frequency("minutes(2)"), new Date(
-                currentTime - 1 * 4 * 60 * 1000), new Date(currentTime + 1 * 60
-                * 60 * 1000));
+        delay = backoff.getDelay(new Frequency("minutes(2)"),
+                new Date(currentTime - 1 * 4 * 60 * 1000),
+                new Date(currentTime + 1 * 60 * 60 * 1000));
         Assert.assertEquals(delay, 1 * 6 * 60 * 1000);
 
         currentTime = System.currentTimeMillis();
-        delay = backoff.getDelay(new Frequency("minutes(1)"), new Date(
-                currentTime - 1 * 9 * 60 * 1000), new Date(currentTime + 1 * 60
-                * 60 * 1000));
+        delay = backoff.getDelay(new Frequency("minutes(1)"),
+                new Date(currentTime - 1 * 9 * 60 * 1000),
+                new Date(currentTime + 1 * 60 * 60 * 1000));
         Assert.assertEquals(delay, 900000);
     }
 
     @Test
-    public void TestPeriodicPolicy() throws FalconException, InterruptedException {
+    public void testPeriodicPolicy() throws FalconException, InterruptedException {
         AbstractRerunPolicy periodic = new PeriodicPolicy();
         long delay = periodic.getDelay(new Frequency("minutes(2)"), 2);
         Assert.assertEquals(delay, 120000);
@@ -85,9 +85,9 @@ public class AbstractRerunPolicyTest {
 
         long currentTime = System.currentTimeMillis();
         //Thread.sleep(1000);
-        delay = periodic.getDelay(new Frequency("minutes(3)"), new Date(
-                currentTime), new Date(currentTime + 1 * 60
-                * 60 * 1000));
+        delay = periodic.getDelay(new Frequency("minutes(3)"),
+                new Date(currentTime),
+                new Date(currentTime + 1 * 60 * 60 * 1000));
         Assert.assertEquals(delay, 180000);
     }
 }

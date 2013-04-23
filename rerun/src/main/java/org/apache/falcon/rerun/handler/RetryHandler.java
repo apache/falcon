@@ -28,6 +28,12 @@ import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 
+/**
+ * An implementation of retry handler that kicks off retries until the
+ * configured attempts are exhausted.
+ *
+ * @param <M>
+ */
 public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
 
@@ -80,14 +86,12 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     }
 
     @Override
-    public void init(M queue) throws FalconException {
-        super.init(queue);
+    public void init(M aDelayQueue) throws FalconException {
+        super.init(aDelayQueue);
         Thread daemon = new Thread(new RetryConsumer(this));
         daemon.setName("RetryHandler");
         daemon.setDaemon(true);
         daemon.start();
-        LOG.info("RetryHandler  thread started");
-
+        LOG.info("RetryHandler thread started.");
     }
-
 }

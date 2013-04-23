@@ -18,7 +18,6 @@
 
 package org.apache.falcon.rerun.handler;
 
-import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -39,14 +38,16 @@ import javax.xml.bind.Unmarshaller;
 import java.io.StringWriter;
 import java.util.Collection;
 
+/**
+ * Test class for Late data handling.
+ */
 public class TestLateData {
 
     protected static final String FEED_XML = "/feed-template.xml";
-    protected static String CLUSTER_XML = "/cluster-template.xml";
+    protected static final String CLUSTER_XML = "/cluster-template.xml";
     protected static final String PROCESS_XML = "/process-template.xml";
     protected static final String PROCESS_XML2 = "/process-template2.xml";
 
-    protected WebResource service = null;
     protected Configuration conf = new Configuration();
 
     @BeforeClass
@@ -75,24 +76,27 @@ public class TestLateData {
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(type, name);
         switch (type) {
-            case CLUSTER:
-                Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
-                cluster.setName(name);
-                ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
-                store.publish(type, cluster);
-                break;
+        case CLUSTER:
+            Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+            cluster.setName(name);
+            ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
+            store.publish(type, cluster);
+            break;
 
-            case FEED:
-                Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
-                feed.setName(name);
-                store.publish(type, feed);
-                break;
+        case FEED:
+            Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
+            feed.setName(name);
+            store.publish(type, feed);
+            break;
 
-            case PROCESS:
-                Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
-                process.setName(name);
-                store.publish(type, process);
-                break;
+        case PROCESS:
+            Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
+            process.setName(name);
+            store.publish(type, process);
+            break;
+
+        default:
+            throw new IllegalArgumentException("Invalid entity type: " + type);
         }
     }
 
@@ -113,82 +117,78 @@ public class TestLateData {
         store.publish(EntityType.PROCESS, process);
     }
 
-    public String marshallEntity(final Entity entity) throws FalconException,
-                                                             JAXBException {
+    public String marshallEntity(final Entity entity) throws FalconException, JAXBException {
         Marshaller marshaller = entity.getEntityType().getMarshaller();
         StringWriter stringWriter = new StringWriter();
         marshaller.marshal(entity, stringWriter);
         return stringWriter.toString();
     }
 
-//	@Test
-//	private void TestLateWhenInstanceRunning() throws Exception
-//	{
-//		try{
-//        WorkflowEngine engine = Mockito.mock(WorkflowEngine.class);
-//        when(engine.instanceStatus("testCluster", "123")).thenReturn("RUNNING");
-//        
-//		ConfigurationStore store = ConfigurationStore.get();
-//		setup();
-//		String nominalTime = EntityUtil.formatDateUTC(new Date(System.currentTimeMillis() - 1800000));
-//        InMemoryQueue<LaterunEvent> queue = new InMemoryQueue<LaterunEvent>(new File("target/late"));
-//        latedataHandler.init(queue);
-//        
-//        AbstractRerunHandler handle = RerunHandlerFactory.getRerunHandler(RerunEvent.RerunType.LATE);
-//        handle.handleRerun("sample", nominalTime, "123", "123", engine, System.currentTimeMillis());
-//        
-//        File directory = new File("target/late");
-//        File[] files = directory.listFiles();
-//        int noFilesBefore = files.length;
-//        
-//        Thread.sleep(90000);
-//        
-//        files = directory.listFiles();
-//        int noFilesAfterRetry = files.length;        
-//        Assert.assertNotSame(noFilesBefore, noFilesAfterRetry);
-//		}
-//		catch (Exception e){
-//			Assert.fail("Not expecting any exception");
-//		}
-//        
-//	}
-//	
-//	
-//	@Test
-//	private void TestLateWhenDataPresent() throws Exception {
-//		WorkflowEngine engine = Mockito.mock(WorkflowEngine.class);
-//		when(engine.instanceStatus("testCluster", "123")).thenReturn(
-//				"SUCCEEDED");
-//
-//		LateRerunConsumer consumer = Mockito.mock(LateRerunConsumer.class);
-//		when(consumer.detectLate(Mockito.any(LaterunEvent.class))).thenReturn(
-//				"new data found");
-//
-//		String nominalTime = EntityUtil.formatDateUTC(new Date(System
-//				.currentTimeMillis() - 1800000));
-//		AbstractRerunHandler handle = RerunHandlerFactory
-//				.getRerunHandler(RerunEvent.RerunType.LATE);
-//
-//		ConfigurationStore store = ConfigurationStore.get();
-//		setup();
-//
-//		InMemoryQueue<LaterunEvent> queue = new InMemoryQueue<LaterunEvent>(
-//				new File("target/late"));
-//		latedataHandler.init(queue);
-//
-//		handle.handleRerun("sample", nominalTime, "123", "123", engine,
-//				System.currentTimeMillis());
-//
-//		File directory = new File("target/late");
-//		File[] files = directory.listFiles();
-//		int noFilesBefore = files.length;
-//
-//		Thread.sleep(90000);
-//
-//		files = directory.listFiles();
-//		int noFilesAfterRetry = files.length;
-//		Assert.assertNotSame(noFilesBefore, noFilesAfterRetry);
-//
-//	}
+/*
+    @Test
+    private void TestLateWhenInstanceRunning() throws Exception {
+        try {
+            WorkflowEngine engine = Mockito.mock(WorkflowEngine.class);
+            when(engine.instanceStatus("testCluster", "123")).thenReturn("RUNNING");
 
+            ConfigurationStore store = ConfigurationStore.get();
+            setup();
+            String nominalTime = EntityUtil.formatDateUTC(new Date(System.currentTimeMillis() - 1800000));
+            InMemoryQueue<LaterunEvent> queue = new InMemoryQueue<LaterunEvent>(new File("target/late"));
+            latedataHandler.init(queue);
+
+            AbstractRerunHandler handle = RerunHandlerFactory.getRerunHandler(RerunEvent.RerunType.LATE);
+            handle.handleRerun("sample", nominalTime, "123", "123", engine, System.currentTimeMillis());
+
+            File directory = new File("target/late");
+            File[] files = directory.listFiles();
+            int noFilesBefore = files.length;
+
+            Thread.sleep(90000);
+
+            files = directory.listFiles();
+            int noFilesAfterRetry = files.length;
+            Assert.assertNotSame(noFilesBefore, noFilesAfterRetry);
+        } catch (Exception e) {
+            Assert.fail("Not expecting any exception");
+        }
+    }
+
+    @Test
+    private void TestLateWhenDataPresent() throws Exception {
+        WorkflowEngine engine = Mockito.mock(WorkflowEngine.class);
+        when(engine.instanceStatus("testCluster", "123")).thenReturn(
+                "SUCCEEDED");
+
+        LateRerunConsumer consumer = Mockito.mock(LateRerunConsumer.class);
+        when(consumer.detectLate(Mockito.any(LaterunEvent.class))).thenReturn(
+                "new data found");
+
+        String nominalTime = EntityUtil.formatDateUTC(new Date(System
+                .currentTimeMillis() - 1800000));
+        AbstractRerunHandler handle = RerunHandlerFactory
+                .getRerunHandler(RerunEvent.RerunType.LATE);
+
+        ConfigurationStore store = ConfigurationStore.get();
+        setup();
+
+        InMemoryQueue<LaterunEvent> queue = new InMemoryQueue<LaterunEvent>(
+                new File("target/late"));
+        latedataHandler.init(queue);
+
+        handle.handleRerun("sample", nominalTime, "123", "123", engine,
+                System.currentTimeMillis());
+
+        File directory = new File("target/late");
+        File[] files = directory.listFiles();
+        int noFilesBefore = files.length;
+
+        Thread.sleep(90000);
+
+        files = directory.listFiles();
+        int noFilesAfterRetry = files.length;
+        Assert.assertNotSame(noFilesBefore, noFilesAfterRetry);
+
+    }
+*/
 }

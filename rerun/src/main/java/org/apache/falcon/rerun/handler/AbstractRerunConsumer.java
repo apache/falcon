@@ -26,6 +26,12 @@ import org.apache.falcon.rerun.policy.ExpBackoffPolicy;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.log4j.Logger;
 
+/**
+ * Base class for a rerun consumer.
+ *
+ * @param <T> a rerun event
+ * @param <M> a rerun handler
+ */
 public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends AbstractRerunHandler<T, DelayedQueue<T>>>
         implements Runnable {
 

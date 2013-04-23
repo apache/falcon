@@ -29,6 +29,9 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
+/**
+ * A service implementation for Late Rerun initialized at startup.
+ */
 public class LateRunService implements FalconService {
 
     private static final Logger LOG = Logger.getLogger(LateRunService.class);
@@ -40,20 +43,18 @@ public class LateRunService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler = RerunHandlerFactory
-                .getRerunHandler(RerunType.LATE);
+        AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler =
+            RerunHandlerFactory.getRerunHandler(RerunType.LATE);
         ActiveMQueue<LaterunEvent> queue = new ActiveMQueue<LaterunEvent>(
-                StartupProperties
-                        .get()
-                        .getProperty("broker.url",
-                                "failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
+                StartupProperties.get()
+                    .getProperty("broker.url", "failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
                 "falcon.late.queue");
         rerunHandler.init(queue);
     }
 
     @Override
     public void destroy() throws FalconException {
-        LOG.info("LateRun  thread destroyed");
+        LOG.info("LateRun thread destroyed");
     }
 
     private File getBasePath() {
@@ -64,7 +65,7 @@ public class LateRunService implements FalconService {
             throw new RuntimeException("Unable to initialize late recorder @"
                     + basePath);
         }
+
         return basePath;
     }
-
 }

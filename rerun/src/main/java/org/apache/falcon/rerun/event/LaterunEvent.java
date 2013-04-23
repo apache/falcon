@@ -17,14 +17,19 @@
  */
 package org.apache.falcon.rerun.event;
 
+/**
+ * Event representing a late rerun.
+ */
 public class LaterunEvent extends RerunEvent {
 
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     public LaterunEvent(String clusterName, String wfId, long msgInsertTime,
                         long delay, String entityType, String entityName, String instance,
                         int runId) {
         super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
                 instance, runId);
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     @Override
     public String toString() {
@@ -34,5 +39,4 @@ public class LaterunEvent extends RerunEvent {
                 + "entityName=" + entityName + SEP + "instance=" + instance
                 + SEP + "runId=" + runId;
     }
-
 }

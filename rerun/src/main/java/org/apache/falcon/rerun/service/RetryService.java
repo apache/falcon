@@ -30,6 +30,9 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
+/**
+ * A service implementation for Retry initialized at startup.
+ */
 public class RetryService implements FalconService {
 
     private static final Logger LOG = Logger.getLogger(RetryService.class);
@@ -41,16 +44,15 @@ public class RetryService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler = RerunHandlerFactory
-                .getRerunHandler(RerunType.RETRY);
-        InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(
-                getBasePath());
+        AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler =
+            RerunHandlerFactory.getRerunHandler(RerunType.RETRY);
+        InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(getBasePath());
         rerunHandler.init(queue);
     }
 
     @Override
     public void destroy() throws FalconException {
-        LOG.info("RetryHandler  thread destroyed");
+        LOG.info("RetryHandler thread destroyed");
     }
 
     private File getBasePath() {
@@ -61,7 +63,7 @@ public class RetryService implements FalconService {
             throw new RuntimeException("Unable to initialize retry recorder @"
                     + basePath);
         }
+
         return basePath;
     }
-
 }

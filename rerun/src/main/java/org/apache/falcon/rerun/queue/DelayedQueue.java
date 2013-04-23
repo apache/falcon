@@ -23,6 +23,10 @@ import org.apache.log4j.Logger;
 
 import java.util.List;
 
+/**
+ * Base class for a Queue implementation.
+ * @param <T>
+ */
 public abstract class DelayedQueue<T extends RerunEvent> {
     public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
 
@@ -35,5 +39,4 @@ public abstract class DelayedQueue<T extends RerunEvent> {
     public abstract void init();
 
     public abstract void reconnect() throws FalconException;
-
 }

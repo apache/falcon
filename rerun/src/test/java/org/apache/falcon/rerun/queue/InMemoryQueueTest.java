@@ -25,6 +25,9 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.util.LinkedList;
 
+/**
+ * Test class for the InMemory Queue implementation of the DelayedQueue.
+ */
 public class InMemoryQueueTest {
 
     @Test(timeOut = 10000)
@@ -47,8 +50,8 @@ public class InMemoryQueueTest {
             boolean inserted = false;
             for (int posn = 0; posn < events.size(); posn++) {
                 MyEvent thisEvent = events.get(posn);
-                if (thisEvent.getDelayInMilliSec() + thisEvent.getMsgInsertTime() >
-                        event.getDelayInMilliSec() + event.getMsgInsertTime()) {
+                if (thisEvent.getDelayInMilliSec() + thisEvent.getMsgInsertTime()
+                        > event.getDelayInMilliSec() + event.getMsgInsertTime()) {
                     events.add(posn, event);
                     inserted = true;
                     break;
@@ -67,12 +70,14 @@ public class InMemoryQueueTest {
 
     private class MyEvent extends RerunEvent {
 
+        //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         public MyEvent(String clusterName, String wfId,
                        long msgInsertTime, long delay, String entityType,
                        String entityName, String instance, int runId) {
             super(clusterName, wfId, msgInsertTime, delay,
                     entityType, entityName, instance, runId);
         }
+        //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
         @Override
         public RerunType getType() {

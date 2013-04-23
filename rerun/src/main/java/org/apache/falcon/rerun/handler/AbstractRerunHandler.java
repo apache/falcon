@@ -27,6 +27,12 @@ import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
 
+/**
+ * Base class for handling reruns.
+ *
+ * @param <T> a rerun event
+ * @param <M> queue
+ */
 public abstract class AbstractRerunHandler<T extends RerunEvent, M extends DelayedQueue<T>> {
 
     protected static final Logger LOG = Logger
@@ -34,9 +40,9 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
     protected M delayQueue;
     private AbstractWorkflowEngine wfEngine;
 
-    public void init(M delayQueue) throws FalconException {
+    public void init(M aDelayQueue) throws FalconException {
         this.wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-        this.delayQueue = delayQueue;
+        this.delayQueue = aDelayQueue;
         this.delayQueue.init();
     }
 
@@ -60,13 +66,11 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
         delayQueue.reconnect();
     }
 
-    public Entity getEntity(String entityType, String entityName)
-            throws FalconException {
+    public Entity getEntity(String entityType, String entityName) throws FalconException {
         return EntityUtil.getEntity(entityType, entityName);
     }
 
     public Retry getRetry(Entity entity) throws FalconException {
         return EntityUtil.getRetry(entity);
     }
-
 }

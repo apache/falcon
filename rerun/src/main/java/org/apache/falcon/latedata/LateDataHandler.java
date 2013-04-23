@@ -32,11 +32,12 @@ import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * A tool for late data handling.
+ */
 public class LateDataHandler extends Configured implements Tool {
 
-    private static Logger LOG = Logger.getLogger(LateDataHandler.class);
-
-    static PrintStream stream = System.out;
+    private static final Logger LOG = Logger.getLogger(LateDataHandler.class);
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -110,9 +111,9 @@ public class LateDataHandler extends Configured implements Tool {
     }
 
     public String detectChanges(Path file, Map<String, Long> map, Configuration conf)
-            throws Exception {
+        throws Exception {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         BufferedReader in = new BufferedReader(new InputStreamReader(file
                 .getFileSystem(conf).open(file)));
         String line;
@@ -148,12 +149,11 @@ public class LateDataHandler extends Configured implements Tool {
         } finally {
             in.close();
         }
-
     }
 
     public long usage(Path inPath, Configuration conf) throws IOException {
         FileSystem fs = inPath.getFileSystem(conf);
-        FileStatus status[] = fs.globStatus(inPath);
+        FileStatus[] status = fs.globStatus(inPath);
         if (status == null || status.length == 0) {
             return 0;
         }
