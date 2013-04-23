@@ -26,8 +26,10 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
-
-public class StandAloneCluster extends EmbeddedCluster {
+/**
+ * A standalone cluster.
+ */
+public final class StandAloneCluster extends EmbeddedCluster {
     private static final Logger LOG = Logger.getLogger(StandAloneCluster.class);
 
     private StandAloneCluster() {
@@ -50,6 +52,5 @@ public class StandAloneCluster extends EmbeddedCluster {
 
     @Override
     public void shutdown() {
-
     }
 }

@@ -33,9 +33,12 @@ import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 
+/**
+ * A utility class that doles out an embedded Hadoop cluster with DFS and/or MR.
+ */
 public class EmbeddedCluster {
 
-    private static Logger LOG = Logger.getLogger(EmbeddedCluster.class);
+    private static final Logger LOG = Logger.getLogger(EmbeddedCluster.class);
 
     protected EmbeddedCluster() {
     }
@@ -49,16 +52,13 @@ public class EmbeddedCluster {
         return conf;
     }
 
-    public static EmbeddedCluster newCluster(final String name, final boolean withMR)
-            throws Exception {
+    public static EmbeddedCluster newCluster(final String name, final boolean withMR) throws Exception {
         return createClusterAsUser(name, withMR);
     }
 
     public static EmbeddedCluster newCluster(final String name,
                                              final boolean withMR,
-                                             final String user)
-            throws Exception {
-
+                                             final String user) throws Exception {
         UserGroupInformation hdfsUser = UserGroupInformation.createRemoteUser(user);
         return hdfsUser.doAs(new PrivilegedExceptionAction<EmbeddedCluster>() {
             @Override
@@ -69,9 +69,7 @@ public class EmbeddedCluster {
     }
 
     private static EmbeddedCluster createClusterAsUser(String name,
-                                                       boolean withMR)
-            throws IOException {
-
+                                                       boolean withMR) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
         File target = new File("webapp/target");
         if (!target.exists()) {
