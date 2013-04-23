@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,6 +41,9 @@ import org.apache.oozie.client.OozieClient;
 
 import java.util.*;
 
+/**
+ * Oozie workflow builder for falcon entities.
+ */
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     @Override
@@ -59,7 +62,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void addOptionalInputProperties(Properties properties, Input in, String clusterName)
-            throws FalconException {
+        throws FalconException {
         Feed feed = EntityUtil.getEntity(EntityType.FEED, in.getFeed());
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, clusterName);
         String inName = in.getName();
@@ -80,28 +83,28 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
     private Timeunit mapToCoordTimeUnit(TimeUnit tu) {
         switch (tu) {
-            case days:
-                return Timeunit.DAY;
+        case days:
+            return Timeunit.DAY;
 
-            case hours:
-                return Timeunit.HOUR;
+        case hours:
+            return Timeunit.HOUR;
 
-            case minutes:
-                return Timeunit.MINUTE;
+        case minutes:
+            return Timeunit.MINUTE;
 
-            case months:
-                return Timeunit.MONTH;
+        case months:
+            return Timeunit.MONTH;
+
+        default:
+            throw new IllegalArgumentException("Unhandled time unit " + tu);
         }
-        throw new IllegalArgumentException("Unhandled time unit " + tu);
     }
 
     @Override
     public Properties newWorkflowSchedule(Process process, Date startDate, String clusterName, String user)
-            throws FalconException {
+        throws FalconException {
         org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process, clusterName);
-        if (!startDate.before(processCluster.getValidity().getEnd()))
-        // start time >= end time
-        {
+        if (!startDate.before(processCluster.getValidity().getEnd())) {// start time >= end time
             return null;
         }
 

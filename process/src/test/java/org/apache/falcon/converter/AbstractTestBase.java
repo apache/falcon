@@ -34,7 +34,6 @@ public class AbstractTestBase {
     private static final String FEED_XML = "/config/feed/feed-0.1.xml";
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
 
-
     private void storeEntity(EntityType type, String name) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         ConfigurationStore store = ConfigurationStore.get();
@@ -57,6 +56,7 @@ public class AbstractTestBase {
             process.setName(name);
             store.publish(type, process);
             break;
+
         default:
         }
     }

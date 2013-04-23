@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +44,9 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.*;
 
+/**
+ * This class maps the Falcon entities into Oozie artifacts.
+ */
 public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private static final String DEFAULT_WF_TEMPLATE = "/config/workflow/process-parent-workflow.xml";
@@ -76,7 +79,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     }
 
     /**
-     * Creates default oozie coordinator
+     * Creates default oozie coordinator.
      *
      * @param cluster    - Cluster for which the coordiantor app need to be created
      * @param bundlePath - bundle path
@@ -108,21 +111,20 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         controls.setExecution(process.getOrder().name());
 
         Frequency timeout = process.getTimeout();
-        long frequency_ms = ExpressionHelper.get().
-                evaluate(process.getFrequency().toString(), Long.class);
-        long timeout_ms;
+        long frequencyInMillis = ExpressionHelper.get().evaluate(process.getFrequency().toString(), Long.class);
+        long timeoutInMillis;
         if (timeout != null) {
-            timeout_ms = ExpressionHelper.get().
+            timeoutInMillis = ExpressionHelper.get().
                     evaluate(process.getTimeout().toString(), Long.class);
         } else {
-            timeout_ms = frequency_ms * 6;
-            if (timeout_ms < THIRTY_MINUTES) {
-                timeout_ms = THIRTY_MINUTES;
+            timeoutInMillis = frequencyInMillis * 6;
+            if (timeoutInMillis < THIRTY_MINUTES) {
+                timeoutInMillis = THIRTY_MINUTES;
             }
         }
-        controls.setTimeout(String.valueOf(timeout_ms / (1000 * 60)));
-        if (timeout_ms / frequency_ms * 2 > 0) {
-            controls.setThrottle(String.valueOf(timeout_ms / frequency_ms * 2));
+        controls.setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
+        if (timeoutInMillis / frequencyInMillis * 2 > 0) {
+            controls.setThrottle(String.valueOf(timeoutInMillis / frequencyInMillis * 2));
         }
         coord.setControls(controls);
 
@@ -229,10 +231,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return datain;
     }
 
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     private void createOutputEvent(String feed, String name, Cluster cluster,
                                    String type, LocationType locType, COORDINATORAPP coord,
-                                   Map<String, String> props, String instance)
-            throws FalconException {
+                                   Map<String, String> props, String instance) throws FalconException {
         SYNCDATASET dataset = createDataSet(feed, cluster, name + type,
                 locType);
         coord.getDatasets().getDatasetOrAsyncDataset().add(dataset);
@@ -247,6 +249,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         String outputExpr = "${coord:dataOut('" + name + type + "')}";
         props.put(name + "." + type, outputExpr);
     }
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     private String join(Iterator<String> itr, char sep) {
         String joinedStr = StringUtils.join(itr, sep);
@@ -256,8 +259,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return joinedStr;
     }
 
-    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName, LocationType locationType)
-            throws FalconException {
+    private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName,
+                                      LocationType locationType) throws FalconException {
         Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();

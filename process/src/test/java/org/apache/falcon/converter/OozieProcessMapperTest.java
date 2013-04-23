@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,6 +62,9 @@ import java.io.InputStreamReader;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+/**
+ * Test for the Falcon entities mapping into Oozie artifacts.
+ */
 public class OozieProcessMapperTest extends AbstractTestBase {
 
     private String hdfsUrl;
