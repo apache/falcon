@@ -38,11 +38,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Test class for org.apache.falcon.replication.FilteredCopyListing.
+ */
 public class FilteredCopyListingTest {
 
     private static final Credentials CREDENTIALS = new Credentials();
 
-    public static Map<String, String> expectedValues = new HashMap<String, String>();
+    public static final Map<String, String> EXPECTED_VALUES = new HashMap<String, String>();
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -101,7 +104,7 @@ public class FilteredCopyListingTest {
     private static void recordInExpectedValues(String path) throws Exception {
         FileSystem fileSystem = FileSystem.getLocal(new Configuration());
         Path sourcePath = new Path(fileSystem.getUri().toString() + path);
-        expectedValues.put(sourcePath.toString(), DistCpUtils.getRelativePath(
+        EXPECTED_VALUES.put(sourcePath.toString(), DistCpUtils.getRelativePath(
                 new Path("/tmp/source"), sourcePath));
     }
 
@@ -215,9 +218,9 @@ public class FilteredCopyListingTest {
             actualValues.put(value.getPath().toString(), key.toString());
         }
 
-        Assert.assertEquals(expected == -1 ? expectedValues.size() : expected, actualValues.size());
+        Assert.assertEquals(expected == -1 ? EXPECTED_VALUES.size() : expected, actualValues.size());
         for (Map.Entry<String, String> entry : actualValues.entrySet()) {
-            Assert.assertEquals(entry.getValue(), expectedValues.get(entry.getKey()));
+            Assert.assertEquals(entry.getValue(), EXPECTED_VALUES.get(entry.getKey()));
         }
     }
 }

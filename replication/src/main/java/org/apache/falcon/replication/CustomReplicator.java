@@ -27,9 +27,14 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
+/**
+ * A custom implementation of DistCp that overrides the behavior of CopyListing
+ * interface to copy FileOutputCommitter.SUCCEEDED_FILE_NAME last so downstream apps
+ * depending on data availability will work correctly.
+ */
 public class CustomReplicator extends DistCp {
 
-    private static Logger LOG = Logger.getLogger(CustomReplicator.class);
+    private static final Logger LOG = Logger.getLogger(CustomReplicator.class);
 
     /**
      * Public Constructor. Creates DistCp object with specified input-parameters.

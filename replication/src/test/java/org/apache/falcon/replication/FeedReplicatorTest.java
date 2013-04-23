@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.falcon.repliation;
+package org.apache.falcon.replication;
 
-import org.apache.falcon.replication.FeedReplicator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.testng.Assert;
@@ -26,6 +25,9 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Test class for FeedReplicator.
+ */
 public class FeedReplicatorTest {
 
     @Test
@@ -37,9 +39,10 @@ public class FeedReplicatorTest {
          * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
          */
         FeedReplicator replicator = new FeedReplicator();
-        DistCpOptions options = replicator.getDistCpOptions(new String[]{"true", "-maxMaps", "5", "-sourcePaths",
-                                                                         "hdfs://localhost:8020/tmp/", "-targetPath",
-                                                                         "hdfs://localhost1:8020/tmp/"});
+        DistCpOptions options = replicator.getDistCpOptions(new String[] {
+            "true", "-maxMaps", "5", "-sourcePaths",
+            "hdfs://localhost:8020/tmp/", "-targetPath",
+            "hdfs://localhost1:8020/tmp/", });
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));

@@ -29,6 +29,11 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+/**
+ * An implementation of CopyListing that overrides the default behavior by suppressing file,
+ * FileOutputCommitter.SUCCEEDED_FILE_NAME and copies that in the last so downstream apps
+ * depending on data availability will work correctly.
+ */
 public class FilteredCopyListing extends SimpleCopyListing {
     private static final Logger LOG = Logger.getLogger(FilteredCopyListing.class);
 
@@ -54,8 +59,8 @@ public class FilteredCopyListing extends SimpleCopyListing {
             LOG.info("Inclusion pattern = " + configuration.get("falcon.include.path"));
             LOG.info("Regex pattern = " + regex);
         } catch (IOException e) {
-            throw new IllegalArgumentException("Unable to build regex for " +
-                    configuration.get("falcon.include.path", ""));
+            throw new IllegalArgumentException("Unable to build regex for "
+                    + configuration.get("falcon.include.path", ""));
         }
     }
 
@@ -68,8 +73,8 @@ public class FilteredCopyListing extends SimpleCopyListing {
     }
 
     private static boolean isJavaRegexSpecialChar(char pChar) {
-        return pChar == '.' || pChar == '$' || pChar == '(' || pChar == ')' ||
-                pChar == '|' || pChar == '+';
+        return pChar == '.' || pChar == '$' || pChar == '(' || pChar == ')'
+                || pChar == '|' || pChar == '+';
     }
 
     public static Pattern getRegEx(String filePattern) throws IOException {
@@ -122,7 +127,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
                 pCh = ')';
             } else if (pCh == '[' && setOpen == 0) {
                 setOpen++;
-            } else if (pCh == '^' && setOpen > 0) {
+            // } else if (pCh == '^' && setOpen > 0) {
             } else if (pCh == '-' && setOpen > 0) {
                 // Character set range
                 setRange = true;

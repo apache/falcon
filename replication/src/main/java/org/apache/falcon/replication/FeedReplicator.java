@@ -35,9 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * A tool for feed replication that uses DistCp tool to replicate.
+ */
 public class FeedReplicator extends Configured implements Tool {
 
-    private static Logger LOG = Logger.getLogger(FeedReplicator.class);
+    private static final Logger LOG = Logger.getLogger(FeedReplicator.class);
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new FeedReplicator(), args);
@@ -82,8 +85,7 @@ public class FeedReplicator extends Configured implements Tool {
             }
         } else {
             LOG.info("No files present in path: "
-                    + new Path(targetPath.toString() + "/" + fixedPath)
-                    .toString());
+                    + new Path(targetPath.toString() + "/" + fixedPath).toString());
         }
         LOG.info("Completed DistCp");
         return 0;
