@@ -30,17 +30,22 @@ import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
-import org.apache.log4j.Logger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
-import java.text.SimpleDateFormat;
 
-public class Debug {
-    private static final Logger LOG = Logger.getLogger(Debug.class);
+/**
+ * A driver for debugging purposes.
+ */
+public final class Debug {
+    // private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm Z");
 
-    private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm Z");
+    /**
+     * Prevent users from constructing this.
+     */
+    private Debug() {
+    }
 
     public static void main(String[] args) throws Exception {
         String falconUrl = args[0];
@@ -78,8 +83,8 @@ public class Debug {
 
 
 //        OozieWorkflowEngine engine = new OozieWorkflowEngine();
-//        Date start = formatter.parse("2010-01-02 01:05 UTC");
-//        Date end = formatter.parse("2010-01-02 01:21 UTC");
+//        Date start = FORMATTER.parse("2010-01-02 01:05 UTC");
+//        Date end = FORMATTER.parse("2010-01-02 01:21 UTC");
 //        InstancesResult status = engine.suspendInstances(obj, start, end, new Properties());
 //        System.out.println(Arrays.toString(status.getInstances()));
 //        AbstractInstanceManager manager = new InstanceManager();

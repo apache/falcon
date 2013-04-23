@@ -21,6 +21,9 @@ package org.apache.falcon.util;
 import junit.framework.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Test class for org.apache.falcon.util.ResourcesReflectionUtil.
+ */
 public class ResourcesReflectionUtilTest {
 
     @Test

@@ -34,6 +34,9 @@ import javax.ws.rs.core.Response;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Test for BasicAuthFilter using mock objects.
+ */
 public class BasicAuthFilterTest {
 
     @Mock

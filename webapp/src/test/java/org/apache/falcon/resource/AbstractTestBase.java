@@ -58,10 +58,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Base test class for CLI, Entity and Process Instances.
+ */
 public class AbstractTestBase {
     protected static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     protected static final String FEED_TEMPLATE2 = "/feed-template2.xml";
-    protected String CLUSTER_FILE_TEMPLATE = "/cluster-template.xml";
+
+    protected String clusterFileTemplate = "/cluster-template.xml";
 
     protected static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     protected static final String PROCESS_TEMPLATE = "/process-template.xml";
@@ -80,10 +84,10 @@ public class AbstractTestBase {
     protected String processName;
     protected String outputFeedName;
 
-    private static final Pattern varPattern = Pattern.compile("##[A-Za-z0-9_]*##");
+    private static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_]*##");
 
     protected void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        ClientResponse response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        ClientResponse response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -156,7 +160,7 @@ public class AbstractTestBase {
                         done = true;
                     }
                 }
-                if (done == true) {
+                if (done) {
                     return;
                 }
             }
@@ -198,16 +202,16 @@ public class AbstractTestBase {
         this.server.start();
 
         if (System.getProperty("falcon.test.hadoop.embedded", "true").equals("true")) {
-            CLUSTER_FILE_TEMPLATE = "target/cluster-template.xml";
+            clusterFileTemplate = "target/cluster-template.xml";
             this.cluster = EmbeddedCluster.newCluster("##cluster##", true);
             Cluster clusterEntity = this.cluster.getCluster();
-            FileOutputStream out = new FileOutputStream(CLUSTER_FILE_TEMPLATE);
+            FileOutputStream out = new FileOutputStream(clusterFileTemplate);
             marshaller.marshal(clusterEntity, out);
             out.close();
         } else {
             Map<String, String> overlay = new HashMap<String, String>();
             overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
-            String file = overlayParametersOverTemplate(CLUSTER_FILE_TEMPLATE, overlay);
+            String file = overlayParametersOverTemplate(clusterFileTemplate, overlay);
             this.cluster = StandAloneCluster.newCluster(file);
             clusterName = cluster.getCluster().getName();
         }
@@ -232,7 +236,7 @@ public class AbstractTestBase {
     }
 
     /**
-     * Converts a InputStream into ServletInputStream
+     * Converts a InputStream into ServletInputStream.
      *
      * @param fileName
      * @return ServletInputStream
@@ -266,7 +270,7 @@ public class AbstractTestBase {
     }
 
     protected ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
-            throws Exception {
+        throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
@@ -276,7 +280,7 @@ public class AbstractTestBase {
     }
 
     protected ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType)
-            throws IOException {
+        throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         return submitFileToFalcon(entityType, tmpFile);
     }
@@ -333,11 +337,11 @@ public class AbstractTestBase {
         BufferedReader reader = new BufferedReader(in);
         String line;
         while ((line = reader.readLine()) != null) {
-            Matcher matcher = varPattern.matcher(line);
+            Matcher matcher = VAR_PATTERN.matcher(line);
             while (matcher.find()) {
                 String variable = line.substring(matcher.start(), matcher.end());
                 line = line.replace(variable, overlay.get(variable.substring(2, variable.length() - 2)));
-                matcher = varPattern.matcher(line);
+                matcher = VAR_PATTERN.matcher(line);
             }
             out.write(line.getBytes());
             out.write("\n".getBytes());

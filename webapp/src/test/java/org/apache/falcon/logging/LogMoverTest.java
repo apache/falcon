@@ -41,22 +41,22 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Requires Oozie to be running on localhost
+ * Test for LogMover.
+ * Requires Oozie to be running on localhost.
  */
 public class LogMoverTest {
 
-    private static final ConfigurationStore store = ConfigurationStore.get();
+    private static final ConfigurationStore STORE = ConfigurationStore.get();
+    private static final String PROCESS_NAME = "testProcess" + System.currentTimeMillis();
     private static EmbeddedCluster testCluster = null;
     private static Process testProcess = null;
-    private static String processName = "testProcess"
-            + System.currentTimeMillis();
-    FileSystem fs;
+    private static FileSystem fs;
 
     @BeforeClass
     public void setup() throws Exception {
         cleanupStore();
         testCluster = EmbeddedCluster.newCluster("testCluster", true);
-        store.publish(EntityType.CLUSTER, testCluster.getCluster());
+        STORE.publish(EntityType.CLUSTER, testCluster.getCluster());
         SharedLibraryHostingService listener = new SharedLibraryHostingService();
         listener.onAdd(testCluster.getCluster());
         fs = FileSystem.get(testCluster.getConf());
@@ -73,8 +73,8 @@ public class LogMoverTest {
 
         testProcess = new ProcessEntityParser().parse(LogMoverTest.class
                 .getResourceAsStream("/org/apache/falcon/logging/process.xml"));
-        testProcess.setName(processName);
-        store.publish(EntityType.PROCESS, testProcess);
+        testProcess.setName(PROCESS_NAME);
+        STORE.publish(EntityType.PROCESS, testProcess);
     }
 
     @AfterClass
@@ -84,9 +84,9 @@ public class LogMoverTest {
 
     private void cleanupStore() throws FalconException {
         for (EntityType type : EntityType.values()) {
-            Collection<String> entities = store.getEntities(type);
+            Collection<String> entities = STORE.getEntities(type);
             for (String entity : entities) {
-                store.remove(type, entity);
+                STORE.remove(type, entity);
             }
         }
     }
@@ -102,7 +102,7 @@ public class LogMoverTest {
         List<WorkflowJob> jobs;
         while (true) {
             jobs = client.getJobsInfo(OozieClient.FILTER_NAME + "="
-                    + "FALCON_PROCESS_DEFAULT_" + processName);
+                    + "FALCON_PROCESS_DEFAULT_" + PROCESS_NAME);
             if (jobs.size() > 0) {
                 break;
             } else {
@@ -143,7 +143,7 @@ public class LogMoverTest {
                                    ClusterHelper.getOozieUrl(testCluster.getCluster()),
                                    "-subflowId", jobId + "@user-workflow", "-runId", "1",
                                    "-logDir", getLogPath().toString() + "/job-2010-01-01-01-00",
-                                   "-status", "SUCCEEDED", "-entityType", "process"});
+                                   "-status", "SUCCEEDED", "-entityType", "process", });
 
         Path oozieLogPath = new Path(getLogPath(),
                 "job-2010-01-01-01-00/001/oozie.log");

@@ -18,7 +18,6 @@
 package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
-import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
@@ -27,7 +26,6 @@ import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
@@ -48,11 +46,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * Test class for Entity REST APIs.
+ *
+ * Tests should be enabled only in local environments as they need running instance of the web server.
+ */
 public class EntityManagerJerseyTest extends AbstractTestBase {
-    /**
-     * Tests should be enabled only in local environments as they need running
-     * instance of webserver
-     */
 
     @Test
     public void testUpdateCheckUser() throws Exception {
@@ -216,7 +215,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -238,15 +237,15 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
     }
 
     @Test
-    public void testNotFoundStatus() throws FalconWebException {
+    public void testNotFoundStatus() {
         ClientResponse response;
         String feed1 = "f1" + System.currentTimeMillis();
         response = this.service
@@ -255,21 +254,19 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-
     }
 
     @Test
-    public void testVersion() throws FalconWebException {
+    public void testVersion() {
         ClientResponse response;
         response = this.service
                 .path("api/admin/version")
                 .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
         String status = response.getEntity(String.class);
-        Assert.assertEquals(status, "{Version:\"" +
-                BuildProperties.get().getProperty("build.version") + "\",Mode:\"" +
-                DeploymentProperties.get().getProperty("deploy.mode") + "\"}");
-
+        Assert.assertEquals(status, "{Version:\""
+                + BuildProperties.get().getProperty("build.version") + "\",Mode:\""
+                + DeploymentProperties.get().getProperty("deploy.mode") + "\"}");
     }
 
     @Test
@@ -293,7 +290,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         Map<String, String> overlay = getUniqueOverlay();
 
         InputStream stream = getServletInputStream(overlayParametersOverTemplate(
-                CLUSTER_FILE_TEMPLATE, overlay));
+                clusterFileTemplate, overlay));
 
         clientRepsonse = this.service.path("api/entities/validate/cluster")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
@@ -307,7 +304,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse clientRepsonse;
         Map<String, String> overlay = getUniqueOverlay();
 
-        clientRepsonse = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay,
+        clientRepsonse = submitToFalcon(clusterFileTemplate, overlay,
                 EntityType.CLUSTER);
         assertSuccessful(clientRepsonse);
 
@@ -345,7 +342,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -363,7 +360,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -415,7 +412,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -484,7 +481,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -503,7 +500,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
         ClientResponse response;
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -551,7 +548,6 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
                 .header("Remote-User", REMOTE_USER)
                 .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
         assertSuccessful(response);
-
     }
 
     @Test
@@ -565,7 +561,7 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
 
         Map<String, String> overlay = getUniqueOverlay();
 
-        response = submitToFalcon(CLUSTER_FILE_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = this.service
@@ -573,6 +569,5 @@ public class EntityManagerJerseyTest extends AbstractTestBase {
                 .header("Remote-User", REMOTE_USER).type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML).get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
-
     }
 }

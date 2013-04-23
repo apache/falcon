@@ -21,7 +21,16 @@ package org.apache.falcon;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.util.EmbeddedServer;
 
-public class Main {
+/**
+ * Driver for running Falcon as a standalone server with embedded jetty server.
+ */
+public final class Main {
+
+    /**
+     * Prevent users from constructing this.
+     */
+    private Main() {
+    }
 
     public static void main(String[] args) throws Exception {
 

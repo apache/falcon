@@ -18,7 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.falcon.FalconWebException;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
@@ -27,6 +26,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * Entity management operations as REST API for feed and process.
+ */
 @Path("entities")
 public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
@@ -37,8 +39,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
                                @Dimension("entityName") @PathParam("entity") String entity,
-                               @Dimension("colo") @QueryParam("colo") final String colo)
-            throws FalconWebException {
+                               @Dimension("colo") @QueryParam("colo") final String colo) {
         return super.getStatus(type, entity, colo);
     }
 

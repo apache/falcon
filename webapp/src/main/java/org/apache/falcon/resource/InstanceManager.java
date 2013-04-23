@@ -26,6 +26,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * This class provides RESTful API for the lifecycle management of the entity instances.
+ */
 @Path("instance")
 public class InstanceManager extends AbstractInstanceManager {
 

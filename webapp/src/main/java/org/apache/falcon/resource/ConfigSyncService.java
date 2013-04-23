@@ -26,6 +26,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * This class provides RESTful API for Entity Configurations.
+ */
 @Path("sync")
 public class ConfigSyncService extends AbstractEntityManager {
 
@@ -64,5 +67,4 @@ public class ConfigSyncService extends AbstractEntityManager {
                             @Dimension("colo") @QueryParam("colo") String colo) {
         return super.update(request, type, entityName, colo);
     }
-
 }
