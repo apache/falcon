@@ -20,12 +20,78 @@
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
     <version>0.2-SNAPSHOT</version>
-    <description>Data Management and Feed Processing Platform over Hadoop</description>
+    <description>Data Management and Processing Platform over Hadoop</description>
     <name>Apache Falcon</name>
     <packaging>pom</packaging>
-    <url>https://github.com/sriksun/Falcon</url>
+    <url>http://falcon.incubator.apache.org/</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/FALCON</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/job/falcon</url>
+    </ciManagement>
+
+    <inceptionYear>2013</inceptionYear>
+
+    <mailingLists>
+        <mailingList>
+            <name>falcon-user</name>
+            <subscribe>user-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>user@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>falcon-dev</name>
+            <subscribe>dev-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>dev@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>falcon-commits</name>
+            <subscribe>commits-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>commits@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Internal Repository</name>
+            <url>${internal.maven.repo}</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
+        <!-- platform encoding override -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <include.prism>true</include.prism>
 
         <hadoop.version>1.1.2</hadoop.version>
@@ -79,26 +145,6 @@
         <module>webapp</module>
         <module>build-tools</module>
     </modules>
-
-    <scm>
-        <connection>scm:git:git://github.com/sriksun/Falcon.git</connection>
-        <url>https://github.com/sriksun/Falcon</url>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Internal Repository</name>
-            <url>${internal.maven.repo}</url>
-        </repository>
-    </distributionManagement>
-
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
 
     <repositories>
         <repository>
@@ -612,6 +658,12 @@
                     <artifactId>findbugs-maven-plugin</artifactId>
                     <version>2.5.2</version>
                 </plugin>
+                <!-- Source code metrics: mvn javancss:report or mvn site -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>javancss-maven-plugin</artifactId>
+                    <version>2.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -700,6 +752,7 @@
                     <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
                     <excludeSubProjects>true</excludeSubProjects>
                     <excludes>
+                        <exclude>CHANGES.txt</exclude>
                         <exclude>.git/**</exclude>
                         <exclude>.idea/**</exclude>
                         <exclude>docs/src/site/twiki/*.twiki</exclude>
@@ -763,6 +816,11 @@
                         <phase>verify</phase>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Source code metrics: mvn javancss:report or mvn site -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>javancss-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

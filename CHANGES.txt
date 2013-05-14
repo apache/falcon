@@ -11,6 +11,9 @@ Trunk (Unreleased)
     FALCON-10 Add findbugs plugin and fix findbugs warnings for project (Venkatesh
     Seetharam via Srikanth Sundarrajan) 
 
+    FALCON-13 super pom must reflect license, project website, ML and SCM changes 
+    post incubation (Venkatesh Seetharam via Srikanth Sundarrajan) 
+
   OPTIMIZATIONS
 
   BUG FIXES
