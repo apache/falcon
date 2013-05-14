@@ -19,6 +19,7 @@
 package org.apache.falcon;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
 
 /**
@@ -34,8 +35,9 @@ public final class Main {
 
     public static void main(String[] args) throws Exception {
 
+        String projectVersion = BuildProperties.get().getProperty("project.version");
         EmbeddedServer server = new EmbeddedServer(15000,
-                "webapp/target/falcon-webapp-0.2-SNAPSHOT");
+                "webapp/target/falcon-webapp-" + projectVersion);
         server.start();
 
         BrokerService broker = new BrokerService();

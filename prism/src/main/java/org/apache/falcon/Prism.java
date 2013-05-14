@@ -18,6 +18,7 @@
 
 package org.apache.falcon;
 
+import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
 
 /**
@@ -43,8 +44,9 @@ public final class Prism {
      * @throws Exception exception
      */
     public static void main(final String[] args) throws Exception {
+        String projectVersion = BuildProperties.get().getProperty("project.version");
         EmbeddedServer server = new EmbeddedServer(PORT,
-                "prism/target/falcon-prism-0.2-SNAPSHOT");
+                "prism/target/falcon-prism-" + projectVersion);
         server.start();
     }
 }

@@ -27,7 +27,7 @@
 *Setting up Falcon server properties:*
 Inside your web container, where the falcon war has exploded, you should be able to find 2 files, startup.properties and runtime.properties.
 The path would be:
-<container-base>/<war-location>/falcon-webapp-0.2-SNAPSHOT/WEB-INF/classes
+<container-base>/<war-location>/falcon-webapp-<<project version>>/WEB-INF/classes
 
 *startup.properties:* Specifies values/paths used by Falcon on startup. Common entries usually include config store location
 ,broker url (for messaging), and other settings.Any changes to this requires Falcon to be restarted to take effect.
