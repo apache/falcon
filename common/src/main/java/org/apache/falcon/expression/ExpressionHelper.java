@@ -93,6 +93,7 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         referenceDate.set(date);
     }
 
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"SF_SWITCH_FALLTHROUGH"})
     private static Date getRelative(Date date, int boundary, int month, int day, int hour, int minute) {
         Calendar dsInstanceCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         dsInstanceCal.setTime(date);

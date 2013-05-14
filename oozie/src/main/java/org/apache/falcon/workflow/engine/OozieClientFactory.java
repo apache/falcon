@@ -52,10 +52,8 @@ public final class OozieClientFactory {
             OozieClient ref = getClientRef(oozieUrl);
             LOG.info("Caching Oozie client object for " + oozieUrl);
             CACHE.putIfAbsent(oozieUrl, ref);
-            return ref;
-        } else {
-            return CACHE.get(oozieUrl);
         }
+        return CACHE.get(oozieUrl);
     }
 
     public static OozieClient get(String cluster) throws FalconException {

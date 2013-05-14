@@ -55,7 +55,7 @@ public class LogCleanupService implements FalconService {
 
     }
 
-    private class CleanupThread extends TimerTask {
+    private static class CleanupThread extends TimerTask {
 
         private AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
         private AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();

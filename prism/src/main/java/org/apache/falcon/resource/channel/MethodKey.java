@@ -40,7 +40,7 @@ public class MethodKey {
 
     public MethodKey(String name, Class[] args) {
         this.name = name;
-        argClasses = args;
+        argClasses = args.clone();
     }
 
     @Override

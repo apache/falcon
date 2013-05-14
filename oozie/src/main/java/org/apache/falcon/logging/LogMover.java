@@ -63,7 +63,6 @@ public class LogMover extends Configured implements Tool {
         private String subflowId;
         private String runId;
         private String logDir;
-        private String status;
         private String entityType;
     }
 
@@ -92,7 +91,7 @@ public class LogMover extends Configured implements Tool {
             if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
                 // if replication wf
                 copyOozieLog(client, fs, path, jobInfo.getId());
-                copyTTlogs(args, fs, path, jobInfo.getActions().get(2));
+                copyTTlogs(fs, path, jobInfo.getActions().get(2));
             } else {
                 // if process wf
                 String subflowId = jobInfo.getExternalId();
@@ -102,7 +101,7 @@ public class LogMover extends Configured implements Tool {
                 for (WorkflowAction action : actions) {
                     if (action.getType().equals("pig")
                             || action.getType().equals("java")) {
-                        copyTTlogs(args, fs, path, action);
+                        copyTTlogs(fs, path, action);
                     } else {
                         LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
                                 + action.getName());
@@ -125,7 +124,7 @@ public class LogMover extends Configured implements Tool {
         LOG.info("Copied oozie log to " + path);
     }
 
-    private void copyTTlogs(ARGS args, FileSystem fs, Path path,
+    private void copyTTlogs(FileSystem fs, Path path,
                             WorkflowAction action) throws Exception {
         String ttLogURL = getTTlogURL(action.getExternalId());
         if (ttLogURL != null) {
@@ -178,9 +177,7 @@ public class LogMover extends Configured implements Tool {
         args.subflowId = cmd.getOptionValue("subflowId");
         args.runId = cmd.getOptionValue("runId");
         args.logDir = cmd.getOptionValue("logDir");
-        args.status = cmd.getOptionValue("status");
         args.entityType = cmd.getOptionValue("entityType");
-
     }
 
     private String getTTlogURL(String jobId) throws Exception {
@@ -208,5 +205,4 @@ public class LogMover extends Configured implements Tool {
         connection.connect();
         return connection.getInputStream();
     }
-
 }

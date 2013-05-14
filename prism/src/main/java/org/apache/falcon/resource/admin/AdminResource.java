@@ -111,6 +111,7 @@ public class AdminResource {
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     @XmlRootElement(name = "property")
     @XmlAccessorType(XmlAccessType.FIELD)
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
     private static class Property {
         public String key;
         public String value;
@@ -120,6 +121,7 @@ public class AdminResource {
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     @XmlRootElement(name = "properties")
     @XmlAccessorType(XmlAccessType.FIELD)
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
     private static class PropertyList {
         public List<Property> properties;
     }

@@ -42,12 +42,12 @@ public class CLIParser {
     /**
      * Create a parser.
      *
-     * @param cliName name of the parser, for help purposes.
-     * @param cliHelp help for the CLI.
+     * @param aCliName name of the parser, for help purposes.
+     * @param aCliHelp help for the CLI.
      */
-    public CLIParser(String cliName, String[] cliHelp) {
-        this.cliName = cliName;
-        this.cliHelp = cliHelp;
+    public CLIParser(String aCliName, String[] aCliHelp) {
+        this.cliName = aCliName;
+        this.cliHelp = aCliHelp.clone();
     }
 
     /**
@@ -57,7 +57,7 @@ public class CLIParser {
      * @param argsHelp       command arguments help.
      * @param commandHelp    command description.
      * @param commandOptions command options.
-     * @param hasArguments
+     * @param hasArguments   has args
      */
     public void addCommand(String command, String argsHelp, String commandHelp, Options commandOptions,
                            boolean hasArguments) {
@@ -70,7 +70,7 @@ public class CLIParser {
     /**
      * Bean that represents a parsed command.
      */
-    public final class Command {
+    public static final class Command {
         private String name;
         private CommandLine commandLine;
 

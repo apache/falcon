@@ -133,7 +133,6 @@ public class FeedEvictor extends Configured implements Tool {
                 instancePaths.append(path).append(",");
             }
         }
-
     }
 
     private void logInstancePaths(Path path) throws IOException {

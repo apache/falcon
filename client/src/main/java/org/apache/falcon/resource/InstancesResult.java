@@ -27,6 +27,7 @@ import java.util.Date;
  */
 //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
 @XmlRootElement
+@edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class InstancesResult extends APIResult {
 
     /**

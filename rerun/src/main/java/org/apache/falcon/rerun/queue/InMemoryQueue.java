@@ -18,6 +18,7 @@
 package org.apache.falcon.rerun.queue;
 
 import org.apache.falcon.FalconException;
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.event.RerunEventFactory;
@@ -36,7 +37,11 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
     public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
 
     protected DelayQueue<T> delayQueue = new DelayQueue<T>();
-    private File serializeFilePath;
+    private final File serializeFilePath;
+
+    public InMemoryQueue(File serializeFilePath) {
+        this.serializeFilePath = serializeFilePath;
+    }
 
     @Override
     public boolean offer(T event) {
@@ -59,10 +64,6 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
         return event;
     }
 
-    public InMemoryQueue(File serializeFilePath) {
-        this.serializeFilePath = serializeFilePath;
-    }
-
     public void populateQueue(List<T> events) {
         for (T event : events) {
             delayQueue.offer(event);
@@ -82,17 +83,18 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     private void beforeRetry(T event) {
         File retryFile = getRetryFile(serializeFilePath, event);
+        BufferedWriter out = null;
         try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(retryFile,
-                    true));
+            out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(retryFile, true)));
             out.write(event.toString());
             out.newLine();
             out.close();
         } catch (IOException e) {
-            LOG.warn(
-                    "Unable to write entry for process-instance: "
+            LOG.warn("Unable to write entry for process-instance: "
                             + event.getEntityName() + ":"
                             + event.getInstance(), e);
+        } finally {
+            IOUtils.closeQuietly(out);
         }
     }
 
@@ -121,24 +123,25 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     private List<T> bootstrap() {
         List<T> rerunEvents = new ArrayList<T>();
-        for (File rerunFile : this.serializeFilePath.listFiles()) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(
-                        rerunFile));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    line.split("");
-                    T event = new RerunEventFactory<T>().getRerunEvent(
-                            rerunFile.getName(), line);
-                    rerunEvents.add(event);
+        File[] files = serializeFilePath.listFiles();
+        if (files != null) {
+            for (File rerunFile : files) {
+                BufferedReader reader = null;
+                try {
+                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(rerunFile), "UTF_8"));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        T event = new RerunEventFactory<T>().getRerunEvent(
+                                rerunFile.getName(), line);
+                        rerunEvents.add(event);
+                    }
+                } catch (Exception e) {
+                    LOG.warn("Not able to read rerun entry " + rerunFile.getAbsolutePath(), e);
+                } finally {
+                    IOUtils.closeQuietly(reader);
                 }
-            } catch (Exception e) {
-                LOG.warn(
-                        "Not able to read rerun entry "
-                                + rerunFile.getAbsolutePath(), e);
             }
         }
-
         return rerunEvents;
     }
 }

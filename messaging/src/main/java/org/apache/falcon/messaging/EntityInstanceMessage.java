@@ -41,8 +41,7 @@ import java.util.Map;
 public class EntityInstanceMessage {
 
     private final Map<ARG, String> keyValueMap = new LinkedHashMap<ARG, String>();
-    private static final Logger LOG = Logger
-            .getLogger(EntityInstanceMessage.class);
+    private static final Logger LOG = Logger.getLogger(EntityInstanceMessage.class);
     private static final String FALCON_ENTITY_TOPIC_NAME = "FALCON.ENTITY.TOPIC";
 
     /**
@@ -211,7 +210,6 @@ public class EntityInstanceMessage {
             LOG.debug("Returning instance paths for feed " + instancePaths[1]);
             return instancePaths[1].split(",");
         }
-
     }
 
     public String getFalconDate(String nominalTime) throws ParseException {
@@ -223,5 +221,4 @@ public class EntityInstanceMessage {
         return falconFormat.format(nominalDate);
 
     }
-
 }

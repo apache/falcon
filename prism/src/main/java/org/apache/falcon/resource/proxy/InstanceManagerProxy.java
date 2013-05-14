@@ -220,12 +220,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             Map<String, InstancesResult> results = new HashMap<String, InstancesResult>();
             for (String colo : colos) {
                 try {
-                    APIResult resultHolder = doExecute(colo);
-                    if (resultHolder instanceof InstancesResult) {
-                        results.put(colo, (InstancesResult) resultHolder);
-                    } else {
-                        throw new FalconException(resultHolder.getMessage());
-                    }
+                    InstancesResult resultHolder = doExecute(colo);
+                    results.put(colo, resultHolder);
                 } catch (FalconException e) {
                     results.put(colo, new InstancesResult(APIResult.Status.FAILED,
                             e.getClass().getName() + "::" + e.getMessage(),
@@ -252,7 +248,8 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         StringBuilder requestIds = new StringBuilder();
         List<Instance> instances = new ArrayList<Instance>();
         int statusCount = 0;
-        for (String colo : results.keySet()) {
+        for (Map.Entry<String, InstancesResult> entry : results.entrySet()) {
+            String colo = entry.getKey();
             InstancesResult result = results.get(colo);
             message.append(colo).append('/').append(result.getMessage()).append('\n');
             requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');

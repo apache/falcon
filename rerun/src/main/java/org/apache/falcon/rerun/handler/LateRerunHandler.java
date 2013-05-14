@@ -118,7 +118,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         PolicyType latePolicy = lateProcess.getPolicy();
         Date cutOffTime = getCutOffTime(entity, nominalTime);
         Date now = new Date();
-        Long wait = null;
+        Long wait;
 
         if (now.after(cutOffTime)) {
             LOG.warn("Feed Cut Off time: "
@@ -144,7 +144,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         ExpressionHelper evaluator = ExpressionHelper.get();
         Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
         ExpressionHelper.setReferenceDate(instanceStart);
-        Date endTime = new Date();
+        Date endTime;
         Date feedCutOff = new Date(0);
         if (entity.getEntityType() == EntityType.FEED) {
             if (((Feed) entity).getLateArrival() == null) {
@@ -169,6 +169,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                         feed = store.get(EntityType.FEED, input.getFeed());
                         break;
                     }
+                }
+                if (feed == null) {
+                    throw new IllegalStateException("No such feed: " + lp.getInput());
                 }
                 if (feed.getLateArrival() == null) {
                     LOG.debug("Feed's " + feed.getName()

@@ -95,8 +95,7 @@ public class LateDataHandler extends Configured implements Tool {
 
         OutputStream out = file.getFileSystem(getConf()).create(file);
         for (Map.Entry<String, Long> entry : map.entrySet()) {
-            out.write((entry.getKey() + "=" + entry.getValue() + "\n")
-                    .getBytes());
+            out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
         }
         out.close();
         return 0;
@@ -114,8 +113,8 @@ public class LateDataHandler extends Configured implements Tool {
         throws Exception {
 
         StringBuilder buffer = new StringBuilder();
-        BufferedReader in = new BufferedReader(new InputStreamReader(file
-                .getFileSystem(conf).open(file)));
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                file.getFileSystem(conf).open(file)));
         String line;
         try {
             Map<String, Long> recorded = new LinkedHashMap<String, Long>();

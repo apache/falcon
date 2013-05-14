@@ -38,9 +38,8 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
 
     @Override
-    public void handleRerun(String cluster, String entityType,
-                            String entityName, String nominalTime, String runId, String wfId,
-                            long msgReceivedTime) {
+    public void handleRerun(String cluster, String entityType, String entityName,
+                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
         try {
             Entity entity = getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
@@ -57,10 +56,8 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
             int intRunId = Integer.parseInt(runId);
 
             if (attempts > intRunId) {
-                AbstractRerunPolicy rerunPolicy = RerunPolicyFactory
-                        .getRetryPolicy(policy);
-                long delayTime = rerunPolicy.getDelay(delay,
-                        Integer.parseInt(runId));
+                AbstractRerunPolicy rerunPolicy = RerunPolicyFactory.getRetryPolicy(policy);
+                long delayTime = rerunPolicy.getDelay(delay, Integer.parseInt(runId));
                 RetryEvent event = new RetryEvent(cluster, wfId,
                         msgReceivedTime, delayTime, entityType, entityName,
                         nominalTime, intRunId, attempts, 0);
@@ -76,13 +73,10 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
                         "All retry attempt failed out of configured: "
                                 + attempts + " attempt for entity instance::");
             }
-        } catch (Exception e) {
-            LOG.error("Error during retry of entity instance " + entityName
-                    + ":" + nominalTime, e);
-            GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
-                    wfId, runId, e.getMessage());
+        } catch (FalconException e) {
+            LOG.error("Error during retry of entity instance " + entityName + ":" + nominalTime, e);
+            GenericAlert.alertRetryFailed(entityType, entityName, nominalTime, wfId, runId, e.getMessage());
         }
-
     }
 
     @Override

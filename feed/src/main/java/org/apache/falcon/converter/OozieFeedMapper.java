@@ -148,7 +148,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             retentionWorkflow.setConfiguration(getCoordConfig(props));
             retentionAction.setWorkflow(retentionWorkflow);
             return retentionAction;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new FalconException("Unable to create parent/retention workflow", e);
         }
     }
@@ -328,7 +328,5 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             }
         }
         return null;
-
     }
-
 }

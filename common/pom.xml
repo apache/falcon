@@ -97,6 +97,11 @@
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-test-util</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

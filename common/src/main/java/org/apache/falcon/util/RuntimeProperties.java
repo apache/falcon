@@ -61,7 +61,7 @@ public final class RuntimeProperties extends ApplicationProperties {
     /**
      * Thread for loading properties periodically.
      */
-    private final class DynamicLoader implements Runnable {
+    private static  final class DynamicLoader implements Runnable {
 
         private static final long REFRESH_DELAY = 300000L;
         private static final int MAX_ITER = 20;  //1hr

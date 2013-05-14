@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "entities")
 @XmlAccessorType(XmlAccessType.FIELD)
+@edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class EntityList {
 
     @XmlElement(name = "entity")
@@ -80,7 +81,7 @@ public class EntityList {
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (EntityElement element : elements) {
             buffer.append(element);
         }

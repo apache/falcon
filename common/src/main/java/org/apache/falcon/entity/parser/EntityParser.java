@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity.parser;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -58,15 +59,19 @@ public abstract class EntityParser<T extends Entity> {
      * @throws FalconException
      */
     public Entity parseAndValidate(String xmlString) throws FalconException {
-        InputStream inputStream = new ByteArrayInputStream(xmlString.getBytes());
-        Entity entity = parseAndValidate(inputStream);
-        return entity;
+        InputStream inputStream = null;
+        try {
+            inputStream = new ByteArrayInputStream(xmlString.getBytes());
+            return parseAndValidate(inputStream);
+        } finally {
+            IOUtils.closeQuietly(inputStream);
+        }
     }
 
     /**
      * Parses xml stream.
      *
-     * @param xmlStream
+     * @param xmlStream stream
      * @return entity
      * @throws FalconException
      */

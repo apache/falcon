@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 
@@ -583,11 +584,16 @@ public class FalconCLI {
     }
 
     private Properties getClientProperties() throws IOException {
-        Properties prop = new Properties();
-        InputStream input = FalconCLI.class.getResourceAsStream(CLIENT_PROPERTIES);
-        if (input != null) {
-            prop.load(input);
+        InputStream inputStream = null;
+        try {
+            inputStream = FalconCLI.class.getResourceAsStream(CLIENT_PROPERTIES);
+            Properties prop = new Properties();
+            if (inputStream != null) {
+                prop.load(inputStream);
+            }
+            return prop;
+        } finally {
+            IOUtils.closeQuietly(inputStream);
         }
-        return prop;
     }
 }

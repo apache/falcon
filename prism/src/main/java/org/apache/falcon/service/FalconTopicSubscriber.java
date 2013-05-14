@@ -84,21 +84,16 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
         try {
             debug(mapMessage);
             String cluster = mapMessage.getString(ARG.cluster.getArgName());
-            String entityName = mapMessage.getString(ARG.entityName
-                    .getArgName());
-            String entityType = mapMessage.getString(ARG.entityType
-                    .getArgName());
-            String workflowId = mapMessage.getString(ARG.workflowId
-                    .getArgName());
+            String entityName = mapMessage.getString(ARG.entityName.getArgName());
+            String entityType = mapMessage.getString(ARG.entityType.getArgName());
+            String workflowId = mapMessage.getString(ARG.workflowId.getArgName());
             String runId = mapMessage.getString(ARG.runId.getArgName());
-            String nominalTime = mapMessage.getString(ARG.nominalTime
-                    .getArgName());
+            String nominalTime = mapMessage.getString(ARG.nominalTime.getArgName());
             String status = mapMessage.getString(ARG.status.getArgName());
             String operation = mapMessage.getString(ARG.operation.getArgName());
 
             AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-            InstancesResult result = wfEngine
-                    .getJobDetails(cluster, workflowId);
+            InstancesResult result = wfEngine.getJobDetails(cluster, workflowId);
             Date startTime = result.getInstances()[0].startTime;
             Date endTime = result.getInstances()[0].endTime;
             Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
@@ -121,12 +116,13 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }
 
-        } catch (Exception ignore) {
-            LOG.info(
-                    "Error in onMessage for subscriber of topic: "
-                            + this.toString(), ignore);
+        } catch (JMSException e) {
+            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+        } catch (FalconException e) {
+            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+        } catch (Exception e) {
+            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
         }
-
     }
 
     private void notifySLAService(String cluster, String entityName,

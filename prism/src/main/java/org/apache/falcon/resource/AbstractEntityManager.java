@@ -164,7 +164,7 @@ public abstract class AbstractEntityManager {
      * Post an entity XML with entity type. Validates the XML which can be
      * Process, Feed or Dataendpoint
      *
-     * @param type
+     * @param type entity type
      * @return APIResule -Succeeded or Failed
      */
     public APIResult validate(HttpServletRequest request, String type) {
@@ -184,8 +184,8 @@ public abstract class AbstractEntityManager {
      * Deletes a scheduled entity, a deleted entity is removed completely from
      * execution pool.
      *
-     * @param type
-     * @param entity
+     * @param type entity type
+     * @param entity entity name
      * @return APIResult
      */
     public APIResult delete(HttpServletRequest request, String type, String entity, String colo) {
@@ -287,7 +287,7 @@ public abstract class AbstractEntityManager {
     private void canRemove(Entity entity) throws FalconException {
         Pair<String, EntityType>[] referencedBy = EntityIntegrityChecker.referencedBy(entity);
         if (referencedBy != null && referencedBy.length > 0) {
-            StringBuffer messages = new StringBuffer();
+            StringBuilder messages = new StringBuilder();
             for (Pair<String, EntityType> ref : referencedBy) {
                 messages.append(ref).append("\n");
             }
@@ -371,14 +371,14 @@ public abstract class AbstractEntityManager {
     /**
      * Returns the status of requested entity.
      *
-     * @param type
-     * @param entity
+     * @param type  entity type
+     * @param entity entity name
      * @return String
      */
     public APIResult getStatus(String type, String entity, String colo) {
 
         checkColo(colo);
-        Entity entityObj = null;
+        Entity entityObj;
         try {
             entityObj = EntityUtil.getEntity(type, entity);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -410,19 +410,19 @@ public abstract class AbstractEntityManager {
     /**
      * Returns dependencies.
      *
-     * @param type
-     * @param entity
+     * @param type entity type
+     * @param entityName entity name
      * @return EntityList
      */
-    public EntityList getDependencies(String type, String entity) {
+    public EntityList getDependencies(String type, String entityName) {
 
         try {
-            Entity entityObj = EntityUtil.getEntity(type, entity);
+            Entity entityObj = EntityUtil.getEntity(type, entityName);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
             Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
-            return new EntityList(entities == null ? new Entity[]{} : entities);
+            return new EntityList(entities);
         } catch (Exception e) {
-            LOG.error("Unable to get dependencies for entity " + entity + "(" + type + ")", e);
+            LOG.error("Unable to get dependencies for entityName " + entityName + "(" + type + ")", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
     }
@@ -430,14 +430,14 @@ public abstract class AbstractEntityManager {
     /**
      * Returns the list of entities registered of a given type.
      *
-     * @param type
+     * @param type entity type
      * @return String
      */
     public EntityList getDependencies(String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Collection<String> entityNames = configStore.getEntities(entityType);
-            if (entityNames == null || entityNames.equals("")) {
+            if (entityNames == null || entityNames.isEmpty()) {
                 return new EntityList(new Entity[]{});
             }
             Entity[] entities = new Entity[entityNames.size()];
@@ -455,8 +455,8 @@ public abstract class AbstractEntityManager {
     /**
      * Returns the entity definition as an XML based on name.
      *
-     * @param type
-     * @param entityName
+     * @param type entity type
+     * @param entityName entity name
      * @return String
      */
     public String getEntityDefinition(String type, String entityName) {

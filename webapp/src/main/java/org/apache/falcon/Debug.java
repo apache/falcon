@@ -102,8 +102,7 @@ public final class Debug {
 
     private static void store(EntityType eType, String xml) throws JAXBException, FalconException {
         Unmarshaller unmarshaller = eType.getUnmarshaller();
-        Entity obj = (Entity) unmarshaller.unmarshal(new
-                ByteArrayInputStream(xml.getBytes()));
+        Entity obj = (Entity) unmarshaller.unmarshal(new ByteArrayInputStream(xml.getBytes()));
         ConfigurationStore.get().publish(eType, obj);
     }
 }

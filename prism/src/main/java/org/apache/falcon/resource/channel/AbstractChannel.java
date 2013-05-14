@@ -40,7 +40,7 @@ public abstract class AbstractChannel implements Channel {
                         item.getParameterTypes());
                 if (methodKey.equals(itemKey)) {
                     methods.putIfAbsent(methodKey, item);
-                    return item;
+                    return methods.get(methodKey);
                 }
             }
             throw new FalconException("Lookup for " + methodKey

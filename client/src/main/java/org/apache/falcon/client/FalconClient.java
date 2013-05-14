@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
@@ -47,7 +48,7 @@ import java.util.Properties;
  */
 public class FalconClient {
 
-    protected static WebResource service;
+    private final WebResource service;
     public static final String WS_HEADER_PREFIX = "header:";
     private static final String REMOTE_USER = "Remote-User";
     private static final String USER = System.getProperty("user.name");
@@ -67,8 +68,7 @@ public class FalconClient {
         }
         Client client = Client.create(new DefaultClientConfig());
         setFalconTimeOut(client);
-        FalconClient.service = client.resource(UriBuilder.fromUri(baseUrl)
-                .build());
+        service = client.resource(UriBuilder.fromUri(baseUrl).build());
         client.resource(UriBuilder.fromUri(baseUrl).build());
 
         // addHeaders();
@@ -76,20 +76,24 @@ public class FalconClient {
 
     private void setFalconTimeOut(Client client) throws IOException {
         Properties prop = new Properties();
-        InputStream input = FalconClient.class
-                .getResourceAsStream("/client.properties");
         int readTimeout;
         int connectTimeout;
-        if (input != null) {
-            prop.load(input);
-            readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
-                    .parseInt(prop.getProperty("falcon.read.timeout")) : 180000;
-            connectTimeout = prop.containsKey("falcon.connect.timeout") ? Integer
-                    .parseInt(prop.getProperty("falcon.connect.timeout"))
-                    : 180000;
-        } else {
-            readTimeout = 180000;
-            connectTimeout = 180000;
+        InputStream inputStream = null;
+        try {
+            inputStream = FalconClient.class.getResourceAsStream("/client.properties");
+            if (inputStream != null) {
+                prop.load(inputStream);
+                readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
+                        .parseInt(prop.getProperty("falcon.read.timeout")) : 180000;
+                connectTimeout = prop.containsKey("falcon.connect.timeout") ? Integer
+                        .parseInt(prop.getProperty("falcon.connect.timeout"))
+                        : 180000;
+            } else {
+                readTimeout = 180000;
+                connectTimeout = 180000;
+            }
+        } finally {
+            IOUtils.closeQuietly(inputStream);
         }
         client.setConnectTimeout(connectTimeout);
         client.setReadTimeout(readTimeout);
@@ -316,12 +320,17 @@ public class FalconClient {
 
         StringBuilder buffer = new StringBuilder();
         if (filePath != null) {
-            BufferedReader in = new BufferedReader(new FileReader(filePath));
-            String str;
-            while ((str = in.readLine()) != null) {
-                buffer.append(str).append("\n");
+            BufferedReader in = null;
+            try {
+                in = new BufferedReader(new FileReader(filePath));
+
+                String str;
+                while ((str = in.readLine()) != null) {
+                    buffer.append(str).append("\n");
+                }
+            } finally {
+                IOUtils.closeQuietly(in);
             }
-            in.close();
         }
         String temp = (buffer.length() == 0) ? null : buffer.toString();
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
@@ -390,7 +399,7 @@ public class FalconClient {
         if (properties != null) {
             buffer.append(properties);
         }
-        stream = new ByteArrayInputStream(buffer.toString().getBytes("UTF-8"));
+        stream = new ByteArrayInputStream(buffer.toString().getBytes());
         return (buffer.length() == 0) ? null : stream;
     }
     // private ServletInputStream getServletInputStream(final InputStream

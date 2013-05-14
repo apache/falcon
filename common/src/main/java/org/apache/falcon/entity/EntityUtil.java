@@ -76,7 +76,7 @@ public final class EntityUtil {
 
     public static TimeZone getTimeZone(String tzId) {
         if (tzId == null) {
-            throw new IllegalArgumentException("Invalid TimeZone: " + tzId);
+            throw new IllegalArgumentException("Invalid TimeZone: Cannot be null.");
         }
         TimeZone tz = TimeZone.getTimeZone(tzId);
         if (!tzId.equals("GMT") && tz.getID().equals("GMT")) {
@@ -379,9 +379,10 @@ public final class EntityUtil {
             } catch (NoSuchMethodException e) {
                 try {
                     Map map = PropertyUtils.describe(obj);
-                    for (Object key : map.keySet()) {
+                    for (Object entry : map.entrySet()) {
+                        String key = (String)((Map.Entry)entry).getKey();
                         if (!key.equals("class")) {
-                            mapToProperties(map.get(key), name != null ? name + "." + key : (String) key, propMap,
+                            mapToProperties(map.get(key), name != null ? name + "." + key : key, propMap,
                                     filterProps);
                         }
                     }

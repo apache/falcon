@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.Tag;
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ExternalId;
@@ -45,6 +46,7 @@ import org.apache.oozie.client.OozieClient;
 
 import javax.xml.bind.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -74,10 +76,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
         public boolean accept(Path path) {
-            if (path.getName().startsWith("falcon")) {
-                return true;
-            }
-            return false;
+            return path.getName().startsWith("falcon");
         }
 
         @Override
@@ -229,14 +228,6 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return prop;
     }
 
-    protected org.apache.falcon.oozie.bundle.CONFIGURATION.Property createBundleProperty(String name, String value) {
-        org.apache.falcon.oozie.bundle.CONFIGURATION.Property prop
-            = new org.apache.falcon.oozie.bundle.CONFIGURATION.Property();
-        prop.setName(name);
-        prop.setValue(value);
-        return prop;
-    }
-
     protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
         throws FalconException {
 
@@ -315,26 +306,34 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected WORKFLOWAPP getWorkflowTemplate(String template) throws FalconException {
+        InputStream resourceAsStream = null;
         try {
+            resourceAsStream = AbstractOozieEntityMapper.class.getResourceAsStream(template);
             Unmarshaller unmarshaller = WORKFLOW_JAXB_CONTEXT.createUnmarshaller();
             @SuppressWarnings("unchecked")
-            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(this.getClass()
-                    .getResourceAsStream(template));
+            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(
+                    resourceAsStream);
             return jaxbElement.getValue();
         } catch (JAXBException e) {
             throw new FalconException(e);
+        } finally {
+            IOUtils.closeQuietly(resourceAsStream);
         }
     }
 
     protected COORDINATORAPP getCoordinatorTemplate(String template) throws FalconException {
+        InputStream resourceAsStream = null;
         try {
+            resourceAsStream = AbstractOozieEntityMapper.class.getResourceAsStream(template);
             Unmarshaller unmarshaller = COORD_JAXB_CONTEXT.createUnmarshaller();
             @SuppressWarnings("unchecked")
-            JAXBElement<COORDINATORAPP> jaxbElement = (JAXBElement<COORDINATORAPP>) unmarshaller
-                    .unmarshal(AbstractOozieEntityMapper.class.getResourceAsStream(template));
+            JAXBElement<COORDINATORAPP> jaxbElement = (JAXBElement<COORDINATORAPP>)
+                    unmarshaller.unmarshal(resourceAsStream);
             return jaxbElement.getValue();
         } catch (JAXBException e) {
             throw new FalconException(e);
+        } finally {
+            IOUtils.closeQuietly(resourceAsStream);
         }
     }
 }

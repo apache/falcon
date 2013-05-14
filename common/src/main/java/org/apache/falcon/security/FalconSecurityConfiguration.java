@@ -44,7 +44,7 @@ public class FalconSecurityConfiguration extends Configuration {
     @Override
     public AppConfigurationEntry[] getAppConfigurationEntry(String appName) {
         if (parent == null || appName.equals(SecurityConstants.FALCON_LOGIN)) {
-            return SIMPLE_CONF;
+            return SIMPLE_CONF.clone();
         } else {
             return parent.getAppConfigurationEntry(appName);
         }

@@ -91,6 +91,7 @@ public enum EntityType {
         return this != EntityType.CLUSTER;
     }
 
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"EI_EXPOSE_REP"})
     public String[] getImmutableProperties() {
         return immutableProperties;
     }

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Event representing a rerun.
  */
+@edu.umd.cs.findbugs.annotations.SuppressWarnings({"EQ_COMPARETO_USE_OBJECT_EQUALS"})
 public class RerunEvent implements Delayed {
 
     protected static final String SEP = "*";
@@ -86,6 +87,7 @@ public class RerunEvent implements Delayed {
         return entityType;
     }
 
+
     @Override
     public int compareTo(Delayed o) {
         RerunEvent event = (RerunEvent) o;
@@ -116,5 +118,4 @@ public class RerunEvent implements Delayed {
             return null;
         }
     }
-
 }

@@ -37,7 +37,7 @@ public final class DeploymentUtil {
 
     protected static final String CURRENT_COLO;
     protected static final boolean EMBEDDED_MODE;
-    protected static boolean prism = false;
+    private static boolean prism = false;
 
     static {
         DEFAULT_ALL_COLOS.add(DEFAULT_COLO);

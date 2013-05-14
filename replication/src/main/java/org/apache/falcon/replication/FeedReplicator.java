@@ -106,10 +106,11 @@ public class FeedReplicator extends Configured implements Tool {
             part = index;
             break;
         }
-        String result = "";
+        StringBuilder resultBuffer = new StringBuilder();
         for (int index = 0; index <= part; index++) {
-            result += (patterns[index] + "/");
+            resultBuffer.append(patterns[index]).append("/");
         }
+        String result = resultBuffer.toString();
         return result.substring(0, result.lastIndexOf('/'));
     }
 

@@ -86,8 +86,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     public void schedule(Entity entity) throws FalconException {
         Map<String, BundleJob> bundleMap = findLatestBundle(entity);
         List<String> schedClusters = new ArrayList<String>();
-        for (String cluster : bundleMap.keySet()) {
-            BundleJob bundleJob = bundleMap.get(cluster);
+        for (Map.Entry<String, BundleJob> entry : bundleMap.entrySet()) {
+            String cluster = entry.getKey();
+            BundleJob bundleJob = entry.getValue();
             if (bundleJob == MISSING || bundleJob.getStatus().equals(Job.Status.KILLED)) {
                 if (bundleJob != MISSING) {
                     LOG.warn("Bundle id: " + bundleJob.getId() + " is in killed state, so allowing schedule");
@@ -103,10 +104,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     ENGINE, entity);
             Map<String, Properties> newFlows = builder.newWorkflowSchedule(
                     entity, schedClusters);
-            for (String cluster : newFlows.keySet()) {
+            for (Map.Entry<String, Properties> entry : newFlows.entrySet()) {
+                String cluster = entry.getKey();
                 LOG.info("Scheduling " + entity.toShortString()
                         + " on cluster " + cluster);
-                scheduleEntity(cluster, newFlows.get(cluster), entity);
+                scheduleEntity(cluster, entry.getValue(), entity);
             }
         }
     }
@@ -216,10 +218,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
         Map<String, BundleJob> bundleMap = new HashMap<String, BundleJob>();
-        for (String cluster : bundlesMap.keySet()) {
+        for (Map.Entry<String, List<BundleJob>> entry : bundlesMap.entrySet()) {
+            String cluster = entry.getKey();
             Date latest = null;
             bundleMap.put(cluster, MISSING);
-            for (BundleJob job : bundlesMap.get(cluster)) {
+            for (BundleJob job : entry.getValue()) {
                 if (latest == null || latest.before(job.getCreatedTime())) {
                     bundleMap.put(cluster, job);
                     latest = job.getCreatedTime();
@@ -481,60 +484,50 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private InstancesResult doJobAction(JobAction action, Entity entity,
                                         Date start, Date end, Properties props) throws FalconException {
-
-        Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(
-                entity, start, end);
-        List<String> clusterList = getIncludedClusters(props,
-                FALCON_INSTANCE_ACTION_CLUSTERS);
-        List<String> sourceClusterList = getIncludedClusters(props,
-                FALCON_INSTANCE_SOURCE_CLUSTERS);
+        Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end);
+        List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
+        List<String> sourceClusterList = getIncludedClusters(props, FALCON_INSTANCE_SOURCE_CLUSTERS);
         APIResult.Status overallStatus = APIResult.Status.SUCCEEDED;
         int instanceCount = 0;
 
         List<Instance> instances = new ArrayList<Instance>();
-        for (String cluster : actionsMap.keySet()) {
+        for (Map.Entry<String, List<CoordinatorAction>> entry : actionsMap.entrySet()) {
+            String cluster = entry.getKey();
             if (clusterList.size() != 0 && !clusterList.contains(cluster)) {
                 continue;
             }
 
-            List<CoordinatorAction> actions = actionsMap.get(cluster);
+            List<CoordinatorAction> actions = entry.getValue();
             String sourceCluster = null;
             for (CoordinatorAction coordinatorAction : actions) {
                 if (entity.getEntityType() == EntityType.FEED) {
-                    sourceCluster = getSourceCluster(cluster,
-                            coordinatorAction, entity);
-                    if (sourceClusterList.size() != 0
-                            && !sourceClusterList.contains(sourceCluster)) {
+                    sourceCluster = getSourceCluster(cluster, coordinatorAction, entity);
+                    if (sourceClusterList.size() != 0 && !sourceClusterList.contains(sourceCluster)) {
                         continue;
                     }
                 }
                 String status = mapActionStatus(coordinatorAction.getStatus());
                 WorkflowJob jobInfo = null;
                 if (coordinatorAction.getExternalId() != null) {
-                    jobInfo = getWorkflowInfo(cluster,
-                            coordinatorAction.getExternalId());
+                    jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                 }
                 instanceCount++;
                 if (jobInfo != null) {
                     status = mapWorkflowStatus(jobInfo.getStatus());
                     try {
-                        status = performAction(action, props, cluster, status,
-                                jobInfo);
+                        status = performAction(action, props, cluster, status, jobInfo);
                     } catch (FalconException e) {
-                        LOG.warn("Unable to perform action " + action
-                                + " on cluster ", e);
+                        LOG.warn("Unable to perform action " + action + " on cluster ", e);
                         status = WorkflowStatus.ERROR.name();
                         overallStatus = APIResult.Status.PARTIAL;
                     }
                 }
                 if (action != OozieWorkflowEngine.JobAction.STATUS
                         && coordinatorAction.getExternalId() != null) {
-                    jobInfo = getWorkflowInfo(cluster,
-                            coordinatorAction.getExternalId());
+                    jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                 }
 
-                String nominalTimeStr = SchemaHelper
-                        .formatDateUTC(coordinatorAction.getNominalTime());
+                String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
                 InstancesResult.Instance instance = new InstancesResult.Instance(
                         cluster, nominalTimeStr, WorkflowStatus.valueOf(status));
                 if (jobInfo != null) {
@@ -543,18 +536,15 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     instance.logFile = jobInfo.getConsoleUrl();
                     instance.sourceCluster = sourceCluster;
                 }
-                instance.details = coordinatorAction
-                        .getMissingDependencies();
+                instance.details = coordinatorAction.getMissingDependencies();
                 instances.add(instance);
             }
         }
         if (instanceCount < 2 && overallStatus == APIResult.Status.PARTIAL) {
             overallStatus = APIResult.Status.FAILED;
         }
-        InstancesResult instancesResult = new InstancesResult(overallStatus,
-                action.name());
-        instancesResult.setInstances(instances.toArray(new Instance[instances
-                .size()]));
+        InstancesResult instancesResult = new InstancesResult(overallStatus, action.name());
+        instancesResult.setInstances(instances.toArray(new Instance[instances.size()]));
         return instancesResult;
     }
 
@@ -659,39 +649,33 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
         Map<String, List<CoordinatorAction>> actionsMap = new HashMap<String, List<CoordinatorAction>>();
 
-        for (String cluster : bundlesMap.keySet()) {
-            List<BundleJob> bundles = bundlesMap.get(cluster);
+        for (Map.Entry<String, List<BundleJob>> entry : bundlesMap.entrySet()) {
+            String cluster = entry.getKey();
+            List<BundleJob> bundles = entry.getValue();
             OozieClient client = OozieClientFactory.get(cluster);
-            List<CoordinatorJob> applicableCoords = getApplicableCoords(entity,
-                    client, start, end, bundles);
+            List<CoordinatorJob> applicableCoords = getApplicableCoords(entity, client, start, end, bundles);
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
 
             for (CoordinatorJob coord : applicableCoords) {
-                Frequency freq = createFrequency(coord.getFrequency(),
-                        coord.getTimeUnit());
+                Frequency freq = createFrequency(coord.getFrequency(), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
-                Date iterStart = EntityUtil.getNextStartTime(
-                        coord.getStartTime(), freq, tz, start);
+                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
                 Date iterEnd = (coord.getNextMaterializedTime().before(end) ? coord.getNextMaterializedTime() : end);
                 while (!iterStart.after(iterEnd)) {
-                    int sequence = EntityUtil.getInstanceSequence(
-                            coord.getStartTime(), freq, tz, iterStart);
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterStart);
                     String actionId = coord.getId() + "@" + sequence;
                     CoordinatorAction coordActionInfo = null;
                     try {
                         coordActionInfo = client.getCoordActionInfo(actionId);
                     } catch (OozieClientException e) {
-                        LOG.debug("Unable to get action for " + actionId + " "
-                                + e.getMessage());
+                        LOG.debug("Unable to get action for " + actionId + " " + e.getMessage());
                     }
                     if (coordActionInfo != null) {
                         actions.add(coordActionInfo);
                     }
-                    Calendar startCal = Calendar.getInstance(EntityUtil
-                            .getTimeZone(coord.getTimeZone()));
+                    Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                     startCal.setTime(iterStart);
-                    startCal.add(freq.getTimeUnit().getCalendarUnit(),
-                            coord.getFrequency());
+                    startCal.add(freq.getTimeUnit().getCalendarUnit(), coord.getFrequency());
                     iterStart = startCal.getTime();
                 }
             }
@@ -851,7 +835,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private Date offsetTime(Date date, int minute) {
-        return new Date(date.getTime() + minute * 60 * 1000);
+        return new Date(1000L * 60 * minute + date.getTime());
     }
 
     private Date getCoordLastActionTime(CoordinatorJob coord) {

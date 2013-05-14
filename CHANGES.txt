@@ -1,0 +1,16 @@
+Apache Falcon (incubating) Change log
+
+Trunk (Unreleased)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+
+    FALCON-10 Add findbugs plugin and fix findbugs warnings for project (Venkatesh
+    Seetharam via Srikanth Sundarrajan) 
+
+  OPTIMIZATIONS
+
+  BUG FIXES

@@ -74,12 +74,10 @@ public class CustomOozieClient extends OozieClient {
         protected Properties call(HttpURLConnection conn) throws IOException, OozieClientException {
             conn.setRequestProperty("content-type", RestConstants.XML_CONTENT_TYPE);
             if ((conn.getResponseCode() == HttpURLConnection.HTTP_OK)) {
-                Reader reader = new InputStreamReader(conn.getInputStream());
+                Reader reader = new InputStreamReader(conn.getInputStream(), "UTF_8");
                 JSONObject json = (JSONObject) JSONValue.parse(reader);
                 Properties props = new Properties();
-                for (Object key : json.keySet()) {
-                    props.put(key, json.get(key));
-                }
+                props.putAll(json);
                 return props;
             } else {
                 handleError(conn);

@@ -65,7 +65,7 @@ public class FeedGroup {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof FeedGroup) || obj == null) {
+        if (obj == null || !(obj instanceof FeedGroup)) {
             return false;
         }
         FeedGroup group = (FeedGroup) obj;
@@ -94,10 +94,7 @@ public class FeedGroup {
     }
 
     public boolean canContainFeed(org.apache.falcon.entity.v0.feed.Feed feed) {
-        if (this.frequency.equals(feed.getFrequency())
-                && this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()))) {
-            return true;
-        }
-        return false;
+        return this.frequency.equals(feed.getFrequency())
+                && this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()));
     }
 }

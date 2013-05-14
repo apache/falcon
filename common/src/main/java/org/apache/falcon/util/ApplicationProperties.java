@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
@@ -79,16 +80,17 @@ public abstract class ApplicationProperties extends Properties {
         }
     }
 
-    protected void loadProperties() throws FalconException {
+    void loadProperties() throws FalconException {
         InputStream resource;
         try {
             if (location == LocationType.CLASSPATH) {
-                if (getClass().getResource(propertyFile) != null) {
-                    LOG.info("Property file being loaded from " + getClass().getResource(propertyFile));
-                    resource = getClass().getResourceAsStream(propertyFile);
+                Class clazz = ApplicationProperties.class;
+                if (clazz.getResource(propertyFile) != null) {
+                    LOG.info("Property file being loaded from " + clazz.getResource(propertyFile));
+                    resource = clazz.getResourceAsStream(propertyFile);
                 } else {
-                    LOG.info("Property file being loaded from " + getClass().getResource("/" + propertyFile));
-                    resource = getClass().getResourceAsStream("/" + propertyFile);
+                    LOG.info("Property file being loaded from " + clazz.getResource("/" + propertyFile));
+                    resource = clazz.getResourceAsStream("/" + propertyFile);
                 }
             } else {
                 resource = new FileInputStream(propertyFile);
@@ -120,7 +122,7 @@ public abstract class ApplicationProperties extends Properties {
                     resource.close();
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new FalconException(e);
         }
     }
