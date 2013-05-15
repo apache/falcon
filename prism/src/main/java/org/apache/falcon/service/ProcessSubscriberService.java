@@ -21,7 +21,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.util.StartupProperties;
 
 /**
- * An Ivory Service that initializes and starts a topic subscriber.
+ * A Falcon Service that initializes and starts a topic subscriber.
  */
 public class ProcessSubscriberService implements FalconService {
 
