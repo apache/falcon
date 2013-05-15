@@ -8,6 +8,8 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-19 Bump up the release version to 0.3-SNAPSHOT (Srikanth Sundarrajan via Venkatesh Seetharam)
+
     FALCON-10 Add findbugs plugin and fix findbugs warnings for project (Venkatesh
     Seetharam via Srikanth Sundarrajan) 
 
