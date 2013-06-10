@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-33 Add patch files to RAT ignore list (Jarek Jarcec Cecho via Srikanth
+    Sundarrajan)
+
     FALCON-22 Rename ivory to falcon in project (Venkatesh Seetharam via Srikanth
     Sundarrajan)
 

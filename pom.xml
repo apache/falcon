@@ -760,6 +760,7 @@
                         <exclude>**/target/**</exclude>
                         <exclude>**/activemq-data/**</exclude>
                         <exclude>**/build/**</exclude>
+                        <exclude>*.patch</exclude>
                     </excludes>
                 </configuration>
                 <executions>
