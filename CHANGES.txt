@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-31 File Installation-steps.txt contains old path to repository (Jarek 
+    Jarcec Cecho via Srikanth Sundarrajan)
+
     FALCON-33 Add patch files to RAT ignore list (Jarek Jarcec Cecho via Srikanth
     Sundarrajan)
 

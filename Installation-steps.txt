@@ -23,7 +23,7 @@ Installing Falcon
 
 *Falcon Server
 
-   * Download the source from https://github.com/sriksun/Falcon
+   * Download the source from https://git-wip-us.apache.org/repos/asf/incubator-falcon.git
    * Navigate to base project folder,named 'Falcon'
    * Build as "mvn clean package" at the base location. Please note that both maven 2/3 are supported.
    * By default only embedded/standalone mode is build.
