@@ -83,6 +83,31 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         parser.parseAndValidate(stringWriter.toString());
     }
 
+    /**
+     * A positive test for validating tags key value pair regex: key=value, key=value.
+     * @throws FalconException
+     */
+    @Test
+    public void testClusterTags() throws FalconException {
+        InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
+        Cluster cluster = parser.parse(stream);
+
+        final String tags = cluster.getTags();
+        Assert.assertEquals("consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting", tags);
+
+        final String[] keys = {"consumer", "owner", "department", };
+        final String[] values = {"consumer@xyz.com", "producer@xyz.com", "forecasting", };
+
+        final String[] pairs = tags.split(",");
+        Assert.assertEquals(3, pairs.length);
+        for (int i = 0; i < pairs.length; i++) {
+            String pair = pairs[i].trim();
+            String[] parts = pair.split("=");
+            Assert.assertEquals(keys[i], parts[0]);
+            Assert.assertEquals(values[i], parts[1]);
+        }
+    }
+
     @BeforeClass
     public void init() throws Exception {
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);

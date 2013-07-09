@@ -57,8 +57,9 @@
             <xs:documentation>
                 name: A feed should have a unique name and this name is referenced
                 by processes as input or output feed.
-                groups: a feed specifies a list of comma
-                separated groups,
+                tags: a feed specifies an optional list of comma separated tags
+                which is used for classification of data sets.
+                groups: a feed specifies a list of comma separated groups,
                 a group is a logical grouping of feeds and a group is said to be
                 available if all the feeds belonging to a group are available.
                 The frequency of all
@@ -77,6 +78,16 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element type="KEY_VALUE_PAIR" name="tags" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        tags: a feed specifies an optional list of comma separated tags,
+                        Key Value Pairs, separated by comma,
+                        which is used for classification of processes.
+                        Example: consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="partitions" name="partitions" minOccurs="0"/>
             <xs:element type="group-type" name="groups" minOccurs="0"/>
             <xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
@@ -337,6 +348,11 @@
     <xs:simpleType name="group-type">
         <xs:restriction base="xs:string">
             <xs:pattern value="(\w+(,\w+)*)"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="KEY_VALUE_PAIR">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

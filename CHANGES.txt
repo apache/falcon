@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-29 Add ability to tag/classify data sets and processes to enable 
+    discovery (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-31 File Installation-steps.txt contains old path to repository (Jarek 
     Jarcec Cecho via Srikanth Sundarrajan)
 

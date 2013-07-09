@@ -57,6 +57,16 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element type="KEY_VALUE_PAIR" name="tags" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        tags: a process specifies an optional list of comma separated tags,
+                        Key Value Pairs, separated by comma,
+                        which is used for classification of processes.
+                        Example: consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="interfaces" name="interfaces"/>
             <xs:element type="locations" name="locations"/>
             <xs:element type="properties" name="properties" minOccurs="0"/>
@@ -169,6 +179,11 @@
     <xs:simpleType name="IDENTIFIER">
         <xs:restriction base="xs:string">
             <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="KEY_VALUE_PAIR">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

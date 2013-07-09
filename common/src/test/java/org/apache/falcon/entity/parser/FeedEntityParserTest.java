@@ -36,6 +36,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 
 import static org.testng.AssertJUnit.assertEquals;
@@ -66,7 +67,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         cluster.setName("backupCluster");
         store.publish(EntityType.CLUSTER, cluster);
 
-        modifiableFeed = (Feed) parser.parseAndValidate(this.getClass()
+        modifiableFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
     }
 
@@ -137,9 +138,8 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidFeed() throws Exception {
-        Feed feed = (Feed) parser
-                .parseAndValidate(ProcessEntityParserTest.class
-                        .getResourceAsStream(FEED_XML));
+        Feed feed = parser.parseAndValidate(ProcessEntityParserTest.class
+                .getResourceAsStream(FEED_XML));
         feed.getClusters().getClusters().get(0).setName("invalid cluster");
         parser.validate(feed);
     }
@@ -147,7 +147,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
     @Test
     public void testPartitionExpression() throws FalconException {
-        Feed feed = (Feed) parser.parseAndValidate(ProcessEntityParserTest.class
+        Feed feed = parser.parseAndValidate(ProcessEntityParserTest.class
                 .getResourceAsStream(FEED_XML));
 
         //When there are more than 1 src clusters, there should be partition expression
@@ -429,4 +429,19 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
     }
 
+    /**
+     * A negative test for validating tags key value pair regex: key=value, key=value.
+     * @throws FalconException
+     */
+    @Test
+    public void testFeedTags() throws FalconException {
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/feed/feed-tags-0.1.xml");
+            parser.parse(stream);
+            Assert.fail("org.xml.sax.SAXParseException should have been thrown.");
+        } catch (FalconException e) {
+            Assert.assertEquals(javax.xml.bind.UnmarshalException.class, e.getCause().getClass());
+            Assert.assertEquals(org.xml.sax.SAXParseException.class, e.getCause().getCause().getClass());
+        }
+    }
 }
