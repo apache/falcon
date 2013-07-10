@@ -63,4 +63,3 @@ bin/mkdistro.sh -DskipTests > /dev/null
 echo "Falcon pacakge is available in ${FALCON_SRC}/target/falcon-<<version>>/falcon-<<version>>.tar.gz"
 echo "Oozie pacakge is available in ${FALCON_SRC}/target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz"
 popd
-

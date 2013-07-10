@@ -33,3 +33,4 @@ patch -p0 < ../../oozie-3.2.0-incubating-el.patch
 mvn clean install -DskipTests
 rm -rf oozie-3.2.0-incubating*
 popd
+

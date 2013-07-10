@@ -53,3 +53,4 @@ TIME=`date +%Y%m%d%H%M%s`
 nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main ${BASEDIR}/server/webapp/falcon.war 2> ${BASEDIR}/logs/falcon.out.$TIME &
 echo $! > ${BASEDIR}/logs/falcon.pid
 popd > /dev/null
+
