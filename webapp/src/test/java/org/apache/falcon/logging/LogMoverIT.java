@@ -20,14 +20,16 @@ package org.apache.falcon.logging;
 import junit.framework.Assert;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.cluster.util.StandAloneCluster;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.falcon.service.SharedLibraryHostingService;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,14 +39,17 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Collection;
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Test for LogMover.
  * Requires Oozie to be running on localhost.
  */
-public class LogMoverTest {
+@Test
+public class LogMoverIT {
 
     private static final ConfigurationStore STORE = ConfigurationStore.get();
     private static final String PROCESS_NAME = "testProcess" + System.currentTimeMillis();
@@ -54,27 +59,34 @@ public class LogMoverTest {
 
     @BeforeClass
     public void setup() throws Exception {
-        cleanupStore();
-        testCluster = EmbeddedCluster.newCluster("testCluster", true);
+        Map<String, String> overlay = new HashMap<String, String>();
+        overlay.put("cluster", "testCluster");
+        TestContext context = new TestContext();
+        String file = context.
+                overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+        testCluster = StandAloneCluster.newCluster(file);
         STORE.publish(EntityType.CLUSTER, testCluster.getCluster());
+/*
+        new File("target/libs").mkdirs();
+        StartupProperties.get().setProperty("system.lib.location", "target/libs");
         SharedLibraryHostingService listener = new SharedLibraryHostingService();
         listener.onAdd(testCluster.getCluster());
+*/
         fs = FileSystem.get(testCluster.getConf());
         fs.mkdirs(new Path("/workflow/lib"));
 
         fs.copyFromLocalFile(
-                new Path(LogMoverTest.class.getResource(
+                new Path(LogMoverIT.class.getResource(
                         "/org/apache/falcon/logging/workflow.xml").toURI()),
                 new Path("/workflow"));
         fs.copyFromLocalFile(
-                new Path(LogMoverTest.class.getResource(
+                new Path(LogMoverIT.class.getResource(
                         "/org/apache/falcon/logging/java-test.jar").toURI()),
                 new Path("/workflow/lib"));
 
-        testProcess = new ProcessEntityParser().parse(LogMoverTest.class
+        testProcess = new ProcessEntityParser().parse(LogMoverIT.class
                 .getResourceAsStream("/org/apache/falcon/logging/process.xml"));
         testProcess.setName(PROCESS_NAME);
-        STORE.publish(EntityType.PROCESS, testProcess);
     }
 
     @AfterClass
@@ -82,20 +94,17 @@ public class LogMoverTest {
         testCluster.shutdown();
     }
 
-    private void cleanupStore() throws FalconException {
-        for (EntityType type : EntityType.values()) {
-            Collection<String> entities = STORE.getEntities(type);
-            for (String entity : entities) {
-                STORE.remove(type, entity);
-            }
-        }
-    }
-
-    @Test
+    @Test (enabled = false)
     public void testLogMover() throws Exception {
         CurrentUser.authenticate(System.getProperty("user.name"));
         OozieWorkflowEngine engine = new OozieWorkflowEngine();
+        String path = StartupProperties.get().getProperty("system.lib.location");
+        if (!new File("target/libs").exists()) {
+            Assert.assertTrue(new File("target/libs").mkdirs());
+        }
+        StartupProperties.get().setProperty("system.lib.location", "target/libs");
         engine.schedule(testProcess);
+        StartupProperties.get().setProperty("system.lib.location", path);
 
         OozieClient client = new OozieClient(
                 ClusterHelper.getOozieUrl(testCluster.getCluster()));
@@ -106,7 +115,7 @@ public class LogMoverTest {
             if (jobs.size() > 0) {
                 break;
             } else {
-                Thread.sleep(100);
+                Thread.sleep(1000);
             }
         }
 
@@ -116,7 +125,7 @@ public class LogMoverTest {
                     .getStatus() == WorkflowJob.Status.PREP)) {
                 break;
             } else {
-                Thread.sleep(100);
+                Thread.sleep(1000);
                 job = client.getJobInfo(job.getId());
             }
         }
@@ -133,9 +142,8 @@ public class LogMoverTest {
         Path stagingPath = new Path(ClusterHelper.getLocation(
                 testCluster.getCluster(), "staging"),
                 EntityUtil.getStagingPath(testProcess) + "/../logs");
-        Path logPath = new Path(ClusterHelper.getStorageUrl(testCluster
+        return new Path(ClusterHelper.getStorageUrl(testCluster
                 .getCluster()), stagingPath);
-        return logPath;
     }
 
     private void testLogMoverWithNextRunId(String jobId) throws Exception {

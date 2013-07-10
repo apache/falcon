@@ -29,22 +29,9 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-FALCONCPPATH=""
-for i in "${BASEDIR}/lib/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-
-
-if test -z ${JAVA_HOME}
+if [ -f ${BASEDIR}/logs/falcon.pid ]
 then
-    JAVA_BIN=java
+   kill -15 `cat ${BASEDIR}/logs/falcon.pid`
 else
-    JAVA_BIN=${JAVA_HOME}/bin/java
+   echo "pid file ${BASEDIR}/logs/falcon.pid not present"
 fi
-
-JAVA_PROPERTIES=""
-while [[ ${1} =~ ^\-D ]]; do
-  JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
-  shift
-done
-${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"

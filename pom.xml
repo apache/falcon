@@ -100,6 +100,7 @@
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
+        <skipCheck>false</skipCheck>
     </properties>
 
     <profiles>
@@ -110,9 +111,11 @@
                 <module>metrics</module>
                 <module>common</module>
                 <module>test-util</module>
+                <module>hadoop-webapp</module>
                 <module>feed</module>
                 <module>messaging</module>
                 <module>process</module>
+                <module>oozie-el-extensions</module>
                 <module>oozie</module>
                 <module>acquisition</module>
                 <module>replication</module>
@@ -131,9 +134,11 @@
         <module>client</module>
         <module>common</module>
         <module>test-util</module>
+        <module>hadoop-webapp</module>
         <module>feed</module>
         <module>messaging</module>
         <module>process</module>
+        <module>oozie-el-extensions</module>
         <module>oozie</module>
         <module>acquisition</module>
         <module>replication</module>
@@ -325,13 +330,13 @@
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
-                <version>1.9</version>
+                <version>1.8</version>
             </dependency>
 
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
-                <version>1.9</version>
+                <version>1.8</version>
             </dependency>
 
             <dependency>
@@ -393,7 +398,7 @@
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-server</artifactId>
-                <version>1.9</version>
+                <version>1.8</version>
             </dependency>
 
             <dependency>
@@ -472,6 +477,19 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.oozie</groupId>
+                <artifactId>oozie-core</artifactId>
+                <version>${oozie.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.oozie</groupId>
+                <artifactId>oozie-webapp</artifactId>
+                <version>${oozie.version}</version>
+                <type>war</type>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-core</artifactId>
                 <version>${hadoop.version}</version>
@@ -532,6 +550,12 @@
 
             <dependency>
                 <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-oozie-el-extension</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-feed</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -569,9 +593,16 @@
             </dependency>
 
             <dependency>
-            	<groupId>net.sourceforge.findbugs</groupId>
-            	<artifactId>annotations</artifactId>
-            	<version>1.3.2</version>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-hadoop-webapp</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+
+            <dependency>
+                <groupId>net.sourceforge.findbugs</groupId>
+                <artifactId>annotations</artifactId>
+                <version>1.3.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -684,10 +715,12 @@
                     <doUpdate>false</doUpdate>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -696,32 +729,45 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>deploy</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <phase>deploy</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assemblies/package.xml</descriptor>
+                    </descriptors>
+                    <finalName>falcon-${project.version}</finalName>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -729,6 +775,7 @@
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -761,6 +808,8 @@
                         <exclude>**/activemq-data/**</exclude>
                         <exclude>**/build/**</exclude>
                         <exclude>*.patch</exclude>
+                        <exclude>derby.log</exclude>
+                        <exclude>**/logs/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -795,6 +844,7 @@
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>falcon/checkstyle.xml</configLocation>
                             <failOnViolation>true</failOnViolation>
+                            <skip>${skipCheck}</skip>
                         </configuration>
                     </execution>
                 </executions>
@@ -807,6 +857,7 @@
                     <xmlOutput>true</xmlOutput>
                     <excludeFilterFile>${basedir}/../build-tools/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
                     <failOnError>true</failOnError>
+                    <skip>${skipCheck}</skip>
                 </configuration>
                 <executions>
                     <execution>

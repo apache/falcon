@@ -38,17 +38,18 @@ import javax.ws.rs.core.MediaType;
  * Test class for Process Instance REST API.
  */
 @Test(enabled = false)
-public class ProcessInstanceManagerTest extends AbstractTestBase {
+public class ProcessInstanceManagerIT {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
 
-    protected void schedule() throws Exception {
-        scheduleProcess();
-        waitForProcessWFtoStart();
+    protected void schedule(TestContext context) throws Exception {
+        context.scheduleProcess();
+        context.waitForProcessWFtoStart();
     }
 
     public void testGetRunningInstances() throws Exception {
-        schedule();
-        InstancesResult response = this.service.path("api/instance/running/process/" + processName)
+        TestContext context = new TestContext();
+        schedule(context);
+        InstancesResult response = context.service.path("api/instance/running/process/" + context.processName)
                 .header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON).get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -64,8 +65,9 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testGetInstanceStatus() throws Exception {
-        schedule();
-        InstancesResult response = this.service.path("api/instance/status/process/" + processName)
+        TestContext context = new TestContext();
+        schedule(context);
+        InstancesResult response = context.service.path("api/instance/status/process/" + context.processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -76,8 +78,8 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
 
     public void testReRunInstances() throws Exception {
         testKillInstances();
-
-        InstancesResult response = this.service.path("api/instance/rerun/process/" + processName)
+        TestContext context = new TestContext();
+        InstancesResult response = context.service.path("api/instance/rerun/process/" + context.processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
 
@@ -90,8 +92,9 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testKillInstances() throws Exception {
-        schedule();
-        InstancesResult response = this.service.path("api/instance/kill/process/" + processName)
+        TestContext context = new TestContext();
+        schedule(context);
+        InstancesResult response = context.service.path("api/instance/kill/process/" + context.processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -103,8 +106,9 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     public void testSuspendInstances() throws Exception {
-        schedule();
-        InstancesResult response = this.service.path("api/instance/suspend/process/" + processName)
+        TestContext context = new TestContext();
+        schedule(context);
+        InstancesResult response = context.service.path("api/instance/suspend/process/" + context.processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -118,7 +122,8 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     public void testResumesInstances() throws Exception {
         testSuspendInstances();
 
-        InstancesResult response = this.service.path("api/instance/resume/process/" + processName)
+        TestContext context = new TestContext();
+        InstancesResult response = context.service.path("api/instance/resume/process/" + context.processName)
                 .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -130,9 +135,10 @@ public class ProcessInstanceManagerTest extends AbstractTestBase {
     }
 
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
-        ExternalId extId = new ExternalId(processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
+        TestContext context = new TestContext();
+        ExternalId extId = new ExternalId(context.processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
         OozieClient ozClient = OozieClientFactory.get(
-                (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
+                (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, context.clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;
         for (int i = 0; i < 15; i++) {

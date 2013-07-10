@@ -28,7 +28,7 @@
     </appender>
 
     <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/falcon/application.log"/>
+        <param name="File" value="${user.dir}/logs/application.log"/>
         <param name="Append" value="true"/>
         <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
@@ -37,7 +37,7 @@
     </appender>
 
     <appender name="AUDIT" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/falcon/audit.log"/>
+        <param name="File" value="${user.dir}/logs/audit.log"/>
         <param name="Append" value="true"/>
         <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
@@ -46,7 +46,7 @@
     </appender>
 
     <appender name="TRANSACTIONLOG" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/falcon/tranlog.log"/>
+        <param name="File" value="${user.dir}/logs/tranlog.log"/>
         <param name="Append" value="true"/>
         <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
@@ -55,7 +55,7 @@
     </appender>
 
     <appender name="METRIC" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/var/log/falcon/metric.log"/>
+        <param name="File" value="${user.dir}/logs/metric.log"/>
         <param name="Append" value="true"/>
         <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">

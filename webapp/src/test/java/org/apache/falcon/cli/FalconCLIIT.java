@@ -19,10 +19,15 @@
 package org.apache.falcon.cli;
 
 import junit.framework.Assert;
-import org.apache.falcon.resource.AbstractTestBase;
+import org.apache.falcon.resource.TestContext;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Map;
 
 /**
@@ -30,12 +35,17 @@ import java.util.Map;
  *
  * todo: Refactor both the classes to move this methods to helper;
  */
-public class FalconCLITest extends AbstractTestBase {
+public class FalconCLIIT {
 
     private InMemoryWriter stream = new InMemoryWriter(System.out);
     // private static final String BROKER_URL =
     // "tcp://localhost:61616?daemon=true";
     private static final boolean TEST_ENABLED = true;
+
+    @BeforeClass
+    public void prepare() throws Exception {
+        TestContext.prepare();
+    }
 
     @Test(enabled = TEST_ENABLED)
     public void testSubmitEntityValidCommands() throws Exception {
@@ -43,16 +53,18 @@ public class FalconCLITest extends AbstractTestBase {
         FalconCLI.OUT.set(stream);
 
         String filePath;
-        Map<String, String> overlay = getUniqueOverlay();
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
 
-        filePath = overlayParametersOverTemplate(clusterFileTemplate, overlay);
+        filePath = context.overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type cluster -file " + filePath));
+        context.setCluster(filePath);
         Assert.assertEquals(stream.buffer.toString().trim(),
-                "default/Submit successful (cluster) " + clusterName);
+                "default/Submit successful (cluster) " + context.getClusterName());
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
         Assert.assertEquals(
@@ -60,7 +72,7 @@ public class FalconCLITest extends AbstractTestBase {
                 "default/Submit successful (feed) "
                         + overlay.get("inputFeedName"));
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE2, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
         Assert.assertEquals(
@@ -68,7 +80,7 @@ public class FalconCLITest extends AbstractTestBase {
                 "default/Submit successful (feed) "
                         + overlay.get("outputFeedName"));
 
-        filePath = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type process -file " + filePath));
@@ -90,30 +102,32 @@ public class FalconCLITest extends AbstractTestBase {
 
         Thread.sleep(5000);
         String filePath;
-        Map<String, String> overlay = getUniqueOverlay();
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
 
-        filePath = overlayParametersOverTemplate(clusterFileTemplate, overlay);
+        filePath = context.overlayParametersOverTemplate(context.getClusterFileTemplate(), overlay);
         Assert.assertEquals(-1,
                 executeWithURL("entity -submitAndSchedule -type cluster -file "
                         + filePath));
+        context.setCluster(filePath);
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submitAndSchedule -type feed -file "
                         + filePath));
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE2, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submitAndSchedule -type feed -file "
                         + filePath));
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE2, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submitAndSchedule -type process -file "
                         + filePath));
@@ -125,29 +139,32 @@ public class FalconCLITest extends AbstractTestBase {
     public void testValidateValidCommands() throws Exception {
 
         String filePath;
-        Map<String, String> overlay = getUniqueOverlay();
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
 
-        filePath = overlayParametersOverTemplate(clusterFileTemplate, overlay);
+        filePath = context.overlayParametersOverTemplate(context.getClusterFileTemplate(), overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -validate -type cluster -file "
                         + filePath));
+        context.setCluster(filePath);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type cluster -file " + filePath));
+        context.setCluster(filePath);
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -validate -type feed -file " + filePath));
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE2, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -validate -type feed -file " + filePath));
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -validate -type process -file "
                         + filePath));
@@ -159,8 +176,9 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testDefinitionEntityValidCommands() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -definition -type cluster -name "
@@ -185,8 +203,9 @@ public class FalconCLITest extends AbstractTestBase {
     @Test(enabled = TEST_ENABLED)
     public void testScheduleEntityValidCommands() throws Exception {
 
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(-1,
                 executeWithURL("entity -schedule -type cluster -name "
@@ -207,8 +226,9 @@ public class FalconCLITest extends AbstractTestBase {
     public void testSuspendResumeStatusEntityValidCommands() throws Exception {
 
         Thread.sleep(5000);
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(
                 0,
@@ -229,7 +249,7 @@ public class FalconCLITest extends AbstractTestBase {
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
-        waitForProcessWFtoStart();
+        context.waitForProcessWFtoStart();
 
         Assert.assertEquals(
                 0,
@@ -282,8 +302,9 @@ public class FalconCLITest extends AbstractTestBase {
     @Test(enabled = TEST_ENABLED)
     public void testDeleteEntityValidCommands() throws Exception {
 
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(
                 -1,
@@ -320,8 +341,9 @@ public class FalconCLITest extends AbstractTestBase {
     @Test(enabled = TEST_ENABLED)
     public void testInvalidCLIEntitycommands() throws Exception {
 
-        Map<String, String> overlay = getUniqueOverlay();
-        overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(-1,
                 executeWithURL("entity -submit -type feed -name " + "name"));
 
@@ -331,8 +353,9 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testInstanceRunningAndStatusCommands() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type process -name "
@@ -341,7 +364,7 @@ public class FalconCLITest extends AbstractTestBase {
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type feed -name "
                         + overlay.get("outputFeedName")));
-        waitForProcessWFtoStart();
+        context.waitForProcessWFtoStart();
 
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type feed -name "
@@ -361,8 +384,9 @@ public class FalconCLITest extends AbstractTestBase {
     @Test(enabled = TEST_ENABLED)
     public void testInstanceSuspendAndResume() throws Exception {
         Thread.sleep(5000);
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type process -name "
@@ -385,14 +409,15 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testInstanceKillAndRerun() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
-        waitForProcessWFtoStart();
+        context.waitForProcessWFtoStart();
         Assert.assertEquals(
                 0,
                 executeWithURL("instance -kill -type process -name "
@@ -409,14 +434,15 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testContinue() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type process -name "
                         + overlay.get("processName")));
 
-        waitForProcessWFtoStart();
+        context.waitForProcessWFtoStart();
         Assert.assertEquals(
                 0,
                 executeWithURL("instance -kill -type process -name "
@@ -467,17 +493,20 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testClientProperties() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(
                 0,
                 new FalconCLI().run(("entity -schedule -type feed -name "
-                        + overlay.get("outputFeedName")).split("\\s")));
+                        + overlay.get("outputFeedName") + " -url "
+                        + TestContext.BASE_URL).split("\\s+")));
 
         Assert.assertEquals(0,
                 new FalconCLI().run(("entity -schedule -type process -name "
-                        + overlay.get("processName")).split("\\s")));
+                        + overlay.get("processName")+ " -url "
+                        + TestContext.BASE_URL).split("\\s+")));
 
     }
 
@@ -492,8 +521,9 @@ public class FalconCLITest extends AbstractTestBase {
 
     @Test(enabled = TEST_ENABLED)
     public void testInstanceGetLogs() throws Exception {
-        Map<String, String> overlay = getUniqueOverlay();
-        submitTestFiles(overlay);
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
 
         Assert.assertEquals(0,
                 executeWithURL("entity -schedule -type process -name "
@@ -509,7 +539,7 @@ public class FalconCLITest extends AbstractTestBase {
 
     private int executeWithURL(String command) throws Exception {
         return new FalconCLI()
-                .run((command + " -url " + BASE_URL).split("\\s+"));
+                .run((command + " -url " + TestContext.BASE_URL).split("\\s+"));
     }
 
     private String createTempJobPropertiesFile() throws IOException {
@@ -524,23 +554,24 @@ public class FalconCLITest extends AbstractTestBase {
         return tmpFile.getAbsolutePath();
     }
 
-    public void submitTestFiles(Map<String, String> overlay) throws Exception {
+    public void submitTestFiles(TestContext context, Map<String, String> overlay) throws Exception {
 
-        String filePath = overlayParametersOverTemplate(clusterFileTemplate,
+        String filePath = context.overlayParametersOverTemplate(context.getClusterFileTemplate(),
                 overlay);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type cluster -file " + filePath));
+        context.setCluster(filePath);
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE1, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(FEED_TEMPLATE2, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = overlayParametersOverTemplate(PROCESS_TEMPLATE, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type process -file " + filePath));

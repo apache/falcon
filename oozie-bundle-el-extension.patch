@@ -1,0 +1,18 @@
+diff --git webapp/pom.xml webapp/pom.xml
+index 38ec438..c3bc9b8 100644
+--- webapp/pom.xml
++++ webapp/pom.xml
+@@ -33,6 +33,13 @@
+ 
+     <dependencies>
+         <dependency>
++            <groupId>org.apache.falcon</groupId>
++            <artifactId>falcon-oozie-el-extension</artifactId>
++            <version>0.3-SNAPSHOT</version>
++            <scope>compile</scope>
++        </dependency>
++
++        <dependency>
+             <groupId>org.apache.oozie</groupId>
+             <artifactId>oozie-core</artifactId>
+             <scope>compile</scope>

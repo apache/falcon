@@ -69,6 +69,6 @@ qa.config.store.uri=file:///var/lib/tomcat6/target/store
 To ensure that Falcon installation on your system uses the qa domain settings, just set the FALCON_DOMAIN value to 'qa' in your environment.
 
 *Falcon logs
-Once deployed, all the Falcon operations are logged in folder /var/log/falcon by default.
+Once deployed, all the Falcon operations are logged in folder ${user.dir}/logs by default.
 Application.log contains logs for all the falcon server operations, if Falcon is deployed in distributed mode then prism logs are populated in
 Prism.log

@@ -19,6 +19,7 @@ package org.apache.falcon.logging;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.cluster.util.StandAloneCluster;
 import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -26,6 +27,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesResult.InstanceAction;
 import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
+import org.apache.falcon.resource.TestContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -34,11 +36,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Test for LogProvider.
  */
-public class LogProviderTest {
+public class LogProviderIT {
 
     private static final ConfigurationStore STORE = ConfigurationStore.get();
     private static EmbeddedCluster testCluster = null;
@@ -49,12 +53,17 @@ public class LogProviderTest {
 
     @BeforeClass
     public void setup() throws Exception {
-        testCluster = EmbeddedCluster.newCluster("testCluster", false);
+        Map<String, String> overlay = new HashMap<String, String>();
+        overlay.put("cluster", "logProviderTest");
+        TestContext context = new TestContext();
+        String file = context.
+                overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+        testCluster = StandAloneCluster.newCluster(file);
         cleanupStore();
         STORE.publish(EntityType.CLUSTER, testCluster.getCluster());
         fs = FileSystem.get(testCluster.getConf());
         Path instanceLogPath = new Path(
-                "/workflow/staging/falcon/workflows/process/" + PROCESS_NAME
+                "/projects/falcon/staging/falcon/workflows/process/" + PROCESS_NAME
                         + "/logs/job-2010-01-01-01-00/000");
         fs.mkdirs(instanceLogPath);
         fs.createNewFile(new Path(instanceLogPath, "oozie.log"));
@@ -62,16 +71,16 @@ public class LogProviderTest {
         fs.createNewFile(new Path(instanceLogPath, "mr_Action_FAILED.log"));
         fs.createNewFile(new Path(instanceLogPath, "mr_Action2_SUCCEEDED.log"));
 
-        fs.mkdirs(new Path("/workflow/staging/falcon/workflows/process/"
+        fs.mkdirs(new Path("/projects/falcon/staging/falcon/workflows/process/"
                 + PROCESS_NAME + "/logs/job-2010-01-01-01-00/001"));
-        fs.mkdirs(new Path("/workflow/staging/falcon/workflows/process/"
+        fs.mkdirs(new Path("/projects/falcon/staging/falcon/workflows/process/"
                 + PROCESS_NAME + "/logs/job-2010-01-01-01-00/002"));
-        Path run3 = new Path("/workflow/staging/falcon/workflows/process/"
+        Path run3 = new Path("/projects/falcon/staging/falcon/workflows/process/"
                 + PROCESS_NAME + "/logs/job-2010-01-01-01-00/003");
         fs.mkdirs(run3);
         fs.createNewFile(new Path(run3, "oozie.log"));
 
-        testProcess = new ProcessEntityParser().parse(LogMoverTest.class
+        testProcess = new ProcessEntityParser().parse(LogProviderIT.class
                 .getResourceAsStream("/org/apache/falcon/logging/process.xml"));
         testProcess.setName(PROCESS_NAME);
         STORE.publish(EntityType.PROCESS, testProcess);
@@ -82,8 +91,8 @@ public class LogProviderTest {
         instance = new Instance();
         instance.status = WorkflowStatus.SUCCEEDED;
         instance.instance = "2010-01-01T01:00Z";
-        instance.cluster = "testCluster";
-        instance.logFile = "http://localhost:15000/oozie/wflog";
+        instance.cluster = "logProviderTest";
+        instance.logFile = "http://localhost:41000/oozie/wflog";
     }
 
     private void cleanupStore() throws FalconException {
@@ -102,24 +111,24 @@ public class LogProviderTest {
                 instance, "0");
         Assert.assertEquals(
                 instance.logFile,
-                "http://localhost:50070/data/workflow/staging/falcon/workflows/process/testProcess/logs/job-2010-01"
-                        + "-01-01-00/000/oozie.log");
+                "http://localhost:50070/data/projects/falcon/staging/falcon/workflows/process/testProcess/logs/"
+                        + "job-2010-01-01-01-00/000/oozie.log");
 
         InstanceAction action = instanceWithLog.actions[0];
         Assert.assertEquals(action.action, "mr_Action2");
         Assert.assertEquals(action.status, "SUCCEEDED");
         Assert.assertEquals(
                 action.logFile,
-                "http://localhost:50070/data/workflow/staging/falcon/workflows/process/testProcess/logs/job-2010-01"
-                        + "-01-01-00/000/mr_Action2_SUCCEEDED.log");
+                "http://localhost:50070/data/projects/falcon/staging/falcon/workflows/process/testProcess/logs/"
+                        + "job-2010-01-01-01-00/000/mr_Action2_SUCCEEDED.log");
 
         action = instanceWithLog.actions[1];
         Assert.assertEquals(action.action, "mr_Action");
         Assert.assertEquals(action.status, "FAILED");
         Assert.assertEquals(
                 action.logFile,
-                "http://localhost:50070/data/workflow/staging/falcon/workflows/process/testProcess/logs/job-2010-01"
-                        + "-01-01-00/000/mr_Action_FAILED.log");
+                "http://localhost:50070/data/projects/falcon/staging/falcon/workflows/process/testProcess/logs/"
+                        + "job-2010-01-01-01-00/000/mr_Action_FAILED.log");
     }
 
     @Test
@@ -127,7 +136,7 @@ public class LogProviderTest {
         LogProvider provider = new LogProvider();
         provider.populateLogUrls(testProcess, instance, "x");
         Assert.assertEquals(instance.logFile,
-                "http://localhost:15000/oozie/wflog");
+                "http://localhost:41000/oozie/wflog");
     }
 
     @Test
@@ -145,7 +154,7 @@ public class LogProviderTest {
         provider.populateLogUrls(testProcess, instance, null);
         Assert.assertEquals(
                 instance.logFile,
-                "http://localhost:50070/data/workflow/staging/falcon/workflows/process/testProcess/logs/"
+                "http://localhost:50070/data/projects/falcon/staging/falcon/workflows/process/testProcess/logs/"
                         + "job-2010-01-01-01-00/003/oozie.log");
     }
 }

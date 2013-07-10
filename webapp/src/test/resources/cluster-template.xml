@@ -20,14 +20,14 @@
 <cluster colo="gs" description="" name="##cluster##" xmlns="uri:falcon:cluster:0.1"
         >
     <interfaces>
-        <interface type="readonly" endpoint="hftp://localhost:50010"
+        <interface type="readonly" endpoint="hftp://localhost:41110"
                    version="0.20.2"/>
-        <interface type="write" endpoint="hdfs://localhost:8020"
+        <interface type="write" endpoint="hdfs://localhost:41020"
                    version="0.20.2"/>
-        <interface type="execute" endpoint="localhost:8021" version="0.20.2"/>
-        <interface type="workflow" endpoint="http://localhost:11000/oozie/"
+        <interface type="execute" endpoint="localhost:41021" version="0.20.2"/>
+        <interface type="workflow" endpoint="http://localhost:41000/oozie/"
                    version="3.1"/>
-        <interface type="messaging" endpoint="tcp://10.14.117.33:61616?daemon=true"
+        <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
                    version="5.1.6"/>
         <interface type="registry" endpoint="Hcat" version="1"/>
     </interfaces>

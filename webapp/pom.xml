@@ -133,6 +133,19 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-oozie-el-extension</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-hadoop-webapp</artifactId>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -149,6 +162,167 @@
                         </resource>
                     </webResources>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/webapps</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/conf</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.falcon</groupId>
+                                    <artifactId>falcon-hadoop-webapp</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>war</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/webapps</outputDirectory>
+                                    <destFileName>hadoop.war</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <target>
+                                <copy file="../hadoop-webapp/target/oozie.war" toDir="target/webapps" />
+                                <delete dir="../target/store" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.15</version>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>maven-jetty-plugin</artifactId>
+                <version>${jetty.version}</version>
+                <configuration>
+                    <connectors>
+                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+                            <port>41000</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                        </connector>
+                    </connectors>
+                    <webApp>${project.build.directory}/falcon-webapp-${project.version}</webApp>
+                    <useTestClasspath>true</useTestClasspath>
+                    <contextHandlers>
+                        <contextHandler implementation="org.mortbay.jetty.webapp.WebAppContext">
+                            <war>${project.build.directory}/webapps/oozie.war</war>
+                            <contextPath>/oozie</contextPath>
+                        </contextHandler>
+                        <contextHandler implementation="org.mortbay.jetty.webapp.WebAppContext">
+                            <war>${project.build.directory}/webapps/hadoop.war</war>
+                            <contextPath>/hadoop</contextPath>
+                        </contextHandler>
+                    </contextHandlers>
+                    <systemProperties>
+                        <systemProperty>
+                            <name>hadoop.conf.dir</name>
+                            <value>${project.build.directory}/webapps/hadoop/conf</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>hadoop.tmp.dir</name>
+                            <value>${project.build.directory}/tmp-hadoop-${user.name}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>hadoop.log.dir</name>
+                            <value>${project.build.directory}/logs</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>oozie.home.dir</name>
+                            <value>${project.build.directory}/webapps/oozie</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>oozie.data.dir</name>
+                            <value>${project.build.directory}/webapps/oozie/data</value>
+                        </systemProperty>
+                    </systemProperties>
+                    <stopKey>falcon-stop</stopKey>
+                    <stopPort>41001</stopPort>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>start-jetty</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipCheck}</skip>
+                            <daemon>true</daemon>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>stop-jetty</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -176,6 +350,5 @@
             </build>
         </profile>
     </profiles>
-
 
 </project>

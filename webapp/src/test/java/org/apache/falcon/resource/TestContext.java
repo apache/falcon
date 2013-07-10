@@ -32,18 +32,18 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.util.EmbeddedServer;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.oozie.client.*;
+import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 
 import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
@@ -53,27 +53,38 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Base test class for CLI, Entity and Process Instances.
  */
-public class AbstractTestBase {
-    protected static final String FEED_TEMPLATE1 = "/feed-template1.xml";
-    protected static final String FEED_TEMPLATE2 = "/feed-template2.xml";
+public class TestContext {
+    public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
+    public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
 
-    protected String clusterFileTemplate = "/cluster-template.xml";
+    public static final String CLUSTER_TEMPLATE = "/cluster-template.xml";
 
-    protected static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
-    protected static final String PROCESS_TEMPLATE = "/process-template.xml";
+    public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
+    public static final String PROCESS_TEMPLATE = "/process-template.xml";
 
-    protected static final String BASE_URL = "http://localhost:15000/";
-    protected static final String REMOTE_USER = System.getProperty("user.name");
-
-    protected EmbeddedServer server;
+    public static final String BASE_URL = "http://localhost:41000/falcon-webapp";
+    public static final String REMOTE_USER = System.getProperty("user.name");
 
     protected Unmarshaller unmarshaller;
     protected Marshaller marshaller;
@@ -84,10 +95,42 @@ public class AbstractTestBase {
     protected String processName;
     protected String outputFeedName;
 
-    private static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_]*##");
+    public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_]*##");
 
-    protected void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        ClientResponse response = submitToFalcon(clusterFileTemplate, overlay, EntityType.CLUSTER);
+    public Unmarshaller getUnmarshaller() {
+        return unmarshaller;
+    }
+
+    public Marshaller getMarshaller() {
+        return marshaller;
+    }
+
+    public EmbeddedCluster getCluster() {
+        return cluster;
+    }
+
+    public WebResource getService() {
+        return service;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public String getProcessName() {
+        return processName;
+    }
+
+    public String getOutputFeedName() {
+        return outputFeedName;
+    }
+
+    public String getClusterFileTemplate() {
+        return CLUSTER_TEMPLATE;
+    }
+
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
+        ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
         response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -104,20 +147,19 @@ public class AbstractTestBase {
         assertSuccessful(clientRepsonse);
     }
 
-    protected void scheduleProcess() throws Exception {
+    public void scheduleProcess() throws Exception {
         scheduleProcess(PROCESS_TEMPLATE, getUniqueOverlay());
     }
 
     private List<WorkflowJob> getRunningJobs(String entityName) throws Exception {
-        OozieClient ozClient = OozieClientFactory.get(
-                (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
+        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
         StringBuilder builder = new StringBuilder();
         builder.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING).append(';');
         builder.append(OozieClient.FILTER_NAME).append('=').append("FALCON_PROCESS_DEFAULT_").append(entityName);
         return ozClient.getJobsInfo(builder.toString());
     }
 
-    protected void waitForWorkflowStart(String entityName) throws Exception {
+    public void waitForWorkflowStart(String entityName) throws Exception {
         for (int i = 0; i < 10; i++) {
             List<WorkflowJob> jobs = getRunningJobs(entityName);
             if (jobs != null && !jobs.isEmpty()) {
@@ -130,16 +172,16 @@ public class AbstractTestBase {
         throw new Exception("Workflow for " + entityName + " hasn't started in oozie");
     }
 
-    protected void waitForProcessWFtoStart() throws Exception {
+    public void waitForProcessWFtoStart() throws Exception {
         waitForWorkflowStart(processName);
     }
 
-    protected void waitForOutputFeedWFtoStart() throws Exception {
+    public void waitForOutputFeedWFtoStart() throws Exception {
         waitForWorkflowStart(outputFeedName);
     }
 
-    protected void waitForBundleStart(Status status) throws Exception {
-        OozieClient ozClient = OozieClientFactory.get(clusterName);
+    public void waitForBundleStart(Status status) throws Exception {
+        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
         List<BundleJob> bundles = getBundles();
         if (bundles.isEmpty()) {
             return;
@@ -169,7 +211,7 @@ public class AbstractTestBase {
         throw new Exception("Bundle " + bundleId + " is not " + status + " in oozie");
     }
 
-    public AbstractTestBase() {
+    public TestContext() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(APIResult.class, Feed.class, Process.class, Cluster.class,
                     InstancesResult.class);
@@ -179,60 +221,24 @@ public class AbstractTestBase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        configure();
     }
 
-    @BeforeClass
-    public void configure() throws Exception {
+    public void configure() {
         StartupProperties.get().setProperty(
                 "application.services",
                 StartupProperties.get().getProperty("application.services")
                         .replace("org.apache.falcon.service.ProcessSubscriberService", ""));
         String store = StartupProperties.get().getProperty("config.store.uri");
         StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
-        if (new File("webapp/src/main/webapp").exists()) {
-            this.server = new EmbeddedServer(15000, "webapp/src/main/webapp");
-        } else if (new File("src/main/webapp").exists()) {
-            this.server = new EmbeddedServer(15000, "src/main/webapp");
-        } else {
-            throw new RuntimeException("Cannot run jersey tests");
-        }
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
         this.service = client.resource(UriBuilder.fromUri(BASE_URL).build());
-        this.server.start();
+    }
 
-        if (System.getProperty("falcon.test.hadoop.embedded", "true").equals("true")) {
-            clusterFileTemplate = "target/cluster-template.xml";
-            this.cluster = EmbeddedCluster.newCluster("##cluster##", true);
-            Cluster clusterEntity = this.cluster.getCluster();
-            FileOutputStream out = new FileOutputStream(clusterFileTemplate);
-            marshaller.marshal(clusterEntity, out);
-            out.close();
-        } else {
-            Map<String, String> overlay = new HashMap<String, String>();
-            overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
-            String file = overlayParametersOverTemplate(clusterFileTemplate, overlay);
-            this.cluster = StandAloneCluster.newCluster(file);
-            clusterName = cluster.getCluster().getName();
-        }
-
-        cleanupStore();
-
-        // setup dependent workflow and lipath in hdfs
-        FileSystem fs = FileSystem.get(this.cluster.getConf());
-        fs.mkdirs(new Path("/falcon"), new FsPermission((short) 511));
-
-        Path wfParent = new Path("/falcon/test");
-        fs.delete(wfParent, true);
-        Path wfPath = new Path(wfParent, "workflow");
-        fs.mkdirs(wfPath);
-        fs.copyFromLocalFile(false, true, new Path(this.getClass().getResource("/fs-workflow.xml").getPath()),
-                new Path(wfPath,
-                        "workflow.xml"));
-        fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
-        Path outPath = new Path(wfParent, "output");
-        fs.mkdirs(outPath);
-        fs.setPermission(outPath, new FsPermission((short) 511));
+    public void setCluster(String file) throws Exception {
+        cluster = StandAloneCluster.newCluster(file);
+        clusterName = cluster.getCluster().getName();
     }
 
     /**
@@ -242,11 +248,11 @@ public class AbstractTestBase {
      * @return ServletInputStream
      * @throws java.io.IOException
      */
-    protected ServletInputStream getServletInputStream(String fileName) throws IOException {
+    public ServletInputStream getServletInputStream(String fileName) throws IOException {
         return getServletInputStream(new FileInputStream(fileName));
     }
 
-    protected ServletInputStream getServletInputStream(final InputStream stream) {
+    public ServletInputStream getServletInputStream(final InputStream stream) {
         return new ServletInputStream() {
 
             @Override
@@ -256,20 +262,7 @@ public class AbstractTestBase {
         };
     }
 
-    public void tearDown() throws Exception {
-        this.cluster.shutdown();
-        server.stop();
-    }
-
-    public void cleanupStore() throws Exception {
-        for (EntityType type : EntityType.values()) {
-            for (String name : ConfigurationStore.get().getEntities(type)) {
-                ConfigurationStore.get().remove(type, name);
-            }
-        }
-    }
-
-    protected ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
+    public ClientResponse submitAndSchedule(String template, Map<String, String> overlay, EntityType entityType)
         throws Exception {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
@@ -279,9 +272,17 @@ public class AbstractTestBase {
                 .post(ClientResponse.class, rawlogStream);
     }
 
-    protected ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType)
+    public ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType)
         throws IOException {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
+        if (entityType == EntityType.CLUSTER) {
+            try {
+                cluster = StandAloneCluster.newCluster(tmpFile);
+                clusterName = cluster.getCluster().getName();
+            } catch (Exception e) {
+                throw new IOException("Unable to setup cluster info", e);
+            }
+        }
         return submitFileToFalcon(entityType, tmpFile);
     }
 
@@ -294,7 +295,7 @@ public class AbstractTestBase {
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
     }
 
-    protected void assertRequestId(ClientResponse clientRepsonse) {
+    public void assertRequestId(ClientResponse clientRepsonse) {
         String response = clientRepsonse.getEntity(String.class);
         try {
             APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
@@ -304,7 +305,7 @@ public class AbstractTestBase {
         }
     }
 
-    protected void assertStatus(ClientResponse clientRepsonse, APIResult.Status status) {
+    public void assertStatus(ClientResponse clientRepsonse, APIResult.Status status) {
         String response = clientRepsonse.getEntity(String.class);
         try {
             APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
@@ -314,17 +315,17 @@ public class AbstractTestBase {
         }
     }
 
-    protected void assertFailure(ClientResponse clientRepsonse) {
+    public void assertFailure(ClientResponse clientRepsonse) {
         Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
         assertStatus(clientRepsonse, APIResult.Status.FAILED);
     }
 
-    protected void assertSuccessful(ClientResponse clientRepsonse) {
+    public void assertSuccessful(ClientResponse clientRepsonse) {
         Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.OK.getStatusCode());
         assertStatus(clientRepsonse, APIResult.Status.SUCCEEDED);
     }
 
-    protected String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
+    public String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();
         OutputStream out = new FileOutputStream(tmpFile);
 
@@ -351,7 +352,7 @@ public class AbstractTestBase {
         return tmpFile.getAbsolutePath();
     }
 
-    protected File getTempFile() throws IOException {
+    public File getTempFile() throws IOException {
         File target = new File("webapp/target");
         if (!target.exists()) {
             target = new File("target");
@@ -360,7 +361,7 @@ public class AbstractTestBase {
         return File.createTempFile("test", ".xml", target);
     }
 
-    protected List<BundleJob> getBundles() throws Exception {
+    public List<BundleJob> getBundles() throws Exception {
         List<BundleJob> bundles = new ArrayList<BundleJob>();
         if (clusterName == null) {
             return bundles;
@@ -370,15 +371,8 @@ public class AbstractTestBase {
         return ozClient.getBundleJobsInfo("name=FALCON_PROCESS_" + processName, 0, 10);
     }
 
-    @AfterClass
-    public void cleanup() throws Exception {
-        tearDown();
-        cleanupStore();
-    }
-
-    @AfterMethod
     public boolean killOozieJobs() throws Exception {
-        if (clusterName == null) {
+        if (cluster == null) {
             return true;
         }
 
@@ -392,7 +386,7 @@ public class AbstractTestBase {
         return false;
     }
 
-    protected Map<String, String> getUniqueOverlay() throws FalconException {
+    public Map<String, String> getUniqueOverlay() throws FalconException {
         Map<String, String> overlay = new HashMap<String, String>();
         long time = System.currentTimeMillis();
         clusterName = "cluster" + time;
@@ -406,5 +400,41 @@ public class AbstractTestBase {
         overlay.put("processName", processName);
         outputFeedName = "out" + time;
         return overlay;
+    }
+
+    public static void prepare() throws Exception {
+
+        Map<String, String> overlay = new HashMap<String, String>();
+        overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
+        TestContext context = new TestContext();
+        String file = context.
+                overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+        EmbeddedCluster cluster = StandAloneCluster.newCluster(file);
+
+        cleanupStore();
+
+        // setup dependent workflow and lipath in hdfs
+        FileSystem fs = FileSystem.get(cluster.getConf());
+        fs.mkdirs(new Path("/falcon"), new FsPermission((short) 511));
+
+        Path wfParent = new Path("/falcon/test");
+        fs.delete(wfParent, true);
+        Path wfPath = new Path(wfParent, "workflow");
+        fs.mkdirs(wfPath);
+        fs.copyFromLocalFile(false, true, new Path(TestContext.class.getResource("/fs-workflow.xml").getPath()),
+                new Path(wfPath,
+                        "workflow.xml"));
+        fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
+        Path outPath = new Path(wfParent, "output");
+        fs.mkdirs(outPath);
+        fs.setPermission(outPath, new FsPermission((short) 511));
+    }
+
+    public static void cleanupStore() throws Exception {
+        for (EntityType type : EntityType.values()) {
+            for (String name : ConfigurationStore.get().getEntities(type)) {
+                ConfigurationStore.get().remove(type, name);
+            }
+        }
     }
 }

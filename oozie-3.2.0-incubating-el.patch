@@ -1,0 +1,702 @@
+diff --git client/pom.xml client/pom.xml
+index 72da9bc..4e41e28 100644
+--- client/pom.xml
++++ client/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-client</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Client</description>
+     <name>Apache Oozie Client</name>
+     <packaging>jar</packaging>
+diff --git core/pom.xml core/pom.xml
+index 407478d..efbfb47 100644
+--- core/pom.xml
++++ core/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-core</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Core</description>
+     <name>Apache Oozie Core</name>
+     <packaging>jar</packaging>
+diff --git core/src/main/conf/oozie-site.xml core/src/main/conf/oozie-site.xml
+index 63fd7cc..4ee430e 100644
+--- core/src/main/conf/oozie-site.xml
++++ core/src/main/conf/oozie-site.xml
+@@ -121,7 +121,7 @@
+ 
+     <property>
+         <name>oozie.service.JPAService.create.db.schema</name>
+-        <value>false</value>
++        <value>true</value>
+         <description>
+             Creates Oozie DB.
+ 
+@@ -330,6 +330,141 @@
+         </description>
+     </property>
+ 
++     <property>
++        <name>oozie.service.ELService.ext.functions.coord-job-submit-instances</name>
++        <value>
++           now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
++           today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
++           yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
++           currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
++           lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
++           currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
++           lastYear=org.apache.oozie.extensions.OozieELExtensions#ph1_lastYear_echo,
++           formatTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_formatTime_echo,
++           latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
++           future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a convenience property to add extensions to the built in executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
++        <value>
++           now=org.apache.oozie.extensions.OozieELExtensions#ph2_now_inst,
++           today=org.apache.oozie.extensions.OozieELExtensions#ph2_today_inst,
++           yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday_inst,
++           currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth_inst,
++           lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth_inst,
++           currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear_inst,
++           lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear_inst,
++           latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
++           future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo,
++           formatTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_formatTime,
++           user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a convenience property to add extensions to the built in executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-action-create</name>
++        <value>
++           now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
++           today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
++           yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
++           currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
++           lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
++           currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
++           lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear,
++           latest=org.apache.oozie.coord.CoordELFunctions#ph2_coord_latest_echo,
++           future=org.apache.oozie.coord.CoordELFunctions#ph2_coord_future_echo,
++           formatTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_formatTime,
++           user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a convenience property to add extensions to the built in executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-job-submit-data</name>
++        <value>
++           now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
++           today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
++           yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
++           currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
++           lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
++           currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
++           lastYear=org.apache.oozie.extensions.OozieELExtensions#ph1_lastYear_echo,
++            dataIn=org.apache.oozie.extensions.OozieELExtensions#ph1_dataIn_echo,
++            instanceTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_nominalTime_echo_wrap,
++            formatTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_formatTime_echo,
++            dateOffset=org.apache.oozie.coord.CoordELFunctions#ph1_coord_dateOffset_echo,
++            user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL constant declarations, separated by commas, format is [PREFIX:]NAME=CLASS#CONSTANT.
++            This property is a convenience property to add extensions to the built in executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-action-start</name>
++        <value>
++           now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
++           today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
++           yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
++           currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
++           lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
++           currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
++           lastYear=org.apache.oozie.extensions.OozieELExtensions#ph2_lastYear,
++            latest=org.apache.oozie.coord.CoordELFunctions#ph3_coord_latest,
++            future=org.apache.oozie.coord.CoordELFunctions#ph3_coord_future,
++            dataIn=org.apache.oozie.extensions.OozieELExtensions#ph3_dataIn,
++            instanceTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_nominalTime,
++            dateOffset=org.apache.oozie.coord.CoordELFunctions#ph3_coord_dateOffset,
++            formatTime=org.apache.oozie.coord.CoordELFunctions#ph3_coord_formatTime,
++            user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a convenience property to add extensions to the built in executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-sla-submit</name>
++        <value>
++            instanceTime=org.apache.oozie.coord.CoordELFunctions#ph1_coord_nominalTime_echo_fixed,
++            user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++        </description>
++    </property>
++
++        <property>
++        <name>oozie.service.ELService.ext.functions.coord-sla-create</name>
++        <value>
++            instanceTime=org.apache.oozie.coord.CoordELFunctions#ph2_coord_nominalTime,
++            user=org.apache.oozie.coord.CoordELFunctions#coord_user
++        </value>
++        <description>
++            EL functions declarations, separated by commas, format is [PREFIX:]NAME=CLASS#METHOD.
++        </description>
++    </property>
++
+     <!-- Proxyuser Configuration -->
+ 
+     <!--
+diff --git distro/pom.xml distro/pom.xml
+index a09fd66..c842fa7 100644
+--- distro/pom.xml
++++ distro/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-distro</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Distro</description>
+     <name>Apache Oozie Distro</name>
+     <packaging>jar</packaging>
+diff --git docs/pom.xml docs/pom.xml
+index 9d3ad8a..42060e7 100644
+--- docs/pom.xml
++++ docs/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-docs</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Docs</description>
+     <name>Apache Oozie Docs</name>
+     <packaging>war</packaging>
+diff --git examples/pom.xml examples/pom.xml
+index 7906c8c..4591630 100644
+--- examples/pom.xml
++++ examples/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-examples</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Examples</description>
+     <name>Apache Oozie Examples</name>
+     <packaging>jar</packaging>
+diff --git hadooplibs/hadoop-0_23_1/pom.xml hadooplibs/hadoop-0_23_1/pom.xml
+index fbfaa98..6f4a4ff 100644
+--- hadooplibs/hadoop-0_23_1/pom.xml
++++ hadooplibs/hadoop-0_23_1/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-0_23_2/pom.xml hadooplibs/hadoop-0_23_2/pom.xml
+index fb59c4e..87713c2 100644
+--- hadooplibs/hadoop-0_23_2/pom.xml
++++ hadooplibs/hadoop-0_23_2/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-0_24_0/pom.xml hadooplibs/hadoop-0_24_0/pom.xml
+index 400ff2b..58fa024 100644
+--- hadooplibs/hadoop-0_24_0/pom.xml
++++ hadooplibs/hadoop-0_24_0/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-1_0_1/pom.xml hadooplibs/hadoop-1_0_1/pom.xml
+index 7ab1307..16bd748 100644
+--- hadooplibs/hadoop-1_0_1/pom.xml
++++ hadooplibs/hadoop-1_0_1/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-test-0_23_1/pom.xml hadooplibs/hadoop-test-0_23_1/pom.xml
+index 1125e2d..dc43c93 100644
+--- hadooplibs/hadoop-test-0_23_1/pom.xml
++++ hadooplibs/hadoop-test-0_23_1/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-test-0_23_2/pom.xml hadooplibs/hadoop-test-0_23_2/pom.xml
+index ca27978..b57d288 100644
+--- hadooplibs/hadoop-test-0_23_2/pom.xml
++++ hadooplibs/hadoop-test-0_23_2/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-test-0_24_0/pom.xml hadooplibs/hadoop-test-0_24_0/pom.xml
+index ca45192..aaedde4 100644
+--- hadooplibs/hadoop-test-0_24_0/pom.xml
++++ hadooplibs/hadoop-test-0_24_0/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/hadoop-test-1_0_1/pom.xml hadooplibs/hadoop-test-1_0_1/pom.xml
+index 42681eb..7f63435 100644
+--- hadooplibs/hadoop-test-1_0_1/pom.xml
++++ hadooplibs/hadoop-test-1_0_1/pom.xml
+@@ -22,7 +22,7 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../../pom.xml</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+diff --git hadooplibs/pom.xml hadooplibs/pom.xml
+index b589ec6..f51aa32 100644
+--- hadooplibs/pom.xml
++++ hadooplibs/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-hadooplibs</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Hadoop Libs</description>
+     <name>Apache Oozie Hadoop Libs</name>
+     <packaging>pom</packaging>
+diff --git minitest/pom.xml minitest/pom.xml
+index 2e30f28..3baa1b1 100644
+--- minitest/pom.xml
++++ minitest/pom.xml
+@@ -21,7 +21,7 @@
+ 	<modelVersion>4.0.0</modelVersion>
+ 	<groupId>org.apache.oozie.test</groupId>
+ 	<artifactId>oozie-mini</artifactId>
+-	<version>3.2.0-incubating</version>
++	<version>3.2.2</version>
+ 	<repositories>
+ 		<repository>
+ 			<id>central</id>
+@@ -66,13 +66,13 @@
+ 		<dependency>
+ 			<groupId>org.apache.oozie</groupId>
+ 			<artifactId>oozie-core</artifactId>
+-			<version>3.2.0-incubating</version>
++			<version>3.2.2</version>
+ 			<scope>test</scope>
+ 		</dependency>
+ 		<dependency>
+ 			<groupId>org.apache.oozie</groupId>
+ 			<artifactId>oozie-core</artifactId>
+-			<version>3.2.0-incubating</version>
++			<version>3.2.2</version>
+ 			<type>test-jar</type>
+ 			<scope>test</scope>
+ 		</dependency>
+diff --git pom.xml pom.xml
+index a9ce403..6b044dc 100644
+--- pom.xml
++++ pom.xml
+@@ -21,7 +21,7 @@
+     <modelVersion>4.0.0</modelVersion>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-main</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Main</description>
+     <name>Apache Oozie Main</name>
+     <packaging>pom</packaging>
+diff --git release-log.txt release-log.txt
+index 40aee58..7b37eff 100644
+--- release-log.txt
++++ release-log.txt
+@@ -3,7 +3,7 @@
+ OOZIE-852 remove pipes binaries from the source (tucu)
+ OOZIE-851 demo workflow example does not enable sharelib for pig and streaming (tucu)
+ OOZIE-850 apache-rat report should be a single global report file (tucu)
+-OOZIE-849 set version in branch-3.2 to 3.2.0-incubating (tucu)
++OOZIE-849 set version in branch-3.2 to 3.2.2 (tucu)
+ OOZIE-852 remove pipes binaries from the source (tucu)
+ OOZIE-851 demo workflow example does not enable sharelib for pig and streaming (tucu)
+ OOZIE-850 apache-rat report should be a single global report file (tucu)
+diff --git sharelib/hive/pom.xml sharelib/hive/pom.xml
+index ba22a8f..5ef0cfa 100644
+--- sharelib/hive/pom.xml
++++ sharelib/hive/pom.xml
+@@ -22,12 +22,12 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../..</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib-hive</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib Hive</description>
+     <name>Apache Oozie Share Lib Hive</name>
+     <packaging>jar</packaging>
+diff --git sharelib/oozie/pom.xml sharelib/oozie/pom.xml
+index 0d764e8..ee4f21e 100644
+--- sharelib/oozie/pom.xml
++++ sharelib/oozie/pom.xml
+@@ -22,12 +22,12 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../..</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib-oozie</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib Oozie</description>
+     <name>Apache Oozie Share Lib Oozie</name>
+     <packaging>jar</packaging>
+diff --git sharelib/pig/pom.xml sharelib/pig/pom.xml
+index 2dd0b57..58f9ac9 100644
+--- sharelib/pig/pom.xml
++++ sharelib/pig/pom.xml
+@@ -22,12 +22,12 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../..</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib-pig</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib Pig</description>
+     <name>Apache Oozie Share Lib Pig</name>
+     <packaging>jar</packaging>
+diff --git sharelib/pom.xml sharelib/pom.xml
+index 1bf4743..6ded846 100644
+--- sharelib/pom.xml
++++ sharelib/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib</description>
+     <name>Apache Oozie Share Lib</name>
+     <packaging>pom</packaging>
+diff --git sharelib/sqoop/pom.xml sharelib/sqoop/pom.xml
+index 46c936c..0f1a086 100644
+--- sharelib/sqoop/pom.xml
++++ sharelib/sqoop/pom.xml
+@@ -22,12 +22,12 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../..</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib-sqoop</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib Sqoop</description>
+     <name>Apache Oozie Share Lib Sqoop</name>
+     <packaging>jar</packaging>
+diff --git sharelib/streaming/pom.xml sharelib/streaming/pom.xml
+index 6524fcd..ca8551a 100644
+--- sharelib/streaming/pom.xml
++++ sharelib/streaming/pom.xml
+@@ -22,12 +22,12 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+         <relativePath>../..</relativePath>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-sharelib-streaming</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Share Lib Streaming</description>
+     <name>Apache Oozie Share Lib Streaming</name>
+     <packaging>jar</packaging>
+diff --git tools/pom.xml tools/pom.xml
+index 02f7f66..e3b0e49 100644
+--- tools/pom.xml
++++ tools/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-tools</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie Tools</description>
+     <name>Apache Oozie Tools</name>
+     <packaging>jar</packaging>
+diff --git webapp/pom.xml webapp/pom.xml
+index 38ec438..f354e4b 100644
+--- webapp/pom.xml
++++ webapp/pom.xml
+@@ -22,11 +22,11 @@
+     <parent>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-main</artifactId>
+-        <version>3.2.0-incubating</version>
++        <version>3.2.2</version>
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-webapp</artifactId>
+-    <version>3.2.0-incubating</version>
++    <version>3.2.2</version>
+     <description>Apache Oozie WebApp</description>
+     <name>Apache Oozie WebApp</name>
+     <packaging>war</packaging>
+diff --git core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java
+index 33150a6..6b1b33c 100644
+--- core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java
++++ core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java
+@@ -51,28 +51,36 @@ public class CoordCommandUtils {
+      * parse a function like coord:latest(n)/future() and return the 'n'.
+      * <p/>
+      * @param function
+-     * @param event
+-     * @param appInst
+-     * @param conf
+      * @param restArg
+      * @return int instanceNumber
+      * @throws Exception
+      */
+-    public static int getInstanceNumber(String function, Element event, SyncCoordAction appInst, Configuration conf,
+-            StringBuilder restArg) throws Exception {
+-        ELEvaluator eval = CoordELEvaluator
+-                .createInstancesELEvaluator("coord-action-create-inst", event, appInst, conf);
+-        String newFunc = CoordELFunctions.evalAndWrap(eval, function);
+-        int funcType = getFuncType(newFunc);
++    public static int getInstanceNumber(String function, StringBuilder restArg) throws Exception {
++        int funcType = getFuncType(function);
+         if (funcType == CURRENT || funcType == LATEST) {
+-            return parseOneArg(newFunc);
++            return parseOneArg(function);
+         }
+         else {
+-            return parseMoreArgs(newFunc, restArg);
++            return parseMoreArgs(function, restArg);
+         }
+     }
+ 
+-    private static int parseOneArg(String funcName) throws Exception {
++    /**
++     * Evaluates function for coord-action-create-inst tag
++     * @param event
++     * @param appInst
++     * @param conf
++     * @param function
++     * @return evaluation result
++     * @throws Exception
++     */
++    private static String evaluateInstanceFunction(Element event, SyncCoordAction appInst, Configuration conf, 
++            String function) throws Exception {
++        ELEvaluator eval = CoordELEvaluator.createInstancesELEvaluator("coord-action-create-inst", event, appInst, conf);
++        return CoordELFunctions.evalAndWrap(eval, function);
++    }
++
++    public static int parseOneArg(String funcName) throws Exception {
+         int firstPos = funcName.indexOf("(");
+         int lastPos = funcName.lastIndexOf(")");
+         if (firstPos >= 0 && lastPos > firstPos) {
+@@ -166,16 +174,17 @@ public class CoordCommandUtils {
+         Element eStartInst = event.getChild("start-instance", event.getNamespace());
+         Element eEndInst = event.getChild("end-instance", event.getNamespace());
+         if (eStartInst != null && eEndInst != null) {
+-            String strStart = eStartInst.getTextTrim();
+-            String strEnd = eEndInst.getTextTrim();
++            String strStart = evaluateInstanceFunction(event, appInst, conf, eStartInst.getTextTrim());
++            String strEnd = evaluateInstanceFunction(event, appInst, conf, eEndInst.getTextTrim());
++            
+             checkIfBothSameType(strStart, strEnd);
+             StringBuilder restArg = new StringBuilder(); // To store rest
+                                                          // arguments for
+                                                          // future
+                                                          // function
+-            int startIndex = getInstanceNumber(strStart, event, appInst, conf, restArg);
++            int startIndex = getInstanceNumber(strStart, restArg);
+             restArg.delete(0, restArg.length());
+-            int endIndex = getInstanceNumber(strEnd, event, appInst, conf, restArg);
++            int endIndex = getInstanceNumber(strEnd, restArg);
+             if (startIndex > endIndex) {
+                 throw new CommandException(ErrorCode.E1010,
+                         " start-instance should be equal or earlier than the end-instance \n"
+diff --git core/src/main/java/org/apache/oozie/coord/CoordELEvaluator.java core/src/main/java/org/apache/oozie/coord/CoordELEvaluator.java
+index 764ae4b..b22c696 100644
+--- core/src/main/java/org/apache/oozie/coord/CoordELEvaluator.java
++++ core/src/main/java/org/apache/oozie/coord/CoordELEvaluator.java
+@@ -143,6 +143,9 @@ public class CoordELEvaluator {
+         String strNominalTime = eJob.getAttributeValue("action-nominal-time");
+         if (strNominalTime != null) {
+             appInst.setNominalTime(DateUtils.parseDateUTC(strNominalTime));
++            appInst.setTimeZone(DateUtils.getTimeZone(eJob.getAttributeValue("timezone")));
++            appInst.setFrequency(Integer.parseInt(eJob.getAttributeValue("frequency")));
++            appInst.setTimeUnit(TimeUnit.valueOf(eJob.getAttributeValue("freq_timeunit")));
+             appInst.setActionId(actionId);
+             appInst.setName(eJob.getAttributeValue("name"));
+         }
+diff --git core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java
+index 5c85adb..61f0e04 100644
+--- core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java
++++ core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java
+@@ -39,8 +39,8 @@ import org.apache.oozie.service.HadoopAccessorService;
+  */
+ 
+ public class CoordELFunctions {
+-    final private static String DATASET = "oozie.coord.el.dataset.bean";
+-    final private static String COORD_ACTION = "oozie.coord.el.app.bean";
++    final public static String DATASET = "oozie.coord.el.dataset.bean";
++    final public static String COORD_ACTION = "oozie.coord.el.app.bean";
+     final public static String CONFIGURATION = "oozie.coord.el.conf";
+     // INSTANCE_SEPARATOR is used to separate multiple directories into one tag.
+     final public static String INSTANCE_SEPARATOR = "#";
+@@ -946,7 +946,7 @@ public class CoordELFunctions {
+      * @return current instance i.e. current(0) returns null if effectiveTime is earlier than Initial Instance time of
+      *         the dataset.
+      */
+-    private static Calendar getCurrentInstance(Date effectiveTime, int instanceCount[]) {
++    public static Calendar getCurrentInstance(Date effectiveTime, int instanceCount[]) {
+         Date datasetInitialInstance = getInitialInstance();
+         TimeUnit dsTimeUnit = getDSTimeUnit();
+         TimeZone dsTZ = getDatasetTZ();
+@@ -979,7 +979,7 @@ public class CoordELFunctions {
+         return current;
+     }
+ 
+-    private static Calendar getEffectiveNominalTime() {
++    public static Calendar getEffectiveNominalTime() {
+         Date datasetInitialInstance = getInitialInstance();
+         TimeZone dsTZ = getDatasetTZ();
+         // Convert Date to Calendar for corresponding TZ
+@@ -1027,7 +1027,7 @@ public class CoordELFunctions {
+     /**
+      * @return dataset TimeZone
+      */
+-    private static TimeZone getDatasetTZ() {
++    public static TimeZone getDatasetTZ() {
+         ELEvaluator eval = ELEvaluator.getCurrent();
+         SyncCoordDataset ds = (SyncCoordDataset) eval.getVariable(DATASET);
+         if (ds == null) {

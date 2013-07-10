@@ -41,6 +41,7 @@ import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -57,6 +58,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStreamReader;
 
 import static org.testng.Assert.assertEquals;
@@ -154,6 +156,10 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
     @Test
     public void testBundle() throws Exception {
+        String path = StartupProperties.get().getProperty("system.lib.location");
+        if (!new File(path).exists()) {
+            Assert.assertTrue(new File(path).mkdirs());
+        }
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);

@@ -31,3 +31,6 @@ target
 #ActiveMQ
 activemq-data
 build
+
+#log files
+logs

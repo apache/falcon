@@ -36,14 +36,23 @@ public final class Main {
     public static void main(String[] args) throws Exception {
 
         String projectVersion = BuildProperties.get().getProperty("project.version");
-        EmbeddedServer server = new EmbeddedServer(15000,
-                "webapp/target/falcon-webapp-" + projectVersion);
+        String appPath;
+        String dataDir;
+        if (args.length < 1) {
+            appPath = "webapp/target/falcon-webapp-" + projectVersion;
+            dataDir = "target/";
+        } else {
+            appPath = args[0];
+            dataDir = System.getProperty("activemq.base") + "/data";
+        }
+        EmbeddedServer server = new EmbeddedServer(15000, appPath);
         server.start();
 
         BrokerService broker = new BrokerService();
         broker.setUseJmx(false);
-        broker.setDataDirectory("target/");
+        broker.setDataDirectory(dataDir);
         broker.addConnector("vm://localhost");
+        broker.addConnector("tcp://localhost:61616");
         broker.start();
     }
 }
