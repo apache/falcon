@@ -772,6 +772,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <forkMode>always</forkMode>
                     <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
                 </configuration>
             </plugin>
@@ -789,6 +791,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>

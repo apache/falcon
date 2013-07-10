@@ -95,6 +95,7 @@
                             <target>
                                 <war destfile="target/oozie.war" webxml="target/oozie/WEB-INF/web.xml">
                                     <lib dir="target/oozie/WEB-INF/lib" />
+                                    <classes dir="target/classes" />
                                 </war>
                             </target>
                         </configuration>

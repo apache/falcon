@@ -8,7 +8,13 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
-    FALCON-29 Add ability to tag/classify data sets and processes to enable 
+    FALCON-32 Store test output in file rather then printing all the output
+    into the console (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-1 Create packaging and scripts to install and try Apache Falcon
+    (Srikanth Sundarrajan via Venkatesh Seetharam)
+
+    FALCON-29 Add ability to tag/classify data sets and processes to enable
     discovery (Venkatesh Seetharam via Srikanth Sundarrajan)
 
     FALCON-31 File Installation-steps.txt contains old path to repository (Jarek 

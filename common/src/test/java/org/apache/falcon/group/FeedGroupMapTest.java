@@ -20,7 +20,6 @@ package org.apache.falcon.group;
 import junit.framework.Assert;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.AbstractTestBase;
-import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -38,7 +37,6 @@ import java.util.Map;
  * Feed group map tests.
  */
 public class FeedGroupMapTest extends AbstractTestBase {
-    private ConfigurationStore store = ConfigurationStore.get();
     private static Cluster cluster;
 
     @BeforeClass
@@ -57,7 +55,7 @@ public class FeedGroupMapTest extends AbstractTestBase {
 
     @Test
     public void testOnAdd() throws FalconException, JAXBException {
-        store.publish(EntityType.CLUSTER, cluster);
+        getStore().publish(EntityType.CLUSTER, cluster);
         Feed feed1 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
                 FeedGroupMapTest.class
                         .getResourceAsStream("/config/feed/feed-0.1.xml"));
@@ -68,7 +66,7 @@ public class FeedGroupMapTest extends AbstractTestBase {
         location.setType(LocationType.DATA);
         feed1.setLocations(new Locations());
         feed1.getLocations().getLocations().add(location);
-        store.publish(EntityType.FEED, feed1);
+        getStore().publish(EntityType.FEED, feed1);
         Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
                 .getGroupsMapping();
 
@@ -97,7 +95,7 @@ public class FeedGroupMapTest extends AbstractTestBase {
         location.setType(LocationType.DATA);
         feed2.setLocations(new Locations());
         feed2.getLocations().getLocations().add(location);
-        store.publish(EntityType.FEED, feed2);
+        getStore().publish(EntityType.FEED, feed2);
         groupMapping = FeedGroupMap.get().getGroupsMapping();
 
         group = groupMapping.get("group1");
@@ -128,14 +126,14 @@ public class FeedGroupMapTest extends AbstractTestBase {
                 FeedGroupMapTest.class
                         .getResourceAsStream("/config/feed/feed-0.1.xml"));
         feed1.setName("f1");
-        store.publish(EntityType.CLUSTER, cluster);
+        getStore().publish(EntityType.CLUSTER, cluster);
         feed1.setGroups("group7,group8,group9");
         Location location = new Location();
         location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
         location.setType(LocationType.DATA);
         feed1.setLocations(new Locations());
         feed1.getLocations().getLocations().add(location);
-        store.publish(EntityType.FEED, feed1);
+        getStore().publish(EntityType.FEED, feed1);
 
         Feed feed2 = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
                 FeedGroupMapTest.class
@@ -146,12 +144,12 @@ public class FeedGroupMapTest extends AbstractTestBase {
         location.setType(LocationType.DATA);
         feed2.setLocations(new Locations());
         feed2.getLocations().getLocations().add(location);
-        store.publish(EntityType.FEED, feed2);
+        getStore().publish(EntityType.FEED, feed2);
 
         Map<String, FeedGroup> groupMapping = FeedGroupMap.get()
                 .getGroupsMapping();
 
-        store.remove(EntityType.FEED, "f2");
+        getStore().remove(EntityType.FEED, "f2");
 
         FeedGroup group = groupMapping.get("group7");
         Assert.assertEquals(group.getName(), "group7");
@@ -164,7 +162,7 @@ public class FeedGroupMapTest extends AbstractTestBase {
         group = groupMapping.get("group10");
         Assert.assertEquals(null, group);
 
-        store.remove(EntityType.FEED, "f1");
+        getStore().remove(EntityType.FEED, "f1");
 
         group = groupMapping.get("group7");
         Assert.assertEquals(null, group);
@@ -183,14 +181,14 @@ public class FeedGroupMapTest extends AbstractTestBase {
                 FeedGroupMapTest.class
                         .getResourceAsStream("/config/feed/feed-0.1.xml"));
         feed1.setName("f5" + System.currentTimeMillis());
-        store.publish(EntityType.CLUSTER, cluster);
+        getStore().publish(EntityType.CLUSTER, cluster);
         feed1.setGroups(null);
         Location location = new Location();
         location.setPath("/projects/bi/rmc/daily/ad/${YEAR}/fraud/${MONTH}-${DAY}/ad");
         location.setType(LocationType.DATA);
         feed1.setLocations(new Locations());
         feed1.getLocations().getLocations().add(location);
-        store.publish(EntityType.FEED, feed1);
+        getStore().publish(EntityType.FEED, feed1);
 
     }
 

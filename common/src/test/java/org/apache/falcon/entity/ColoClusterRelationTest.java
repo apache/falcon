@@ -18,7 +18,6 @@
 
 package org.apache.falcon.entity;
 
-import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.testng.Assert;
@@ -31,6 +30,7 @@ import java.util.Set;
  */
 @Test
 public class ColoClusterRelationTest extends AbstractTestBase {
+
     private Cluster newCluster(String name, String colo) {
         Cluster cluster = new Cluster();
         cluster.setName(name);
@@ -43,10 +43,9 @@ public class ColoClusterRelationTest extends AbstractTestBase {
         Cluster cluster1 = newCluster("cluster1", "colo1");
         Cluster cluster2 = newCluster("cluster2", "colo1");
         Cluster cluster3 = newCluster("cluster3", "colo2");
-        ConfigurationStore store = ConfigurationStore.get();
-        store.publish(EntityType.CLUSTER, cluster1);
-        store.publish(EntityType.CLUSTER, cluster2);
-        store.publish(EntityType.CLUSTER, cluster3);
+        getStore().publish(EntityType.CLUSTER, cluster1);
+        getStore().publish(EntityType.CLUSTER, cluster2);
+        getStore().publish(EntityType.CLUSTER, cluster3);
 
         ColoClusterRelation relation = ColoClusterRelation.get();
         Set<String> clusters = relation.getClusters("colo1");
@@ -60,13 +59,13 @@ public class ColoClusterRelationTest extends AbstractTestBase {
         Assert.assertEquals(1, clusters.size());
         Assert.assertTrue(clusters.contains(cluster3.getName()));
 
-        store.remove(EntityType.CLUSTER, cluster1.getName());
+        getStore().remove(EntityType.CLUSTER, cluster1.getName());
         clusters = relation.getClusters("colo1");
         Assert.assertNotNull(clusters);
         Assert.assertEquals(1, clusters.size());
         Assert.assertTrue(clusters.contains(cluster2.getName()));
 
-        store.remove(EntityType.CLUSTER, cluster2.getName());
+        getStore().remove(EntityType.CLUSTER, cluster2.getName());
         clusters = relation.getClusters("colo1");
         Assert.assertNotNull(clusters);
         Assert.assertEquals(0, clusters.size());

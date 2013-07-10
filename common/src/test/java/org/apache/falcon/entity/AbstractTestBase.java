@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -37,7 +38,9 @@ import org.testng.annotations.BeforeClass;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.io.File;
 import java.io.StringWriter;
+import java.net.URI;
 import java.util.Collection;
 
 /**
@@ -49,18 +52,29 @@ public class AbstractTestBase {
     protected static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
     protected EmbeddedCluster dfsCluster;
     protected Configuration conf = new Configuration();
+    private ConfigurationStore store;
+
+    public ConfigurationStore getStore() {
+        return store;
+    }
 
     @BeforeClass
     public void initConfigStore() throws Exception {
+        String configPath = new URI(StartupProperties.get().getProperty("config.store.uri")).getPath();
+        String location = configPath + "-" + getClass().getName();
+        StartupProperties.get().setProperty("config.store.uri", location);
+        FileUtils.deleteDirectory(new File(location));
+
         cleanupStore();
         String listeners = StartupProperties.get().getProperty("configstore.listeners");
         StartupProperties.get().setProperty("configstore.listeners",
                 listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
-        ConfigurationStore.get().init();
+        store = ConfigurationStore.get();
+        store.init();
     }
 
     protected void cleanupStore() throws FalconException {
-        ConfigurationStore store = ConfigurationStore.get();
+        store = ConfigurationStore.get();
         for (EntityType type : EntityType.values()) {
             Collection<String> entities = store.getEntities(type);
             for (String entity : entities) {
@@ -71,7 +85,7 @@ public class AbstractTestBase {
 
     protected void storeEntity(EntityType type, String name) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
-        ConfigurationStore store = ConfigurationStore.get();
+        store = ConfigurationStore.get();
         store.remove(type, name);
         switch (type) {
         case CLUSTER:
@@ -102,7 +116,7 @@ public class AbstractTestBase {
     }
 
     public void setup() throws Exception {
-        ConfigurationStore store = ConfigurationStore.get();
+        store = ConfigurationStore.get();
         for (EntityType type : EntityType.values()) {
             for (String name : store.getEntities(type)) {
                 store.remove(type, name);
