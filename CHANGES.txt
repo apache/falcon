@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-49 Dependency on oozie-client pulls in hadoop-auth-0.23.1 which 
+    is not necessary (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-32 Store test output in file rather then printing all the output
     into the console (Srikanth Sundarrajan via Venkatesh Seetharam)
 

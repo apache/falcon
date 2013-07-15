@@ -474,6 +474,12 @@
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-client</artifactId>
                 <version>${oozie.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
