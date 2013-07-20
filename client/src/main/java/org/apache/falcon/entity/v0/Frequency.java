@@ -68,7 +68,7 @@ public class Frequency {
     }
 
     public static String toString(Frequency freq) {
-        return freq.toString();
+        return freq==null? null:freq.toString();
     }
 
     @Override

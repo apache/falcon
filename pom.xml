@@ -819,6 +819,10 @@
                         <exclude>*.patch</exclude>
                         <exclude>derby.log</exclude>
                         <exclude>**/logs/**</exclude>
+                        <exclude>**/.classpath</exclude>
+                        <exclude>**/.project</exclude>
+                        <exclude>**/.settings/**</exclude>
+                        <exclude>**/test-output/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

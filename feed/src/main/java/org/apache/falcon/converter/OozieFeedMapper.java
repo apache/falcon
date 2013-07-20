@@ -26,6 +26,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -62,6 +63,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
 
     private static final String FEED_PATH_SEP = "#";
+    private static final String TIMEOUT = "timeout";
+    private static final String PARALLEL = "parallel";
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -198,13 +201,49 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             if (timeoutInMillis < THIRTY_MINUTES) {
                 timeoutInMillis = THIRTY_MINUTES;
             }
+            Map<String, String> props = getEntityProperties();
+            String timeout = props.get(TIMEOUT);
+            if (timeout!=null) {
+                try{
+                    timeoutInMillis= ExpressionHelper.get().
+                            evaluate(timeout, Long.class);
+                } catch (Exception ignore) {
+                    LOG.error("Unable to evaluate timeout:", ignore);
+                }
+            }
+            String parallelProp = props.get(PARALLEL);
+            int parallel = 1;
+            if (parallelProp != null) {
+                try {
+                    parallel = Integer.parseInt(parallelProp);
+                } catch (NumberFormatException ignore) {
+                    LOG.error("Unable to parse parallel:", ignore);
+                }
+            }
+
             replicationCoord.getControls().setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
             replicationCoord.getControls().setThrottle(String.valueOf(timeoutInMillis / frequencyInMillis * 2));
+            replicationCoord.getControls().setConcurrency(String.valueOf(parallel));
 
+            Frequency replicationDelay = FeedHelper.getCluster(feed,
+                    srcCluster.getName()).getDelay();
+            long delayInMillis=0;
+            if (replicationDelay != null) {
+                delayInMillis = ExpressionHelper.get().evaluate(
+                        replicationDelay.toString(), Long.class);
+                long delayInMins = -1 * delayInMillis / (1000 * 60);
+                String elExp = "${now(0," + delayInMins + ")}";
+                replicationCoord.getInputEvents().getDataIn().get(0)
+                .getInstance().set(0, elExp);
+                replicationCoord.getOutputEvents().getDataOut().get(0)
+                .setInstance(elExp);
+            }
             Date srcStartDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getStart();
+            srcStartDate=new Date(srcStartDate.getTime()+delayInMillis);
             Date srcEndDate = FeedHelper.getCluster(feed, srcCluster.getName()).getValidity().getEnd();
             Date trgStartDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getStart();
             Date trgEndDate = FeedHelper.getCluster(feed, trgCluster.getName()).getValidity().getEnd();
+            trgStartDate=new Date(trgStartDate.getTime()+delayInMillis);
             if (srcStartDate.after(trgEndDate)
                     || trgStartDate.after(srcEndDate)) {
                 LOG.warn("Not creating replication coordinator, as the source cluster:"

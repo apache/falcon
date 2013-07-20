@@ -8,6 +8,10 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-47 Falcon Replication should support configurable delays in feed, 
+    parallel, timeout and bulk transfer with variable frequency (Shaik Idris
+    Ali via Srikanth Sundarrajan)
+
     FALCON-49 Dependency on oozie-client pulls in hadoop-auth-0.23.1 which 
     is not necessary (Venkatesh Seetharam via Srikanth Sundarrajan)
 

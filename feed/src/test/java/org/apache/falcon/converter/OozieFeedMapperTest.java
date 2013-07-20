@@ -106,6 +106,7 @@ public class OozieFeedMapperTest {
                 new Path("/projects/falcon/"));
         COORDINATORAPP coord = coords.get(0);
 
+        Assert.assertEquals("2010-01-01T00:40Z", coord.getStart());
         Assert.assertEquals("${nameNode}/projects/falcon/REPLICATION", coord
                 .getAction().getWorkflow().getAppPath());
         Assert.assertEquals("FALCON_FEED_REPLICATION_" + feed.getName() + "_"
@@ -129,7 +130,17 @@ public class OozieFeedMapperTest {
         Assert.assertEquals(
                 "${nameNode}"
                         + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
-                outputDataset.getUriTemplate());
+                        outputDataset.getUriTemplate());
+        String inEventName =coord.getInputEvents().getDataIn().get(0).getName();
+        String inEventDataset =coord.getInputEvents().getDataIn().get(0).getDataset();
+        String inEventInstance = coord.getInputEvents().getDataIn().get(0).getInstance().get(0);
+        Assert.assertEquals("input", inEventName);
+        Assert.assertEquals("input-dataset", inEventDataset);
+        Assert.assertEquals("${now(0,-40)}", inEventInstance);
+
+        String outEventInstance = coord.getOutputEvents().getDataOut().get(0).getInstance();
+        Assert.assertEquals("${now(0,-40)}", outEventInstance);
+
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             if (prop.getName().equals("mapred.job.priority")) {
                 assertEquals(prop.getValue(), "NORMAL");
