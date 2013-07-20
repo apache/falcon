@@ -8,6 +8,9 @@ Release Version: 0.3
 
   IMPROVEMENTS
 
+    FALCON-52 Main module configured used with jetty:run has issues with app 
+    start. (Srikanth Sundarrajan)
+
     FALCON-30 Enable embedding pig scripts directly in a process. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 

@@ -45,14 +45,14 @@ public final class Main {
             appPath = args[0];
             dataDir = System.getProperty("activemq.base") + "/data";
         }
-        EmbeddedServer server = new EmbeddedServer(15000, appPath);
-        server.start();
-
         BrokerService broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setDataDirectory(dataDir);
         broker.addConnector("vm://localhost");
         broker.addConnector("tcp://localhost:61616");
         broker.start();
+
+        EmbeddedServer server = new EmbeddedServer(15000, appPath);
+        server.start();
     }
 }
