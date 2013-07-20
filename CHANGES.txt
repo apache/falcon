@@ -8,6 +8,12 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+  OPTIMIZATIONS
+
+  BUG FIXES
+
+Release Version: 0.3
+
     FALCON-30 Enable embedding pig scripts directly in a process. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 
@@ -45,6 +51,4 @@ Trunk (Unreleased)
     FALCON-10 Add findbugs plugin and fix findbugs warnings for project (Venkatesh
     Seetharam via Srikanth Sundarrajan) 
 
-  OPTIMIZATIONS
 
-  BUG FIXES
