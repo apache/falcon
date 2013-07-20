@@ -1,6 +1,6 @@
 Apache Falcon (incubating) Change log
 
-Trunk (Unreleased)
+Release Version: 0.3
 
   INCOMPATIBLE CHANGES
 
