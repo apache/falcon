@@ -33,26 +33,27 @@ public class AbstractTestBase {
     private static final String PROCESS_XML = "/config/process/process-0.1.xml";
     private static final String FEED_XML = "/config/feed/feed-0.1.xml";
     private static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
+    private static final String PIG_PROCESS_XML = "/config/process/pig-process-0.1.xml";
 
-    private void storeEntity(EntityType type, String name) throws Exception {
+    protected void storeEntity(EntityType type, String name, String resource) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         ConfigurationStore store = ConfigurationStore.get();
         store.remove(type, name);
         switch (type) {
         case CLUSTER:
-            Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
+            Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(resource));
             cluster.setName(name);
             store.publish(type, cluster);
             break;
 
         case FEED:
-            Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
+            Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(resource));
             feed.setName(name);
             store.publish(type, feed);
             break;
 
         case PROCESS:
-            Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(PROCESS_XML));
+            Process process = (Process) unmarshaller.unmarshal(this.getClass().getResource(resource));
             process.setName(name);
             store.publish(type, process);
             break;
@@ -62,15 +63,17 @@ public class AbstractTestBase {
     }
 
     public void setup() throws Exception {
-        storeEntity(EntityType.CLUSTER, "corp");
-        storeEntity(EntityType.FEED, "clicks");
-        storeEntity(EntityType.FEED, "impressions");
-        storeEntity(EntityType.FEED, "clicksummary");
-        storeEntity(EntityType.PROCESS, "clicksummary");
+        storeEntity(EntityType.CLUSTER, "corp", CLUSTER_XML);
+        storeEntity(EntityType.FEED, "clicks", FEED_XML);
+        storeEntity(EntityType.FEED, "impressions", FEED_XML);
+        storeEntity(EntityType.FEED, "clicksummary", FEED_XML);
+        storeEntity(EntityType.PROCESS, "clicksummary", PROCESS_XML);
+        storeEntity(EntityType.PROCESS, "pig-process", PIG_PROCESS_XML);
     }
 
     public void cleanup() throws Exception {
         ConfigurationStore store = ConfigurationStore.get();
+        store.remove(EntityType.PROCESS, "pig-process");
         store.remove(EntityType.PROCESS, "clicksummary");
         store.remove(EntityType.FEED, "clicksummary");
         store.remove(EntityType.FEED, "impressions");

@@ -60,6 +60,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -161,37 +163,44 @@ public class OozieProcessMapperTest extends AbstractTestBase {
             Assert.assertTrue(new File(path).mkdirs());
         }
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
-        OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
-        mapper.map(cluster, bundlePath);
 
-        FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
-        assertTrue(fs.exists(bundlePath));
-
-        BUNDLEAPP bundle = getBundle(fs, bundlePath);
-        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
-        assertEquals(1, bundle.getCoordinator().size());
-        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
-                bundle.getCoordinator().get(0).getName());
-        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
-
-        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        testDefCoordMap(process, coord);
-        assertEquals(coord.getControls().getThrottle(), "12");
-        assertEquals(coord.getControls().getTimeout(), "360");
-
-        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "12", "360");
         testParentWorkflow(process, parentWorkflow);
     }
 
     @Test
     public void testBundle1() throws Exception {
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         process.setFrequency(Frequency.fromString("minutes(1)"));
         process.setTimeout(Frequency.fromString("minutes(15)"));
+
+        WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "30", "15");
+        testParentWorkflow(process, parentWorkflow);
+    }
+
+    @Test
+    public void testPigProcessMapper() throws Exception {
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "pig-process");
+        Assert.assertEquals("pig", process.getWorkflow().getEngine().value());
+
+        WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "12", "360");
+        testParentWorkflow(process, parentWorkflow);
+
+        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
+
+        ACTION pigAction = (ACTION) decisionOrForkOrJoin.get(3);
+        Assert.assertEquals("user-pig-job", pigAction.getName());
+        Assert.assertEquals("${nameNode}/apps/pig/id.pig", pigAction.getPig().getScript());
+        Assert.assertEquals(Collections.EMPTY_LIST, pigAction.getPig().getArchive());
+
+        ACTION oozieAction = (ACTION) decisionOrForkOrJoin.get(4);
+        Assert.assertEquals("user-oozie-workflow", oozieAction.getName());
+        Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
+    }
+
+    private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
+        throws Exception {
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
         mapper.map(cluster, bundlePath);
@@ -208,23 +217,22 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         testDefCoordMap(process, coord);
-        assertEquals(coord.getControls().getThrottle(), "30");
-        assertEquals(coord.getControls().getTimeout(), "15");
+        assertEquals(coord.getControls().getThrottle(), throttle);
+        assertEquals(coord.getControls().getTimeout(), timeout);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(fs, new Path(wfPath));
-        testParentWorkflow(process, parentWorkflow);
+        return getParentWorkflow(fs, new Path(wfPath));
     }
 
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow) {
         Assert.assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(), parentWorkflow.getName());
-        Assert.assertEquals("should-record", ((DECISION) parentWorkflow.getDecisionOrForkOrJoin().get(0)).getName());
-        Assert.assertEquals("recordsize", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(1)).getName());
-        Assert.assertEquals("user-workflow", ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(2)).getName());
-        Assert.assertEquals("succeeded-post-processing",
-                ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(3)).getName());
-        Assert.assertEquals("failed-post-processing",
-                ((ACTION) parentWorkflow.getDecisionOrForkOrJoin().get(4)).getName());
+
+        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
+        Assert.assertEquals("should-record", ((DECISION) decisionOrForkOrJoin.get(0)).getName());
+        Assert.assertEquals("recordsize", ((ACTION) decisionOrForkOrJoin.get(1)).getName());
+        Assert.assertEquals("user-workflow", ((DECISION) decisionOrForkOrJoin.get(2)).getName());
+        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(5)).getName());
+        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
     }
 
     private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
@@ -266,7 +274,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
     private String readFile(FileSystem fs, Path path) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)));
         String line;
-        StringBuffer contents = new StringBuffer();
+        StringBuilder contents = new StringBuilder();
         while ((line = reader.readLine()) != null) {
             contents.append(line);
         }

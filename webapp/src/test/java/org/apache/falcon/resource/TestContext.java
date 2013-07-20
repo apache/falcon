@@ -23,8 +23,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.cluster.util.StandAloneCluster;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -34,6 +36,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -55,6 +58,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -82,6 +86,7 @@ public class TestContext {
 
     public static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
+    public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "http://localhost:41000/falcon-webapp";
     public static final String REMOTE_USER = System.getProperty("user.name");
@@ -244,7 +249,7 @@ public class TestContext {
     /**
      * Converts a InputStream into ServletInputStream.
      *
-     * @param fileName
+     * @param fileName file name
      * @return ServletInputStream
      * @throws java.io.IOException
      */
@@ -386,6 +391,51 @@ public class TestContext {
         return false;
     }
 
+    /*
+    public WorkflowJob getWorkflowJob(String filter) throws Exception {
+        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
+
+        List<WorkflowJob> jobs;
+        while (true) {
+            jobs = ozClient.getJobsInfo(filter);
+            System.out.println("jobs = " + jobs);
+            if (jobs.size() > 0) {
+                break;
+            } else {
+                Thread.sleep(1000);
+            }
+        }
+
+        WorkflowJob jobInfo = jobs.get(0);
+        while (true) {
+            if (!(jobInfo.getStatus() == WorkflowJob.Status.RUNNING
+                    || jobInfo.getStatus() == WorkflowJob.Status.PREP)) {
+                break;
+            } else {
+                Thread.sleep(1000);
+                jobInfo = ozClient.getJobInfo(jobInfo.getId());
+                System.out.println("jobInfo = " + jobInfo);
+            }
+        }
+
+        return jobInfo;
+    }
+
+    public Path getOozieLogPath(WorkflowJob jobInfo) throws Exception {
+        Path stagingPath = new Path(ClusterHelper.getLocation(cluster.getCluster(), "staging"),
+                EntityUtil.getStagingPath(cluster.getCluster()) + "/../logs");
+        final Path logPath = new Path(ClusterHelper.getStorageUrl(cluster.getCluster()), stagingPath);
+        LogMover.main(new String[]{"-workflowEngineUrl",
+                ClusterHelper.getOozieUrl(cluster.getCluster()),
+                "-subflowId", jobInfo.getId(), "-runId", "1",
+                "-logDir", logPath.toString() + "/job-2012-04-21-00-00",
+                "-status", "SUCCEEDED", "-entityType", "process",
+                "-userWorkflowEngine", "pig",});
+
+        return new Path(logPath, "job-2012-04-21-00-00/001/oozie.log");
+    }
+    */
+
     public Map<String, String> getUniqueOverlay() throws FalconException {
         Map<String, String> overlay = new HashMap<String, String>();
         long time = System.currentTimeMillis();
@@ -408,7 +458,7 @@ public class TestContext {
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
         TestContext context = new TestContext();
         String file = context.
-                overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+                overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         EmbeddedCluster cluster = StandAloneCluster.newCluster(file);
 
         cleanupStore();
@@ -422,8 +472,7 @@ public class TestContext {
         Path wfPath = new Path(wfParent, "workflow");
         fs.mkdirs(wfPath);
         fs.copyFromLocalFile(false, true, new Path(TestContext.class.getResource("/fs-workflow.xml").getPath()),
-                new Path(wfPath,
-                        "workflow.xml"));
+                new Path(wfPath, "workflow.xml"));
         fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
         Path outPath = new Path(wfParent, "output");
         fs.mkdirs(outPath);
@@ -436,5 +485,76 @@ public class TestContext {
                 ConfigurationStore.get().remove(type, name);
             }
         }
+    }
+
+    public static void copyOozieShareLibsToHDFS(String shareLibLocalPath, String shareLibHdfsPath)
+        throws IOException {
+        File shareLibDir = new File(shareLibLocalPath);
+        if (!shareLibDir.exists()) {
+            throw new IllegalArgumentException("Sharelibs dir must exist for tests to run.");
+        }
+
+        File[] jarFiles = shareLibDir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isFile() && file.getName().endsWith(".jar");
+            }
+        });
+
+        for (File jarFile : jarFiles) {
+            copyFileToHDFS(jarFile, shareLibHdfsPath);
+        }
+    }
+
+    public static void copyFileToHDFS(File jarFile, String shareLibHdfsPath) throws IOException {
+        System.out.println("Copying jarFile = " + jarFile);
+        Path shareLibPath = new Path(shareLibHdfsPath);
+        FileSystem fs = shareLibPath.getFileSystem(new Configuration());
+        if (!fs.exists(shareLibPath)) {
+            fs.mkdirs(shareLibPath);
+        }
+
+        OutputStream os = null;
+        InputStream is = null;
+        try {
+            os = fs.create(new Path(shareLibPath, jarFile.getName()));
+            is = new FileInputStream(jarFile);
+            IOUtils.copy(is, os);
+        } finally {
+            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(os);
+        }
+    }
+
+    public static void copyResourceToHDFS(String localResource, String resourceName, String hdfsPath)
+        throws IOException {
+        Path appPath = new Path(hdfsPath);
+        FileSystem fs = appPath.getFileSystem(new Configuration());
+        if (!fs.exists(appPath)) {
+            fs.mkdirs(appPath);
+        }
+
+        OutputStream os = null;
+        InputStream is = null;
+        try {
+            os = fs.create(new Path(appPath, resourceName));
+            is = TestContext.class.getResourceAsStream(localResource);
+            IOUtils.copy(is, os);
+        } finally {
+            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(os);
+        }
+    }
+
+    public static void deleteOozieShareLibsFromHDFS(String shareLibHdfsPath) throws IOException {
+        Path shareLibPath = new Path(shareLibHdfsPath);
+        FileSystem fs = shareLibPath.getFileSystem(new Configuration());
+        if (fs.exists(shareLibPath)) {
+            fs.delete(shareLibPath, true);
+        }
+    }
+
+    public static int executeWithURL(String command) throws Exception {
+        return new FalconCLI().run((command + " -url " + TestContext.BASE_URL).split("\\s+"));
     }
 }

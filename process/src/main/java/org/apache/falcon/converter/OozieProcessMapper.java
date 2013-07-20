@@ -21,6 +21,7 @@ package org.apache.falcon.converter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
@@ -30,18 +31,34 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
-import org.apache.falcon.oozie.coordinator.*;
+import org.apache.falcon.oozie.coordinator.CONTROLS;
+import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
+import org.apache.falcon.oozie.coordinator.DATAIN;
+import org.apache.falcon.oozie.coordinator.DATAOUT;
+import org.apache.falcon.oozie.coordinator.DATASETS;
+import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
+import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
+import org.apache.falcon.oozie.coordinator.SYNCDATASET;
+import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.workflow.ACTION;
-import org.apache.falcon.oozie.workflow.SUBWORKFLOW;
+import org.apache.falcon.oozie.workflow.DELETE;
+import org.apache.falcon.oozie.workflow.PIG;
+import org.apache.falcon.oozie.workflow.PREPARE;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -64,20 +81,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return apps;
     }
 
-    private void createWorkflow(Cluster cluster, String template, String wfName, Path wfPath) throws FalconException {
-        WORKFLOWAPP wfApp = getWorkflowTemplate(template);
-        wfApp.setName(wfName);
-
-        for (Object object : wfApp.getDecisionOrForkOrJoin()) {
-            if (object instanceof ACTION && ((ACTION) object).getName().equals("user-workflow")) {
-                SUBWORKFLOW subWf = ((ACTION) object).getSubWorkflow();
-                subWf.setAppPath(getStoragePath(getEntity().getWorkflow().getPath()));
-            }
-        }
-
-        marshal(cluster, wfApp, wfPath);
-    }
-
     /**
      * Creates default oozie coordinator.
      *
@@ -97,15 +100,57 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         Path coordPath = getCoordPath(bundlePath, coordName);
 
         // coord attributes
+        initializeCoordAttributes(cluster, process, coord, coordName);
+
+        CONTROLS controls = initializeControls(process); // controls
+        coord.setControls(controls);
+
+        // Configuration
+        Map<String, String> props = createCoordDefaultConfiguration(cluster, coordPath, coordName);
+
+        List<String> inputFeeds = new ArrayList<String>();
+        List<String> inputPaths = new ArrayList<String>();
+        initializeInputPaths(cluster, process, coord, props, inputFeeds, inputPaths); // inputs
+        props.put("falconInPaths", join(inputPaths.iterator(), '#'));
+        props.put("falconInputFeeds", join(inputFeeds.iterator(), '#'));
+
+        List<String> outputFeeds = new ArrayList<String>();
+        List<String> outputPaths = new ArrayList<String>();
+        initializeOutputPaths(cluster, process, coord, props, outputFeeds, outputPaths);  // outputs
+        // Output feed name and path for parent workflow
+        props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
+        props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
+
+        Workflow processWorkflow = process.getWorkflow();
+        props.put("userWorkflowEngine", processWorkflow.getEngine().value());
+
+        // create parent wf
+        createWorkflow(cluster, process, processWorkflow, coordName, coordPath);
+
+        WORKFLOW wf = new WORKFLOW();
+        wf.setAppPath(getStoragePath(coordPath.toString()));
+        wf.setConfiguration(getCoordConfig(props));
+
+        // set coord action to parent wf
+        org.apache.falcon.oozie.coordinator.ACTION action = new org.apache.falcon.oozie.coordinator.ACTION();
+        action.setWorkflow(wf);
+        coord.setAction(action);
+
+        return coord;
+    }
+
+    private void initializeCoordAttributes(Cluster cluster, Process process, COORDINATORAPP coord, String coordName) {
         coord.setName(coordName);
-        org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process,
-                cluster.getName());
+        org.apache.falcon.entity.v0.process.Cluster processCluster =
+                ProcessHelper.getCluster(process, cluster.getName());
         coord.setStart(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()));
         coord.setEnd(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()));
         coord.setTimezone(process.getTimezone().getID());
         coord.setFrequency("${coord:" + process.getFrequency().toString() + "}");
+    }
 
-        // controls
+    private CONTROLS initializeControls(Process process)
+        throws FalconException {
         CONTROLS controls = new CONTROLS();
         controls.setConcurrency(String.valueOf(process.getParallel()));
         controls.setExecution(process.getOrder().name());
@@ -123,95 +168,80 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             }
         }
         controls.setTimeout(String.valueOf(timeoutInMillis / (1000 * 60)));
+
         if (timeoutInMillis / frequencyInMillis * 2 > 0) {
             controls.setThrottle(String.valueOf(timeoutInMillis / frequencyInMillis * 2));
         }
-        coord.setControls(controls);
 
-        // Configuration
-        Map<String, String> props = createCoordDefaultConfiguration(cluster, coordPath, coordName);
+        return controls;
+    }
 
-        List<String> inputFeeds = new ArrayList<String>();
-        List<String> inputPaths = new ArrayList<String>();
-        // inputs
-        if (process.getInputs() != null) {
-            for (Input input : process.getInputs().getInputs()) {
-                if (!input.isOptional()) {
-                    if (coord.getDatasets() == null) {
-                        coord.setDatasets(new DATASETS());
-                    }
-                    if (coord.getInputEvents() == null) {
-                        coord.setInputEvents(new INPUTEVENTS());
-                    }
+    private void initializeInputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
+                                      Map<String, String> props, List<String> inputFeeds, List<String> inputPaths)
+        throws FalconException {
+        if (process.getInputs() == null) {
+            return;
+        }
 
-                    SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName(),
-                            LocationType.DATA);
-                    coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
-
-                    DATAIN datain = createDataIn(input);
-                    coord.getInputEvents().getDataIn().add(datain);
+        for (Input input : process.getInputs().getInputs()) {
+            if (!input.isOptional()) {
+                if (coord.getDatasets() == null) {
+                    coord.setDatasets(new DATASETS());
+                }
+                if (coord.getInputEvents() == null) {
+                    coord.setInputEvents(new INPUTEVENTS());
                 }
 
-                String inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
-                props.put(input.getName(), inputExpr);
-                inputFeeds.add(input.getName());
-                inputPaths.add(inputExpr);
-
-            }
-        }
-        props.put("falconInPaths", join(inputPaths.iterator(), '#'));
-        props.put("falconInputFeeds", join(inputFeeds.iterator(), '#'));
-
-        // outputs
-        List<String> outputFeeds = new ArrayList<String>();
-        List<String> outputPaths = new ArrayList<String>();
-        if (process.getOutputs() != null) {
-            if (coord.getDatasets() == null) {
-                coord.setDatasets(new DATASETS());
-            }
-            if (coord.getOutputEvents() == null) {
-                coord.setOutputEvents(new OUTPUTEVENTS());
-            }
-
-            for (Output output : process.getOutputs().getOutputs()) {
-                SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName(), LocationType.DATA);
+                SYNCDATASET syncdataset = createDataSet(input.getFeed(), cluster, input.getName(),
+                        LocationType.DATA);
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
-                DATAOUT dataout = createDataOut(output);
-                coord.getOutputEvents().getDataOut().add(dataout);
-
-                String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
-                props.put(output.getName(), outputExpr);
-                outputFeeds.add(output.getName());
-                outputPaths.add(outputExpr);
-
-                // stats and meta paths
-                createOutputEvent(output.getFeed(), output.getName(), cluster, "stats",
-                        LocationType.STATS, coord, props, output.getInstance());
-                createOutputEvent(output.getFeed(), output.getName(), cluster, "meta",
-                        LocationType.META, coord, props, output.getInstance());
-                createOutputEvent(output.getFeed(), output.getName(), cluster, "tmp",
-                        LocationType.TMP, coord, props, output.getInstance());
-
+                DATAIN datain = createDataIn(input);
+                coord.getInputEvents().getDataIn().add(datain);
             }
+
+            String inputExpr = getELExpression("dataIn('" + input.getName() + "', '" + input.getPartition() + "')");
+            props.put(input.getName(), inputExpr);
+            inputFeeds.add(input.getName());
+            inputPaths.add(inputExpr);
         }
-        // Output feed name and path for parent workflow
-        props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
-        props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
+    }
 
-        // create parent wf
-        createWorkflow(cluster, DEFAULT_WF_TEMPLATE, coordName, coordPath);
+    private void initializeOutputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
+                                       Map<String, String> props, List<String> outputFeeds, List<String> outputPaths)
+        throws FalconException {
+        if (process.getOutputs() == null) {
+            return;
+        }
 
-        WORKFLOW wf = new WORKFLOW();
-        wf.setAppPath(getStoragePath(coordPath.toString()));
-        wf.setConfiguration(getCoordConfig(props));
+        if (coord.getDatasets() == null) {
+            coord.setDatasets(new DATASETS());
+        }
 
-        // set coord action to parent wf
-        org.apache.falcon.oozie.coordinator.ACTION action = new org.apache.falcon.oozie.coordinator.ACTION();
-        action.setWorkflow(wf);
-        coord.setAction(action);
+        if (coord.getOutputEvents() == null) {
+            coord.setOutputEvents(new OUTPUTEVENTS());
+        }
 
-        return coord;
+        for (Output output : process.getOutputs().getOutputs()) {
+            SYNCDATASET syncdataset = createDataSet(output.getFeed(), cluster, output.getName(), LocationType.DATA);
+            coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
+
+            DATAOUT dataout = createDataOut(output);
+            coord.getOutputEvents().getDataOut().add(dataout);
+
+            String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
+            props.put(output.getName(), outputExpr);
+            outputFeeds.add(output.getName());
+            outputPaths.add(outputExpr);
+
+            // stats and meta paths
+            createOutputEvent(output.getFeed(), output.getName(), cluster, "stats",
+                    LocationType.STATS, coord, props, output.getInstance());
+            createOutputEvent(output.getFeed(), output.getName(), cluster, "meta",
+                    LocationType.META, coord, props, output.getInstance());
+            createOutputEvent(output.getFeed(), output.getName(), cluster, "tmp",
+                    LocationType.TMP, coord, props, output.getInstance());
+        }
     }
 
     private DATAOUT createDataOut(Output output) {
@@ -261,7 +291,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private SYNCDATASET createDataSet(String feedName, Cluster cluster, String datasetName,
                                       LocationType locationType) throws FalconException {
-        Feed feed = (Feed) EntityUtil.getEntity(EntityType.FEED, feedName);
+        Feed feed = EntityUtil.getEntity(EntityType.FEED, feedName);
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
@@ -299,5 +329,128 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             }
         }
         return props;
+    }
+
+    private void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
+                                String wfName, Path wfPath) throws FalconException {
+        WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
+        wfApp.setName(wfName);
+
+        EngineType engineType = processWorkflow.getEngine();
+        for (Object object : wfApp.getDecisionOrForkOrJoin()) {
+            if (!(object instanceof ACTION)) {
+                continue;
+            }
+
+            String storagePath = getStoragePath(getEntity().getWorkflow().getPath());
+            ACTION action = (ACTION) object;
+            String actionName = action.getName();
+            if (engineType == EngineType.OOZIE && actionName.equals("user-oozie-workflow")) {
+                action.getSubWorkflow().setAppPath(storagePath);
+            } else if (engineType == EngineType.PIG && actionName.equals("user-pig-job")) {
+                decoratePIGAction(cluster, process, processWorkflow, storagePath, action.getPig());
+            }
+        }
+
+        marshal(cluster, wfApp, wfPath);
+    }
+
+    private void decoratePIGAction(Cluster cluster, Process process, Workflow processWorkflow,
+                                   String storagePath, PIG pigAction) throws FalconException {
+
+        pigAction.setScript(storagePath);
+
+        addPrepareDeleteOutputPath(process, pigAction);
+
+        addInputOutputFeedsAsParams(pigAction, process);
+
+        propagateProcessProperties(pigAction, process);
+
+        addArchiveForCustomJars(cluster, processWorkflow, pigAction);
+    }
+
+    private void addPrepareDeleteOutputPath(Process process, PIG pigAction) {
+        final PREPARE prepare = new PREPARE();
+        final List<DELETE> deleteList = prepare.getDelete();
+        for (Output output : process.getOutputs().getOutputs()) {
+            final DELETE delete = new DELETE();
+            delete.setPath("${wf:conf('" + output.getName() + "')}");
+            deleteList.add(delete);
+        }
+
+        if (!deleteList.isEmpty()) {
+            pigAction.setPrepare(prepare);
+        }
+    }
+
+    private void addInputOutputFeedsAsParams(PIG pigAction, Process process) throws FalconException {
+        final List<String> paramList = pigAction.getParam();
+        for (Input input : process.getInputs().getInputs()) {
+            paramList.add(input.getName() + "=${" + input.getName() + "}");
+        }
+
+        for (Output output : process.getOutputs().getOutputs()) {
+            paramList.add(output.getName() + "=${" + output.getName() + "}");
+        }
+    }
+
+    private void propagateProcessProperties(PIG pigAction, Process process) {
+        org.apache.falcon.entity.v0.process.Properties processProperties = process.getProperties();
+        if (processProperties == null) {
+            return;
+        }
+
+        // Propagate user defined properties to job configuration
+        final List<org.apache.falcon.oozie.workflow.CONFIGURATION.Property> configuration =
+                pigAction.getConfiguration().getProperty();
+        for (org.apache.falcon.entity.v0.process.Property property : processProperties.getProperties()) {
+            org.apache.falcon.oozie.workflow.CONFIGURATION.Property configProperty =
+                    new org.apache.falcon.oozie.workflow.CONFIGURATION.Property();
+            configProperty.setName(property.getName());
+            configProperty.setValue(property.getValue());
+            configuration.add(configProperty);
+        }
+
+        // Propagate user defined properties to pig script as macros
+        // passed as parameters -p name=value that can be accessed as $name
+        final List<String> paramList = pigAction.getParam();
+        for (org.apache.falcon.entity.v0.process.Property property : processProperties.getProperties()) {
+            paramList.add(property.getName() + "=" + property.getValue());
+        }
+    }
+
+    private void addArchiveForCustomJars(Cluster cluster, Workflow processWorkflow,
+                                         PIG pigAction) throws FalconException {
+        String processWorkflowLib = processWorkflow.getLib();
+        if (processWorkflowLib == null) {
+            return;
+        }
+
+        Path libPath = new Path(processWorkflowLib);
+        try {
+            final FileSystem fs = libPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
+            if (fs.isFile(libPath)) {  // File, not a Dir
+                pigAction.getArchive().add(processWorkflowLib);
+                return;
+            }
+
+            // lib path is a directory, add each file under the lib dir to archive
+            final FileStatus[] fileStatuses = fs.listStatus(libPath, new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    try {
+                        return fs.isFile(path) && path.getName().endsWith(".jar");
+                    } catch (IOException ignore) {
+                        return false;
+                    }
+                }
+            });
+
+            for (FileStatus fileStatus : fileStatuses) {
+                pigAction.getArchive().add(fileStatus.getPath().toString());
+            }
+        } catch (IOException e) {
+            throw new FalconException("Error adding archive for custom jars under: " + libPath, e);
+        }
     }
 }

@@ -52,7 +52,37 @@
         <error to="fail"/>
     </action>
 
-    <action name='user-workflow'>
+    <decision name='user-workflow'>
+        <switch>
+            <case to="user-oozie-workflow">
+                ${userWorkflowEngine=="oozie"}
+            </case>
+            <case to="user-pig-job">
+                ${userWorkflowEngine=="pig"}
+            </case>
+            <default to="user-oozie-workflow"/>
+        </switch>
+    </decision>
+    <action name='user-pig-job'>
+        <pig>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <script>#USER_WF_PATH#</script>
+        </pig>
+        <ok to="succeeded-post-processing"/>
+        <error to="failed-post-processing"/>
+    </action>
+    <action name='user-oozie-workflow'>
         <sub-workflow>
             <app-path>#USER_WF_PATH#</app-path>
             <propagate-configuration/>
@@ -113,7 +143,9 @@
             <arg>-workflowEngineUrl</arg>
             <arg>${workflowEngineUrl}</arg>
             <arg>-subflowId</arg>
-            <arg>${wf:id()}@user-workflow</arg>
+            <arg>${wf:id()}${userWorkflowEngine == "oozie" ? "@user-oozie-workflow" : ""}</arg>
+            <arg>-userWorkflowEngine</arg>
+            <arg>${userWorkflowEngine}</arg>
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
@@ -179,7 +211,9 @@
             <arg>-workflowEngineUrl</arg>
             <arg>${workflowEngineUrl}</arg>
             <arg>-subflowId</arg>
-            <arg>${wf:id()}@user-workflow</arg>
+            <arg>${wf:id()}${userWorkflowEngine == "oozie" ? "@user-oozie-workflow" : ""}</arg>
+            <arg>-userWorkflowEngine</arg>
+            <arg>${userWorkflowEngine}</arg>
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
@@ -194,8 +228,8 @@
         <error to="fail"/>
     </action>
     <kill name="fail">
-        <message>Workflow failed, error
-            message[${wf:errorMessage(wf:lastErrorNode())}]
+        <message>
+            Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
         </message>
     </kill>
     <end name='end'/>

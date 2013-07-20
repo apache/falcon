@@ -63,7 +63,7 @@ public class LogMoverIT {
         overlay.put("cluster", "testCluster");
         TestContext context = new TestContext();
         String file = context.
-                overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+                overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         testCluster = StandAloneCluster.newCluster(file);
         STORE.publish(EntityType.CLUSTER, testCluster.getCluster());
 /*
@@ -135,7 +135,7 @@ public class LogMoverIT {
         Assert.assertTrue(fs.exists(oozieLogPath));
 
         testLogMoverWithNextRunId(job.getId());
-
+        testLogMoverWithNextRunIdWithEngine(job.getId());
     }
 
     private Path getLogPath() throws FalconException {
@@ -156,7 +156,18 @@ public class LogMoverIT {
         Path oozieLogPath = new Path(getLogPath(),
                 "job-2010-01-01-01-00/001/oozie.log");
         Assert.assertTrue(fs.exists(oozieLogPath));
-
     }
 
+    private void testLogMoverWithNextRunIdWithEngine(String jobId) throws Exception {
+        LogMover.main(new String[]{"-workflowEngineUrl",
+                                   ClusterHelper.getOozieUrl(testCluster.getCluster()),
+                                   "-subflowId", jobId + "@user-workflow", "-runId", "1",
+                                   "-logDir", getLogPath().toString() + "/job-2010-01-01-01-00",
+                                   "-status", "SUCCEEDED", "-entityType", "process",
+                                   "-userWorkflowEngine", "oozie", });
+
+        Path oozieLogPath = new Path(getLogPath(),
+                "job-2010-01-01-01-00/001/oozie.log");
+        Assert.assertTrue(fs.exists(oozieLogPath));
+    }
 }

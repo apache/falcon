@@ -59,6 +59,7 @@ public class FalconPostProcessing extends Configured implements Tool {
         LOG_FILE("logFile", "log file path where feeds to be deleted are recorded"),
         WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie"),
         USER_SUBFLOW_ID("subflowId", "external id of user workflow"),
+        USER_WORKFLOW_ENGINE("userWorkflowEngine", "user workflow engine type"),
         LOG_DIR("logDir", "log dir where job logs are copied");
 
         private String name;
@@ -80,7 +81,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         public String getOptionValue(CommandLine cmd) {
             return cmd.getOptionValue(this.name);
         }
-
     }
 
     public static void main(String[] args) throws Exception {
@@ -94,9 +94,11 @@ public class FalconPostProcessing extends Configured implements Tool {
 
         LOG.info("Sending user message " + cmd);
         invokeUserMessageProducer(cmd);
+
         //LogMover doesnt throw exception, a failed logmover will not fail the user workflow
         LOG.info("Moving logs " + cmd);
         invokeLogProducer(cmd);
+
         LOG.info("Sending falcon message " + cmd);
         invokeFalconMessageProducer(cmd);
 
@@ -154,7 +156,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         addArg(args, cmd, Arg.LOG_FILE);
 
         MessageProducer.main(args.toArray(new String[0]));
-
     }
 
     private void invokeLogProducer(CommandLine cmd) throws Exception {
@@ -162,12 +163,12 @@ public class FalconPostProcessing extends Configured implements Tool {
         addArg(args, cmd, Arg.WF_ENGINE_URL);
         addArg(args, cmd, Arg.ENTITY_TYPE);
         addArg(args, cmd, Arg.USER_SUBFLOW_ID);
+        addArg(args, cmd, Arg.USER_WORKFLOW_ENGINE);
         addArg(args, cmd, Arg.RUN_ID);
         addArg(args, cmd, Arg.LOG_DIR);
         addArg(args, cmd, Arg.STATUS);
 
         LogMover.main(args.toArray(new String[0]));
-
     }
 
     private void addArg(List<String> args, CommandLine cmd, Arg arg) {
@@ -198,15 +199,18 @@ public class FalconPostProcessing extends Configured implements Tool {
         addOption(options, Arg.LOG_FILE);
         addOption(options, Arg.WF_ENGINE_URL);
         addOption(options, Arg.USER_SUBFLOW_ID);
+        addOption(options, Arg.USER_WORKFLOW_ENGINE, false);
         addOption(options, Arg.LOG_DIR);
         return new GnuParser().parse(options, arguments);
     }
 
     private static void addOption(Options options, Arg arg) {
-        Option option = arg.getOption();
-        option.setRequired(true);
-        options.addOption(option);
+        addOption(options, arg, true);
     }
 
-
+    private static void addOption(Options options, Arg arg, boolean isRequired) {
+        Option option = arg.getOption();
+        option.setRequired(isRequired);
+        options.addOption(option);
+    }
 }

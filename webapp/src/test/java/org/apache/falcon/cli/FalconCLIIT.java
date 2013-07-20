@@ -18,8 +18,8 @@
 
 package org.apache.falcon.cli;
 
-import junit.framework.Assert;
 import org.apache.falcon.resource.TestContext;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -56,7 +56,7 @@ public class FalconCLIIT {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        filePath = context.overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);
+        filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(
                 0,
                 executeWithURL("entity -submit -type cluster -file " + filePath));

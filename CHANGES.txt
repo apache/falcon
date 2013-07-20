@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-30 Enable embedding pig scripts directly in a process. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
     FALCON-47 Falcon Replication should support configurable delays in feed, 
     parallel, timeout and bulk transfer with variable frequency (Shaik Idris
     Ali via Srikanth Sundarrajan)

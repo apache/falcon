@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -64,6 +65,7 @@ public class LogMover extends Configured implements Tool {
         private String runId;
         private String logDir;
         private String entityType;
+        private String userWorkflowEngine;
     }
 
     public static void main(String[] args) throws Exception {
@@ -75,6 +77,7 @@ public class LogMover extends Configured implements Tool {
         try {
             ARGS args = new ARGS();
             setupArgs(arguments, args);
+
             OozieClient client = new OozieClient(args.oozieUrl);
             WorkflowJob jobInfo;
             try {
@@ -83,17 +86,18 @@ public class LogMover extends Configured implements Tool {
                 LOG.error("Error getting jobinfo for: " + args.subflowId, e);
                 return 0;
             }
+
             Path path = new Path(args.logDir + "/"
                     + String.format("%03d", Integer.parseInt(args.runId)));
-
             FileSystem fs = path.getFileSystem(getConf());
 
-            if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())) {
-                // if replication wf
+            if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())
+                    || notUserWorkflowEngineIsOozie(args.userWorkflowEngine)) {
+                // if replication wf or PIG Process
                 copyOozieLog(client, fs, path, jobInfo.getId());
                 copyTTlogs(fs, path, jobInfo.getActions().get(2));
             } else {
-                // if process wf
+                // if process wf with oozie engine
                 String subflowId = jobInfo.getExternalId();
                 copyOozieLog(client, fs, path, subflowId);
                 WorkflowJob subflowInfo = client.getJobInfo(subflowId);
@@ -107,13 +111,17 @@ public class LogMover extends Configured implements Tool {
                                 + action.getName());
                     }
                 }
-
             }
 
         } catch (Exception e) {
             LOG.error("Exception in log mover:", e);
         }
         return 0;
+    }
+
+    private boolean notUserWorkflowEngineIsOozie(String userWorkflowEngine) {
+        // userWorkflowEngine will be null for replication and "pig" for pig
+        return userWorkflowEngine != null && EngineType.fromValue(userWorkflowEngine) != EngineType.OOZIE;
     }
 
     private void copyOozieLog(OozieClient client, FileSystem fs, Path path,
@@ -150,23 +158,31 @@ public class LogMover extends Configured implements Tool {
 
     private void setupArgs(String[] arguments, ARGS args) throws ParseException {
         Options options = new Options();
-        Option opt;
-        opt = new Option("workflowEngineUrl", true,
-                "url of workflow engine, ex:oozie");
+
+        Option opt = new Option("workflowEngineUrl", true, "url of workflow engine, ex:oozie");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("subflowId", true, "external id of userworkflow");
         opt.setRequired(true);
         options.addOption(opt);
+
+        opt = new Option("userWorkflowEngine", true, "user workflow engine type");
+        opt.setRequired(false);  // replication will NOT have this arg sent
+        options.addOption(opt);
+
         opt = new Option("runId", true, "current workflow's runid");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("logDir", true, "log dir where job logs are stored");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("status", true, "user workflow status");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("entityType", true, "entity type feed or process");
         opt.setRequired(true);
         options.addOption(opt);
@@ -175,6 +191,7 @@ public class LogMover extends Configured implements Tool {
 
         args.oozieUrl = cmd.getOptionValue("workflowEngineUrl");
         args.subflowId = cmd.getOptionValue("subflowId");
+        args.userWorkflowEngine = cmd.getOptionValue("userWorkflowEngine");
         args.runId = cmd.getOptionValue("runId");
         args.logDir = cmd.getOptionValue("logDir");
         args.entityType = cmd.getOptionValue("entityType");

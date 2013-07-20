@@ -68,7 +68,8 @@ public class FalconPostProcessingTest {
                             "-" + Arg.WF_ENGINE_URL.getOptionName(),
                             "http://localhost:11000/oozie/",
                             "-" + Arg.LOG_DIR.getOptionName(), "target/log",
-                            "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test", };
+                            "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test",
+                            "-" + Arg.USER_WORKFLOW_ENGINE.getOptionName(), "oozie", };
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");

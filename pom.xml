@@ -823,6 +823,7 @@
                         <exclude>**/.project</exclude>
                         <exclude>**/.settings/**</exclude>
                         <exclude>**/test-output/**</exclude>
+                        <exclude>**/data.txt</exclude>
                     </excludes>
                 </configuration>
                 <executions>
