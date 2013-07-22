@@ -35,7 +35,7 @@ import org.apache.falcon.workflow.WorkflowBuilder;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.*;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
-import org.apache.oozie.client.WorkflowJob.Status;
+import org.apache.oozie.client.Job.Status;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -51,14 +51,14 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     public static final String ENGINE = "oozie";
     private static final BundleJob MISSING = new NullBundleJob();
 
-    private static final List<Status> WF_KILL_PRECOND = Arrays.asList(Status.PREP,
-            Status.RUNNING, Status.SUSPENDED, Status.FAILED);
-    private static final List<Status> WF_SUSPEND_PRECOND = Arrays
-            .asList(Status.RUNNING);
-    private static final List<Status> WF_RESUME_PRECOND = Arrays
-            .asList(Status.SUSPENDED);
-    private static final List<Status> WF_RERUN_PRECOND = Arrays.asList(Status.FAILED,
-            Status.KILLED, Status.SUCCEEDED);
+    private static final List<WorkflowJob.Status> WF_KILL_PRECOND = Arrays.asList(WorkflowJob.Status.PREP,
+            WorkflowJob.Status.RUNNING, WorkflowJob.Status.SUSPENDED, WorkflowJob.Status.FAILED);
+    private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays
+            .asList(WorkflowJob.Status.RUNNING);
+    private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays
+            .asList(WorkflowJob.Status.SUSPENDED);
+    private static final List<WorkflowJob.Status> WF_RERUN_PRECOND = Arrays.asList(WorkflowJob.Status.FAILED,
+            WorkflowJob.Status.KILLED, WorkflowJob.Status.SUCCEEDED);
 
     private static final List<Job.Status> BUNDLE_ACTIVE_STATUS = Arrays.asList(
             Job.Status.PREP, Job.Status.RUNNING, Job.Status.SUSPENDED,
@@ -845,7 +845,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             cal.setTime(coord.getLastActionTime());
             Frequency freq = createFrequency(coord.getFrequency(),
                     coord.getTimeUnit());
-            cal.add(freq.getTimeUnit().getCalendarUnit(), -1);
+            cal.add(freq.getTimeUnit().getCalendarUnit(), -freq.getFrequency());
             return cal.getTime();
         }
         return null;
@@ -906,6 +906,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private void resume(String cluster, BundleJob bundle) throws FalconException {
+        bundle = getBundleInfo(cluster, bundle.getId());
         for (CoordinatorJob coord : bundle.getCoordinators()) {
             resume(cluster, coord.getId());
         }
@@ -1029,7 +1030,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             client.reRun(jobId, jobprops);
-            assertStatus(cluster, jobId, WorkflowJob.Status.RUNNING);
+            assertStatus(cluster, jobId, Job.Status.RUNNING);
             LOG.info("Rerun job " + jobId + " on cluster " + cluster);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
@@ -1119,7 +1120,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             client.suspend(jobId);
-            assertStatus(cluster, jobId, Status.SUSPENDED, Status.SUCCEEDED,
+            assertStatus(cluster, jobId, Status.PREPSUSPENDED, Status.SUSPENDED, Status.SUCCEEDED,
                     Status.FAILED, Status.KILLED);
             LOG.info("Suspended job " + jobId + " on cluster " + cluster);
         } catch (OozieClientException e) {
@@ -1242,7 +1243,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             instance.startTime = jobInfo.getStartTime();
-            if (jobInfo.getStatus() == Status.RUNNING) {
+            if (jobInfo.getStatus().name().equals(Status.RUNNING.name())) {
                 instance.endTime = new Date();
             } else {
                 instance.endTime = jobInfo.getEndTime();

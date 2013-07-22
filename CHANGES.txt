@@ -14,6 +14,12 @@ Trunk (Unreleased)
 
 Release Version: 0.3
 
+    FALCON-56 Update Falcon packing to include all source files. (Srikanth
+    Sundarrajan)
+
+    FALCON-55 Update suspends old oozie coords. (Shwetha GS via Srikanth 
+    Sundarrajan)
+
     FALCON-52 Main module configured used with jetty:run has issues with app 
     start. (Srikanth Sundarrajan)
 

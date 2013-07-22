@@ -17,7 +17,23 @@
  */
 package org.apache.falcon.resource;
 
-import com.sun.jersey.api.client.ClientResponse;
+import java.io.File;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.servlet.ServletInputStream;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBException;
+
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
@@ -32,26 +48,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import com.sun.jersey.api.client.ClientResponse;
 
 /**
  * Test class for Entity REST APIs.
@@ -186,6 +189,10 @@ public class EntityManagerJerseyIT {
         TestContext context = newContext();
         context.scheduleProcess();
         context.waitForBundleStart(Job.Status.RUNNING);
+        List<BundleJob> bundles = context.getBundles();
+        Assert.assertEquals(bundles.size(), 1);
+        OozieClient ozClient = context.getOozieClient();
+        String coordId = ozClient.getBundleJobInfo(bundles.get(0).getId()).getCoordinators().get(0).getId();
 
         ClientResponse response = context.service.path("api/entities/definition/process/"
                 + context.processName).header(
@@ -218,9 +225,10 @@ public class EntityManagerJerseyIT {
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
         context.assertSuccessful(response);
 
-        //Assert that update creates new bundle
-        List<BundleJob> bundles = context.getBundles();
+        //Assert that update creates new bundle and old coord is running
+        bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
+        Assert.assertEquals(ozClient.getCoordJobInfo(coordId).getStatus(), Status.RUNNING);
     }
 
     @Test
