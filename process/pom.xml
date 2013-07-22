@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.3</version>
+        <version>0.3-incubating</version>
     </parent>
     <artifactId>falcon-process</artifactId>
     <description>Apache Falcon Process Module</description>

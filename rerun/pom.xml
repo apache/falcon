@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon</groupId>
         <artifactId>falcon-main</artifactId>
-        <version>0.3</version>
+        <version>0.3-incubating</version>
     </parent>
     <artifactId>falcon-rerun</artifactId>
     <description>Apache Falcon Rerun Handler</description>
