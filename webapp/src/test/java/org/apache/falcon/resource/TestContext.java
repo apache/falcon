@@ -366,6 +366,10 @@ public class TestContext {
         return File.createTempFile("test", ".xml", target);
     }
 
+    public OozieClient getOozieClient() throws FalconException {
+        return OozieClientFactory.get(cluster.getCluster());
+    }
+
     public List<BundleJob> getBundles() throws Exception {
         List<BundleJob> bundles = new ArrayList<BundleJob>();
         if (clusterName == null) {
