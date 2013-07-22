@@ -769,6 +769,7 @@
                 <configuration>
                     <descriptors>
                         <descriptor>src/main/assemblies/package.xml</descriptor>
+                        <descriptor>src/main/assemblies/src-package.xml</descriptor>
                     </descriptors>
                     <finalName>falcon-${project.version}</finalName>
                 </configuration>
