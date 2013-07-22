@@ -20,9 +20,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <formats>
-        <format>dir</format>
         <format>tar.gz</format>
     </formats>
+    <id>bin</id>
     <fileSets>
         <fileSet>
             <directory>src/conf/</directory>
@@ -32,22 +32,6 @@
         <fileSet>
             <directory>client/target/dependency</directory>
             <outputDirectory>client/lib</outputDirectory>
-        </fileSet>
-
-        <fileSet>
-            <directory>.</directory>
-            <outputDirectory>src</outputDirectory>
-            <includes>
-                <include>**/target/*sources.jar</include>
-            </includes>
-        </fileSet>
-
-        <fileSet>
-            <directory>.</directory>
-            <outputDirectory>docs</outputDirectory>
-            <includes>
-                <include>**/target/*javadoc.jar</include>
-            </includes>
         </fileSet>
 
         <fileSet>
