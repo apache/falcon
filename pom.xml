@@ -717,6 +717,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <revisionOnScmFailure>release</revisionOnScmFailure>
                     <doCheck>false</doCheck>
                     <doUpdate>false</doUpdate>
                 </configuration>
