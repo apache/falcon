@@ -14,6 +14,9 @@ Trunk (Unreleased)
 
 Release Version: 0.3
 
+    FALCON-53 Add -incubating to the version. (Jarek Jarcec Cecho via Srikanth
+    Sundarrajan)
+
     FALCON-56 Update Falcon packing to include all source files. (Srikanth
     Sundarrajan)
 
