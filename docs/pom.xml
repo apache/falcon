@@ -27,7 +27,6 @@
     <artifactId>falcon-docs</artifactId>
     <description>Apache Falcon Documentation</description>
     <name>Apache Falcon Documentation</name>
-    <packaging>war</packaging>
 
     <properties>
         <skipTests>true</skipTests>
@@ -53,21 +52,10 @@
                         <phase>prepare-package</phase>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
                 <configuration>
-                    <webResources>
-                        <resource>
-                            <directory>src/site/resources</directory>
-                            <targetPath>pages</targetPath>
-                        </resource>
-                        <resource>
-                            <directory>target/site</directory>
-                            <targetPath>pages</targetPath>
-                        </resource>
-                    </webResources>
+                    <generateProjectInfo>false</generateProjectInfo>
+                    <generateReports>false</generateReports>
+                    <skip>false</skip>
                 </configuration>
             </plugin>
         </plugins>
