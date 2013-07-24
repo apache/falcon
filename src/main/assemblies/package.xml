@@ -40,6 +40,16 @@
         </fileSet>
 
         <fileSet>
+            <directory>docs/target/site</directory>
+            <outputDirectory>docs</outputDirectory>
+        </fileSet>
+
+        <fileSet>
+            <directory>webapp/target/apidocs</directory>
+            <outputDirectory>apidocs</outputDirectory>
+        </fileSet>
+
+        <fileSet>
             <directory>src/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
@@ -60,6 +70,8 @@
             <directory>./</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
+                <include>DISCLAIMER.txt</include>
+                <include>NOTICE.txt</include>
                 <include>LICENSE.txt</include>
                 <include>CHANGES.txt</include>
                 <include>README</include>

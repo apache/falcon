@@ -1,58 +1,92 @@
----+++ Building & Packaging Falcon
+---++ Building & Installing Falcon
 
 
----+++ Installing Falcon
-*Pre-requisites:*
-   * hadoop-0.20.2 +
-   * oozie-3.1.5 +
-*Falcon Server*
+---+++ Building Falcon
 
-   * Download the source from https://github.com/sriksun/Falcon
-   * Navigate to base project folder,named 'Falcon'
-   * Build as "mvn clean package" at the base location. Please note that both maven 2/3 are supported.
-   * By default only embedded/standalone mode is build.
-   * To build Falcon with documentation build with MVN profile "all".
-   * To build the Falcon for distributed mode, i.e. multiple server and prism mode, build with MVN profile "distributed".
-   * Once the build operation is over,navigate to '<base-folder>/Falcon/webapps/target' and deploy the .war file generated
-      there in a web container (Eg: tomcat6).
----+++ User Guide
-*Falcon Client*
+<verbatim>
+git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
 
-   * Follow the steps 1 to 3 from server instructions.
-   * Once the build operation is over, navigate to '<base-folder>/Falcon/client/target'. There is a client.jar that has
-      been generated along with multiple other jars. Fetch this jar and others to use the Falcon client application.
-      Please ensure that the other jars in the folder are always specified in the classpath of the client.jar.
-   * Please refer Falcon-CLI guide for various options on how to use the falcon client.
----+++ Administration Guide
-*Setting up Falcon server properties:*
-Inside your web container, where the falcon war has exploded, you should be able to find 2 files, startup.properties and runtime.properties.
-The path would be:
-<container-base>/<war-location>/falcon-webapp-<<project version>>/WEB-INF/classes
+cd falcon
 
-*startup.properties:* Specifies values/paths used by Falcon on startup. Common entries usually include config store location
-,broker url (for messaging), and other settings.Any changes to this requires Falcon to be restarted to take effect.
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
-*runtime.properties:* Specifies various properties that can be picked at runtime. Falcon server keeps polling this file after a certain interval;
-and incorporates changes, if any.
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+[Falcon has currently not been tested with secure Hadoop / Hadoop 2.0]
 
-*Domain based settings (only applicable for Falcon 0.2):*
+</verbatim>
 
-Falcon 0.2 and subsequent releases support domain based properties. The user can specify properties either for all domains
-(with prefixing the property with a '*' ) or for a particular domain (with prefixing the domain name to the property).
-Once the domain is set,  the user can set an env variable,FALCON_DOMAIN as the domain that the Falcon is supposed to use.
+Once the build successfully completes, artifacts can be packaged for deployment. By default the falcon is built for embedded mode.
 
-Please refer the example below:
+<verbatim>
 
-Example:
-Trying to set the config store property for all domains:
+mvn clean assembly:assembly -DskipTests
 
-*.config.store.uri=file:///var/lib/tomcat6/target/store
+</verbatim>
 
-Trying to set config store property for a 'specific' domain:
+Tar can be found in {project dir}/target/falcon-${project.version}.tar.gz
 
-qa.config.store.uri=file:///var/lib/tomcat6/target/store
+Tar is structured as follows
 
-To ensure that Falcon installation on your system uses the qa domain settings, just set the FALCON_DOMAIN value to 'qa' in your environment.
----++++ Security
+<verbatim>
 
-*TO-DO*
+|- bin
+   |- falcon
+   |- falcon-start
+   |- falcon-stop
+|- conf
+   |- startup.properties
+   |- runtime.properties
+   |- client.properties
+   |- log4j.xml
+|- src
+|- docs
+|- client
+   |- lib (client support libs)
+|- server
+   |- webapp
+      |- classes (serer support classes)
+      |- lib (server support libs)
+   |- falcon.war
+|- logs (application log files & temp data files)
+   |- falcon.pid
+
+</verbatim>
+
+---+++ Installing & running Falcon
+
+*Installing falcon*
+<verbatim>
+tar -xzvf falcon-${project.version}.tar.gz
+cd falcon-main-${project.version}
+</verbatim>
+
+*Starting Falcon Server*
+<verbatim>
+bin/falcon-start
+</verbatim>
+
+*Using Falcon*
+<verbatim>
+bin/falcon admin -version
+Falcon server build version: {Version:"0.3-SNAPSHOT-rd7e2be9afa2a5dc96acd1ec9e325f39c6b2f17f7",Mode:"embedded"}
+
+----
+
+bin/falcon help
+(for more details about falcon cli usage)
+</verbatim>
+
+*Stopping Falcon Server*
+<verbatim>
+bin/falcon-stop
+</verbatim>
+
+---+++ Preparing oozie bundle for use with Falcon
+<verbatim>
+cd <<project home>>
+mkdir target/package
+src/bin/pacakge.sh <<hadoop-version>>
+
+>> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
+>> oozie bundle available in target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz
+</verbatim>

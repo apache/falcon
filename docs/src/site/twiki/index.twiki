@@ -24,6 +24,8 @@ management on hadoop clusters.
 Start with these simple steps to install an falcon instance [[InstallationSteps][Simple setup]]. Also refer
 to Falcon architecture and documentation in [[FalconDocumentation][Documentation]]. [[OnBoarding][On boarding]] describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline for reference. [[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
 
+[[FalconCLI][Falcon CLI]] describes the various options for the command line utility provided by Falcon.
+
 #LicenseInfo
 ---+ Licensing Information
 

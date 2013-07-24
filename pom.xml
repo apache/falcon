@@ -103,35 +103,9 @@
         <skipCheck>false</skipCheck>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>all</id>
-            <modules>
-                <module>client</module>
-                <module>metrics</module>
-                <module>common</module>
-                <module>test-util</module>
-                <module>hadoop-webapp</module>
-                <module>feed</module>
-                <module>messaging</module>
-                <module>process</module>
-                <module>oozie-el-extensions</module>
-                <module>oozie</module>
-                <module>acquisition</module>
-                <module>replication</module>
-                <module>retention</module>
-                <module>archival</module>
-                <module>rerun</module>
-                <module>prism</module>
-                <module>webapp</module>
-                <module>docs</module>
-                <module>build-tools</module>
-            </modules>
-        </profile>
-    </profiles>
-
     <modules>
         <module>client</module>
+        <module>metrics</module>
         <module>common</module>
         <module>test-util</module>
         <module>hadoop-webapp</module>
@@ -144,10 +118,10 @@
         <module>replication</module>
         <module>retention</module>
         <module>archival</module>
-        <module>metrics</module>
         <module>rerun</module>
         <module>prism</module>
         <module>webapp</module>
+        <module>docs</module>
         <module>build-tools</module>
     </modules>
 
@@ -640,56 +614,67 @@
                     <artifactId>buildnumber-maven-plugin</artifactId>
                     <version>1.0</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>1.5</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>2.3.2</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>2.2.1</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.8.1</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.14</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>2.7</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
                     <version>2.1.1</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
                     <version>0.7</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>2.9.1</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.2</version>
                 </plugin>
+
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
@@ -759,6 +744,7 @@
                         <id>attach-javadocs</id>
                         <phase>package</phase>
                         <goals>
+                            <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
                     </execution>
@@ -810,10 +796,10 @@
                     <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
                     <excludeSubProjects>true</excludeSubProjects>
                     <excludes>
-                        <exclude>CHANGES.txt</exclude>
+                        <exclude>*.txt</exclude>
                         <exclude>.git/**</exclude>
                         <exclude>.idea/**</exclude>
-                        <exclude>docs/src/site/twiki/*.twiki</exclude>
+                        <exclude>**/*.twiki</exclude>
                         <exclude>**/*.iml</exclude>
                         <exclude>**/target/**</exclude>
                         <exclude>**/activemq-data/**</exclude>
@@ -838,6 +824,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -865,6 +852,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
@@ -890,6 +878,30 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javancss-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.doxia</groupId>
+                        <artifactId>doxia-module-twiki</artifactId>
+                        <version>1.3</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>prepare-package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>

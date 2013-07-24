@@ -30,7 +30,8 @@
                 <exclude>**/target/**</exclude>
                 <exclude>**/logs/**</exclude>
                 <exclude>**/activemq-data/**</exclude>
-                <exclude>**/.git/**</exclude>
+                <exclude>**/.git*/**</exclude>
+                <exclude>backlog</exclude>
             </excludes>
         </fileSet>
     </fileSets>
