@@ -11,6 +11,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-65 The identifier regex for oozie bundle,coordinator, workflow 
+    pattern is incorrect. (Suhas V via Srikanth Sundarrajan)
 
 Release Version: 0.3
 
