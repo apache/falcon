@@ -478,6 +478,14 @@
                         <groupId>org.eclipse.jdt</groupId>
                         <artifactId>core</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-runtime</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-compiler</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -599,6 +607,20 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>startup.properties</exclude>
+                    <exclude>runtime.properties</exclude>
+                    <exclude>log4j.xml</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>startup.properties</include>
+                    <include>runtime.properties</include>
+                    <include>log4j.xml</include>
+                </includes>
             </resource>
         </resources>
         <testResources>

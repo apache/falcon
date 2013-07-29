@@ -63,7 +63,7 @@
         </layout>
     </appender>
 
-    <logger name="org.apache.falcon">
+    <logger name="org.apache.falcon" additivity="false">
         <level value="debug"/>
         <appender-ref ref="FILE"/>
     </logger>
