@@ -18,6 +18,7 @@
 
 package org.apache.falcon.util;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.log4j.Logger;
@@ -27,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -38,92 +40,111 @@ public abstract class ApplicationProperties extends Properties {
 
     private static final Logger LOG = Logger.getLogger(ApplicationProperties.class);
 
-    protected enum LocationType {
-        FILE, HOME, CLASSPATH
-    }
-
     protected abstract String getPropertyFile();
 
-    private String propertyFile;
-    private LocationType location;
     private String domain;
 
     protected ApplicationProperties() throws FalconException {
-        initialize();
+        init();
+    }
+
+    protected void init() throws FalconException {
+        setDomain(System.getProperty("falcon.domain", System.getenv("FALCON_DOMAIN")));
         loadProperties();
+    }
+
+    protected void setDomain(String domain) {
+        this.domain = domain;
     }
 
     public String getDomain() {
         return domain;
     }
 
-    protected void initialize() {
-        String propFile = getPropertyFile();
-        String userHome = System.getProperty("user.home");
+    protected void loadProperties() throws FalconException {
+        String propertyFileName = getPropertyFile();
         String confDir = System.getProperty("config.location");
-        domain = System.getProperty("falcon.domain", System.getenv("FALCON_DOMAIN"));
+        loadProperties(propertyFileName, confDir);
+    }
 
-        if (confDir == null && new File(userHome, propFile).exists()) {
-            LOG.info("config.location is not set, and property file found in home dir" + userHome + "/" + propFile);
-            location = LocationType.HOME;
-            propertyFile = new File(userHome, propFile).getAbsolutePath();
-        } else if (confDir != null) {
-            LOG.info("config.location is set, using " + confDir + "/" + propFile);
-            location = LocationType.FILE;
-            propertyFile = new File(confDir, propFile).getAbsolutePath();
-        } else {
-            LOG.info("config.location is not set, properties file not present in "
-                    + "user home dir, falling back to classpath for "
-                    + propFile);
-            location = LocationType.CLASSPATH;
-            propertyFile = propFile;
+    /**
+     * This method reads the given properties file in the following order:
+     * config.location & classpath. It falls back in that specific order.
+     *
+     * @throws FalconException
+     */
+    protected void loadProperties(String propertyFileName, String confDir) throws FalconException {
+        try {
+            InputStream resourceAsStream = checkConfigLocation(propertyFileName, confDir);
+
+            //Fallback to classpath
+            if (resourceAsStream == null) {
+                resourceAsStream = checkClassPath(propertyFileName);
+            }
+
+            if (resourceAsStream != null) {
+                try {
+                    doLoadProperties(resourceAsStream);
+                    return;
+                } finally {
+                    IOUtils.closeQuietly(resourceAsStream);
+                }
+            }
+            throw new FileNotFoundException("Unable to find: " + propertyFileName);
+        } catch (IOException e) {
+            throw new FalconException("Error loading properties file: " + getPropertyFile(), e);
         }
     }
 
-    void loadProperties() throws FalconException {
-        InputStream resource;
-        try {
-            if (location == LocationType.CLASSPATH) {
-                Class clazz = ApplicationProperties.class;
-                if (clazz.getResource(propertyFile) != null) {
-                    LOG.info("Property file being loaded from " + clazz.getResource(propertyFile));
-                    resource = clazz.getResourceAsStream(propertyFile);
-                } else {
-                    LOG.info("Property file being loaded from " + clazz.getResource("/" + propertyFile));
-                    resource = clazz.getResourceAsStream("/" + propertyFile);
-                }
-            } else {
-                resource = new FileInputStream(propertyFile);
-            }
+    private InputStream checkConfigLocation(String propertyFileName, String confDir)
+        throws FileNotFoundException {
 
-            if (resource == null) {
-                throw new FileNotFoundException(propertyFile + " not found in " + location);
-            } else {
-                try {
-                    LOG.info("Loading properties from " + propertyFile);
-                    Properties origProps = new Properties();
-                    origProps.load(resource);
-                    if (domain == null) {
-                        domain = origProps.getProperty("*.domain");
-                        if (domain == null) {
-                            throw new FalconException("Domain is not set!");
-                        }
-                    }
-                    LOG.info("Initializing properties with domain " + domain);
-
-                    Set<String> keys = getKeys(origProps.keySet());
-                    for (String key : keys) {
-                        String value = origProps.getProperty(domain + "." + key, origProps.getProperty("*." + key));
-                        value = ExpressionHelper.substitute(value);
-                        LOG.debug(key + "=" + value);
-                        put(key, value);
-                    }
-                } finally {
-                    resource.close();
-                }
+        InputStream resourceAsStream = null;
+        if (confDir != null) {
+            File fileToLoad = new File(confDir, propertyFileName);
+            if (fileToLoad.exists()) {
+                LOG.info("config.location is set, using: " + confDir + "/" + propertyFileName);
+                resourceAsStream = new FileInputStream(fileToLoad);
             }
-        } catch (IOException e) {
-            throw new FalconException(e);
+        }
+        return resourceAsStream;
+    }
+
+    private InputStream checkClassPath(String propertyFileName) {
+
+        InputStream resourceAsStream = null;
+        Class clazz = ApplicationProperties.class;
+        URL resource = clazz.getResource("/" + propertyFileName);
+        if (resource != null) {
+            LOG.info("Fallback to classpath for: " + resource);
+            resourceAsStream = clazz.getResourceAsStream("/" + propertyFileName);
+        } else {
+            resource = clazz.getResource(propertyFileName);
+            if (resource != null) {
+                LOG.info("Fallback to classpath for: " + resource);
+                resourceAsStream = clazz.getResourceAsStream(propertyFileName);
+            }
+        }
+        return resourceAsStream;
+    }
+
+    private void doLoadProperties(InputStream resourceAsStream) throws IOException, FalconException {
+        Properties origProps = new Properties();
+        origProps.load(resourceAsStream);
+        if (domain == null) {
+            domain = origProps.getProperty("*.domain");
+            if (domain == null) {
+                throw new FalconException("Domain is not set!");
+            }
+        }
+
+        LOG.info("Initializing properties with domain " + domain);
+        Set<String> keys = getKeys(origProps.keySet());
+        for (String key : keys) {
+            String value = origProps.getProperty(domain + "." + key, origProps.getProperty("*." + key));
+            value = ExpressionHelper.substitute(value);
+            LOG.debug(key + "=" + value);
+            put(key, value);
         }
     }
 
