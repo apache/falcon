@@ -102,7 +102,7 @@ public abstract class ApplicationProperties extends Properties {
         InputStream resourceAsStream = null;
         if (confDir != null) {
             File fileToLoad = new File(confDir, propertyFileName);
-            if (fileToLoad.exists()) {
+            if (fileToLoad.exists() && fileToLoad.isFile() && fileToLoad.canRead()) {
                 LOG.info("config.location is set, using: " + confDir + "/" + propertyFileName);
                 resourceAsStream = new FileInputStream(fileToLoad);
             }
