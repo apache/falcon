@@ -136,7 +136,6 @@
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
-            <file>${wf:conf("falcon.libpath")}/ant.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>
             <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
@@ -202,7 +201,6 @@
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
-            <file>${wf:conf("falcon.libpath")}/ant.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>
             <file>${wf:conf("falcon.libpath")}/json-simple.jar</file>
