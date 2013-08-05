@@ -1,6 +1,25 @@
+=========================================================================
+==  NOTICE file corresponding to the section 4 d of                    ==
+==  the Apache License, Version 2.0,                                   ==
+==  in this case for the Apache Falcon distribution.                   ==
+=========================================================================
 Apache Falcon (incubating)
 
 Copyright 2011-2013 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
+
+
+This product includes ASM (http://asm.ow2.org/),
+Copyright (c) 2000-2005 INRIA, France Telecom.
+
+This product includes SLF4J (http://www.slf4j.org/),
+Copyright (c) 2004-2008 QOS.ch
+
+This product includes javax.(jms,servlet,servlet.jsp,xml.bind) libraries
+(https://glassfish.java.net/public/CDDLv1.0.html),
+COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 1.
+
+This product includes JDOM,
+Copyright (C) 2000-2011 Jason Hunter & Brett McLaughlin.
