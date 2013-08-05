@@ -19,6 +19,9 @@ Trunk (Unreleased)
 
 Release Version: 0.3
 
+    FALCON-70 Confirm if v0.3 branch is ready for release as per guideline.
+    (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-65 Avoid bundling compilation path dependent configs in artifact
     and allow for config scan to seamlessly fallback to classpath if not found
     in default conf location. (Srikanth Sundarrajan via Venkatesh Seetharam)
