@@ -17,9 +17,22 @@ Copyright (c) 2000-2005 INRIA, France Telecom.
 This product includes SLF4J (http://www.slf4j.org/),
 Copyright (c) 2004-2008 QOS.ch
 
-This product includes javax.(jms,servlet,servlet.jsp,xml.bind) libraries
+This product includes javax.(jms,servlet,servlet.jsp,xml.bind)
+libraries and junit under
 (https://glassfish.java.net/public/CDDLv1.0.html),
 COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 1.
 
 This product includes JDOM,
 Copyright (C) 2000-2011 Jason Hunter & Brett McLaughlin.
+
+This product include aspectj runtime & weaver libraries under
+(http://www.eclipse.org/legal/epl-v10.html)
+Eclipse Public License - Version 1.0
+
+This product includes MXP1: Xml Pull Parser 3rd Edition (XPP3) &
+AOP alliance (http://aopalliance.sourceforge.net) under
+(http://creativecommons.org/licenses/publicdomain/)
+Creative Commons - Public Domain
+
+This product includes HSQLDB (http://hsqldb.org/)
+HSQLDB License
