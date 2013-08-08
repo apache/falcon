@@ -22,6 +22,7 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,6 +47,13 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                     "Cannot get valid scheme for namenode from write interface of cluster: "
                             + cluster.getName());
         }
+
+        //No filesystem validations in prism or other falcon servers. Only the falcon server for which
+        // the cluster belongs to should check filesystem
+        if (DeploymentUtil.isPrism() || !cluster.getColo().equals(DeploymentUtil.getCurrentColo())) {
+            return;
+        }
+
         try {
             Configuration conf = new Configuration();
             conf.set("fs.default.name", ClusterHelper.getStorageUrl(cluster));
@@ -56,5 +64,4 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                     + ClusterHelper.getStorageUrl(cluster), e);
         }
     }
-
 }

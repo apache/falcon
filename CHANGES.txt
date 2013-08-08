@@ -9,10 +9,12 @@ Trunk (Unreleased)
   IMPROVEMENTS
 
   OPTIMIZATIONS
-
-  BUG FIXES
     FALCON-67 Remove ant dependency in oozie workflows. (Shwetha GS via
     Srikanth Sundarrajan)
+
+  BUG FIXES
+    FALCON-78 Falcon error when prism on one hadoop version and server 
+    on another. (Shwetha GS via Srikanth Sundarrajan)
 
     FALCON-61 The identifier regex for oozie bundle,coordinator, workflow
     pattern is incorrect. (Suhas V via Srikanth Sundarrajan)

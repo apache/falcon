@@ -18,20 +18,30 @@
 
 package org.apache.falcon.entity.parser;
 
+import java.net.ConnectException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Inputs;
+import org.apache.falcon.entity.v0.process.LateInput;
+import org.apache.falcon.entity.v0.process.Output;
+import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
-import java.net.ConnectException;
-import java.util.*;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -87,6 +97,11 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private void validateHDFSpaths(Process process, String clusterName) throws FalconException {
+        //No filesystem checks in prism
+        if (DeploymentUtil.isPrism()) {
+            return;
+        }
+
         org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
                 clusterName);
         String workflowPath = process.getWorkflow().getPath();
