@@ -7,6 +7,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-80 Option in falcon-start to not start embedded activemq.
+    (Shwetha GS via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
     FALCON-67 Remove ant dependency in oozie workflows. (Shwetha GS via

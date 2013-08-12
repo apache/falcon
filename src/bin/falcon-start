@@ -44,13 +44,13 @@ else
 fi
 
 pushd ${BASEDIR} > /dev/null
-JAVA_PROPERTIES="-Dactivemq.base=${BASEDIR}/logs -Dconfig.location=${BASEDIR}/conf"
+JAVA_PROPERTIES="-Dconfig.location=${BASEDIR}/conf"
 while [[ ${1} =~ ^\-D ]]; do
   JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
   shift
 done
 TIME=`date +%Y%m%d%H%M%s`
-nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main ${BASEDIR}/server/webapp/falcon.war 2> ${BASEDIR}/logs/falcon.out.$TIME &
+nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/falcon.war -mqbase ${BASEDIR}/logs/data $* 2> ${BASEDIR}/logs/falcon.out.$TIME &
 echo $! > ${BASEDIR}/logs/falcon.pid
 popd > /dev/null
 

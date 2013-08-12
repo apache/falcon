@@ -19,6 +19,11 @@
 package org.apache.falcon;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
 
@@ -27,30 +32,62 @@ import org.apache.falcon.util.EmbeddedServer;
  */
 public final class Main {
 
+    private static final String APP_PATH = "app";
+    private static final String EMBEDDED_ACTIVEMQ = "embeddedmq";
+    private static final String ACTIVEMQ_BASE = "mqbase";
+
     /**
      * Prevent users from constructing this.
      */
     private Main() {
     }
 
-    public static void main(String[] args) throws Exception {
+    private static CommandLine parseArgs(String[] args) throws ParseException {
+        Options options = new Options();
+        Option opt;
 
+        opt = new Option(APP_PATH, true, "Application Path");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(EMBEDDED_ACTIVEMQ, true, "Should start embedded activemq?");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        opt = new Option(ACTIVEMQ_BASE, true, "Activemq data directory");
+        opt.setRequired(false);
+        options.addOption(opt);
+
+        return new GnuParser().parse(options, args);
+    }
+
+    public static void main(String[] args) throws Exception {
+        CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
-        String appPath;
-        String dataDir;
-        if (args.length < 1) {
-            appPath = "webapp/target/falcon-webapp-" + projectVersion;
-            dataDir = "target/";
-        } else {
-            appPath = args[0];
-            dataDir = System.getProperty("activemq.base") + "/data";
+        String appPath = "webapp/target/falcon-webapp-" + projectVersion;
+        String dataDir = "target/";
+        boolean startActiveMq = true;
+
+        if (cmd.hasOption(APP_PATH)) {
+            appPath = cmd.getOptionValue(APP_PATH);
         }
-        BrokerService broker = new BrokerService();
-        broker.setUseJmx(false);
-        broker.setDataDirectory(dataDir);
-        broker.addConnector("vm://localhost");
-        broker.addConnector("tcp://localhost:61616");
-        broker.start();
+
+        if (cmd.hasOption(EMBEDDED_ACTIVEMQ)) {
+            startActiveMq = Boolean.valueOf(cmd.getOptionValue(EMBEDDED_ACTIVEMQ));
+        }
+
+        if (cmd.hasOption(ACTIVEMQ_BASE)) {
+            dataDir = cmd.getOptionValue(ACTIVEMQ_BASE);
+        }
+
+        if (startActiveMq) {
+            BrokerService broker = new BrokerService();
+            broker.setUseJmx(false);
+            broker.setDataDirectory(dataDir);
+            broker.addConnector("vm://localhost");
+            broker.addConnector("tcp://localhost:61616");
+            broker.start();
+        }
 
         EmbeddedServer server = new EmbeddedServer(15000, appPath);
         server.start();
