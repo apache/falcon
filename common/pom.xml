@@ -102,6 +102,11 @@
             <groupId>net.sourceforge.findbugs</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

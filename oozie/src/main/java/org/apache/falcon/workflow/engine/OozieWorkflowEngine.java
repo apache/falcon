@@ -24,6 +24,7 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.*;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesResult.Instance;
@@ -80,6 +81,15 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     public OozieWorkflowEngine() {
         registerListener(new OozieHouseKeepingService());
+    }
+
+    @Override
+    public boolean isAlive(Cluster cluster) throws FalconException {
+        try {
+            return OozieClientFactory.get(cluster).getSystemMode() == OozieClient.SYSTEM_MODE.NORMAL;
+        } catch (OozieClientException e) {
+            throw new FalconException("Unable to reach Oozie server.", e);
+        }
     }
 
     @Override

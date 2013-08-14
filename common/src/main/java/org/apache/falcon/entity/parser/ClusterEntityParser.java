@@ -18,15 +18,24 @@
 
 package org.apache.falcon.entity.parser;
 
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.util.DeploymentUtil;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Logger;
+
+import javax.jms.ConnectionFactory;
+import java.io.IOException;
 
 /**
  * Parser that parses cluster entity definition.
@@ -42,26 +51,104 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     @Override
     public void validate(Cluster cluster) throws StoreAccessException,
                                                  ValidationException {
-        if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme() == null) {
-            throw new ValidationException(
-                    "Cannot get valid scheme for namenode from write interface of cluster: "
-                            + cluster.getName());
-        }
+        // validating scheme in light of fail-early
+        validateScheme(cluster, Interfacetype.READONLY);
+        validateScheme(cluster, Interfacetype.WRITE);
+        validateScheme(cluster, Interfacetype.WORKFLOW);
+        validateScheme(cluster, Interfacetype.MESSAGING);
 
-        //No filesystem validations in prism or other falcon servers. Only the falcon server for which
-        // the cluster belongs to should check filesystem
+        // No interface validations in prism or other falcon servers.
+        // Only the falcon server for which the cluster belongs to should validate interfaces
         if (DeploymentUtil.isPrism() || !cluster.getColo().equals(DeploymentUtil.getCurrentColo())) {
+            LOG.info("No interface validations in prism or falcon servers not applicable.");
             return;
         }
 
+        validateReadInterface(cluster);
+        validateWriteInterface(cluster);
+        validateExecuteInterface(cluster);
+        validateWorkflowInterface(cluster);
+        validateMessagingInterface(cluster);
+
+        // Interfacetype.REGISTRY is not validated as its not used
+    }
+
+    private void validateScheme(Cluster cluster, Interfacetype interfacetype)
+        throws ValidationException {
+        final String endpoint = ClusterHelper.getInterface(cluster, interfacetype).getEndpoint();
+        if (new Path(endpoint).toUri().getScheme() == null) {
+            throw new ValidationException("Cannot get valid scheme for interface: "
+                    + interfacetype + " of cluster: " + cluster.getName());
+        }
+    }
+
+    private void validateReadInterface(Cluster cluster) throws ValidationException {
+        final String readOnlyStorageUrl = ClusterHelper.getReadOnlyStorageUrl(cluster);
+        LOG.info("Validating read interface: " + readOnlyStorageUrl);
+
+        validateFileSystem(readOnlyStorageUrl);
+    }
+
+    private void validateWriteInterface(Cluster cluster) throws ValidationException {
+        final String writeStorageUrl = ClusterHelper.getStorageUrl(cluster);
+        LOG.info("Validating write interface: " + writeStorageUrl);
+
+        validateFileSystem(writeStorageUrl);
+    }
+
+    private void validateFileSystem(String storageUrl) throws ValidationException {
         try {
             Configuration conf = new Configuration();
-            conf.set("fs.default.name", ClusterHelper.getStorageUrl(cluster));
+            conf.set("fs.default.name", storageUrl);
             conf.setInt("ipc.client.connect.max.retries", 10);
             FileSystem.get(conf);
+        } catch (IOException e) {
+            throw new ValidationException("Invalid storage server or port: " + storageUrl, e);
+        }
+    }
+
+    private void validateExecuteInterface(Cluster cluster) throws ValidationException {
+        String executeUrl = ClusterHelper.getMREndPoint(cluster);
+        LOG.info("Validating execute interface: " + executeUrl);
+
+        try {
+            JobConf jobConf = new JobConf();
+            jobConf.set("mapred.job.tracker", executeUrl);
+            new JobClient(jobConf);
+        } catch (IOException e) {
+            throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
+        }
+    }
+
+    private void validateWorkflowInterface(Cluster cluster) throws ValidationException {
+        final String workflowUrl = ClusterHelper.getOozieUrl(cluster);
+        LOG.info("Validating workflow interface: " + workflowUrl);
+
+        try {
+            if (!WorkflowEngineFactory.getWorkflowEngine().isAlive(cluster)) {
+                throw new ValidationException("Unable to reach Workflow server:" + workflowUrl);
+            }
+        } catch (FalconException e) {
+            throw new ValidationException("Invalid Workflow server or port: " + workflowUrl, e);
+        }
+    }
+
+    private void validateMessagingInterface(Cluster cluster) throws ValidationException {
+        final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
+        final String implementation = StartupProperties.get().getProperty(
+                "broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory");
+        LOG.info("Validating messaging interface: " + messagingUrl + ", implementation: " + implementation);
+
+        try {
+            @SuppressWarnings("unchecked")
+            Class<ConnectionFactory> clazz = (Class<ConnectionFactory>)
+                    getClass().getClassLoader().loadClass(implementation);
+            ConnectionFactory connectionFactory = clazz.getConstructor(
+                    String.class, String.class, String.class).newInstance("", "", messagingUrl);
+            connectionFactory.createConnection();
         } catch (Exception e) {
-            throw new ValidationException("Invalid HDFS server or port:"
-                    + ClusterHelper.getStorageUrl(cluster), e);
+            throw new ValidationException("Invalid Messaging server or port: " + messagingUrl
+                    + " for: " + implementation, e);
         }
     }
 }

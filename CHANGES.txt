@@ -15,6 +15,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-72 Feeds with invalid oozie URI in cluster cannot be deleted.
+    (Venkatesh Seetharam vi Shwetha GS)
+
     FALCON-78 Falcon error when prism on one hadoop version and server 
     on another. (Shwetha GS via Srikanth Sundarrajan)
 

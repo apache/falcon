@@ -20,6 +20,7 @@ package org.apache.falcon.workflow.engine;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult;
 
 import java.util.Date;
@@ -41,6 +42,8 @@ public abstract class AbstractWorkflowEngine {
     public void registerListener(WorkflowEngineActionListener listener) {
         listeners.add(listener);
     }
+
+    public abstract boolean isAlive(Cluster cluster) throws FalconException;
 
     public abstract void schedule(Entity entity) throws FalconException;
 
