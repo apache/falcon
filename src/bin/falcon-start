@@ -44,7 +44,7 @@ else
 fi
 
 pushd ${BASEDIR} > /dev/null
-JAVA_PROPERTIES="-Dconfig.location=${BASEDIR}/conf"
+JAVA_PROPERTIES="$FALCON_OPTS -Dconfig.location=${BASEDIR}/conf"
 while [[ ${1} =~ ^\-D ]]; do
   JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
   shift

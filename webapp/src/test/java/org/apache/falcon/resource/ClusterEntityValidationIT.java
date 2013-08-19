@@ -18,11 +18,12 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.activemq.broker.BrokerService;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Map;
+
 import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.parser.ClusterEntityParser;
-import org.apache.falcon.entity.parser.EntityParserFactory;
-import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
@@ -32,20 +33,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.Marshaller;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.Map;
+import com.sun.jersey.api.client.ClientResponse;
 
 /**
  * Tests cluster entity validation to verify if each of the specified
  * interface endpoints are valid.
  */
 public class ClusterEntityValidationIT {
-    private final ClusterEntityParser parser =
-            (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
-
     private final TestContext context = new TestContext();
     private Map<String, String> overlay;
 
@@ -53,18 +47,6 @@ public class ClusterEntityValidationIT {
     @BeforeClass
     public void setup() throws Exception {
         TestContext.prepare();
-        startBroker();
-
-        overlay = context.getUniqueOverlay();
-    }
-
-    private void startBroker() throws Exception {
-        BrokerService broker = new BrokerService();
-        broker.setUseJmx(false);
-        broker.setDataDirectory("target/data");
-        broker.addConnector("vm://localhost");
-        broker.addConnector("tcp://localhost:61616");
-        broker.start();
     }
 
     /**
@@ -74,25 +56,17 @@ public class ClusterEntityValidationIT {
      */
     @Test
     public void testClusterEntityWithValidInterfaces() throws Exception {
-
-        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
-        InputStream stream = new FileInputStream(filePath);
-        Cluster cluster = parser.parse(stream);
-        Assert.assertNotNull(cluster);
-        cluster.setColo("default");  // validations will be ignored if not default & tests fail
-
-        StringWriter stringWriter = new StringWriter();
-        Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
-        marshaller.marshal(cluster, stringWriter);
-        System.out.println(stringWriter.toString());
-        parser.parseAndValidate(stringWriter.toString());
+        overlay = context.getUniqueOverlay();
+        overlay.put("colo", "default");
+        ClientResponse response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        context.assertSuccessful(response);
     }
 
 
     @DataProvider(name = "interfaceToInvalidURLs")
     public Object[][] createInterfaceToInvalidURLData() {
         return new Object[][] {
-            // todo FileSystem validates invalid hftp url, does NOT fail
+            // TODO FileSystem validates invalid hftp url, does NOT fail
             // {Interfacetype.READONLY, "hftp://localhost:41119"},
             {Interfacetype.READONLY, ""},
             {Interfacetype.READONLY, "localhost:41119"},
@@ -106,25 +80,22 @@ public class ClusterEntityValidationIT {
         };
     }
 
-    @Test (dataProvider = "interfaceToInvalidURLs",
-           expectedExceptions = {ValidationException.class, IllegalArgumentException.class})
+    @Test (dataProvider = "interfaceToInvalidURLs")
     public void testClusterEntityWithInvalidInterfaces(Interfacetype interfacetype, String endpoint)
         throws Exception {
+        overlay = context.getUniqueOverlay();
         String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         InputStream stream = new FileInputStream(filePath);
-        Cluster cluster = parser.parse(stream);
+        Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
         Assert.assertNotNull(cluster);
         cluster.setColo("default");  // validations will be ignored if not default & tests fail
 
         Interface anInterface = ClusterHelper.getInterface(cluster, interfacetype);
         anInterface.setEndpoint(endpoint);
 
-        StringWriter stringWriter = new StringWriter();
-        Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
-        marshaller.marshal(cluster, stringWriter);
-        System.out.println(stringWriter.toString());
-        parser.parseAndValidate(stringWriter.toString());
-        Assert.fail("Validation exception must have been thrown for an invalid interface: "
-                + interfacetype + ", URL: " + endpoint);
+        File tmpFile = context.getTempFile();
+        EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
+        ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
+        context.assertFailure(response);
     }
 }

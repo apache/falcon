@@ -18,6 +18,15 @@
 
 package org.apache.falcon.entity.parser;
 
+import static org.testng.AssertJUnit.assertEquals;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -30,14 +39,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-
-import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * Test for validating cluster entity parsing.
@@ -109,7 +110,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
     }
 

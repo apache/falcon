@@ -18,7 +18,25 @@
 
 package org.apache.falcon.converter;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+
 import junit.framework.Assert;
+
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -50,22 +68,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.List;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
 /**
  * Test for the Falcon entities mapping into Oozie artifacts.
  */
@@ -75,7 +77,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        EmbeddedCluster cluster = EmbeddedCluster.newCluster("testCluster", false);
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster("testCluster");
         Configuration conf = cluster.getConf();
         hdfsUrl = conf.get("fs.default.name");
     }
@@ -281,6 +283,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         return contents.toString();
     }
 
+    @Override
     @AfterClass
     public void cleanup() throws Exception {
         super.cleanup();

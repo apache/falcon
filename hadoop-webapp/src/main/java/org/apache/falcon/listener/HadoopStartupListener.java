@@ -18,22 +18,25 @@
 
 package org.apache.falcon.listener;
 
+import java.io.File;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobTracker;
-import org.apache.hadoop.mapred.TaskTracker;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import java.io.File;
+import org.apache.log4j.Logger;
 
 /**
  * Listener for bootstrapping embedded hadoop cluster for integration tests.
  */
 public class HadoopStartupListener implements ServletContextListener {
+    private static final Logger LOG = Logger.getLogger(HadoopStartupListener.class);
+    private BrokerService broker;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -43,37 +46,101 @@ public class HadoopStartupListener implements ServletContextListener {
 
             NameNode.format(conf);
             final String[] emptyArgs = {};
-            NameNode.createNameNode(emptyArgs, conf);
-            DataNode.createDataNode(emptyArgs, conf);
-            final JobTracker jobTracker = JobTracker.startTracker(new JobConf(conf));
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        jobTracker.offerService();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }).start();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        TaskTracker taskTracker = new TaskTracker(new JobConf(conf));
-                        taskTracker.run();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }).start();
+            String hadoopProfle = System.getProperty("hadoop.profile", "1");
+            if (hadoopProfle.equals("1")) {
+                NameNode.createNameNode(emptyArgs, conf);
+                DataNode.createDataNode(emptyArgs, conf);
+                JobConf jobConf = new JobConf(conf);
+//                JobTracker jt = JobTracker.startTracker(jobConf);
+//                jt.offerService();
+//                TaskTracker tt = new TaskTracker(jobConf);
+//                tt.run();
+                Object jt = Class.forName("org.apache.hadoop.mapred.JobTracker")
+                                .getMethod("startTracker", JobConf.class).invoke(null, jobConf);
+                startService(jt, "offerService");
+                Object tt = Class.forName("org.apache.hadoop.mapred.TaskTracker")
+                                .getConstructor(JobConf.class).newInstance(jobConf);
+                startService(tt, "run");
+            } else if (hadoopProfle.equals("2")) {
+//                DefaultMetricsSystem.setMiniClusterMode(true);
+//                ResourceManager resourceManager = new ResourceManager(new MemStore());
+//                YarnConfiguration yarnConf = new YarnConfiguration(conf);
+//                resourceManager.init(yarnConf);
+//                resourceManager.start();
+//                NodeManager nodeManager = new NodeManager();
+//                nodeManager.init(yarnConf);
+//                nodeManager.start();
+                Class.forName("org.apache.hadoop.metrics2.lib.DefaultMetricsSystem")
+                                .getMethod("setMiniClusterMode", boolean.class).invoke(null, true);
+                NameNode.createNameNode(emptyArgs, conf);
+                DataNode.createDataNode(emptyArgs, conf);
+
+                Object memStore = instance("org.apache.hadoop.yarn.server.resourcemanager.recovery.MemStore");
+                Object resourceManager = Class.forName("org.apache.hadoop.yarn.server.resourcemanager.ResourceManager")
+                        .getConstructor(Class.forName("org.apache.hadoop.yarn.server.resourcemanager.recovery.Store"))
+                        .newInstance(memStore);
+                Object yarnConf = Class.forName("org.apache.hadoop.yarn.conf.YarnConfiguration")
+                        .getConstructor(Configuration.class).newInstance(conf);
+                invoke(resourceManager, "init", Configuration.class, yarnConf);
+                startService(resourceManager, "start");
+                Object nodeManager = instance("org.apache.hadoop.yarn.server.nodemanager.NodeManager");
+                invoke(nodeManager, "init", Configuration.class, yarnConf);
+                startService(nodeManager, "start");
+            } else {
+                throw new RuntimeException("Unhandled hadoop profile " + hadoopProfle);
+            }
+            startBroker();
         } catch (Exception e) {
             e.printStackTrace();
+            LOG.error("Unable to start hadoop cluster", e);
             throw new RuntimeException("Unable to start hadoop cluster", e);
         }
     }
 
+    private void startBroker() throws Exception {
+        broker = new BrokerService();
+        broker.setUseJmx(false);
+        broker.setDataDirectory("target/data");
+        broker.addConnector("vm://localhost");
+        broker.addConnector("tcp://localhost:61616");
+        broker.start();
+    }
+
+    private Object instance(String clsName) throws Exception {
+        return Class.forName(clsName).newInstance();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void invoke(Object service, String methodName, Class argCls, Object arg) throws Exception {
+        if (argCls == null) {
+            service.getClass().getMethod(methodName).invoke(service);
+        } else {
+            service.getClass().getMethod(methodName, argCls).invoke(service, arg);
+        }
+    }
+
+    private void startService(final Object service, final String method) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    LOG.info("Starting service " + service.getClass().getName());
+                    invoke(service, method, null, null);
+                } catch(Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+    }
+
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        try {
+            if (broker != null) {
+                broker.stop();
+            }
+        } catch(Exception e) {
+            LOG.warn("Failed to stop activemq", e);
+        }
     }
 }

@@ -27,6 +27,8 @@ target
 .classpath
 .project
 .settings
+.externalToolBuilders
+maven-eclipse.xml
 
 #ActiveMQ
 activemq-data

@@ -18,20 +18,22 @@
 
 package org.apache.falcon.cluster.util;
 
-import org.apache.falcon.entity.v0.cluster.*;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.log4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfaces;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Locations;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.log4j.Logger;
 
 /**
  * A utility class that doles out an embedded Hadoop cluster with DFS and/or MR.
@@ -45,31 +47,28 @@ public class EmbeddedCluster {
 
     private Configuration conf = new Configuration();
     private MiniDFSCluster dfsCluster;
-    private MiniMRCluster mrCluster;
     protected Cluster clusterEntity;
 
     public Configuration getConf() {
         return conf;
     }
 
-    public static EmbeddedCluster newCluster(final String name, final boolean withMR) throws Exception {
-        return createClusterAsUser(name, withMR);
+    public static EmbeddedCluster newCluster(final String name) throws Exception {
+        return createClusterAsUser(name);
     }
 
     public static EmbeddedCluster newCluster(final String name,
-                                             final boolean withMR,
                                              final String user) throws Exception {
         UserGroupInformation hdfsUser = UserGroupInformation.createRemoteUser(user);
         return hdfsUser.doAs(new PrivilegedExceptionAction<EmbeddedCluster>() {
             @Override
             public EmbeddedCluster run() throws Exception {
-                return createClusterAsUser(name, withMR);
+                return createClusterAsUser(name);
             }
         });
     }
 
-    private static EmbeddedCluster createClusterAsUser(String name,
-                                                       boolean withMR) throws IOException {
+    private static EmbeddedCluster createClusterAsUser(String name) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
         File target = new File("webapp/target");
         if (!target.exists()) {
@@ -78,7 +77,6 @@ public class EmbeddedCluster {
         } else {
             System.setProperty("test.build.data", "webapp/target/" + name + "/data");
         }
-        String user = System.getProperty("user.name");
         cluster.conf.set("hadoop.tmp.dir", target.getAbsolutePath());
         cluster.conf.set("hadoop.log.dir", new File(target, "tmp").getAbsolutePath());
         cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
@@ -91,25 +89,6 @@ public class EmbeddedCluster {
         ProxyUsers.refreshSuperUserGroupsConfiguration(cluster.conf);
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = " + hdfsUrl);
-        if (withMR) {
-            System.setProperty("hadoop.log.dir", "/tmp");
-            System.setProperty("org.apache.hadoop.mapred.TaskTracker", "/tmp");
-            cluster.conf.set("org.apache.hadoop.mapred.TaskTracker", "/tmp");
-            cluster.conf.set("org.apache.hadoop.mapred.TaskTracker", "/tmp");
-            cluster.conf.set("mapreduce.jobtracker.staging.root.dir", "/user");
-            Path path = new Path("/tmp/hadoop-" + user, "mapred");
-            FileSystem.get(cluster.conf).mkdirs(path);
-            FileSystem.get(cluster.conf).setPermission(path, new FsPermission((short) 511));
-            cluster.mrCluster = new MiniMRCluster(1,
-                    hdfsUrl, 1);
-            Configuration mrConf = cluster.mrCluster.createJobConf();
-            cluster.conf.set("mapred.job.tracker",
-                    mrConf.get("mapred.job.tracker"));
-            cluster.conf.set("mapred.job.tracker.http.address",
-                    mrConf.get("mapred.job.tracker.http.address"));
-            LOG.info("Cluster JobTracker = " + cluster.conf.
-                    get("mapred.job.tracker"));
-        }
         cluster.buildClusterObject(name);
         return cluster;
     }
@@ -162,9 +141,6 @@ public class EmbeddedCluster {
     }
 
     public void shutdown() {
-        if (mrCluster != null) {
-            mrCluster.shutdown();
-        }
         dfsCluster.shutdown();
     }
 

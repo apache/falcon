@@ -14,8 +14,10 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
- -->
-<project>
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon</groupId>
     <artifactId>falcon-main</artifactId>
@@ -94,7 +96,7 @@
 
         <include.prism>true</include.prism>
 
-        <hadoop.version>1.1.2</hadoop.version>
+        <slf4j.version>1.2</slf4j.version>
         <oozie.version>3.2.2</oozie.version>
         <activemq.version>5.4.3</activemq.version>
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
@@ -102,6 +104,117 @@
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>hadoop-1</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>hadoop.profile</name>
+                    <value>1</value>
+                </property>
+            </activation>
+            <properties>
+                <hadoop.profile>1</hadoop.profile>
+                <hadoop.version>1.1.2</hadoop.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-core</artifactId>
+                        <version>${hadoop.version}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.eclipse.jdt</groupId>
+                                <artifactId>core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>tomcat</groupId>
+                                <artifactId>jasper-runtime</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>tomcat</groupId>
+                                <artifactId>jasper-compiler</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+        
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-test</artifactId>
+                        <version>${hadoop.version}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.ftpserver</groupId>
+                                <artifactId>ftpserver-core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>org.apache.ftpserver</groupId>
+                                <artifactId>ftpserver-deprecated</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+
+        <profile>
+            <id>hadoop-2</id>
+            <activation>
+                <property>
+                    <name>hadoop.profile</name>
+                    <value>2</value>
+                </property>
+            </activation>
+            <properties>
+                <hadoop.profile>2</hadoop.profile>
+                <hadoop.version>2.0.2-alpha</hadoop.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client</artifactId>
+                        <version>${hadoop.version}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.glassfish</groupId>
+                                <artifactId>javax.servlet</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                    
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-hdfs</artifactId>
+                        <version>${hadoop.version}</version>
+                        <classifier>tests</classifier>
+                    </dependency>
+                    
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-common</artifactId>
+                        <version>${hadoop.version}</version>
+                        <classifier>tests</classifier>
+                    </dependency>
+                    
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+                        <version>${hadoop.version}</version>
+                    </dependency>
+                    
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                        <version>${hadoop.version}</version>
+                    </dependency>                    
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+    </profiles>
 
     <modules>
         <module>client</module>
@@ -171,7 +284,7 @@
         </repository>
         <repository>
             <id>cdh.repo</id>
-            <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
             <name>Cloudera Repository</name>
             <snapshots>
                 <enabled>false</enabled>
@@ -212,8 +325,14 @@
 
             <dependency>
                 <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.2</version>
+                <version>${slf4j.version}</version>
             </dependency>
 
             <dependency>
@@ -342,7 +461,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.2</version>
+                <version>${slf4j.version}</version>
             </dependency>
 
             <dependency>
@@ -451,9 +570,35 @@
             </dependency>
 
             <dependency>
+                <groupId>commons-el</groupId>
+                <artifactId>commons-el</artifactId>
+                <version>1.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet.jsp</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-core</artifactId>
                 <version>${oozie.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet.jsp</groupId>
+                        <artifactId>jsp-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -465,43 +610,18 @@
 
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-core</artifactId>
+                <artifactId>hadoop-auth</artifactId>
                 <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jdt</groupId>
-                        <artifactId>core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-runtime</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-compiler</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.hadoop.inmobi.tools</groupId>
                 <artifactId>hadoop-distcp</artifactId>
                 <version>${hadoop-distcp.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-test</artifactId>
-                <version>${hadoop.version}</version>
-                <!--<scope>test</scope>-->
                 <exclusions>
                     <exclusion>
-                        <groupId>org.apache.ftpserver</groupId>
-                        <artifactId>ftpserver-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.ftpserver</groupId>
-                        <artifactId>ftpserver-deprecated</artifactId>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-core</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -836,6 +956,8 @@
                         <exclude>**/.settings/**</exclude>
                         <exclude>**/test-output/**</exclude>
                         <exclude>**/data.txt</exclude>
+                        <exclude>**/maven-eclipse.xml</exclude>
+                        <exclude>**/.externalToolBuilders/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -881,7 +1003,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <configuration>
-                    <!--debug>true</debug-->
+                    <!--debug>true</debug -->
                     <xmlOutput>true</xmlOutput>
                     <excludeFilterFile>${basedir}/../build-tools/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
                     <failOnError>true</failOnError>

@@ -18,6 +18,17 @@
 
 package org.apache.falcon.messaging;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -31,10 +42,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import javax.jms.*;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Test for feed message producer.
@@ -58,7 +65,7 @@ public class FeedProducerTest {
     @BeforeClass
     public void setup() throws Exception {
 
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         conf = dfsCluster.getConf();
         logFile = new Path(conf.get("fs.default.name"),
                 "/falcon/feed/agg-logs/instance-2012-01-01-10-00.csv");

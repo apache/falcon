@@ -44,7 +44,7 @@ public class FeedUpdateTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
         setup();
     }

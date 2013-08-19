@@ -55,6 +55,7 @@ public class LogProviderIT {
     public void setup() throws Exception {
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", "logProviderTest");
+        overlay.put("colo", "gs");
         TestContext context = new TestContext();
         String file = context.
                 overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay);

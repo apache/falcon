@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-62 Falcon compilation with hadoop 2.0 libs. (Shwetha GS
+    via Srikanth Sundarrajan)
 
   IMPROVEMENTS
     FALCON-80 Option in falcon-start to not start embedded activemq.

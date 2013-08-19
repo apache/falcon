@@ -291,7 +291,7 @@ public class TestContext {
         return submitFileToFalcon(entityType, tmpFile);
     }
 
-    private ClientResponse submitFileToFalcon(EntityType entityType, String tmpFile) throws IOException {
+    public ClientResponse submitFileToFalcon(EntityType entityType, String tmpFile) throws IOException {
 
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
@@ -445,6 +445,7 @@ public class TestContext {
         long time = System.currentTimeMillis();
         clusterName = "cluster" + time;
         overlay.put("cluster", clusterName);
+        overlay.put("colo", "gs");
         overlay.put("inputFeedName", "in" + time);
         //only feeds with future dates can be scheduled
         Date endDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
@@ -460,6 +461,7 @@ public class TestContext {
 
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
+        overlay.put("colo", "gs");
         TestContext context = new TestContext();
         String file = context.
                 overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);

@@ -18,6 +18,29 @@
 
 package org.apache.falcon.retention;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -36,17 +59,6 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-import java.io.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Feed Evictor is called only if the retention policy that applies
@@ -77,7 +89,7 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private FileSystem fs;
-    private Map<VARS, String> map = new TreeMap<VARS, String>();
+    private final Map<VARS, String> map = new TreeMap<VARS, String>();
     private final StringBuffer instancePaths = new StringBuffer("instancePaths=");
     private final StringBuffer buffer = new StringBuffer();
 
@@ -94,7 +106,7 @@ public class FeedEvictor extends Configured implements Tool {
 
         String[] feedLocs = feedBasePath.split("#");
         for (String path : feedLocs) {
-            evictor(path, retentionType, retentionLimit, timeZone, frequency, logFile);
+            evictor(path, retentionType, retentionLimit, timeZone, frequency);
         }
 
         logInstancePaths(new Path(logFile));
@@ -108,8 +120,7 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private void evictor(String feedBasePath, String retentionType,
-                         String retentionLimit, String timeZone, String frequency,
-                         String logFile) throws IOException, ELException {
+                         String retentionLimit, String timeZone, String frequency) throws IOException, ELException {
         Path normalizedPath = new Path(feedBasePath);
         fs = normalizedPath.getFileSystem(getConf());
         feedBasePath = normalizedPath.toUri().getPath();

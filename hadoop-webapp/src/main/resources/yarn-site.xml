@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+  <property>
+    <description>The address of the applications manager interface in the RM.</description>
+    <name>yarn.resourcemanager.address</name>
+    <value>0.0.0.0:41021</value>
+  </property>
+
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>0.0.0.0:41025</value>
+  </property>
+
+  <property>
+    <description>The address of the RM web application.</description>
+    <name>yarn.resourcemanager.webapp.address</name>
+    <value>0.0.0.0:41130</value>
+  </property>
+
+  <property>
+    <description>The address of the scheduler interface.</description>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>0.0.0.0:41030</value>
+  </property>
+
+  <property>
+    <description>Address where the localizer IPC is.</description>
+    <name>yarn.nodemanager.localizer.address</name>
+    <value>0.0.0.0:41040</value>
+  </property>
+
+  <property>
+    <description>The address of the RM admin interface.</description>
+    <name>yarn.resourcemanager.admin.address</name>
+    <value>0.0.0.0:41140</value>
+  </property>
+
+</configuration>

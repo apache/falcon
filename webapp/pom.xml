@@ -7,9 +7,9 @@
    The ASF licenses this file to You under the Apache License, Version 2.0
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
-    
+
        http://www.apache.org/licenses/LICENSE-2.0
-        
+
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,12 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet.jsp</groupId>
+                    <artifactId>jsp-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -82,6 +88,7 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-test-util</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -400,6 +407,18 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>hadoop-2</id>
+            <activation>
+                <property>
+                    <name>hadoop.profile</name>
+                    <value>2</value>
+                </property>
+            </activation>
+            <dependencies>
+            </dependencies>
         </profile>
     </profiles>
 

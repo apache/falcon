@@ -17,7 +17,15 @@
  */
 package org.apache.falcon.converter;
 
+import static org.testng.Assert.assertEquals;
+
+import java.util.Collection;
+import java.util.List;
+
+import javax.xml.bind.Unmarshaller;
+
 import junit.framework.Assert;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -35,19 +43,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.Unmarshaller;
-import java.util.Collection;
-import java.util.List;
-
-import static org.testng.Assert.assertEquals;
-
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
  */
 public class OozieFeedMapperTest {
     private EmbeddedCluster srcMiniDFS;
     private EmbeddedCluster trgMiniDFS;
-    private ConfigurationStore store = ConfigurationStore.get();
+    private final ConfigurationStore store = ConfigurationStore.get();
     private Cluster srcCluster;
     private Cluster trgCluster;
     private Feed feed;
@@ -58,10 +60,10 @@ public class OozieFeedMapperTest {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        srcMiniDFS = EmbeddedCluster.newCluster("cluster1", false);
+        srcMiniDFS = EmbeddedCluster.newCluster("cluster1");
         String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
 
-        trgMiniDFS = EmbeddedCluster.newCluster("cluster2", false);
+        trgMiniDFS = EmbeddedCluster.newCluster("cluster2");
         String trgHdfsUrl = trgMiniDFS.getConf().get("fs.default.name");
 
         cleanupStore();

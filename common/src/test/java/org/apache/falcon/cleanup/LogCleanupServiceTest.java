@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.cleanup;
 
+import java.io.IOException;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -31,8 +33,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-
 /**
  * Test for log cleanup service.
  */
@@ -41,19 +41,19 @@ public class LogCleanupServiceTest extends AbstractTestBase {
     private FileSystem fs;
     private FileSystem tfs;
     private EmbeddedCluster targetDfsCluster;
-    private Path instanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/process/"
+    private final Path instanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/job-2010-01-01-01-00/000");
-    private Path instanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+    private final Path instanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/job-2010-01-01-01-00/001");
-    private Path instanceLogPath2 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+    private final Path instanceLogPath2 = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/job-2010-01-01-02-00/001");
-    private Path instanceLogPath3 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+    private final Path instanceLogPath3 = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample2" + "/logs/job-2010-01-01-01-00/000");
-    private Path instanceLogPath4 = new Path("/projects/falcon/staging/falcon/workflows/process/"
+    private final Path instanceLogPath4 = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/latedata/2010-01-01-01-00");
-    private Path feedInstanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/feed/"
+    private final Path feedInstanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/feed/"
         + "impressionFeed" + "/logs/job-2010-01-01-01-00/testCluster/000");
-    private Path feedInstanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/feed/"
+    private final Path feedInstanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/feed/"
         + "impressionFeed2" + "/logs/job-2010-01-01-01-00/testCluster/000");
 
 
@@ -63,15 +63,16 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         this.targetDfsCluster.shutdown();
     }
 
+    @Override
     @BeforeClass
     public void setup() throws Exception {
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         conf = dfsCluster.getConf();
         fs = dfsCluster.getFileSystem();
 
         storeEntity(EntityType.CLUSTER, "testCluster");
         System.setProperty("test.build.data", "target/tdfs/data" + System.currentTimeMillis());
-        this.targetDfsCluster = EmbeddedCluster.newCluster("backupCluster", false);
+        this.targetDfsCluster = EmbeddedCluster.newCluster("backupCluster");
         conf = targetDfsCluster.getConf();
 
         storeEntity(EntityType.CLUSTER, "backupCluster");

@@ -50,7 +50,7 @@ public class OozieProcessMapperLateProcessTest {
 
         cleanupStore();
 
-        dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        dfsCluster = EmbeddedCluster.newCluster("testCluster");
         Configuration conf = dfsCluster.getConf();
         String hdfsUrl = conf.get("fs.default.name");
 

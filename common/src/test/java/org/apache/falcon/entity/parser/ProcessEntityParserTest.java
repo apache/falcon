@@ -18,6 +18,15 @@
 
 package org.apache.falcon.entity.parser;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -31,14 +40,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Tests for validating process entity parser.
@@ -55,7 +56,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
     @BeforeClass
     public void init() throws Exception {
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", false);
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         this.conf = dfsCluster.getConf();
     }
 
@@ -64,6 +65,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         this.dfsCluster.shutdown();
     }
 
+    @Override
     @BeforeMethod
     public void setup() throws Exception {
         storeEntity(EntityType.CLUSTER, "testCluster");
@@ -156,7 +158,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
     @Test(expectedExceptions = ValidationException.class)
     public void applyValidationInvalidProcess() throws Exception {
-        Process process = (Process) parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
+        Process process = parser.parseAndValidate(getClass().getResourceAsStream(PROCESS_XML));
         process.getClusters().getClusters().get(0).setName("invalid cluster");
         parser.validate(process);
     }
@@ -173,6 +175,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
         for (int i = 0; i < 3; i++) {
             threadList.add(new Thread() {
+                @Override
                 public void run() {
                     try {
                         EntityParser parser = EntityParserFactory.getParser(EntityType.PROCESS);

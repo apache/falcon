@@ -18,6 +18,10 @@
 
 package org.apache.falcon.entity.parser;
 
+import java.io.IOException;
+
+import javax.jms.ConnectionFactory;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.StoreAccessException;
@@ -33,10 +37,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Logger;
-
-import javax.jms.ConnectionFactory;
-import java.io.IOException;
-
 /**
  * Parser that parses cluster entity definition.
  */
@@ -114,7 +114,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         try {
             JobConf jobConf = new JobConf();
             jobConf.set("mapred.job.tracker", executeUrl);
-            new JobClient(jobConf);
+            jobConf.set("yarn.resourcemanager.address", executeUrl);
+            JobClient jobClient = new JobClient(jobConf);
+            jobClient.getClusterStatus().getMapTasks();
         } catch (IOException e) {
             throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
         }

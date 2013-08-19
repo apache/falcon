@@ -46,6 +46,7 @@
         <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-test-util</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

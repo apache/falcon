@@ -18,6 +18,21 @@
 
 package org.apache.falcon.retention;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.falcon.Pair;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.hadoop.conf.Configuration;
@@ -29,24 +44,18 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Test for FeedEvictor.
  */
 public class FeedEvictorTest {
 
     private EmbeddedCluster cluster;
-    private InMemoryWriter stream = new InMemoryWriter(System.out);
-    private Map<String, String> map = new HashMap<String, String>();
+    private final InMemoryWriter stream = new InMemoryWriter(System.out);
+    private final Map<String, String> map = new HashMap<String, String>();
 
     @BeforeClass
     public void start() throws Exception {
-        cluster = EmbeddedCluster.newCluster("test", false);
+        cluster = EmbeddedCluster.newCluster("test");
         FeedEvictor.OUT.set(stream);
     }
 
@@ -384,7 +393,7 @@ public class FeedEvictorTest {
 
     private static class InMemoryWriter extends PrintStream {
 
-        private StringBuffer buffer = new StringBuffer();
+        private final StringBuffer buffer = new StringBuffer();
 
         public InMemoryWriter(OutputStream out) {
             super(out);

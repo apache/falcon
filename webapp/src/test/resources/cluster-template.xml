@@ -17,7 +17,7 @@
   limitations under the License.
   -->
 
-<cluster colo="gs" description="" name="##cluster##" xmlns="uri:falcon:cluster:0.1"
+<cluster colo="##colo##" description="" name="##cluster##" xmlns="uri:falcon:cluster:0.1"
         >
     <interfaces>
         <interface type="readonly" endpoint="hftp://localhost:41110"
