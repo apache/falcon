@@ -48,31 +48,31 @@ handling late input arrival etc.
 
 ---++ Modes Of Deployment
 There are two basic components of Falcon set up. Falcon Prism and Falcon Server.
-As the name suggests Falcon Prism splits the request it gets to the Falcon Servers.More details below:
+As the name suggests Falcon Prism splits the request it gets to the Falcon Servers. More details below:
 
----+++ Stand Alone Mode: 
-Stand alone mode is useful when the hadoop jobs and revelant data processing invoves only one hadoop cluster. In this mode there is single Falcon server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend , kill are sent to this server only. For running in this mode oen should use the falcon whihc has been built for standalone mode , or build using standalone option if using source code.
+---+++ Stand Alone Mode
+Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster. In this mode there is single Falcon server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend, kill are sent to this server only. For running in this mode one should use the falcon which has been built for standalone mode, or build using standalone option if using source code.
 
----+++ Distributed Mode: 
-Distributed mode is the mode which you might me using most of the time. This is for orgs which have which have multiple instance of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config localtions. 
-In this mode Prism acts as a contact point for Falcon servers.Below is what all request can be sent tp prism and server in this mode:
+---+++ Distributed Mode
+Distributed mode is the mode which you might me using most of the time. This is for orgs which have multiple instances of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config locations. 
+In this mode Prism acts as a contact point for Falcon servers. Below are the requests that can be sent to prism and server in this mode:
 
- Prism: submit, schedule, submitAndSchdeule, Suspend, Resume, Kill , instance management
+ Prism: submit, schedule, submitAndSchedule, Suspend, Resume, Kill, instance management
  Server: schedule, suspend, resume, instance management
  
-As observed above submit and kill are kept exclusively as Prism operations to keep all the config stores in sync and to support feture of idempotency.
-Request may also be sent from prism but directed to only one specific server, to use that once had to use option "-colo" from CLI or append the same in web request if using API.
+As observed above submit and kill are kept exclusively as Prism operations to keep all the config stores in sync and to support feature of idempotency.
+Request may also be sent from prism but directed to a specific server using the option "-colo" from CLI or append the same in web request, if using API.
 
-When a cluster is submitted it is bu default sent to all the servers configured in the prism.
-When is feed is SUBMIT / SCHEDULED request is only sent to he servers specified in the feed / process definitions. Servers are mentioned in the feed / process via CLUSTER tags in xml definition.  
+When a cluster is submitted it is by default sent to all the servers configured in the prism.
+When is feed is SUBMIT / SCHEDULED request is only sent to the servers specified in the feed / process definitions. Servers are mentioned in the feed / process via CLUSTER tags in xml definition.
 
 ---++++ Prism Setup
 <img src="PrismSetup.png" height="400" width="600" />
  
 ---+++ Configuration Store
 Configuration store is file system based store that the Falcon system maintains where the entity definitions
-are stored. File System used for the configuration store can either be a local file system or a hdfs file system.
-It is recommended that to maintain this store outside of the system where Falcon is deployed. This is needed
+are stored. File System used for the configuration store can either be a local file system or HDFS file system.
+It is recommended that the store be maintained outside of the system where Falcon is deployed. This is needed
 for handling issues relating to disk failures or other permanent failures of the system where Falcon is deployed.
 Configuration store also maintains an archive location where prior versions of the configuration or deleted
 configurations are maintained. They are never accessed by the Falcon system and they merely serve to track
@@ -87,89 +87,89 @@ to keep the system in an consistent state.
 
 ---++ Entity Management actions
 
----+++ Submit:
+---+++ Submit
 Entity submit action allows a new cluster/feed/process to be setup within Falcon. Submitted entity is not
 scheduled, meaning it would simply be in the configuration store within Falcon. Besides validating against
 the schema for the corresponding entity being added, the Falcon system would also perform inter-field
 validations within the configuration file and validations across dependent entities.
 
----+++ List:
+---+++ List
 List all the entities within the falcon config store for the entity type being requested. This will include
 both scheduled and submitted entity configurations.
 
----+++ Dependency:
+---+++ Dependency
 Returns the dependencies of the requested entity. Dependency list include both forward and backward
-dependencies (depends on & is dependent on). For ex, a feed would show process that are dependent on the
-feed and the clusters that it depends on.'
+dependencies (depends on & is dependent on). For example, a feed would show process that are dependent on the
+feed and the clusters that it depends on.
 
----+++ Schedule:
+---+++ Schedule
 Feeds or Processes that are already submitted and present in the config store can be scheduled. Upon schedule,
 Falcon system wraps the required repeatable action as a bundle of oozie coordinators and executes them on the
 Oozie scheduler. (It is possible to extend Falcon to use an alternate workflow engine other than Oozie).
 Falcon overrides the workflow instance's external id in Oozie to reflect the process/feed and the nominal
 time. This external Id can then be used for instance management functions.
 
----+++ Suspend:
+---+++ Suspend
 This action is applicable only on scheduled entity. This triggers suspend on the oozie bundle that was
 scheduled earlier through the schedule function. No further instances are executed on a suspended process/feed.
 
----+++ Resume:
+---+++ Resume
 Puts a suspended process/feed back to active, which in turn resumes applicable oozie bundle.
 
----+++ Status:
+---+++ Status
 Gets the current status of the entity.
 
----+++ Definition:
+---+++ Definition
 Gets the current entity definition as stored in the configuration store. Please note that user documentations
 in the entity will not be retained.
 
----+++ Delete:
+---+++ Delete
 Delete operation on the entity removes any scheduled activity on the workflow engine, besides removing the
 entity from the falcon configuration store. Delete operation on an entity would only succeed if there are
 no dependent entities on the deleted entity.
 
----+++ Update:
+---+++ Update
 Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
 not allowed. Feed update can cause cascading update to all the processes already scheduled. The following
 set of actions are performed in Oozie to realize an update.
 
    * Suspend the previously scheduled Oozie coordinator. This is prevent any new action from being triggered.
    * Update the coordinator to set the end time to "now"
-   * Resume the suspended coordiantors
+   * Resume the suspended coordinators
    * Schedule as per the new process/feed definition with the start time as "now"
 
 ---++ Instance Management actions
 
 
-Instance Manager gives user the option to control individual instances of the process based on their instance start time (start time of that instance). Start time needs to be given in standard TZ format. Example:   01 Jan 2012 01:00  => 2012-01-01T01:00Z
+Instance Manager gives user the option to control individual instances of the process based on their instance start time (start time of that instance). Start time needs to be given in standard TZ format. Example: 01 Jan 2012 01:00 => 2012-01-01T01:00Z
 
-All the instance management operations (except running) allow single instance or list of instance within a Date range to be acted on. Make sure the dates are valid. i.e are within the start and  end time of process itself. 
+All the instance management operations (except running) allow single instance or list of instance within a Date range to be acted on. Make sure the dates are valid. i.e. are within the start and end time of process itself. 
 
 For every query in instance management the process name is a compulsory parameter. 
 
 Parameters -start and -end are used to mention the date range within which you want the instance to be operated upon. 
 
--start:   using only  "-start" without  "-end"  will conduct the desired operation only on single instance given by date along with start.
+-start: using only "-start" without "-end" will conduct the desired operation only on single instance given by date along with start.
 
--end:  "-end"  can only be used along with "-start" . It corresponds to the end date till which instance need to operated upon. 
+-end: "-end" can only be used along with "-start" . It corresponds to the end date till which instance need to operated upon. 
 
-   * 1. *status*: -status option via CLI can be used to get the status of a single or multiple instances.  If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state.Along with the status of the instance log location is also returned.
+   * 1. *status*: -status option via CLI can be used to get the status of a single or multiple instances. If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state. Along with the status of the instance log location is also returned.
 
 
    * 2.	*running*: -running returns all the running instance of the process. It does not take any start or end dates but simply return all the instances in state RUNNING at that given time. 
 
    * 3.	*rerun*: -rerun is the option that you will use most often from instance management. As the name suggest this option is used to rerun a particular instance or instances of the process. The rerun option reruns all parent workflow for the instance, which in turn rerun all the sub-workflows for it. This option is valid for any instance in terminal state, i.e. KILLED, SUCCEEDED, FAILED. User can also set properties in the request, which will give options what types of actions should be rerun like, only failed, run all etc. These properties are dependent on the workflow engine being used along with falcon.
    
-   * 4. *suspend*: -suspend is used to suspend a instance or instances  for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command. This command is similar to SUSPEND process command in functionality only difference being, SUSPEND process suspends all the instance whereas suspend instance suspend only that instance or instances in the range. 
+   * 4. *suspend*: -suspend is used to suspend a instance or instances for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command. This command is similar to SUSPEND process command in functionality only difference being, SUSPEND process suspends all the instance whereas suspend instance suspend only that instance or instances in the range. 
 
-   * 5.	*resume*: -resume option is used to resume any instance that  is in suspended state.  (Note: due to a bug in oozie �resume option in some cases may not actually resume the suspended instance/ instances)
+   * 5.	*resume*: -resume option is used to resume any instance that is in suspended state. (Note: due to a bug in oozie �resume option in some cases may not actually resume the suspended instance/ instances)
    * 6. *kill*: -kill option can be used to kill an instance or multiple instances 
 
 
-In all the cases where your request is syntactically correct but logically not, the instance / instances are returned with the same status as earlier. Example:  trying to resume a KILLED  / SUCCEEDED instance will return the instance with KILLED / SUCCEEDED, without actually performing any operation. This is so because only an instance in SUSPENDED state can be resumed. Same thing is valid for rerun a SUSPENDED or RUNNING options etc. 
+In all the cases where your request is syntactically correct but logically not, the instance / instances are returned with the same status as earlier. Example: trying to resume a KILLED / SUCCEEDED instance will return the instance with KILLED / SUCCEEDED, without actually performing any operation. This is so because only an instance in SUSPENDED state can be resumed. Same thing is valid for rerun a SUSPENDED or RUNNING options etc. 
 
 ---++ Retention
-In coherence with it's feed lifecycle management philosophy, Falcon allows the user to retain  data in the system
+In coherence with it's feed lifecycle management philosophy, Falcon allows the user to retain data in the system
 for a specific period of time for a scheduled feed. The user can specify the retention period in the respective 
 feed/data xml in the following manner for each cluster the feed can belong to :
 <verbatim>
@@ -187,7 +187,7 @@ be attached to it. It essentially instructs the system to retain data spanning f
 in the attribute spanning backwards in time. Any data beyond the limit (past/future) is erased from the system.
 
 ---+++ Example:
- If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
+If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
 one falling in between [t-10h,t]. Any data in the boundaries [-�,t-10h) and (t,�] is removed from the system.
 
 The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is either
@@ -201,14 +201,14 @@ Retention policy in Falcon kicks off on the basis of the time value specified by
 
    * If the retention policy specified is less than 24 hours: In this event, the retention policy automatically kicks off every 6 hours.
    * If the retention policy specified is more than 24 hours: In this event, the retention policy automatically kicks off every 24 hours.
-   * As soon as a feed is successfully scheduled:  the retention policy is triggered immediately regardless of the current timestamp/state of the system.
+   * As soon as a feed is successfully scheduled: the retention policy is triggered immediately regardless of the current timestamp/state of the system.
 
 Relation between feed path and retention policy: Retention policy for a particular scheduled feed applies only to the eligible feed path
 specified in the feed xml. Any other paths that do not conform to the specified feed path are left unaffected by the retention policy.
 
 ---++ Replication
-Falcons feed lifecycle management also supports Feed replication across different clusters out-of-the-box.
-Multiple source clusters and target clusters can be defined in feed definition, Falcon replicates the data using
+Falcon's feed lifecycle management also supports Feed replication across different clusters out-of-the-box.
+Multiple source clusters and target clusters can be defined in feed definition. Falcon replicates the data using
 hadoop's distcp version 2 across different clusters whenever a feed is scheduled.
 
 The frequency at which the data is replicated is governed by the frequency specified in the feed definition.
@@ -230,13 +230,13 @@ Ideally, the feeds data path should have the same granularity as that for freque
 If more than 1 source cluster is defined, then partition expression is compulsory, a partition can also have a constant.
 The expression is required to avoid copying data from different source location to the same target location, also only the data in the partition is considered for replication if it is present. The partitions defined in the cluster should be less than or equal to the number of partition declared in the feed definition.
 
-Falcon uses pull based replication mechanism, meaning in every target cluster, for a given source cluster a coordinator is scheduled which pulls the data using distcp from source cluster. So in the above example, 2 coordinators are scheduled in backupCluster, one which pulls the data from sourceCluster1 and another from sourceCluster2.
+Falcon uses pull based replication mechanism, meaning in every target cluster, for a given source cluster, a coordinator is scheduled which pulls the data using distcp from source cluster. So in the above example, 2 coordinators are scheduled in backupCluster, one which pulls the data from sourceCluster1 and another from sourceCluster2.
 Also, for every feed instance which is replicated Falcon sends a JMS message on success or failure of replication instance.
 
 Replication can be scheduled with the past date, the time frame considered for replication is the minimum overlapping window of start and end time of source and target cluster, ex: if s1 and e1 is the start and end time of source cluster respectively,
 and s2 and e2 of target cluster, then the coordinator is scheduled in target cluster with start time max(s1,s2) and min(e1,e2).
 
-A feed can also optionally specify the delay for replication instance in the cluster tag, the delay governs the replication instance delays. If the frequency of the feed is hours(2) and delay is hours(1), then the replication instance will run every 2 hours and replicates data with an offset of 1 hour, i.e at
+A feed can also optionally specify the delay for replication instance in the cluster tag, the delay governs the replication instance delays. If the frequency of the feed is hours(2) and delay is hours(1), then the replication instance will run every 2 hours and replicates data with an offset of 1 hour, i.e. at
 09:00 UTC, feed instance which is eligible for replication is 08:00; and 11:00 UTC, feed instance of 10:00 UTC is eligible and so on.
 
 ---+++ Where is the feed path defined?
@@ -279,7 +279,7 @@ may have a different feed path.
 For reasons that are obvious, Falcon has an external validation that ensures that the user
 always specifies the feed retention limit to be more than the feed's allowed late arrival period.
 If this rule is violated by the user, the feed submission call itself throws back an error.
-   
+
 
 ---++ Cross entity validations
 
@@ -387,7 +387,7 @@ feed="raaw-logs16" name="inputData"/>
 
    
     * The time interpretation for corresponding tags indicating the start and end instances for a
-particular input feed in the process xml should lie well within the timespan of  the period specified in
+particular input feed in the process xml should lie well within the timespan of the period specified in
 <validity> tag of the particular feed.
 
 *Example:*
@@ -404,7 +404,7 @@ particular input feed in the process xml should lie well within the timespan of 
 <validity start="2009-01-01T00:00Z" end="2009-12-31T23:59Z".....
 </verbatim>
 Explanation: The process timelines for the feed range between a 40 minute interval between [-60m,-20m] from
-the current timestamp (which lets assume is  'today' as per the 'now' directive). However, the feed validity
+the current timestamp (which lets assume is 'today' as per the 'now' directive). However, the feed validity
 is between a 1 year period in 2009, which makes it anachronistic. 
 
 2. The following example would work just fine:
@@ -419,7 +419,7 @@ is between a 1 year period in 2009, which makes it anachronistic.
 validity start="2009-01-01T00:00Z" end="2012-12-31T23:59Z" .......
 </verbatim>
 since at the time of charting this document (03/03/2012), the feed validity is able to encapsulate the process
-input's start  and end instances.
+input's start and end instances.
 
 
 Failure to follow any of the above rules would result in a process submission failure.
@@ -431,7 +431,7 @@ created would result in a WAITING state unless data is actually provided in the 
 
 
 ---++ Updating process and feed definition
-Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated. Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates feed workflows like retention, replication etc and also updates the processes that reference the feed.
+Any changes in feed/process can be done by updating its definition. After the update, any new workflows which are to be scheduled after the update call will pick up the new changes. Feed/process name and start time can't be updated. Updating a process triggers updates to the workflow that is triggered in the workflow engine. Updating feed updates feed workflows like retention, replication etc. and also updates the processes that reference the feed.
 
 
 ---++ Handling late input data
@@ -455,8 +455,8 @@ explicitly set the feed names in late-input which needs to be checked for late d
 </verbatim>
 
 ---++ Idempotency
-All the operations in Falcon are Idempotent. That is if you make same request to the falcon server / prism again you will get a SUCCESSFUL return if it was SUCCESSFUL in the first attempt. For example, you submit a new process / feed and get SUCCESSFUL message return. Now if you run the same command / api request on same entity you will again get a SUCCESSFUL message.  Same is true for other operatins like schedule, kill , suspend and resume.
-Idempotency also by takes care of the condition when request is sent through prism and fails on one or more servers. For example prism is configured to send request to 3 servers. First user sends a request to SUBMIT a process on all 3 of them, and receives a response SUCCESSFUL from all of them. Then due to some issue one of the servers goes down, and user send a request to schdeule the submitted process. This time he will receive a response with PARTIAL status and a FALIURE message from the server that has gone down. If the users check he will find the porcess would have been started and running on the 2 SUCCESSFUL servers. Now the issue with server is figured out and it is brought up. Sending the SCHEDULE request again through prism will result in a SUCCESSFUL response from pism as well as other three servers, but this time PORCESS will be SCHEDULED only on the server which had failed earlier and other two will keep running as before. 
+All the operations in Falcon are Idempotent. That is if you make same request to the falcon server / prism again you will get a SUCCESSFUL return if it was SUCCESSFUL in the first attempt. For example, you submit a new process / feed and get SUCCESSFUL message return. Now if you run the same command / api request on same entity you will again get a SUCCESSFUL message. Same is true for other operations like schedule, kill, suspend and resume.
+Idempotency also by takes care of the condition when request is sent through prism and fails on one or more servers. For example prism is configured to send request to 3 servers. First user sends a request to SUBMIT a process on all 3 of them, and receives a response SUCCESSFUL from all of them. Then due to some issue one of the servers goes down, and user send a request to schedule the submitted process. This time he will receive a response with PARTIAL status and a FAILURE message from the server that has gone down. If the users check he will find the process would have been started and running on the 2 SUCCESSFUL servers. Now the issue with server is figured out and it is brought up. Sending the SCHEDULE request again through prism will result in a SUCCESSFUL response from prism as well as other three servers, but this time PROCESS will be SCHEDULED only on the server which had failed earlier and other two will keep running as before. 
  
 
 ---++ Alerting and Monitoring
@@ -596,20 +596,20 @@ __Note: if no instance is created at the resolved time, then the instance immedi
 Falcon currently support following ELs:
 
 
-   * 1.	*now(hours,minutes)*: now refer to the instance start time.Hours and minutes given are in reference with the start time of instance. For example now(-2,40)  corresponds to feed instance at -2 hr and +40 minutes i.e  feed instance 80 mins before the instance start time. Id user would have given now(0,-80) it would have correspond to the same. 
+   * 1.	*now(hours,minutes)*: now refer to the instance start time. Hours and minutes given are in reference with the start time of instance. For example now(-2,40)  corresponds to feed instance at -2 hr and +40 minutes i.e.  feed instance 80 mins before the instance start time. Id user would have given now(0,-80) it would have correspond to the same. 
    * 2.	*today(hours,minutes)*: hours and minutes given in this EL corresponds to instance from the start day of instance start time. Ie. If instance start is at 2010-01-02T01:30Z  then today(-3,-20) will mean instance created at 2010-01-01T20:40 and today(3,20) will correspond to 2010-01-02T3:20Z. 
 
-   * 3.	*yesterday(hours,minutes)*: As the name suggest EL yesterday picks up feed instances with respect to start of day yesterday. Hours and minutes are added to the 00 hours starting yesterday, Example:  yesterday(24,30) will actually correspond to 00:30 am of today, for 2010-01-02T01:30Z this would mean 2010-01-02:00:30 feed. 
+   * 3.	*yesterday(hours,minutes)*: As the name suggest EL yesterday picks up feed instances with respect to start of day yesterday. Hours and minutes are added to the 00 hours starting yesterday, Example: yesterday(24,30) will actually correspond to 00:30 am of today, for 2010-01-02T01:30Z this would mean 2010-01-02:00:30 feed. 
 
-   * 4.	*currentMonth(day,hour,minute)*: Current month takes the reference to start of the month with respect to instance start time.  One thing to keep in mind is that day is added to the first day of the month. So the value of day is the number of days you want to add to the first day of the month.For example:  for instance start time 2010-01-12T01:30Z and El as currentMonth(3,2,40) will correspond to feed created at  2010-01-04T02:40Z  and  currentMonth(0,0,0) will mean 2010-01-01T00:00Z.
+   * 4.	*currentMonth(day,hour,minute)*: Current month takes the reference to start of the month with respect to instance start time. One thing to keep in mind is that day is added to the first day of the month. So the value of day is the number of days you want to add to the first day of the month. For example: for instance start time 2010-01-12T01:30Z and El as currentMonth(3,2,40) will correspond to feed created at 2010-01-04T02:40Z and currentMonth(0,0,0) will mean 2010-01-01T00:00Z.
 
-   * 5.	*lastMonth(day,hour,minute)*: Parameters for lastMonth is same as currentMonth, only difference being the reference is shifted to one month back.  For instance start 2010-01-12T01:30Z  lastMonth(2,3,30)  will correspond to feed instance at 2009-12-03:T03:30Z 
+   * 5.	*lastMonth(day,hour,minute)*: Parameters for lastMonth is same as currentMonth, only difference being the reference is shifted to one month back. For instance start 2010-01-12T01:30Z lastMonth(2,3,30) will correspond to feed instance at 2009-12-03:T03:30Z 
 
    * 6.	*currentYear(month,day,hour,minute)*: The month,day,hour, minutes in the pareamter are added with reference to the start of year of instance start time. For our exmple start time 2010-01-02:00:30 reference will go back to 2010-01-01:T00:00Z. Also similar to days, months are added to the 1st month that Jan. So currentYear(0,2,2,20) will mean 2010-01-03T02:20Z while currentYear(11,2,2,20) will mean 2010-12-03T02:20Z
 
 
-   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similary to currentYear in usage> only difference being start reference is taken to start of previous year.For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.
+   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similary to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.
    
-   * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest avaliable instance of the feed given as parameter. For exmample: latest(0) will consider the last avaliable instance of feed, where as latest latest(-1) will consider second last avaliable feed and latest(-3) will consider 4th last avaliable feed.
+   * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest available instance of the feed given as parameter. For example: latest(0) will consider the last available instance of feed, where as latest latest(-1) will consider second last available feed and latest(-3) will consider 4th last available feed.
    
 

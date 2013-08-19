@@ -17,6 +17,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-79 Fix typos in Falcon architecture document. (Suresh Srinivas
+    via Srikanth Sundarrajan)
+
     FALCON-72 Feeds with invalid oozie URI in cluster cannot be deleted.
     (Venkatesh Seetharam vi Shwetha GS)
 
