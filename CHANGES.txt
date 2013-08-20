@@ -17,6 +17,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-71 mvn jetty:run doesn't work. (Srikanth Sundarrajan via 
+    Shwetha GS)
+
     FALCON-79 Fix typos in Falcon architecture document. (Suresh Srinivas
     via Srikanth Sundarrajan)
 

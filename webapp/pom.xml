@@ -358,6 +358,10 @@
                             <name>oozie.data.dir</name>
                             <value>${project.build.directory}/webapps/oozie/data</value>
                         </systemProperty>
+                        <systemProperty>
+                            <name>system.lib.location</name>
+                            <value>${project.build.directory}/dependency</value>
+                        </systemProperty>
                     </systemProperties>
                     <stopKey>falcon-stop</stopKey>
                     <stopPort>41001</stopPort>
