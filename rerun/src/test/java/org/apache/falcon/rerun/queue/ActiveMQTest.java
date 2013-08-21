@@ -17,10 +17,10 @@
  */
 package org.apache.falcon.rerun.queue;
 
-import junit.framework.Assert;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.event.RerunEvent;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

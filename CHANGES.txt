@@ -9,6 +9,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-73 Remove JUnit dependency as its used only for asserts while 
+    TestNG for tests. (Srikanth Sundarrajan)
+
     FALCON-80 Option in falcon-start to not start embedded activemq.
     (Shwetha GS via Srikanth Sundarrajan)
 

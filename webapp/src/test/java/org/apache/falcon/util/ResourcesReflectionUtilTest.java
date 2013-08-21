@@ -18,7 +18,7 @@
 
 package org.apache.falcon.util;
 
-import junit.framework.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**

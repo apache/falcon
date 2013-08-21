@@ -18,9 +18,9 @@
 
 package org.apache.falcon.aspect;
 
-import junit.framework.Assert;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.resource.AbstractEntityManager;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
