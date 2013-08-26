@@ -17,6 +17,13 @@
  */
 package org.apache.falcon.service;
 
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
@@ -26,12 +33,6 @@ import org.apache.falcon.cleanup.ProcessCleanupHandler;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Log cleanup service.
@@ -57,8 +58,8 @@ public class LogCleanupService implements FalconService {
 
     private static class CleanupThread extends TimerTask {
 
-        private AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
-        private AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
+        private final AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
+        private final AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
 
         @Override
         public void run() {

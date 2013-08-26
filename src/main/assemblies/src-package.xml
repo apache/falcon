@@ -23,6 +23,7 @@
         <format>tar.gz</format>
     </formats>
     <id>sources</id>
+    <baseDirectory>falcon-sources-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>.</directory>

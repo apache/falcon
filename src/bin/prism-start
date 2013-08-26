@@ -31,4 +31,9 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-exec ${BASEDIR}/bin/service-stop.sh falcon
+if [[ $* != *-port* ]]; then
+  ARGS="-port 16000"
+fi
+
+export FALCON_PROPERTIES="-Dfalcon.embeddedmq=false -Dfalcon.domain=prism"
+exec ${BASEDIR}/bin/service-start.sh prism $ARGS $*

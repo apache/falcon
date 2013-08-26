@@ -28,8 +28,8 @@ import org.mortbay.jetty.webapp.WebAppContext;
  * This class embeds a Jetty server and a connector.
  */
 public class EmbeddedServer {
-    private Server server = new Server();
-    private Connector connector = new SocketConnector();
+    private final Server server = new Server();
+    private final Connector connector = new SocketConnector();
 
     public EmbeddedServer(int port, String path) {
         connector.setPort(port);

@@ -9,6 +9,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-83 Option to build distributed packages. (Shwetha GS via
+    Srikanth Sundarrajan)
+
     FALCON-73 Remove JUnit dependency as its used only for asserts while 
     TestNG for tests. (Srikanth Sundarrajan)
 

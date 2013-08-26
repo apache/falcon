@@ -26,15 +26,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
+import org.apache.log4j.Logger;
 
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
  */
 public final class Main {
-
+    private static final Logger LOG = Logger.getLogger(Main.class);
     private static final String APP_PATH = "app";
-    private static final String EMBEDDED_ACTIVEMQ = "embeddedmq";
-    private static final String ACTIVEMQ_BASE = "mqbase";
+    private static final String APP_PORT = "port";
 
     /**
      * Prevent users from constructing this.
@@ -50,11 +50,7 @@ public final class Main {
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option(EMBEDDED_ACTIVEMQ, true, "Should start embedded activemq?");
-        opt.setRequired(false);
-        options.addOption(opt);
-
-        opt = new Option(ACTIVEMQ_BASE, true, "Activemq data directory");
+        opt = new Option(APP_PORT, true, "Application Port");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -65,31 +61,31 @@ public final class Main {
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
-        String dataDir = "target/";
-        boolean startActiveMq = true;
+        int appPort = 15000;
 
         if (cmd.hasOption(APP_PATH)) {
             appPath = cmd.getOptionValue(APP_PATH);
         }
 
-        if (cmd.hasOption(EMBEDDED_ACTIVEMQ)) {
-            startActiveMq = Boolean.valueOf(cmd.getOptionValue(EMBEDDED_ACTIVEMQ));
+        if (cmd.hasOption(APP_PORT)) {
+            appPort = Integer.valueOf(cmd.getOptionValue(APP_PORT));
         }
 
-        if (cmd.hasOption(ACTIVEMQ_BASE)) {
-            dataDir = cmd.getOptionValue(ACTIVEMQ_BASE);
-        }
-
+        boolean startActiveMq = Boolean.valueOf(System.getProperty("falcon.embeddedmq", "true"));
         if (startActiveMq) {
+            String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
+            int mqport = Integer.valueOf(System.getProperty("falcon.emeddedmq.port", "61616"));
+            LOG.info("Starting activemq at port " + mqport + " with data dir " + dataDir);
+
             BrokerService broker = new BrokerService();
             broker.setUseJmx(false);
             broker.setDataDirectory(dataDir);
             broker.addConnector("vm://localhost");
-            broker.addConnector("tcp://localhost:61616");
+            broker.addConnector("tcp://localhost:" + mqport);
             broker.start();
         }
 
-        EmbeddedServer server = new EmbeddedServer(15000, appPath);
+        EmbeddedServer server = new EmbeddedServer(appPort, appPath);
         server.start();
     }
 }

@@ -51,10 +51,13 @@ public class HadoopStartupListener implements ServletContextListener {
                 NameNode.createNameNode(emptyArgs, conf);
                 DataNode.createDataNode(emptyArgs, conf);
                 JobConf jobConf = new JobConf(conf);
-//                JobTracker jt = JobTracker.startTracker(jobConf);
-//                jt.offerService();
-//                TaskTracker tt = new TaskTracker(jobConf);
-//                tt.run();
+                /**
+                 * Reflection code:
+                 * JobTracker jt = JobTracker.startTracker(jobConf);
+                 * jt.offerService();
+                 * TaskTracker tt = new TaskTracker(jobConf);
+                 * tt.run();
+                 */
                 Object jt = Class.forName("org.apache.hadoop.mapred.JobTracker")
                                 .getMethod("startTracker", JobConf.class).invoke(null, jobConf);
                 startService(jt, "offerService");
@@ -62,14 +65,17 @@ public class HadoopStartupListener implements ServletContextListener {
                                 .getConstructor(JobConf.class).newInstance(jobConf);
                 startService(tt, "run");
             } else if (hadoopProfle.equals("2")) {
-//                DefaultMetricsSystem.setMiniClusterMode(true);
-//                ResourceManager resourceManager = new ResourceManager(new MemStore());
-//                YarnConfiguration yarnConf = new YarnConfiguration(conf);
-//                resourceManager.init(yarnConf);
-//                resourceManager.start();
-//                NodeManager nodeManager = new NodeManager();
-//                nodeManager.init(yarnConf);
-//                nodeManager.start();
+                /**
+                 * Reflection code:
+                 * DefaultMetricsSystem.setMiniClusterMode(true);
+                 * ResourceManager resourceManager = new ResourceManager(new MemStore());
+                 * YarnConfiguration yarnConf = new YarnConfiguration(conf);
+                 * resourceManager.init(yarnConf);
+                 * resourceManager.start();
+                 * NodeManager nodeManager = new NodeManager();
+                 * nodeManager.init(yarnConf);
+                 * nodeManager.start();
+                 */
                 Class.forName("org.apache.hadoop.metrics2.lib.DefaultMetricsSystem")
                                 .getMethod("setMiniClusterMode", boolean.class).invoke(null, true);
                 NameNode.createNameNode(emptyArgs, conf);

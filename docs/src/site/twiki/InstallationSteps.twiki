@@ -15,15 +15,16 @@ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 </verbatim>
 
-Once the build successfully completes, artifacts can be packaged for deployment. By default the falcon is built for embedded mode.
+Once the build successfully completes, artifacts can be packaged for deployment. The package can be built in embedded or distributed mode.
 
+*Embedded Mode*
 <verbatim>
 
-mvn clean assembly:assembly -DskipTests
+mvn clean assembly:assembly -DskipTests -DskipCheck=true
 
 </verbatim>
 
-Tar can be found in {project dir}/target/falcon-${project.version}.tar.gz
+Tar can be found in {project dir}/target/falcon-${project.version}-bin.tar.gz
 
 Tar is structured as follows
 
@@ -40,30 +41,70 @@ Tar is structured as follows
    |- log4j.xml
 |- src
 |- docs
+|- apidocs
 |- client
    |- lib (client support libs)
 |- server
    |- webapp
-      |- classes (serer support classes)
-      |- lib (server support libs)
-   |- falcon.war
+      |- falcon.war
 |- logs (application log files & temp data files)
    |- falcon.pid
+   
+</verbatim>
 
+*Distributed Mode*
+
+<verbatim>
+
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed
+
+</verbatim>
+
+This generates 3 tars - {project dir}/target/falcon-${project.version}-prism.tar.gz, {project dir}/target/falcon-${project.version}-server.tar.gz and {project dir}/target/falcon-${project.version}-client.tar.gz
+
+Package structure of prism and server tars is same as that of the embedded package with one difference that prism package contains prism war instead of falcon war. Client package is structured as follows 
+ 
+<verbatim>
+
+|- bin
+   |- falcon
+|- conf
+   |- client.properties
+   |- log4j.xml
+|- client
+   |- lib (client support libs)
+   
 </verbatim>
 
 ---+++ Installing & running Falcon
 
 *Installing falcon*
 <verbatim>
-tar -xzvf falcon-${project.version}.tar.gz
-cd falcon-main-${project.version}
+tar -xzvf {falcon package}
+cd falcon-server-${project.version} or cd falcon-prism-${project.version}
 </verbatim>
 
 *Starting Falcon Server*
 <verbatim>
-bin/falcon-start
+bin/falcon-start [-port <port>]
 </verbatim>
+
+By default, 
+- falcon server starts at port 15000. To change the port, use -port option
+- falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
+  - falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
+  - falcon.emeddedmq.port=<port> - Port for embedded active mq, default 61616
+  - falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
+- falcon server starts with conf from {package dir}/conf. To override this (to use the same conf with multiple falcon upgrades), set environment variable FALCON_CONF to the path of conf dir
+
+*Starting Prism*
+<verbatim>
+bin/prism-start [-port <port>]
+</verbatim>
+
+By default, 
+- falcon server starts at port 16000. To change the port, use -port option
+- prism starts with conf from {package dir}/conf. To override this (to use the same conf with multiple prism upgrades), set environment variable FALCON_CONF to the path of conf dir
 
 *Using Falcon*
 <verbatim>
@@ -79,6 +120,11 @@ bin/falcon help
 *Stopping Falcon Server*
 <verbatim>
 bin/falcon-stop
+</verbatim>
+
+*Stopping Prism*
+<verbatim>
+bin/prism-stop
 </verbatim>
 
 ---+++ Preparing oozie bundle for use with Falcon

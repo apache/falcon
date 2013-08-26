@@ -297,6 +297,7 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <forkMode>always</forkMode>
+                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>                    
                 </configuration>
                 <executions>
                     <execution>
@@ -411,18 +412,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-
-        <profile>
-            <id>hadoop-2</id>
-            <activation>
-                <property>
-                    <name>hadoop.profile</name>
-                    <value>2</value>
-                </property>
-            </activation>
-            <dependencies>
-            </dependencies>
         </profile>
     </profiles>
 

@@ -13,6 +13,8 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
+set -e
+
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
@@ -29,14 +31,8 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-FALCONCPPATH="$FALCON_CONF:${BASEDIR}/conf:"
-for i in "${BASEDIR}/client/lib/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-for i in "${BASEDIR}/server/webapp/"*/WEB-INF/lib/*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
 
+mkdir -p ${BASEDIR}/logs
 
 if test -z ${JAVA_HOME}
 then
@@ -45,10 +41,37 @@ else
     JAVA_BIN=${JAVA_HOME}/bin/java
 fi
 
-JAVA_PROPERTIES="$FALCON_OPTS"
+pushd ${BASEDIR} > /dev/null
+
+APP_TYPE=$1
+if [ ! -d ${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF ]; then
+  mkdir -p ${BASEDIR}/server/webapp/$APP_TYPE
+  cd ${BASEDIR}/server/webapp/$APP_TYPE
+  jar -xf ../$APP_TYPE.war
+  cd -
+fi
+
+FALCONCPPATH="$FALCON_CONF:${BASEDIR}/conf:${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/classes:"
+for i in "${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/lib/"*.jar; do
+  FALCONCPPATH="${FALCONCPPATH}:$i"
+done
+
+if [ -z "$FALCON_CONF" ]; then
+  CONF_PATH=${BASEDIR}/conf
+else
+  CONF_PATH=$FALCON_CONF
+fi
+ 
+JAVA_PROPERTIES="$FALCON_OPTS $FALCON_PROPERTIES -Dfalcon.embeddedmq.data=${BASEDIR}/logs/data -Dfalcon.home=${BASEDIR} -Dconfig.location=$CONF_PATH"
+shift
+
 while [[ ${1} =~ ^\-D ]]; do
   JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
   shift
 done
-${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"
+TIME=`date +%Y%m%d%H%M%s`
 
+
+nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/*.war $* 2> ${BASEDIR}/logs/$APP_TYPE.out.$TIME &
+echo $! > ${BASEDIR}/logs/$APP_TYPE.pid
+popd > /dev/null

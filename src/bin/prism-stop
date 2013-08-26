@@ -31,4 +31,4 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-exec ${BASEDIR}/bin/service-stop.sh falcon
+exec ${BASEDIR}/bin/service-stop.sh prism

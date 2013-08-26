@@ -23,20 +23,14 @@
         <format>tar.gz</format>
     </formats>
     <id>bin</id>
+    <baseDirectory>falcon-server-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>src/conf/</directory>
             <outputDirectory>conf</outputDirectory>
-        </fileSet>
-
-        <fileSet>
-            <directory>client/target/dependency</directory>
-            <outputDirectory>client/lib</outputDirectory>
-        </fileSet>
-
-        <fileSet>
-            <directory>client/target/dependency</directory>
-            <outputDirectory>client/lib</outputDirectory>
+            <excludes>
+                <exclude>prism-client.properties</exclude>
+            </excludes>
         </fileSet>
 
         <fileSet>
@@ -54,6 +48,13 @@
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
+            <includes>
+                <include>falcon</include>
+                <include>falcon-start</include>
+                <include>falcon-stop</include>
+                <include>service-start.sh</include>
+                <include>service-stop.sh</include>
+            </includes>
         </fileSet>
 
         <fileSet>
@@ -77,27 +78,9 @@
                 <include>README</include>
             </includes>
         </fileSet>
-
-        <fileSet>
-            <directory>webapp/target/falcon-webapp-${project.version}/WEB-INF/classes</directory>
-            <outputDirectory>server/webapp/classes</outputDirectory>
-            <includes>
-                <include>**/*.class</include>
-            </includes>
-        </fileSet>
-
-        <fileSet>
-            <directory>webapp/target/falcon-webapp-${project.version}/WEB-INF/lib</directory>
-            <outputDirectory>server/webapp/lib</outputDirectory>
-        </fileSet>
     </fileSets>
 
     <files>
-        <file>
-            <source>client/target/falcon-client-${project.version}.jar</source>
-            <outputDirectory>client/lib</outputDirectory>
-        </file>
-
         <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>

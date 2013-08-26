@@ -13,6 +13,8 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
+set -e
+
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
@@ -29,28 +31,4 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-FALCONCPPATH="${BASEDIR}/conf:${BASEDIR}/server/webapp/classes:"
-for i in "${BASEDIR}/server/webapp/lib/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-
-mkdir -p ${BASEDIR}/logs
-
-if test -z ${JAVA_HOME}
-then
-    JAVA_BIN=java
-else
-    JAVA_BIN=${JAVA_HOME}/bin/java
-fi
-
-pushd ${BASEDIR} > /dev/null
-JAVA_PROPERTIES="$FALCON_OPTS -Dconfig.location=${BASEDIR}/conf"
-while [[ ${1} =~ ^\-D ]]; do
-  JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
-  shift
-done
-TIME=`date +%Y%m%d%H%M%s`
-nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/falcon.war -mqbase ${BASEDIR}/logs/data $* 2> ${BASEDIR}/logs/falcon.out.$TIME &
-echo $! > ${BASEDIR}/logs/falcon.pid
-popd > /dev/null
-
+exec ${BASEDIR}/bin/service-start.sh falcon $ARGS $*

@@ -13,8 +13,6 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
-set -e
-
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
@@ -31,4 +29,12 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-exec ${BASEDIR}/bin/service-stop.sh falcon
+APP_TYPE=$1
+PID_FILE=${BASEDIR}/logs/$APP_TYPE.pid
+if [ -f $PID_FILE ]
+then
+   kill -15 `cat $PID_FILE`
+else
+   echo "pid file $PID_FILE not present"
+fi
+

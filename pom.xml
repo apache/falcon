@@ -96,6 +96,8 @@
 
         <include.prism>true</include.prism>
 
+        <hadoop.profile>1</hadoop.profile>
+        <hadoop.version>1.1.2</hadoop.version>
         <slf4j.version>1.2</slf4j.version>
         <oozie.version>3.2.2</oozie.version>
         <activemq.version>5.4.3</activemq.version>
@@ -106,60 +108,6 @@
     </properties>
 
     <profiles>
-        <profile>
-            <id>hadoop-1</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>hadoop.profile</name>
-                    <value>1</value>
-                </property>
-            </activation>
-            <properties>
-                <hadoop.profile>1</hadoop.profile>
-                <hadoop.version>1.1.2</hadoop.version>
-            </properties>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-core</artifactId>
-                        <version>${hadoop.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.eclipse.jdt</groupId>
-                                <artifactId>core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>tomcat</groupId>
-                                <artifactId>jasper-runtime</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>tomcat</groupId>
-                                <artifactId>jasper-compiler</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-        
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-test</artifactId>
-                        <version>${hadoop.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.apache.ftpserver</groupId>
-                                <artifactId>ftpserver-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.ftpserver</groupId>
-                                <artifactId>ftpserver-deprecated</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
-        </profile>
-
         <profile>
             <id>hadoop-2</id>
             <activation>
@@ -172,47 +120,25 @@
                 <hadoop.profile>2</hadoop.profile>
                 <hadoop.version>2.0.2-alpha</hadoop.version>
             </properties>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-client</artifactId>
-                        <version>${hadoop.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>org.glassfish</groupId>
-                                <artifactId>javax.servlet</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-hdfs</artifactId>
-                        <version>${hadoop.version}</version>
-                        <classifier>tests</classifier>
-                    </dependency>
-                    
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                        <version>${hadoop.version}</version>
-                        <classifier>tests</classifier>
-                    </dependency>
-                    
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>
-                    
-                    <dependency>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-                        <version>${hadoop.version}</version>
-                    </dependency>                    
-                </dependencies>
-            </dependencyManagement>
+        </profile>
+        
+        <profile>
+            <id>distributed</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assemblies/prism-package.xml</descriptor>
+                                <descriptor>src/main/assemblies/server-package.xml</descriptor>
+                                <descriptor>src/main/assemblies/client-package.xml</descriptor>
+                            </descriptors>
+                            <finalName>falcon-${project.version}</finalName>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
@@ -294,6 +220,80 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-core</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.eclipse.jdt</groupId>
+                        <artifactId>core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-runtime</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-compiler</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-test</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.ftpserver</groupId>
+                        <artifactId>ftpserver-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.ftpserver</groupId>
+                        <artifactId>ftpserver-deprecated</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.glassfish</groupId>
+                        <artifactId>javax.servlet</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+                                        
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
@@ -899,7 +899,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assemblies/package.xml</descriptor>
+                        <descriptor>src/main/assemblies/bin-package.xml</descriptor>
                         <descriptor>src/main/assemblies/src-package.xml</descriptor>
                     </descriptors>
                     <finalName>falcon-${project.version}</finalName>
