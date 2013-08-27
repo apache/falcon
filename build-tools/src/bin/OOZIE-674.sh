@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/3.2.2 ]
 then
     echo "Oozie already setup. skipping";
@@ -25,12 +27,19 @@ fi
 mkdir -p ../target
 pushd ../target
 rm -rf oozie-3.2.0-incubating*
-curl -v "http://www.gtlib.gatech.edu/pub/apache/oozie/3.2.0-incubating/oozie-3.2.0-incubating.tar.gz" -o oozie-3.2.0-incubating.tgz
+curl -v "http://www.apache.org/dist/oozie/3.2.0-incubating/oozie-3.2.0-incubating.tar.gz" -o oozie-3.2.0-incubating.tgz
 tar -xzvf oozie-3.2.0-incubating.tgz
 cd oozie-3.2.0-incubating
 pwd
 patch -p0 < ../../oozie-3.2.0-incubating-el.patch
-mvn clean install -DskipTests
+if [ -z "${MAVEN_HOME}" ]
+then
+    export MVN_CMD=`which mvn`;
+else
+    export MVN_CMD=${MAVEN_HOME}/bin/mvn;
+fi
+echo "Using maven from " $MVN_CMD
+$MVN_CMD clean install -DskipTests
 rm -rf oozie-3.2.0-incubating*
 popd
 

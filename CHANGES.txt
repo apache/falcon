@@ -23,6 +23,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-43 Add Falcon to Sonar for Analysis. (Srikanth Sundarrajan via
+    Shwetha GS)
+
     FALCON-71 mvn jetty:run doesn't work. (Srikanth Sundarrajan via 
     Shwetha GS)
 
