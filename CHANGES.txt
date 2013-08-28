@@ -23,6 +23,8 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-100 Build error with mvn 3.0.4. (Shwetha GS)
+
     FALCON-43 Add Falcon to Sonar for Analysis. (Srikanth Sundarrajan via
     Shwetha GS)
 
