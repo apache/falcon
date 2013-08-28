@@ -147,6 +147,7 @@
         <module>metrics</module>
         <module>common</module>
         <module>test-util</module>
+        <module>hadoop-dependencies</module>
         <module>hadoop-webapp</module>
         <module>feed</module>
         <module>messaging</module>

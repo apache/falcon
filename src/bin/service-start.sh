@@ -56,6 +56,23 @@ for i in "${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/lib/"*.jar; do
   FALCONCPPATH="${FALCONCPPATH}:$i"
 done
 
+HADOOPDIR=`which hadoop`
+if [ "$HADOOPDIR" != "" ]; then
+  echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
+  FALCONCPPATH="${FALCONCPPATH}:`hadoop classpath`"
+elif [ "$HADOOP_HOME" != "" ]; then
+  echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into falcon classpath"
+  for i in "${HADOOP_HOME}/lib/"*.jar; do
+    FALCONCPPATH="${FALCONCPPATH}:$i"
+  done
+else
+  echo "Could not find installed hadoop and HADOOP_HOME is not set."
+  echo "Using the default jars bundled in ${BASEDIR}/hadooplibs/"
+  for i in "${BASEDIR}/hadooplibs/"*.jar; do
+    FALCONCPPATH="${FALCONCPPATH}:$i"
+  done
+fi
+
 if [ -z "$FALCON_CONF" ]; then
   CONF_PATH=${BASEDIR}/conf
 else
@@ -75,3 +92,5 @@ TIME=`date +%Y%m%d%H%M%s`
 nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/*.war $* 2> ${BASEDIR}/logs/$APP_TYPE.out.$TIME &
 echo $! > ${BASEDIR}/logs/$APP_TYPE.pid
 popd > /dev/null
+
+echo "Falcon started using hadoop version: " `${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.hadoop.util.VersionInfo | head -1`

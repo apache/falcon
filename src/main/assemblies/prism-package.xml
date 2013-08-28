@@ -79,6 +79,11 @@
                 <include>README</include>
             </includes>
         </fileSet>
+
+        <fileSet>
+            <directory>hadoop-dependencies/target/dependency</directory>
+            <outputDirectory>hadooplibs</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <files>

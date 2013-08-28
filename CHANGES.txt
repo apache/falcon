@@ -9,6 +9,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-63 Ability to ingest hadoop libs to falcon release package.
+    (Suhas Vasu via Shwetha GS)
+
     FALCON-83 Option to build distributed packages. (Shwetha GS via
     Srikanth Sundarrajan)
 
