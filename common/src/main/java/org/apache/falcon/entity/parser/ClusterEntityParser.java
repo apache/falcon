@@ -23,11 +23,13 @@ import java.io.IOException;
 import javax.jms.ConnectionFactory;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -56,6 +58,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateScheme(cluster, Interfacetype.WRITE);
         validateScheme(cluster, Interfacetype.WORKFLOW);
         validateScheme(cluster, Interfacetype.MESSAGING);
+        if (ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY) != null) {
+            validateScheme(cluster, Interfacetype.REGISTRY);
+        }
 
         // No interface validations in prism or other falcon servers.
         // Only the falcon server for which the cluster belongs to should validate interfaces
@@ -69,8 +74,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateExecuteInterface(cluster);
         validateWorkflowInterface(cluster);
         validateMessagingInterface(cluster);
-
-        // Interfacetype.REGISTRY is not validated as its not used
+        validateRegistryInterface(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -151,6 +155,29 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         } catch (Exception e) {
             throw new ValidationException("Invalid Messaging server or port: " + messagingUrl
                     + " for: " + implementation, e);
+        }
+    }
+
+    private void validateRegistryInterface(Cluster cluster) throws ValidationException {
+        final Interface catalogInterface = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        if (catalogInterface == null) {
+            LOG.info("Catalog service is not enabled for cluster: " + cluster.getName());
+            return;
+        }
+
+        if (!CatalogServiceFactory.isEnabled()) {
+            throw new ValidationException("Catalog registry implementation is not defined: catalog.service.impl");
+        }
+
+        final String catalogUrl = catalogInterface.getEndpoint();
+        LOG.info("Validating catalog registry interface: " + catalogUrl);
+
+        try {
+            if (!CatalogServiceFactory.getCatalogService().isAlive(catalogUrl)) {
+                throw new ValidationException("Unable to reach Catalog server:" + catalogUrl);
+            }
+        } catch (FalconException e) {
+            throw new ValidationException("Invalid Catalog server or port: " + catalogUrl, e);
         }
     }
 }
