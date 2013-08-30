@@ -5,6 +5,12 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-86 Hive table integration with cluster entity. (Venaktesh 
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-88 Add embedded hive and webhcat for integration tests. 
+    (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-62 Falcon compilation with hadoop 2.0 libs. (Shwetha GS
     via Srikanth Sundarrajan)
 
