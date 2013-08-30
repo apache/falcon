@@ -8,7 +8,7 @@ index 38ec438..c3bc9b8 100644
          <dependency>
 +            <groupId>org.apache.falcon</groupId>
 +            <artifactId>falcon-oozie-el-extension</artifactId>
-+            <version>0.4-SNAPSHOT</version>
++            <version>0.4-incubating-SNAPSHOT</version>
 +            <scope>compile</scope>
 +        </dependency>
 +
