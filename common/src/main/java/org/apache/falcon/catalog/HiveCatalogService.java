@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
@@ -40,7 +41,36 @@ public class HiveCatalogService extends AbstractCatalogService {
 
         Client client = Client.create();
         WebResource service = client.resource(catalogBaseUrl);
-        ClientResponse response = service.path("status").accept(MediaType.APPLICATION_JSON).head();
+        ClientResponse response = service.path("status")
+                .accept(MediaType.APPLICATION_JSON)
+                .head();
+                // .get(ClientResponse.class);    // todo this isnt working
+
+        if (LOG.isDebugEnabled() && response.getStatus() != 200) {
+            LOG.debug("Output from Server .... \n" + response.getEntity(String.class));
+        }
+
+        return response.getStatus() == 200;
+    }
+
+    @Override
+    public boolean tableExists(String catalogUrl, String database, String tableName)
+        throws FalconException {
+        LOG.info("Checking if the table exists: " + tableName);
+
+        Client client = Client.create();
+        WebResource service = client.resource(catalogUrl);
+
+        ClientResponse response = service.path("ddl/database/").path(database)
+                .path("/table").path(tableName)
+                .queryParam("user.name", CurrentUser.getUser())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+
+        if (LOG.isDebugEnabled() && response.getStatus() != 200) {
+            LOG.debug("Output from Server .... \n" + response.getEntity(String.class));
+        }
+
         return response.getStatus() == 200;
     }
 }

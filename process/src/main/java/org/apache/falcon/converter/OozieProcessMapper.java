@@ -295,10 +295,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         SYNCDATASET syncdataset = new SYNCDATASET();
         syncdataset.setName(datasetName);
-        String locPath = FeedHelper.getLocation(feed, locationType,
-                cluster.getName()).getPath();
-        syncdataset.setUriTemplate(new Path(locPath).toUri().getScheme() != null ? locPath : "${nameNode}"
-                + locPath);
+        String locPath = FeedHelper.createStorage(cluster, feed).getUriTemplate(locationType);
+        syncdataset.setUriTemplate(locPath);
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());

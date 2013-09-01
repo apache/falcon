@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
     FALCON-107 Adding extensions. (Shwetha GS)
 
+    FALCON-87 Hive table integration with feed entity. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
     FALCON-86 Hive table integration with cluster entity. (Venaktesh 
     Seetharam via Srikanth Sundarrajan)
 
