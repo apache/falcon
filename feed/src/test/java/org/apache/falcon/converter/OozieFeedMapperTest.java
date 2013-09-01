@@ -19,6 +19,7 @@ package org.apache.falcon.converter;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 
@@ -27,6 +28,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -74,7 +76,6 @@ public class OozieFeedMapperTest {
         ClusterHelper.getInterface(trgCluster, Interfacetype.WRITE).setEndpoint(trgHdfsUrl);
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED);
-
     }
 
     protected Entity storeEntity(EntityType type, String path) throws Exception {
@@ -148,6 +149,35 @@ public class OozieFeedMapperTest {
                 break;
             }
         }
+    }
 
+    @Test
+    public void testRetentionCoords() throws FalconException {
+        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, srcCluster.getName());
+        final Calendar instance = Calendar.getInstance();
+        instance.roll(Calendar.YEAR, 1);
+        cluster.getValidity().setEnd(instance.getTime());
+
+        OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
+        List<COORDINATORAPP> coords = feedMapper.getCoordinators(srcCluster, new Path("/projects/falcon/"));
+        COORDINATORAPP coord = coords.get(0);
+
+        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(), "${nameNode}/projects/falcon/RETENTION");
+        Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
+        Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
+
+        String feedDataPath = null;
+        org.apache.falcon.oozie.coordinator.CONFIGURATION configuration =
+                coord.getAction().getWorkflow().getConfiguration();
+        for (Property property : configuration.getProperty()) {
+            if ("feedDataPath".equals(property.getName())) {
+                feedDataPath = property.getValue();
+                break;
+            }
+        }
+
+        if (feedDataPath != null) {
+            Assert.assertEquals(feedDataPath, feedMapper.getFeedDataPath(srcCluster, feed));
+        }
     }
 }
