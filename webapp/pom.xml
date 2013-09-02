@@ -174,7 +174,6 @@
                             <dependencySourceIncludes>
                                 <dependencySourceInclude>org.apache.falcon:*</dependencySourceInclude>
                             </dependencySourceIncludes>
-                            <skip>${skipCheck}</skip>
                         </configuration>
                     </execution>
                 </executions>

@@ -98,11 +98,10 @@
 
         <hadoop.profile>1</hadoop.profile>
         <hadoop.version>1.1.2</hadoop.version>
-        <slf4j.version>1.6.1</slf4j.version>
+        <slf4j.version>1.2</slf4j.version>
         <oozie.version>3.2.2</oozie.version>
         <activemq.version>5.4.3</activemq.version>
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
-        <hive.version>0.11.0</hive.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
@@ -704,30 +703,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hive</groupId>
-                <artifactId>hive-metastore</artifactId>
-                <version>${hive.version}</version>
-                <exclusions>
-                    <exclusion> <!--Oozie already imports this-->
-                        <groupId>org.apache.derby</groupId>
-                        <artifactId>derby</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat</artifactId>
-                <version>${hive.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>xerces</groupId>
-                        <artifactId>xercesImpl</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>net.sourceforge.findbugs</groupId>
                 <artifactId>annotations</artifactId>
                 <version>1.3.2</version>
@@ -906,9 +881,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <skip>${skipCheck}</skip>
-                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>

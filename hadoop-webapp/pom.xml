@@ -91,27 +91,6 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-core</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-metastore</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hcatalog</groupId>
-            <artifactId>webhcat</artifactId>
-        </dependency>
-
-        <!-- Hive Metastore and WebHcat fails with out these dependencies -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

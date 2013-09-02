@@ -19,8 +19,6 @@
 package org.apache.falcon.listener;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -30,9 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hcatalog.templeton.AppConfig;
 import org.apache.log4j.Logger;
 
 /**
@@ -52,76 +48,59 @@ public class HadoopStartupListener implements ServletContextListener {
             final String[] emptyArgs = {};
             String hadoopProfle = System.getProperty("hadoop.profile", "1");
             if (hadoopProfle.equals("1")) {
-                startHadoop1Services(conf, emptyArgs);
+                NameNode.createNameNode(emptyArgs, conf);
+                DataNode.createDataNode(emptyArgs, conf);
+                JobConf jobConf = new JobConf(conf);
+                /**
+                 * Reflection code:
+                 * JobTracker jt = JobTracker.startTracker(jobConf);
+                 * jt.offerService();
+                 * TaskTracker tt = new TaskTracker(jobConf);
+                 * tt.run();
+                 */
+                Object jt = Class.forName("org.apache.hadoop.mapred.JobTracker")
+                                .getMethod("startTracker", JobConf.class).invoke(null, jobConf);
+                startService(jt, "offerService");
+                Object tt = Class.forName("org.apache.hadoop.mapred.TaskTracker")
+                                .getConstructor(JobConf.class).newInstance(jobConf);
+                startService(tt, "run");
             } else if (hadoopProfle.equals("2")) {
-                startHadoop2Services(conf, emptyArgs);
+                /**
+                 * Reflection code:
+                 * DefaultMetricsSystem.setMiniClusterMode(true);
+                 * ResourceManager resourceManager = new ResourceManager(new MemStore());
+                 * YarnConfiguration yarnConf = new YarnConfiguration(conf);
+                 * resourceManager.init(yarnConf);
+                 * resourceManager.start();
+                 * NodeManager nodeManager = new NodeManager();
+                 * nodeManager.init(yarnConf);
+                 * nodeManager.start();
+                 */
+                Class.forName("org.apache.hadoop.metrics2.lib.DefaultMetricsSystem")
+                                .getMethod("setMiniClusterMode", boolean.class).invoke(null, true);
+                NameNode.createNameNode(emptyArgs, conf);
+                DataNode.createDataNode(emptyArgs, conf);
+
+                Object memStore = instance("org.apache.hadoop.yarn.server.resourcemanager.recovery.MemStore");
+                Object resourceManager = Class.forName("org.apache.hadoop.yarn.server.resourcemanager.ResourceManager")
+                        .getConstructor(Class.forName("org.apache.hadoop.yarn.server.resourcemanager.recovery.Store"))
+                        .newInstance(memStore);
+                Object yarnConf = Class.forName("org.apache.hadoop.yarn.conf.YarnConfiguration")
+                        .getConstructor(Configuration.class).newInstance(conf);
+                invoke(resourceManager, "init", Configuration.class, yarnConf);
+                startService(resourceManager, "start");
+                Object nodeManager = instance("org.apache.hadoop.yarn.server.nodemanager.NodeManager");
+                invoke(nodeManager, "init", Configuration.class, yarnConf);
+                startService(nodeManager, "start");
             } else {
                 throw new RuntimeException("Unhandled hadoop profile " + hadoopProfle);
             }
-
             startBroker();
-
-            startHiveMetaStore();
-            startHiveWebMetaStore();
-
         } catch (Exception e) {
             e.printStackTrace();
             LOG.error("Unable to start hadoop cluster", e);
             throw new RuntimeException("Unable to start hadoop cluster", e);
         }
-    }
-
-    private void startHadoop1Services(Configuration conf, String[] emptyArgs)
-        throws IOException, IllegalAccessException, InvocationTargetException,
-               NoSuchMethodException, ClassNotFoundException, InstantiationException {
-
-        NameNode.createNameNode(emptyArgs, conf);
-        DataNode.createDataNode(emptyArgs, conf);
-
-        JobConf jobConf = new JobConf(conf);
-        // JobTracker jt = JobTracker.startTracker(jobConf);
-        // jt.offerService();
-        // TaskTracker tt = new TaskTracker(jobConf);
-        // tt.run();
-
-        Object jt = Class.forName("org.apache.hadoop.mapred.JobTracker")
-                        .getMethod("startTracker", JobConf.class).invoke(null, jobConf);
-        startService(jt, "offerService");
-
-        Object tt = Class.forName("org.apache.hadoop.mapred.TaskTracker")
-                        .getConstructor(JobConf.class).newInstance(jobConf);
-        startService(tt, "run");
-    }
-
-    private void startHadoop2Services(Configuration conf, String[] emptyArgs) throws Exception {
-
-        // DefaultMetricsSystem.setMiniClusterMode(true);
-        // ResourceManager resourceManager = new ResourceManager(new MemStore());
-        // YarnConfiguration yarnConf = new YarnConfiguration(conf);
-        // resourceManager.init(yarnConf);
-        // resourceManager.start();
-        // NodeManager nodeManager = new NodeManager();
-        // nodeManager.init(yarnConf);
-        // nodeManager.start();
-
-        Class.forName("org.apache.hadoop.metrics2.lib.DefaultMetricsSystem")
-                        .getMethod("setMiniClusterMode", boolean.class).invoke(null, true);
-
-        NameNode.createNameNode(emptyArgs, conf);
-        DataNode.createDataNode(emptyArgs, conf);
-
-        Object memStore = instance("org.apache.hadoop.yarn.server.resourcemanager.recovery.MemStore");
-        Object resourceManager = Class.forName("org.apache.hadoop.yarn.server.resourcemanager.ResourceManager")
-                .getConstructor(Class.forName("org.apache.hadoop.yarn.server.resourcemanager.recovery.Store"))
-                .newInstance(memStore);
-        Object yarnConf = Class.forName("org.apache.hadoop.yarn.conf.YarnConfiguration")
-                .getConstructor(Configuration.class).newInstance(conf);
-        invoke(resourceManager, "init", Configuration.class, yarnConf);
-        startService(resourceManager, "start");
-
-        Object nodeManager = instance("org.apache.hadoop.yarn.server.nodemanager.NodeManager");
-        invoke(nodeManager, "init", Configuration.class, yarnConf);
-        startService(nodeManager, "start");
     }
 
     private void startBroker() throws Exception {
@@ -131,39 +110,6 @@ public class HadoopStartupListener implements ServletContextListener {
         broker.addConnector("vm://localhost");
         broker.addConnector("tcp://localhost:61616");
         broker.start();
-    }
-
-    public static final String META_STORE_PORT = "49083";
-    private void startHiveMetaStore() {
-        try {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        String[] args = new String[]{
-                            "-v",
-                            "-p", META_STORE_PORT,
-                        };
-
-                        HiveMetaStore.main(args);
-                    } catch (Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-                }
-            }).start();
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to start hive metastore server.", e);
-        }
-    }
-
-    public static final String WEB_HCAT_PORT = "48080";
-    private void startHiveWebMetaStore() {
-        String[] args = new String[]{
-            "-D" + AppConfig.PORT + "=" + WEB_HCAT_PORT,
-            "-D" + AppConfig.HADOOP_CONF_DIR + "=./target/webapps/hadoop/conf",
-        };
-
-        org.apache.hcatalog.templeton.Main.main(args);
     }
 
     private Object instance(String clsName) throws Exception {
