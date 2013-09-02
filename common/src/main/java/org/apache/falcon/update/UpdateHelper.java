@@ -21,10 +21,10 @@ package org.apache.falcon.update;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Partitions;
 import org.apache.falcon.entity.v0.process.Cluster;
@@ -78,15 +78,18 @@ public final class UpdateHelper {
         }
     }
 
-    public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess)
-        throws FalconException {
-        Storage oldFeedStorage = FeedHelper.createStorage(oldFeed);
-        Storage newFeedStorage = FeedHelper.createStorage(newFeed);
-
-        if (!oldFeedStorage.isIdentical(newFeedStorage)) {
+    public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess) {
+        if (!FeedHelper.getLocation(oldFeed.getLocations(), LocationType.DATA)
+            .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.DATA).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.META)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.META).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.STATS)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.STATS).getPath())
+                || !FeedHelper.getLocation(oldFeed.getLocations(), LocationType.TMP)
+                    .getPath().equals(FeedHelper.getLocation(newFeed.getLocations(), LocationType.TMP).getPath())) {
             return true;
         }
-        LOG.debug(oldFeed.toShortString() + ": Storage identical. Ignoring...");
+        LOG.debug(oldFeed.toShortString() + ": Location identical. Ignoring...");
 
         if (!oldFeed.getFrequency().equals(newFeed.getFrequency())) {
             return true;
@@ -125,12 +128,17 @@ public final class UpdateHelper {
         }
 
         for (Cluster cluster : affectedProcess.getClusters().getClusters()) {
-            oldFeedStorage = FeedHelper.createStorage(cluster.getName(), oldFeed);
-            newFeedStorage = FeedHelper.createStorage(cluster.getName(), newFeed);
-
-            if (!FeedHelper.getCluster(oldFeed, cluster.getName()).getValidity().getStart()
+            if (!FeedHelper
+                    .getCluster(oldFeed, cluster.getName()).getValidity().getStart()
                     .equals(FeedHelper.getCluster(newFeed, cluster.getName()).getValidity().getStart())
-                    || !oldFeedStorage.isIdentical(newFeedStorage)) {
+                    || !FeedHelper.getLocation(oldFeed, LocationType.DATA, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.DATA, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.META, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.META, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.STATS, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.STATS, cluster.getName()).getPath())
+                    || !FeedHelper.getLocation(oldFeed, LocationType.TMP, cluster.getName()).getPath()
+                    .equals(FeedHelper.getLocation(newFeed, LocationType.TMP, cluster.getName()).getPath())) {
                 return true;
             }
             LOG.debug(oldFeed.toShortString() + ": Feed on cluster" + cluster.getName() + " identical. Ignoring...");

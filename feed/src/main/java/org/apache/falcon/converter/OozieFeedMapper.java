@@ -21,9 +21,9 @@ package org.apache.falcon.converter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -62,7 +62,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
     private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
 
-    public static final String FEED_PATH_SEP = "#";
+    private static final String FEED_PATH_SEP = "#";
     private static final String TIMEOUT = "timeout";
     private static final String PARALLEL = "parallel";
 
@@ -116,7 +116,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         WORKFLOW retentionWorkflow = new WORKFLOW();
         try {
             //
-            WORKFLOWAPP retWfApp = createRetentionWorkflow();
+            WORKFLOWAPP retWfApp = createRetentionWorkflow(cluster);
             retWfApp.setName(wfName);
             marshal(cluster, retWfApp, wfPath);
             retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
@@ -124,9 +124,23 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
             org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-            String feedBasePaths = getFeedDataPath(cluster, feed);
+            String feedPathMask = getLocationURI(cluster, feed, LocationType.DATA);
+            String metaPathMask = getLocationURI(cluster, feed, LocationType.META);
+            String statsPathMask = getLocationURI(cluster, feed, LocationType.STATS);
+            String tmpPathMask = getLocationURI(cluster, feed, LocationType.TMP);
 
-            props.put("feedDataPath", feedBasePaths);
+            StringBuilder feedBasePaths = new StringBuilder(feedPathMask);
+            if (metaPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
+            }
+            if (statsPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
+            }
+            if (tmpPathMask != null) {
+                feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
+            }
+
+            props.put("feedDataPath", feedBasePaths.toString().replaceAll("\\$\\{", "\\?\\{"));
             props.put("timeZone", feed.getTimezone().getID());
             props.put("frequency", feed.getFrequency().getTimeUnit().name());
             props.put("limit", feedCluster.getRetention().getLimit().toString());
@@ -140,29 +154,6 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         } catch (IOException e) {
             throw new FalconException("Unable to create parent/retention workflow", e);
         }
-    }
-
-    protected String getFeedDataPath(Cluster cluster, Feed feed) throws FalconException {
-        final Storage storage = FeedHelper.createStorage(cluster, feed);
-        String feedPathMask = storage.getUriTemplate(LocationType.DATA);
-        String metaPathMask = storage.getUriTemplate(LocationType.META);
-        String statsPathMask = storage.getUriTemplate(LocationType.STATS);
-        String tmpPathMask = storage.getUriTemplate(LocationType.TMP);
-
-        StringBuilder feedBasePaths = new StringBuilder(feedPathMask);
-        if (metaPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
-        }
-
-        if (statsPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
-        }
-
-        if (tmpPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
-        }
-
-        return feedBasePaths.toString().replaceAll("\\$\\{", "\\?\\{");
     }
 
     private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath)
@@ -272,8 +263,10 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-            inputDataset.setUriTemplate(FeedHelper.createStorage(srcCluster, feed).getUriTemplate(LocationType.DATA));
-            outputDataset.setUriTemplate(FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA));
+            inputDataset.setUriTemplate(new Path(ClusterHelper.getStorageUrl(srcCluster),
+                FeedHelper.getLocation(feed, LocationType.DATA, srcCluster.getName()).getPath()).toString());
+            outputDataset.setUriTemplate(getStoragePath(
+                FeedHelper.getLocation(feed, LocationType.DATA, trgCluster.getName()).getPath()));
             setDatasetValues(inputDataset, feed, srcCluster);
             setDatasetValues(outputDataset, feed, srcCluster);
             if (feed.getAvailabilityFlag() == null) {
@@ -345,7 +338,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         marshal(cluster, repWFapp, wfPath);
     }
 
-    private WORKFLOWAPP createRetentionWorkflow() throws IOException, FalconException {
+    private WORKFLOWAPP createRetentionWorkflow(Cluster cluster) throws IOException, FalconException {
         return getWorkflowTemplate(RETENTION_WF_TEMPLATE);
     }
 
@@ -359,5 +352,20 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             }
         }
         return props;
+    }
+
+    private String getLocationURI(Cluster cluster, Feed feed, LocationType type) {
+        String path = FeedHelper.getLocation(feed, type, cluster.getName())
+                .getPath();
+
+        if (!path.equals("/tmp")) {
+            if (new Path(path).toUri().getScheme() == null) {
+                return new Path(ClusterHelper.getStorageUrl(cluster), path)
+                        .toString();
+            } else {
+                return path;
+            }
+        }
+        return null;
     }
 }

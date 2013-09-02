@@ -295,11 +295,9 @@ public class TestContext {
 
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/submit/" + entityType.name().toLowerCase())
-                .header("Remote-User", REMOTE_USER)
-                .accept(MediaType.TEXT_XML)
-                .type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, rawlogStream);
+        return this.service.path("api/entities/submit/" + entityType.name().toLowerCase()).header("Remote-User",
+                "testuser")
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
     }
 
     public void assertRequestId(ClientResponse clientRepsonse) {

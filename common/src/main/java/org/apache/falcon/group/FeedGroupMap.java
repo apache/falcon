@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.service.ConfigurationChangeListener;
 
 import java.util.Collections;
@@ -113,9 +114,8 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
         return groupSet;
     }
 
-    public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed)
-        throws FalconException {
+    public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed) {
         return getGroups(feed.getGroups(), feed.getFrequency(),
-                FeedHelper.createStorage(feed).getUriTemplate());
+                FeedHelper.getLocation(feed, LocationType.DATA).getPath());
     }
 }

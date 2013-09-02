@@ -23,7 +23,6 @@ import org.apache.falcon.FalconException;
 /**
  * Interface definition for a catalog registry service
  * such as Hive or HCatalog.
- * Catalog should minimally support the following operations.
  */
 public abstract class AbstractCatalogService {
 
@@ -35,7 +34,4 @@ public abstract class AbstractCatalogService {
      * @throws FalconException exception
      */
     public abstract boolean isAlive(String catalogBaseUrl) throws FalconException;
-
-    public abstract boolean tableExists(String catalogUrl, String database, String tableName)
-        throws FalconException;
 }

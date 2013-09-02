@@ -20,10 +20,8 @@ package org.apache.falcon.entity.parser;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
@@ -31,6 +29,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -72,7 +71,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
             validateFeedCutOffPeriod(feed, cluster);
         }
 
-        validateFeedStorage(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
 
@@ -107,19 +105,21 @@ public class FeedEntityParser extends EntityParser<Feed> {
         return processes;
     }
 
-    private void validateFeedGroups(Feed feed) throws FalconException {
+    private void validateFeedGroups(Feed feed) throws ValidationException {
         String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[]{};
-        String defaultPath = FeedHelper.createStorage(feed).getUriTemplate();
+        String defaultPath = FeedHelper.getLocation(feed, LocationType.DATA)
+                .getPath();
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            final String uriTemplate = FeedHelper.createStorage(cluster, feed).getUriTemplate();
-            if (!FeedGroup.getDatePattern(uriTemplate).equals(
+            if (!FeedGroup.getDatePattern(
+                    FeedHelper.getLocation(feed, LocationType.DATA,
+                            cluster.getName()).getPath()).equals(
                     FeedGroup.getDatePattern(defaultPath))) {
                 throw new ValidationException("Feeds default path pattern: "
-                        + FeedHelper.createStorage(feed).getUriTemplate()
+                        + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
                         + ", does not match with cluster: "
                         + cluster.getName()
                         + " path pattern: "
-                        + uriTemplate);
+                        + FeedHelper.getLocation(feed, LocationType.DATA, cluster.getName()).getPath());
             }
         }
         for (String groupName : groupNames) {
@@ -127,7 +127,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (group != null && !group.canContainFeed(feed)) {
                 throw new ValidationException(
                         "Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
-                                + ", path pattern: " + FeedHelper.createStorage(feed)
+                                + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
                                 + " does not match with group: " + group.getName() + "'s frequency: "
                                 + group.getFrequency()
                                 + ", date pattern: " + group.getDatePattern());
@@ -278,31 +278,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         if (FeedHelper.evaluateClusterExp(cluster, part).equals(part)) {
             throw new ValidationException(
                     "Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName());
-        }
-    }
-
-    /**
-     * Ensure table is already defined in the catalog registry.
-     * Does not matter for FileSystem storage.
-     */
-    private void validateFeedStorage(Feed feed) throws FalconException {
-        StringBuilder buffer = new StringBuilder();
-        for (Cluster cluster : feed.getClusters().getClusters()) {
-            final Storage storage = FeedHelper.createStorage(cluster, feed);
-            if (!storage.exists()) {
-                // this is only true for table, filesystem always returns true
-                CatalogStorage catalogStorage = (CatalogStorage) storage;
-                buffer.append("Table [")
-                        .append(catalogStorage.getTable())
-                        .append("] does not exist for feed: ")
-                        .append(feed.getName())
-                        .append(", cluster: ")
-                        .append(cluster.getName());
-            }
-        }
-
-        if (buffer.length() > 0) {
-            throw new ValidationException(buffer.toString());
         }
     }
 }

@@ -116,12 +116,12 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(feed.getClusters().getClusters().get(1).getRetention()
                 .getLimit().toString(), "hours(6)");
 
-        assertEquals("${nameNode}/projects/falcon/clicks",
-                FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA));
-        assertEquals("${nameNode}/projects/falcon/clicksMetaData",
-                FeedHelper.createStorage(feed).getUriTemplate(LocationType.META));
-        assertEquals("${nameNode}/projects/falcon/clicksStats",
-                FeedHelper.createStorage(feed).getUriTemplate(LocationType.STATS));
+        assertEquals(FeedHelper.getLocation(feed, LocationType.DATA).getPath(),
+                "/projects/falcon/clicks");
+        assertEquals(FeedHelper.getLocation(feed, LocationType.META).getPath(),
+                "/projects/falcon/clicksMetaData");
+        assertEquals(FeedHelper.getLocation(feed, LocationType.STATS).getPath(),
+                "/projects/falcon/clicksStats");
 
         assertEquals(feed.getACL().getGroup(), "group");
         assertEquals(feed.getACL().getOwner(), "testuser");
@@ -443,18 +443,5 @@ public class FeedEntityParserTest extends AbstractTestBase {
             Assert.assertEquals(javax.xml.bind.UnmarshalException.class, e.getCause().getClass());
             Assert.assertEquals(org.xml.sax.SAXParseException.class, e.getCause().getCause().getClass());
         }
-    }
-
-    @Test
-    public void testParseFeedWithTable() throws FalconException {
-        final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
-        Feed feedWithTable = parser.parse(inputStream);
-        Assert.assertEquals(feedWithTable.getTable().getUri(),
-                "catalog:default:clicks#ds=$YEAR-$MONTH-$DAY-$HOUR");
-    }
-
-    @Test (expectedExceptions = FalconException.class)
-    public void testParseInvalidFeedWithTable() throws FalconException {
-        parser.parse(FeedEntityParserTest.class.getResourceAsStream("/config/feed/invalid-feed.xml"));
     }
 }
