@@ -77,8 +77,6 @@ public class ClusterEntityValidationIT {
             {Interfacetype.WORKFLOW, "http://workflow-interface:9999/oozie/"},
             {Interfacetype.MESSAGING, "messaging-interface:9999"},
             {Interfacetype.MESSAGING, "tcp://messaging-interface:9999"},
-            {Interfacetype.REGISTRY, "catalog-interface:9999"},
-            {Interfacetype.REGISTRY, "http://catalog-interface:9999"},
         };
     }
 
