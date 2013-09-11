@@ -6,6 +6,9 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
+    FALCON-102 Add integration tests for feed entity parser for table.
+    (Venkatesh Seetharam)
+
     FALCON-103 Upgrade oozie to 4.0.x. (Venkatesh Seetharam)
 
     FALCON-96 Hive client to talk to the metastore. (Venkatesh

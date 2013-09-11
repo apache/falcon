@@ -19,9 +19,15 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,11 +35,26 @@ import java.util.List;
  */
 public class FileSystemStorage implements Storage {
 
+    public static final String FEED_PATH_SEP = "#";
+    public static final String LOCATION_TYPE_SEP = "=";
+
+    public static final String FILE_SYSTEM_URL = "${nameNode}";
+    private static final String DOLLAR_EXPR_START = "_D__START_";
+    private static final String EXPR_CLOSE = "_CLOSE_";
+
     private final String storageUrl;
     private final List<Location> locations;
 
-    protected FileSystemStorage(List<Location> locations) {
-        this("${nameNode}", locations);
+    protected FileSystemStorage(Feed feed) {
+        this(FILE_SYSTEM_URL, feed.getLocations());
+    }
+
+    protected FileSystemStorage(Cluster cluster, Feed feed) {
+        this(ClusterHelper.getStorageUrl(cluster), feed.getLocations());
+    }
+
+    protected FileSystemStorage(String storageUrl, Locations locations) {
+        this(storageUrl, locations.getLocations());
     }
 
     protected FileSystemStorage(String storageUrl, List<Location> locations) {
@@ -47,6 +68,44 @@ public class FileSystemStorage implements Storage {
 
         this.storageUrl = storageUrl;
         this.locations = locations;
+    }
+
+    /**
+     * Create an instance from the URI Template that was generated using
+     * the getUriTemplate() method.
+     *
+     * @param uriTemplate the uri template from org.apache.falcon.entity.CatalogStorage#getUriTemplate
+     * @throws URISyntaxException
+     */
+    protected FileSystemStorage(String uriTemplate) throws URISyntaxException {
+        if (uriTemplate == null || uriTemplate.length() == 0) {
+            throw new IllegalArgumentException("URI template cannot be null or empty");
+        }
+
+        String rawStorageUrl = null;
+        List<Location> rawLocations = new ArrayList<Location>();
+        String[] feedLocs = uriTemplate.split(FEED_PATH_SEP);
+        for (String rawPath : feedLocs) {
+            String[] typeAndPath = rawPath.split(LOCATION_TYPE_SEP);
+            final String processed = typeAndPath[1].replaceAll("\\$\\{", DOLLAR_EXPR_START)
+                                                   .replaceAll("}", EXPR_CLOSE);
+            URI uri = new URI(processed);
+            if (rawStorageUrl == null) {
+                rawStorageUrl = uri.getScheme() + "://" + uri.getAuthority();
+            }
+
+            String path = uri.getPath();
+            final String finalPath = path.replaceAll(DOLLAR_EXPR_START, "\\$\\{")
+                                         .replaceAll(EXPR_CLOSE, "\\}");
+
+            Location location = new Location();
+            location.setPath(finalPath);
+            location.setType(LocationType.valueOf(typeAndPath[0]));
+            rawLocations.add(location);
+        }
+
+        this.storageUrl = rawStorageUrl;
+        this.locations = rawLocations;
     }
 
     @Override
@@ -64,7 +123,38 @@ public class FileSystemStorage implements Storage {
 
     @Override
     public String getUriTemplate() {
-        return getUriTemplate(LocationType.DATA);
+        String feedPathMask = getUriTemplate(LocationType.DATA);
+        String metaPathMask = getUriTemplate(LocationType.META);
+        String statsPathMask = getUriTemplate(LocationType.STATS);
+        String tmpPathMask = getUriTemplate(LocationType.TMP);
+
+        StringBuilder feedBasePaths = new StringBuilder();
+        feedBasePaths.append(LocationType.DATA.name())
+                     .append(LOCATION_TYPE_SEP)
+                     .append(feedPathMask);
+
+        if (metaPathMask != null) {
+            feedBasePaths.append(FEED_PATH_SEP)
+                         .append(LocationType.META.name())
+                         .append(LOCATION_TYPE_SEP)
+                         .append(metaPathMask);
+        }
+
+        if (statsPathMask != null) {
+            feedBasePaths.append(FEED_PATH_SEP)
+                         .append(LocationType.STATS.name())
+                         .append(LOCATION_TYPE_SEP)
+                         .append(statsPathMask);
+        }
+
+        if (tmpPathMask != null) {
+            feedBasePaths.append(FEED_PATH_SEP)
+                         .append(LocationType.TMP.name())
+                         .append(LOCATION_TYPE_SEP)
+                         .append(tmpPathMask);
+        }
+
+        return feedBasePaths.toString();
     }
 
     @Override
@@ -120,5 +210,13 @@ public class FileSystemStorage implements Storage {
         loc.setPath("/tmp");
         loc.setType(type);
         return loc;
+    }
+
+    @Override
+    public String toString() {
+        return "FileSystemStorage{"
+                + "storageUrl='" + storageUrl + '\''
+                + ", locations=" + locations
+                + '}';
     }
 }

@@ -33,15 +33,15 @@ public class CatalogStorageTest {
 
     @Test
     public void testGetType() throws Exception {
-        String table = "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us";
-        CatalogStorage storage = new CatalogStorage(table);
+        String table = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
+        CatalogStorage storage = new CatalogStorage(CatalogStorage.CATALOG_URL, table);
         Assert.assertEquals(Storage.TYPE.TABLE, storage.getType());
     }
 
     @Test
-    public void testParseVaildURI() throws URISyntaxException {
-        String table = "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us";
-        CatalogStorage storage = new CatalogStorage(table);
+    public void testParseFeedUriValid() throws URISyntaxException {
+        String table = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
+        CatalogStorage storage = new CatalogStorage(CatalogStorage.CATALOG_URL, table);
         Assert.assertEquals("${hcatNode}", storage.getCatalogUrl());
         Assert.assertEquals("clicksdb", storage.getDatabase());
         Assert.assertEquals("clicks", storage.getTable());
@@ -53,77 +53,97 @@ public class CatalogStorageTest {
         Assert.assertFalse(storage.hasPartition("unknown"));
     }
 
+    @Test
+    public void testCreateFromUriTemplate() throws Exception {
+        String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/region=us;ds=${YEAR}-${MONTH}-${DAY}";
+        CatalogStorage storage = new CatalogStorage(uriTemplate);
+        Assert.assertEquals("thrift://localhost:49083", storage.getCatalogUrl());
+        Assert.assertEquals("clicksdb", storage.getDatabase());
+        Assert.assertEquals("clicks", storage.getTable());
+        Assert.assertEquals(Storage.TYPE.TABLE, storage.getType());
+        Assert.assertEquals(2, storage.getPartitions().size());
+        Assert.assertEquals("us", storage.getPartitionValue("region"));
+        Assert.assertTrue(storage.hasPartition("region"));
+        Assert.assertNull(storage.getPartitionValue("unknown"));
+        Assert.assertFalse(storage.hasPartition("unknown"));
+    }
 
-    @DataProvider(name = "invalidTableURIs")
-    public Object[][] createInvalidTableURIData() {
+    @DataProvider(name = "invalidFeedURIs")
+    public Object[][] createParseFeedUriInvalid() {
         return new Object[][] {
-            {"catalog:default:clicks:ds=$YEAR-$MONTH-$DAY#region=us", ""},
-            {"default:clicks:ds=$YEAR-$MONTH-$DAY#region=us", ""},
-            {"catalog:default#ds=$YEAR-$MONTH-$DAY;region=us", ""},
-            {"catalog://default/clicks#ds=$YEAR-$MONTH-$DAY:region=us", ""},
+            {"catalog:default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us", ""},
+            {"default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us", ""},
+            {"catalog:default#ds=${YEAR}-${MONTH}-${DAY};region=us", ""},
+            {"catalog://default/clicks#ds=${YEAR}-${MONTH}-${DAY}:region=us", ""},
         };
     }
 
-    @Test(dataProvider = "invalidTableURIs", expectedExceptions = URISyntaxException.class)
-    public void testParseInvalidURI(String tableUri, String ignore) throws URISyntaxException {
-        new CatalogStorage(tableUri);
+    @Test(dataProvider = "invalidFeedURIs", expectedExceptions = URISyntaxException.class)
+    public void testParseFeedUriInvalid(String tableUri, String ignore) throws URISyntaxException {
+        new CatalogStorage(CatalogStorage.CATALOG_URL, tableUri);
         Assert.fail("Exception must have been thrown");
     }
 
     @Test
     public void testIsIdenticalPositive() throws Exception {
-        CatalogStorage table1 = new CatalogStorage("catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
-        CatalogStorage table2 = new CatalogStorage("catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+        CatalogStorage table1 = new CatalogStorage(CatalogStorage.CATALOG_URL,
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
+        CatalogStorage table2 = new CatalogStorage(CatalogStorage.CATALOG_URL,
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         Assert.assertTrue(table1.isIdentical(table2));
 
         final String catalogUrl = "thrift://localhost:49083";
         CatalogStorage table3 = new CatalogStorage(catalogUrl,
-                "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         CatalogStorage table4 = new CatalogStorage(catalogUrl,
-                "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         Assert.assertTrue(table3.isIdentical(table4));
     }
 
     @Test
     public void testIsIdenticalNegative() throws Exception {
-        CatalogStorage table1 = new CatalogStorage("catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
-        CatalogStorage table2 = new CatalogStorage("catalog:clicksdb:impressions#ds=$YEAR-$MONTH-$DAY;region=us");
+        CatalogStorage table1 = new CatalogStorage(CatalogStorage.CATALOG_URL,
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
+        CatalogStorage table2 = new CatalogStorage(CatalogStorage.CATALOG_URL,
+                "catalog:clicksdb:impressions#ds=${YEAR}-${MONTH}-${DAY};region=us");
         Assert.assertFalse(table1.isIdentical(table2));
 
         final String catalogUrl = "thrift://localhost:49083";
         CatalogStorage table3 = new CatalogStorage(catalogUrl,
-                "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         CatalogStorage table4 = new CatalogStorage(catalogUrl,
-                "catalog:clicksdb:impressions#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:impressions#ds=${YEAR}-${MONTH}-${DAY};region=us");
         Assert.assertFalse(table3.isIdentical(table4));
 
         CatalogStorage table5 = new CatalogStorage("thrift://localhost:49084",
-                "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         CatalogStorage table6 = new CatalogStorage("thrift://localhost:49083",
-                "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us");
+                "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us");
         Assert.assertFalse(table5.isIdentical(table6));
     }
 
     @Test
     public void testGetUriTemplateWithCatalogUrl() throws Exception {
         final String catalogUrl = "thrift://localhost:49083";
-        String tableUri = "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us";
-        String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/region=us;ds=$YEAR-$MONTH-$DAY";
+        String tableUri = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
+        String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/region=us;ds=${YEAR}-${MONTH}-${DAY}";
 
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
 
         Assert.assertEquals(uriTemplate, table.getUriTemplate());
         Assert.assertEquals(uriTemplate, table.getUriTemplate(LocationType.DATA));
+        Assert.assertEquals(table.getUriTemplate(), table.getUriTemplate(LocationType.DATA));
     }
 
     @Test
     public void testGetUriTemplateWithOutCatalogUrl() throws Exception {
-        String tableUri = "catalog:clicksdb:clicks#ds=$YEAR-$MONTH-$DAY;region=us";
-        String uriTemplate = "${hcatNode}/clicksdb/clicks/region=us;ds=$YEAR-$MONTH-$DAY";
+        String tableUri = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
+        String uriTemplate = "${hcatNode}/clicksdb/clicks/region=us;ds=${YEAR}-${MONTH}-${DAY}";
 
-        CatalogStorage table = new CatalogStorage(tableUri);
+        CatalogStorage table = new CatalogStorage(CatalogStorage.CATALOG_URL, tableUri);
 
         Assert.assertEquals(uriTemplate, table.getUriTemplate());
         Assert.assertEquals(uriTemplate, table.getUriTemplate(LocationType.DATA));
+        Assert.assertEquals(table.getUriTemplate(), table.getUriTemplate(LocationType.DATA));
     }
 }

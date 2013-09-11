@@ -21,7 +21,6 @@ package org.apache.falcon.entity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
@@ -54,15 +53,16 @@ public final class FeedHelper {
 
     public static Storage createStorage(Feed feed) throws FalconException {
 
-        final List<Location> locations = feed.getLocations().getLocations();
-        if (locations != null) {
-            return new FileSystemStorage(locations);
+        final Locations feedLocations = feed.getLocations();
+        if (feedLocations != null
+                && feedLocations.getLocations().size() != 0) {
+            return new FileSystemStorage(feed);
         }
 
         try {
             final CatalogTable table = feed.getTable();
             if (table != null) {
-                return new CatalogStorage(table.getUri());
+                return new CatalogStorage(feed);
             }
         } catch (URISyntaxException e) {
             throw new FalconException(e);
@@ -97,21 +97,32 @@ public final class FeedHelper {
 
         final List<Location> locations = getLocations(cluster, feed);
         if (locations != null) {
-            return new FileSystemStorage(ClusterHelper.getStorageUrl(clusterEntity), locations);
+            return new FileSystemStorage(clusterEntity, feed);
         }
 
         try {
             final CatalogTable table = getTable(cluster, feed);
             if (table != null) {
-                return new CatalogStorage(
-                        ClusterHelper.getInterface(clusterEntity, Interfacetype.REGISTRY).getEndpoint(),
-                        table.getUri());
+                return new CatalogStorage(clusterEntity, feed);
             }
         } catch (URISyntaxException e) {
             throw new FalconException(e);
         }
 
         throw new FalconException("Both catalog and locations are not defined.");
+    }
+
+    public static Storage createStorage(String type, String storageUriTemplate)
+        throws URISyntaxException {
+
+        Storage.TYPE storageType = Storage.TYPE.valueOf(type);
+        if (storageType == Storage.TYPE.FILESYSTEM) {
+            return new FileSystemStorage(storageUriTemplate);
+        } else if (storageType == Storage.TYPE.TABLE) {
+            return new CatalogStorage(storageUriTemplate);
+        }
+
+        throw new IllegalArgumentException("Bad type: " + type);
     }
 
     private static List<Location> getLocations(Cluster cluster, Feed feed) {

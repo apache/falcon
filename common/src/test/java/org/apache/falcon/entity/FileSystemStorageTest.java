@@ -39,12 +39,35 @@ public class FileSystemStorageTest {
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage(locations);
+        FileSystemStorage storage = new FileSystemStorage(FileSystemStorage.FILE_SYSTEM_URL, locations);
         Assert.assertEquals(storage.getType(), Storage.TYPE.FILESYSTEM);
     }
 
     @Test
-    public void testGetUriTemplate() throws Exception {
+    public void testCreateFromUriTemplate() throws Exception {
+        String feedBasePath = "DATA=hdfs://localhost:8020"
+                + "/data/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}"
+                + "#"
+                + "META=hdfs://localhost:8020"
+                + "/meta/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}"
+                + "#"
+                + "STATS=hdfs://localhost:8020"
+                + "/stats/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}";
+
+        FileSystemStorage storage = new FileSystemStorage(feedBasePath);
+        Assert.assertEquals(storage.getUriTemplate(), feedBasePath + "#TMP=/tmp");
+
+        Assert.assertEquals("hdfs://localhost:8020", storage.getStorageUrl());
+        Assert.assertEquals("hdfs://localhost:8020/data/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
+                storage.getUriTemplate(LocationType.DATA));
+        Assert.assertEquals("hdfs://localhost:8020/stats/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
+                storage.getUriTemplate(LocationType.STATS));
+        Assert.assertEquals("hdfs://localhost:8020/meta/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
+                storage.getUriTemplate(LocationType.META));
+    }
+
+    @Test
+    public void testGetUriTemplateForData() throws Exception {
         final Location location = new Location();
         location.setPath("/foo/bar");
         location.setType(LocationType.DATA);
@@ -52,7 +75,52 @@ public class FileSystemStorageTest {
         locations.add(location);
 
         FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
-        Assert.assertEquals(storage.getUriTemplate(), "hdfs://localhost:41020/foo/bar");
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "hdfs://localhost:41020/foo/bar");
+    }
+
+    @Test
+    public void testGetUriTemplate() throws Exception {
+        final Location dataLocation = new Location();
+        dataLocation.setPath("/data/foo/bar");
+        dataLocation.setType(LocationType.DATA);
+
+        final Location metaLocation = new Location();
+        metaLocation.setPath("/meta/foo/bar");
+        metaLocation.setType(LocationType.META);
+
+        final Location statsLocation = new Location();
+        statsLocation.setPath("/stats/foo/bar");
+        statsLocation.setType(LocationType.STATS);
+
+        final Location tmpLocation = new Location();
+        tmpLocation.setPath("/tmp/foo/bar");
+        tmpLocation.setType(LocationType.TMP);
+
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(dataLocation);
+        locations.add(metaLocation);
+        locations.add(statsLocation);
+        locations.add(tmpLocation);
+
+        StringBuilder expected = new StringBuilder();
+        expected.append(LocationType.DATA)
+                .append(FileSystemStorage.LOCATION_TYPE_SEP)
+                .append("hdfs://localhost:41020/data/foo/bar")
+                .append(FileSystemStorage.FEED_PATH_SEP)
+                .append(LocationType.META)
+                .append(FileSystemStorage.LOCATION_TYPE_SEP)
+                .append("hdfs://localhost:41020/meta/foo/bar")
+                .append(FileSystemStorage.FEED_PATH_SEP)
+                .append(LocationType.STATS)
+                .append(FileSystemStorage.LOCATION_TYPE_SEP)
+                .append("hdfs://localhost:41020/stats/foo/bar")
+                .append(FileSystemStorage.FEED_PATH_SEP)
+                .append(LocationType.TMP)
+                .append(FileSystemStorage.LOCATION_TYPE_SEP)
+                .append("hdfs://localhost:41020/tmp/foo/bar");
+
+        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        Assert.assertEquals(storage.getUriTemplate(), expected.toString());
     }
 
     @Test
@@ -63,8 +131,8 @@ public class FileSystemStorageTest {
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage(locations);
-        Assert.assertEquals(storage.getUriTemplate(), "${nameNode}/foo/bar");
+        FileSystemStorage storage = new FileSystemStorage(FileSystemStorage.FILE_SYSTEM_URL, locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "${nameNode}/foo/bar");
     }
 
     @Test

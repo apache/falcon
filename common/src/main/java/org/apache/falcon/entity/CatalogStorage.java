@@ -20,6 +20,10 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 
 import java.net.URI;
@@ -37,13 +41,25 @@ public class CatalogStorage implements Storage {
     public static final String INPUT_PATH_SEPARATOR = ":";
     public static final String OUTPUT_PATH_SEPARATOR = "/";
 
+    public static final String CATALOG_URL = "${hcatNode}";
+    private static final String DOLLAR_EXPR_START = "_D__START_";
+    private static final String EXPR_CLOSE = "_CLOSE_";
+
     private final String catalogUrl;
     private String database;
     private String table;
     private Map<String, String> partitions;
 
-    protected CatalogStorage(String catalogTable) throws URISyntaxException {
-        this("${hcatNode}", catalogTable);
+    protected CatalogStorage(Feed feed) throws URISyntaxException {
+        this(CATALOG_URL, feed.getTable());
+    }
+
+    protected CatalogStorage(Cluster cluster, Feed feed) throws URISyntaxException {
+        this(ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint(), feed.getTable());
+    }
+
+    protected CatalogStorage(String catalogUrl, CatalogTable table) throws URISyntaxException {
+        this(catalogUrl, table.getUri());
     }
 
     protected CatalogStorage(String catalogUrl, String tableUri) throws URISyntaxException {
@@ -53,7 +69,7 @@ public class CatalogStorage implements Storage {
 
         this.catalogUrl = catalogUrl;
 
-        parse(tableUri);
+        parseFeedUri(tableUri);
     }
 
     /**
@@ -64,9 +80,11 @@ public class CatalogStorage implements Storage {
      * @param catalogTableUri table URI to parse and validate
      * @throws URISyntaxException
      */
-    private void parse(String catalogTableUri) throws URISyntaxException {
+    private void parseFeedUri(String catalogTableUri) throws URISyntaxException {
 
-        URI tableUri = new URI(catalogTableUri);
+        final String processed = catalogTableUri.replaceAll("\\$\\{", DOLLAR_EXPR_START)
+                                                .replaceAll("}", EXPR_CLOSE);
+        URI tableUri = new URI(processed);
 
         if (!"catalog".equals(tableUri.getScheme())) {
             throw new URISyntaxException(tableUri.toString(), "catalog scheme is missing");
@@ -98,8 +116,10 @@ public class CatalogStorage implements Storage {
             throw new URISyntaxException(tableUri.toString(), "Partition details are missing");
         }
 
+        final String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START, "\\$\\{")
+                                           .replaceAll(EXPR_CLOSE, "\\}");
         partitions = new HashMap<String, String>();
-        String[] parts = partRaw.split(PARTITION_SEPARATOR);
+        String[] parts = rawPartition.split(PARTITION_SEPARATOR);
         for (String part : parts) {
             if (part == null || part.length() == 0) {
                 continue;
@@ -108,6 +128,67 @@ public class CatalogStorage implements Storage {
             String[] keyVal = part.split(PARTITION_KEYVAL_SEPARATOR);
             if (keyVal.length != 2) {
                 throw new URISyntaxException(tableUri.toString(),
+                        "Partition key value pair is not specified properly in (" + part + ")");
+            }
+
+            partitions.put(keyVal[0], keyVal[1]);
+        }
+    }
+
+    /**
+     * Create an instance from the URI Template that was generated using
+     * the getUriTemplate() method.
+     *
+     * @param uriTemplate the uri template from org.apache.falcon.entity.CatalogStorage#getUriTemplate
+     * @throws URISyntaxException
+     */
+    protected CatalogStorage(String uriTemplate) throws URISyntaxException {
+        if (uriTemplate == null || uriTemplate.length() == 0) {
+            throw new IllegalArgumentException("URI template cannot be null or empty");
+        }
+
+        final String processed = uriTemplate.replaceAll("\\$\\{", DOLLAR_EXPR_START)
+                                            .replaceAll("}", EXPR_CLOSE);
+        URI uri = new URI(processed);
+
+        this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
+
+        parseUriTemplate(uri);
+    }
+
+    private void parseUriTemplate(URI uriTemplate) throws URISyntaxException {
+        String path = uriTemplate.getPath();
+        String[] paths = path.split(OUTPUT_PATH_SEPARATOR);
+        if (paths.length != 4) {
+            throw new URISyntaxException(uriTemplate.toString(),
+                    "URI path is not in expected format: database:table");
+        }
+
+        database = paths[1];
+        table = paths[2];
+        String partRaw = paths[3];
+
+        if (database == null || database.length() == 0) {
+            throw new URISyntaxException(uriTemplate.toString(), "DB name is missing");
+        }
+        if (table == null || table.length() == 0) {
+            throw new URISyntaxException(uriTemplate.toString(), "Table name is missing");
+        }
+        if (partRaw == null || partRaw.length() == 0) {
+            throw new URISyntaxException(uriTemplate.toString(), "Partition details are missing");
+        }
+
+        String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START, "\\$\\{").replaceAll(EXPR_CLOSE, "\\}");
+        partitions = new HashMap<String, String>();
+        String[] parts = rawPartition.split(PARTITION_SEPARATOR);
+        for (String part : parts) {
+            if (part == null || part.length() == 0) {
+                continue;
+            }
+
+            String[] keyVal = part.split(PARTITION_KEYVAL_SEPARATOR);
+            if (keyVal.length != 2) {
+                throw new URISyntaxException(uriTemplate.toString(),
                         "Partition key value pair is not specified properly in (" + part + ")");
             }
 
@@ -152,11 +233,17 @@ public class CatalogStorage implements Storage {
         return TYPE.TABLE;
     }
 
+    /**
+     * LocationType does NOT matter here.
+     */
     @Override
     public String getUriTemplate() {
         return getUriTemplate(LocationType.DATA);
     }
 
+    /**
+     * LocationType does NOT matter here.
+     */
     @Override
     public String getUriTemplate(LocationType locationType) {
         StringBuilder uriTemplate = new StringBuilder();
@@ -190,5 +277,15 @@ public class CatalogStorage implements Storage {
                 && getDatabase().equals(catalogStorage.getDatabase())
                 && getTable().equals(catalogStorage.getTable())
                 && getPartitions().equals(catalogStorage.getPartitions());
+    }
+
+    @Override
+    public String toString() {
+        return "CatalogStorage{"
+                + "catalogUrl='" + catalogUrl + '\''
+                + ", database='" + database + '\''
+                + ", table='" + table + '\''
+                + ", partitions=" + partitions
+                + '}';
     }
 }
