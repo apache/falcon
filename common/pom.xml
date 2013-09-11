@@ -153,6 +153,16 @@
             <groupId>javax.jms</groupId>
             <artifactId>jms</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hcatalog</groupId>
+            <artifactId>webhcat-java-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

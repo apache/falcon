@@ -103,6 +103,7 @@
         <activemq.version>5.4.3</activemq.version>
         <hadoop-distcp.version>0.3</hadoop-distcp.version>
         <hive.version>0.11.0</hive.version>
+        <hcatalog.version>0.11.0</hcatalog.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
@@ -725,6 +726,42 @@
                         <artifactId>xercesImpl</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-common</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-metastore</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion> <!--Oozie already imports this-->
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derby</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hcatalog</groupId>
+                <artifactId>webhcat</artifactId>
+                <version>${hcatalog.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hcatalog</groupId>
+                <artifactId>webhcat-java-client</artifactId>
+                <version>${hcatalog.version}</version>
             </dependency>
 
             <dependency>

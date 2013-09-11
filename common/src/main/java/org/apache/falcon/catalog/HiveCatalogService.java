@@ -18,14 +18,21 @@
 
 package org.apache.falcon.catalog;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hcatalog.api.HCatClient;
+import org.apache.hcatalog.api.HCatDatabase;
+import org.apache.hcatalog.api.HCatTable;
+import org.apache.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
+import org.apache.hcatalog.common.HCatException;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.core.MediaType;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An implementation of CatalogService that uses Hive Meta Store (HCatalog)
@@ -35,22 +42,58 @@ public class HiveCatalogService extends AbstractCatalogService {
 
     private static final Logger LOG = Logger.getLogger(HiveCatalogService.class);
 
+    private static final ConcurrentHashMap<String, HCatClient> CACHE = new ConcurrentHashMap<String, HCatClient>();
+
+    public static HCatClient get(Cluster cluster) throws FalconException {
+        assert cluster != null : "Cluster cant be null";
+
+        String metastoreUrl = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint();
+        return get(metastoreUrl);
+    }
+
+    public static synchronized HCatClient get(String metastoreUrl) throws FalconException {
+
+        if (!CACHE.containsKey(metastoreUrl)) {
+            HCatClient hCatClient = getHCatClient(metastoreUrl);
+            LOG.info("Caching HCatalog client object for " + metastoreUrl);
+            CACHE.putIfAbsent(metastoreUrl, hCatClient);
+        }
+
+        return CACHE.get(metastoreUrl);
+    }
+
+    private static HCatClient getHCatClient(String metastoreUrl) throws FalconException {
+        try {
+            HiveConf hcatConf = new HiveConf();
+            hcatConf.set("hive.metastore.local", "false");
+            hcatConf.setVar(HiveConf.ConfVars.METASTOREURIS, metastoreUrl);
+            hcatConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
+            hcatConf.set(HiveConf.ConfVars.SEMANTIC_ANALYZER_HOOK.varname,
+                    HCatSemanticAnalyzer.class.getName());
+            hcatConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
+
+            hcatConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
+            hcatConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
+
+            return HCatClient.create(hcatConf);
+        } catch (HCatException e) {
+            throw new FalconException(e);
+        }
+    }
+
+
     @Override
     public boolean isAlive(String catalogBaseUrl) throws FalconException {
         LOG.info("Checking if the service is alive for: " + catalogBaseUrl);
 
-        Client client = Client.create();
-        WebResource service = client.resource(catalogBaseUrl);
-        ClientResponse response = service.path("status")
-                .accept(MediaType.APPLICATION_JSON)
-                .head();
-                // .get(ClientResponse.class);    // todo this isnt working
-
-        if (LOG.isDebugEnabled() && response.getStatus() != 200) {
-            LOG.debug("Output from Server .... \n" + response.getEntity(String.class));
+        try {
+            HCatClient client = get(catalogBaseUrl);
+            client.close();
+            HCatDatabase database = client.getDatabase("default");
+            return database != null;
+        } catch (HCatException e) {
+            throw new FalconException(e);
         }
-
-        return response.getStatus() == 200;
     }
 
     @Override
@@ -58,19 +101,34 @@ public class HiveCatalogService extends AbstractCatalogService {
         throws FalconException {
         LOG.info("Checking if the table exists: " + tableName);
 
-        Client client = Client.create();
-        WebResource service = client.resource(catalogUrl);
-
-        ClientResponse response = service.path("ddl/database/").path(database)
-                .path("/table").path(tableName)
-                .queryParam("user.name", CurrentUser.getUser())
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-
-        if (LOG.isDebugEnabled() && response.getStatus() != 200) {
-            LOG.debug("Output from Server .... \n" + response.getEntity(String.class));
+        try {
+            HCatClient client = get(catalogUrl);
+            HCatTable table = client.getTable(database, tableName);
+            return table != null;
+        } catch (HCatException e) {
+            throw new FalconException(e);
         }
+    }
 
-        return response.getStatus() == 200;
+    @Override
+    public Map<String, String> listTableProperties(String catalogUrl, String database,
+                                                   String tableName) throws FalconException {
+        LOG.info("Returns a list of table properties for:" + tableName);
+
+        try {
+            HCatClient client = get(catalogUrl);
+            HCatTable table = client.getTable(database, tableName);
+
+            Map<String, String> tableProperties = new HashMap<String, String>();
+            tableProperties.put("database", table.getDbName());
+            tableProperties.put("tableName", table.getTableName());
+            tableProperties.put("tabletype", table.getTabletype());
+            tableProperties.put("location", table.getLocation());
+            // tableProperties.putAll(table.getTblProps());
+
+            return tableProperties;
+        } catch (HCatException e) {
+            throw new FalconException(e);
+        }
     }
 }

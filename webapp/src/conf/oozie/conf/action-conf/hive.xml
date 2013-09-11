@@ -18,18 +18,24 @@
   limitations under the License.
 -->
 <configuration>
-   <!-- An example of setting default properties for Hive action.
-        This could be useful with Hadoop versions that have deprecated
-        HADOOP_HOME that Hive still relies on.
+    <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://localhost:49083</value>
+    </property>
 
-   <property>
-      <name>hadoop.bin.path</name>
-      <value>/usr/bin/hadoop</value>
-   </property>
+    <property>
+        <name>hive.metastore.local</name>
+        <value>false</value>
+    </property>
 
-   <property>
-      <name>hadoop.config.dir</name>
-      <value>/etc/hadoop/conf</value>
-   </property>
-   -->
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://localhost:41020</value>
+    </property>
+
+    <!-- Forcing the creation of the db dir under target so mvn clean will clean up -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:derby:;databaseName=./target/metastore_db;create=true</value>
+    </property>
 </configuration>

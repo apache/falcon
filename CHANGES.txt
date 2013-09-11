@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-96 Hive client to talk to the metastore. (Venkatesh 
+    Seetharam via Srikanth Sundarrajan)
+
     FALCON-87 Hive table integration with feed entity. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 

@@ -20,6 +20,8 @@ package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
 
+import java.util.Map;
+
 /**
  * Interface definition for a catalog registry service
  * such as Hive or HCatalog.
@@ -36,6 +38,29 @@ public abstract class AbstractCatalogService {
      */
     public abstract boolean isAlive(String catalogBaseUrl) throws FalconException;
 
+    /**
+     * This method checks if the given table exists in the catalog.
+     *
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName tableName to check if it exists
+     * @return if the table exists
+     * @throws FalconException exception
+     */
     public abstract boolean tableExists(String catalogUrl, String database, String tableName)
         throws FalconException;
+
+    /**
+     * Returns a list of table properties. Most important here are:
+     * 1. Table type: external table or a managed table
+     * 2. Location on HDFS
+     *
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName tableName to check if it exists
+     * @return Bag of property name and associated value
+     * @throws FalconException
+     */
+    public abstract Map<String, String> listTableProperties(String catalogUrl, String database,
+                                                            String tableName) throws FalconException;
 }
