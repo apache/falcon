@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" ?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -16,23 +15,17 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-
-    <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="${user.dir}/target/logs/jetty.log"/>
-        <param name="Append" value="true"/>
-        <param name="Threshold" value="debug"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p - [%t:%x] ~ %m (%c{1}:%L)%n"/>
-        </layout>
-    </appender>
-
-    <root>
-        <priority value="info"/>
-        <appender-ref ref="FILE"/>
-    </root>
-
-</log4j:configuration>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="Date-Revision-yyyymmdd" content="20130821" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>Apache Falcon - Data management and processing platform</title>
+</head>
+<body class="topBarEnabled">
+<h1> Apache Falcon</h1>
+More information at: <a href="http://falcon.incubator.apache.org/index.html"  title="About">Project Website</a>
+</body>
+</html>

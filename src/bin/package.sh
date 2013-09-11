@@ -48,18 +48,18 @@ popd
 
 mkdir -p ${PACKAGE_HOME}
 pushd ${PACKAGE_HOME}
-rm -rf oozie-3.2.0-incubating*
-echo "Getting oozie release tar ball of version 3.2.0-incubating ..."
-curl "http://www.gtlib.gatech.edu/pub/apache/oozie/3.2.0-incubating/oozie-3.2.0-incubating.tar.gz" -o oozie-3.2.0-incubating.tgz
-tar -xzvf oozie-3.2.0-incubating.tgz 2> /dev/null
-rm oozie-3.2.0-incubating.tgz
-cd oozie-3.2.0-incubating
-echo "Patching oozie with falcon extensions and marking version as 3.2.2 (custom) ..."
-patch -p0 < ${FALCON_SRC}/oozie-3.2.0-incubating-el.patch
-patch -p0 < ${FALCON_SRC}/oozie-bundle-el-extension.patch
+rm -rf oozie-*
+echo "Getting oozie release tar ball of version 4.0.0 ..."
+curl "http://www.apache.org/dist/oozie/4.0.0/oozie-4.0.0.tar.gz" -o oozie-4.0.0.tgz
+tar -xzvf oozie-4.0.0.tgz 2> /dev/null
+rm oozie-4.0.0.tgz
+cd oozie-4.0.0
+echo "Patching oozie with falcon extensions and marking version as 4.0.0 ..."
+patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-4.0.0-falcon.patch
+patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-bundle-el-extension.patch
 echo "Building oozie & creating tar ball ..."
 bin/mkdistro.sh -DskipTests > /dev/null
 
 echo "Falcon pacakge is available in ${FALCON_SRC}/target/falcon-<<version>>/falcon-<<version>>.tar.gz"
-echo "Oozie pacakge is available in ${FALCON_SRC}/target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz"
+echo "Oozie pacakge is available in ${FALCON_SRC}/target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz"
 popd

@@ -31,6 +31,7 @@ public class TestFrequency {
         String freqStr = "minutes(10)";
         Frequency freq = Frequency.fromString(freqStr);
         Assert.assertEquals(freq.getTimeUnit().name(), "minutes");
-        Assert.assertEquals(freq.getFrequency(), 10);
+        Assert.assertEquals(freq.getFrequency(), "10");
+        Assert.assertEquals(freq.getFrequencyAsInt(), 10);
     }
 }

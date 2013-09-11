@@ -198,7 +198,7 @@ public class SLAMonitoringService implements FalconService, WorkflowEngineAction
                     LOG.debug("Adding to pending jobs: " + key + " ---> " + SchemaHelper.formatDateUTC(nextStart));
                     Calendar startCal = Calendar.getInstance(timeZone);
                     startCal.setTime(nextStart);
-                    startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
+                    startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequencyAsInt());
                     nextStart = startCal.getTime();
                 }
             }

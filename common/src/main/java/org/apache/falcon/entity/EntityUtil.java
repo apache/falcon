@@ -253,12 +253,12 @@ public final class EntityUtil {
         default:
         }
 
+        final int freq = frequency.getFrequencyAsInt();
         if (count > 2) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(),
-                    ((count - 2) / frequency.getFrequency()) * frequency.getFrequency());
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), ((count - 2) / freq) * freq);
         }
         while (startCal.getTime().before(now)) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
         }
         return startCal.getTime();
     }
@@ -288,15 +288,15 @@ public final class EntityUtil {
         default:
         }
 
+        final int freq = frequency.getFrequencyAsInt();
         if (count > 2) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(),
-                    (count / frequency.getFrequency()) * frequency.getFrequency());
-            count = (count / frequency.getFrequency());
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), (count / freq) * freq);
+            count = (count / freq);
         } else {
             count = 0;
         }
         while (startCal.getTime().before(instanceTime)) {
-            startCal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequency());
+            startCal.add(frequency.getTimeUnit().getCalendarUnit(), freq);
             count++;
         }
         return count + 1;
@@ -596,5 +596,4 @@ public final class EntityUtil {
         DateFormat uriFormat = new SimpleDateFormat("yyyy'-'MM'-'dd'-'HH'-'mm");
         return uriFormat.format(utcDate);
     }
-
 }

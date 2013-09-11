@@ -55,8 +55,8 @@ public class NullCoordJob implements CoordinatorJob {
     }
 
     @Override
-    public int getFrequency() {
-        return 0;
+    public String getFrequency() {
+        return null;
     }
 
     @Override
