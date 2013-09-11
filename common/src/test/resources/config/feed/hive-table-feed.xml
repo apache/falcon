@@ -41,7 +41,7 @@
         </cluster>
     </clusters>
 
-    <table uri="catalog:default:clicks#ds=$YEAR-$MONTH-$DAY-$HOUR" />
+    <table uri="catalog:default:clicks#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 
     <ACL owner="testuser" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>

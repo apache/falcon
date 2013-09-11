@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -109,13 +110,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
     private void validateFeedGroups(Feed feed) throws FalconException {
         String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[]{};
-        String defaultPath = FeedHelper.createStorage(feed).getUriTemplate();
+        final Storage storage = FeedHelper.createStorage(feed);
+        String defaultPath = storage.getUriTemplate(LocationType.DATA);
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            final String uriTemplate = FeedHelper.createStorage(cluster, feed).getUriTemplate();
+            final String uriTemplate = FeedHelper.createStorage(cluster, feed).getUriTemplate(LocationType.DATA);
             if (!FeedGroup.getDatePattern(uriTemplate).equals(
                     FeedGroup.getDatePattern(defaultPath))) {
                 throw new ValidationException("Feeds default path pattern: "
-                        + FeedHelper.createStorage(feed).getUriTemplate()
+                        + storage.getUriTemplate(LocationType.DATA)
                         + ", does not match with cluster: "
                         + cluster.getName()
                         + " path pattern: "
@@ -127,7 +129,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (group != null && !group.canContainFeed(feed)) {
                 throw new ValidationException(
                         "Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
-                                + ", path pattern: " + FeedHelper.createStorage(feed)
+                                + ", path pattern: " + storage
                                 + " does not match with group: " + group.getName() + "'s frequency: "
                                 + group.getFrequency()
                                 + ", date pattern: " + group.getDatePattern());
