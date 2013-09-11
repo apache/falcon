@@ -40,7 +40,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>src/bin/OOZIE-674.sh</executable>
+                            <executable>src/bin/oozie-patch-pkg.sh</executable>
                         </configuration>
                     </execution>
                 </executions>

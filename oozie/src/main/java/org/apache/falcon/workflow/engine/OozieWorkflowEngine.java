@@ -291,7 +291,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private String doBundleAction(Entity entity, BundleAction action, String cluster)
         throws FalconException {
 
-        boolean success = true;
         List<BundleJob> jobs = findBundles(entity, cluster);
         if (jobs.isEmpty()) {
             LOG.warn("No active job found for " + entity.getName());
@@ -306,7 +305,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 if (!BUNDLE_SUSPENDED_STATUS.contains(job.getStatus())
                         && BUNDLE_SUSPEND_PRECOND.contains(job.getStatus())) {
                     suspend(cluster, job.getId());
-                    success = true;
                 }
                 break;
 
@@ -315,20 +313,20 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 if (!BUNDLE_RUNNING_STATUS.contains(job.getStatus())
                         && BUNDLE_RESUME_PRECOND.contains(job.getStatus())) {
                     resume(cluster, job.getId());
-                    success = true;
                 }
                 break;
 
             case KILL:
                 // not already killed and preconditions are true
                 killBundle(cluster, job);
-                success = true;
                 break;
+
             default:
             }
             afterAction(entity, action, cluster);
         }
-        return success ? "SUCCESS" : "FAILED";
+
+        return "SUCCESS";
     }
 
     private void killBundle(String cluster, BundleJob job) throws FalconException {
@@ -685,7 +683,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     }
                     Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                     startCal.setTime(iterStart);
-                    startCal.add(freq.getTimeUnit().getCalendarUnit(), coord.getFrequency());
+                    startCal.add(freq.getTimeUnit().getCalendarUnit(), Integer.parseInt(coord.getFrequency()));
                     iterStart = startCal.getTime();
                 }
             }
@@ -694,7 +692,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return actionsMap;
     }
 
-    private Frequency createFrequency(int frequency, Timeunit timeUnit) {
+    private Frequency createFrequency(String frequency, Timeunit timeUnit) {
         return new Frequency(frequency, OozieTimeUnit.valueOf(timeUnit.name())
                 .getFalconTimeUnit());
     }
@@ -855,7 +853,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             cal.setTime(coord.getLastActionTime());
             Frequency freq = createFrequency(coord.getFrequency(),
                     coord.getTimeUnit());
-            cal.add(freq.getTimeUnit().getCalendarUnit(), -freq.getFrequency());
+            cal.add(freq.getTimeUnit().getCalendarUnit(), -freq.getFrequencyAsInt());
             return cal.getTime();
         }
         return null;
