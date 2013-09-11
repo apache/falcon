@@ -6,7 +6,8 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
-    FALCON-107 Adding extensions. (Shwetha GS)
+    FALCON-96 Hive client to talk to the metastore. (Venkatesh 
+    Seetharam via Srikanth Sundarrajan)
 
     FALCON-87 Hive table integration with feed entity. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
@@ -16,6 +17,8 @@ Trunk (Unreleased)
 
     FALCON-88 Add embedded hive and webhcat for integration tests. 
     (Venkatesh Seetharam via Srikanth Sundarrajan)
+
+    FALCON-107 Adding extensions. (Shwetha GS)
 
     FALCON-62 Falcon compilation with hadoop 2.0 libs. (Shwetha GS
     via Srikanth Sundarrajan)
