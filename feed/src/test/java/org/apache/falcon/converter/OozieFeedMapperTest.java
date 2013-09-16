@@ -121,7 +121,7 @@ public class OozieFeedMapperTest {
         Assert.assertEquals("${coord:minutes(20)}", inputDataset.getFrequency());
         Assert.assertEquals("input-dataset", inputDataset.getName());
         Assert.assertEquals(
-                ClusterHelper.getStorageUrl(srcCluster)
+                ClusterHelper.getReadOnlyStorageUrl(srcCluster)
                         + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
                 inputDataset.getUriTemplate());
 

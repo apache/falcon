@@ -26,6 +26,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-76 Use cluster readonly endpoint for replication source.
+    (Suhas Vasu via Shweth GS)
+
     FALCON-101 mvn release:prepare fails because of build order. (Shwetha GS
     via Srikanth Sundarrajan)
 

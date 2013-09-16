@@ -263,7 +263,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             SYNCDATASET inputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(0);
             SYNCDATASET outputDataset = (SYNCDATASET) replicationCoord.getDatasets().getDatasetOrAsyncDataset().get(1);
 
-            inputDataset.setUriTemplate(new Path(ClusterHelper.getStorageUrl(srcCluster),
+            inputDataset.setUriTemplate(new Path(ClusterHelper.getReadOnlyStorageUrl(srcCluster),
                 FeedHelper.getLocation(feed, LocationType.DATA, srcCluster.getName()).getPath()).toString());
             outputDataset.setUriTemplate(getStoragePath(
                 FeedHelper.getLocation(feed, LocationType.DATA, trgCluster.getName()).getPath()));
