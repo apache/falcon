@@ -27,6 +27,7 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ExternalId;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
@@ -34,10 +35,12 @@ import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.COORDINATOR;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.ObjectFactory;
+import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -142,15 +145,53 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         return true;
     }
 
+    private void addExtensionJars(FileSystem fs, Path path, WORKFLOWAPP wf) throws IOException {
+        FileStatus[] libs = fs.listStatus(path);
+        if (libs == null) {
+            return;
+        }
+
+        for(FileStatus lib : libs) {
+            if (lib.isDir()) {
+                continue;
+            }
+
+            for(Object obj: wf.getDecisionOrForkOrJoin()) {
+                if (!(obj instanceof ACTION)) {
+                    continue;
+                }
+                ACTION action = (ACTION) obj;
+                List<String> files = null;
+                if (action.getJava() != null) {
+                    files = action.getJava().getFile();
+                } else if (action.getPig() != null) {
+                    files = action.getPig().getFile();
+                } else if (action.getMapReduce() != null) {
+                    files = action.getMapReduce().getFile();
+                }
+                if (files != null) {
+                    files.add(lib.getPath().toString());
+                }
+            }
+        }
+    }
+
+    protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, EntityType type, String lifecycle)
+        throws IOException {
+        String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
+        FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+        addExtensionJars(fs, new Path(libext), wf);
+        addExtensionJars(fs, new Path(libext, type.name()), wf);
+        if (StringUtils.isNotEmpty(lifecycle)) {
+            addExtensionJars(fs, new Path(libext, type.name() + "/" + lifecycle), wf);
+        }
+    }
+
     private void copySharedLibs(Cluster cluster, Path coordPath) throws FalconException {
         try {
             Path libPath = new Path(coordPath, "lib");
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
-            if (!fs.exists(libPath)) {
-                fs.mkdirs(libPath);
-            }
-
-            SharedLibraryHostingService.pushLibsToHDFS(libPath.toString(), cluster, FALCON_JAR_FILTER);
+            SharedLibraryHostingService.pushLibsToHDFS(StartupProperties.get().getProperty("system.lib.location"),
+                    libPath, cluster, FALCON_JAR_FILTER);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
             throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(), e);

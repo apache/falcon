@@ -28,6 +28,7 @@ import java.util.TimeZone;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -38,7 +39,6 @@ import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.util.DeploymentUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,13 +97,13 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private void validateHDFSpaths(Process process, String clusterName) throws FalconException {
-        //No filesystem checks in prism
-        if (DeploymentUtil.isPrism()) {
+        org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
+                clusterName);
+
+        if (!EntityUtil.responsibleFor(cluster.getColo())) {
             return;
         }
 
-        org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
-                clusterName);
         String workflowPath = process.getWorkflow().getPath();
         String libPath = process.getWorkflow().getLib();
         String nameNode = getNameNode(cluster, clusterName);

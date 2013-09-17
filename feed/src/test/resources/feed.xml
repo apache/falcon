@@ -26,12 +26,12 @@
     <late-arrival cut-off="minutes(3)"/>
     <clusters>
         <cluster name="corp1" type="source" delay="minutes(40)">
-            <validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
+            <validity start="2010-01-01T00:00Z" end="2020-01-01T02:00Z"/>
             <retention limit="minutes(5)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
         <cluster name="corp2" type="target">
-            <validity start="2010-01-01T00:00Z" end="2010-01-01T02:00Z"/>
+            <validity start="2010-01-01T00:00Z" end="2020-01-01T02:00Z"/>
             <retention limit="minutes(7)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>

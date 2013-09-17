@@ -910,7 +910,7 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <forkMode>always</forkMode>
-                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
+                    <argLine>-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
                 </configuration>
             </plugin>
 

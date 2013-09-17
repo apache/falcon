@@ -24,11 +24,11 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -57,10 +57,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateScheme(cluster, Interfacetype.WORKFLOW);
         validateScheme(cluster, Interfacetype.MESSAGING);
 
-        // No interface validations in prism or other falcon servers.
-        // Only the falcon server for which the cluster belongs to should validate interfaces
-        if (DeploymentUtil.isPrism() || !cluster.getColo().equals(DeploymentUtil.getCurrentColo())) {
-            LOG.info("No interface validations in prism or falcon servers not applicable.");
+        if (!EntityUtil.responsibleFor(cluster.getColo())) {
             return;
         }
 

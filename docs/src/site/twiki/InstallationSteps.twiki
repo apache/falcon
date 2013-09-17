@@ -90,12 +90,23 @@ bin/falcon-start [-port <port>]
 </verbatim>
 
 By default, 
-- falcon server starts at port 15000. To change the port, use -port option
-- falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
-  - falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
-  - falcon.emeddedmq.port=<port> - Port for embedded active mq, default 61616
-  - falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
-- falcon server starts with conf from {package dir}/conf. To override this (to use the same conf with multiple falcon upgrades), set environment variable FALCON_CONF to the path of conf dir
+* falcon server starts at port 15000. To change the port, use -port option
+* falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
+   * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
+   * falcon.emeddedmq.port=<port> - Port for embedded active mq, default 61616
+   * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
+* falcon server starts with conf from {package dir}/conf. To override this (to use the same conf with multiple falcon upgrades), set environment variable FALCON_CONF to the path of conf dir
+
+__Adding Extension Libraries__
+Library extensions allows users to add custom libraries to entity lifecycles such as feed retention, feed replication and process execution. This is useful for usecases such as adding filesystem extensions. To enable this, add the following configs to startup.properties:
+*.libext.paths=<paths to be added to all entity lifecycles>
+*.libext.feed.paths=<paths to be added to all feed lifecycles>
+*.libext.feed.retentions.paths=<paths to be added to feed retention workflow>
+*.libext.feed.replication.paths=<paths to be added to feed replication workflow>
+*.libext.process.paths=<paths to be added to process workflow>
+
+The configured jars are added to falcon classpath and the corresponding workflows
+
 
 *Starting Prism*
 <verbatim>
@@ -103,8 +114,8 @@ bin/prism-start [-port <port>]
 </verbatim>
 
 By default, 
-- falcon server starts at port 16000. To change the port, use -port option
-- prism starts with conf from {package dir}/conf. To override this (to use the same conf with multiple prism upgrades), set environment variable FALCON_CONF to the path of conf dir
+* falcon server starts at port 16000. To change the port, use -port option
+* prism starts with conf from {package dir}/conf. To override this (to use the same conf with multiple prism upgrades), set environment variable FALCON_CONF to the path of conf dir
 
 *Using Falcon*
 <verbatim>

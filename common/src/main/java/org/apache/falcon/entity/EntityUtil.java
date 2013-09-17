@@ -597,4 +597,11 @@ public final class EntityUtil {
         return uriFormat.format(utcDate);
     }
 
+    public static boolean responsibleFor(String colo) {
+        if (DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
+                && colo.equals(DeploymentUtil.getCurrentColo()))) {
+            return true;
+        }
+        return false;
+    }
 }

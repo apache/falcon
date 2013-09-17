@@ -73,6 +73,7 @@ import org.testng.annotations.Test;
 public class OozieProcessMapperTest extends AbstractTestBase {
 
     private String hdfsUrl;
+    private FileSystem fs;
 
     @BeforeClass
     public void setUpDFS() throws Exception {
@@ -88,6 +89,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
+        fs = new Path(hdfsUrl).getFileSystem(new Configuration());
+        fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
 
         Process process = store.get(EntityType.PROCESS, "clicksummary");
         Path wfpath = new Path(process.getWorkflow().getPath());
@@ -155,6 +158,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
                 break;
             }
         }
+
+        assertLibExtensions(coord);
     }
 
     @Test
@@ -197,6 +202,32 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ACTION oozieAction = (ACTION) decisionOrForkOrJoin.get(4);
         Assert.assertEquals("user-oozie-workflow", oozieAction.getName());
         Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
+    }
+
+    private void assertLibExtensions(COORDINATORAPP coord) throws Exception {
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        JAXBContext WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
+        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) WORKFLOW_JAXB_CONTEXT.createUnmarshaller().unmarshal(
+                fs.open(new Path(wfPath, "workflow.xml")))).getValue();
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            List<String> files = null;
+            if (action.getJava() != null) {
+                files = action.getJava().getFile();
+            } else if (action.getPig() != null) {
+                files = action.getPig().getFile();
+            } else if (action.getMapReduce() != null) {
+                files = action.getMapReduce().getFile();
+            }
+            if (files != null) {
+                Assert.assertTrue(files.get(files.size() - 1)
+                        .endsWith("/projects/falcon/working/libext/PROCESS/ext.jar"));
+            }
+        }
     }
 
     private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)

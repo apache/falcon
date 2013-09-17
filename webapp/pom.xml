@@ -357,6 +357,10 @@
                             <name>system.lib.location</name>
                             <value>${project.build.directory}/dependency</value>
                         </systemProperty>
+                        <systemProperty>
+                            <name>falcon.libext</name>
+                            <value>${project.build.directory}/../../hadoop-dependencies/target/falcon-hadoop-dependencies-${project.version}.jar</value>
+                        </systemProperty>
                     </systemProperties>
                     <stopKey>falcon-stop</stopKey>
                     <stopPort>41001</stopPort>

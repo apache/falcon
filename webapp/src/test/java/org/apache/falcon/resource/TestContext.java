@@ -273,7 +273,7 @@ public class TestContext {
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
         return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase())
-                .header("Remote-User", "testuser").accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .header("Remote-User", TestContext.REMOTE_USER).accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);
     }
 
@@ -296,7 +296,7 @@ public class TestContext {
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
         return this.service.path("api/entities/submit/" + entityType.name().toLowerCase()).header("Remote-User",
-                "testuser")
+                TestContext.REMOTE_USER)
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
     }
 

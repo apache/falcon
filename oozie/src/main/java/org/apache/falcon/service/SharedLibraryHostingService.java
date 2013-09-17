@@ -18,13 +18,14 @@
 
 package org.apache.falcon.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -34,6 +35,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * Host shared libraries in oozie shared lib dir upon creation or modification of cluster.
@@ -66,22 +68,31 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     };
 
     private void addLibsTo(Cluster cluster) throws FalconException {
-        String libLocation = ClusterHelper.getLocation(cluster, "working") + "/lib";
+        Path lib = new Path(ClusterHelper.getLocation(cluster, "working"), "lib");
+        Path libext = new Path(ClusterHelper.getLocation(cluster, "working"), "libext");
         try {
-            pushLibsToHDFS(libLocation, cluster, NON_FALCON_JAR_FILTER);
+            Properties properties = StartupProperties.get();
+            pushLibsToHDFS(properties.getProperty("system.lib.location"), lib, cluster, NON_FALCON_JAR_FILTER);
+            pushLibsToHDFS(properties.getProperty("libext.paths"), libext, cluster, null);
+            pushLibsToHDFS(properties.getProperty("libext.feed.paths"),
+                    new Path(libext, EntityType.FEED.name()) , cluster, null);
+            pushLibsToHDFS(properties.getProperty("libext.feed.replication.paths"),
+                    new Path(libext, EntityType.FEED.name() + "/replication"), cluster, null);
+            pushLibsToHDFS(properties.getProperty("libext.feed.retention.paths"),
+                    new Path(libext, EntityType.FEED.name() + "/retention"), cluster, null);
+            pushLibsToHDFS(properties.getProperty("libext.process.paths"),
+                    new Path(libext, EntityType.PROCESS.name()) , cluster, null);
         } catch (IOException e) {
             LOG.error("Failed to copy shared libs to cluster " + cluster.getName(), e);
         }
     }
 
-    public static void pushLibsToHDFS(String path, Cluster cluster, FalconPathFilter pathFilter)
+    public static void pushLibsToHDFS(String src, Path target, Cluster cluster, FalconPathFilter pathFilter)
         throws IOException, FalconException {
+        LOG.debug("Copying libs from " + src);
 
-        String localPaths = StartupProperties.get().getProperty("system.lib.location");
-        assert localPaths != null && !localPaths.isEmpty() : "Invalid value for system.lib.location";
-        if (!new File(localPaths).isDirectory()) {
-            throw new FalconException(
-                    localPaths + " configured for system.lib.location doesn't contain any valid libs");
+        if (StringUtils.isEmpty(src)) {
+            return;
         }
 
         Configuration conf = ClusterHelper.getConfiguration(cluster);
@@ -93,26 +104,37 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             throw new FalconException("Unable to connect to HDFS: "
                     + ClusterHelper.getStorageUrl(cluster));
         }
-        Path clusterPath = new Path(path);
-        if (!fs.exists(clusterPath)) {
-            fs.mkdirs(clusterPath);
+        if (!fs.exists(target)) {
+            fs.mkdirs(target);
         }
 
-        for (File localFile : new File(localPaths).listFiles()) {
-            Path localPath = new Path(localFile.getAbsolutePath());
-            if (!pathFilter.accept(localPath)) {
-                continue;
+        for(String srcPaths : src.split(",")) {
+            File srcFile = new File(srcPaths);
+            File[] srcFiles = new File[] { srcFile };
+            if (srcFile.isDirectory()) {
+                srcFiles = srcFile.listFiles();
             }
 
-            Path clusterFile = new Path(path, pathFilter.getJarName(localPath) + ".jar");
-            if (fs.exists(clusterFile)) {
-                FileStatus fstat = fs.getFileStatus(clusterFile);
-                if (fstat.getLen() == localFile.length()) {
-                    continue;
+            for (File file : srcFiles) {
+                Path path = new Path(file.getAbsolutePath());
+                String jarName = StringUtils.removeEnd(path.getName(), ".jar");
+                if (pathFilter != null) {
+                    if (!pathFilter.accept(path)) {
+                        continue;
+                    }
+                    jarName = pathFilter.getJarName(path);
                 }
+
+                Path targetFile = new Path(target, jarName + ".jar");
+                if (fs.exists(targetFile)) {
+                    FileStatus fstat = fs.getFileStatus(targetFile);
+                    if (fstat.getLen() == file.length()) {
+                        continue;
+                    }
+                }
+                fs.copyFromLocalFile(false, true, new Path(file.getAbsolutePath()), targetFile);
+                LOG.info("Copied " + file.getAbsolutePath() + " to " + targetFile.toString() + " in " + fs.getUri());
             }
-            fs.copyFromLocalFile(false, true, new Path(localFile.getAbsolutePath()), clusterFile);
-            LOG.info("Copied " + localFile.getAbsolutePath() + " to " + path + " in " + fs.getUri());
         }
     }
 
@@ -123,10 +145,11 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         }
 
         Cluster cluster = (Cluster) entity;
-        String currentColo = DeploymentUtil.getCurrentColo();
-        if (DeploymentUtil.isEmbeddedMode() || currentColo.equals(cluster.getColo())) {
-            addLibsTo(cluster);
+        if (!EntityUtil.responsibleFor(cluster.getColo())) {
+            return;
         }
+
+        addLibsTo(cluster);
     }
 
     @Override

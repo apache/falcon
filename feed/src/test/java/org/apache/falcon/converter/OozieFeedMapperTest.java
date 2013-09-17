@@ -19,11 +19,17 @@ package org.apache.falcon.converter;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -36,6 +42,10 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
+import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -67,21 +77,27 @@ public class OozieFeedMapperTest {
 
         cleanupStore();
 
-        srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH);
-        ClusterHelper.getInterface(srcCluster, Interfacetype.WRITE).setEndpoint(srcHdfsUrl);
+        srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH, srcHdfsUrl);
 
-        trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH);
-        ClusterHelper.getInterface(trgCluster, Interfacetype.WRITE).setEndpoint(trgHdfsUrl);
+        trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH, trgHdfsUrl);
 
-        feed = (Feed) storeEntity(EntityType.FEED, FEED);
+        feed = (Feed) storeEntity(EntityType.FEED, FEED, null);
 
     }
 
-    protected Entity storeEntity(EntityType type, String path) throws Exception {
+    protected Entity storeEntity(EntityType type, String template, String writeEndpoint) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         Entity entity = (Entity) unmarshaller
-                .unmarshal(OozieFeedMapperTest.class.getResource(path));
+                .unmarshal(OozieFeedMapperTest.class.getResource(template));
         store.publish(type, entity);
+
+        if (type == EntityType.CLUSTER) {
+            Cluster cluster = (Cluster) entity;
+            ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(writeEndpoint);
+            FileSystem fs = new Path(writeEndpoint).getFileSystem(new Configuration());
+            fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/retention/ext.jar")).close();
+            fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/replication/ext.jar")).close();
+        }
         return entity;
     }
 
@@ -101,12 +117,16 @@ public class OozieFeedMapperTest {
     }
 
     @Test
-    public void testReplicationCoords() throws FalconException {
+    public void testFeedCoords() throws Exception {
         OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
         List<COORDINATORAPP> coords = feedMapper.getCoordinators(trgCluster,
                 new Path("/projects/falcon/"));
+        //Assert retention coord
         COORDINATORAPP coord = coords.get(0);
+        assertLibExtensions(coord, "retention");
 
+        //Assert replication coord
+        coord = coords.get(1);
         Assert.assertEquals("2010-01-01T00:40Z", coord.getStart());
         Assert.assertEquals("${nameNode}/projects/falcon/REPLICATION", coord
                 .getAction().getWorkflow().getAppPath());
@@ -148,6 +168,32 @@ public class OozieFeedMapperTest {
                 break;
             }
         }
+        assertLibExtensions(coord, "replication");
+    }
 
+    private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        JAXBContext WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
+        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) WORKFLOW_JAXB_CONTEXT.createUnmarshaller().unmarshal(
+                trgMiniDFS.getFileSystem().open(new Path(wfPath, "workflow.xml")))).getValue();
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            List<String> files = null;
+            if (action.getJava() != null) {
+                files = action.getJava().getFile();
+            } else if (action.getPig() != null) {
+                files = action.getPig().getFile();
+            } else if (action.getMapReduce() != null) {
+                files = action.getMapReduce().getFile();
+            }
+            if (files != null) {
+                Assert.assertTrue(files.get(files.size() - 1).endsWith("/projects/falcon/working/libext/FEED/"
+                        + lifecycle + "/ext.jar"));
+            }
+        }
     }
 }
