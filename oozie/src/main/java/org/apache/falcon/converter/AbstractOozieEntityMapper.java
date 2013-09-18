@@ -48,10 +48,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
 import javax.xml.bind.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +143,13 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     private void addExtensionJars(FileSystem fs, Path path, WORKFLOWAPP wf) throws IOException {
-        FileStatus[] libs = fs.listStatus(path);
+        FileStatus[] libs = null;
+        try {
+            libs = fs.listStatus(path);
+        } catch(FileNotFoundException ignore) {
+            //Ok if the libext is not configured
+        }
+
         if (libs == null) {
             return;
         }

@@ -28,6 +28,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-127 Fix test issues after FALCON-107. (Shwetha GS via Srikanth
+    Sundarrajan)
+
     FALCON-76 Use cluster readonly endpoint for replication source.
     (Suhas Vasu via Shweth GS)
 

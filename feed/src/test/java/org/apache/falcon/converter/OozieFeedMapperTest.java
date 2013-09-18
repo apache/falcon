@@ -19,17 +19,13 @@ package org.apache.falcon.converter;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -96,7 +92,8 @@ public class OozieFeedMapperTest {
             ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(writeEndpoint);
             FileSystem fs = new Path(writeEndpoint).getFileSystem(new Configuration());
             fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/retention/ext.jar")).close();
-            fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/replication/ext.jar")).close();
+            fs.create(
+                    new Path(ClusterHelper.getLocation(cluster, "working"), "libext/FEED/replication/ext.jar")).close();
         }
         return entity;
     }
@@ -173,8 +170,8 @@ public class OozieFeedMapperTest {
 
     private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        JAXBContext WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
-        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) WORKFLOW_JAXB_CONTEXT.createUnmarshaller().unmarshal(
+        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
                 trgMiniDFS.getFileSystem().open(new Path(wfPath, "workflow.xml")))).getValue();
         List<Object> actions = wf.getDecisionOrForkOrJoin();
         for (Object obj : actions) {
