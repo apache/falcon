@@ -26,6 +26,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
+    via Srikanth Sundarrajan)
+
     FALCON-63 Ability to ingest hadoop libs to falcon release package.
     (Suhas Vasu via Shwetha GS)
 
