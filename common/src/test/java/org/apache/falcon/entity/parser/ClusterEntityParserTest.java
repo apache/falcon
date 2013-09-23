@@ -18,6 +18,13 @@
 
 package org.apache.falcon.entity.parser;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -32,9 +39,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Test for validating cluster entity parsing.
@@ -70,6 +74,13 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
         Assert.assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
         Assert.assertEquals(workflow.getVersion(), "3.1");
+
+        Assert.assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
+
+        StringWriter stringWriter = new StringWriter();
+        Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
+        marshaller.marshal(cluster, stringWriter);
+        System.out.println(stringWriter.toString());
 
         Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         Assert.assertEquals(catalog.getEndpoint(), "http://localhost:48080/templeton/v1");
