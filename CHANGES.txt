@@ -11,7 +11,10 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
-    FALCON-69 exception from ConfigurationChangeListener should fail 
+    FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
+    via Srikanth Sundarrajan)
+
+    FALCON-69 Exception from ConfigurationChangeListener should fail 
     the API. (Shwetha GS via Srikanth Sundarrajan)
 
     FALCON-63 Ability to ingest hadoop libs to falcon release package.
