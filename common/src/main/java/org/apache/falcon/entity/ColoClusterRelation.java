@@ -51,7 +51,7 @@ public final class ColoClusterRelation implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onAdd(Entity entity) {
+    public void onAdd(Entity entity, boolean ignoreFailure) {
         if (entity.getEntityType() != EntityType.CLUSTER) {
             return;
         }

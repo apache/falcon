@@ -139,7 +139,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     }
 
     @Override
-    public void onAdd(Entity entity) throws FalconException {
+    public void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
         if (entity.getEntityType() != EntityType.CLUSTER) {
             return;
         }
@@ -149,7 +149,14 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             return;
         }
 
-        addLibsTo(cluster);
+        try {
+            addLibsTo(cluster);
+        } catch(FalconException e) {
+            if (!ignoreFailure) {
+                throw e;
+            }
+            LOG.warn("Failed to copy shared libraries to cluster", e);
+        }
     }
 
     @Override

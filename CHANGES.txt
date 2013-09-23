@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-69 exception from ConfigurationChangeListener should fail 
+    the API. (Shwetha GS via Srikanth Sundarrajan)
+
     FALCON-63 Ability to ingest hadoop libs to falcon release package.
     (Suhas Vasu via Shwetha GS)
 

@@ -26,7 +26,7 @@ import org.apache.falcon.entity.v0.Entity;
  */
 public interface ConfigurationChangeListener {
 
-    void onAdd(Entity entity) throws FalconException;
+    void onAdd(Entity entity, boolean ignoreFailure) throws FalconException;
 
     void onRemove(Entity entity) throws FalconException;
 
