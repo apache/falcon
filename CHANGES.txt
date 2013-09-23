@@ -16,7 +16,7 @@ Trunk (Unreleased)
     FALCON-87 Hive table integration with feed entity. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 
-    FALCON-86 Hive table integration with cluster entity. (Venaktesh 
+    FALCON-86 Hive table integration with cluster entity. (Venaktesh
     Seetharam via Srikanth Sundarrajan)
 
     FALCON-88 Add embedded hive and webhcat for integration tests. 

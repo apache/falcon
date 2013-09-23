@@ -25,7 +25,6 @@ import java.util.Map;
 /**
  * Interface definition for a catalog registry service
  * such as Hive or HCatalog.
- * Catalog should minimally support the following operations.
  */
 public abstract class AbstractCatalogService {
 
