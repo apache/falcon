@@ -102,9 +102,9 @@
         <oozie.version>4.0.0</oozie.version>
         <falcon.oozie.version>${oozie.version}-falcon</falcon.oozie.version>
         <activemq.version>5.4.3</activemq.version>
-        <hadoop-distcp.version>0.3</hadoop-distcp.version>
         <hive.version>0.11.0</hive.version>
         <hcatalog.version>0.11.0</hcatalog.version>
+        <hadoop-distcp.version>0.9</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
         <skipCheck>false</skipCheck>
@@ -1040,7 +1040,7 @@
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <forkMode>always</forkMode>
-                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
+                    <argLine>-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
                 </configuration>
             </plugin>
 

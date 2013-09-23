@@ -114,32 +114,25 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         Feed feed = getEntity();
         ACTION retentionAction = new ACTION();
         WORKFLOW retentionWorkflow = new WORKFLOW();
-        try {
-            //
-            WORKFLOWAPP retWfApp = createRetentionWorkflow();
-            retWfApp.setName(wfName);
-            marshal(cluster, retWfApp, wfPath);
-            retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
+        createRetentionWorkflow(cluster, wfPath, wfName);
+        retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
 
-            Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
+        Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
 
-            org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-            String feedBasePaths = getFeedDataPath(cluster, feed);
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+        String feedBasePaths = getFeedDataPath(cluster, feed);
 
-            props.put("feedDataPath", feedBasePaths);
-            props.put("timeZone", feed.getTimezone().getID());
-            props.put("frequency", feed.getFrequency().getTimeUnit().name());
-            props.put("limit", feedCluster.getRetention().getLimit().toString());
-            props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
-            props.put(ARG.feedNames.getPropName(), feed.getName());
-            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
+        props.put("feedDataPath", feedBasePaths);
+        props.put("timeZone", feed.getTimezone().getID());
+        props.put("frequency", feed.getFrequency().getTimeUnit().name());
+        props.put("limit", feedCluster.getRetention().getLimit().toString());
+        props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
+        props.put(ARG.feedNames.getPropName(), feed.getName());
+        props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
 
-            retentionWorkflow.setConfiguration(getCoordConfig(props));
-            retentionAction.setWorkflow(retentionWorkflow);
-            return retentionAction;
-        } catch (IOException e) {
-            throw new FalconException("Unable to create parent/retention workflow", e);
-        }
+        retentionWorkflow.setConfiguration(getCoordConfig(props));
+        retentionAction.setWorkflow(retentionWorkflow);
+        return retentionAction;
     }
 
     protected String getFeedDataPath(Cluster cluster, Feed feed) throws FalconException {
@@ -340,13 +333,25 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private void createReplicatonWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
-        WORKFLOWAPP repWFapp = getWorkflowTemplate(REPLICATION_WF_TEMPLATE);
-        repWFapp.setName(wfName);
-        marshal(cluster, repWFapp, wfPath);
+        try {
+            WORKFLOWAPP repWFapp = getWorkflowTemplate(REPLICATION_WF_TEMPLATE);
+            repWFapp.setName(wfName);
+            addLibExtensionsToWorkflow(cluster, repWFapp, EntityType.FEED, "replication");
+            marshal(cluster, repWFapp, wfPath);
+        } catch(IOException e) {
+            throw new FalconException("Unable to create replication workflow", e);
+        }
     }
 
-    private WORKFLOWAPP createRetentionWorkflow() throws IOException, FalconException {
-        return getWorkflowTemplate(RETENTION_WF_TEMPLATE);
+    private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
+        try {
+            WORKFLOWAPP retWfApp = getWorkflowTemplate(RETENTION_WF_TEMPLATE);
+            retWfApp.setName(wfName);
+            addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
+            marshal(cluster, retWfApp, wfPath);
+        } catch(IOException e) {
+            throw new FalconException("Unable to create retention workflow", e);
+        }
     }
 
     @Override

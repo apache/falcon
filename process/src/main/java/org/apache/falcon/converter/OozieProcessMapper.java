@@ -333,6 +333,11 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                                 String wfName, Path wfPath) throws FalconException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
         wfApp.setName(wfName);
+        try {
+            addLibExtensionsToWorkflow(cluster, wfApp, EntityType.PROCESS, null);
+        } catch (IOException e) {
+            throw new FalconException("Failed to add library extensions for the workflow", e);
+        }
 
         EngineType engineType = processWorkflow.getEngine();
         for (Object object : wfApp.getDecisionOrForkOrJoin()) {

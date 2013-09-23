@@ -16,19 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.service;
+package org.apache.falcon.hadoop;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.Entity;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 
 /**
- * Configuration change notification listener.
+ * For testing library extensions.
  */
-public interface ConfigurationChangeListener {
+public class FileSystemExtension extends DistributedFileSystem {
 
-    void onAdd(Entity entity, boolean ignoreFailure) throws FalconException;
-
-    void onRemove(Entity entity) throws FalconException;
-
-    void onChange(Entity oldEntity, Entity newEntity) throws FalconException;
 }

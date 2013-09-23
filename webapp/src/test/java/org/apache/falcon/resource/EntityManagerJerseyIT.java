@@ -17,9 +17,7 @@
  */
 package org.apache.falcon.resource;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,13 +33,14 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
 
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
@@ -66,6 +65,38 @@ public class EntityManagerJerseyIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+    }
+
+    private void assertLibs(FileSystem fs, Path path) throws IOException {
+        FileStatus[] libs = fs.listStatus(path);
+        Assert.assertNotNull(libs);
+        Assert.assertEquals(libs.length, 1);
+        Assert.assertTrue(libs[0].getPath().getName().startsWith("falcon-hadoop-dependencies"));
+    }
+
+    @Test
+    public void testLibExtensions() throws Exception {
+        TestContext context = newContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        ClientResponse response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        context.assertSuccessful(response);
+        FileSystem fs = context.getCluster().getFileSystem();
+        assertLibs(fs, new Path("/project/falcon/working/libext/FEED/retention"));
+        assertLibs(fs, new Path("/project/falcon/working/libext/PROCESS"));
+
+        String tmpFileName = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(new File(tmpFileName));
+        Location location = new Location();
+        location.setPath("fsext://localhost:41020/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+        location.setType(LocationType.DATA);
+        Cluster cluster = feed.getClusters().getClusters().get(0);
+        cluster.setLocations(new Locations());
+        feed.getClusters().getClusters().get(0).getLocations().getLocations().add(location);
+
+        File tmpFile = context.getTempFile();
+        EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
+        response = context.submitAndSchedule(tmpFileName, overlay, EntityType.FEED);
+        context.assertSuccessful(response);
     }
 
     @Test
@@ -98,7 +129,7 @@ public class EntityManagerJerseyIT {
         EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
         response = context.service.path("api/entities/update/feed/"
                 + context.outputFeedName).header("Remote-User",
-                "testuser").accept(MediaType.TEXT_XML)
+                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
         context.assertSuccessful(response);
 

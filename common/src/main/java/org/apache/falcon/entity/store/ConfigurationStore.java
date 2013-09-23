@@ -116,7 +116,7 @@ public final class ConfigurationStore implements FalconService {
                         String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
                         Entity entity = restore(type, entityName);
                         entityMap.put(entityName, entity);
-                        onAdd(entity);
+                        onAdd(entity, true);
                     }
                 }
             }
@@ -129,6 +129,10 @@ public final class ConfigurationStore implements FalconService {
         listeners.add(listener);
     }
 
+    public void unregisterListener(ConfigurationChangeListener listener) {
+        listeners.remove(listener);
+    }
+
     /**
      * @param type   - EntityType that need to be published
      * @param entity - Reference to the Entity Object
@@ -138,8 +142,8 @@ public final class ConfigurationStore implements FalconService {
         try {
             if (get(type, entity.getName()) == null) {
                 persist(type, entity);
+                onAdd(entity, false);
                 dictionary.get(type).put(entity.getName(), entity);
-                onAdd(entity);
             } else {
                 throw new EntityAlreadyExistsException(
                         entity.toShortString() + " already registered with configuration store. "
@@ -155,8 +159,10 @@ public final class ConfigurationStore implements FalconService {
         try {
             if (get(type, entity.getName()) != null) {
                 persist(type, entity);
-                Entity oldEntity = dictionary.get(type).put(entity.getName(), entity);
+                ConcurrentHashMap<String, Entity> entityMap = dictionary.get(type);
+                Entity oldEntity = entityMap.get(entity.getName());
                 onChange(oldEntity, entity);
+                entityMap.put(entity.getName(), entity);
             } else {
                 throw new FalconException(entity.toShortString() + " doesn't exist");
             }
@@ -164,10 +170,6 @@ public final class ConfigurationStore implements FalconService {
             throw new StoreAccessException(e);
         }
         AUDIT.info(type + "/" + entity.getName() + " is replaced into config store");
-    }
-
-    public synchronized void rollbackUpdate(EntityType type, Entity entity) throws FalconException {
-        updateInternal(type, entity);
     }
 
     public synchronized void update(EntityType type, Entity entity) throws FalconException {
@@ -178,13 +180,9 @@ public final class ConfigurationStore implements FalconService {
         }
     }
 
-    private void onAdd(Entity entity) {
+    private void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
         for (ConfigurationChangeListener listener : listeners) {
-            try {
-                listener.onAdd(entity);
-            } catch (Throwable e) {
-                LOG.warn("Encountered exception while notifying " + listener + entity.toShortString(), e);
-            }
+            listener.onAdd(entity, ignoreFailure);
         }
     }
 
@@ -255,7 +253,9 @@ public final class ConfigurationStore implements FalconService {
         if (entityMap.containsKey(name)) {
             try {
                 archive(type, name);
-                onRemove(entityMap.remove(name));
+                Entity entity = entityMap.get(name);
+                onRemove(entity);
+                entityMap.remove(name);
             } catch (IOException e) {
                 throw new StoreAccessException(e);
             }
@@ -265,27 +265,10 @@ public final class ConfigurationStore implements FalconService {
         return false;
     }
 
-    private void onRemove(Entity entity) {
+    private void onRemove(Entity entity) throws FalconException {
         for (ConfigurationChangeListener listener : listeners) {
-            try {
-                listener.onRemove(entity);
-            } catch (Throwable e) {
-                LOG.warn(
-                        "Encountered exception while notifying " + listener + "(" + entity.getEntityType() + ") "
-                                + entity.getName(),
-                        e);
-            }
+            listener.onRemove(entity);
         }
-    }
-
-    /**
-     * @param type     - Entity type that needs to be searched
-     * @param keywords - List of keywords to search for. only entities that have all
-     *                 the keywords being searched would be returned
-     * @return - Array of entity types
-     */
-    public Entity[] search(EntityType type, String... keywords) {
-        return null;
     }
 
     /**

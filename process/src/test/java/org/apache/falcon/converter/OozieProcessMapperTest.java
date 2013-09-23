@@ -73,6 +73,7 @@ import org.testng.annotations.Test;
 public class OozieProcessMapperTest extends AbstractTestBase {
 
     private String hdfsUrl;
+    private FileSystem fs;
 
     @BeforeClass
     public void setUpDFS() throws Exception {
@@ -88,6 +89,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
+        fs = new Path(hdfsUrl).getFileSystem(new Configuration());
+        fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
 
         Process process = store.get(EntityType.PROCESS, "clicksummary");
         Path wfpath = new Path(process.getWorkflow().getPath());
@@ -157,6 +160,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
                 break;
             }
         }
+
+        assertLibExtensions(coord);
     }
 
     @Test
@@ -201,30 +206,54 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
     }
 
+    private void assertLibExtensions(COORDINATORAPP coord) throws Exception {
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
+                fs.open(new Path(wfPath, "workflow.xml")))).getValue();
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            List<String> files = null;
+            if (action.getJava() != null) {
+                files = action.getJava().getFile();
+            } else if (action.getPig() != null) {
+                files = action.getPig().getFile();
+            } else if (action.getMapReduce() != null) {
+                files = action.getMapReduce().getFile();
+            }
+            if (files != null) {
+                Assert.assertTrue(files.get(files.size() - 1)
+                        .endsWith("/projects/falcon/working/libext/PROCESS/ext.jar"));
+            }
+        }
+    }
+
     private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
         throws Exception {
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
         Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
         mapper.map(cluster, bundlePath);
-
-        FileSystem fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         assertTrue(fs.exists(bundlePath));
 
-        BUNDLEAPP bundle = getBundle(fs, bundlePath);
+        BUNDLEAPP bundle = getBundle(bundlePath);
         assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
         assertEquals(1, bundle.getCoordinator().size());
         assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
                 bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
-        COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
+        COORDINATORAPP coord = getCoordinator(new Path(coordPath));
         testDefCoordMap(process, coord);
         assertEquals(coord.getControls().getThrottle(), throttle);
         assertEquals(coord.getControls().getTimeout(), timeout);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        return getParentWorkflow(fs, new Path(wfPath));
+        return getParentWorkflow(new Path(wfPath));
     }
 
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow) {
@@ -238,8 +267,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
     }
 
-    private COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
-        String bundleStr = readFile(fs, path);
+    private COORDINATORAPP getCoordinator(Path path) throws Exception {
+        String bundleStr = readFile(path);
 
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -250,8 +279,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         return jaxbBundle.getValue();
     }
 
-    private WORKFLOWAPP getParentWorkflow(FileSystem fs, Path path) throws Exception {
-        String workflow = readFile(fs, new Path(path, "workflow.xml"));
+    private WORKFLOWAPP getParentWorkflow(Path path) throws Exception {
+        String workflow = readFile(new Path(path, "workflow.xml"));
 
         Unmarshaller unmarshaller = JAXBContext.newInstance(WORKFLOWAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -262,8 +291,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         return jaxbWorkflow.getValue();
     }
 
-    private BUNDLEAPP getBundle(FileSystem fs, Path path) throws Exception {
-        String bundleStr = readFile(fs, new Path(path, "bundle.xml"));
+    private BUNDLEAPP getBundle(Path path) throws Exception {
+        String bundleStr = readFile(new Path(path, "bundle.xml"));
 
         Unmarshaller unmarshaller = JAXBContext.newInstance(BUNDLEAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -274,7 +303,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         return jaxbBundle.getValue();
     }
 
-    private String readFile(FileSystem fs, Path path) throws Exception {
+    private String readFile(Path path) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)));
         String line;
         StringBuilder contents = new StringBuilder();

@@ -13,8 +13,6 @@
 #  limitations under the License. See accompanying LICENSE file.
 #
 
-set -e
-
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
@@ -53,6 +51,10 @@ fi
 
 FALCONCPPATH="$FALCON_CONF:${BASEDIR}/conf:${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/classes:"
 for i in "${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/lib/"*.jar; do
+  FALCONCPPATH="${FALCONCPPATH}:$i"
+done
+
+for i in "${BASEDIR}/libext/"*.jar; do
   FALCONCPPATH="${FALCONCPPATH}:$i"
 done
 

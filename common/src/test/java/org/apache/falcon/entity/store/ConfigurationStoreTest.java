@@ -18,8 +18,11 @@
 
 package org.apache.falcon.entity.store;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,6 +43,24 @@ public class ConfigurationStoreTest {
     private static final Logger LOG = Logger.getLogger(ConfigurationStoreTest.class);
 
     private ConfigurationStore store = ConfigurationStore.get();
+    private TestListener listener = new TestListener();
+
+    private class TestListener implements ConfigurationChangeListener {
+        @Override
+        public void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
+            throw new FalconException("For test");
+        }
+
+        @Override
+        public void onRemove(Entity entity) throws FalconException {
+            throw new FalconException("For test");
+        }
+
+        @Override
+        public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
+            throw new FalconException("For test");
+        }
+    }
 
     @Test
     public void testPublish() throws Exception {
@@ -48,6 +69,16 @@ public class ConfigurationStoreTest {
         store.publish(EntityType.PROCESS, process);
         Process p = store.get(EntityType.PROCESS, "hello");
         Assert.assertEquals(p, process);
+
+        store.registerListener(listener);
+        process.setName("world");
+        try {
+            store.publish(EntityType.PROCESS, process);
+            throw new AssertionError("Expected exception");
+        } catch(FalconException expected) {
+            //expected
+        }
+        store.unregisterListener(listener);
     }
 
     @Test
@@ -66,11 +97,16 @@ public class ConfigurationStoreTest {
         store.remove(EntityType.PROCESS, "remove");
         p = store.get(EntityType.PROCESS, "remove");
         Assert.assertNull(p);
-    }
 
-    @Test
-    public void testSearch() throws Exception {
-        //TODO
+        store.publish(EntityType.PROCESS, process);
+        store.registerListener(listener);
+        try {
+            store.remove(EntityType.PROCESS, "remove");
+            throw new AssertionError("Expected exception");
+        } catch(FalconException expected) {
+            //expected
+        }
+        store.unregisterListener(listener);
     }
 
     @BeforeSuite

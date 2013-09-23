@@ -596,4 +596,12 @@ public final class EntityUtil {
         DateFormat uriFormat = new SimpleDateFormat("yyyy'-'MM'-'dd'-'HH'-'mm");
         return uriFormat.format(utcDate);
     }
+
+    public static boolean responsibleFor(String colo) {
+        if (DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
+                && colo.equals(DeploymentUtil.getCurrentColo()))) {
+            return true;
+        }
+        return false;
+    }
 }

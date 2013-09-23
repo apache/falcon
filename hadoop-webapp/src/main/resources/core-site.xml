@@ -20,6 +20,11 @@
 
 <configuration>
     <property>
+        <name>fs.fsext.impl</name>
+        <value>org.apache.falcon.hadoop.FileSystemExtension</value>
+    </property>
+
+    <property>
         <name>fs.default.name</name>
         <value>hdfs://localhost:41020</value>
     </property>

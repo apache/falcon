@@ -22,12 +22,17 @@ Trunk (Unreleased)
     FALCON-88 Add embedded hive and webhcat for integration tests. 
     (Venkatesh Seetharam via Srikanth Sundarrajan)
 
+    FALCON-107 Adding extensions. (Shwetha GS)
+
     FALCON-62 Falcon compilation with hadoop 2.0 libs. (Shwetha GS
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
     FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
     via Srikanth Sundarrajan)
+
+    FALCON-69 Exception from ConfigurationChangeListener should fail
+    the API. (Shwetha GS via Srikanth Sundarrajan)
 
     FALCON-63 Ability to ingest hadoop libs to falcon release package.
     (Suhas Vasu via Shwetha GS)
@@ -46,6 +51,14 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-128 Feed replication post processing log mover error. (Shwetha GS)
+
+    FALCON-127 Fix test issues after FALCON-107. (Shwetha GS via Srikanth
+    Sundarrajan)
+
+    FALCON-76 Use cluster readonly endpoint for replication source.
+    (Suhas Vasu via Shweth GS)
+
     FALCON-101 mvn release:prepare fails because of build order. (Shwetha GS
     via Srikanth Sundarrajan)
 

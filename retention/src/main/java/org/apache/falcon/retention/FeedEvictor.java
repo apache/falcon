@@ -148,11 +148,12 @@ public class FeedEvictor extends Configured implements Tool {
 
     private void logInstancePaths(Path path) throws IOException {
         LOG.info("Writing deleted instances to path " + path);
-        OutputStream out = fs.create(path);
+        FileSystem logfs = path.getFileSystem(getConf());
+        OutputStream out = logfs.create(path);
         out.write(instancePaths.toString().getBytes());
         out.close();
         if (LOG.isDebugEnabled()) {
-            debug(path);
+            debug(logfs, path);
         }
     }
 
@@ -275,9 +276,9 @@ public class FeedEvictor extends Configured implements Tool {
         return fs.delete(path, true);
     }
 
-    private void debug(Path outPath) throws IOException {
+    private void debug(FileSystem myfs, Path outPath) throws IOException {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        InputStream instance = fs.open(outPath);
+        InputStream instance = myfs.open(outPath);
         IOUtils.copyBytes(instance, writer, 4096, true);
         LOG.debug("Instance Paths copied to " + outPath);
         LOG.debug("Written " + writer);

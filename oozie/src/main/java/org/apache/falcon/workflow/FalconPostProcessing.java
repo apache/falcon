@@ -18,6 +18,7 @@
 package org.apache.falcon.workflow;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.logging.LogMover;
 import org.apache.falcon.messaging.MessageProducer;
 import org.apache.hadoop.conf.Configuration;
@@ -172,8 +173,10 @@ public class FalconPostProcessing extends Configured implements Tool {
     }
 
     private void addArg(List<String> args, CommandLine cmd, Arg arg) {
-        args.add("-" + arg.getOptionName());
-        args.add(arg.getOptionValue(cmd));
+        if (StringUtils.isNotEmpty(arg.getOptionValue(cmd))) {
+            args.add("-" + arg.getOptionName());
+            args.add(arg.getOptionValue(cmd));
+        }
     }
 
     private static CommandLine getCommand(String[] arguments)
