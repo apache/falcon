@@ -112,6 +112,26 @@ public final class FeedHelper {
         throw new FalconException("Both catalog and locations are not defined.");
     }
 
+    public static Storage createReadOnlyStorage(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+                                                Feed feed) throws FalconException {
+        Cluster feedCluster = getCluster(feed, clusterEntity.getName());
+        final List<Location> locations = getLocations(feedCluster, feed);
+        if (locations != null) {
+            return new FileSystemStorage(ClusterHelper.getReadOnlyStorageUrl(clusterEntity), locations);
+        }
+
+        try {
+            final CatalogTable table = getTable(feedCluster, feed);
+            if (table != null) {
+                return new CatalogStorage(clusterEntity, feed);
+            }
+        } catch (URISyntaxException e) {
+            throw new FalconException(e);
+        }
+
+        throw new FalconException("Both catalog and locations are not defined.");
+    }
+
     public static Storage createStorage(String type, String storageUriTemplate)
         throws URISyntaxException {
 
