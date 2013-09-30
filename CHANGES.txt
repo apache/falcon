@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-136 Upgrade to commons-codec 1.8. (Jean-Baptiste Onofre 
+    via Srikanth Sundarrajan)
+
     FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
     via Srikanth Sundarrajan)
 
