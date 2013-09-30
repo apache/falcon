@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-132 assembly plugin for embedded does not generate client
+    artifacts. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-136 Upgrade to commons-codec 1.8. (Jean-Baptiste Onofre 
     via Srikanth Sundarrajan)
 
