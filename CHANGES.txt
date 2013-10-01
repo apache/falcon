@@ -40,6 +40,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-135 Remove jzlib dependency. (Jean-Baptiste Onofré via 
+    Shwetha GS)
+
     FALCON-24 Allow re-run of timedout instances. (Samarth Gupta via 
     Shwetha GS)
 
