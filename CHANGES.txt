@@ -40,6 +40,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-138 Remove perf4j dependency. (Jean-Baptiste Onofré via
+    Shwetha GS)
+
     FALCON-137 Remove commons-logging dependency. (Jean-Baptiste Onofré via
     Shwetha GS)
 
