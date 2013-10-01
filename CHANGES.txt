@@ -40,6 +40,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-24 Allow re-run of timedout instances. (Samarth Gupta via 
+    Shwetha GS)
+
     FALCON-128 Feed replication post processing log mover error. (Shwetha GS)
 
     FALCON-127 Fix test issues after FALCON-107. (Shwetha GS via Srikanth
