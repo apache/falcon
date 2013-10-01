@@ -40,6 +40,9 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-137 Remove commons-logging dependency. (Jean-Baptiste Onofré via
+    Shwetha GS)
+
     FALCON-135 Remove jzlib dependency. (Jean-Baptiste Onofré via 
     Shwetha GS)
 
