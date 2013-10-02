@@ -28,6 +28,12 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-132 assembly plugin for embedded does not generate client
+    artifacts. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
+    FALCON-136 Upgrade to commons-codec 1.8. (Jean-Baptiste Onofre 
+    via Srikanth Sundarrajan)
+
     FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
     via Srikanth Sundarrajan)
 
@@ -51,6 +57,18 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-138 Remove perf4j dependency. (Jean-Baptiste Onofré via
+    Shwetha GS)
+
+    FALCON-137 Remove commons-logging dependency. (Jean-Baptiste Onofré via
+    Shwetha GS)
+
+    FALCON-135 Remove jzlib dependency. (Jean-Baptiste Onofré via 
+    Shwetha GS)
+
+    FALCON-24 Allow re-run of timedout instances. (Samarth Gupta via 
+    Shwetha GS)
+
     FALCON-128 Feed replication post processing log mover error. (Shwetha GS)
 
     FALCON-127 Fix test issues after FALCON-107. (Shwetha GS via Srikanth
