@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-142 Cleanup testng dependency. (Jean Baptiste Onofre via 
+    Srikanth Sundarrajan)
+
     FALCON-132 assembly plugin for embedded does not generate client
     artifacts. (Venkatesh Seetharam via Srikanth Sundarrajan)
 

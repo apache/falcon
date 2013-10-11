@@ -296,14 +296,6 @@
             </dependency>
                                         
             <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>5.8</version>
-                <classifier>jdk15</classifier>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>${slf4j.version}</version>
