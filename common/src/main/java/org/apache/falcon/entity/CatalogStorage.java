@@ -29,7 +29,7 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -42,6 +42,7 @@ public class CatalogStorage implements Storage {
     public static final String PARTITION_KEYVAL_SEPARATOR = "=";
     public static final String INPUT_PATH_SEPARATOR = ":";
     public static final String OUTPUT_PATH_SEPARATOR = "/";
+    public static final String PARTITION_VALUE_QUOTE = "'";
 
     public static final String CATALOG_URL = "${hcatNode}";
 
@@ -54,8 +55,8 @@ public class CatalogStorage implements Storage {
         this(CATALOG_URL, feed.getTable());
     }
 
-    protected CatalogStorage(Cluster cluster, Feed feed) throws URISyntaxException {
-        this(ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint(), feed.getTable());
+    protected CatalogStorage(Cluster cluster, CatalogTable table) throws URISyntaxException {
+        this(ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint(), table);
     }
 
     protected CatalogStorage(String catalogUrl, CatalogTable table) throws URISyntaxException {
@@ -118,7 +119,7 @@ public class CatalogStorage implements Storage {
 
         final String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START_NORMALIZED, DOLLAR_EXPR_START_REGEX)
                                            .replaceAll(EXPR_CLOSE_NORMALIZED, EXPR_CLOSE_REGEX);
-        partitions = new HashMap<String, String>();
+        partitions = new LinkedHashMap<String, String>(); // preserve insertion order
         String[] parts = rawPartition.split(PARTITION_SEPARATOR);
         for (String part : parts) {
             if (part == null || part.length() == 0) {
@@ -180,7 +181,7 @@ public class CatalogStorage implements Storage {
 
         String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START_NORMALIZED, DOLLAR_EXPR_START_REGEX)
                 .replaceAll(EXPR_CLOSE_NORMALIZED, EXPR_CLOSE_REGEX);
-        partitions = new HashMap<String, String>();
+        partitions = new LinkedHashMap<String, String>();
         String[] parts = rawPartition.split(PARTITION_SEPARATOR);
         for (String part : parts) {
             if (part == null || part.length() == 0) {
@@ -242,6 +243,49 @@ public class CatalogStorage implements Storage {
         }
 
         return datedPartitionKey;
+    }
+
+    /**
+     * Convert the partition map to filter string.
+     * Each key value pair is separated by ';'.
+     *
+     * @return filter string
+     */
+    public String toPartitionFilter() {
+        StringBuilder filter = new StringBuilder();
+        filter.append("(");
+        for (Map.Entry<String, String> entry : partitions.entrySet()) {
+            if (filter.length() > 1) {
+                filter.append(PARTITION_SEPARATOR);
+            }
+            filter.append(entry.getKey());
+            filter.append(PARTITION_KEYVAL_SEPARATOR);
+            filter.append(PARTITION_VALUE_QUOTE);
+            filter.append(entry.getValue());
+            filter.append(PARTITION_VALUE_QUOTE);
+        }
+        filter.append(")");
+        return filter.toString();
+    }
+
+    /**
+     * Convert the partition map to path string.
+     * Each key value pair is separated by '/'.
+     *
+     * @return path string
+     */
+    public String toPartitionAsPath() {
+        StringBuilder partitionFilter = new StringBuilder();
+
+        for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
+            partitionFilter.append(entry.getKey())
+                    .append(PARTITION_KEYVAL_SEPARATOR)
+                    .append(entry.getValue())
+                    .append(OUTPUT_PATH_SEPARATOR);
+        }
+
+        partitionFilter.setLength(partitionFilter.length() - 1);
+        return partitionFilter.toString();
     }
 
     @Override

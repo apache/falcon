@@ -979,6 +979,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>${skipCheck}</skip>
+                </configuration>
             </plugin>
 
             <plugin>

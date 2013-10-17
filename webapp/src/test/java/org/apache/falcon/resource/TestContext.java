@@ -395,51 +395,6 @@ public class TestContext {
         return false;
     }
 
-    /*
-    public WorkflowJob getWorkflowJob(String filter) throws Exception {
-        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-
-        List<WorkflowJob> jobs;
-        while (true) {
-            jobs = ozClient.getJobsInfo(filter);
-            System.out.println("jobs = " + jobs);
-            if (jobs.size() > 0) {
-                break;
-            } else {
-                Thread.sleep(1000);
-            }
-        }
-
-        WorkflowJob jobInfo = jobs.get(0);
-        while (true) {
-            if (!(jobInfo.getStatus() == WorkflowJob.Status.RUNNING
-                    || jobInfo.getStatus() == WorkflowJob.Status.PREP)) {
-                break;
-            } else {
-                Thread.sleep(1000);
-                jobInfo = ozClient.getJobInfo(jobInfo.getId());
-                System.out.println("jobInfo = " + jobInfo);
-            }
-        }
-
-        return jobInfo;
-    }
-
-    public Path getOozieLogPath(WorkflowJob jobInfo) throws Exception {
-        Path stagingPath = new Path(ClusterHelper.getLocation(cluster.getCluster(), "staging"),
-                EntityUtil.getStagingPath(cluster.getCluster()) + "/../logs");
-        final Path logPath = new Path(ClusterHelper.getStorageUrl(cluster.getCluster()), stagingPath);
-        LogMover.main(new String[]{"-workflowEngineUrl",
-                ClusterHelper.getOozieUrl(cluster.getCluster()),
-                "-subflowId", jobInfo.getId(), "-runId", "1",
-                "-logDir", logPath.toString() + "/job-2012-04-21-00-00",
-                "-status", "SUCCEEDED", "-entityType", "process",
-                "-userWorkflowEngine", "pig",});
-
-        return new Path(logPath, "job-2012-04-21-00-00/001/oozie.log");
-    }
-    */
-
     public Map<String, String> getUniqueOverlay() throws FalconException {
         Map<String, String> overlay = new HashMap<String, String>();
         long time = System.currentTimeMillis();

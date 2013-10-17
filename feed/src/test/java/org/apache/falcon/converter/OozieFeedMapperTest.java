@@ -17,14 +17,6 @@
  */
 package org.apache.falcon.converter;
 
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
@@ -49,6 +41,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
  */
@@ -59,10 +58,12 @@ public class OozieFeedMapperTest {
     private Cluster srcCluster;
     private Cluster trgCluster;
     private Feed feed;
+    private Feed tableFeed;
 
     private static final String SRC_CLUSTER_PATH = "/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/trg-cluster.xml";
     private static final String FEED = "/feed.xml";
+    private static final String TABLE_FEED = "/table-replication-feed.xml";
 
     @BeforeClass
     public void setUpDFS() throws Exception {
@@ -79,6 +80,8 @@ public class OozieFeedMapperTest {
         trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH, trgHdfsUrl);
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED, null);
+
+        tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED, null);
     }
 
     protected Entity storeEntity(EntityType type, String template, String writeEndpoint) throws Exception {
@@ -114,7 +117,7 @@ public class OozieFeedMapperTest {
     }
 
     @Test
-    public void testFeedCoords() throws Exception {
+    public void testReplicationCoordsForFSStorage() throws Exception {
         OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
         List<COORDINATORAPP> coords = feedMapper.getCoordinators(trgCluster,
                 new Path("/projects/falcon/"));
@@ -145,9 +148,8 @@ public class OozieFeedMapperTest {
         Assert.assertEquals("${coord:minutes(20)}",
                 outputDataset.getFrequency());
         Assert.assertEquals("output-dataset", outputDataset.getName());
-        Assert.assertEquals(
-                "${nameNode}"
-                        + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
+        Assert.assertEquals(ClusterHelper.getStorageUrl(trgCluster)
+                + "/examples/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
                         outputDataset.getUriTemplate());
         String inEventName =coord.getInputEvents().getDataIn().get(0).getName();
         String inEventDataset =coord.getInputEvents().getDataIn().get(0).getDataset();
@@ -190,6 +192,69 @@ public class OozieFeedMapperTest {
             if (files != null) {
                 Assert.assertTrue(files.get(files.size() - 1).endsWith("/projects/falcon/working/libext/FEED/"
                         + lifecycle + "/ext.jar"));
+            }
+        }
+    }
+
+    @Test
+    public void testReplicationCoordsForTableStorage() throws Exception {
+        OozieFeedMapper feedMapper = new OozieFeedMapper(tableFeed);
+        List<COORDINATORAPP> coords = feedMapper.getCoordinators(
+                trgCluster, new Path("/projects/falcon/"));
+        COORDINATORAPP coord = coords.get(0);
+
+        Assert.assertEquals("2010-01-01T00:40Z", coord.getStart());
+        Assert.assertEquals("${nameNode}/projects/falcon/REPLICATION",
+                coord.getAction().getWorkflow().getAppPath());
+        Assert.assertEquals("FALCON_FEED_REPLICATION_" + tableFeed.getName() + "_"
+                + srcCluster.getName(), coord.getName());
+        Assert.assertEquals("${coord:minutes(20)}", coord.getFrequency());
+
+        SYNCDATASET inputDataset = (SYNCDATASET) coord.getDatasets()
+                .getDatasetOrAsyncDataset().get(0);
+        Assert.assertEquals("${coord:minutes(20)}", inputDataset.getFrequency());
+        Assert.assertEquals("input-dataset", inputDataset.getName());
+
+        String sourceRegistry = ClusterHelper.getInterface(srcCluster, Interfacetype.REGISTRY).getEndpoint();
+        sourceRegistry = sourceRegistry.replace("thrift", "hcat");
+        Assert.assertEquals(inputDataset.getUriTemplate(),
+                sourceRegistry + "/source_db/source_clicks_table/ds=${YEAR}${MONTH}${DAY};region=${region}");
+
+        SYNCDATASET outputDataset = (SYNCDATASET) coord.getDatasets()
+                .getDatasetOrAsyncDataset().get(1);
+        Assert.assertEquals(outputDataset.getFrequency(), "${coord:minutes(20)}");
+        Assert.assertEquals("output-dataset", outputDataset.getName());
+
+        String targetRegistry = ClusterHelper.getInterface(trgCluster, Interfacetype.REGISTRY).getEndpoint();
+        targetRegistry = targetRegistry.replace("thrift", "hcat");
+        Assert.assertEquals(outputDataset.getUriTemplate(),
+                targetRegistry + "/target_db/target_clicks_table/ds=${YEAR}${MONTH}${DAY};region=${region}");
+
+        String inEventName =coord.getInputEvents().getDataIn().get(0).getName();
+        String inEventDataset =coord.getInputEvents().getDataIn().get(0).getDataset();
+        String inEventInstance = coord.getInputEvents().getDataIn().get(0).getInstance().get(0);
+        Assert.assertEquals("input", inEventName);
+        Assert.assertEquals("input-dataset", inEventDataset);
+        Assert.assertEquals("${now(0,-40)}", inEventInstance);
+
+        String outEventInstance = coord.getOutputEvents().getDataOut().get(0).getInstance();
+        Assert.assertEquals("${now(0,-40)}", outEventInstance);
+
+        // assert FS staging area
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        final FileSystem fs = trgMiniDFS.getFileSystem();
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts")));
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-export.hql")));
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-import.hql")));
+
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf")));
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-source-hive-site.xml")));
+        Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-target-hive-site.xml")));
+
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            if (prop.getName().equals("shouldRecord")) {
+                Assert.assertEquals(prop.getValue(), "false");
+                break;
             }
         }
     }

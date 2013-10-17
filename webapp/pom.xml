@@ -257,6 +257,16 @@
                                     <outputDirectory>${project.build.directory}/sharelib</outputDirectory>
                                     <destFileName>pig.jar</destFileName>
                                 </artifactItem>
+                                <!-- this is only used in integration-tests against external clusters -->
+                                <artifactItem>
+                                    <groupId>org.apache.activemq</groupId>
+                                    <artifactId>kahadb</artifactId>
+                                    <version>5.4.3</version>
+                                    <type>jar</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/libext</outputDirectory>
+                                    <destFileName>kahadb.jar</destFileName>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>

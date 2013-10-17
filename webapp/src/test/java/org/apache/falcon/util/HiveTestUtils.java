@@ -77,7 +77,7 @@ public final class HiveTestUtils {
     }
 
     public static void createExternalTable(String metaStoreUrl, String databaseName, String tableName,
-                                    List<String> partitionKeys, String externalLocation) throws Exception {
+                                           List<String> partitionKeys, String externalLocation) throws Exception {
         ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
         cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
         cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
@@ -101,12 +101,27 @@ public final class HiveTestUtils {
         client.createTable(tableDesc);
     }
 
+    public static void alterTable(String metaStoreUrl, String databaseName,
+                                  String tableName) throws Exception {
+        StringBuilder alterTableDdl = new StringBuilder();
+        alterTableDdl
+                .append(" alter table ")
+                .append(tableName)
+                .append(" set fileformat ")
+                .append(" inputformat 'org.apache.hadoop.mapred.TextInputFormat' ")
+                .append(" outputformat 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'");
+
+        startSessionState(metaStoreUrl);
+        execHiveDDL("use " + databaseName);
+        execHiveDDL(alterTableDdl.toString());
+    }
+
     public static void loadData(String metaStoreUrl, String databaseName, String tableName,
                                 String path, String partition) throws Exception {
         StringBuilder alterTableDdl = new StringBuilder();
         alterTableDdl
                 .append(" load data inpath ")
-                .append(" '").append(path).append(partition).append("' ")
+                .append(" '").append(path).append("' ")
                 .append(" into table ")
                 .append(tableName)
                 .append(" partition ").append(" (ds='").append(partition).append("') ");
@@ -142,7 +157,7 @@ public final class HiveTestUtils {
         System.out.println("response.getErrorMessage() = " + response.getErrorMessage());
         System.out.println("response.getSQLState() = " + response.getSQLState());
 
-        if (response.getResponseCode() == 1) {
+        if (response.getResponseCode() > 0) {
             throw new Exception(response.getErrorMessage());
         }
     }

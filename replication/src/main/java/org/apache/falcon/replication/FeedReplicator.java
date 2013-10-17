@@ -18,6 +18,7 @@
 package org.apache.falcon.replication;
 
 import org.apache.commons.cli.*;
+import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -48,8 +49,8 @@ public class FeedReplicator extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-
-        DistCpOptions options = getDistCpOptions(args);
+        CommandLine cmd = getCommand(args);
+        DistCpOptions options = getDistCpOptions(cmd);
 
         Configuration conf = this.getConf();
         // inject wf configs
@@ -60,10 +61,68 @@ public class FeedReplicator extends Configured implements Tool {
                 + confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
-        DistCp distCp = new CustomReplicator(conf, options);
+        String falconFeedStorageType = cmd.getOptionValue("falconFeedStorageType").trim();
+        Storage.TYPE feedStorageType = Storage.TYPE.valueOf(falconFeedStorageType);
+
+        DistCp distCp = (feedStorageType == Storage.TYPE.FILESYSTEM)
+                ? new CustomReplicator(conf, options)
+                : new DistCp(conf, options);
         LOG.info("Started DistCp");
         distCp.execute();
 
+        if (feedStorageType == Storage.TYPE.FILESYSTEM) {
+            executePostProcessing(options);  // this only applies for FileSystem Storage.
+        }
+
+        LOG.info("Completed DistCp");
+        return 0;
+    }
+
+    protected CommandLine getCommand(String[] args) throws ParseException {
+        Options options = new Options();
+        Option opt = new Option("maxMaps", true,
+                "max number of maps to use for this copy");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("sourcePaths", true,
+                "comma separtated list of source paths to be copied");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("targetPath", true, "target path");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("falconFeedStorageType", true, "feed storage type");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        return new GnuParser().parse(options, args);
+    }
+
+    protected DistCpOptions getDistCpOptions(CommandLine cmd) {
+        String[] paths = cmd.getOptionValue("sourcePaths").trim().split(",");
+        List<Path> srcPaths = getPaths(paths);
+        String trgPath = cmd.getOptionValue("targetPath").trim();
+
+        DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(trgPath));
+        distcpOptions.setSyncFolder(true);
+        distcpOptions.setBlocking(true);
+        distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
+
+        return distcpOptions;
+    }
+
+    private List<Path> getPaths(String[] paths) {
+        List<Path> listPaths = new ArrayList<Path>();
+        for (String path : paths) {
+            listPaths.add(new Path(path));
+        }
+        return listPaths;
+    }
+
+    private void executePostProcessing(DistCpOptions options) throws IOException {
         Path targetPath = options.getTargetPath();
         FileSystem fs = targetPath.getFileSystem(getConf());
         List<Path> inPaths = options.getSourcePaths();
@@ -87,8 +146,6 @@ public class FeedReplicator extends Configured implements Tool {
             LOG.info("No files present in path: "
                     + new Path(targetPath.toString() + "/" + fixedPath).toString());
         }
-        LOG.info("Completed DistCp");
-        return 0;
     }
 
     private String getFixedPath(String relativePath) throws IOException {
@@ -112,45 +169,5 @@ public class FeedReplicator extends Configured implements Tool {
         }
         String result = resultBuffer.toString();
         return result.substring(0, result.lastIndexOf('/'));
-    }
-
-    public DistCpOptions getDistCpOptions(String[] args) throws ParseException {
-        Options options = new Options();
-        Option opt;
-        opt = new Option("maxMaps", true,
-                "max number of maps to use for this copy");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("sourcePaths", true,
-                "comma separtated list of source paths to be copied");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("targetPath", true, "target path");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        CommandLine cmd = new GnuParser().parse(options, args);
-        String[] paths = cmd.getOptionValue("sourcePaths").trim().split(",");
-        List<Path> srcPaths = getPaths(paths);
-        String trgPath = cmd.getOptionValue("targetPath").trim();
-
-        DistCpOptions distcpOptions = new DistCpOptions(srcPaths, new Path(
-                trgPath));
-        distcpOptions.setSyncFolder(true);
-        distcpOptions.setBlocking(true);
-        distcpOptions
-                .setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
-
-        return distcpOptions;
-    }
-
-    private List<Path> getPaths(String[] paths) {
-        List<Path> listPaths = new ArrayList<Path>();
-        for (String path : paths) {
-            listPaths.add(new Path(path));
-        }
-        return listPaths;
     }
 }

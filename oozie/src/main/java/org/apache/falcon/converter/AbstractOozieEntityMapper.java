@@ -40,10 +40,12 @@ import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -378,6 +380,21 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             throw new FalconException(e);
         } finally {
             IOUtils.closeQuietly(resourceAsStream);
+        }
+    }
+
+    protected void createHiveConf(FileSystem fs, Path confPath, String metastoreUrl,
+                                  String prefix) throws IOException {
+        Configuration hiveConf = new Configuration(false);
+        hiveConf.set(HiveConf.ConfVars.METASTOREURIS.varname, metastoreUrl);
+        hiveConf.set("hive.metastore.local", "false");
+
+        OutputStream out = null;
+        try {
+            out = fs.create(new Path(confPath, prefix + "hive-site.xml"));
+            hiveConf.writeXml(out);
+        } finally {
+            IOUtils.closeQuietly(out);
         }
     }
 }

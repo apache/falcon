@@ -17,14 +17,17 @@
  */
 package org.apache.falcon.cleanup;
 
-import java.io.IOException;
-
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.CatalogStorage;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,6 +35,9 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Test for log cleanup service.
@@ -41,6 +47,11 @@ public class LogCleanupServiceTest extends AbstractTestBase {
     private FileSystem fs;
     private FileSystem tfs;
     private EmbeddedCluster targetDfsCluster;
+    private Path sourceStagingPath1;
+    private Path sourceStagingPath2;
+    private Path targetStagingPath1;
+    private Path targetStagingPath2;
+
     private final Path instanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/job-2010-01-01-01-00/000");
     private final Path instanceLogPath1 = new Path("/projects/falcon/staging/falcon/workflows/process/"
@@ -107,7 +118,43 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         fs.createNewFile(new Path(feedInstanceLogPath, "oozie.log"));
         tfs.createNewFile(new Path(feedInstanceLogPath, "oozie.log"));
 
+        // table feed staging dir setup
+        initializeStagingDirs();
+        createStageData(sourceStagingPath1, targetStagingPath1);
+
         Thread.sleep(61000);
+
+        createStageData(sourceStagingPath2, targetStagingPath2);
+    }
+
+    private void initializeStagingDirs() throws Exception {
+        final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
+        Feed tableFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(inputStream);
+        getStore().publish(EntityType.FEED, tableFeed);
+
+        final Cluster srcCluster = dfsCluster.getCluster();
+        final CatalogStorage sourceStorage = (CatalogStorage) FeedHelper.createStorage(srcCluster, tableFeed);
+        String sourceStagingDir = FeedHelper.getStagingDir(srcCluster, tableFeed, sourceStorage, Tag.REPLICATION);
+
+        sourceStagingPath1 = new Path(sourceStagingDir + "/ds=2012092400/" + System.currentTimeMillis());
+        sourceStagingPath2 = new Path(sourceStagingDir + "/ds=2012092500/" + System.currentTimeMillis());
+
+        final Cluster targetCluster = targetDfsCluster.getCluster();
+        final CatalogStorage targetStorage = (CatalogStorage) FeedHelper.createStorage(targetCluster, tableFeed);
+        String targetStagingDir = FeedHelper.getStagingDir(targetCluster, tableFeed, targetStorage, Tag.REPLICATION);
+
+        targetStagingPath1 = new Path(targetStagingDir + "/ds=2012092400/" + System.currentTimeMillis());
+        targetStagingPath2 = new Path(targetStagingDir + "/ds=2012092500/" + System.currentTimeMillis());
+    }
+
+    private void createStageData(Path sourcePath, Path targetPath) throws Exception {
+        fs.mkdirs(sourcePath);
+        fs.createNewFile(new Path(sourcePath, "_metadata.xml"));
+        fs.createNewFile(new Path(sourcePath, "data.txt"));
+
+        tfs.mkdirs(targetPath);
+        tfs.createNewFile(new Path(targetPath, "_metadata.xml"));
+        tfs.createNewFile(new Path(targetPath, "data.txt"));
     }
 
     @Test
@@ -120,7 +167,6 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Assert.assertFalse(fs.exists(instanceLogPath1));
         Assert.assertFalse(fs.exists(instanceLogPath2));
         Assert.assertTrue(fs.exists(instanceLogPath3));
-
     }
 
     @Test
@@ -134,5 +180,18 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Assert.assertTrue(fs.exists(feedInstanceLogPath1));
         Assert.assertTrue(tfs.exists(feedInstanceLogPath1));
 
+        // source table replication staging dirs
+        Assert.assertFalse(fs.exists(new Path(sourceStagingPath1, "_metadata.xml")));
+        Assert.assertFalse(fs.exists(new Path(sourceStagingPath1, "data.txt")));
+
+        Assert.assertTrue(fs.exists(new Path(sourceStagingPath2, "_metadata.xml")));
+        Assert.assertTrue(fs.exists(new Path(sourceStagingPath2, "data.txt")));
+
+        // target table replication staging dirs
+        Assert.assertFalse(tfs.exists(new Path(targetStagingPath1, "_metadata.xml")));
+        Assert.assertFalse(tfs.exists(new Path(targetStagingPath1, "data.txt")));
+
+        Assert.assertTrue(tfs.exists(new Path(targetStagingPath2, "_metadata.xml")));
+        Assert.assertTrue(tfs.exists(new Path(targetStagingPath2, "data.txt")));
     }
 }

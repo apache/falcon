@@ -143,7 +143,7 @@ public class CatalogStorageTest {
     public void testGetUriTemplateWithCatalogUrl() throws Exception {
         final String catalogUrl = "thrift://localhost:49083";
         String tableUri = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
-        String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/region=us;ds=${YEAR}-${MONTH}-${DAY}";
+        String uriTemplate = "thrift://localhost:49083/clicksdb/clicks/ds=${YEAR}-${MONTH}-${DAY};region=us";
 
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
 
@@ -155,12 +155,32 @@ public class CatalogStorageTest {
     @Test
     public void testGetUriTemplateWithOutCatalogUrl() throws Exception {
         String tableUri = "catalog:clicksdb:clicks#ds=${YEAR}-${MONTH}-${DAY};region=us";
-        String uriTemplate = "${hcatNode}/clicksdb/clicks/region=us;ds=${YEAR}-${MONTH}-${DAY}";
+        String uriTemplate = "${hcatNode}/clicksdb/clicks/ds=${YEAR}-${MONTH}-${DAY};region=us";
 
         CatalogStorage table = new CatalogStorage(CatalogStorage.CATALOG_URL, tableUri);
 
         Assert.assertEquals(uriTemplate, table.getUriTemplate());
         Assert.assertEquals(uriTemplate, table.getUriTemplate(LocationType.DATA));
         Assert.assertEquals(table.getUriTemplate(), table.getUriTemplate(LocationType.DATA));
+    }
+
+    @Test
+    public void testToPartitionFilter() throws Exception {
+        final String catalogUrl = "thrift://localhost:49083";
+        String tableUri = "catalog:clicksdb:clicks#ds=20130918;region=us";
+        String partitionFilter = "(ds='20130918';region='us')";
+
+        CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
+        Assert.assertEquals(table.toPartitionFilter(), partitionFilter);
+    }
+
+    @Test
+    public void testToPartitionAsPath() throws Exception {
+        final String catalogUrl = "thrift://localhost:49083";
+        String tableUri = "catalog:clicksdb:clicks#ds=20130918;region=us";
+        String partitionPath = "ds=20130918/region=us";
+
+        CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
+        Assert.assertEquals(table.toPartitionAsPath(), partitionPath);
     }
 }

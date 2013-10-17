@@ -27,7 +27,7 @@
                    version="3.1"/>
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
                    version="5.1.6"/>
-        <interface type="registry" endpoint="Hcat" version="1"/>
+        <interface type="registry" endpoint="thrift://localhost:59093" version="1"/>
     </interfaces>
     <locations>
         <location name="temp" path="/tmp"/>

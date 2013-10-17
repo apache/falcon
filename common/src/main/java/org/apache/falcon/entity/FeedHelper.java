@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Tag;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
@@ -30,6 +31,7 @@ import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.expression.ExpressionHelper;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +105,7 @@ public final class FeedHelper {
         try {
             final CatalogTable table = getTable(cluster, feed);
             if (table != null) {
-                return new CatalogStorage(clusterEntity, feed);
+                return new CatalogStorage(clusterEntity, table);
             }
         } catch (URISyntaxException e) {
             throw new FalconException(e);
@@ -112,6 +114,14 @@ public final class FeedHelper {
         throw new FalconException("Both catalog and locations are not defined.");
     }
 
+    /**
+     * Factory method to dole out a storage instance used for replication source.
+     *
+     * @param clusterEntity cluster entity
+     * @param feed feed entity
+     * @return an implementation of Storage
+     * @throws FalconException
+     */
     public static Storage createReadOnlyStorage(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
                                                 Feed feed) throws FalconException {
         Cluster feedCluster = getCluster(feed, clusterEntity.getName());
@@ -123,7 +133,7 @@ public final class FeedHelper {
         try {
             final CatalogTable table = getTable(feedCluster, feed);
             if (table != null) {
-                return new CatalogStorage(clusterEntity, feed);
+                return new CatalogStorage(clusterEntity, table);
             }
         } catch (URISyntaxException e) {
             throw new FalconException(e);
@@ -199,5 +209,15 @@ public final class FeedHelper {
         ExpressionHelper expHelp = ExpressionHelper.get();
         expHelp.setPropertiesForVariable(properties);
         return expHelp.evaluateFullExpression(exp, String.class);
+    }
+
+    public static String getStagingDir(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+                                       Feed feed, CatalogStorage storage, Tag tag) {
+        String workflowName = EntityUtil.getWorkflowName(
+                tag, Arrays.asList(clusterEntity.getName()), feed).toString();
+        return ClusterHelper.getCompleteLocation(clusterEntity, "staging") + "/"
+                + workflowName  + "/"
+                + storage.getDatabase() + "/"
+                + storage.getTable();
     }
 }
