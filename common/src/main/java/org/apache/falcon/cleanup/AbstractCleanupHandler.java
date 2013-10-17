@@ -106,6 +106,10 @@ public abstract class AbstractCleanupHandler {
 
     protected void delete(Cluster cluster, Entity entity, long retention, FileStatus[] logs)
         throws FalconException {
+        if (logs == null || logs.length == 0) {
+            LOG.info("Nothing to delete for cluster: " + cluster.getName() + ", entity: " + entity.getName());
+            return;
+        }
 
         long now = System.currentTimeMillis();
 
@@ -141,7 +145,6 @@ public abstract class AbstractCleanupHandler {
             fs.delete(parent, true);
             deleteParentIfEmpty(fs, parent.getParent());
         }
-
     }
 
     public abstract void cleanup() throws FalconException;

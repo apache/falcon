@@ -19,6 +19,7 @@
 package org.apache.falcon.latedata;
 
 import org.apache.commons.cli.*;
+import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -56,14 +57,19 @@ public class LateDataHandler extends Configured implements Tool {
         Option opt = new Option("out", true, "Out file name");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("paths", true,
                 "Comma separated path list, further separated by #");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("falconInputFeeds", true,
                 "Input feed names, further separated by #");
         opt.setRequired(true);
         options.addOption(opt);
+
+        opt = new Option("falconFeedStorageType", true, "Feed storage type: FileSystem or Table");
+        opt.setRequired(true);
 
         return new GnuParser().parse(options, args);
     }
@@ -73,6 +79,12 @@ public class LateDataHandler extends Configured implements Tool {
 
         CommandLine command = getCommand(args);
 
+        final String falconFeedStorageType = command.getOptionValue("falconFeedStorageType");
+        if (Storage.TYPE.valueOf(falconFeedStorageType) == Storage.TYPE.TABLE) {
+            LOG.info("Late data not supported for table storage.");
+            return 0; // Late Data is not handled for table storage
+        }
+
         Path file = new Path(command.getOptionValue("out"));
         Map<String, Long> map = new LinkedHashMap<String, Long>();
         String pathStr = getOptionValue(command, "paths");
@@ -81,8 +93,7 @@ public class LateDataHandler extends Configured implements Tool {
         }
 
         String[] pathGroups = pathStr.split("#");
-        String[] inputFeeds = getOptionValue(command, "falconInputFeeds").split(
-                "#");
+        String[] inputFeeds = getOptionValue(command, "falconInputFeeds").split("#");
         for (int index = 0; index < pathGroups.length; index++) {
             long usage = 0;
             for (String pathElement : pathGroups[index].split(",")) {

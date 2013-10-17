@@ -155,6 +155,36 @@ public final class FeedHelper {
         throw new IllegalArgumentException("Bad type: " + type);
     }
 
+    public static Storage.TYPE getStorageType(Feed feed) throws FalconException {
+        final Locations feedLocations = feed.getLocations();
+        if (feedLocations != null
+                && feedLocations.getLocations().size() != 0) {
+            return Storage.TYPE.FILESYSTEM;
+        }
+
+        final CatalogTable table = feed.getTable();
+        if (table != null) {
+            return Storage.TYPE.TABLE;
+        }
+
+        throw new FalconException("Both catalog and locations are not defined.");
+    }
+
+    public static Storage.TYPE getStorageType(Feed feed,
+                                              Cluster cluster) throws FalconException {
+        final List<Location> locations = getLocations(cluster, feed);
+        if (locations != null) {
+            return Storage.TYPE.FILESYSTEM;
+        }
+
+        final CatalogTable table = getTable(cluster, feed);
+        if (table != null) {
+            return Storage.TYPE.TABLE;
+        }
+
+        throw new FalconException("Both catalog and locations are not defined.");
+    }
+
     private static List<Location> getLocations(Cluster cluster, Feed feed) {
         // check if locations are overridden in cluster
         final Locations clusterLocations = cluster.getLocations();

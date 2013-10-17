@@ -175,6 +175,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private void validateLateInputs(Process process) throws ValidationException {
+        if (process.getLateProcess() == null) {
+            return;
+        }
+
         Map<String, String> feeds = new HashMap<String, String>();
         if (process.getInputs() != null) {
             for (Input in : process.getInputs().getInputs()) {
@@ -182,26 +186,30 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
         }
 
-        if (process.getLateProcess() != null) {
-            for (LateInput lp : process.getLateProcess().getLateInputs()) {
-                if (!feeds.keySet().contains(lp.getInput())) {
-                    throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
+        for (LateInput lp : process.getLateProcess().getLateInputs()) {
+            if (!feeds.keySet().contains(lp.getInput())) {
+                throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
+            }
+
+            try {
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
+                if (FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
+                    throw new ValidationException("Late data handling is not supported for feeds with table storage! "
+                            + feed.getName());
                 }
-                try {
-                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
-                    if (feed.getLateArrival() == null) {
-                        throw new ValidationException(
-                                "Late Input feed: " + lp.getInput() + " is not configured with late arrival cut-off");
-                    }
-                } catch (FalconException e) {
-                    throw new ValidationException(e);
+
+                if (feed.getLateArrival() == null) {
+                    throw new ValidationException(
+                            "Late Input feed: " + lp.getInput() + " is not configured with late arrival cut-off");
                 }
+            } catch (FalconException e) {
+                throw new ValidationException(e);
             }
         }
     }
 
     private void validateOptionalInputsForTableStorage(Feed feed, Input input) throws FalconException {
-        if (input.isOptional() && FeedHelper.createStorage(feed).getType() == Storage.TYPE.TABLE) {
+        if (input.isOptional() && FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
             throw new ValidationException("Optional Input is not supported for feeds with table storage! "
                     + input.getName());
         }

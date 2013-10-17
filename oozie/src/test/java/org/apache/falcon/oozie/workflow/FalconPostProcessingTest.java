@@ -69,7 +69,8 @@ public class FalconPostProcessingTest {
                             "http://localhost:11000/oozie/",
                             "-" + Arg.LOG_DIR.getOptionName(), "target/log",
                             "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test",
-                            "-" + Arg.USER_WORKFLOW_ENGINE.getOptionName(), "oozie", };
+                            "-" + Arg.USER_WORKFLOW_ENGINE.getOptionName(), "oozie",
+                            "-" + Arg.FEED_STORAGE_TYPE.getOptionName(), "FILESYSTEM", };
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
@@ -133,6 +134,7 @@ public class FalconPostProcessingTest {
             Assert.assertEquals(
                     m.getString(Arg.FEED_INSTANCE_PATHS.getOptionName()),
                     "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20");
+            Assert.assertEquals(m.getString(Arg.FEED_STORAGE_TYPE.getOptionName()), "FILESYSTEM");
         } else {
             Assert.assertEquals(m.getString(Arg.FEED_NAMES.getOptionName()),
                     "click-logs");

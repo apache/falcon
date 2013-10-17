@@ -45,6 +45,7 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -163,12 +164,12 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         assertEquals(ds.getUriTemplate(),
                 FeedHelper.createStorage(feedCluster, feed).getUriTemplate(LocationType.DATA));
 
+        HashMap<String, String> props = new HashMap<String, String>();
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            if (prop.getName().equals("mapred.job.priority")) {
-                assertEquals(prop.getValue(), "LOW");
-                break;
-            }
+            props.put(prop.getName(), prop.getValue());
         }
+        assertEquals(props.get("mapred.job.priority"), "LOW");
+        Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
 
         assertLibExtensions(coord);
     }
@@ -285,7 +286,6 @@ public class OozieProcessMapperTest extends AbstractTestBase {
             props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
         } else if (prefix.equals("output")) {
             props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
-            props.put("shouldRecord", "false"); // todo - override until late data is handled
         }
     }
 

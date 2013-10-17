@@ -61,7 +61,8 @@ public class FalconPostProcessing extends Configured implements Tool {
         WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie"),
         USER_SUBFLOW_ID("subflowId", "external id of user workflow"),
         USER_WORKFLOW_ENGINE("userWorkflowEngine", "user workflow engine type"),
-        LOG_DIR("logDir", "log dir where job logs are copied");
+        LOG_DIR("logDir", "log dir where job logs are copied"),
+        FEED_STORAGE_TYPE("falconFeedStorageType", "feed's storage type");
 
         private String name;
         private String description;
@@ -155,6 +156,7 @@ public class FalconPostProcessing extends Configured implements Tool {
         addArg(args, cmd, Arg.FEED_NAMES);
         addArg(args, cmd, Arg.FEED_INSTANCE_PATHS);
         addArg(args, cmd, Arg.LOG_FILE);
+        addArg(args, cmd, Arg.FEED_STORAGE_TYPE);
 
         MessageProducer.main(args.toArray(new String[0]));
     }
@@ -204,6 +206,7 @@ public class FalconPostProcessing extends Configured implements Tool {
         addOption(options, Arg.USER_SUBFLOW_ID);
         addOption(options, Arg.USER_WORKFLOW_ENGINE, false);
         addOption(options, Arg.LOG_DIR);
+        addOption(options, Arg.FEED_STORAGE_TYPE);
         return new GnuParser().parse(options, arguments);
     }
 

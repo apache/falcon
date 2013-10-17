@@ -124,12 +124,18 @@ public class MessageProducer extends Configured implements Tool {
                 "workflow id"));
         addOption(options, new Option(ARG.cluster.getArgName(), true,
                 "cluster name"));
+        addOption(options, new Option(ARG.falconFeedStorageType.getArgName(), true,
+                "feed storage type: filesystem or table"), false);
 
         return new GnuParser().parse(options, arguments);
     }
 
     private static void addOption(Options options, Option opt) {
-        opt.setRequired(true);
+        addOption(options, opt, true);
+    }
+
+    private static void addOption(Options options, Option opt, boolean isRequired) {
+        opt.setRequired(isRequired);
         options.addOption(opt);
     }
 

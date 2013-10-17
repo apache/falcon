@@ -72,7 +72,7 @@ public class FileSystemStorage implements Storage {
      * Create an instance from the URI Template that was generated using
      * the getUriTemplate() method.
      *
-     * @param uriTemplate the uri template from org.apache.falcon.entity.CatalogStorage#getUriTemplate
+     * @param uriTemplate the uri template from org.apache.falcon.entity.FileSystemStorage#getUriTemplate
      * @throws URISyntaxException
      */
     protected FileSystemStorage(String uriTemplate) throws URISyntaxException {

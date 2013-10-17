@@ -22,14 +22,21 @@ package org.apache.falcon.rerun.event;
  */
 public class LaterunEvent extends RerunEvent {
 
-    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    private String feedStorageType;
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public LaterunEvent(String clusterName, String wfId, long msgInsertTime,
                         long delay, String entityType, String entityName, String instance,
-                        int runId) {
+                        int runId, String feedStorageType) {
         super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
                 instance, runId);
+        this.feedStorageType = feedStorageType;
     }
-    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+
+    public String getFeedStorageType() {
+        return feedStorageType;
+    }
 
     @Override
     public String toString() {
@@ -37,6 +44,6 @@ public class LaterunEvent extends RerunEvent {
                 + "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
                 + delayInMilliSec + SEP + "entityType=" + entityType + SEP
                 + "entityName=" + entityName + SEP + "instance=" + instance
-                + SEP + "runId=" + runId;
+                + SEP + "runId=" + runId + ", falconFeedStorageType=" + feedStorageType;
     }
 }

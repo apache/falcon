@@ -416,7 +416,6 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                 } else if (sourceStorage.getType() == Storage.TYPE.TABLE) {
                     instancePaths = "${coord:dataIn('input')}";
 
-                    props.put("shouldRecord", "false"); // todo - override until late data is handled
                     final CatalogStorage sourceTableStorage = (CatalogStorage) sourceStorage;
                     propagateTableStorageProperties(srcCluster, sourceTableStorage, props, "falconSource");
                     final CatalogStorage targetTableStorage = (CatalogStorage) targetStorage;

@@ -20,6 +20,7 @@ package org.apache.falcon.rerun.handler;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -38,7 +39,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * An implementation of handler for late reruns.
@@ -49,9 +50,13 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
 
     @Override
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public void handleRerun(String cluster, String entityType,
                             String entityName, String nominalTime, String runId, String wfId,
-                            long msgReceivedTime) {
+                            long msgReceivedTime, String feedStorageType) {
+        if (Storage.TYPE.TABLE.name().equals(feedStorageType)) {
+            return;
+        }
 
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
@@ -72,15 +77,17 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             Long wait = getEventDelay(entity, nominalTime);
             if (wait == -1) {
                 LOG.info("Late rerun expired for entity: " + entityType + "(" + entityName + ")");
-                String logDir = this.getWfEngine().getWorkflowProperty(cluster,
-                        wfId, "logDir");
-                String srcClusterName = this.getWfEngine().getWorkflowProperty(
-                        cluster, wfId, "srcClusterName");
+
+                java.util.Properties properties =
+                        this.getWfEngine().getWorkflowProperties(cluster, wfId);
+                String logDir = properties.getProperty("logDir");
+                String srcClusterName = properties.getProperty("srcClusterName");
                 Path lateLogPath = this.getLateLogPath(logDir,
                         EntityUtil.fromUTCtoURIDate(nominalTime), srcClusterName);
+
                 LOG.info("Going to delete path:" + lateLogPath);
-                FileSystem fs = FileSystem.get(getConfiguration(cluster,
-                        wfId));
+                final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
+                FileSystem fs = FileSystem.get(getConfiguration(storageEndpoint));
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
                     if (deleted) {
@@ -95,7 +102,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     + " And WorkflowId: " + wfId);
             LaterunEvent event = new LaterunEvent(cluster, wfId,
                     msgInsertTime.getTime(), wait, entityType, entityName,
-                    nominalTime, intRunId);
+                    nominalTime, intRunId, feedStorageType);
             offerToQueue(event);
         } catch (Exception e) {
             LOG.error("Unable to schedule late rerun for entity instance : "
@@ -105,6 +112,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     nominalTime, wfId, runId, e.getMessage());
         }
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private long getEventDelay(Entity entity, String nominalTime) throws FalconException {
 
@@ -216,12 +224,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
     }
 
-    public Configuration getConfiguration(String cluster, String wfId) throws FalconException {
+    public static Configuration getConfiguration(String storageEndpoint) throws FalconException {
         Configuration conf = new Configuration();
-        conf.set(
-                CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
-                this.getWfEngine().getWorkflowProperty(cluster, wfId,
-                        AbstractWorkflowEngine.NAME_NODE));
+        conf.set(CommonConfigurationKeys.FS_DEFAULT_NAME_KEY, storageEndpoint);
         return conf;
     }
 }

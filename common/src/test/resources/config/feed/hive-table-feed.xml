@@ -17,16 +17,10 @@
   limitations under the License.
   -->
 <feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1">
-    <partitions>
-        <partition name="fraud"/>
-        <partition name="good"/>
-    </partitions>
-
     <groups>online,bi</groups>
 
     <frequency>hours(1)</frequency>
     <timezone>UTC</timezone>
-    <late-arrival cut-off="hours(6)"/>
 
     <clusters>
         <cluster name="testCluster" type="source" partition="*/${cluster.colo}">

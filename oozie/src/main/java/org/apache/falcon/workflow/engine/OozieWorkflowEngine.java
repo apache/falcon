@@ -1267,14 +1267,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public String getWorkflowProperty(String cluster, String jobId,
-                                      String property) throws FalconException {
+    public Properties getWorkflowProperties(String cluster, String jobId) throws FalconException {
         OozieClient client = OozieClientFactory.get(cluster);
         try {
             WorkflowJob jobInfo = client.getJobInfo(jobId);
             String conf = jobInfo.getConf();
-            Properties props = OozieUtils.toProperties(conf);
-            return props.getProperty(property);
+            return OozieUtils.toProperties(conf);
         } catch (Exception e) {
             throw new FalconException(e);
         }

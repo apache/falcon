@@ -40,6 +40,6 @@
 
     <late-process policy="exp-backoff" delay="hours(1)">
         <late-input input="impression" workflow-path="hdfs://impression/late/workflow"/>
-        <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow"/>
+        <late-input input="click" workflow-path="hdfs://clicks/late/workflow"/>
     </late-process>
 </process>

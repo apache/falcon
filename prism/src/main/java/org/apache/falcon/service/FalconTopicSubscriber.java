@@ -91,6 +91,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             String nominalTime = mapMessage.getString(ARG.nominalTime.getArgName());
             String status = mapMessage.getString(ARG.status.getArgName());
             String operation = mapMessage.getString(ARG.operation.getArgName());
+            String feedStorageType = mapMessage.getString(ARG.falconFeedStorageType.getArgName());
 
             AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
             InstancesResult result = wfEngine.getJobDetails(cluster, workflowId);
@@ -100,7 +101,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             if (status.equalsIgnoreCase("FAILED")) {
                 retryHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
-                        System.currentTimeMillis());
+                        System.currentTimeMillis(), feedStorageType);
                 GenericAlert.instrumentFailedInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
@@ -108,7 +109,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             } else if (status.equalsIgnoreCase("SUCCEEDED")) {
                 latedataHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
-                        System.currentTimeMillis());
+                        System.currentTimeMillis(), feedStorageType);
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),

@@ -558,6 +558,11 @@ public final class EntityUtil {
                     .equalsIgnoreCase("true")) {
                 return null;
             }
+
+            if (FeedHelper.getStorageType((Feed) entity) == Storage.TYPE.TABLE) {
+                return null;
+            }
+
             LateProcess lateProcess = new LateProcess();
             lateProcess.setDelay(new Frequency(RuntimeProperties.get()
                     .getProperty("feed.late.frequency", "hours(3)")));
@@ -598,10 +603,7 @@ public final class EntityUtil {
     }
 
     public static boolean responsibleFor(String colo) {
-        if (DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
-                && colo.equals(DeploymentUtil.getCurrentColo()))) {
-            return true;
-        }
-        return false;
+        return DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
+                && colo.equals(DeploymentUtil.getCurrentColo()));
     }
 }

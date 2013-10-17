@@ -28,8 +28,8 @@ public class CatalogPartition {
     private String databaseName;
     private String tableName;
     private List<String> values;
-    private int createTime;
-    private int lastAccessTime;
+    private long createTime;
+    private long lastAccessTime;
     private List<String> tableColumns;
     private String inputFormat;
     private String outputFormat;
@@ -51,11 +51,11 @@ public class CatalogPartition {
         this.values = values;
     }
 
-    protected void setCreateTime(int createTime) {
+    protected void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
 
-    protected void setLastAccessTime(int lastAccessTime) {
+    protected void setLastAccessTime(long lastAccessTime) {
         this.lastAccessTime = lastAccessTime;
     }
 
@@ -147,7 +147,7 @@ public class CatalogPartition {
      *
      * @return the last access time
      */
-    public int getLastAccessTime() {
+    public long getLastAccessTime() {
         return this.lastAccessTime;
     }
 
@@ -156,7 +156,7 @@ public class CatalogPartition {
      *
      * @return the creates the time
      */
-    public int getCreateTime() {
+    public long getCreateTime() {
         return this.createTime;
     }
 

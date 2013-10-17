@@ -288,6 +288,39 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * Does not matter for FileSystem storage.
      */
     private void validateFeedStorage(Feed feed) throws FalconException {
+        final Storage.TYPE storageType = FeedHelper.getStorageType(feed);
+        validateUniformStorageType(feed, storageType);
+        validatePartitions(feed, storageType);
+        validateLateData(feed, storageType);
+        validateStorageExists(feed);
+    }
+
+    private void validateUniformStorageType(Feed feed, Storage.TYPE feedStorageType) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Storage.TYPE feedClusterStorageType = FeedHelper.getStorageType(feed, cluster);
+
+            if (feedStorageType != feedClusterStorageType) {
+                throw new ValidationException("The storage type is not uniform for cluster: " + cluster.getName());
+            }
+        }
+    }
+
+    private void validatePartitions(Feed feed, Storage.TYPE storageType) throws  FalconException {
+        if (storageType == Storage.TYPE.TABLE && feed.getPartitions() != null) {
+            throw new ValidationException("Partitions are not supported for feeds with table storage. "
+                    + "It should be defined as part of the table URI. "
+                    + feed.getName());
+        }
+    }
+
+    private void validateLateData(Feed feed, Storage.TYPE storageType) throws FalconException {
+        if (storageType == Storage.TYPE.TABLE && feed.getLateArrival() != null) {
+            throw new ValidationException("Late data handling is not supported for feeds with table storage! "
+                    + feed.getName());
+        }
+    }
+
+    private void validateStorageExists(Feed feed) throws FalconException {
         StringBuilder buffer = new StringBuilder();
         for (Cluster cluster : feed.getClusters().getClusters()) {
             final Storage storage = FeedHelper.createStorage(cluster, feed);

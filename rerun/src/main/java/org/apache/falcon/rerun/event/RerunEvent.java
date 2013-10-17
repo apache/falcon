@@ -45,7 +45,7 @@ public class RerunEvent implements Delayed {
     protected String instance;
     protected int runId;
 
-    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public RerunEvent(String clusterName, String wfId, long msgInsertTime, long delay,
                       String entityType, String entityName, String instance, int runId) {
         this.clusterName = clusterName;
@@ -57,7 +57,7 @@ public class RerunEvent implements Delayed {
         this.runId = runId;
         this.entityType = entityType;
     }
-    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String getClusterName() {
         return clusterName;
