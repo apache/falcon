@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-91 Handle feed updates in purview of tables. (Venkatesh
+    Seetharam via Srikanth Sundarrajan) 
+
     FALCON-104 FALCON-86 introduces a backward incompatible change.
     (Venkatesh Seetharam via Srikanth Sundarrajan)
 

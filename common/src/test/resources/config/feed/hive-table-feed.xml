@@ -16,7 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1">
+<feed description="clicks log table" name="clicks-table" xmlns="uri:falcon:feed:0.1">
     <groups>online,bi</groups>
 
     <frequency>hours(1)</frequency>

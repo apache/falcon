@@ -32,7 +32,7 @@
 
     <!-- what -->
     <inputs>
-        <input name="input" feed="clicks" start="today(0,0)" end="today(20,0)"/>
+        <input name="input" feed="clicks-table" start="today(0,0)" end="today(20,0)"/>
     </inputs>
 
     <outputs>
