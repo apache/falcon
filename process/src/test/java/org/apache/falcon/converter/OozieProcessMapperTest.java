@@ -25,8 +25,11 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -35,8 +38,10 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
@@ -48,9 +53,12 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.coordinator.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
@@ -89,6 +97,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
+        ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).setEndpoint("thrift://localhost:49083");
         fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
 
@@ -206,6 +215,80 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
     }
 
+    @Test
+    public void testProcessMapperForTableStorage() throws Exception {
+        URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
+        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, inFeed);
+
+        resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
+        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, outFeed);
+
+        resource = this.getClass().getResource("/config/process/process-table.xml");
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
+        mapper.map(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(new Path(coordPath));
+        CONFIGURATION conf = coord.getAction().getWorkflow().getConfiguration();
+        List<Property> properties = conf.getProperty();
+
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
+
+        for (Property property : properties) {
+            if (expected.containsKey(property.getName())) {
+                Assert.assertEquals(property.getValue(), expected.get(property.getName()));
+            }
+        }
+    }
+
+    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process,
+                                                      Cluster cluster) throws FalconException {
+        Map<String, String> expected = new HashMap<String, String>();
+        for (Input input : process.getInputs().getInputs()) {
+            CatalogStorage storage = (CatalogStorage) FeedHelper.createStorage(cluster, inFeed);
+            propagateStorageProperties(input.getName(), storage, expected);
+        }
+
+        for (Output output : process.getOutputs().getOutputs()) {
+            CatalogStorage storage = (CatalogStorage) FeedHelper.createStorage(cluster, outFeed);
+            propagateStorageProperties(output.getName(), storage, expected);
+        }
+
+        return expected;
+    }
+
+    private void propagateStorageProperties(String feedName, CatalogStorage tableStorage,
+                                            Map<String, String> props) {
+        String prefix = "falcon_" + feedName;
+        props.put(prefix + "_storage_type", tableStorage.getType().name());
+        props.put(prefix + "_catalog_url", tableStorage.getCatalogUrl());
+        props.put(prefix + "_database", tableStorage.getDatabase());
+        props.put(prefix + "_table", tableStorage.getTable());
+
+        if (prefix.equals("input")) {
+            props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
+            props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
+            props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
+        } else if (prefix.equals("output")) {
+            props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
+            props.put("shouldRecord", "false"); // todo - override until late data is handled
+        }
+    }
+
     private void assertLibExtensions(COORDINATORAPP coord) throws Exception {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
@@ -317,5 +400,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
     @AfterClass
     public void cleanup() throws Exception {
         super.cleanup();
+        ConfigurationStore.get().remove(EntityType.PROCESS, "table-process");
+        ConfigurationStore.get().remove(EntityType.FEED, "clicks-raw-table");
+        ConfigurationStore.get().remove(EntityType.FEED, "clicks-summary-table");
     }
 }

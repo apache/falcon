@@ -16,12 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1">
-    <partitions>
-        <partition name="fraud"/>
-        <partition name="good"/>
-    </partitions>
-
+<feed description="clicks summary table " name="clicks-summary-table" xmlns="uri:falcon:feed:0.1">
     <groups>online,bi</groups>
 
     <frequency>hours(1)</frequency>
@@ -29,8 +24,8 @@
     <late-arrival cut-off="hours(6)"/>
 
     <clusters>
-        <cluster name="testCluster" type="source" partition="*/${cluster.colo}">
-            <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
+        <cluster name="corp" type="source" partition="*/${cluster.colo}">
+            <validity start="2021-11-01T00:00Z" end="2021-12-31T00:00Z"/>
             <retention limit="hours(48)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
         </cluster>
@@ -41,7 +36,7 @@
         </cluster>
     </clusters>
 
-    <table uri="catalog:default:clicks#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+    <table uri="catalog:default:clicks-summary#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 
     <ACL owner="testuser" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>

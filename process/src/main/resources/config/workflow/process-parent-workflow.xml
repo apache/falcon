@@ -76,8 +76,17 @@
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
                 </property>
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.pig</name>
+                    <value>pig,hcatalog</value>
+                </property>
             </configuration>
             <script>#USER_WF_PATH#</script>
+            <file>${wf:appPath()}/conf/hive-site.xml</file>
         </pig>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>

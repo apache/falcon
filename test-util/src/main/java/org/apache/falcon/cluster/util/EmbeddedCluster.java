@@ -112,7 +112,7 @@ public class EmbeddedCluster {
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
                 conf.get("mapred.job.tracker"), "0.1"));
         interfaces.getInterfaces().add(
-                newInterface(Interfacetype.REGISTRY, "localhost", "0.1"));
+                newInterface(Interfacetype.REGISTRY, "thrift://localhost:49083", "0.1"));
         interfaces.getInterfaces().add(
                 newInterface(Interfacetype.MESSAGING, "vm://localhost", "0.1"));
 
