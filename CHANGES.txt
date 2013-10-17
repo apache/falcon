@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-134 Remove jsch dependency. (Jean-Baptiste Onofre via 
+    Srikanth Sundarrajan)
+
     FALCON-146 Javadoc generation should respect skipCheck property.
     (Raghav Kumar Gautam via Srikanth Sundarrajan) 
 
