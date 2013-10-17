@@ -1,6 +1,7 @@
 ---++ Contents
    * <a href="#Onboarding Steps">Onboarding Steps</a>
    * <a href="#Sample Pipeline">Sample Pipeline</a>
+   * [[HiveIntegration][Hive Examples]]
 
 ---+++ Onboarding Steps
    * Create cluster definition for the cluster, specifying name node, job tracker, workflow engine endpoint, messaging endpoint. Refer to [[EntitySpecification][cluster definition]] for details.
