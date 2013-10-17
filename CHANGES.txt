@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-146 Javadoc generation should respect skipCheck property.
+    (Raghav Kumar Gautam via Srikanth Sundarrajan) 
+
     FALCON-142 Cleanup testng dependency. (Jean Baptiste Onofre via 
     Srikanth Sundarrajan)
 
