@@ -17,8 +17,6 @@
  */
 package org.apache.falcon.converter;
 
-import static org.testng.Assert.assertEquals;
-
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +29,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -162,7 +161,7 @@ public class OozieFeedMapperTest {
 
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             if (prop.getName().equals("mapred.job.priority")) {
-                assertEquals(prop.getValue(), "NORMAL");
+                Assert.assertEquals(prop.getValue(), "NORMAL");
                 break;
             }
         }
@@ -211,17 +210,25 @@ public class OozieFeedMapperTest {
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
         String feedDataPath = null;
+        String storageType = null;
         org.apache.falcon.oozie.coordinator.CONFIGURATION configuration =
                 coord.getAction().getWorkflow().getConfiguration();
         for (Property property : configuration.getProperty()) {
             if ("feedDataPath".equals(property.getName())) {
                 feedDataPath = property.getValue();
-                break;
+            } else if ("falconFeedStorageType".equals(property.getName())) {
+                storageType = property.getValue();
             }
         }
 
+        final Storage storage = FeedHelper.createStorage(cluster, feed);
         if (feedDataPath != null) {
-            Assert.assertEquals(feedDataPath, feedMapper.getFeedDataPath(srcCluster, feed));
+            Assert.assertEquals(feedDataPath, storage.getUriTemplate()
+                    .replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
+        }
+
+        if (storageType != null) {
+            Assert.assertEquals(storageType, storage.getType().name());
         }
     }
 }

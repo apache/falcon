@@ -23,10 +23,14 @@ import org.apache.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatCreateDBDesc;
 import org.apache.hcatalog.api.HCatCreateTableDesc;
+import org.apache.hcatalog.api.HCatPartition;
 import org.apache.hcatalog.data.schema.HCatFieldSchema;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -40,9 +44,11 @@ import java.util.Map;
  */
 public class HiveCatalogServiceIT {
 
-    private static final String DATABASE_NAME = "falcondb";
-    private static final String TABLE_NAME = "foobar";
     private static final String METASTORE_URL = "thrift://localhost:49083";
+    private static final String DATABASE_NAME = "falcon_db";
+    private static final String TABLE_NAME = "falcon_table";
+    private static final String EXTERNAL_TABLE_NAME = "falcon_external";
+    private static final String EXTERNAL_TABLE_LOCATION = "hdfs://localhost:41020/falcon/staging/falcon_external";
 
     private HiveCatalogService hiveCatalogService;
     private HCatClient client;
@@ -54,7 +60,7 @@ public class HiveCatalogServiceIT {
 
         createDatabase();
         createTable();
-        addPartition();
+        createExternalTable();
     }
 
     private void createDatabase() throws Exception {
@@ -69,8 +75,8 @@ public class HiveCatalogServiceIT {
         cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
 
         List<HCatFieldSchema> partitionSchema = Arrays.asList(
-            new HCatFieldSchema("ds", HCatFieldSchema.Type.STRING, ""),
-            new HCatFieldSchema("region", HCatFieldSchema.Type.STRING, "")
+                new HCatFieldSchema("ds", HCatFieldSchema.Type.STRING, ""),
+                new HCatFieldSchema("region", HCatFieldSchema.Type.STRING, "")
         );
 
         HCatCreateTableDesc tableDesc = HCatCreateTableDesc
@@ -83,41 +89,76 @@ public class HiveCatalogServiceIT {
         client.createTable(tableDesc);
     }
 
-    private void addPartition() throws Exception {
+    public void createExternalTable() throws Exception {
+        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
+        cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
+
+        List<HCatFieldSchema> partitionSchema = Arrays.asList(
+                new HCatFieldSchema("ds", HCatFieldSchema.Type.STRING, ""),
+                new HCatFieldSchema("region", HCatFieldSchema.Type.STRING, "")
+        );
+
+        HCatCreateTableDesc tableDesc = HCatCreateTableDesc
+                .create(DATABASE_NAME, EXTERNAL_TABLE_NAME, cols)
+                .fileFormat("rcfile")
+                .ifNotExists(true)
+                .comments("falcon integration test")
+                .partCols(new ArrayList<HCatFieldSchema>(partitionSchema))
+                .isTableExternal(true)
+                .location(EXTERNAL_TABLE_LOCATION)
+                .build();
+        client.createTable(tableDesc);
+    }
+
+    @AfterClass
+    public void tearDown() throws Exception {
+        dropTable(EXTERNAL_TABLE_NAME);
+        dropTable(TABLE_NAME);
+        dropDatabase();
+    }
+
+    private void dropTable(String tableName) throws Exception {
+        client.dropTable(DATABASE_NAME, tableName, true);
+    }
+
+    private void dropDatabase() throws Exception {
+        client.dropDatabase(DATABASE_NAME, true, HCatClient.DropDBMode.CASCADE);
+    }
+
+    @BeforeMethod
+    private void addPartitions() throws Exception {
         Map<String, String> firstPtn = new HashMap<String, String>();
-        firstPtn.put("ds", "09/03/2013");
-        firstPtn.put("region", "usa");
+        firstPtn.put("ds", "20130903"); //yyyyMMDD
+        firstPtn.put("region", "us");
         HCatAddPartitionDesc addPtn = HCatAddPartitionDesc.create(
                 DATABASE_NAME, TABLE_NAME, null, firstPtn).build();
         client.addPartition(addPtn);
 
         Map<String, String> secondPtn = new HashMap<String, String>();
-        secondPtn.put("ds", "09/03/2013");
-        secondPtn.put("region", "india");
+        secondPtn.put("ds", "20130903");
+        secondPtn.put("region", "in");
         HCatAddPartitionDesc addPtn2 = HCatAddPartitionDesc.create(
                 DATABASE_NAME, TABLE_NAME, null, secondPtn).build();
         client.addPartition(addPtn2);
 
         Map<String, String> thirdPtn = new HashMap<String, String>();
-        thirdPtn.put("ds", "09/02/2013");
-        thirdPtn.put("region", "india");
+        thirdPtn.put("ds", "20130902");
+        thirdPtn.put("region", "in");
         HCatAddPartitionDesc addPtn3 = HCatAddPartitionDesc.create(
                 DATABASE_NAME, TABLE_NAME, null, thirdPtn).build();
         client.addPartition(addPtn3);
     }
 
-    @AfterClass
-    public void tearDown() throws Exception {
-        dropTable();
-        dropDatabase();
-    }
+    @AfterMethod
+    private void dropPartitions() throws Exception {
+        Map<String, String> partitionSpec = new HashMap<String, String>();
+        partitionSpec.put("ds", "20130903");
+        client.dropPartitions(DATABASE_NAME, TABLE_NAME, partitionSpec, true);
 
-    private void dropTable() throws Exception {
-        client.dropTable(DATABASE_NAME, TABLE_NAME, true);
-    }
-
-    private void dropDatabase() throws Exception {
-        client.dropDatabase(DATABASE_NAME, true, HCatClient.DropDBMode.CASCADE);
+        partitionSpec = new HashMap<String, String>();
+        partitionSpec.put("ds", "20130902");
+        client.dropPartitions(DATABASE_NAME, TABLE_NAME, partitionSpec, true);
     }
 
     @Test
@@ -146,12 +187,116 @@ public class HiveCatalogServiceIT {
     }
 
     @Test
-    public void testListTableProperties() throws Exception {
-        Map<String, String> tableProperties =
-                hiveCatalogService.listTableProperties(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
-        Assert.assertEquals(tableProperties.get("database"), DATABASE_NAME);
-        Assert.assertEquals(tableProperties.get("tableName"), TABLE_NAME);
-        Assert.assertEquals(tableProperties.get("tabletype"), "MANAGED_TABLE");
-        Assert.assertTrue(tableProperties.containsKey("location"));
+    public void testIsTableExternalFalse() throws Exception {
+        Assert.assertFalse(hiveCatalogService.isTableExternal(METASTORE_URL, DATABASE_NAME, TABLE_NAME));
     }
+    @Test
+    public void testIsTableExternalTrue() throws Exception {
+        Assert.assertTrue(hiveCatalogService.isTableExternal(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME));
+    }
+
+    @Test
+    public void testListPartitionsByFilterNull() throws Exception {
+
+        List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, null);
+        Assert.assertEquals(filteredPartitions.size(), 3);
+    }
+
+    @DataProvider (name = "lessThanFilter")
+    public Object[][] createLessThanFilter() {
+        return new Object[][] {
+            {"ds < \"20130905\"", 3},
+            {"ds < \"20130904\"", 3},
+            {"ds < \"20130903\"", 1},
+            {"ds < \"20130902\"", 0},
+        };
+    }
+
+    @Test (dataProvider = "lessThanFilter")
+    public void testListPartitionsByFilterLessThan(String lessThanFilter, int expectedPartitionCount)
+        throws Exception {
+
+        List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, lessThanFilter);
+        Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
+    }
+
+    @DataProvider (name = "greaterThanFilter")
+    public Object[][] createGreaterThanFilter() {
+        return new Object[][] {
+            {"ds > \"20130831\"", 3},
+            {"ds > \"20130905\"", 0},
+            {"ds > \"20130904\"", 0},
+            {"ds > \"20130903\"", 0},
+            {"ds > \"20130902\"", 2},
+        };
+    }
+
+    @Test (dataProvider = "greaterThanFilter")
+    public void testListPartitionsByFilterGreaterThan(String greaterThanFilter, int expectedPartitionCount)
+        throws Exception {
+
+        List<CatalogPartition> filteredPartitions = hiveCatalogService.listPartitionsByFilter(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, greaterThanFilter);
+        Assert.assertEquals(filteredPartitions.size(), expectedPartitionCount);
+    }
+
+    @Test
+    public void testGetPartitionsFullSpec() throws Exception {
+        Map<String, String> partitionSpec = new HashMap<String, String>();
+        partitionSpec.put("ds", "20130902");
+        partitionSpec.put("region", "in");
+
+        HCatPartition ptn = client.getPartition(DATABASE_NAME, TABLE_NAME, partitionSpec);
+        Assert.assertTrue(ptn != null);
+    }
+
+    @Test
+    public void testGetPartitionsPartialSpec() throws Exception {
+        Map<String, String> partialPartitionSpec = new HashMap<String, String>();
+        partialPartitionSpec.put("ds", "20130903");
+
+        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME, partialPartitionSpec);
+        Assert.assertEquals(partitions.size(), 2);
+    }
+
+    @Test
+    public void testDropPartition() throws Exception {
+        Map<String, String> partialPartitionSpec = new HashMap<String, String>();
+        partialPartitionSpec.put("ds", "20130903");
+
+        Assert.assertTrue(hiveCatalogService.dropPartitions(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+
+        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
+        Assert.assertEquals(1, partitions.size(), "Unexpected number of partitions");
+        Assert.assertEquals(new String[]{"20130902", "in"},
+                partitions.get(0).getValues().toArray(), "Mismatched partition");
+
+        partialPartitionSpec = new HashMap<String, String>();
+        partialPartitionSpec.put("ds", "20130902");
+
+        Assert.assertTrue(hiveCatalogService.dropPartitions(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+        partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
+        Assert.assertEquals(partitions.size(), 0, "Unexpected number of partitions");
+    }
+
+    /*
+    // this is NOT possible to do in Hive
+    @Test
+    public void testDropPartitionBulk() throws Exception {
+        Map<String, String> partialPartitionSpec = new HashMap<String, String>();
+        partialPartitionSpec.put("ds", "20130903");
+        partialPartitionSpec.put("ds", "20130902");
+        partialPartitionSpec.put("ds", "20130901");
+
+        Assert.assertTrue(hiveCatalogService.dropPartitions(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+
+        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
+        Assert.assertEquals(0, partitions.size(), "Unexpected number of partitions");
+    }
+    */
 }

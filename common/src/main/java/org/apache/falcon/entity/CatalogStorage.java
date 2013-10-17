@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
+import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
@@ -30,6 +31,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 /**
  * A catalog registry implementation of a feed storage.
@@ -42,8 +44,6 @@ public class CatalogStorage implements Storage {
     public static final String OUTPUT_PATH_SEPARATOR = "/";
 
     public static final String CATALOG_URL = "${hcatNode}";
-    private static final String DOLLAR_EXPR_START = "_D__START_";
-    private static final String EXPR_CLOSE = "_CLOSE_";
 
     private final String catalogUrl;
     private String database;
@@ -82,8 +82,8 @@ public class CatalogStorage implements Storage {
      */
     private void parseFeedUri(String catalogTableUri) throws URISyntaxException {
 
-        final String processed = catalogTableUri.replaceAll("\\$\\{", DOLLAR_EXPR_START)
-                                                .replaceAll("}", EXPR_CLOSE);
+        final String processed = catalogTableUri.replaceAll(DOLLAR_EXPR_START_REGEX, DOLLAR_EXPR_START_NORMALIZED)
+                                                .replaceAll("}", EXPR_CLOSE_NORMALIZED);
         URI tableUri = new URI(processed);
 
         if (!"catalog".equals(tableUri.getScheme())) {
@@ -116,8 +116,8 @@ public class CatalogStorage implements Storage {
             throw new URISyntaxException(tableUri.toString(), "Partition details are missing");
         }
 
-        final String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START, "\\$\\{")
-                                           .replaceAll(EXPR_CLOSE, "\\}");
+        final String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START_NORMALIZED, DOLLAR_EXPR_START_REGEX)
+                                           .replaceAll(EXPR_CLOSE_NORMALIZED, EXPR_CLOSE_REGEX);
         partitions = new HashMap<String, String>();
         String[] parts = rawPartition.split(PARTITION_SEPARATOR);
         for (String part : parts) {
@@ -147,8 +147,8 @@ public class CatalogStorage implements Storage {
             throw new IllegalArgumentException("URI template cannot be null or empty");
         }
 
-        final String processed = uriTemplate.replaceAll("\\$\\{", DOLLAR_EXPR_START)
-                                            .replaceAll("}", EXPR_CLOSE);
+        final String processed = uriTemplate.replaceAll(DOLLAR_EXPR_START_REGEX, DOLLAR_EXPR_START_NORMALIZED)
+                                            .replaceAll("}", EXPR_CLOSE_NORMALIZED);
         URI uri = new URI(processed);
 
         this.catalogUrl = uri.getScheme() + "://" + uri.getAuthority();
@@ -178,7 +178,8 @@ public class CatalogStorage implements Storage {
             throw new URISyntaxException(uriTemplate.toString(), "Partition details are missing");
         }
 
-        String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START, "\\$\\{").replaceAll(EXPR_CLOSE, "\\}");
+        String rawPartition = partRaw.replaceAll(DOLLAR_EXPR_START_NORMALIZED, DOLLAR_EXPR_START_REGEX)
+                .replaceAll(EXPR_CLOSE_NORMALIZED, EXPR_CLOSE_REGEX);
         partitions = new HashMap<String, String>();
         String[] parts = rawPartition.split(PARTITION_SEPARATOR);
         for (String part : parts) {
@@ -226,6 +227,21 @@ public class CatalogStorage implements Storage {
      */
     public boolean hasPartition(String key) {
         return partitions.containsKey(key);
+    }
+
+    public String getDatedPartitionKey() {
+        String datedPartitionKey = null;
+
+        for (Map.Entry<String, String> entry : getPartitions().entrySet()) {
+
+            Matcher matcher = FeedDataPath.PATTERN.matcher(entry.getValue());
+            if (matcher.find()) {
+                datedPartitionKey = entry.getKey();
+                break;
+            }
+        }
+
+        return datedPartitionKey;
     }
 
     @Override

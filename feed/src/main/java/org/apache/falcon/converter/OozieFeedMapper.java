@@ -58,13 +58,13 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
-    private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
     private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
     private static final String REPLICATION_WF_TEMPLATE = "/config/workflow/replication-workflow.xml";
 
-    public static final String FEED_PATH_SEP = "#";
     private static final String TIMEOUT = "timeout";
     private static final String PARALLEL = "parallel";
+
+    private final RetentionOozieWorkflowMapper retentionMapper = new RetentionOozieWorkflowMapper();
 
     public OozieFeedMapper(Feed feed) {
         super(feed);
@@ -92,70 +92,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     + " is not in the future");
             return null;
         }
-        COORDINATORAPP retentionApp = new COORDINATORAPP();
-        String coordName = EntityUtil.getWorkflowName(Tag.RETENTION, feed).toString();
-        retentionApp.setName(coordName);
-        retentionApp.setEnd(SchemaHelper.formatDateUTC(feedCluster.getValidity().getEnd()));
-        retentionApp.setStart(SchemaHelper.formatDateUTC(new Date()));
-        retentionApp.setTimezone(feed.getTimezone().getID());
-        TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
-        if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
-            retentionApp.setFrequency("${coord:hours(6)}");
-        } else {
-            retentionApp.setFrequency("${coord:days(1)}");
-        }
 
-        Path wfPath = getCoordPath(bundlePath, coordName);
-        retentionApp.setAction(getRetentionWorkflowAction(cluster, wfPath, coordName));
-        return retentionApp;
-    }
-
-    private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath, String wfName) throws FalconException {
-        Feed feed = getEntity();
-        ACTION retentionAction = new ACTION();
-        WORKFLOW retentionWorkflow = new WORKFLOW();
-        createRetentionWorkflow(cluster, wfPath, wfName);
-        retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
-
-        Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
-
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
-        String feedBasePaths = getFeedDataPath(cluster, feed);
-
-        props.put("feedDataPath", feedBasePaths);
-        props.put("timeZone", feed.getTimezone().getID());
-        props.put("frequency", feed.getFrequency().getTimeUnit().name());
-        props.put("limit", feedCluster.getRetention().getLimit().toString());
-        props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
-        props.put(ARG.feedNames.getPropName(), feed.getName());
-        props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
-
-        retentionWorkflow.setConfiguration(getCoordConfig(props));
-        retentionAction.setWorkflow(retentionWorkflow);
-        return retentionAction;
-    }
-
-    protected String getFeedDataPath(Cluster cluster, Feed feed) throws FalconException {
-        final Storage storage = FeedHelper.createStorage(cluster, feed);
-        String feedPathMask = storage.getUriTemplate(LocationType.DATA);
-        String metaPathMask = storage.getUriTemplate(LocationType.META);
-        String statsPathMask = storage.getUriTemplate(LocationType.STATS);
-        String tmpPathMask = storage.getUriTemplate(LocationType.TMP);
-
-        StringBuilder feedBasePaths = new StringBuilder(feedPathMask);
-        if (metaPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(metaPathMask);
-        }
-
-        if (statsPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(statsPathMask);
-        }
-
-        if (tmpPathMask != null) {
-            feedBasePaths.append(FEED_PATH_SEP).append(tmpPathMask);
-        }
-
-        return feedBasePaths.toString().replaceAll("\\$\\{", "\\?\\{");
+        return retentionMapper.getRetentionCoordinator(cluster, bundlePath, feed, feedCluster);
     }
 
     private List<COORDINATORAPP> getReplicationCoordinators(Cluster targetCluster, Path bundlePath)
@@ -344,17 +282,6 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
         }
     }
 
-    private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
-        try {
-            WORKFLOWAPP retWfApp = getWorkflowTemplate(RETENTION_WF_TEMPLATE);
-            retWfApp.setName(wfName);
-            addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
-            marshal(cluster, retWfApp, wfPath);
-        } catch(IOException e) {
-            throw new FalconException("Unable to create retention workflow", e);
-        }
-    }
-
     @Override
     protected Map<String, String> getEntityProperties() {
         Feed feed = getEntity();
@@ -365,5 +292,77 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             }
         }
         return props;
+    }
+
+    private final class RetentionOozieWorkflowMapper {
+
+        private static final String RETENTION_WF_TEMPLATE = "/config/workflow/retention-workflow.xml";
+
+        private COORDINATORAPP getRetentionCoordinator(Cluster cluster, Path bundlePath, Feed feed,
+                                                       org.apache.falcon.entity.v0.feed.Cluster feedCluster)
+            throws FalconException {
+
+            COORDINATORAPP retentionApp = new COORDINATORAPP();
+            String coordName = EntityUtil.getWorkflowName(Tag.RETENTION, feed).toString();
+            retentionApp.setName(coordName);
+            retentionApp.setEnd(SchemaHelper.formatDateUTC(feedCluster.getValidity().getEnd()));
+            retentionApp.setStart(SchemaHelper.formatDateUTC(new Date()));
+            retentionApp.setTimezone(feed.getTimezone().getID());
+            TimeUnit timeUnit = feed.getFrequency().getTimeUnit();
+            if (timeUnit == TimeUnit.hours || timeUnit == TimeUnit.minutes) {
+                retentionApp.setFrequency("${coord:hours(6)}");
+            } else {
+                retentionApp.setFrequency("${coord:days(1)}");
+            }
+
+            Path wfPath = getCoordPath(bundlePath, coordName);
+            retentionApp.setAction(getRetentionWorkflowAction(cluster, wfPath, coordName));
+            return retentionApp;
+        }
+
+        private ACTION getRetentionWorkflowAction(Cluster cluster, Path wfPath, String wfName)
+            throws FalconException {
+            Feed feed = getEntity();
+            ACTION retentionAction = new ACTION();
+            WORKFLOW retentionWorkflow = new WORKFLOW();
+            createRetentionWorkflow(cluster, wfPath, wfName);
+            retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
+
+            Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
+
+            props.put("timeZone", feed.getTimezone().getID());
+            props.put("frequency", feed.getFrequency().getTimeUnit().name());
+
+            final Storage storage = FeedHelper.createStorage(cluster, feed);
+            props.put("falconFeedStorageType", storage.getType().name());
+
+            String feedDataPath = storage.getUriTemplate();
+            props.put("feedDataPath",
+                    feedDataPath.replaceAll(Storage.DOLLAR_EXPR_START_REGEX, Storage.QUESTION_EXPR_START_REGEX));
+
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                    FeedHelper.getCluster(feed, cluster.getName());
+            props.put("limit", feedCluster.getRetention().getLimit().toString());
+
+            props.put(ARG.operation.getPropName(), EntityOps.DELETE.name());
+            props.put(ARG.feedNames.getPropName(), feed.getName());
+            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
+
+            retentionWorkflow.setConfiguration(getCoordConfig(props));
+            retentionAction.setWorkflow(retentionWorkflow);
+
+            return retentionAction;
+        }
+
+        private void createRetentionWorkflow(Cluster cluster, Path wfPath, String wfName) throws FalconException {
+            try {
+                WORKFLOWAPP retWfApp = getWorkflowTemplate(RETENTION_WF_TEMPLATE);
+                retWfApp.setName(wfName);
+                addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
+                marshal(cluster, retWfApp, wfPath);
+            } catch(IOException e) {
+                throw new FalconException("Unable to create retention workflow", e);
+            }
+        }
     }
 }

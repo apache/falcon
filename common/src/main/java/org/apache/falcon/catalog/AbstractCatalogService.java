@@ -20,6 +20,7 @@ package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,16 +51,43 @@ public abstract class AbstractCatalogService {
         throws FalconException;
 
     /**
-     * Returns a list of table properties. Most important here are:
-     * 1. Table type: external table or a managed table
-     * 2. Location on HDFS
+     * Returns if the table is external or not.
      *
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
-     * @return Bag of property name and associated value
+     * @return true if external else false
      * @throws FalconException
      */
-    public abstract Map<String, String> listTableProperties(String catalogUrl, String database,
-                                                            String tableName) throws FalconException;
+    public abstract boolean isTableExternal(String catalogUrl, String database,
+                                            String tableName) throws FalconException;
+
+    /**
+     * List partitions by filter.
+     *
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName tableName to check if it exists
+     * @param filter The filter string,
+     *    for example "part1 = \"p1_abc\" and part2 <= "\p2_test\"". Filtering can
+     *    be done only on string partition keys.
+     * @return list of partitions
+     * @throws FalconException
+     */
+    public abstract List<CatalogPartition> listPartitionsByFilter(String catalogUrl, String database,
+                                                                  String tableName, String filter)
+        throws FalconException;
+
+    /**
+     * Drops a given partition.
+     *
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName tableName to check if it exists
+     * @param partitions list of partitions as Key=Value pairs
+     * @return if the partition was dropped
+     * @throws FalconException
+     */
+    public abstract boolean dropPartitions(String catalogUrl, String database, String tableName,
+                                           Map<String, String> partitions) throws FalconException;
 }

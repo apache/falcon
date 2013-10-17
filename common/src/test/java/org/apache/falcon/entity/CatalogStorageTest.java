@@ -51,6 +51,23 @@ public class CatalogStorageTest {
         Assert.assertTrue(storage.hasPartition("region"));
         Assert.assertNull(storage.getPartitionValue("unknown"));
         Assert.assertFalse(storage.hasPartition("unknown"));
+        Assert.assertEquals(storage.getDatedPartitionKey(), "ds");
+    }
+
+    @Test
+    public void testParseFeedUriValid2() throws URISyntaxException {
+        String table = "catalog:clicksdb:clicks#ds=${YEAR}${MONTH}${DAY};region=us";
+        CatalogStorage storage = new CatalogStorage(CatalogStorage.CATALOG_URL, table);
+        Assert.assertEquals("${hcatNode}", storage.getCatalogUrl());
+        Assert.assertEquals("clicksdb", storage.getDatabase());
+        Assert.assertEquals("clicks", storage.getTable());
+        Assert.assertEquals(Storage.TYPE.TABLE, storage.getType());
+        Assert.assertEquals(2, storage.getPartitions().size());
+        Assert.assertEquals("us", storage.getPartitionValue("region"));
+        Assert.assertTrue(storage.hasPartition("region"));
+        Assert.assertNull(storage.getPartitionValue("unknown"));
+        Assert.assertFalse(storage.hasPartition("unknown"));
+        Assert.assertEquals(storage.getDatedPartitionKey(), "ds");
     }
 
     @Test

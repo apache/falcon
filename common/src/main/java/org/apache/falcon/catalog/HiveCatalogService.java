@@ -25,12 +25,15 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatDatabase;
+import org.apache.hcatalog.api.HCatPartition;
 import org.apache.hcatalog.api.HCatTable;
 import org.apache.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
 import org.apache.hcatalog.common.HCatException;
+import org.apache.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,24 +114,75 @@ public class HiveCatalogService extends AbstractCatalogService {
     }
 
     @Override
-    public Map<String, String> listTableProperties(String catalogUrl, String database,
-                                                   String tableName) throws FalconException {
+    public boolean isTableExternal(String catalogUrl, String database, String tableName)
+        throws FalconException {
         LOG.info("Returns a list of table properties for:" + tableName);
 
         try {
             HCatClient client = get(catalogUrl);
             HCatTable table = client.getTable(database, tableName);
-
-            Map<String, String> tableProperties = new HashMap<String, String>();
-            tableProperties.put("database", table.getDbName());
-            tableProperties.put("tableName", table.getTableName());
-            tableProperties.put("tabletype", table.getTabletype());
-            tableProperties.put("location", table.getLocation());
-            // tableProperties.putAll(table.getTblProps());
-
-            return tableProperties;
+            return !table.getTabletype().equals("MANAGED_TABLE");
         } catch (HCatException e) {
             throw new FalconException(e);
         }
+    }
+
+    @Override
+    public List<CatalogPartition> listPartitionsByFilter(String catalogUrl, String database,
+                                                      String tableName, String filter)
+        throws FalconException {
+        LOG.info("List partitions for : " + tableName + ", partition filter: " + filter);
+
+        try {
+            List<CatalogPartition> catalogPartitionList = new ArrayList<CatalogPartition>();
+
+            HCatClient client = get(catalogUrl);
+            List<HCatPartition> hCatPartitions = client.listPartitionsByFilter(database, tableName, filter);
+            for (HCatPartition hCatPartition : hCatPartitions) {
+                CatalogPartition partition = createCatalogPartition(hCatPartition);
+                catalogPartitionList.add(partition);
+            }
+
+            return catalogPartitionList;
+        } catch (HCatException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    private CatalogPartition createCatalogPartition(HCatPartition hCatPartition) {
+        final CatalogPartition catalogPartition = new CatalogPartition();
+        catalogPartition.setDatabaseName(hCatPartition.getDatabaseName());
+        catalogPartition.setTableName(hCatPartition.getTableName());
+        catalogPartition.setValues(hCatPartition.getValues());
+        catalogPartition.setInputFormat(hCatPartition.getInputFormat());
+        catalogPartition.setOutputFormat(hCatPartition.getOutputFormat());
+        catalogPartition.setLocation(hCatPartition.getLocation());
+        catalogPartition.setSerdeInfo(hCatPartition.getSerDe());
+        catalogPartition.setCreateTime(hCatPartition.getCreateTime());
+        catalogPartition.setLastAccessTime(hCatPartition.getLastAccessTime());
+
+        List<String> tableColumns = new ArrayList<String>();
+        for (HCatFieldSchema hCatFieldSchema : hCatPartition.getColumns()) {
+            tableColumns.add(hCatFieldSchema.getName());
+        }
+        catalogPartition.setTableColumns(tableColumns);
+
+        return catalogPartition;
+    }
+
+    @Override
+    public boolean dropPartitions(String catalogUrl, String database,
+                                  String tableName, Map<String, String> partitions)
+        throws FalconException {
+        LOG.info("Dropping partitions for : " + tableName + ", partitions: " + partitions);
+
+        try {
+            HCatClient client = get(catalogUrl);
+            client.dropPartitions(database, tableName, partitions, true);
+        } catch (HCatException e) {
+            throw new FalconException(e);
+        }
+
+        return true;
     }
 }

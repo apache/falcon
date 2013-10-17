@@ -30,10 +30,21 @@
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
                 </property>
+                <!-- HCatalog jars -->
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>hcatalog</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.retention.FeedEvictor</main-class>
             <arg>-feedBasePath</arg>
             <arg>${feedDataPath}</arg>
+            <arg>-falconFeedStorageType</arg>
+            <arg>${falconFeedStorageType}</arg>
             <arg>-retentionType</arg>
             <arg>instance</arg>
             <arg>-retentionLimit</arg>

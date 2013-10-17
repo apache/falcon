@@ -39,8 +39,6 @@ public class FileSystemStorage implements Storage {
     public static final String LOCATION_TYPE_SEP = "=";
 
     public static final String FILE_SYSTEM_URL = "${nameNode}";
-    private static final String DOLLAR_EXPR_START = "_D__START_";
-    private static final String EXPR_CLOSE = "_CLOSE_";
 
     private final String storageUrl;
     private final List<Location> locations;
@@ -87,16 +85,16 @@ public class FileSystemStorage implements Storage {
         String[] feedLocs = uriTemplate.split(FEED_PATH_SEP);
         for (String rawPath : feedLocs) {
             String[] typeAndPath = rawPath.split(LOCATION_TYPE_SEP);
-            final String processed = typeAndPath[1].replaceAll("\\$\\{", DOLLAR_EXPR_START)
-                                                   .replaceAll("}", EXPR_CLOSE);
+            final String processed = typeAndPath[1].replaceAll(DOLLAR_EXPR_START_REGEX, DOLLAR_EXPR_START_NORMALIZED)
+                                                   .replaceAll("}", EXPR_CLOSE_NORMALIZED);
             URI uri = new URI(processed);
             if (rawStorageUrl == null) {
                 rawStorageUrl = uri.getScheme() + "://" + uri.getAuthority();
             }
 
             String path = uri.getPath();
-            final String finalPath = path.replaceAll(DOLLAR_EXPR_START, "\\$\\{")
-                                         .replaceAll(EXPR_CLOSE, "\\}");
+            final String finalPath = path.replaceAll(DOLLAR_EXPR_START_NORMALIZED, DOLLAR_EXPR_START_REGEX)
+                                         .replaceAll(EXPR_CLOSE_NORMALIZED, EXPR_CLOSE_REGEX);
 
             Location location = new Location();
             location.setPath(finalPath);

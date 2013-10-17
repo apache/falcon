@@ -18,7 +18,7 @@
 
 set -e
 
-if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/4.0.0 ]
+if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/4.0.0-falcon ]
 then
     echo "Oozie already setup. skipping";
     exit 0;

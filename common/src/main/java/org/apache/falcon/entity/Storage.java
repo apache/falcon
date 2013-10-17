@@ -27,6 +27,16 @@ import org.apache.falcon.entity.v0.feed.LocationType;
  */
 public interface Storage {
 
+    String DOLLAR_EXPR_START_REGEX = "\\$\\{";
+    String QUESTION_EXPR_START_REGEX = "\\?\\{";
+    String EXPR_CLOSE_REGEX = "\\}";
+
+    /**
+     * URI Friendly expression.
+     */
+    String DOLLAR_EXPR_START_NORMALIZED = "_D__START_";
+    String EXPR_CLOSE_NORMALIZED = "_CLOSE_";
+
     /**
      * Enumeration for the various storage types.
      */
