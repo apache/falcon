@@ -169,6 +169,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipCheck}</skip>
                             <includeTransitiveDependencySources>false</includeTransitiveDependencySources>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>

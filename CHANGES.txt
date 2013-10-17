@@ -56,6 +56,9 @@ Trunk (Unreleased)
     FALCON-152 REST API for entity & Admin resources only returns
     XML. (Venkatesh Seetharam via Srikanth Sundarrajan)
 
+    FALCON-146 Javadoc generation should respect skipCheck property.
+    (Raghav Kumar Gautam via Srikanth Sundarrajan) 
+
     FALCON-142 Cleanup testng dependency. (Jean Baptiste Onofre via 
     Srikanth Sundarrajan)
 
