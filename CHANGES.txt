@@ -5,6 +5,21 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-113 Update documentation for Hive integration. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-129 Disable Late data handling for hive tables. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-90 Propagate hive table through Process mapper. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-93 Replication to handle hive table replication. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-94 Retention to handle hive table eviction. (Venkatesh 
+    Seetharam via Srikanth Sundarrajan)
+
     FALCON-102 Add integration tests for feed entity parser for table.
     (Venkatesh Seetharam)
 
