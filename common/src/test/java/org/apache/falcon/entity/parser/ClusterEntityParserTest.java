@@ -26,6 +26,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.ClusterHelper;
@@ -92,16 +93,34 @@ public class ClusterEntityParserTest extends AbstractTestBase {
     @Test
     public void testParseClusterWithoutRegistry() throws IOException, FalconException, JAXBException {
 
-        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-registry.xml");
+        StartupProperties.get().setProperty(CatalogServiceFactory.CATALOG_SERVICE, "thrift://localhost:9083");
+        Assert.assertTrue(CatalogServiceFactory.isEnabled());
 
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-registry.xml");
         Cluster cluster = parser.parse(stream);
 
         Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         Assert.assertNull(catalog);
 
-        StartupProperties.get().setProperty("catalog.service.impl", "");
+        StartupProperties.get().remove(CatalogServiceFactory.CATALOG_SERVICE);
+        Assert.assertFalse(CatalogServiceFactory.isEnabled());
+
         catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         Assert.assertNull(catalog);
+    }
+
+    @Test
+    public void testParseClusterWithBadRegistry() throws Exception {
+        // disable catalog service
+        StartupProperties.get().remove(CatalogServiceFactory.CATALOG_SERVICE);
+        Assert.assertFalse(CatalogServiceFactory.isEnabled());
+
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-bad-registry.xml");
+        Cluster cluster = parser.parse(stream);
+
+        Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        Assert.assertEquals(catalog.getEndpoint(), "Hcat");
+        Assert.assertEquals(catalog.getVersion(), "0.1");
     }
 
     /**

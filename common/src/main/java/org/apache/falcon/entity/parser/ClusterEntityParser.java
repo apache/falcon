@@ -58,7 +58,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateScheme(cluster, Interfacetype.WRITE);
         validateScheme(cluster, Interfacetype.WORKFLOW);
         validateScheme(cluster, Interfacetype.MESSAGING);
-        if (ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY) != null) {
+        if (CatalogServiceFactory.isEnabled()
+                && ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY) != null) {
             validateScheme(cluster, Interfacetype.REGISTRY);
         }
 
@@ -156,14 +157,16 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     private void validateRegistryInterface(Cluster cluster) throws ValidationException {
+        final boolean isCatalogRegistryEnabled = CatalogServiceFactory.isEnabled();
+        if (!isCatalogRegistryEnabled) {
+            return;  // ignore the registry interface for backwards compatibility
+        }
+
+        // continue validation only if a catalog service is provided
         final Interface catalogInterface = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         if (catalogInterface == null) {
             LOG.info("Catalog service is not enabled for cluster: " + cluster.getName());
             return;
-        }
-
-        if (!CatalogServiceFactory.isEnabled()) {
-            throw new ValidationException("Catalog registry implementation is not defined: catalog.service.impl");
         }
 
         final String catalogUrl = catalogInterface.getEndpoint();

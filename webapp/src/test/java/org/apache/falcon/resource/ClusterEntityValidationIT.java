@@ -79,6 +79,7 @@ public class ClusterEntityValidationIT {
             {Interfacetype.MESSAGING, "tcp://messaging-interface:9999"},
             {Interfacetype.REGISTRY, "catalog-interface:9999"},
             {Interfacetype.REGISTRY, "http://catalog-interface:9999"},
+            {Interfacetype.REGISTRY, "Hcat"},
         };
     }
 

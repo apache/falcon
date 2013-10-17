@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-104 FALCON-86 introduces a backward incompatible change.
+    (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-113 Update documentation for Hive integration. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 
