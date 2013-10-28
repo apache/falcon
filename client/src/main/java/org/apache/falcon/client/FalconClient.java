@@ -103,20 +103,18 @@ public class FalconClient {
      * Methods allowed on Entity Resources.
      */
     protected static enum Entities {
-        VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML), SUBMIT(
-                "api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML), UPDATE(
-                "api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML), SUBMITandSCHEDULE(
-                "api/entities/submitAndSchedule/", HttpMethod.POST,
-                MediaType.TEXT_XML), SCHEDULE("api/entities/schedule/",
-                HttpMethod.POST, MediaType.TEXT_XML), SUSPEND(
-                "api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML), RESUME(
-                "api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML), DELETE(
-                "api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML), STATUS(
-                "api/entities/status/", HttpMethod.GET, MediaType.TEXT_XML), DEFINITION(
-                "api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML), LIST(
-                "api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML), DEPENDENCY(
-                "api/entities/dependencies/", HttpMethod.GET,
-                MediaType.TEXT_XML);
+        VALIDATE("api/entities/validate/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUBMIT("api/entities/submit/", HttpMethod.POST, MediaType.TEXT_XML),
+        UPDATE("api/entities/update/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUBMITandSCHEDULE("api/entities/submitAndSchedule/", HttpMethod.POST, MediaType.TEXT_XML),
+        SCHEDULE("api/entities/schedule/", HttpMethod.POST, MediaType.TEXT_XML),
+        SUSPEND("api/entities/suspend/", HttpMethod.POST, MediaType.TEXT_XML),
+        RESUME("api/entities/resume/", HttpMethod.POST, MediaType.TEXT_XML),
+        DELETE("api/entities/delete/", HttpMethod.DELETE, MediaType.TEXT_XML),
+        STATUS("api/entities/status/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
+        LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
+        DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
 
         private String path;
         private String method;
@@ -133,16 +131,14 @@ public class FalconClient {
      * Methods allowed on Process Instance Resources.
      */
     protected static enum Instances {
-        RUNNING("api/instance/running/", HttpMethod.GET,
-                MediaType.APPLICATION_JSON), STATUS("api/instance/status/",
-                HttpMethod.GET, MediaType.APPLICATION_JSON), KILL(
-                "api/instance/kill/", HttpMethod.POST,
-                MediaType.APPLICATION_JSON), SUSPEND("api/instance/suspend/",
-                HttpMethod.POST, MediaType.APPLICATION_JSON), RESUME(
-                "api/instance/resume/", HttpMethod.POST,
-                MediaType.APPLICATION_JSON), RERUN("api/instance/rerun/",
-                HttpMethod.POST, MediaType.APPLICATION_JSON), LOG("api/instance/logs/",
-                HttpMethod.GET, MediaType.APPLICATION_JSON);
+        RUNNING("api/instance/running/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        STATUS("api/instance/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        KILL("api/instance/kill/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        SUSPEND("api/instance/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        RESUME("api/instance/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        RERUN("api/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
+        LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+
         private String path;
         private String method;
         private String mimeType;
@@ -156,10 +152,9 @@ public class FalconClient {
 
     protected static enum AdminOperations {
 
-        STACK("api/admin/stack", HttpMethod.GET,
-                MediaType.TEXT_PLAIN),
-        VERSION("api/admin/version", HttpMethod.GET,
-                MediaType.TEXT_PLAIN);
+        STACK("api/admin/stack", HttpMethod.GET, MediaType.TEXT_PLAIN),
+        VERSION("api/admin/version", HttpMethod.GET, MediaType.TEXT_PLAIN);
+
         private String path;
         private String method;
         private String mimeType;
@@ -278,8 +273,7 @@ public class FalconClient {
 
     public String getStatusOfInstances(String type, String entity,
                                        String start, String end,
-                                       String runid, String colo)
-        throws FalconCLIException {
+                                       String colo) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
                 null, null, colo);

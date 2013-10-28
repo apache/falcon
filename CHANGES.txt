@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-152 REST API for entity & Admin resources only returns 
+    XML (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-134 Remove jsch dependency. (Jean-Baptiste Onofre via 
     Srikanth Sundarrajan)
 
