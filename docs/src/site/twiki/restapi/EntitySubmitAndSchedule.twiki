@@ -1,0 +1,63 @@
+---++  POST /api/entities/submitAndSchedule/:entity-type
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Submits and schedules an entity.
+
+---++ Parameters
+   * :entity-type can either be a feed or a process.
+
+---++ Results
+Result of the submit and schedule command.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/submitAndSchedule/process
+Remote-User: rgautam
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
+<process xmlns="uri:falcon:process:0.1" name="SampleProcess" >
+    <clusters>
+      <cluster name="primary-cluster">
+	<validity start="2012-04-03T06:00Z" end="2022-12-30T00:00Z" />
+      </cluster>
+    </clusters>
+
+    <parallel>1</parallel>
+    <order>FIFO</order>
+    <frequency>hours(1)</frequency>
+
+    <inputs>
+        <input name="input" feed="SampleInput" start="yesterday(0,0)" end="today(-1,0)" />
+    </inputs>
+
+    <outputs>
+        <output name="output" feed="SampleOutput" instance="yesterday(0,0)" />
+    </outputs>
+
+    <properties>
+        <property name="queueName" value="default" />
+        <property name="ssh.host" value="localhost" />
+        <property name="fileTimestamp" value="${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd')}" />
+    </properties>
+
+    <workflow engine="oozie" path="/examples/apps/aggregator" />
+    <retry policy="exp-backoff" delay="minutes(5)" attempts="3" />
+    
+    <late-process policy="exp-backoff" delay="hours(1)">
+        <late-input input="input" workflow-path="/projects/bootcamp/workflow/lateinput" />
+    </late-process>
+</process>
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "schedule\/default\/b5b40931-175b-4b15-8f2b-02ef2e66f06b\n\nsubmit\/default\/b5b40931-175b-4b15-8f2b-02ef2e66f06b\n\n",
+    "message": "schedule\/default\/SampleProcess(process) scheduled successfully\n\nsubmit\/default\/Submit successful (process) SampleProcess\n\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
