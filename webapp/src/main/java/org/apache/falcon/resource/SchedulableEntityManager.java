@@ -34,7 +34,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("status/{type}/{entity}")
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "status")
     @Override
     public APIResult getStatus(@Dimension("entityType") @PathParam("type") String type,
@@ -45,7 +45,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("dependencies/{type}/{entity}")
-    @Produces(MediaType.TEXT_XML)
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "dependencies")
     @Override
     public EntityList getDependencies(@Dimension("entityType") @PathParam("type") String type,
@@ -55,7 +55,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("list/{type}")
-    @Produces(MediaType.TEXT_XML)
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "dependencies")
     @Override
     public EntityList getDependencies(@Dimension("type") @PathParam("type") String type) {
@@ -64,7 +64,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @GET
     @Path("definition/{type}/{entity}")
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "definition")
     @Override
     public String getEntityDefinition(@Dimension("type") @PathParam("type") String type,
@@ -74,7 +74,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("schedule/{type}/{entity}")
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "schedule")
     @Override
     public APIResult schedule(@Context HttpServletRequest request,
@@ -86,7 +86,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("suspend/{type}/{entity}")
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "suspend")
     @Override
     public APIResult suspend(@Context HttpServletRequest request,
@@ -98,7 +98,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
 
     @POST
     @Path("resume/{type}/{entity}")
-    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Monitored(event = "resume")
     @Override
     public APIResult resume(@Context HttpServletRequest request,

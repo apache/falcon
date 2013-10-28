@@ -188,8 +188,7 @@ public class FalconCLI {
         if (optionsList.contains(RUNNING_OPT)) {
             result = client.getRunningInstances(type, entity, colo);
         } else if (optionsList.contains(STATUS_OPT)) {
-            result = client.getStatusOfInstances(type, entity, start, end,
-                    runid, colo);
+            result = client.getStatusOfInstances(type, entity, start, end, colo);
         } else if (optionsList.contains(KILL_OPT)) {
             result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters);
         } else if (optionsList.contains(SUSPEND_OPT)) {

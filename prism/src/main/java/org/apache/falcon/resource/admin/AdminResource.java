@@ -68,7 +68,7 @@ public class AdminResource {
 
     @GET
     @Path("version")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     public String getVersion() {
         if (version == null) {
             version = "{Version:\"" + BuildProperties.get().getProperty("build.version")
@@ -79,7 +79,7 @@ public class AdminResource {
 
     @GET
     @Path("config/{type}")
-    @Produces(MediaType.TEXT_XML)
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public PropertyList getVersion(@PathParam("type") String type) {
         if ("build".equals(type)) {
             return getProperties(BuildProperties.get());
