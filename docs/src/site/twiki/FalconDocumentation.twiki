@@ -86,6 +86,7 @@ the overall user action. In some cases, it is not possible to undo the action. I
 to keep the system in an consistent state.
 
 ---++ Entity Management actions
+All the following operation can also be done using [[restapi/ResourceList][Falcon's RESTful API]].
 
 ---+++ Submit
 Entity submit action allows a new cluster/feed/process to be setup within Falcon. Submitted entity is not

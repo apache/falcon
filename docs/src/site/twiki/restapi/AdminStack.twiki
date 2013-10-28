@@ -1,0 +1,40 @@
+---++  GET /api/admin/stack
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get stack trace of the falcon server.
+
+---++ Parameters
+None.
+---++ Results
+Stack trace of the server.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/admin/stack
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+Reference Handler
+State: WAITING
+java.lang.Object.wait(Native Method)
+java.lang.Object.wait(Object.java:485)
+java.lang.ref.Reference$ReferenceHandler.run(Reference.java:116)Finalizer
+
+...
+
+State: TIMED_WAITING
+sun.misc.Unsafe.park(Native Method)
+java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:196)
+java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:424)
+java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:323)
+java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:874)
+java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:955)
+java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:917)
+java.lang.Thread.run(Thread.java:695)
+</verbatim>

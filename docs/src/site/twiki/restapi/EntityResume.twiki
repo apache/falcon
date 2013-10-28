@@ -1,0 +1,30 @@
+---++  POST /api/entities/resume/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Resume a supended entity.
+
+---++ Parameters
+   * :entity-type can either be a feed or a process.
+   * :entity-name is name of the entity.
+
+---++ Results
+Result of the resume command.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/entities/resume/process/SampleProcess
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "requestId": "default\/106582a9-130f-4903-8b8f-f95d7b286c30\n",
+    "message": "default\/SampleProcess(process) resumed successfully\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

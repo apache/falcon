@@ -11,6 +11,9 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+    FALCON-151 Document the REST APIs for Falcon. (Raghav Kumar 
+    Gautham via Srikanth Sundarrajan) 
+
     FALCON-152 REST API for entity & Admin resources only returns 
     XML (Venkatesh Seetharam via Srikanth Sundarrajan)
 

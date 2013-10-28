@@ -1,0 +1,41 @@
+---++  POST /api/instance/rerun/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Rerun a specific instance of an entity.
+
+---++ Parameters
+   * :entity-type can either be a feed or a process.
+   * :entity-name is name of the entity.
+   * start is the start time of the instance that you want to refer to
+
+---++ Results
+Results of the rerun command.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "details": "",
+            "startTime": "2013-10-21T15:10:47-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "status": "RUNNING",
+            "instance": "2012-04-03T07:00Z"
+        }
+    ],
+    "requestId": "default\/7a3582bd-608c-45a7-9b74-1837b51ba6d5\n",
+    "message": "default\/RERUN\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
