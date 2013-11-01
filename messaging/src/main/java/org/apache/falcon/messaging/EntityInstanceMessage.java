@@ -70,8 +70,7 @@ public class EntityInstanceMessage {
         topicName("topicName"),
         status("status"),
         brokerTTL("broker.ttlInMins"),
-        cluster("cluster"),
-        falconFeedStorageType("falconFeedStorageType");
+        cluster("cluster");
 
         private String propName;
 

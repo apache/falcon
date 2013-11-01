@@ -59,7 +59,7 @@ public class TableStorageFeedReplicationIT {
     private static final String TARGET_DATABASE_NAME = "tgt_demo_db";
     private static final String TARGET_TABLE_NAME = "customer_bcp";
 
-    private static final String PARTITION_VALUE = "2013-10-24-00"; // ${YEAR}-${MONTH}-${DAY}-${HOUR}
+    private static final String PARTITION_VALUE = "2013102400"; // ${YEAR}${MONTH}${DAY}${HOUR}
 
     private final TestContext sourceContext = new TestContext();
     private String sourceMetastoreUrl;

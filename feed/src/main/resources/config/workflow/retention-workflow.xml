@@ -107,8 +107,6 @@
             <arg>${wf:conf("broker.ttlInMins")}</arg>
             <arg>-cluster</arg>
             <arg>${cluster}</arg>
-            <arg>-falconFeedStorageType</arg>
-            <arg>${falconFeedStorageType}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>

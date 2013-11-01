@@ -21,6 +21,7 @@
 
     <frequency>hours(1)</frequency>
     <timezone>UTC</timezone>
+    <late-arrival cut-off="hours(4)"/>
 
     <clusters>
         <cluster name="##cluster##" type="source">
@@ -32,5 +33,5 @@
     <table uri="catalog:falcon_db:output_table#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 
     <ACL owner="testuser" group="group" permission="0x755"/>
-    <schema location="/schema/clicks" provider="protobuf"/>
+    <schema location="hcat" provider="hcat"/>
 </feed>

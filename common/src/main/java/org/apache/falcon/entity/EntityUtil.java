@@ -559,10 +559,6 @@ public final class EntityUtil {
                 return null;
             }
 
-            if (FeedHelper.getStorageType((Feed) entity) == Storage.TYPE.TABLE) {
-                return null;
-            }
-
             LateProcess lateProcess = new LateProcess();
             lateProcess.setDelay(new Frequency(RuntimeProperties.get()
                     .getProperty("feed.late.frequency", "hours(3)")));

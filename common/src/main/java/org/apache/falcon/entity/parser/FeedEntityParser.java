@@ -291,7 +291,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         final Storage.TYPE storageType = FeedHelper.getStorageType(feed);
         validateUniformStorageType(feed, storageType);
         validatePartitions(feed, storageType);
-        validateLateData(feed, storageType);
         validateStorageExists(feed);
     }
 
@@ -309,13 +308,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         if (storageType == Storage.TYPE.TABLE && feed.getPartitions() != null) {
             throw new ValidationException("Partitions are not supported for feeds with table storage. "
                     + "It should be defined as part of the table URI. "
-                    + feed.getName());
-        }
-    }
-
-    private void validateLateData(Feed feed, Storage.TYPE storageType) throws FalconException {
-        if (storageType == Storage.TYPE.TABLE && feed.getLateArrival() != null) {
-            throw new ValidationException("Late data handling is not supported for feeds with table storage! "
                     + feed.getName());
         }
     }

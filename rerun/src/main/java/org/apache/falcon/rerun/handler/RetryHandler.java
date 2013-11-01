@@ -38,10 +38,8 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
 
     @Override
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public void handleRerun(String cluster, String entityType, String entityName,
-                            String nominalTime, String runId, String wfId,
-                            long msgReceivedTime, String feedStorageType) {
+                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
         try {
             Entity entity = getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
@@ -80,7 +78,6 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
             GenericAlert.alertRetryFailed(entityType, entityName, nominalTime, wfId, runId, e.getMessage());
         }
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     @Override
     public void init(M aDelayQueue) throws FalconException {

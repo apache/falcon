@@ -129,7 +129,7 @@ public class HiveCatalogService extends AbstractCatalogService {
 
     @Override
     public List<CatalogPartition> listPartitionsByFilter(String catalogUrl, String database,
-                                                      String tableName, String filter)
+                                                         String tableName, String filter)
         throws FalconException {
         LOG.info("List partitions for : " + tableName + ", partition filter: " + filter);
 
@@ -184,5 +184,19 @@ public class HiveCatalogService extends AbstractCatalogService {
         }
 
         return true;
+    }
+
+    @Override
+    public CatalogPartition getPartition(String catalogUrl, String database, String tableName,
+                                         Map<String, String> partitionSpec) throws FalconException {
+        LOG.info("List partitions for : " + tableName + ", partition spec: " + partitionSpec);
+
+        try {
+            HCatClient client = get(catalogUrl);
+            HCatPartition hCatPartition = client.getPartition(database, tableName, partitionSpec);
+            return createCatalogPartition(hCatPartition);
+        } catch (HCatException e) {
+            throw new FalconException(e);
+        }
     }
 }

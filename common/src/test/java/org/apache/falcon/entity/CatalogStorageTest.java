@@ -183,4 +183,17 @@ public class CatalogStorageTest {
         CatalogStorage table = new CatalogStorage(catalogUrl, tableUri);
         Assert.assertEquals(table.toPartitionAsPath(), partitionPath);
     }
+
+    @Test
+    public void testCreateFromURL() throws Exception {
+        String url = "thrift://localhost:29083/falcon_db/output_table/ds=2012-04-21-00";
+        CatalogStorage storage = new CatalogStorage(url);
+        Assert.assertEquals("thrift://localhost:29083", storage.getCatalogUrl());
+        Assert.assertEquals("falcon_db", storage.getDatabase());
+        Assert.assertEquals("output_table", storage.getTable());
+        Assert.assertEquals(Storage.TYPE.TABLE, storage.getType());
+        Assert.assertEquals(1, storage.getPartitions().size());
+        Assert.assertEquals("2012-04-21-00", storage.getPartitionValue("ds"));
+        Assert.assertTrue(storage.hasPartition("ds"));
+    }
 }

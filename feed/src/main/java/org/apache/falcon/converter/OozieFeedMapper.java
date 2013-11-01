@@ -405,6 +405,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                 props.put("srcClusterName", srcCluster.getName());
                 props.put("srcClusterColo", srcCluster.getColo());
 
+                // the storage type is uniform across source and target feeds for replication
                 props.put("falconFeedStorageType", sourceStorage.getType().name());
 
                 String instancePaths = null;
@@ -425,7 +426,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     setupHiveConfiguration(trgCluster, sourceTableStorage, targetTableStorage, wfPath);
                 }
 
-                propagateLateDataProperties(feed, instancePaths, props);
+                propagateLateDataProperties(feed, instancePaths, sourceStorage.getType().name(), props);
 
                 replicationWF.setConfiguration(getCoordConfig(props));
                 replicationAction.setWorkflow(replicationWF);
@@ -524,13 +525,18 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put("sourceRelativePaths", "IGNORE"); // this will bot be used for Table storage.
         }
 
-        private void propagateLateDataProperties(Feed feed, String instancePaths, Map<String, String> props) {
+        private void propagateLateDataProperties(Feed feed, String instancePaths,
+                                                 String falconFeedStorageType, Map<String, String> props) {
             // todo these pairs are the same but used in different context
             // late data handler - should-record action
             props.put("falconInputFeeds", feed.getName());
             props.put("falconInPaths", instancePaths);
 
-            // late data consumer - falcon post processing
+            // storage type for each corresponding feed - in this case only one feed is involved
+            // needed to compute usage based on storage type in LateDataHandler
+            props.put("falconInputFeedStorageTypes", falconFeedStorageType);
+
+            // falcon post processing
             props.put(ARG.feedNames.getPropName(), feed.getName());
             props.put(ARG.feedInstancePaths.getPropName(), instancePaths);
         }

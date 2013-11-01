@@ -20,7 +20,6 @@ package org.apache.falcon.rerun.handler;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -50,14 +49,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
 
     @Override
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
-    public void handleRerun(String cluster, String entityType,
-                            String entityName, String nominalTime, String runId, String wfId,
-                            long msgReceivedTime, String feedStorageType) {
-        if (Storage.TYPE.TABLE.name().equals(feedStorageType)) {
-            return;
-        }
-
+    public void handleRerun(String cluster, String entityType, String entityName,
+                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             try {
@@ -100,9 +93,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             LOG.debug("Scheduling the late rerun for entity instance : "
                     + entityType + "(" + entityName + ")" + ":" + nominalTime
                     + " And WorkflowId: " + wfId);
-            LaterunEvent event = new LaterunEvent(cluster, wfId,
-                    msgInsertTime.getTime(), wait, entityType, entityName,
-                    nominalTime, intRunId, feedStorageType);
+            LaterunEvent event = new LaterunEvent(cluster, wfId, msgInsertTime.getTime(),
+                    wait, entityType, entityName, nominalTime, intRunId);
             offerToQueue(event);
         } catch (Exception e) {
             LOG.error("Unable to schedule late rerun for entity instance : "
@@ -112,7 +104,6 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     nominalTime, wfId, runId, e.getMessage());
         }
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private long getEventDelay(Entity entity, String nominalTime) throws FalconException {
 

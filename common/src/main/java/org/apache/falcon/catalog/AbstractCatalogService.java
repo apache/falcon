@@ -90,4 +90,18 @@ public abstract class AbstractCatalogService {
      */
     public abstract boolean dropPartitions(String catalogUrl, String database, String tableName,
                                            Map<String, String> partitions) throws FalconException;
+
+    /**
+     * Gets the partition.
+     *
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName tableName to check if it exists
+     * @param partitionSpec The partition specification, {[col_name,value],[col_name2,value2]}.
+     *                      All partition-key-values must be specified.
+     * @return An instance of CatalogPartition.
+     * @throws FalconException
+     */
+    public abstract CatalogPartition getPartition(String catalogUrl, String database, String tableName,
+                                                  Map<String, String> partitionSpec) throws FalconException;
 }

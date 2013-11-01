@@ -27,7 +27,6 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.Storage;
-import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -37,7 +36,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -126,7 +124,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         initializeInputPaths(cluster, process, coord, props); // inputs
         initializeOutputPaths(cluster, process, coord, props);  // outputs
-        propagateStorageType(process, props);  // falconFeedStorageType
 
         Workflow processWorkflow = process.getWorkflow();
         props.put("userWorkflowEngine", processWorkflow.getEngine().value());
@@ -191,6 +188,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         List<String> inputFeeds = new ArrayList<String>();
         List<String> inputPaths = new ArrayList<String>();
+        List<String> inputFeedStorageTypes = new ArrayList<String>();
         for (Input input : process.getInputs().getInputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
@@ -221,11 +219,21 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
             inputFeeds.add(input.getName());
             inputPaths.add(inputExpr);
+            inputFeedStorageTypes.add(storage.getType().name());
         }
 
+        propagateLateDataProperties(inputFeeds, inputPaths, inputFeedStorageTypes, props);
+    }
+
+    private void propagateLateDataProperties(List<String> inputFeeds, List<String> inputPaths,
+                                             List<String> inputFeedStorageTypes, Map<String, String> props) {
         // populate late data handler - should-record action
         props.put("falconInputFeeds", join(inputFeeds.iterator(), '#'));
         props.put("falconInPaths", join(inputPaths.iterator(), '#'));
+
+        // storage type for each corresponding feed sent as a param to LateDataHandler
+        // needed to compute usage based on storage type in LateDataHandler
+        props.put("falconInputFeedStorageTypes", join(inputFeedStorageTypes.iterator(), '#'));
     }
 
     private void initializeOutputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
@@ -270,30 +278,6 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // Output feed name and path for parent workflow
         props.put(ARG.feedNames.getPropName(), join(outputFeeds.iterator(), ','));
         props.put(ARG.feedInstancePaths.getPropName(), join(outputPaths.iterator(), ','));
-    }
-
-    private void propagateStorageType(Process process, Map<String, String> props) throws FalconException {
-        Storage.TYPE feedStorageType = Storage.TYPE.FILESYSTEM; // defaults to FS.
-
-        if (process.getLateProcess() != null) {
-            Map<String, String> feeds = new HashMap<String, String>();
-            if (process.getInputs() != null) {
-                for (Input in : process.getInputs().getInputs()) {
-                    feeds.put(in.getName(), in.getFeed());
-                }
-            }
-
-            for (LateInput lp : process.getLateProcess().getLateInputs()) {
-                Feed feed = ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
-                if (FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
-                    feedStorageType = Storage.TYPE.TABLE;
-                    break;  // break if one of 'em is a table as late data wont apply
-                }
-            }
-        }
-
-        // this is currently only used for late data handling.
-        props.put("falconFeedStorageType", feedStorageType.name());
     }
 
     private SYNCDATASET createDataSet(Feed feed, Cluster cluster, Storage storage,

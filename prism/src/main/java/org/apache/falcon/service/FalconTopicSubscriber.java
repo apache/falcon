@@ -91,7 +91,6 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             String nominalTime = mapMessage.getString(ARG.nominalTime.getArgName());
             String status = mapMessage.getString(ARG.status.getArgName());
             String operation = mapMessage.getString(ARG.operation.getArgName());
-            String feedStorageType = mapMessage.getString(ARG.falconFeedStorageType.getArgName());
 
             AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
             InstancesResult result = wfEngine.getJobDetails(cluster, workflowId);
@@ -101,22 +100,25 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             if (status.equalsIgnoreCase("FAILED")) {
                 retryHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
-                        System.currentTimeMillis(), feedStorageType);
+                        System.currentTimeMillis());
+
                 GenericAlert.instrumentFailedInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         "", "", duration);
+
             } else if (status.equalsIgnoreCase("SUCCEEDED")) {
                 latedataHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
-                        System.currentTimeMillis(), feedStorageType);
+                        System.currentTimeMillis());
+
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         duration);
+
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }
-
         } catch (JMSException e) {
             LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
         } catch (FalconException e) {

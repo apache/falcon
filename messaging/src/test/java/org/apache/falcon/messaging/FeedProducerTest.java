@@ -50,8 +50,6 @@ public class FeedProducerTest {
 
     private String[] args;
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-    // private static final String BROKER_URL =
-    // "tcp://localhost:61616?daemon=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "Falcon.process1.click-logs";
     private BrokerService broker;
@@ -86,8 +84,7 @@ public class FeedProducerTest {
                             "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                             "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                             "-" + ARG.brokerTTL.getArgName(), "10",
-                            "-" + ARG.cluster.getArgName(), "corp",
-                            "-" + ARG.falconFeedStorageType.getArgName(), "FILESYSTEM", };
+                            "-" + ARG.cluster.getArgName(), "corp", };
 
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
@@ -209,7 +206,5 @@ public class FeedProducerTest {
         Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
                 "2012-01-01T01:00Z");
         Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
-        Assert.assertEquals(m.getString(ARG.falconFeedStorageType.getArgName()), "FILESYSTEM");
     }
-
 }

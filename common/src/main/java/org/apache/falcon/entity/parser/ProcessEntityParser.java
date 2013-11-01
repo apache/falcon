@@ -193,11 +193,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
             try {
                 Feed feed = ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
-                if (FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
-                    throw new ValidationException("Late data handling is not supported for feeds with table storage! "
-                            + feed.getName());
-                }
-
                 if (feed.getLateArrival() == null) {
                     throw new ValidationException(
                             "Late Input feed: " + lp.getInput() + " is not configured with late arrival cut-off");

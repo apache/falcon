@@ -124,8 +124,6 @@ public class MessageProducer extends Configured implements Tool {
                 "workflow id"));
         addOption(options, new Option(ARG.cluster.getArgName(), true,
                 "cluster name"));
-        addOption(options, new Option(ARG.falconFeedStorageType.getArgName(), true,
-                "feed storage type: filesystem or table"), false);
 
         return new GnuParser().parse(options, arguments);
     }
@@ -178,5 +176,4 @@ public class MessageProducer extends Configured implements Tool {
         }
         return 0;
     }
-
 }

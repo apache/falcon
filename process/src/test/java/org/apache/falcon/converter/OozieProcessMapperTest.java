@@ -39,7 +39,6 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
-import org.apache.falcon.oozie.coordinator.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
@@ -169,7 +168,6 @@ public class OozieProcessMapperTest extends AbstractTestBase {
             props.put(prop.getName(), prop.getValue());
         }
         assertEquals(props.get("mapred.job.priority"), "LOW");
-        Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
 
         assertLibExtensions(coord);
     }
@@ -251,14 +249,16 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(new Path(coordPath));
-        CONFIGURATION conf = coord.getAction().getWorkflow().getConfiguration();
-        List<Property> properties = conf.getProperty();
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
 
+        // verify table props
         Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
-
-        for (Property property : properties) {
-            if (expected.containsKey(property.getName())) {
-                Assert.assertEquals(property.getValue(), expected.get(property.getName()));
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            if (expected.containsKey(entry.getKey())) {
+                Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
 
@@ -309,16 +309,27 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(new Path(coordPath));
-        CONFIGURATION conf = coord.getAction().getWorkflow().getConfiguration();
-        List<Property> properties = conf.getProperty();
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
 
+        // verify table props
         Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
-
-        for (Property property : properties) {
-            if (expected.containsKey(property.getName())) {
-                Assert.assertEquals(property.getValue(), expected.get(property.getName()));
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            if (expected.containsKey(entry.getKey())) {
+                Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
+
+        // verify the late data params
+        Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getName());
+        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
+
+        // verify the post processing params
+        Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getName());
+        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
     }
 
     private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process,

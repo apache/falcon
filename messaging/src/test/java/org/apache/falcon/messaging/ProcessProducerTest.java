@@ -61,8 +61,7 @@ public class ProcessProducerTest {
                             "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
                             "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                             "-" + ARG.brokerTTL.getArgName(), "10",
-                            "-" + ARG.cluster.getArgName(), "corp",
-                            "-" + ARG.falconFeedStorageType.getArgName(), "FILESYSTEM", };
+                            "-" + ARG.cluster.getArgName(), "corp", };
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
@@ -146,6 +145,5 @@ public class ProcessProducerTest {
         Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
                 "2012-01-01T01:00Z");
         Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
-        Assert.assertEquals(m.getString(ARG.falconFeedStorageType.getArgName()), "FILESYSTEM");
     }
 }

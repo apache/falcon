@@ -56,13 +56,12 @@ public class FalconPostProcessing extends Configured implements Tool {
         USER_BRKR_URL("userBrokerUrl", "user broker url"),
         BRKR_TTL("brokerTTL", "time to live for broker message in sec"),
         FEED_NAMES("feedNames", "name of the feeds which are generated/replicated/deleted"),
-        FEED_INSTANCE_PATHS("feedInstancePaths", "comma seperated feed instance paths"),
+        FEED_INSTANCE_PATHS("feedInstancePaths", "comma separated feed instance paths"),
         LOG_FILE("logFile", "log file path where feeds to be deleted are recorded"),
         WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie"),
         USER_SUBFLOW_ID("subflowId", "external id of user workflow"),
         USER_WORKFLOW_ENGINE("userWorkflowEngine", "user workflow engine type"),
-        LOG_DIR("logDir", "log dir where job logs are copied"),
-        FEED_STORAGE_TYPE("falconFeedStorageType", "feed's storage type");
+        LOG_DIR("logDir", "log dir where job logs are copied");
 
         private String name;
         private String description;
@@ -156,7 +155,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         addArg(args, cmd, Arg.FEED_NAMES);
         addArg(args, cmd, Arg.FEED_INSTANCE_PATHS);
         addArg(args, cmd, Arg.LOG_FILE);
-        addArg(args, cmd, Arg.FEED_STORAGE_TYPE);
 
         MessageProducer.main(args.toArray(new String[0]));
     }
@@ -206,7 +204,6 @@ public class FalconPostProcessing extends Configured implements Tool {
         addOption(options, Arg.USER_SUBFLOW_ID);
         addOption(options, Arg.USER_WORKFLOW_ENGINE, false);
         addOption(options, Arg.LOG_DIR);
-        addOption(options, Arg.FEED_STORAGE_TYPE);
         return new GnuParser().parse(options, arguments);
     }
 

@@ -283,20 +283,49 @@ public class HiveCatalogServiceIT {
         Assert.assertEquals(partitions.size(), 0, "Unexpected number of partitions");
     }
 
-    /*
-    // this is NOT possible to do in Hive
     @Test
-    public void testDropPartitionBulk() throws Exception {
-        Map<String, String> partialPartitionSpec = new HashMap<String, String>();
-        partialPartitionSpec.put("ds", "20130903");
-        partialPartitionSpec.put("ds", "20130902");
-        partialPartitionSpec.put("ds", "20130901");
+    public void testGetPartition() throws Exception {
+        Map<String, String> partitionSpec = new HashMap<String, String>();
+        partitionSpec.put("ds", "20130902");
+        partitionSpec.put("region", "in");
 
-        Assert.assertTrue(hiveCatalogService.dropPartitions(
-                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partialPartitionSpec));
+        CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+        Assert.assertNotNull(partition);
 
-        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
-        Assert.assertEquals(0, partitions.size(), "Unexpected number of partitions");
+        long createTime = partition.getCreateTime();
+        Assert.assertTrue(createTime > 0);
     }
-    */
+
+    @Test
+    public void testReInstatePartition() throws Exception {
+        Map<String, String> partitionSpec = new HashMap<String, String>();
+        partitionSpec.put("ds", "20130918");
+        partitionSpec.put("region", "blah");
+
+        HCatAddPartitionDesc first = HCatAddPartitionDesc.create(
+                DATABASE_NAME, TABLE_NAME, null, partitionSpec).build();
+        client.addPartition(first);
+
+        CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+        Assert.assertNotNull(partition);
+        final long originalCreateTime = partition.getCreateTime();
+
+        Thread.sleep(1000); // sleep before deletion
+        client.dropPartitions(DATABASE_NAME, TABLE_NAME, partitionSpec, true);
+
+        Thread.sleep(1000); // sleep so the next add is delayed a bit
+
+        HCatAddPartitionDesc second = HCatAddPartitionDesc.create(
+                DATABASE_NAME, TABLE_NAME, null, partitionSpec).build();
+        client.addPartition(second);
+
+        CatalogPartition reInstatedPartition = CatalogServiceFactory.getCatalogService().getPartition(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionSpec);
+        Assert.assertNotNull(reInstatedPartition);
+        final long reInstatedCreateTime = reInstatedPartition.getCreateTime();
+
+        Assert.assertTrue(reInstatedCreateTime > originalCreateTime);
+    }
 }

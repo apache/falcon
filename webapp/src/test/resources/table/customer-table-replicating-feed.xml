@@ -34,11 +34,11 @@
             <validity start="2013-10-24T00:00Z" end="2014-10-26T00:00Z"/>
             <retention limit="months(12)" action="delete"/>
 
-            <table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            <table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}${MONTH}${DAY}${HOUR}" />
         </cluster>
     </clusters>
 
-    <table uri="catalog:src_demo_db:customer_raw#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+    <table uri="catalog:src_demo_db:customer_raw#ds=${YEAR}${MONTH}${DAY}${HOUR}" />
 
     <ACL owner="seetharam" group="users" permission="0755"/>
     <schema location="" provider="hcatalog"/>
