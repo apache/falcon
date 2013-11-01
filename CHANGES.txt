@@ -6,6 +6,18 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
+    FALCON-154 Remove webhcat startup in HadoopStartupListener
+    as its not used. (Venkatesh Seetharam)
+
+    FALCON-161 Feed evictor evicts instances not eligible when
+    pattern has dash. (Venkatesh Seetharam)
+
+    FALCON-143 Enable Late data handling for hive tables.
+    (Venkatesh Seetharam)
+
+    FALCON-95 Enable embedding hive scripts directly in a process.
+    (Venkatesh Seetharam)
+
     FALCON-153 Feed Storage type isn't passed in replication.
     (Venkatesh Seetharam)
 
