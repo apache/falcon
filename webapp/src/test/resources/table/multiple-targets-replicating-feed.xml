@@ -19,7 +19,7 @@
 <!--
     Replicating Hourly customer table from primary to secondary cluster.
   -->
-<feed description="Replicating customer table feed" name="customer-table-replicating-feed"
+<feed description="Replicating customer table feed" name="multiple-targets-replicating-feed"
       xmlns="uri:falcon:feed:0.1">
 
     <frequency>hours(1)</frequency>
@@ -29,16 +29,44 @@
         <cluster name="primary-cluster" type="source">
             <validity start="2013-10-24T00:00Z" end="2014-10-26T00:00Z"/>
             <retention limit="days(30)" action="delete"/>
+
+            <locations>
+                <location type="data"
+                          path="/falcon/test/primary-cluster/customer_raw/${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            </locations>
         </cluster>
-        <cluster name="bcp-cluster" type="target">
+        <cluster name="target-cluster-alpha" type="target">
             <validity start="2013-10-24T00:00Z" end="2014-10-26T00:00Z"/>
             <retention limit="months(12)" action="delete"/>
 
-            <table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            <locations>
+                <location type="data"
+                          path="/falcon/test/target-cluster-alpha/customer_alpha/${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            </locations>
+        </cluster>
+        <cluster name="target-cluster-beta" type="target">
+            <validity start="2013-10-24T00:00Z" end="2014-10-26T00:00Z"/>
+            <retention limit="months(12)" action="delete"/>
+
+            <locations>
+                <location type="data"
+                          path="/falcon/test/target-cluster-beta/customer_beta/${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            </locations>
+        </cluster>
+        <cluster name="target-cluster-gamma" type="target">
+            <validity start="2013-10-24T00:00Z" end="2014-10-26T00:00Z"/>
+            <retention limit="months(12)" action="delete"/>
+
+            <locations>
+                <location type="data"
+                          path="/falcon/test/target-cluster-gamma/customer_gamma/${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+            </locations>
         </cluster>
     </clusters>
 
-    <table uri="catalog:src_demo_db:customer_raw#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+    <locations>
+        <location type="data" path="/falcon/test/customer_raw/${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+    </locations>
 
     <ACL owner="seetharam" group="users" permission="0755"/>
     <schema location="" provider="hcatalog"/>

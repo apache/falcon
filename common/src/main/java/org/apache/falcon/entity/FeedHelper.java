@@ -99,7 +99,7 @@ public final class FeedHelper {
 
         final List<Location> locations = getLocations(cluster, feed);
         if (locations != null) {
-            return new FileSystemStorage(clusterEntity, feed);
+            return new FileSystemStorage(ClusterHelper.getStorageUrl(clusterEntity), locations);
         }
 
         try {
@@ -185,7 +185,14 @@ public final class FeedHelper {
         throw new FalconException("Both catalog and locations are not defined.");
     }
 
-    private static List<Location> getLocations(Cluster cluster, Feed feed) {
+    public static Storage.TYPE getStorageType(Feed feed,
+                                              org.apache.falcon.entity.v0.cluster.Cluster clusterEntity)
+        throws FalconException {
+        Cluster feedCluster = getCluster(feed, clusterEntity.getName());
+        return getStorageType(feed, feedCluster);
+    }
+
+    protected static List<Location> getLocations(Cluster cluster, Feed feed) {
         // check if locations are overridden in cluster
         final Locations clusterLocations = cluster.getLocations();
         if (clusterLocations != null
@@ -197,7 +204,7 @@ public final class FeedHelper {
         return feedLocations == null ? null : feedLocations.getLocations();
     }
 
-    private static CatalogTable getTable(Cluster cluster, Feed feed) {
+    protected static CatalogTable getTable(Cluster cluster, Feed feed) {
         // check if table is overridden in cluster
         if (cluster.getTable() != null) {
             return cluster.getTable();

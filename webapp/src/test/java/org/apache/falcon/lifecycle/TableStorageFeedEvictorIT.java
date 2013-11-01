@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.catalog;
+package org.apache.falcon.lifecycle;
 
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.Pair;
+import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.retention.FeedEvictor;

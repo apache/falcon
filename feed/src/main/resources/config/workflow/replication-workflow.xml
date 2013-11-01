@@ -67,7 +67,7 @@
             <job-tracker>${falconSourceJobTracker}</job-tracker>
             <name-node>${falconSourceNameNode}</name-node>
             <prepare>
-                <delete path="${falconSourceStagingDir}/${nominalTime}"/>
+                <delete path="${distcpSourcePaths}"/>
             </prepare>
             <job-xml>${wf:appPath()}/conf/falcon-source-hive-site.xml</job-xml>
             <configuration>
@@ -84,7 +84,7 @@
             <param>falconSourceDatabase=${falconSourceDatabase}</param>
             <param>falconSourceTable=${falconSourceTable}</param>
             <param>falconSourcePartition=${falconSourcePartition}</param>
-            <param>falconSourceStagingDir=${falconSourceStagingDir}/${nominalTime}</param>
+            <param>falconSourceStagingDir=${distcpSourcePaths}</param>
         </hive>
         <ok to="replication"/>
         <error to="fail"/>
@@ -149,7 +149,7 @@
             <param>falconTargetDatabase=${falconTargetDatabase}</param>
             <param>falconTargetTable=${falconTargetTable}</param>
             <param>falconTargetPartition=${falconTargetPartition}</param>
-            <param>falconTargetStagingDir=${falconTargetStagingDir}/${nominalTime}</param>
+            <param>falconTargetStagingDir=${distcpTargetPaths}</param>
         </hive>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>

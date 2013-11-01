@@ -62,6 +62,9 @@
             <case to="user-pig-job">
                 ${userWorkflowEngine=="pig"}
             </case>
+            <case to="user-hive-job">
+                ${userWorkflowEngine=="hive"}
+            </case>
             <default to="user-oozie-workflow"/>
         </switch>
     </decision>
@@ -88,8 +91,27 @@
                 </property>
             </configuration>
             <script>#USER_WF_PATH#</script>
-            <file>${wf:appPath()}/conf/hive-site.xml</file>
         </pig>
+        <ok to="succeeded-post-processing"/>
+        <error to="failed-post-processing"/>
+    </action>
+    <action name="user-hive-job">
+        <hive xmlns="uri:oozie:hive-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <job-xml>${wf:appPath()}/conf/falcon-hive-site.xml</job-xml>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <script>#USER_WF_PATH#</script>
+        </hive>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
@@ -101,7 +123,6 @@
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
-
     <action name='succeeded-post-processing'>
         <java>
             <job-tracker>${jobTracker}</job-tracker>

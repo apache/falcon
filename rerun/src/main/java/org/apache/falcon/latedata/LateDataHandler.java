@@ -70,6 +70,7 @@ public class LateDataHandler extends Configured implements Tool {
 
         opt = new Option("falconFeedStorageType", true, "Feed storage type: FileSystem or Table");
         opt.setRequired(true);
+        options.addOption(opt);
 
         return new GnuParser().parse(options, args);
     }

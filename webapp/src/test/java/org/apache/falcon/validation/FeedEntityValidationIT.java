@@ -16,21 +16,18 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.resource;
+package org.apache.falcon.validation;
 
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.catalog.HiveCatalogService;
 import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.FeedEntityParser;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LateArrival;
-import org.apache.hcatalog.api.HCatClient;
-import org.apache.hcatalog.api.HCatCreateDBDesc;
-import org.apache.hcatalog.api.HCatCreateTableDesc;
-import org.apache.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.util.HiveTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -41,7 +38,6 @@ import javax.xml.bind.Marshaller;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -56,50 +52,19 @@ public class FeedEntityValidationIT {
             "catalog:" + DATABASE_NAME + ":" + TABLE_NAME + "#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}";
 
     private final TestContext context = new TestContext();
-    private HCatClient client;
 
     @BeforeClass
     public void setup() throws Exception {
         TestContext.prepare();
 
-        client = HiveCatalogService.get(METASTORE_URL);
-
-        createDatabase();
-        createTable();
-    }
-
-    private void createDatabase() throws Exception {
-        HCatCreateDBDesc dbDesc = HCatCreateDBDesc.create(DATABASE_NAME)
-                .ifNotExists(true).build();
-        client.createDatabase(dbDesc);
-    }
-
-    public void createTable() throws Exception {
-        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
-        cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
-        cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
-
-        HCatCreateTableDesc tableDesc = HCatCreateTableDesc
-                .create(DATABASE_NAME, TABLE_NAME, cols)
-                .fileFormat("rcfile")
-                .ifNotExists(true)
-                .comments("falcon integration test")
-                .build();
-        client.createTable(tableDesc);
+        HiveTestUtils.createDatabase(METASTORE_URL, DATABASE_NAME);
+        HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
     }
 
     @AfterClass
     public void tearDown() throws Exception {
-        dropTable();
-        dropDatabase();
-    }
-
-    private void dropTable() throws Exception {
-        client.dropTable(DATABASE_NAME, TABLE_NAME, true);
-    }
-
-    private void dropDatabase() throws Exception {
-        client.dropDatabase(DATABASE_NAME, true, HCatClient.DropDBMode.CASCADE);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
+        HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
     }
 
     /**
@@ -163,7 +128,7 @@ public class FeedEntityValidationIT {
     }
 
     @Test (dataProvider = "invalidTableUris")
-    public void testFeedEntityWithInvalidTableUri(String tableUri, String ignore)
+    public void testFeedEntityWithInvalidTableUri(String tableUri, @SuppressWarnings("unused") String ignore)
         throws Exception {
 
         Map<String, String> overlay = context.getUniqueOverlay();

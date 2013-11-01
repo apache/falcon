@@ -249,15 +249,6 @@
                                     <outputDirectory>${project.build.directory}/webapps</outputDirectory>
                                     <destFileName>hadoop.war</destFileName>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.apache.pig</groupId>
-                                    <artifactId>pig</artifactId>
-                                    <version>0.11.1</version>
-                                    <type>jar</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/sharelib</outputDirectory>
-                                    <destFileName>pig.jar</destFileName>
-                                </artifactItem>
                                 <!-- this is only used in integration-tests against external clusters -->
                                 <artifactItem>
                                     <groupId>org.apache.activemq</groupId>

@@ -32,6 +32,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.EngineType;
@@ -61,7 +62,14 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.xerces.dom.ElementNSImpl;
+import org.w3c.dom.Document;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.dom.DOMResult;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -447,42 +455,74 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 action.getSubWorkflow().setAppPath(storagePath);
             } else if (engineType == EngineType.PIG && actionName.equals("user-pig-job")) {
                 decoratePIGAction(cluster, process, processWorkflow, storagePath, action.getPig(), wfPath);
+            } else if (engineType == EngineType.HIVE && actionName.equals("user-hive-job")) {
+                decorateHiveAction(cluster, process, processWorkflow, storagePath, action, wfPath);
             }
         }
 
         marshal(cluster, wfApp, wfPath);
     }
 
-    private void decoratePIGAction(Cluster cluster, Process process, Workflow processWorkflow,
-                                   String storagePath, PIG pigAction, Path wfPath) throws FalconException {
+    private void decoratePIGAction(Cluster cluster, Process process,
+                                   Workflow processWorkflow, String storagePath,
+                                   PIG pigAction, Path wfPath) throws FalconException {
         pigAction.setScript(storagePath);
 
-        addPrepareDeleteOutputPath(cluster, process, pigAction);
+        addPrepareDeleteOutputPath(process, pigAction);
 
-        addInputFeedsAsParams(pigAction, process, cluster);
-        addOutputFeedsAsParams(pigAction, process, cluster);
+        final List<String> paramList = pigAction.getParam();
+        addInputFeedsAsParams(paramList, process, cluster, EngineType.PIG.name().toLowerCase());
+        addOutputFeedsAsParams(paramList, process, cluster);
 
         propagateProcessProperties(pigAction, process);
 
-        setupHiveConfiguration(cluster, process, wfPath);
+        Storage.TYPE storageType = getStorageType(cluster, process);
+        if (Storage.TYPE.TABLE == storageType) {
+            // adds hive-site.xml in pig classpath
+            setupHiveConfiguration(cluster, wfPath, ""); // DO NOT ADD PREFIX!!!
+            pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
+        }
 
-        addArchiveForCustomJars(cluster, processWorkflow, pigAction);
+        addArchiveForCustomJars(cluster, processWorkflow, pigAction.getArchive());
     }
 
-    private void addPrepareDeleteOutputPath(Cluster cluster, Process process,
+    private void decorateHiveAction(Cluster cluster, Process process,
+                                    Workflow processWorkflow, String storagePath,
+                                    ACTION wfAction, Path wfPath) throws FalconException {
+
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = unMarshalHiveAction(wfAction);
+        org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
+
+        hiveAction.setScript(storagePath);
+
+        addPrepareDeleteOutputPath(process, hiveAction);
+
+        final List<String> paramList = hiveAction.getParam();
+        addInputFeedsAsParams(paramList, process, cluster, EngineType.HIVE.name().toLowerCase());
+        addOutputFeedsAsParams(paramList, process, cluster);
+
+        propagateProcessProperties(hiveAction, process);
+
+        setupHiveConfiguration(cluster, wfPath, "falcon-");
+
+        addArchiveForCustomJars(cluster, processWorkflow, hiveAction.getArchive());
+
+        marshalHiveAction(wfAction, actionJaxbElement);
+    }
+
+    private void addPrepareDeleteOutputPath(Process process,
                                             PIG pigAction) throws FalconException {
+        List<String> deleteOutputPathList = getPrepareDeleteOutputPathList(process);
+        if (deleteOutputPathList.isEmpty()) {
+            return;
+        }
+
         final PREPARE prepare = new PREPARE();
         final List<DELETE> deleteList = prepare.getDelete();
-        for (Output output : process.getOutputs().getOutputs()) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
-            Storage storage = FeedHelper.createStorage(cluster, feed);
 
-            if (storage.getType() == Storage.TYPE.TABLE) {
-                continue; // prepare delete only applies to FileSystem storage
-            }
-
+        for (String deletePath : deleteOutputPathList) {
             final DELETE delete = new DELETE();
-            delete.setPath("${wf:conf('" + output.getName() + "')}");
+            delete.setPath(deletePath);
             deleteList.add(delete);
         }
 
@@ -491,41 +531,79 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         }
     }
 
-    private void addInputFeedsAsParams(PIG pigAction, Process process,
-                                       Cluster cluster) throws FalconException {
-        final List<String> paramList = pigAction.getParam();
+    private void addPrepareDeleteOutputPath(Process process,
+                                            org.apache.falcon.oozie.hive.ACTION hiveAction)
+        throws FalconException {
+
+        List<String> deleteOutputPathList = getPrepareDeleteOutputPathList(process);
+        if (deleteOutputPathList.isEmpty()) {
+            return;
+        }
+
+        org.apache.falcon.oozie.hive.PREPARE prepare = new org.apache.falcon.oozie.hive.PREPARE();
+        List<org.apache.falcon.oozie.hive.DELETE> deleteList = prepare.getDelete();
+
+        for (String deletePath : deleteOutputPathList) {
+            org.apache.falcon.oozie.hive.DELETE delete = new org.apache.falcon.oozie.hive.DELETE();
+            delete.setPath(deletePath);
+            deleteList.add(delete);
+        }
+
+        if (!deleteList.isEmpty()) {
+            hiveAction.setPrepare(prepare);
+        }
+    }
+
+    private List<String> getPrepareDeleteOutputPathList(Process process) throws FalconException {
+        final List<String> deleteList = new ArrayList<String>();
+        for (Output output : process.getOutputs().getOutputs()) {
+            Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
+
+            if (FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
+                continue; // prepare delete only applies to FileSystem storage
+            }
+
+            deleteList.add("${wf:conf('" + output.getName() + "')}");
+        }
+
+        return deleteList;
+    }
+
+    private void addInputFeedsAsParams(List<String> paramList, Process process, Cluster cluster,
+                                       String engineType) throws FalconException {
         for (Input input : process.getInputs().getInputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
 
-            final String inputName = "falcon_" + input.getName();
+            final String inputName = input.getName();
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                paramList.add(inputName + "=${" + inputName + "}");
+                paramList.add(inputName + "=${" + inputName + "}"); // no prefix for backwards compatibility
             } else if (storage.getType() == Storage.TYPE.TABLE) {
+                final String paramName = "falcon_" + inputName; // prefix 'falcon' for new params
                 Map<String, String> props = new HashMap<String, String>();
-                propagateCommonCatalogTableProperties((CatalogStorage) storage, props, inputName);
+                propagateCommonCatalogTableProperties((CatalogStorage) storage, props, paramName);
                 for (String key : props.keySet()) {
                     paramList.add(key + "=${wf:conf('" + key + "')}");
                 }
-                // finally add the pig filter for this input feed
-                paramList.add(inputName + "_filter=${wf:conf('" + inputName + "_partition_filter_pig')}");
+
+                paramList.add(paramName + "_filter=${wf:conf('"
+                        + paramName + "_partition_filter_" + engineType + "')}");
             }
         }
     }
 
-    private void addOutputFeedsAsParams(PIG pigAction, Process process,
+    private void addOutputFeedsAsParams(List<String> paramList, Process process,
                                         Cluster cluster) throws FalconException {
-        final List<String> paramList = pigAction.getParam();
         for (Output output : process.getOutputs().getOutputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
 
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
-                final String outputName = "falcon_" + output.getName();
+                final String outputName = output.getName();  // no prefix for backwards compatibility
                 paramList.add(outputName + "=${" + outputName + "}");
             } else if (storage.getType() == Storage.TYPE.TABLE) {
                 Map<String, String> props = new HashMap<String, String>();
-                propagateCatalogTableProperties(output, (CatalogStorage) storage, props);
+                propagateCatalogTableProperties(output, (CatalogStorage) storage, props); // prefix is auto added
                 for (String key : props.keySet()) {
                     paramList.add(key + "=${wf:conf('" + key + "')}");
                 }
@@ -542,43 +620,79 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         // Propagate user defined properties to job configuration
         final List<org.apache.falcon.oozie.workflow.CONFIGURATION.Property> configuration =
                 pigAction.getConfiguration().getProperty();
+
+        // Propagate user defined properties to pig script as macros
+        // passed as parameters -p name=value that can be accessed as $name
+        final List<String> paramList = pigAction.getParam();
+
         for (org.apache.falcon.entity.v0.process.Property property : processProperties.getProperties()) {
             org.apache.falcon.oozie.workflow.CONFIGURATION.Property configProperty =
                     new org.apache.falcon.oozie.workflow.CONFIGURATION.Property();
             configProperty.setName(property.getName());
             configProperty.setValue(property.getValue());
             configuration.add(configProperty);
-        }
 
-        // Propagate user defined properties to pig script as macros
-        // passed as parameters -p name=value that can be accessed as $name
-        final List<String> paramList = pigAction.getParam();
-        for (org.apache.falcon.entity.v0.process.Property property : processProperties.getProperties()) {
             paramList.add(property.getName() + "=" + property.getValue());
         }
     }
 
-    // adds hive-site.xml in pig classpath
-    private void setupHiveConfiguration(Cluster cluster, Process process,
-                                        Path wfPath) throws FalconException {
-        Input input = process.getInputs().getInputs().get(0); // at least one input should exist
-        Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
-        Storage storage = FeedHelper.createStorage(cluster, feed);
-        if (storage.getType() == Storage.TYPE.FILESYSTEM) {
+    private void propagateProcessProperties(org.apache.falcon.oozie.hive.ACTION hiveAction, Process process) {
+        org.apache.falcon.entity.v0.process.Properties processProperties = process.getProperties();
+        if (processProperties == null) {
             return;
         }
 
+        // Propagate user defined properties to job configuration
+        final List<org.apache.falcon.oozie.hive.CONFIGURATION.Property> configuration =
+                hiveAction.getConfiguration().getProperty();
+
+        // Propagate user defined properties to pig script as macros
+        // passed as parameters -p name=value that can be accessed as $name
+        final List<String> paramList = hiveAction.getParam();
+
+        for (org.apache.falcon.entity.v0.process.Property property : processProperties.getProperties()) {
+            org.apache.falcon.oozie.hive.CONFIGURATION.Property configProperty =
+                    new org.apache.falcon.oozie.hive.CONFIGURATION.Property();
+            configProperty.setName(property.getName());
+            configProperty.setValue(property.getValue());
+            configuration.add(configProperty);
+
+            paramList.add(property.getName() + "=" + property.getValue());
+        }
+    }
+
+    private Storage.TYPE getStorageType(Cluster cluster, Process process) throws FalconException {
+        Storage.TYPE storageType = Storage.TYPE.FILESYSTEM;
+        if (process.getInputs() == null) {
+            return storageType;
+        }
+
+        for (Input input : process.getInputs().getInputs()) {
+            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
+            storageType = FeedHelper.getStorageType(feed, cluster);
+            if (Storage.TYPE.TABLE == storageType) {
+                break;
+            }
+        }
+
+        return storageType;
+    }
+
+    // creates hive-site.xml configuration in conf dir.
+    private void setupHiveConfiguration(Cluster cluster, Path wfPath,
+                                        String prefix) throws FalconException {
+        String catalogUrl = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint();
         try {
             FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
             Path confPath = new Path(wfPath, "conf");
-            createHiveConf(fs, confPath, ((CatalogStorage) storage).getCatalogUrl(), ""); // DO NOT ADD PREFIX!!!
+            createHiveConf(fs, confPath, catalogUrl, prefix);
         } catch (IOException e) {
             throw new FalconException(e);
         }
     }
 
     private void addArchiveForCustomJars(Cluster cluster, Workflow processWorkflow,
-                                         PIG pigAction) throws FalconException {
+                                         List<String> archiveList) throws FalconException {
         String processWorkflowLib = processWorkflow.getLib();
         if (processWorkflowLib == null) {
             return;
@@ -588,7 +702,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         try {
             final FileSystem fs = libPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
             if (fs.isFile(libPath)) {  // File, not a Dir
-                pigAction.getArchive().add(processWorkflowLib);
+                archiveList.add(processWorkflowLib);
                 return;
             }
 
@@ -605,10 +719,34 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             });
 
             for (FileStatus fileStatus : fileStatuses) {
-                pigAction.getArchive().add(fileStatus.getPath().toString());
+                archiveList.add(fileStatus.getPath().toString());
             }
         } catch (IOException e) {
             throw new FalconException("Error adding archive for custom jars under: " + libPath, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected JAXBElement<org.apache.falcon.oozie.hive.ACTION> unMarshalHiveAction(ACTION wfAction) {
+        try {
+            Unmarshaller unmarshaller = HIVE_ACTION_JAXB_CONTEXT.createUnmarshaller();
+            unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
+            return (JAXBElement<org.apache.falcon.oozie.hive.ACTION>)
+                    unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to unmarshall hive action.", e);
+        }
+    }
+
+    protected void marshalHiveAction(ACTION wfAction,
+                                     JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionjaxbElement) {
+        try {
+            DOMResult hiveActionDOM = new DOMResult();
+            Marshaller marshaller = HIVE_ACTION_JAXB_CONTEXT.createMarshaller();
+            marshaller.marshal(actionjaxbElement, hiveActionDOM);
+            wfAction.setAny(((Document) hiveActionDOM.getNode()).getDocumentElement());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to marshall hive action.", e);
         }
     }
 }

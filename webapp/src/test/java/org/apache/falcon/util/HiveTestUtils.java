@@ -55,6 +55,21 @@ public final class HiveTestUtils {
         client.dropDatabase(databaseName, true, HCatClient.DropDBMode.CASCADE);
     }
 
+    public static void createTable(String metaStoreUrl, String databaseName,
+                                   String tableName) throws Exception {
+        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
+        cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
+        cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
+
+        HCatCreateTableDesc tableDesc = HCatCreateTableDesc
+                .create(databaseName, tableName, cols)
+                .ifNotExists(true)
+                .comments("falcon integration test")
+                .build();
+        client.createTable(tableDesc);
+    }
+
     public static void createTable(String metaStoreUrl, String databaseName, String tableName,
                                    List<String> partitionKeys) throws Exception {
         HCatClient client = HiveCatalogService.get(metaStoreUrl);
@@ -118,17 +133,16 @@ public final class HiveTestUtils {
 
     public static void loadData(String metaStoreUrl, String databaseName, String tableName,
                                 String path, String partition) throws Exception {
-        StringBuilder alterTableDdl = new StringBuilder();
-        alterTableDdl
-                .append(" load data inpath ")
-                .append(" '").append(path).append("' ")
-                .append(" into table ")
-                .append(tableName)
-                .append(" partition ").append(" (ds='").append(partition).append("') ");
+        StringBuilder ddl = new StringBuilder();
+        ddl.append(" load data inpath ")
+            .append(" '").append(path).append("' ")
+            .append(" into table ")
+            .append(tableName)
+            .append(" partition ").append(" (ds='").append(partition).append("') ");
 
         startSessionState(metaStoreUrl);
         execHiveDDL("use " + databaseName);
-        execHiveDDL(alterTableDdl.toString());
+        execHiveDDL(ddl.toString());
     }
 
     public static void dropTable(String metaStoreUrl, String databaseName,

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.resource;
+package org.apache.falcon.validation;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +28,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.resource.TestContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -79,7 +80,6 @@ public class ClusterEntityValidationIT {
             {Interfacetype.MESSAGING, "tcp://messaging-interface:9999"},
             {Interfacetype.REGISTRY, "catalog-interface:9999"},
             {Interfacetype.REGISTRY, "http://catalog-interface:9999"},
-            {Interfacetype.REGISTRY, "Hcat"},
         };
     }
 

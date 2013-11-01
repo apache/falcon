@@ -147,6 +147,23 @@
                         </goals>
                         <configuration>
                             <!-- <generateDirectory>src/main/java</generateDirectory> -->
+                            <generatePackage>org.apache.falcon.oozie.hive</generatePackage>
+                            <includeSchemas>
+                                <includeSchema>hive-action-0.2.xsd</includeSchema>
+                            </includeSchemas>
+                            <excludeBindings>
+                                <excludeBinding>jaxb-binding.xjb</excludeBinding>
+                            </excludeBindings>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>4</id>
+                        <!-- <phase>generate-sources</phase> -->
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <!-- <generateDirectory>src/main/java</generateDirectory> -->
                             <generatePackage>org.apache.falcon.oozie.bundle</generatePackage>
                             <includeSchemas>
                                 <includeSchema>oozie-bundle-0.1.xsd</includeSchema>

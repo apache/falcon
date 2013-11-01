@@ -74,6 +74,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final JAXBContext WORKFLOW_JAXB_CONTEXT;
     protected static final JAXBContext COORD_JAXB_CONTEXT;
     protected static final JAXBContext BUNDLE_JAXB_CONTEXT;
+    protected static final JAXBContext HIVE_ACTION_JAXB_CONTEXT;
 
     protected static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override
@@ -96,6 +97,8 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
             COORD_JAXB_CONTEXT = JAXBContext.newInstance(COORDINATORAPP.class);
             BUNDLE_JAXB_CONTEXT = JAXBContext.newInstance(BUNDLEAPP.class);
+            HIVE_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
+                    org.apache.falcon.oozie.hive.ACTION.class.getPackage().getName());
         } catch (JAXBException e) {
             throw new RuntimeException("Unable to create JAXB context", e);
         }

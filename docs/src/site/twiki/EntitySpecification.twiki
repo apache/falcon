@@ -637,6 +637,26 @@ This defines the workflow engine to be pig and the pig script is defined at
 Feeds with Hive table storage will send one more parameter apart from the general ones:
 <verbatim>$input_filter</verbatim>
 
+---+++++ Hive
+
+Falcon also adds the Hive engine as part of Hive Integration which enables users to embed a Hive script as a process.
+This would enable users to create materialized queries in a declarative way.
+
+Example:
+<verbatim>
+<process name="sample-process">
+...
+    <workflow engine="hive" path="/projects/bootcamp/hive-script.hql"/>
+...
+</process>
+</verbatim>
+
+This defines the workflow engine to be hive and the hive script is defined at
+/projects/bootcamp/hive-script.hql.
+
+Feeds with Hive table storage will send one more parameter apart from the general ones:
+<verbatim>$input_filter</verbatim>
+
 ---++++ Retry
 Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
 Syntax:

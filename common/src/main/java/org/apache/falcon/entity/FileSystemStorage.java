@@ -19,7 +19,6 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -45,10 +44,6 @@ public class FileSystemStorage implements Storage {
 
     protected FileSystemStorage(Feed feed) {
         this(FILE_SYSTEM_URL, feed.getLocations());
-    }
-
-    protected FileSystemStorage(Cluster cluster, Feed feed) {
-        this(ClusterHelper.getStorageUrl(cluster), feed.getLocations());
     }
 
     protected FileSystemStorage(String storageUrl, Locations locations) {

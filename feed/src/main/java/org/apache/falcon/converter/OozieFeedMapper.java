@@ -511,8 +511,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     FeedHelper.getStagingDir(srcCluster, getEntity(), sourceStorage, Tag.REPLICATION)
                     + "/" + sourceDatedPartitionKey
                     + "=${coord:dataOutPartitionValue('output', '" + sourceDatedPartitionKey + "')}";
-            props.put("falconSourceStagingDir", sourceStagingDir);
-            props.put("distcpSourcePaths", sourceStagingDir + "/" + NOMINAL_TIME_EL);
+            props.put("distcpSourcePaths", sourceStagingDir + "/" + NOMINAL_TIME_EL + "/data");
 
             // create staging dirs for import at target & set it as distcpTargetPaths
             String targetDatedPartitionKey = targetStorage.getDatedPartitionKey();
@@ -520,8 +519,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     FeedHelper.getStagingDir(trgCluster, getEntity(), targetStorage, Tag.REPLICATION)
                     + "/" + targetDatedPartitionKey
                     + "=${coord:dataOutPartitionValue('output', '" + targetDatedPartitionKey + "')}";
-            props.put("falconTargetStagingDir", targetStagingDir);
-            props.put("distcpTargetPaths", targetStagingDir + "/" + NOMINAL_TIME_EL);
+            props.put("distcpTargetPaths", targetStagingDir + "/" + NOMINAL_TIME_EL + "/data");
 
             props.put("sourceRelativePaths", "IGNORE"); // this will bot be used for Table storage.
         }

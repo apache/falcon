@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.catalog;
+package org.apache.falcon.lifecycle;
 
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.util.FSUtils;
 import org.apache.falcon.util.HiveTestUtils;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.util.StartupProperties;
@@ -58,7 +59,7 @@ public class TableStorageFeedReplicationIT {
     private static final String TARGET_DATABASE_NAME = "tgt_demo_db";
     private static final String TARGET_TABLE_NAME = "customer_bcp";
 
-    private static final String PARTITION_VALUE = "2013-09-24-00"; // ${YEAR}-${MONTH}-${DAY}-${HOUR}
+    private static final String PARTITION_VALUE = "2013-10-24-00"; // ${YEAR}-${MONTH}-${DAY}-${HOUR}
 
     private final TestContext sourceContext = new TestContext();
     private String sourceMetastoreUrl;
@@ -80,7 +81,7 @@ public class TableStorageFeedReplicationIT {
 
         // copyTestDataToHDFS
         final String sourcePath = sourceStorageUrl + "/falcon/test/input/" + PARTITION_VALUE;
-        TestContext.copyResourceToHDFS("/apps/pig/data.txt", "data.txt", sourcePath);
+        FSUtils.copyResourceToHDFS("/apps/data/data.txt", "data.txt", sourcePath);
 
         sourceMetastoreUrl = ClusterHelper.getInterface(sourceCluster, Interfacetype.REGISTRY).getEndpoint();
         setupHiveMetastore(sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME);
@@ -94,11 +95,7 @@ public class TableStorageFeedReplicationIT {
         targetMetastoreUrl = ClusterHelper.getInterface(targetCluster, Interfacetype.REGISTRY).getEndpoint();
         setupHiveMetastore(targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME);
 
-        // set up kahadb to be sent as part of workflows
-        StartupProperties.get().setProperty("libext.paths", "./target/libext");
-        String libext = ClusterHelper.getLocation(targetCluster, "working") + "/libext";
-        String targetStorageUrl = ClusterHelper.getStorageUrl(targetCluster);
-        TestContext.copyOozieShareLibsToHDFS("./target/libext", targetStorageUrl + libext);
+        copyLibsToHDFS(targetCluster);
     }
 
     private void setupHiveMetastore(String metastoreUrl, String databaseName,
@@ -110,6 +107,14 @@ public class TableStorageFeedReplicationIT {
         HiveTestUtils.createTable(metastoreUrl, databaseName, tableName, partitionKeys);
         // todo this is a kludge to work around hive's limitations
         HiveTestUtils.alterTable(metastoreUrl, databaseName, tableName);
+    }
+
+    private void copyLibsToHDFS(Cluster cluster) throws IOException {
+        // set up kahadb to be sent as part of workflows
+        StartupProperties.get().setProperty("libext.paths", "./target/libext");
+        String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
+        String targetStorageUrl = ClusterHelper.getStorageUrl(cluster);
+        FSUtils.copyOozieShareLibsToHDFS("./target/libext", targetStorageUrl + libext);
     }
 
     @AfterClass
@@ -136,6 +141,7 @@ public class TableStorageFeedReplicationIT {
                 + "FALCON_FEED_REPLICATION_customer-table-replicating-feed_primary-cluster/"
                 + databaseName;
         fs.delete(new Path(stagingDir), true);
+        fs.delete(new Path("/falcon/test/input"), true);
     }
 
     @Test (enabled = false)
@@ -158,7 +164,7 @@ public class TableStorageFeedReplicationIT {
         // wait until the workflow job completes
         WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(targetContext.getCluster().getCluster(),
                 OozieClient.FILTER_NAME + "=FALCON_FEED_REPLICATION_" + feedName);
-        Assert.assertEquals(WorkflowJob.Status.SUCCEEDED, jobInfo.getStatus());
+        Assert.assertEquals(jobInfo.getStatus(), WorkflowJob.Status.SUCCEEDED);
 
         // verify if the partition on the target exists
         HCatPartition targetPartition = HiveTestUtils.getPartition(
@@ -169,6 +175,6 @@ public class TableStorageFeedReplicationIT {
                 .header("Remote-User", "guest")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
-        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
     }
 }
