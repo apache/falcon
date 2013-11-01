@@ -32,7 +32,6 @@ import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hcatalog.templeton.AppConfig;
 import org.apache.log4j.Logger;
 
 /**
@@ -62,7 +61,6 @@ public class HadoopStartupListener implements ServletContextListener {
             startBroker();
 
             startHiveMetaStore();
-            startHiveWebMetaStore();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,16 +152,6 @@ public class HadoopStartupListener implements ServletContextListener {
         } catch (Exception e) {
             throw new RuntimeException("Unable to start hive metastore server.", e);
         }
-    }
-
-    public static final String WEB_HCAT_PORT = "48080";
-    private void startHiveWebMetaStore() {
-        String[] args = new String[]{
-            "-D" + AppConfig.PORT + "=" + WEB_HCAT_PORT,
-            "-D" + AppConfig.HADOOP_CONF_DIR + "=./target/webapps/hadoop/conf",
-        };
-
-        org.apache.hcatalog.templeton.Main.main(args);
     }
 
     private Object instance(String clsName) throws Exception {
