@@ -361,7 +361,13 @@ public class FeedEvictor extends Configured implements Tool {
         LOG.info("Applying retention on " + storage.getTable()
                 + ", Limit: " + retentionLimit + ", timezone: " + timeZone);
 
-        String dateMask = getDateFormatInPath(storage.getUriTemplate());
+        String datedPartitionKey = storage.getDatedPartitionKey();
+        String datePattern = storage.getPartitionValue(datedPartitionKey);
+        String dateMask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
+                .replaceAll(VARS.MONTH.regex(), "MM")
+                .replaceAll(VARS.DAY.regex(), "dd")
+                .replaceAll(VARS.HOUR.regex(), "HH")
+                .replaceAll(VARS.MINUTE.regex(), "mm");
 
         List<CatalogPartition> toBeDeleted = discoverPartitionsToDelete(
                 storage, retentionLimit, timeZone, dateMask);
@@ -389,7 +395,7 @@ public class FeedEvictor extends Configured implements Tool {
                                 String timeZone, String dateMask) throws ELException {
 
         Pair<Date, Date> range = getDateRange(retentionLimit);
-        DateFormat dateFormat = new SimpleDateFormat(FORMAT.substring(0, dateMask.length()));
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
         String beforeDate = dateFormat.format(range.first);
 
@@ -398,9 +404,9 @@ public class FeedEvictor extends Configured implements Tool {
         StringBuilder filterBuffer = new StringBuilder();
         filterBuffer.append(datedPartitionKey)
                 .append(" < ")
-                .append("\"")
+                .append("'")
                 .append(beforeDate)
-                .append("\"");
+                .append("'");
 
         return filterBuffer.toString();
     }

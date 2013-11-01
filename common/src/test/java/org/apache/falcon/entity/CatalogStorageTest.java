@@ -85,18 +85,32 @@ public class CatalogStorageTest {
         Assert.assertFalse(storage.hasPartition("unknown"));
     }
 
-    @DataProvider(name = "invalidFeedURIs")
-    public Object[][] createParseFeedUriInvalid() {
+    @DataProvider(name = "invalidFeedURITemplates")
+    public Object[][] createInValidFeedUriTemplates() {
         return new Object[][] {
-            {"catalog:default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us", ""},
-            {"default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us", ""},
-            {"catalog:default#ds=${YEAR}-${MONTH}-${DAY};region=us", ""},
-            {"catalog://default/clicks#ds=${YEAR}-${MONTH}-${DAY}:region=us", ""},
+            {"thrift://localhost:49083/clicksdb/clicks/region=us;ds=${YEAR}/${MONTH}/${DAY}"},
+            {"thrift://localhost:49083/clicksdb/clicks/region=us;ds=${YEAR}/${MONTH}-${DAY}"},
+        };
+    }
+
+    @Test(dataProvider = "invalidFeedURITemplates", expectedExceptions = URISyntaxException.class)
+    public void testParseInvalidFeedUriTemplate(String uriTemplate) throws URISyntaxException {
+        new CatalogStorage(uriTemplate);
+        Assert.fail("Exception must have been thrown");
+    }
+
+    @DataProvider(name = "invalidFeedURIs")
+    public Object[][] createFeedUriInvalid() {
+        return new Object[][] {
+            {"catalog:default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us"},
+            {"default:clicks:ds=${YEAR}-${MONTH}-${DAY}#region=us"},
+            {"catalog:default#ds=${YEAR}-${MONTH}-${DAY};region=us"},
+            {"catalog://default/clicks#ds=${YEAR}-${MONTH}-${DAY}:region=us"},
         };
     }
 
     @Test(dataProvider = "invalidFeedURIs", expectedExceptions = URISyntaxException.class)
-    public void testParseFeedUriInvalid(String tableUri, String ignore) throws URISyntaxException {
+    public void testParseFeedUriInvalid(String tableUri) throws URISyntaxException {
         new CatalogStorage(CatalogStorage.CATALOG_URL, tableUri);
         Assert.fail("Exception must have been thrown");
     }

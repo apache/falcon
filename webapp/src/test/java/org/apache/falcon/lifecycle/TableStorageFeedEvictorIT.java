@@ -32,6 +32,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatPartition;
+import org.apache.hcatalog.common.HCatException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,8 +71,8 @@ public class TableStorageFeedEvictorIT {
     private static final String DATABASE_NAME = "falcon_db";
     private static final String TABLE_NAME = "clicks";
     private static final String EXTERNAL_TABLE_NAME = "clicks_external";
-    private static final String EXTERNAL_TABLE_LOCATION = "hdfs://localhost:41020/falcon/staging/clicks_external/";
-    private static final String FORMAT = "yyyyMMddHHmm";
+    private static final String STORAGE_URL = "hdfs://localhost:41020";
+    private static final String EXTERNAL_TABLE_LOCATION = STORAGE_URL + "/falcon/staging/clicks_external/";
 
     private final InMemoryWriter stream = new InMemoryWriter(System.out);
 
@@ -96,30 +98,46 @@ public class TableStorageFeedEvictorIT {
         HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
     }
 
-    @DataProvider (name = "retentionLimitDataProvider")
-    private Object[][] createRetentionLimitData() {
+    @DataProvider (name = "evictorTestDataProvider")
+    private Object[][] createEvictorTestData() {
         return new Object[][] {
-            {"days(10)", 4},
-            {"days(100)", 7},
+            {"days(10)", "", false},
+            {"days(10)", "", true},
+            {"days(10)", "-", false},
+            {"days(10)", "-", true},
+            {"days(15)", "", false},
+            {"days(15)", "", true},
+            {"days(15)", "-", false},
+            {"days(15)", "-", true},
+            {"days(100)", "", false},
+            {"days(100)", "", true},
+            {"days(100)", "-", false},
+            {"days(100)", "-", true},
         };
     }
 
-    @Test (dataProvider = "retentionLimitDataProvider")
-    public void testFeedEvictorForTable(String retentionLimit, int expectedSize) throws Exception {
-
+    @Test (dataProvider = "evictorTestDataProvider")
+    public void testFeedEvictorForTableStorage(String retentionLimit, String dateSeparator,
+                                               boolean isExternal) throws Exception {
+        final String tableName = isExternal ? EXTERNAL_TABLE_NAME : TABLE_NAME;
         final String timeZone = "UTC";
-        final String dateMask = "yyyyMMdd";
+        final String dateMask = "yyyy" + dateSeparator + "MM" + dateSeparator + "dd";
 
-        Pair<Date, Date> range = getDateRange(retentionLimit);
         List<String> candidatePartitions = getCandidatePartitions("days(10)", dateMask, timeZone, 3);
-        addPartitions(TABLE_NAME, candidatePartitions, false);
+        addPartitions(tableName, candidatePartitions, isExternal);
+
+        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, tableName);
+        Assert.assertEquals(partitions.size(), candidatePartitions.size());
+        Pair<Date, Date> range = getDateRange(retentionLimit);
+        List<HCatPartition> filteredPartitions = getFilteredPartitions(tableName, timeZone, dateMask, range);
 
         try {
             stream.clear();
 
-            final String tableUri = DATABASE_NAME + "/" + TABLE_NAME + "/ds=${YEAR}${MONTH}${DAY};region=us";
+            final String tableUri = DATABASE_NAME + "/" + tableName
+                    + "/ds=${YEAR}" + dateSeparator + "${MONTH}" + dateSeparator + "${DAY};region=us";
             String feedBasePath = METASTORE_URL + tableUri;
-            String logFile = "hdfs://localhost:41020/falcon/staging/feed/instancePaths-2013-09-13-01-00.csv";
+            String logFile = STORAGE_URL + "/falcon/staging/feed/instancePaths-2013-09-13-01-00.csv";
 
             FeedEvictor.main(new String[]{
                 "-feedBasePath", feedBasePath,
@@ -131,35 +149,56 @@ public class TableStorageFeedEvictorIT {
                 "-falconFeedStorageType", Storage.TYPE.TABLE.name(),
             });
 
-            List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, TABLE_NAME);
-            Assert.assertEquals(partitions.size(), expectedSize, "Unexpected number of partitions");
+            StringBuilder expectedInstancePaths = new StringBuilder();
+            List<String> expectedInstancesEvicted = getExpectedEvictedInstances(
+                    candidatePartitions, range.first, dateMask, timeZone, expectedInstancePaths);
+            int expectedSurvivorSize = candidatePartitions.size() - expectedInstancesEvicted.size();
 
-            Assert.assertEquals(readLogFile(new Path(logFile)),
-                    getExpectedInstancePaths(candidatePartitions, range.first, dateMask, timeZone));
+            List<HCatPartition> survivingPartitions = client.getPartitions(DATABASE_NAME, tableName);
+            Assert.assertEquals(survivingPartitions.size(), expectedSurvivorSize,
+                    "Unexpected number of surviving partitions");
 
-        } catch (Exception e) {
-            Assert.fail("Unknown exception", e);
+            Assert.assertEquals(expectedInstancesEvicted.size(), filteredPartitions.size(),
+                    "Unexpected number of evicted partitions");
+
+            final String actualInstancesEvicted = readLogFile(new Path(logFile));
+            Assert.assertEquals(actualInstancesEvicted, expectedInstancePaths.toString(),
+                    "Unexpected number of Logged partitions");
+
+            if (isExternal) {
+                verifyFSPartitionsAreDeleted(candidatePartitions, range.first, dateMask, timeZone);
+            }
         } finally {
-            dropPartitions(TABLE_NAME, candidatePartitions);
+            dropPartitions(tableName, candidatePartitions);
+            Assert.assertEquals(client.getPartitions(DATABASE_NAME, tableName).size(), 0);
         }
     }
 
-    @Test (dataProvider = "retentionLimitDataProvider")
-    public void testFeedEvictorForExternalTable(String retentionLimit, int expectedSize) throws Exception {
+    @DataProvider (name = "evictorTestInvalidDataProvider")
+    private Object[][] createEvictorTestDataInvalid() {
+        return new Object[][] {
+            {"days(10)", "/", false},
+            {"days(10)", "/", true},
+        };
+    }
 
+    @Test (dataProvider = "evictorTestInvalidDataProvider", expectedExceptions = URISyntaxException.class)
+    public void testFeedEvictorForInvalidTableStorage(String retentionLimit, String dateSeparator,
+                                                      boolean isExternal) throws Exception {
+        final String tableName = isExternal ? EXTERNAL_TABLE_NAME : TABLE_NAME;
         final String timeZone = "UTC";
-        final String dateMask = "yyyyMMdd";
+        final String dateMask = "yyyy" + dateSeparator + "MM" + dateSeparator + "dd";
 
-        Pair<Date, Date> range = getDateRange(retentionLimit);
         List<String> candidatePartitions = getCandidatePartitions("days(10)", dateMask, timeZone, 3);
-        addPartitions(EXTERNAL_TABLE_NAME, candidatePartitions, true);
+        addPartitions(tableName, candidatePartitions, isExternal);
 
         try {
             stream.clear();
 
-            final String tableUri = DATABASE_NAME + "/" + EXTERNAL_TABLE_NAME + "/ds=${YEAR}${MONTH}${DAY};region=us";
+            final String tableUri = DATABASE_NAME + "/" + tableName
+                    + "/ds=${YEAR}" + dateSeparator + "${MONTH}" + dateSeparator + "${DAY};region=us";
             String feedBasePath = METASTORE_URL + tableUri;
-            String logFile = "hdfs://localhost:41020/falcon/staging/feed/instancePaths-2013-09-13-01-00.csv";
+            String logFile = STORAGE_URL + "/falcon/staging/feed/instancePaths-2013-09-13-01-00.csv";
 
             FeedEvictor.main(new String[]{
                 "-feedBasePath", feedBasePath,
@@ -171,18 +210,9 @@ public class TableStorageFeedEvictorIT {
                 "-falconFeedStorageType", Storage.TYPE.TABLE.name(),
             });
 
-            List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, EXTERNAL_TABLE_NAME);
-            Assert.assertEquals(partitions.size(), expectedSize, "Unexpected number of partitions");
-
-            Assert.assertEquals(readLogFile(new Path(logFile)),
-                    getExpectedInstancePaths(candidatePartitions, range.first, dateMask, timeZone));
-
-            verifyFSPartitionsAreDeleted(candidatePartitions, range.first, dateMask, timeZone);
-
-        } catch (Exception e) {
-            Assert.fail("Unknown exception", e);
+            Assert.fail("Exception must have been thrown");
         } finally {
-            dropPartitions(EXTERNAL_TABLE_NAME, candidatePartitions);
+            dropPartitions(tableName, candidatePartitions);
         }
     }
 
@@ -192,7 +222,7 @@ public class TableStorageFeedEvictorIT {
 
         Pair<Date, Date> range = getDateRange(retentionLimit);
 
-        DateFormat dateFormat = new SimpleDateFormat(FORMAT.substring(0, dateMask.length()));
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
 
         String startDate = dateFormat.format(range.first);
@@ -255,24 +285,35 @@ public class TableStorageFeedEvictorIT {
         }
     }
 
-    public String getExpectedInstancePaths(List<String> candidatePartitions, Date date,
-                                           String dateMask, String timeZone) {
-        Collections.sort(candidatePartitions);
-        StringBuilder instances = new StringBuilder("instancePaths=");
+    private List<HCatPartition> getFilteredPartitions(String tableName, String timeZone, String dateMask,
+                                                      Pair<Date, Date> range) throws HCatException {
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
 
-        DateFormat dateFormat = new SimpleDateFormat(FORMAT.substring(0, dateMask.length()));
+        String filter = "ds < '" + dateFormat.format(range.first) + "'";
+        return client.listPartitionsByFilter(DATABASE_NAME, tableName, filter);
+    }
+
+    public List<String> getExpectedEvictedInstances(List<String> candidatePartitions, Date date, String dateMask,
+                                                    String timeZone, StringBuilder instancePaths) {
+        Collections.sort(candidatePartitions);
+        instancePaths.append("instancePaths=");
+
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
         String startDate = dateFormat.format(date);
 
+        List<String> expectedInstances = new ArrayList<String>();
         for (String candidatePartition : candidatePartitions) {
             if (candidatePartition.compareTo(startDate) < 0) {
-                instances.append("[")
+                expectedInstances.add(candidatePartition);
+                instancePaths.append("[")
                         .append(candidatePartition)
                         .append(", in],");
             }
         }
 
-        return instances.toString();
+        return expectedInstances;
     }
 
     private void verifyFSPartitionsAreDeleted(List<String> candidatePartitions, Date date,
@@ -280,7 +321,7 @@ public class TableStorageFeedEvictorIT {
 
         FileSystem fs = new Path(EXTERNAL_TABLE_LOCATION).getFileSystem(new Configuration());
 
-        DateFormat dateFormat = new SimpleDateFormat(FORMAT.substring(0, dateMask.length()));
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
         String startDate = dateFormat.format(date);
 

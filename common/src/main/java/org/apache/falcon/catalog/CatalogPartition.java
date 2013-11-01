@@ -171,7 +171,7 @@ public class CatalogPartition {
 
     @Override
     public String toString() {
-        return "HCatPartition ["
+        return "CatalogPartition ["
             + (tableName != null ? "tableName=" + tableName + ", " : "tableName=null")
             + (databaseName != null ? "dbName=" + databaseName + ", " : "dbName=null")
             + (values != null ? "values=" + values + ", " : "values=null")
