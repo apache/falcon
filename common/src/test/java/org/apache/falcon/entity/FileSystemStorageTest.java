@@ -21,6 +21,7 @@ package org.apache.falcon.entity;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -135,16 +136,29 @@ public class FileSystemStorageTest {
         Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "${nameNode}/foo/bar");
     }
 
-    @Test
-    public void testGetUriTemplateWithLocationType() throws Exception {
+    @DataProvider(name = "locationTestDataProvider")
+    private Object[][] createLocationTestData() {
+        return new Object[][] {
+            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2", "/localDC/rc/billing/ua2"},
+            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2/", "/localDC/rc/billing/ua2"},
+            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2//", "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "/localDC/rc/billing/ua2", "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "/localDC/rc/billing/ua2/", "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "/localDC/rc/billing/ua2//", "/localDC/rc/billing/ua2"},
+        };
+    }
+
+    @Test (dataProvider = "locationTestDataProvider")
+    public void testGetUriTemplateWithLocationType(String storageUrl, String path,
+                                                   String expected) throws Exception {
         final Location location = new Location();
-        location.setPath("/foo/bar");
+        location.setPath(path);
         location.setType(LocationType.DATA);
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
-        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "hdfs://localhost:41020/foo/bar");
+        FileSystemStorage storage = new FileSystemStorage(storageUrl, locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), storageUrl + expected);
     }
 
     @Test
