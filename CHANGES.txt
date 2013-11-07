@@ -6,6 +6,12 @@ Trunk (Unreleased)
 
   NEW FEATURES
 
+    FALCON-169 multiple "/" in target for replication for
+    multi target feed. (Venkatesh Seetharam)
+
+    FALCON-168 Different validity of clusters in feed
+    not handled. (Venkatesh Seetharam)
+
     FALCON-154 Remove webhcat startup in HadoopStartupListener
     as its not used. (Venkatesh Seetharam)
 
