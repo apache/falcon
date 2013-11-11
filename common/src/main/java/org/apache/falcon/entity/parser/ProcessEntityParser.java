@@ -79,10 +79,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
                     CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
                     CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
                     CrossEntityValidations.validateInstanceRange(process, input, feed);
-                    if (input.getPartition() != null) {
-                        CrossEntityValidations.validateInputPartition(input, feed);
-                    }
-
+                    validateInputPartition(input, feed);
                     validateOptionalInputsForTableStorage(feed, input);
                 }
             }
@@ -152,6 +149,19 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException(e);
         } catch (Exception e) {
             throw new FalconException(e);
+        }
+    }
+
+    private void validateInputPartition(Input input, Feed feed) throws FalconException {
+        if (input.getPartition() == null) {
+            return;
+        }
+
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            CrossEntityValidations.validateInputPartition(input, feed);
+        } else if (baseFeedStorageType == Storage.TYPE.TABLE) {
+            throw new ValidationException("Input partitions are not supported for table storage: " + input.getName());
         }
     }
 

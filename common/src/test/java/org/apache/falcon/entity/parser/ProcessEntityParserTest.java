@@ -315,4 +315,18 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             Assert.assertTrue(e instanceof ValidationException);
         }
     }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateInputPartitionForTable() throws Exception {
+        Process process = parser.parse(
+                ProcessEntityParserTest.class.getResourceAsStream("/config/process/process-table.xml"));
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInputs()) {
+                input.setPartition("region=usa");
+            }
+        }
+
+        parser.validate(process);
+        Assert.fail("An exception should have been thrown since Input partitions are not supported for table storage");
+    }
 }

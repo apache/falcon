@@ -458,4 +458,26 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testParseInvalidFeedWithTable() throws FalconException {
         parser.parse(FeedEntityParserTest.class.getResourceAsStream("/config/feed/invalid-feed.xml"));
     }
+
+    @Test (expectedExceptions = FalconException.class)
+    public void testValidateFeedWithTableAndMultipleSources() throws FalconException {
+        parser.parseAndValidate(FeedEntityParserTest.class.getResourceAsStream(
+                "/config/feed/table-with-multiple-sources-feed.xml"));
+        Assert.fail("Should have thrown an exception:Multiple sources are not supported for feed with table storage");
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidatePartitionsForTable() throws Exception {
+        Feed feed = parser.parse(FeedEntityParserTest.class.getResourceAsStream("/config/feed/hive-table-feed.xml"));
+        Assert.assertNull(feed.getPartitions());
+
+        Partitions partitions = new Partitions();
+        Partition partition = new Partition();
+        partition.setName("colo");
+        partitions.getPartitions().add(partition);
+        feed.setPartitions(partitions);
+
+        parser.validate(feed);
+        Assert.fail("An exception should have been thrown:Partitions are not supported for feeds with table storage");
+    }
 }

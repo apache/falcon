@@ -161,9 +161,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), newFeed, clusterName);
                     CrossEntityValidations.validateInstanceRange(process, input, newFeed);
 
-                    if (input.getPartition() != null) {
-                        CrossEntityValidations.validateInputPartition(input, newFeed);
-                    }
+                    validateInputPartition(newFeed, input);
                 }
             }
 
@@ -178,6 +176,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
             LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of "
                     + newFeed.getName());
+        }
+    }
+
+    private void validateInputPartition(Feed newFeed, Input input) throws FalconException {
+        if (input.getPartition() == null) {
+            return;
+        }
+
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(newFeed);
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            CrossEntityValidations.validateInputPartition(input, newFeed);
+        } else if (baseFeedStorageType == Storage.TYPE.TABLE) {
+            throw new ValidationException("Input partitions are not supported for table storage: " + input.getName());
         }
     }
 
@@ -288,10 +299,30 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * Does not matter for FileSystem storage.
      */
     private void validateFeedStorage(Feed feed) throws FalconException {
-        final Storage.TYPE storageType = FeedHelper.getStorageType(feed);
-        validateUniformStorageType(feed, storageType);
-        validatePartitions(feed, storageType);
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
+        validateMultipleSourcesExist(feed, baseFeedStorageType);
+        validateUniformStorageType(feed, baseFeedStorageType);
+        validatePartitions(feed, baseFeedStorageType);
         validateStorageExists(feed);
+    }
+
+    private void validateMultipleSourcesExist(Feed feed, Storage.TYPE baseFeedStorageType) throws FalconException {
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            return;
+        }
+
+        // validate that there is only one source cluster
+        int numberOfSourceClusters = 0;
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (cluster.getType() == ClusterType.SOURCE) {
+                numberOfSourceClusters++;
+            }
+        }
+
+        if (numberOfSourceClusters > 1) {
+            throw new ValidationException("Multiple sources are not supported for feed with table storage: "
+                    + feed.getName());
+        }
     }
 
     private void validateUniformStorageType(Feed feed, Storage.TYPE feedStorageType) throws FalconException {

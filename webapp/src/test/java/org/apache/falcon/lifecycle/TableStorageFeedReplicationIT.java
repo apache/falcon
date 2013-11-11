@@ -119,10 +119,6 @@ public class TableStorageFeedReplicationIT {
 
     @AfterClass
     public void tearDown() throws Exception {
-        TestContext.executeWithURL("entity -delete -type feed -name customer-table-replicating-feed");
-        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
-        TestContext.executeWithURL("entity -delete -type cluster -name bcp-cluster");
-
         cleanupHiveMetastore(sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME);
         cleanupHiveMetastore(targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME);
 
@@ -176,5 +172,66 @@ public class TableStorageFeedReplicationIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
+
+        TestContext.executeWithURL("entity -delete -type feed -name customer-table-replicating-feed");
+        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.executeWithURL("entity -delete -type cluster -name bcp-cluster");
+    }
+
+    @Test (enabled = false)
+    public void testTableReplicationWithExistingTargetPartition() throws Exception {
+        final String feedName = "customer-table-replicating-feed";
+        final Map<String, String> overlay = sourceContext.getUniqueOverlay();
+        String filePath = sourceContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+
+        filePath = targetContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+
+        HCatPartition sourcePartition = HiveTestUtils.getPartition(
+                sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME, "ds", PARTITION_VALUE);
+        Assert.assertNotNull(sourcePartition);
+
+        addPartitionToTarget();
+        // verify if the partition on the target exists before replication starts
+        // to see import drops partition before importing partition
+        HCatPartition targetPartition = HiveTestUtils.getPartition(
+                targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME, "ds", PARTITION_VALUE);
+        Assert.assertNotNull(targetPartition);
+
+        filePath = sourceContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+
+        // wait until the workflow job completes
+        WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(targetContext.getCluster().getCluster(),
+                OozieClient.FILTER_NAME + "=FALCON_FEED_REPLICATION_" + feedName);
+        Assert.assertEquals(jobInfo.getStatus(), WorkflowJob.Status.SUCCEEDED);
+
+        // verify if the partition on the target exists
+        targetPartition = HiveTestUtils.getPartition(
+                targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME, "ds", PARTITION_VALUE);
+        Assert.assertNotNull(targetPartition);
+
+        InstancesResult response = targetContext.getService().path("api/instance/running/feed/" + feedName)
+                .header("Remote-User", "guest")
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
+
+        TestContext.executeWithURL("entity -delete -type feed -name customer-table-replicating-feed");
+        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.executeWithURL("entity -delete -type cluster -name bcp-cluster");
+    }
+
+    private void addPartitionToTarget() throws Exception {
+        final Cluster targetCluster = targetContext.getCluster().getCluster();
+        String targetStorageUrl = ClusterHelper.getStorageUrl(targetCluster);
+
+        // copyTestDataToHDFS
+        final String targetPath = targetStorageUrl + "/falcon/test/input/" + PARTITION_VALUE;
+        FSUtils.copyResourceToHDFS("/apps/data/data.txt", "data.txt", targetPath);
+
+        HiveTestUtils.loadData(targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME,
+                targetPath, PARTITION_VALUE);
     }
 }

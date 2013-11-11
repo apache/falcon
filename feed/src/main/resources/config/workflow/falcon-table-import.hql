@@ -15,4 +15,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-import table ${falconTargetDatabase}.${falconTargetTable} partition ${falconTargetPartition} from '${falconTargetStagingDir}';
+use ${falconTargetDatabase};
+alter table ${falconTargetTable} drop if exists partition ${falconTargetPartition};
+import table ${falconTargetTable} partition ${falconTargetPartition} from '${falconTargetStagingDir}';

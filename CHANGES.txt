@@ -109,6 +109,15 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-180 Disable table replication for multiple sources. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-179 Table replication must drop partition before import as 
+    late reruns fails. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
+    FALCON-182 Disable specifying partitions in inputs with table storage 
+    for process. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-138 Remove perf4j dependency. (Jean-Baptiste Onofré via
     Shwetha GS)
 
