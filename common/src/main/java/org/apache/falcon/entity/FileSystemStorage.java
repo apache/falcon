@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -164,10 +165,8 @@ public class FileSystemStorage implements Storage {
             return "/tmp";
         }
 
-        StringBuilder uriTemplate = new StringBuilder();
-        uriTemplate.append(storageUrl);
-        uriTemplate.append(locationForType.getPath());
-        return uriTemplate.toString();
+        // normalize the path so trailing and double '/' are removed
+        return storageUrl + new Path(locationForType.getPath());
     }
 
     @Override

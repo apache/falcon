@@ -152,6 +152,10 @@ public class FileSystemFeedReplicationIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
+
+        TestContext.executeWithURL("entity -delete -type feed -name " + feedName);
+        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.executeWithURL("entity -delete -type cluster -name bcp-cluster");
     }
 
     @Test (enabled = false)
@@ -192,7 +196,7 @@ public class FileSystemFeedReplicationIT {
         FileSystem beta = FileSystem.get(ClusterHelper.getConfiguration(targetBetaContext.getCluster().getCluster()));
         Assert.assertTrue(beta.exists(new Path("/falcon/test/target-cluster-beta/customer_beta/" + PARTITION_VALUE)));
 
-        FileSystem gamma = FileSystem.get(ClusterHelper.getConfiguration(targetAlphaContext.getCluster().getCluster()));
+        FileSystem gamma = FileSystem.get(ClusterHelper.getConfiguration(targetGammaContext.getCluster().getCluster()));
         Assert.assertTrue(
                 gamma.exists(new Path("/falcon/test/target-cluster-gamma/customer_gamma/" + PARTITION_VALUE)));
 
@@ -201,5 +205,66 @@ public class FileSystemFeedReplicationIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
+
+        TestContext.executeWithURL("entity -delete -type feed -name " + feedName);
+        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.executeWithURL("entity -delete -type cluster -name target-cluster-alpha");
+        TestContext.executeWithURL("entity -delete -type cluster -name target-cluster-beta");
+        TestContext.executeWithURL("entity -delete -type cluster -name target-cluster-gamma");
+    }
+
+    @Test (enabled = false)
+    public void testFSReplicationComplex() throws Exception {
+        // copyTestDataToHDFS
+        Cluster sourceCluster = sourceContext.getCluster().getCluster();
+        FileSystem sourceFS = FileSystem.get(ClusterHelper.getConfiguration(sourceCluster));
+        String sourceStorageUrl = ClusterHelper.getStorageUrl(sourceCluster);
+        final String partitionValue = "2012-10-01-12";
+        String sourceLocation = sourceStorageUrl + SOURCE_LOCATION + partitionValue + "/" + sourceCluster.getColo();
+        FSUtils.copyResourceToHDFS("/apps/data/data.txt", "data.txt", sourceLocation);
+        Path sourcePath = new Path(sourceLocation);
+        Assert.assertTrue(sourceFS.exists(sourcePath));
+
+        final Map<String, String> overlay = sourceContext.getUniqueOverlay();
+        String filePath = sourceContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+
+        filePath = targetContext.overlayParametersOverTemplate("/table/target-cluster-alpha.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+
+        filePath = targetContext.overlayParametersOverTemplate("/table/target-cluster-beta.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
+
+        // verify if the partition on the source exists - precondition
+        Assert.assertTrue(sourceFS.exists(sourcePath));
+
+        filePath = sourceContext.overlayParametersOverTemplate("/table/complex-replicating-feed.xml", overlay);
+        Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+
+        // wait until the workflow job completes
+        final String feedName = "complex-replicating-feed";
+        WorkflowJob jobInfo = OozieTestUtils.getWorkflowJob(targetContext.getCluster().getCluster(),
+                OozieClient.FILTER_NAME + "=FALCON_FEED_REPLICATION_" + feedName);
+        Assert.assertEquals(jobInfo.getStatus(), WorkflowJob.Status.SUCCEEDED);
+
+        Assert.assertTrue(sourceFS.exists(new Path(SOURCE_LOCATION + partitionValue)));
+
+        // verify if the partition on the target exists
+        FileSystem alpha = FileSystem.get(ClusterHelper.getConfiguration(targetAlphaContext.getCluster().getCluster()));
+        Assert.assertTrue(alpha.exists(new Path("/localDC/rc/billing/ua1/" + partitionValue)));
+
+        FileSystem beta = FileSystem.get(ClusterHelper.getConfiguration(targetBetaContext.getCluster().getCluster()));
+        Assert.assertTrue(beta.exists(new Path("/localDC/rc/billing/ua2/" + partitionValue)));
+
+        InstancesResult response = targetContext.getService().path("api/instance/running/feed/" + feedName)
+                .header("Remote-User", "guest")
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
+
+        TestContext.executeWithURL("entity -delete -type feed -name " + feedName);
+        TestContext.executeWithURL("entity -delete -type cluster -name primary-cluster");
+        TestContext.executeWithURL("entity -delete -type cluster -name target-cluster-alpha");
+        TestContext.executeWithURL("entity -delete -type cluster -name target-cluster-beta");
     }
 }

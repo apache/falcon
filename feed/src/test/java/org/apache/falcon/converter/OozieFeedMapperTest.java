@@ -17,16 +17,19 @@
  */
 package org.apache.falcon.converter;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -34,6 +37,8 @@ import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.DECISION;
+import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,9 +50,12 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,13 +69,17 @@ public class OozieFeedMapperTest {
     private final ConfigurationStore store = ConfigurationStore.get();
     private Cluster srcCluster;
     private Cluster trgCluster;
+    private Cluster alphaTrgCluster;
+    private Cluster betaTrgCluster;
     private Feed feed;
     private Feed tableFeed;
+    private Feed fsReplFeed;
 
     private static final String SRC_CLUSTER_PATH = "/src-cluster.xml";
     private static final String TRG_CLUSTER_PATH = "/trg-cluster.xml";
     private static final String FEED = "/feed.xml";
     private static final String TABLE_FEED = "/table-replication-feed.xml";
+    private static final String FS_REPLICATION_FEED = "/fs-replication-feed.xml";
 
     @BeforeClass
     public void setUpDFS() throws Exception {
@@ -80,11 +92,12 @@ public class OozieFeedMapperTest {
         cleanupStore();
 
         srcCluster = (Cluster) storeEntity(EntityType.CLUSTER, SRC_CLUSTER_PATH, srcHdfsUrl);
-
         trgCluster = (Cluster) storeEntity(EntityType.CLUSTER, TRG_CLUSTER_PATH, trgHdfsUrl);
+        alphaTrgCluster = (Cluster) storeEntity(EntityType.CLUSTER, "/trg-cluster-alpha.xml", trgHdfsUrl);
+        betaTrgCluster = (Cluster) storeEntity(EntityType.CLUSTER, "/trg-cluster-beta.xml", trgHdfsUrl);
 
         feed = (Feed) storeEntity(EntityType.FEED, FEED, null);
-
+        fsReplFeed = (Feed) storeEntity(EntityType.FEED, FS_REPLICATION_FEED, null);
         tableFeed = (Feed) storeEntity(EntityType.FEED, TABLE_FEED, null);
     }
 
@@ -171,6 +184,9 @@ public class OozieFeedMapperTest {
         }
 
         // verify the replication param that feed replicator depends on
+        String pathsWithPartitions = getPathsWithPartitions(srcCluster, trgCluster, feed);
+        Assert.assertEquals(props.get("sourceRelativePaths"), pathsWithPartitions);
+
         Assert.assertEquals(props.get("sourceRelativePaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("distcpSourcePaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
@@ -178,21 +194,19 @@ public class OozieFeedMapperTest {
 
         // verify the late data params
         Assert.assertEquals(props.get("falconInputFeeds"), feed.getName());
-        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}/");
+        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("falconInPaths"), pathsWithPartitions);
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.FILESYSTEM.name());
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataIn('input')}/");
+        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataIn('input')}");
 
         assertLibExtensions(coord, "replication");
     }
 
     private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
-        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
-                trgMiniDFS.getFileSystem().open(new Path(wfPath, "workflow.xml")))).getValue();
+        WORKFLOWAPP wf = getWorkflowapp(coord);
         List<Object> actions = wf.getDecisionOrForkOrJoin();
         for (Object obj : actions) {
             if (!(obj instanceof ACTION)) {
@@ -212,6 +226,102 @@ public class OozieFeedMapperTest {
                         + lifecycle + "/ext.jar"));
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private WORKFLOWAPP getWorkflowapp(COORDINATORAPP coord) throws JAXBException, IOException {
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+        return ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
+                trgMiniDFS.getFileSystem().open(new Path(wfPath, "workflow.xml")))).getValue();
+    }
+
+    @Test
+    public void testReplicationCoordsForFSStorageWithMultipleTargets() throws Exception {
+        OozieFeedMapper feedMapper = new OozieFeedMapper(fsReplFeed);
+
+        List<COORDINATORAPP> alphaCoords = feedMapper.getCoordinators(alphaTrgCluster, new Path("/alpha/falcon/"));
+        final COORDINATORAPP alphaCoord = alphaCoords.get(0);
+        Assert.assertEquals(alphaCoord.getStart(), "2012-10-01T12:05Z");
+        Assert.assertEquals(alphaCoord.getEnd(), "2012-10-01T12:11Z");
+
+        String pathsWithPartitions = getPathsWithPartitions(srcCluster, alphaTrgCluster, fsReplFeed);
+        assertReplCoord(alphaCoord, fsReplFeed, alphaTrgCluster.getName(), pathsWithPartitions);
+
+        List<COORDINATORAPP> betaCoords = feedMapper.getCoordinators(betaTrgCluster, new Path("/beta/falcon/"));
+        final COORDINATORAPP betaCoord = betaCoords.get(0);
+        Assert.assertEquals(betaCoord.getStart(), "2012-10-01T12:10Z");
+        Assert.assertEquals(betaCoord.getEnd(), "2012-10-01T12:26Z");
+
+        pathsWithPartitions = getPathsWithPartitions(srcCluster, betaTrgCluster, fsReplFeed);
+        assertReplCoord(betaCoord, fsReplFeed, betaTrgCluster.getName(), pathsWithPartitions);
+    }
+
+    private String getPathsWithPartitions(Cluster sourceCluster, Cluster targetCluster,
+                                          Feed aFeed) throws FalconException {
+        String srcPart = FeedHelper.normalizePartitionExpression(
+                FeedHelper.getCluster(aFeed, sourceCluster.getName()).getPartition());
+        srcPart = FeedHelper.evaluateClusterExp(sourceCluster, srcPart);
+        String targetPart = FeedHelper.normalizePartitionExpression(
+                FeedHelper.getCluster(aFeed, targetCluster.getName()).getPartition());
+        targetPart = FeedHelper.evaluateClusterExp(targetCluster, targetPart);
+
+        StringBuilder pathsWithPartitions = new StringBuilder();
+        pathsWithPartitions.append("${coord:dataIn('input')}/")
+                .append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
+
+        String parts = pathsWithPartitions.toString().replaceAll("//+", "/");
+        parts = StringUtils.stripEnd(parts, "/");
+        return parts;
+    }
+
+    private void assertReplCoord(COORDINATORAPP coord, Feed aFeed, String clusterName,
+                                 String pathsWithPartitions) throws JAXBException, IOException {
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(aFeed, clusterName);
+        Date startDate = feedCluster.getValidity().getStart();
+        Assert.assertEquals(coord.getStart(), SchemaHelper.formatDateUTC(startDate));
+
+        Date endDate = feedCluster.getValidity().getEnd();
+        Assert.assertEquals(coord.getEnd(), SchemaHelper.formatDateUTC(endDate));
+
+        WORKFLOWAPP workflow = getWorkflowapp(coord);
+        assertWorkflowDefinition(fsReplFeed, workflow);
+
+        List<Object> actions = workflow.getDecisionOrForkOrJoin();
+        System.out.println("actions = " + actions);
+
+        ACTION replicationActionNode = (ACTION) actions.get(4);
+        Assert.assertEquals(replicationActionNode.getName(), "replication");
+
+        JAVA replication = replicationActionNode.getJava();
+        List<String> args = replication.getArg();
+        Assert.assertEquals(args.size(), 11);
+
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+
+        Assert.assertEquals(props.get("sourceRelativePaths"), pathsWithPartitions);
+        Assert.assertEquals(props.get("sourceRelativePaths"), "${coord:dataIn('input')}/" + srcCluster.getColo());
+        Assert.assertEquals(props.get("distcpSourcePaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
+        Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
+    }
+
+    public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP parentWorkflow) {
+        Assert.assertEquals(EntityUtil.getWorkflowName(Tag.REPLICATION, aFeed).toString(), parentWorkflow.getName());
+
+        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
+        Assert.assertEquals("should-record", ((DECISION) decisionOrForkOrJoin.get(0)).getName());
+        Assert.assertEquals("recordsize", ((ACTION) decisionOrForkOrJoin.get(1)).getName());
+        Assert.assertEquals("replication-decision", ((DECISION) decisionOrForkOrJoin.get(2)).getName());
+        Assert.assertEquals("table-export", ((ACTION) decisionOrForkOrJoin.get(3)).getName());
+        Assert.assertEquals("replication", ((ACTION) decisionOrForkOrJoin.get(4)).getName());
+        Assert.assertEquals("post-replication-decision", ((DECISION) decisionOrForkOrJoin.get(5)).getName());
+        Assert.assertEquals("table-import", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
+        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(7)).getName());
+        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(8)).getName());
     }
 
     @Test

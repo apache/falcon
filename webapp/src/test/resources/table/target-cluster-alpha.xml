@@ -19,7 +19,7 @@
 <!--
     target-cluster-alpha configuration for demo vm
   -->
-<cluster colo="east-coast" description="BCP Cluster"
+<cluster colo="ua1" description="BCP Cluster"
          name="target-cluster-alpha"
          xmlns="uri:falcon:cluster:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 

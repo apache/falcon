@@ -232,8 +232,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             Date sourceStartDate = getStartDate(feed, srcCluster, replicationDelayInMillis);
             Date sourceEndDate = getEndDate(feed, srcCluster);
 
-            Date targetStartDate = getStartDate(feed, srcCluster, replicationDelayInMillis);
-            Date targetEndDate = getEndDate(feed, srcCluster);
+            Date targetStartDate = getStartDate(feed, trgCluster, replicationDelayInMillis);
+            Date targetEndDate = getEndDate(feed, trgCluster);
 
             if (noOverlapExists(sourceStartDate, sourceEndDate,
                     targetStartDate, targetEndDate)) {
@@ -443,6 +443,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             String srcPart = FeedHelper.normalizePartitionExpression(
                     FeedHelper.getCluster(feed, srcCluster.getName()).getPartition());
             srcPart = FeedHelper.evaluateClusterExp(srcCluster, srcPart);
+
             String targetPart = FeedHelper.normalizePartitionExpression(
                     FeedHelper.getCluster(feed, trgCluster.getName()).getPartition());
             targetPart = FeedHelper.evaluateClusterExp(trgCluster, targetPart);
@@ -450,14 +451,15 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             StringBuilder pathsWithPartitions = new StringBuilder();
             pathsWithPartitions.append("${coord:dataIn('input')}/")
                     .append(FeedHelper.normalizePartitionExpression(srcPart, targetPart));
-            return pathsWithPartitions.toString();
+
+            String parts = pathsWithPartitions.toString().replaceAll("//+", "/");
+            parts = StringUtils.stripEnd(parts, "/");
+            return parts;
         }
 
         private void propagateFileSystemCopyProperties(String pathsWithPartitions,
                                                        Map<String, String> props) throws FalconException {
-            String parts = pathsWithPartitions.replaceAll("//+", "/");
-            parts = StringUtils.stripEnd(parts, "/");
-            props.put("sourceRelativePaths", parts);
+            props.put("sourceRelativePaths", pathsWithPartitions);
 
             props.put("distcpSourcePaths", "${coord:dataIn('input')}");
             props.put("distcpTargetPaths", "${coord:dataOut('output')}");
