@@ -133,11 +133,9 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/main/assemblies/prism-package.xml</descriptor>
-                                <descriptor>src/main/assemblies/server-package.xml</descriptor>
-                                <descriptor>src/main/assemblies/client-package.xml</descriptor>
+                                <descriptor>src/main/assemblies/distributed-package.xml</descriptor>
                             </descriptors>
-                            <finalName>falcon-${project.version}</finalName>
+                            <finalName>falcon-distributed-${project.version}</finalName>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -961,7 +959,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assemblies/bin-package.xml</descriptor>
+                        <descriptor>src/main/assemblies/standalone-package.xml</descriptor>
                         <descriptor>src/main/assemblies/src-package.xml</descriptor>
                     </descriptors>
                     <finalName>falcon-${project.version}</finalName>
@@ -1021,6 +1019,7 @@
                         <exclude>**/maven-eclipse.xml</exclude>
                         <exclude>**/.externalToolBuilders/**</exclude>
                     </excludes>
+                    <argLine>-Dfalcon.log.dir=target/logs -Dfalcon.embeddedmq.data=target/data</argLine>
                 </configuration>
                 <executions>
                     <execution>

@@ -71,6 +71,19 @@ Trunk (Unreleased)
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
+
+    FALCON-187 Update Falcon start script to also redirect
+    stdout to the log file. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-174 Bind activemq to all interfaces rather than
+    just localhost. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-165 Simplify packaging to create one package instead of
+    client, falcon and prism packages. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-162 Update falcon scripts to let the user set the log
+    and pid locations. (Arpit Gupta via Venkatesh Seetharam)
+
     FALCON-151 Document the REST APIs for Falcon. (Raghav Kumar
     Gautham via Srikanth Sundarrajan) 
 

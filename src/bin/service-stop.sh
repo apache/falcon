@@ -30,11 +30,12 @@ BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
 APP_TYPE=$1
-PID_FILE=${BASEDIR}/logs/$APP_TYPE.pid
-if [ -f $PID_FILE ]
+. ${BASEDIR}/bin/falcon-config.sh 'server' "$APP_TYPE"
+
+if [ -f $FALCON_PID_FILE ]
 then
-   kill -15 `cat $PID_FILE`
+   kill -15 `cat $FALCON_PID_FILE`
 else
-   echo "pid file $PID_FILE not present"
+   echo "pid file $FALCON_PID_FILE not present"
 fi
 

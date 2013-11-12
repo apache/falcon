@@ -127,7 +127,7 @@ public class HadoopStartupListener implements ServletContextListener {
         broker.setUseJmx(false);
         broker.setDataDirectory("target/data");
         broker.addConnector("vm://localhost");
-        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("tcp://0.0.0.0:61616");
         broker.start();
     }
 
