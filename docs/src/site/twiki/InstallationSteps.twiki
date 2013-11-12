@@ -35,22 +35,27 @@ Tar is structured as follows
    |- falcon
    |- falcon-start
    |- falcon-stop
+   |- falcon-config.sh
+   |- service-start.sh
+   |- service-stop.sh
 |- conf
    |- startup.properties
    |- runtime.properties
    |- client.properties
    |- log4j.xml
-|- src
+   |- falcon-env.sh
 |- docs
-|- apidocs
 |- client
    |- lib (client support libs)
 |- server
    |- webapp
       |- falcon.war
-|- logs (application log files & temp data files)
-   |- falcon.pid
-   
+|- hadooplibs
+|- README
+|- NOTICE.txt
+|- LICENSE.txt
+|- DISCLAIMER.txt
+|- CHANGES.txt
 </verbatim>
 
 *Distributed Mode*
@@ -62,20 +67,40 @@ mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed -Dhadoop
 
 </verbatim>
 
-This generates 3 tars - {project dir}/target/falcon-${project.version}-prism.tar.gz, {project dir}/target/falcon-${project.version}-server.tar.gz and {project dir}/target/falcon-${project.version}-client.tar.gz
+Tar can be found in {project dir}/target/falcon-distributed-${project.version}-server.tar.gz
 
-Package structure of prism and server tars is same as that of the embedded package with one difference that prism package contains prism war instead of falcon war. Client package is structured as follows 
- 
+Tar is structured as follows
+
 <verbatim>
 
 |- bin
    |- falcon
+   |- falcon-start
+   |- falcon-stop
+   |- falcon-config.sh
+   |- service-start.sh
+   |- service-stop.sh
+   |- prism-stop
+   |- prism-start
 |- conf
+   |- startup.properties
+   |- runtime.properties
    |- client.properties
    |- log4j.xml
+   |- falcon-env.sh
+|- docs
 |- client
    |- lib (client support libs)
-   
+|- server
+   |- webapp
+      |- falcon.war
+      |- prism.war
+|- hadooplibs
+|- README
+|- NOTICE.txt
+|- LICENSE.txt
+|- DISCLAIMER.txt
+|- CHANGES.txt
 </verbatim>
 
 ---+++ Installing & running Falcon
@@ -83,7 +108,54 @@ Package structure of prism and server tars is same as that of the embedded packa
 *Installing falcon*
 <verbatim>
 tar -xzvf {falcon package}
-cd falcon-server-${project.version} or cd falcon-prism-${project.version}
+cd falcon-distributed-${project.version} or falcon-${project.version}
+</verbatim>
+
+*Configuring Falcon*
+
+By default config directory used by faclon is {package dir}/conf. To override this set environemnt variable FALCON_CONF to the path of the conf dir. 
+
+falcon-env.sh has been added to the falcon conf. This file can be used to set various enviornment variables that you need for you services. In addition you can set any other environment variables you might need. This file will be sourced by falcon scripts before any commands are exectuted. The following enviornment variables are available to set.
+
+<verbatim>
+# The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
+#export JAVA_HOME=
+
+# any additional java opts you want to set. This will apply to both client and server operations
+#export FALCON_OPTS=
+
+# any additional java opts that you want to set for client only
+#export FALCON_CLIENT_OPTS=
+
+# java heap size we want to set for the client. Default is 1024MB
+#export FALCON_CLIENT_HEAP=
+
+# any additional opts you want to set for prisim service.
+#export FALCON_PRISM_OPTS=
+
+# java heap size we want to set for the prisim service. Default is 1024MB
+#export FALCON_PRISM_HEAP=
+
+# any additional opts you want to set for falcon service.
+#export FALCON_SERVER_OPTS=
+
+# java heap size we want to set for the falcon server. Default is 1024MB
+#export FALCON_SERVER_HEAP=
+
+# What is is considered as falcon home dir. Default is the base locaion of the installed software
+#export FALCON_HOME_DIR=
+
+# Where log files are stored. Defatult is logs directory under the base install location
+#export FALCON_LOG_DIR=
+
+# Where pid files are stored. Defatult is logs directory under the base install location
+#export FALCON_PID_DIR=
+
+# where the falcon active mq data is stored. Defatult is logs/data directory under the base install location
+#export FALCON_DATA_DIR=
+
+# Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
+#export FALCON_EXPANDED_WEBAPP_DIR=
 </verbatim>
 
 *Starting Falcon Server*
@@ -147,5 +219,5 @@ mkdir target/package
 src/bin/pacakge.sh <<hadoop-version>>
 
 >> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
->> oozie bundle available in target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz
+>> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz
 </verbatim>

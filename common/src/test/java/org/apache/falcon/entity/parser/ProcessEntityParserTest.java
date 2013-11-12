@@ -33,7 +33,9 @@ import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
+import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -285,5 +287,46 @@ public class ProcessEntityParserTest extends AbstractTestBase {
                         .getResourceAsStream(PROCESS_XML)));
         process.getClusters().getClusters().add(1, process.getClusters().getClusters().get(0));
         parser.validate(process);
+    }
+
+    @Test
+    public void testProcessForTableStorage() throws Exception {
+        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                this.getClass().getResource("/config/feed/hive-table-feed.xml"));
+        getStore().publish(EntityType.FEED, inFeed);
+
+        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(
+                this.getClass().getResource("/config/feed/hive-table-feed-out.xml"));
+        getStore().publish(EntityType.FEED, outFeed);
+
+        Process process = parser.parse(
+                ProcessEntityParserTest.class.getResourceAsStream("/config/process/process-table.xml"));
+        Input input = process.getInputs().getInputs().get(0);
+        Assert.assertFalse(input.isOptional());
+        parser.validate(process);
+
+        // Test Optional Inputs For Table Storage
+        try {
+            input.setOptional(Boolean.TRUE);
+            Assert.assertTrue(input.isOptional());
+            parser.validate(process);
+            Assert.fail("Validation exception must have been thrown.");
+        } catch (FalconException e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateInputPartitionForTable() throws Exception {
+        Process process = parser.parse(
+                ProcessEntityParserTest.class.getResourceAsStream("/config/process/process-table.xml"));
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInputs()) {
+                input.setPartition("region=usa");
+            }
+        }
+
+        parser.validate(process);
+        Assert.fail("An exception should have been thrown since Input partitions are not supported for table storage");
     }
 }

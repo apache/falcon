@@ -44,6 +44,14 @@ A workflow interface specifies the interface for workflow engine, example of its
 Falcon uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
 
 <verbatim>
+<interface type="registry" endpoint="thrift://localhost:9083" version="0.11.0" />
+</verbatim>
+A registry interface specifies the interface for metadata catalog, such as Hive Metastore (or HCatalog).
+Falcon uses this interface to register/de-register partitions for a given database and table. Also,
+uses this information to schedule data availability events based on partitions in the workflow engine.
+Although Hive metastore supports both RPC and HTTP, Falcon comes with an implementation for RPC over thrift.
+
+<verbatim>
 <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true" version="5.4.6" />
 </verbatim>
 A messaging interface specifies the interface for sending feed availability messages, it's endpoint is broker url with tcp address.
@@ -76,41 +84,20 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 A feed should have a unique name and this name is referenced by processes as input or output feed.
 
-<verbatim>
-   <partitions>
-        <partition name="country" />
-        <partition name="cluster" />
-    </partitions>
-</verbatim>
-A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be equal to or more than the cluster partitions.
+---+++ Storage
+Falcon introduces a new abstraction to encapsulate the storage for a given feed which can either be
+expressed as a path on the file system, File System Storage or a table in a catalog such as Hive, Catalog Storage.
 
 <verbatim>
-    <groups>online,bi</groups>
+    <xs:choice minOccurs="1" maxOccurs="1">
+        <xs:element type="locations" name="locations"/>
+        <xs:element type="catalog-table" name="table"/>
+    </xs:choice>
 </verbatim>
-A feed specifies a list of comma separated groups, a group is a logical grouping of feeds and a group is said to be
-available if all the feeds belonging to a group are available. The frequency of all the feed which belong to the same group
-must be same.
 
-<verbatim>
-    <availabilityFlag>_SUCCESS</availabilityFlag>
-</verbatim>
-An availabilityFlag specifies the name of a file which when present/created in a feeds data directory, 
-the feed is termed as available. ex: _SUCCESS, if this element is ignored then Falcon would consider the presence of feed's
-data directory as feed availability.
+Feed should contain one of the two storage options. Locations on File System or Table in a Catalog.
 
-<verbatim>
-    <frequency>minutes(20)</frequency>
-</verbatim>
-A feed has a frequency which specifies the frequency by which this feed is generated. 
-ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
-valid frequency type for a feed are minutes, hours, days, months. The values can be negative, zero or positive.
-
-<verbatim>
-    <late-arrival cut-off="hours(6)" />
-</verbatim>
-A late-arrival specifies the cut-off period till which the feed is expected to arrive late and should be honored be processes referring to it as input feed by rerunning the instances in case the data arrives late with in a cut-off period.
-The cut-off period is specified by expression frequency(times), ex: if the feed can arrive late
-upto 8 hours then late-arrival's cut-off="hours(8)"
+---++++ File System Storage
 
 <verbatim>
         <clusters>
@@ -131,7 +118,7 @@ Validity of a feed on cluster specifies duration for which this feed is valid on
 Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
 The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
 The field partitionExp contains partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema. A partition tag can be a wildcard(*), a static string or an expression. Atleast one of the strings has to be an expression.
-Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional. 
+Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional.
 
 <verbatim>
  <location type="data" path="/projects/falcon/clicks" />
@@ -145,6 +132,93 @@ The granularity of date pattern in the path should be atleast that of a frequenc
 Other location type which are supported are stats and meta paths, if a process references a feed then the meta and stats
 paths are available as a property in a process.
 
+---++++ Catalog Storage (Table)
+
+A table tag specifies the table URI in the catalog registry as:
+<verbatim>
+catalog:$database-name:$table-name#partition-key=partition-value);partition-key=partition-value);*
+</verbatim>
+
+This is modeled as a URI (similar to an ISBN URI). It does not have any reference to Hive or HCatalog. Its quite
+generic so it can be tied to other implementations of a catalog registry. The catalog implementation specified
+in the startup config provides implementation for the catalog URI.
+
+Top-level partition has to be a dated pattern and the granularity of date pattern should be at least that
+of a frequency of a feed.
+
+<verbatim>
+    <xs:complexType name="catalog-table">
+        <xs:annotation>
+            <xs:documentation>
+                catalog specifies the uri of a Hive table along with the partition spec.
+                uri="catalog:$database:$table#(partition-key=partition-value);+"
+                Example: catalog:logs-db:clicks#ds=${YEAR}-${MONTH}-${DAY}
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="uri" use="required"/>
+    </xs:complexType>
+</verbatim>
+
+Examples:
+<verbatim>
+<table uri="catalog:default:clicks#ds=${YEAR}-${MONTH}-${DAY}-${HOUR};region=${region}" />
+<table uri="catalog:src_demo_db:customer_raw#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+<table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+</verbatim>
+
+---+++ Partitions
+
+<verbatim>
+   <partitions>
+        <partition name="country" />
+        <partition name="cluster" />
+    </partitions>
+</verbatim>
+A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be equal to or more than the cluster partitions.
+
+*Note:* This will only apply for FileSystem storage but not Table storage as partitions are defined and maintained in
+Hive (Hcatalog) registry.
+
+---+++ Groups
+
+<verbatim>
+    <groups>online,bi</groups>
+</verbatim>
+A feed specifies a list of comma separated groups, a group is a logical grouping of feeds and a group is said to be
+available if all the feeds belonging to a group are available. The frequency of all the feed which belong to the same group
+must be same.
+
+---+++ Availability Flags
+
+<verbatim>
+    <availabilityFlag>_SUCCESS</availabilityFlag>
+</verbatim>
+An availabilityFlag specifies the name of a file which when present/created in a feeds data directory, 
+the feed is termed as available. ex: _SUCCESS, if this element is ignored then Falcon would consider the presence of feed's
+data directory as feed availability.
+
+---+++ Frequency
+
+<verbatim>
+    <frequency>minutes(20)</frequency>
+</verbatim>
+A feed has a frequency which specifies the frequency by which this feed is generated. 
+ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
+valid frequency type for a feed are minutes, hours, days, months. The values can be negative, zero or positive.
+
+---+++ Late Arrival
+
+<verbatim>
+    <late-arrival cut-off="hours(6)" />
+</verbatim>
+A late-arrival specifies the cut-off period till which the feed is expected to arrive late and should be honored be processes referring to it as input feed by rerunning the instances in case the data arrives late with in a cut-off period.
+The cut-off period is specified by expression frequency(times), ex: if the feed can arrive late
+upto 8 hours then late-arrival's cut-off="hours(8)"
+
+*Note:* This will only apply for FileSystem storage but not Table storage until a future time.
+
+---++++ Custom Properties
+
 <verbatim>
     <properties>
         <property name="tmpFeedPath" value="tmpFeedPathValue" />
@@ -155,7 +229,10 @@ paths are available as a property in a process.
         <property name="parallel" value="3"/>
     </properties>
 </verbatim>
-A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties available to user to specify the hadoop job queue and priority, the same value is used by Falcons launcher job. "timeout" and "parallel" are other special properties which decides replication instance's timeout value while waiting for the feed instance and parallel decides the concurrent replication instances that can run at any given time.
+A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties
+available to user to specify the hadoop job queue and priority, the same value is used by Falcons launcher job.
+"timeout" and "parallel" are other special properties which decides replication instance's timeout value while
+waiting for the feed instance and parallel decides the concurrent replication instances that can run at any given time.
  
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
@@ -306,11 +383,70 @@ Example:
 ...
 </process>
 </verbatim>
-The input for the workflow is a hourly feed and takes 0th and 1st hour data of today(the day when the workflow runs). If the workflow is running for 2012-03-01T06:40Z, the inputs are /projects/bootcamp/feed1/2012-03-01-00/*/US and /projects/bootcamp/feed1/2012-03-01-01/*/US. The property for this input is
+The input for the workflow is a hourly feed and takes 0th and 1st hour data of today(the day when the workflow runs).
+If the workflow is running for 2012-03-01T06:40Z, the inputs are /projects/bootcamp/feed1/2012-03-01-00/*/US and
+/projects/bootcamp/feed1/2012-03-01-01/*/US. The property for this input is
 input1=/projects/bootcamp/feed1/2012-03-01-00/*/US,/projects/bootcamp/feed1/2012-03-01-01/*/US
 
+Also, feeds with Hive table storage can be used as inputs to a process. Several parameters from inputs are passed as
+params to the user workflow or pig script.
+
+<verbatim>
+    ${wf:conf('falcon_input_database')} - database name associated with the feed for a given input
+    ${wf:conf('falcon_input_table')} - table name associated with the feed for a given input
+    ${wf:conf('falcon_input_catalog_url')} - Hive metastore URI for this input feed
+    ${wf:conf('falcon_input_partition_filter_pig')} - value of ${coord:dataInPartitionFilter('$input', 'pig')}
+    ${wf:conf('falcon_input_partition_filter_hive')} - value of ${coord:dataInPartitionFilter('$input', 'hive')}
+    ${wf:conf('falcon_input_partition_filter_java')} - value of ${coord:dataInPartitionFilter('$input', 'java')}
+</verbatim>
+
+*NOTE:* input is the name of the input configured in the process, which is input.getName().
+<verbatim><input name="input" feed="clicks-raw-table" start="yesterday(0,0)" end="yesterday(20,0)"/></verbatim>
+
+Example workflow configuration:
+
+<verbatim>
+<configuration>
+  <property>
+    <name>falcon_input_database</name>
+    <value>falcon_db</value>
+  </property>
+  <property>
+    <name>falcon_input_table</name>
+    <value>input_table</value>
+  </property>
+  <property>
+    <name>falcon_input_catalog_url</name>
+    <value>thrift://localhost:29083</value>
+  </property>
+  <property>
+    <name>falcon_input_storage_type</name>
+    <value>TABLE</value>
+  </property>
+  <property>
+    <name>feedInstancePaths</name>
+    <value>hcat://localhost:29083/falcon_db/output_table/ds=2012-04-21-00</value>
+  </property>
+  <property>
+    <name>falcon_input_partition_filter_java</name>
+    <value>(ds='2012-04-21-00')</value>
+  </property>
+  <property>
+    <name>falcon_input_partition_filter_hive</name>
+    <value>(ds='2012-04-21-00')</value>
+  </property>
+  <property>
+    <name>falcon_input_partition_filter_pig</name>
+    <value>(ds=='2012-04-21-00')</value>
+  </property>
+  ...
+</configuration>
+</verbatim>
+
+
 ---++++ Optional Inputs
-User can metion one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are mentioned as optional. If they are present it considers them otherwise continue with the comlpulsury ones. 
+User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
+mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
 Example:
 <verbatim>
 <feed name="feed1">
@@ -334,6 +470,8 @@ Example:
 ...
 </process>
 </verbatim>
+
+*Note:* This is only supported for FileSystem storage but not Table storage at this point.
 
 
 ---++++ Outputs
@@ -372,11 +510,57 @@ Example:
 ...
 </process>
 </verbatim>
-The output of the workflow is feed instance for today. If the workflow is running for 2012-03-01T06:40Z, the workflow generates output /projects/bootcamp/feed2/2012-03-01. The property for this output that is available for workflow is:
-output1=/projects/bootcamp/feed2/2012-03-01
+The output of the workflow is feed instance for today. If the workflow is running for 2012-03-01T06:40Z,
+the workflow generates output /projects/bootcamp/feed2/2012-03-01. The property for this output that is available
+for workflow is: output1=/projects/bootcamp/feed2/2012-03-01
+
+Also, feeds with Hive table storage can be used as outputs to a process. Several parameters from outputs are passed as
+params to the user workflow or pig script.
+<verbatim>
+    ${wf:conf('falcon_output_database')} - database name associated with the feed for a given output
+    ${wf:conf('falcon_output_table')} - table name associated with the feed for a given output
+    ${wf:conf('falcon_output_catalog_url')} - Hive metastore URI for the given output feed
+    ${wf:conf('falcon_output_dataout_partitions')} - value of ${coord:dataOutPartitions('$output')}
+</verbatim>
+
+*NOTE:* output is the name of the output configured in the process, which is output.getName().
+<verbatim><output name="output" feed="clicks-summary-table" instance="today(0,0)"/></verbatim>
+
+Example workflow configuration:
+
+<verbatim>
+<configuration>
+  <property>
+    <name>falcon_output_database</name>
+    <value>falcon_db</value>
+  </property>
+  <property>
+    <name>falcon_output_table</name>
+    <value>output_table</value>
+  </property>
+  <property>
+    <name>falcon_output_catalog_url</name>
+    <value>thrift://localhost:29083</value>
+  </property>
+  <property>
+    <name>falcon_output_storage_type</name>
+    <value>TABLE</value>
+  </property>
+  <property>
+    <name>feedInstancePaths</name>
+    <value>hcat://localhost:29083/falcon_db/output_table/ds=2012-04-21-00</value>
+  </property>
+  <property>
+    <name>falcon_output_dataout_partitions</name>
+    <value>'ds=2012-04-21-00'</value>
+  </property>
+  ....
+</configuration>
+</verbatim>
 
 ---++++ Properties
-The properties are key value pairs that are passed to the workflow. These properties are optional and can be used in workflow to parameterize the workflow.
+The properties are key value pairs that are passed to the workflow. These properties are optional and can be used
+in workflow to parameterize the workflow.
 Synatx:
 <verbatim>
 <process name="[process name]">
@@ -450,6 +634,29 @@ Example:
 This defines the workflow engine to be pig and the pig script is defined at
 /projects/bootcamp/pig.script.
 
+Feeds with Hive table storage will send one more parameter apart from the general ones:
+<verbatim>$input_filter</verbatim>
+
+---+++++ Hive
+
+Falcon also adds the Hive engine as part of Hive Integration which enables users to embed a Hive script as a process.
+This would enable users to create materialized queries in a declarative way.
+
+Example:
+<verbatim>
+<process name="sample-process">
+...
+    <workflow engine="hive" path="/projects/bootcamp/hive-script.hql"/>
+...
+</process>
+</verbatim>
+
+This defines the workflow engine to be hive and the hive script is defined at
+/projects/bootcamp/hive-script.hql.
+
+Feeds with Hive table storage will send one more parameter apart from the general ones:
+<verbatim>$input_filter</verbatim>
+
 ---++++ Retry
 Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
 Syntax:
@@ -512,3 +719,5 @@ Example:
 </process>
 </verbatim>
 This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Falcon should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml
+
+*Note:* This is only supported for FileSystem storage but not Table storage at this point.

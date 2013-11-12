@@ -111,22 +111,21 @@ public class EmbeddedCluster {
         interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
                 conf.get("mapred.job.tracker"), "0.1"));
-        interfaces
-                .getInterfaces()
-                .add(newInterface(
-                        Interfacetype.MESSAGING,
-                        "vm://localhost",
-                        "0.1"));
+        interfaces.getInterfaces().add(
+                newInterface(Interfacetype.REGISTRY, "thrift://localhost:49083", "0.1"));
+        interfaces.getInterfaces().add(
+                newInterface(Interfacetype.MESSAGING, "vm://localhost", "0.1"));
+
         clusterEntity.setInterfaces(interfaces);
 
         Location location = new Location();
         location.setName("staging");
-        location.setPath("/workflow/staging");
+        location.setPath("/projects/falcon/staging");
         Locations locs = new Locations();
         locs.getLocations().add(location);
         location = new Location();
         location.setName("working");
-        location.setPath("/workflow/work");
+        location.setPath("/projects/falcon/working");
         locs.getLocations().add(location);
         clusterEntity.setLocations(locs);
     }

@@ -18,8 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import static org.testng.AssertJUnit.assertEquals;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -28,6 +26,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.ClusterHelper;
@@ -35,10 +34,12 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
 
 /**
  * Test for validating cluster entity parsing.
@@ -56,31 +57,70 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
 
         Assert.assertNotNull(cluster);
-        assertEquals(cluster.getName(), "testCluster");
+        Assert.assertEquals(cluster.getName(), "testCluster");
 
         Interface execute = ClusterHelper.getInterface(cluster, Interfacetype.EXECUTE);
 
-        assertEquals(execute.getEndpoint(), "localhost:8021");
-        assertEquals(execute.getVersion(), "0.20.2");
+        Assert.assertEquals(execute.getEndpoint(), "localhost:8021");
+        Assert.assertEquals(execute.getVersion(), "0.20.2");
 
         Interface readonly = ClusterHelper.getInterface(cluster, Interfacetype.READONLY);
-        assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
-        assertEquals(readonly.getVersion(), "0.20.2");
+        Assert.assertEquals(readonly.getEndpoint(), "hftp://localhost:50010");
+        Assert.assertEquals(readonly.getVersion(), "0.20.2");
 
         Interface write = ClusterHelper.getInterface(cluster, Interfacetype.WRITE);
         //assertEquals(write.getEndpoint(), conf.get("fs.default.name"));
-        assertEquals(write.getVersion(), "0.20.2");
+        Assert.assertEquals(write.getVersion(), "0.20.2");
 
         Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
-        assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
-        assertEquals(workflow.getVersion(), "3.1");
+        Assert.assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
+        Assert.assertEquals(workflow.getVersion(), "3.1");
 
-        assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
+        Assert.assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
 
         StringWriter stringWriter = new StringWriter();
         Marshaller marshaller = EntityType.CLUSTER.getMarshaller();
         marshaller.marshal(cluster, stringWriter);
         System.out.println(stringWriter.toString());
+
+        Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        Assert.assertEquals(catalog.getEndpoint(), "http://localhost:48080/templeton/v1");
+        Assert.assertEquals(catalog.getVersion(), "0.11.0");
+
+        Assert.assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
+    }
+
+    @Test
+    public void testParseClusterWithoutRegistry() throws IOException, FalconException, JAXBException {
+
+        StartupProperties.get().setProperty(CatalogServiceFactory.CATALOG_SERVICE, "thrift://localhost:9083");
+        Assert.assertTrue(CatalogServiceFactory.isEnabled());
+
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-registry.xml");
+        Cluster cluster = parser.parse(stream);
+
+        Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        Assert.assertNull(catalog);
+
+        StartupProperties.get().remove(CatalogServiceFactory.CATALOG_SERVICE);
+        Assert.assertFalse(CatalogServiceFactory.isEnabled());
+
+        catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        Assert.assertNull(catalog);
+    }
+
+    @Test
+    public void testParseClusterWithBadRegistry() throws Exception {
+        // disable catalog service
+        StartupProperties.get().remove(CatalogServiceFactory.CATALOG_SERVICE);
+        Assert.assertFalse(CatalogServiceFactory.isEnabled());
+
+        InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-bad-registry.xml");
+        Cluster cluster = parser.parse(stream);
+
+        Interface catalog = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
+        Assert.assertEquals(catalog.getEndpoint(), "Hcat");
+        Assert.assertEquals(catalog.getVersion(), "0.1");
     }
 
     /**

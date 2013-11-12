@@ -29,6 +29,8 @@ import java.util.TimeZone;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -68,25 +70,24 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
             validateEntityExists(EntityType.CLUSTER, clusterName);
             validateProcessValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd());
-            validateHDFSpaths(process, clusterName);
+            validateHDFSPaths(process, clusterName);
 
             if (process.getInputs() != null) {
                 for (Input input : process.getInputs().getInputs()) {
                     validateEntityExists(EntityType.FEED, input.getFeed());
-                    Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
+                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, input.getFeed());
                     CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
                     CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), feed, clusterName);
                     CrossEntityValidations.validateInstanceRange(process, input, feed);
-                    if (input.getPartition() != null) {
-                        CrossEntityValidations.validateInputPartition(input, feed);
-                    }
+                    validateInputPartition(input, feed);
+                    validateOptionalInputsForTableStorage(feed, input);
                 }
             }
 
             if (process.getOutputs() != null) {
                 for (Output output : process.getOutputs().getOutputs()) {
                     validateEntityExists(EntityType.FEED, output.getFeed());
-                    Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
+                    Feed feed = ConfigurationStore.get().get(EntityType.FEED, output.getFeed());
                     CrossEntityValidations.validateFeedDefinedForCluster(feed, clusterName);
                     CrossEntityValidations.validateInstance(process, output, feed);
                 }
@@ -96,7 +97,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         validateLateInputs(process);
     }
 
-    private void validateHDFSpaths(Process process, String clusterName) throws FalconException {
+    private void validateHDFSPaths(Process process, String clusterName) throws FalconException {
         org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
                 clusterName);
 
@@ -130,8 +131,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private String getNameNode(Cluster cluster, String clusterName) throws ValidationException {
-        // cluster should never be null as it is validated while submitting
-        // feeds.
+        // cluster should never be null as it is validated while submitting feeds.
         if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme() == null) {
             throw new ValidationException(
                     "Cannot get valid nameNode scheme from write interface of cluster: " + clusterName);
@@ -149,6 +149,19 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException(e);
         } catch (Exception e) {
             throw new FalconException(e);
+        }
+    }
+
+    private void validateInputPartition(Input input, Feed feed) throws FalconException {
+        if (input.getPartition() == null) {
+            return;
+        }
+
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            CrossEntityValidations.validateInputPartition(input, feed);
+        } else if (baseFeedStorageType == Storage.TYPE.TABLE) {
+            throw new ValidationException("Input partitions are not supported for table storage: " + input.getName());
         }
     }
 
@@ -172,6 +185,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
     }
 
     private void validateLateInputs(Process process) throws ValidationException {
+        if (process.getLateProcess() == null) {
+            return;
+        }
+
         Map<String, String> feeds = new HashMap<String, String>();
         if (process.getInputs() != null) {
             for (Input in : process.getInputs().getInputs()) {
@@ -179,21 +196,27 @@ public class ProcessEntityParser extends EntityParser<Process> {
             }
         }
 
-        if (process.getLateProcess() != null) {
-            for (LateInput lp : process.getLateProcess().getLateInputs()) {
-                if (!feeds.keySet().contains(lp.getInput())) {
-                    throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
-                }
-                try {
-                    Feed feed = (Feed) ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
-                    if (feed.getLateArrival() == null) {
-                        throw new ValidationException(
-                                "Late Input feed: " + lp.getInput() + " is not configured with late arrival cut-off");
-                    }
-                } catch (FalconException e) {
-                    throw new ValidationException(e);
-                }
+        for (LateInput lp : process.getLateProcess().getLateInputs()) {
+            if (!feeds.keySet().contains(lp.getInput())) {
+                throw new ValidationException("Late Input: " + lp.getInput() + " is not specified in the inputs");
             }
+
+            try {
+                Feed feed = ConfigurationStore.get().get(EntityType.FEED, feeds.get(lp.getInput()));
+                if (feed.getLateArrival() == null) {
+                    throw new ValidationException(
+                            "Late Input feed: " + lp.getInput() + " is not configured with late arrival cut-off");
+                }
+            } catch (FalconException e) {
+                throw new ValidationException(e);
+            }
+        }
+    }
+
+    private void validateOptionalInputsForTableStorage(Feed feed, Input input) throws FalconException {
+        if (input.isOptional() && FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
+            throw new ValidationException("Optional Input is not supported for feeds with table storage! "
+                    + input.getName());
         }
     }
 }

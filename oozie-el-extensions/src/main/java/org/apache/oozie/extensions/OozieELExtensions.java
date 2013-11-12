@@ -226,7 +226,7 @@ public final class OozieELExtensions {
     private static String getEffectiveTimeStr(TruncateBoundary trunc, int yr, int mon,
                                               int day, int hr, int min) throws Exception {
         Calendar time = getEffectiveTime(trunc, yr, mon, day, hr, min);
-        return DateUtils.formatDateUTC(time);
+        return DateUtils.formatDateOozieTZ(time);
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"SF_SWITCH_FALLTHROUGH"})

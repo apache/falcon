@@ -23,7 +23,7 @@
         <format>tar.gz</format>
     </formats>
     <id>bin</id>
-    <baseDirectory>falcon-server-${project.version}</baseDirectory>
+    <baseDirectory>falcon-${project.version}</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>src/conf/</directory>
@@ -55,6 +55,7 @@
             <directoryMode>0755</directoryMode>
             <includes>
                 <include>falcon</include>
+                <include>falcon-config.sh</include>
                 <include>falcon-start</include>
                 <include>falcon-stop</include>
                 <include>service-start.sh</include>
@@ -103,4 +104,3 @@
         </file>
     </files>
 </assembly>
-    

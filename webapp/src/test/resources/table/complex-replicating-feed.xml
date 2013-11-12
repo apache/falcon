@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<!--
+    Replicating Hourly customer table from primary to secondary cluster.
+  -->
+<feed description="billing RC File" name="complex-replicating-feed" xmlns="uri:falcon:feed:0.1">
+    <partitions>
+        <partition name="colo"/>
+        <partition name="eventTime"/>
+        <partition name="impressionHour"/>
+        <partition name="pricingModel"/>
+    </partitions>
+
+    <groups>online,bi</groups>
+
+    <frequency>minutes(5)</frequency>
+    <timezone>UTC</timezone>
+    <late-arrival cut-off="minutes(1)"/>
+
+    <clusters>
+        <cluster partition="${cluster.colo}" name="primary-cluster" type="source">
+            <validity end="2099-01-01T00:00Z" start="2012-10-01T12:00Z"/>
+            <retention action="delete" limit="days(10000)"/>
+
+            <locations>
+                <location type="data"
+                          path="/falcon/test/primary-cluster/customer_raw/${YEAR}-${MONTH}-${DAY}-${HOUR}/" />
+            </locations>
+        </cluster>
+        <cluster type="target" name="target-cluster-alpha">
+            <validity end="2012-10-01T12:11Z" start="2012-10-01T12:05Z"/>
+            <retention action="delete" limit="days(10000)"/>
+
+            <locations>
+                <location path="/localDC/rc/billing/ua1/${YEAR}-${MONTH}-${DAY}-${HOUR}/" type="data"/>
+            </locations>
+        </cluster>
+        <cluster type="target" name="target-cluster-beta">
+            <validity end="2012-10-01T12:26Z" start="2012-10-01T12:10Z"/>
+            <retention action="delete" limit="days(10000)"/>
+
+            <locations>
+                <location path="/localDC/rc/billing/ua2/${YEAR}-${MONTH}-${DAY}-${HOUR}/" type="data"/>
+            </locations>
+        </cluster>
+    </clusters>
+
+    <locations>
+        <location type="data" path="/falcon/test/customer_raw/${YEAR}-${MONTH}-${DAY}-${HOUR}/" />
+    </locations>
+
+    <ACL owner="seetharam" group="users" permission="0755"/>
+    <schema location="" provider="hcatalog"/>
+
+</feed>

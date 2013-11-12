@@ -18,7 +18,7 @@
 
 set -e
 
-if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/3.2.2 ]
+if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/4.0.0-falcon ]
 then
     echo "Oozie already setup. skipping";
     exit 0;
@@ -26,12 +26,12 @@ fi
 
 mkdir -p ../target
 pushd ../target
-rm -rf oozie-3.2.0-incubating*
-curl -v "http://www.apache.org/dist/oozie/3.2.0-incubating/oozie-3.2.0-incubating.tar.gz" -o oozie-3.2.0-incubating.tgz
-tar -xzvf oozie-3.2.0-incubating.tgz
-cd oozie-3.2.0-incubating
+rm -rf oozie-4.0.0*
+curl -v "http://www.apache.org/dist/oozie/4.0.0/oozie-4.0.0.tar.gz" -o oozie-4.0.0.tgz
+tar -xzvf oozie-4.0.0.tgz
+cd oozie-4.0.0
 pwd
-patch -p0 < ../../oozie-3.2.0-incubating-el.patch
+patch -p0 < ../../build-tools/src/patch/oozie-4.0.0-falcon.patch
 if [ -z "${MAVEN_HOME}" ]
 then
     export MVN_CMD=`which mvn`;
@@ -40,6 +40,6 @@ else
 fi
 echo "Using maven from " $MVN_CMD
 $MVN_CMD clean install -DskipTests
-rm -rf oozie-3.2.0-incubating*
+cd ..
+rm -rf oozie-4.0.0*
 popd
-

@@ -22,7 +22,7 @@
             <case to="recordsize">
                 ${shouldRecord=="true"}
             </case>
-            <default to="replication"/>
+            <default to="replication-decision"/>
         </switch>
     </decision>
     <action name='recordsize'>
@@ -38,6 +38,15 @@
                     <name>oozie.launcher.mapred.job.priority</name>
                     <value>${jobPriority}</value>
                 </property>
+                <!-- HCatalog jars -->
+                <property>
+                    <name>oozie.use.system.libpath</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>hcatalog</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.latedata.LateDataHandler</main-class>
             <arg>-out</arg>
@@ -46,11 +55,50 @@
             <arg>${falconInPaths}</arg>
             <arg>-falconInputFeeds</arg>
             <arg>${falconInputFeeds}</arg>
+            <arg>-falconInputFeedStorageTypes</arg>
+            <arg>${falconInputFeedStorageTypes}</arg>
             <capture-output/>
         </java>
+        <ok to="replication-decision"/>
+        <error to="fail"/>
+    </action>
+    <decision name="replication-decision">
+        <switch>
+            <case to="table-export">
+                ${falconFeedStorageType == "TABLE"}
+            </case>
+            <default to="replication"/>
+        </switch>
+    </decision>
+    <!-- Table Replication - Export data and metadata to HDFS Staging from Source Hive -->
+    <action name="table-export">
+        <hive xmlns="uri:oozie:hive-action:0.2">
+            <job-tracker>${falconSourceJobTracker}</job-tracker>
+            <name-node>${falconSourceNameNode}</name-node>
+            <prepare>
+                <delete path="${distcpSourcePaths}"/>
+            </prepare>
+            <job-xml>${wf:appPath()}/conf/falcon-source-hive-site.xml</job-xml>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <script>${wf:appPath()}/scripts/falcon-table-export.hql</script>
+            <param>falconSourceDatabase=${falconSourceDatabase}</param>
+            <param>falconSourceTable=${falconSourceTable}</param>
+            <param>falconSourcePartition=${falconSourcePartition}</param>
+            <param>falconSourceStagingDir=${distcpSourcePaths}</param>
+        </hive>
         <ok to="replication"/>
         <error to="fail"/>
     </action>
+    <!-- Replication action -->
     <action name="replication">
         <java>
             <job-tracker>${jobTracker}</job-tracker>
@@ -75,8 +123,43 @@
             <arg>${distcpSourcePaths}</arg>
             <arg>-targetPath</arg>
             <arg>${distcpTargetPaths}</arg>
+            <arg>-falconFeedStorageType</arg>
+            <arg>${falconFeedStorageType}</arg>
             <file>${wf:conf("falcon.libpath")}/hadoop-distcp.jar</file>
         </java>
+        <ok to="post-replication-decision"/>
+        <error to="failed-post-processing"/>
+    </action>
+    <decision name="post-replication-decision">
+        <switch>
+            <case to="table-import">
+                ${falconFeedStorageType == "TABLE"}
+            </case>
+            <default to="succeeded-post-processing"/>
+        </switch>
+    </decision>
+    <!-- Table Replication - Import data and metadata from HDFS Staging into Target Hive -->
+    <action name="table-import">
+        <hive xmlns="uri:oozie:hive-action:0.2">
+            <job-tracker>${falconTargetJobTracker}</job-tracker>
+            <name-node>${falconTargetNameNode}</name-node>
+            <job-xml>${wf:appPath()}/conf/falcon-target-hive-site.xml</job-xml>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapred.job.priority</name>
+                    <value>${jobPriority}</value>
+                </property>
+            </configuration>
+            <script>${wf:appPath()}/scripts/falcon-table-import.hql</script>
+            <param>falconTargetDatabase=${falconTargetDatabase}</param>
+            <param>falconTargetTable=${falconTargetTable}</param>
+            <param>falconTargetPartition=${falconTargetPartition}</param>
+            <param>falconTargetStagingDir=${distcpTargetPaths}</param>
+        </hive>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
@@ -211,8 +294,8 @@
         <error to="fail"/>
     </action>
     <kill name="fail">
-        <message>Workflow failed, error
-            message[${wf:errorMessage(wf:lastErrorNode())}]
+        <message>
+            Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
         </message>
     </kill>
     <end name='end'/>

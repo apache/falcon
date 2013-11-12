@@ -18,28 +18,14 @@
 
 package org.apache.falcon.converter;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.List;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
+import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -48,6 +34,8 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -56,16 +44,36 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.DECISION;
+import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Test for the Falcon entities mapping into Oozie artifacts.
@@ -89,6 +97,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
+        ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).setEndpoint("thrift://localhost:49083");
         fs = new Path(hdfsUrl).getFileSystem(new Configuration());
         fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
 
@@ -145,19 +154,20 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore store = ConfigurationStore.get();
         Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());
         SYNCDATASET ds = (SYNCDATASET) coord.getDatasets().getDatasetOrAsyncDataset().get(0);
-        assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(0).getValidity().getStart()),
-                ds.getInitialInstance());
+
+        final org.apache.falcon.entity.v0.feed.Cluster feedCluster = feed.getClusters().getClusters().get(0);
+        assertEquals(SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()), ds.getInitialInstance());
         assertEquals(feed.getTimezone().getID(), ds.getTimezone());
         assertEquals("${coord:" + feed.getFrequency().toString() + "}", ds.getFrequency());
         assertEquals("", ds.getDoneFlag());
-        assertEquals(ds.getUriTemplate(), "${nameNode}" + FeedHelper.getLocation(feed, LocationType.DATA,
-                feed.getClusters().getClusters().get(0).getName()).getPath());
+        assertEquals(ds.getUriTemplate(),
+                FeedHelper.createStorage(feedCluster, feed).getUriTemplate(LocationType.DATA));
+
+        HashMap<String, String> props = new HashMap<String, String>();
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            if (prop.getName().equals("mapred.job.priority")) {
-                assertEquals(prop.getValue(), "LOW");
-                break;
-            }
+            props.put(prop.getName(), prop.getValue());
         }
+        assertEquals(props.get("mapred.job.priority"), "LOW");
 
         assertLibExtensions(coord);
     }
@@ -194,16 +204,168 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
         List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
 
-        ACTION pigAction = (ACTION) decisionOrForkOrJoin.get(3);
-        Assert.assertEquals("user-pig-job", pigAction.getName());
-        Assert.assertEquals("${nameNode}/apps/pig/id.pig", pigAction.getPig().getScript());
-        Assert.assertEquals(Collections.EMPTY_LIST, pigAction.getPig().getArchive());
+        ACTION pigActionNode = (ACTION) decisionOrForkOrJoin.get(3);
+        Assert.assertEquals("user-pig-job", pigActionNode.getName());
 
-        ACTION oozieAction = (ACTION) decisionOrForkOrJoin.get(4);
+        final PIG pigAction = pigActionNode.getPig();
+        Assert.assertEquals("${nameNode}/apps/pig/id.pig", pigAction.getScript());
+        Assert.assertNotNull(pigAction.getPrepare());
+        Assert.assertEquals(1, pigAction.getPrepare().getDelete().size());
+        Assert.assertFalse(pigAction.getParam().isEmpty());
+        Assert.assertEquals(5, pigAction.getParam().size());
+        Assert.assertEquals(Collections.EMPTY_LIST, pigAction.getArchive());
+        Assert.assertTrue(pigAction.getFile().size() > 0);
+
+        ACTION oozieAction = (ACTION) decisionOrForkOrJoin.get(5);
         Assert.assertEquals("user-oozie-workflow", oozieAction.getName());
         Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
     }
 
+    @Test
+    public void testHiveProcessMapper() throws Exception {
+        URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
+        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, inFeed);
+
+        resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
+        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, outFeed);
+
+        resource = this.getClass().getResource("/config/process/hive-process.xml");
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        Path bundlePath = new Path("/tmp/seetharam", EntityUtil.getStagingPath(process));
+        mapper.map(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(new Path(coordPath));
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+
+        // verify table props
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            if (expected.containsKey(entry.getKey())) {
+                Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
+            }
+        }
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        testParentWorkflow(process, parentWorkflow);
+
+        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
+
+        ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
+        Assert.assertEquals("user-hive-job", hiveNode.getName());
+
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = mapper.unMarshalHiveAction(hiveNode);
+        org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
+
+        Assert.assertEquals("${nameNode}/apps/hive/script.hql", hiveAction.getScript());
+        Assert.assertNull(hiveAction.getPrepare());
+        Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
+        Assert.assertFalse(hiveAction.getParam().isEmpty());
+        Assert.assertEquals(10, hiveAction.getParam().size());
+    }
+
+    @Test
+    public void testProcessMapperForTableStorage() throws Exception {
+        URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
+        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, inFeed);
+
+        resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
+        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.FEED, outFeed);
+
+        resource = this.getClass().getResource("/config/process/pig-process-table.xml");
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, process);
+
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
+        mapper.map(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(process).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(new Path(coordPath));
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+
+        // verify table props
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            if (expected.containsKey(entry.getKey())) {
+                Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
+            }
+        }
+
+        // verify the late data params
+        Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getName());
+        Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
+
+        // verify the post processing params
+        Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getName());
+        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+    }
+
+    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process,
+                                                      Cluster cluster) throws FalconException {
+        Map<String, String> expected = new HashMap<String, String>();
+        for (Input input : process.getInputs().getInputs()) {
+            CatalogStorage storage = (CatalogStorage) FeedHelper.createStorage(cluster, inFeed);
+            propagateStorageProperties(input.getName(), storage, expected);
+        }
+
+        for (Output output : process.getOutputs().getOutputs()) {
+            CatalogStorage storage = (CatalogStorage) FeedHelper.createStorage(cluster, outFeed);
+            propagateStorageProperties(output.getName(), storage, expected);
+        }
+
+        return expected;
+    }
+
+    private void propagateStorageProperties(String feedName, CatalogStorage tableStorage,
+                                            Map<String, String> props) {
+        String prefix = "falcon_" + feedName;
+        props.put(prefix + "_storage_type", tableStorage.getType().name());
+        props.put(prefix + "_catalog_url", tableStorage.getCatalogUrl());
+        props.put(prefix + "_database", tableStorage.getDatabase());
+        props.put(prefix + "_table", tableStorage.getTable());
+
+        if (prefix.equals("input")) {
+            props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
+            props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
+            props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
+        } else if (prefix.equals("output")) {
+            props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void assertLibExtensions(COORDINATORAPP coord) throws Exception {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
@@ -261,8 +423,11 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertEquals("should-record", ((DECISION) decisionOrForkOrJoin.get(0)).getName());
         Assert.assertEquals("recordsize", ((ACTION) decisionOrForkOrJoin.get(1)).getName());
         Assert.assertEquals("user-workflow", ((DECISION) decisionOrForkOrJoin.get(2)).getName());
-        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(5)).getName());
-        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
+        Assert.assertEquals("user-pig-job", ((ACTION) decisionOrForkOrJoin.get(3)).getName());
+        Assert.assertEquals("user-hive-job", ((ACTION) decisionOrForkOrJoin.get(4)).getName());
+        Assert.assertEquals("user-oozie-workflow", ((ACTION) decisionOrForkOrJoin.get(5)).getName());
+        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
+        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(7)).getName());
     }
 
     private COORDINATORAPP getCoordinator(Path path) throws Exception {
@@ -277,16 +442,14 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         return jaxbBundle.getValue();
     }
 
+    @SuppressWarnings("unchecked")
     private WORKFLOWAPP getParentWorkflow(Path path) throws Exception {
         String workflow = readFile(new Path(path, "workflow.xml"));
 
-        Unmarshaller unmarshaller = JAXBContext.newInstance(WORKFLOWAPP.class).createUnmarshaller();
-        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-        Schema schema = schemaFactory.newSchema(this.getClass().getResource("/oozie-workflow-0.3.xsd"));
-        unmarshaller.setSchema(schema);
-        JAXBElement<WORKFLOWAPP> jaxbWorkflow = unmarshaller.unmarshal(
-                new StreamSource(new ByteArrayInputStream(workflow.trim().getBytes())), WORKFLOWAPP.class);
-        return jaxbWorkflow.getValue();
+        JAXBContext wfAppContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+        Unmarshaller unmarshaller = wfAppContext.createUnmarshaller();
+        return ((JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(
+                new StreamSource(new ByteArrayInputStream(workflow.trim().getBytes())))).getValue();
     }
 
     private BUNDLEAPP getBundle(Path path) throws Exception {
@@ -312,8 +475,11 @@ public class OozieProcessMapperTest extends AbstractTestBase {
     }
 
     @Override
-    @AfterClass
+    @AfterMethod
     public void cleanup() throws Exception {
         super.cleanup();
+        ConfigurationStore.get().remove(EntityType.PROCESS, "table-process");
+        ConfigurationStore.get().remove(EntityType.FEED, "clicks-raw-table");
+        ConfigurationStore.get().remove(EntityType.FEED, "clicks-summary-table");
     }
 }

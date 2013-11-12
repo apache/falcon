@@ -98,9 +98,12 @@
 
         <hadoop.profile>1</hadoop.profile>
         <hadoop.version>1.1.2</hadoop.version>
-        <slf4j.version>1.2</slf4j.version>
-        <oozie.version>3.2.2</oozie.version>
+        <slf4j.version>1.6.1</slf4j.version>
+        <oozie.version>4.0.0</oozie.version>
+        <falcon.oozie.version>${oozie.version}-falcon</falcon.oozie.version>
         <activemq.version>5.4.3</activemq.version>
+        <hive.version>0.11.0</hive.version>
+        <hcatalog.version>0.11.0</hcatalog.version>
         <hadoop-distcp.version>0.9</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -130,11 +133,9 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/main/assemblies/prism-package.xml</descriptor>
-                                <descriptor>src/main/assemblies/server-package.xml</descriptor>
-                                <descriptor>src/main/assemblies/client-package.xml</descriptor>
+                                <descriptor>src/main/assemblies/distributed-package.xml</descriptor>
                             </descriptors>
-                            <finalName>falcon-${project.version}</finalName>
+                            <finalName>falcon-distributed-${project.version}</finalName>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -176,6 +177,14 @@
         <repository>
             <id>im</id>
             <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>hortonworks.repo</id>
+            <url>http://repo.hortonworks.com/content/repositories/releases</url>
+            <name>Hortonworks Repo</name>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -246,6 +255,10 @@
                 <artifactId>hadoop-test</artifactId>
                 <version>${hadoop.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>org.apache.ftpserver</groupId>
                         <artifactId>ftpserver-core</artifactId>
@@ -513,11 +526,79 @@
             <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-client</artifactId>
-                <version>${oozie.version}</version>
+                <version>${falcon.oozie.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
                         <artifactId>hadoop-auth</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.googlecode.json-simple</groupId>
+                        <artifactId>json-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-core-asl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-cli</groupId>
+                        <artifactId>commons-cli</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.oozie</groupId>
+                <artifactId>oozie-core</artifactId>
+                <version>${falcon.oozie.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.oozie</groupId>
+                        <artifactId>oozie-sharelib-hcatalog</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet.jsp</groupId>
+                        <artifactId>jsp-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jetty</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -536,28 +617,8 @@
 
             <dependency>
                 <groupId>org.apache.oozie</groupId>
-                <artifactId>oozie-core</artifactId>
-                <version>${oozie.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-auth</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet</groupId>
-                        <artifactId>servlet-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet.jsp</groupId>
-                        <artifactId>jsp-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-webapp</artifactId>
-                <version>${oozie.version}</version>
+                <version>${falcon.oozie.version}</version>
                 <type>war</type>
             </dependency>
 
@@ -652,6 +713,49 @@
                 <artifactId>falcon-hadoop-webapp</artifactId>
                 <version>${project.version}</version>
                 <type>war</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-metastore</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion> <!--Oozie already imports this-->
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derby</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-common</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <!--  this is needed for embedded oozie -->
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-exec</artifactId>
+                <version>${hive.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-metastore</artifactId>
+                <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion> <!--Oozie already imports this-->
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derby</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hcatalog</groupId>
+                <artifactId>webhcat-java-client</artifactId>
+                <version>${hcatalog.version}</version>
             </dependency>
 
             <dependency>
@@ -846,13 +950,16 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>${skipCheck}</skip>
+                </configuration>
             </plugin>
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assemblies/bin-package.xml</descriptor>
+                        <descriptor>src/main/assemblies/standalone-package.xml</descriptor>
                         <descriptor>src/main/assemblies/src-package.xml</descriptor>
                     </descriptors>
                     <finalName>falcon-${project.version}</finalName>
@@ -912,6 +1019,7 @@
                         <exclude>**/maven-eclipse.xml</exclude>
                         <exclude>**/.externalToolBuilders/**</exclude>
                     </excludes>
+                    <argLine>-Dfalcon.log.dir=target/logs -Dfalcon.embeddedmq.data=target/data</argLine>
                 </configuration>
                 <executions>
                     <execution>

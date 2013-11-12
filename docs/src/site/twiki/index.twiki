@@ -8,11 +8,11 @@ management on hadoop clusters.
 
    * Establishes relationship between various data and processing elements on a Hadoop environment
 
-   * Feed management services such as feed retention, replications across clusters, archival etc 
+   * Feed management services such as feed retention, replications across clusters, archival etc.
 
    * Easy to onboard new workflows/pipelines, with support for late data handling, retry policies
 
-   * Integration with metastore/catalog
+   * Integration with metastore/catalog such as Hive/HCatalog
 
    * Provide notification to end customer based on availability of feed groups
      (logical group of related feeds, which are likely to be used together)
@@ -22,10 +22,15 @@ management on hadoop clusters.
 ---+ Getting Started
 
 Start with these simple steps to install an falcon instance [[InstallationSteps][Simple setup]]. Also refer
-to Falcon architecture and documentation in [[FalconDocumentation][Documentation]]. [[OnBoarding][On boarding]] describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline for reference. [[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
+to Falcon architecture and documentation in [[FalconDocumentation][Documentation]]. [[OnBoarding][On boarding]]
+describes steps to on-board a pipeline to Falcon. It also gives a sample pipeline for reference.
+[[EntitySpecification][Entity Specification]] gives complete details of all Falcon entities.
 
 [[FalconCLI][Falcon CLI]] implements [[restapi/ResourceList][Falcon's RESTful API]] and
 describes various options for the command line utility provided by Falcon.
+
+Falcon provides OOTB [[HiveIntegration][lifecycle management for Tables in Hive (HCatalog)]]
+such as table replication for BCP and table eviction.
 
 #LicenseInfo
 ---+ Licensing Information

@@ -43,6 +43,7 @@ public final class StandAloneCluster extends EmbeddedCluster {
         for (Interface inter : cluster.getCluster().getInterfaces().getInterfaces()) {
             if (inter.getType() == Interfacetype.WRITE) {
                 cluster.getConf().set("fs.default.name", inter.getEndpoint());
+                break;
             }
         }
 

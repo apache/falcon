@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -46,9 +47,17 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
+import org.apache.falcon.catalog.CatalogPartition;
+import org.apache.falcon.catalog.CatalogServiceFactory;
+import org.apache.falcon.entity.CatalogStorage;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.FileSystemStorage;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.common.FeedDataPath.VARS;
+import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -72,7 +81,6 @@ public class FeedEvictor extends Configured implements Tool {
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
 
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
-//    static PrintStream stream = System.out;
 
     private static final String FORMAT = "yyyyMMddHHmm";
 
@@ -88,7 +96,6 @@ public class FeedEvictor extends Configured implements Tool {
         }
     }
 
-    private FileSystem fs;
     private final Map<VARS, String> map = new TreeMap<VARS, String>();
     private final StringBuffer instancePaths = new StringBuffer("instancePaths=");
     private final StringBuffer buffer = new StringBuffer();
@@ -97,47 +104,73 @@ public class FeedEvictor extends Configured implements Tool {
     public int run(String[] args) throws Exception {
 
         CommandLine cmd = getCommand(args);
-        String feedBasePath = cmd.getOptionValue("feedBasePath").replaceAll("\\?\\{", "\\$\\{");
+        String feedBasePath = cmd.getOptionValue("feedBasePath")
+                .replaceAll(Storage.QUESTION_EXPR_START_REGEX, Storage.DOLLAR_EXPR_START_REGEX);
         String retentionType = cmd.getOptionValue("retentionType");
         String retentionLimit = cmd.getOptionValue("retentionLimit");
         String timeZone = cmd.getOptionValue("timeZone");
         String frequency = cmd.getOptionValue("frequency"); //to write out smart path filters
         String logFile = cmd.getOptionValue("logFile");
+        String feedStorageType = cmd.getOptionValue("falconFeedStorageType");
 
-        String[] feedLocs = feedBasePath.split("#");
-        for (String path : feedLocs) {
-            evictor(path, retentionType, retentionLimit, timeZone, frequency);
-        }
+        LOG.info("Applying retention on " + feedBasePath + " type: " + retentionType
+                + ", Limit: " + retentionLimit + ", timezone: " + timeZone
+                + ", frequency: " + frequency + ", storage" + feedStorageType);
+
+        Storage storage = FeedHelper.createStorage(feedStorageType, feedBasePath);
+        evict(storage, retentionLimit, timeZone);
 
         logInstancePaths(new Path(logFile));
+
         int len = buffer.length();
         if (len > 0) {
             OUT.get().println("instances=" + buffer.substring(0, len - 1));
         } else {
             OUT.get().println("instances=NULL");
         }
+
         return 0;
     }
 
-    private void evictor(String feedBasePath, String retentionType,
-                         String retentionLimit, String timeZone, String frequency) throws IOException, ELException {
+    private void evict(Storage storage, String retentionLimit, String timeZone)
+        throws Exception {
+
+        if (storage.getType() == Storage.TYPE.FILESYSTEM) {
+            evictFS((FileSystemStorage) storage, retentionLimit, timeZone);
+        } else if (storage.getType() == Storage.TYPE.TABLE) {
+            evictTable((CatalogStorage) storage, retentionLimit, timeZone);
+        }
+    }
+
+    private void evictFS(FileSystemStorage storage, String retentionLimit, String timeZone)
+        throws Exception {
+
+        for (Location location : storage.getLocations()) {
+            fileSystemEvictor(storage.getUriTemplate(location.getType()), retentionLimit, timeZone);
+        }
+    }
+
+    private void fileSystemEvictor(String feedBasePath, String retentionLimit, String timeZone)
+        throws IOException, ELException {
+
         Path normalizedPath = new Path(feedBasePath);
-        fs = normalizedPath.getFileSystem(getConf());
+        FileSystem fs = normalizedPath.getFileSystem(getConf());
         feedBasePath = normalizedPath.toUri().getPath();
         LOG.info("Normalized path : " + feedBasePath);
+
         Pair<Date, Date> range = getDateRange(retentionLimit);
         String dateMask = getDateFormatInPath(feedBasePath);
-        List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath,
-                timeZone, dateMask, range.first);
 
-        LOG.info("Applying retention on " + feedBasePath + " type: "
-                + retentionType + ", Limit: " + retentionLimit + ", timezone: "
-                + timeZone + ", frequency: " + frequency);
+        List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath, timeZone, dateMask, range.first, fs);
+        if (toBeDeleted.isEmpty()) {
+            LOG.info("No instances to delete.");
+            return;
+        }
 
         DateFormat dateFormat = new SimpleDateFormat(FORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
         for (Path path : toBeDeleted) {
-            if (deleteInstance(path)) {
+            if (deleteInstance(fs, path)) {
                 LOG.info("Deleted instance " + path);
                 Date date = getDate(path, feedBasePath, dateMask, timeZone);
                 buffer.append(dateFormat.format(date)).append(',');
@@ -165,10 +198,10 @@ public class FeedEvictor extends Configured implements Tool {
         return Pair.of(start, end);
     }
 
-    private List<Path> discoverInstanceToDelete(String inPath, String timeZone,
-                                                String dateMask, Date start) throws IOException {
+    private List<Path> discoverInstanceToDelete(String inPath, String timeZone, String dateMask,
+                                                Date start, FileSystem fs) throws IOException {
 
-        FileStatus[] files = findFilesForFeed(inPath);
+        FileStatus[] files = findFilesForFeed(fs, inPath);
         if (files == null || files.length == 0) {
             return Collections.emptyList();
         }
@@ -196,7 +229,7 @@ public class FeedEvictor extends Configured implements Tool {
                 .replaceAll(VARS.MINUTE.regex(), "mm");
     }
 
-    private FileStatus[] findFilesForFeed(String feedBasePath) throws IOException {
+    private FileStatus[] findFilesForFeed(FileSystem fs, String feedBasePath) throws IOException {
 
         Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         while (matcher.find()) {
@@ -272,13 +305,13 @@ public class FeedEvictor extends Configured implements Tool {
         return date.compareTo(start) >= 0;
     }
 
-    private boolean deleteInstance(Path path) throws IOException {
+    private boolean deleteInstance(FileSystem fs, Path path) throws IOException {
         return fs.delete(path, true);
     }
 
-    private void debug(FileSystem myfs, Path outPath) throws IOException {
+    private void debug(FileSystem fs, Path outPath) throws IOException {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        InputStream instance = myfs.open(outPath);
+        InputStream instance = fs.open(outPath);
         IOUtils.copyBytes(instance, writer, 4096, true);
         LOG.debug("Instance Paths copied to " + outPath);
         LOG.debug("Written " + writer);
@@ -286,29 +319,128 @@ public class FeedEvictor extends Configured implements Tool {
 
     private CommandLine getCommand(String[] args) throws org.apache.commons.cli.ParseException {
         Options options = new Options();
-        Option opt;
-        opt = new Option("feedBasePath", true,
+
+        Option opt = new Option("feedBasePath", true,
                 "base path for feed, ex /data/feed/${YEAR}-${MONTH}");
         opt.setRequired(true);
         options.addOption(opt);
+
+        opt = new Option("falconFeedStorageType", true, "feed storage type, FileSystem or Table");
+        opt.setRequired(true);
+        options.addOption(opt);
+
         opt = new Option("retentionType", true,
                 "type of retention policy like delete, archive etc");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("retentionLimit", true,
                 "time limit for retention, ex hours(5), months(2), days(90)");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("timeZone", true, "timezone for feed, ex UTC");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("frequency", true,
                 "frequency of feed,  ex hourly, daily, monthly, minute, weekly, yearly");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("logFile", true, "log file for capturing size of feed");
         opt.setRequired(true);
         options.addOption(opt);
+
         return new GnuParser().parse(options, args);
+    }
+
+    private void evictTable(CatalogStorage storage, String retentionLimit, String timeZone)
+        throws Exception {
+
+        LOG.info("Applying retention on " + storage.getTable()
+                + ", Limit: " + retentionLimit + ", timezone: " + timeZone);
+
+        String datedPartitionKey = storage.getDatedPartitionKey();
+        String datePattern = storage.getPartitionValue(datedPartitionKey);
+        String dateMask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
+                .replaceAll(VARS.MONTH.regex(), "MM")
+                .replaceAll(VARS.DAY.regex(), "dd")
+                .replaceAll(VARS.HOUR.regex(), "HH")
+                .replaceAll(VARS.MINUTE.regex(), "mm");
+
+        List<CatalogPartition> toBeDeleted = discoverPartitionsToDelete(
+                storage, retentionLimit, timeZone, dateMask);
+        if (toBeDeleted.isEmpty()) {
+            LOG.info("No partitions to delete.");
+            return;
+        }
+
+        final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
+
+        dropPartitions(storage, toBeDeleted, isTableExternal);
+    }
+
+    private List<CatalogPartition> discoverPartitionsToDelete(CatalogStorage storage, String retentionLimit,
+                                                           String timeZone, String dateMask)
+        throws FalconException, ELException {
+
+        final String filter = createFilter(storage, retentionLimit, timeZone, dateMask);
+        return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), filter);
+    }
+
+    private String createFilter(CatalogStorage storage, String retentionLimit,
+                                String timeZone, String dateMask) throws ELException {
+
+        Pair<Date, Date> range = getDateRange(retentionLimit);
+        DateFormat dateFormat = new SimpleDateFormat(dateMask);
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        String beforeDate = dateFormat.format(range.first);
+
+        String datedPartitionKey = storage.getDatedPartitionKey();
+
+        StringBuilder filterBuffer = new StringBuilder();
+        filterBuffer.append(datedPartitionKey)
+                .append(" < ")
+                .append("'")
+                .append(beforeDate)
+                .append("'");
+
+        return filterBuffer.toString();
+    }
+
+    private void dropPartitions(CatalogStorage storage, List<CatalogPartition> partitionsToDelete,
+                                boolean isTableExternal) throws FalconException, IOException {
+
+        for (CatalogPartition partitionToDrop : partitionsToDelete) {
+            if (dropPartition(storage, partitionToDrop, isTableExternal)) {
+                LOG.info("Deleted partition: " + partitionToDrop.getValues());
+                buffer.append(partitionToDrop.getValues().get(0)).append(',');
+                instancePaths.append(partitionToDrop.getValues()).append(",");
+            }
+        }
+    }
+
+    private boolean dropPartition(CatalogStorage storage, CatalogPartition partitionToDrop,
+                                  boolean isTableExternal) throws FalconException, IOException {
+
+        String datedPartitionKey = storage.getDatedPartitionKey();
+
+        Map<String, String> partitions = new HashMap<String, String>();
+        partitions.put(datedPartitionKey, partitionToDrop.getValues().get(0));
+
+        boolean dropped = CatalogServiceFactory.getCatalogService().dropPartitions(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partitions);
+
+        boolean deleted = true;
+        if (isTableExternal) { // nuke the dirs if an external table
+            final String location = partitionToDrop.getLocation();
+            final Path path = new Path(location);
+            deleted = path.getFileSystem(new Configuration()).delete(path, true);
+        }
+
+        return dropped && deleted;
     }
 }

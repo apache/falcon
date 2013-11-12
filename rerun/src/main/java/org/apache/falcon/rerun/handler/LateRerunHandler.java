@@ -38,7 +38,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * An implementation of handler for late reruns.
@@ -49,10 +49,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
 
     @Override
-    public void handleRerun(String cluster, String entityType,
-                            String entityName, String nominalTime, String runId, String wfId,
-                            long msgReceivedTime) {
-
+    public void handleRerun(String cluster, String entityType, String entityName,
+                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             try {
@@ -72,15 +70,17 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             Long wait = getEventDelay(entity, nominalTime);
             if (wait == -1) {
                 LOG.info("Late rerun expired for entity: " + entityType + "(" + entityName + ")");
-                String logDir = this.getWfEngine().getWorkflowProperty(cluster,
-                        wfId, "logDir");
-                String srcClusterName = this.getWfEngine().getWorkflowProperty(
-                        cluster, wfId, "srcClusterName");
+
+                java.util.Properties properties =
+                        this.getWfEngine().getWorkflowProperties(cluster, wfId);
+                String logDir = properties.getProperty("logDir");
+                String srcClusterName = properties.getProperty("srcClusterName");
                 Path lateLogPath = this.getLateLogPath(logDir,
                         EntityUtil.fromUTCtoURIDate(nominalTime), srcClusterName);
+
                 LOG.info("Going to delete path:" + lateLogPath);
-                FileSystem fs = FileSystem.get(getConfiguration(cluster,
-                        wfId));
+                final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
+                FileSystem fs = FileSystem.get(getConfiguration(storageEndpoint));
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
                     if (deleted) {
@@ -93,9 +93,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             LOG.debug("Scheduling the late rerun for entity instance : "
                     + entityType + "(" + entityName + ")" + ":" + nominalTime
                     + " And WorkflowId: " + wfId);
-            LaterunEvent event = new LaterunEvent(cluster, wfId,
-                    msgInsertTime.getTime(), wait, entityType, entityName,
-                    nominalTime, intRunId);
+            LaterunEvent event = new LaterunEvent(cluster, wfId, msgInsertTime.getTime(),
+                    wait, entityType, entityName, nominalTime, intRunId);
             offerToQueue(event);
         } catch (Exception e) {
             LOG.error("Unable to schedule late rerun for entity instance : "
@@ -216,12 +215,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
     }
 
-    public Configuration getConfiguration(String cluster, String wfId) throws FalconException {
+    public static Configuration getConfiguration(String storageEndpoint) throws FalconException {
         Configuration conf = new Configuration();
-        conf.set(
-                CommonConfigurationKeys.FS_DEFAULT_NAME_KEY,
-                this.getWfEngine().getWorkflowProperty(cluster, wfId,
-                        AbstractWorkflowEngine.NAME_NODE));
+        conf.set(CommonConfigurationKeys.FS_DEFAULT_NAME_KEY, storageEndpoint);
         return conf;
     }
 }

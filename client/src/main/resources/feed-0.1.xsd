@@ -105,7 +105,10 @@
             </xs:element>
             <xs:element type="late-arrival" name="late-arrival" minOccurs="0"/>
             <xs:element type="clusters" name="clusters"/>
-            <xs:element type="locations" name="locations"/>
+            <xs:choice minOccurs="1" maxOccurs="1">
+                <xs:element type="locations" name="locations"/>
+                <xs:element type="catalog-table" name="table"/>
+            </xs:choice>
             <xs:element type="ACL" name="ACL"/>
             <xs:element type="schema" name="schema"/>
             <xs:element type="properties" name="properties" minOccurs="0"/>
@@ -139,7 +142,10 @@
         <xs:sequence>
             <xs:element type="validity" name="validity"/>
             <xs:element type="retention" name="retention"/>
-            <xs:element type="locations" name="locations" minOccurs="0"/>
+            <xs:choice minOccurs="0" maxOccurs="1">
+                <xs:element type="locations" name="locations" minOccurs="0"/>
+                <xs:element type="catalog-table" name="table"/>
+            </xs:choice>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
         <xs:attribute type="cluster-type" name="type" use="optional"/>
@@ -194,7 +200,7 @@
     <xs:complexType name="locations">
         <xs:annotation>
             <xs:documentation>
-                A list of locations.
+                A list of locations on the file system.
             </xs:documentation>
         </xs:annotation>
         <xs:choice maxOccurs="unbounded" minOccurs="0">
@@ -356,4 +362,14 @@
             <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:complexType name="catalog-table">
+        <xs:annotation>
+            <xs:documentation>
+                catalog specifies the uri of a Hive table along with the partition spec.
+                uri="catalog:$database:$table#(partition-key=partition-value);+"
+                Example: catalog:logs-db:clicks#ds=${YEAR}-${MONTH}-${DAY}
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="uri" use="required"/>
+    </xs:complexType>
 </xs:schema>

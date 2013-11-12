@@ -25,7 +25,7 @@ public class RetryEvent extends RerunEvent {
     private int attempts;
     private int failRetryCount;
 
-    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public RetryEvent(String clusterName, String wfId, long msgInsertTime,
                       long delay, String entityType, String entityName, String instance,
                       int runId, int attempts, int failRetryCount) {
@@ -34,7 +34,7 @@ public class RetryEvent extends RerunEvent {
         this.attempts = attempts;
         this.failRetryCount = failRetryCount;
     }
-    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public int getAttempts() {
         return attempts;

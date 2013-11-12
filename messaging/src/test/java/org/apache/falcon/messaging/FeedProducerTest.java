@@ -50,8 +50,6 @@ public class FeedProducerTest {
 
     private String[] args;
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-    // private static final String BROKER_URL =
-    // "tcp://localhost:61616?daemon=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "Falcon.process1.click-logs";
     private BrokerService broker;
@@ -209,5 +207,4 @@ public class FeedProducerTest {
                 "2012-01-01T01:00Z");
         Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
     }
-
 }

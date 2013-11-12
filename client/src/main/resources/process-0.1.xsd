@@ -292,6 +292,7 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="oozie"/>
             <xs:enumeration value="pig"/>
+            <xs:enumeration value="hive"/>
         </xs:restriction>
     </xs:simpleType>
 

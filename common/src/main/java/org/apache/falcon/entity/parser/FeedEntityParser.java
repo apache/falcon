@@ -20,8 +20,10 @@ package org.apache.falcon.entity.parser;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
@@ -71,6 +73,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             validateFeedCutOffPeriod(feed, cluster);
         }
 
+        validateFeedStorage(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
 
@@ -105,21 +108,20 @@ public class FeedEntityParser extends EntityParser<Feed> {
         return processes;
     }
 
-    private void validateFeedGroups(Feed feed) throws ValidationException {
+    private void validateFeedGroups(Feed feed) throws FalconException {
         String[] groupNames = feed.getGroups() != null ? feed.getGroups().split(",") : new String[]{};
-        String defaultPath = FeedHelper.getLocation(feed, LocationType.DATA)
-                .getPath();
+        final Storage storage = FeedHelper.createStorage(feed);
+        String defaultPath = storage.getUriTemplate(LocationType.DATA);
         for (Cluster cluster : feed.getClusters().getClusters()) {
-            if (!FeedGroup.getDatePattern(
-                    FeedHelper.getLocation(feed, LocationType.DATA,
-                            cluster.getName()).getPath()).equals(
+            final String uriTemplate = FeedHelper.createStorage(cluster, feed).getUriTemplate(LocationType.DATA);
+            if (!FeedGroup.getDatePattern(uriTemplate).equals(
                     FeedGroup.getDatePattern(defaultPath))) {
                 throw new ValidationException("Feeds default path pattern: "
-                        + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
+                        + storage.getUriTemplate(LocationType.DATA)
                         + ", does not match with cluster: "
                         + cluster.getName()
                         + " path pattern: "
-                        + FeedHelper.getLocation(feed, LocationType.DATA, cluster.getName()).getPath());
+                        + uriTemplate);
             }
         }
         for (String groupName : groupNames) {
@@ -127,7 +129,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (group != null && !group.canContainFeed(feed)) {
                 throw new ValidationException(
                         "Feed " + feed.getName() + "'s frequency: " + feed.getFrequency().toString()
-                                + ", path pattern: " + FeedHelper.getLocation(feed, LocationType.DATA).getPath()
+                                + ", path pattern: " + storage
                                 + " does not match with group: " + group.getName() + "'s frequency: "
                                 + group.getFrequency()
                                 + ", date pattern: " + group.getDatePattern());
@@ -159,9 +161,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
                     CrossEntityValidations.validateFeedRetentionPeriod(input.getStart(), newFeed, clusterName);
                     CrossEntityValidations.validateInstanceRange(process, input, newFeed);
 
-                    if (input.getPartition() != null) {
-                        CrossEntityValidations.validateInputPartition(input, newFeed);
-                    }
+                    validateInputPartition(newFeed, input);
                 }
             }
 
@@ -176,6 +176,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
             LOG.debug("Verified and found " + process.getName() + " to be valid for new definition of "
                     + newFeed.getName());
+        }
+    }
+
+    private void validateInputPartition(Feed newFeed, Input input) throws FalconException {
+        if (input.getPartition() == null) {
+            return;
+        }
+
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(newFeed);
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            CrossEntityValidations.validateInputPartition(input, newFeed);
+        } else if (baseFeedStorageType == Storage.TYPE.TABLE) {
+            throw new ValidationException("Input partitions are not supported for table storage: " + input.getName());
         }
     }
 
@@ -278,6 +291,76 @@ public class FeedEntityParser extends EntityParser<Feed> {
         if (FeedHelper.evaluateClusterExp(cluster, part).equals(part)) {
             throw new ValidationException(
                     "Alteast one of the partition tags has to be a cluster expression for cluster " + cl.getName());
+        }
+    }
+
+    /**
+     * Ensure table is already defined in the catalog registry.
+     * Does not matter for FileSystem storage.
+     */
+    private void validateFeedStorage(Feed feed) throws FalconException {
+        final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
+        validateMultipleSourcesExist(feed, baseFeedStorageType);
+        validateUniformStorageType(feed, baseFeedStorageType);
+        validatePartitions(feed, baseFeedStorageType);
+        validateStorageExists(feed);
+    }
+
+    private void validateMultipleSourcesExist(Feed feed, Storage.TYPE baseFeedStorageType) throws FalconException {
+        if (baseFeedStorageType == Storage.TYPE.FILESYSTEM) {
+            return;
+        }
+
+        // validate that there is only one source cluster
+        int numberOfSourceClusters = 0;
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            if (cluster.getType() == ClusterType.SOURCE) {
+                numberOfSourceClusters++;
+            }
+        }
+
+        if (numberOfSourceClusters > 1) {
+            throw new ValidationException("Multiple sources are not supported for feed with table storage: "
+                    + feed.getName());
+        }
+    }
+
+    private void validateUniformStorageType(Feed feed, Storage.TYPE feedStorageType) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Storage.TYPE feedClusterStorageType = FeedHelper.getStorageType(feed, cluster);
+
+            if (feedStorageType != feedClusterStorageType) {
+                throw new ValidationException("The storage type is not uniform for cluster: " + cluster.getName());
+            }
+        }
+    }
+
+    private void validatePartitions(Feed feed, Storage.TYPE storageType) throws  FalconException {
+        if (storageType == Storage.TYPE.TABLE && feed.getPartitions() != null) {
+            throw new ValidationException("Partitions are not supported for feeds with table storage. "
+                    + "It should be defined as part of the table URI. "
+                    + feed.getName());
+        }
+    }
+
+    private void validateStorageExists(Feed feed) throws FalconException {
+        StringBuilder buffer = new StringBuilder();
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            final Storage storage = FeedHelper.createStorage(cluster, feed);
+            if (!storage.exists()) {
+                // this is only true for table, filesystem always returns true
+                CatalogStorage catalogStorage = (CatalogStorage) storage;
+                buffer.append("Table [")
+                        .append(catalogStorage.getTable())
+                        .append("] does not exist for feed: ")
+                        .append(feed.getName())
+                        .append(", cluster: ")
+                        .append(cluster.getName());
+            }
+        }
+
+        if (buffer.length() > 0) {
+            throw new ValidationException(buffer.toString());
         }
     }
 }

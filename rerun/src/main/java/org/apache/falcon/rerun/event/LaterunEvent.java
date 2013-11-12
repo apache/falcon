@@ -22,14 +22,14 @@ package org.apache.falcon.rerun.event;
  */
 public class LaterunEvent extends RerunEvent {
 
-    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
-    public LaterunEvent(String clusterName, String wfId, long msgInsertTime,
-                        long delay, String entityType, String entityName, String instance,
-                        int runId) {
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public LaterunEvent(String clusterName, String wfId, long msgInsertTime, long delay,
+                        String entityType, String entityName, String instance, int runId) {
         super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
                 instance, runId);
     }
-    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
 
     @Override
     public String toString() {

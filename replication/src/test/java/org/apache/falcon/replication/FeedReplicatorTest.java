@@ -17,6 +17,8 @@
  */
 package org.apache.falcon.replication;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.testng.Assert;
@@ -38,11 +40,17 @@ public class FeedReplicatorTest {
          * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
          * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
          */
+        final String[] args = {
+            "true",
+            "-maxMaps", "5",
+            "-sourcePaths", "hdfs://localhost:8020/tmp/",
+            "-targetPath", "hdfs://localhost1:8020/tmp/",
+            "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+        };
+
         FeedReplicator replicator = new FeedReplicator();
-        DistCpOptions options = replicator.getDistCpOptions(new String[] {
-            "true", "-maxMaps", "5", "-sourcePaths",
-            "hdfs://localhost:8020/tmp/", "-targetPath",
-            "hdfs://localhost1:8020/tmp/", });
+        CommandLine cmd = replicator.getCommand(args);
+        DistCpOptions options = replicator.getDistCpOptions(cmd);
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));

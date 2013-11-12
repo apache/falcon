@@ -28,60 +28,22 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
+APP_TYPE=$1
+. ${BASEDIR}/bin/falcon-config.sh 'server' "$APP_TYPE"
 
-
-mkdir -p ${BASEDIR}/logs
-
-if test -z ${JAVA_HOME}
-then
-    JAVA_BIN=java
-else
-    JAVA_BIN=${JAVA_HOME}/bin/java
+# make sure the process is not running
+if [ -f $FALCON_PID_FILE ]; then
+  if kill -0 `cat $FALCON_PID_FILE` > /dev/null 2>&1; then
+    echo $APP_TYPE running as process `cat $FALCON_PID_FILE`.  Stop it first.
+    exit 1
+  fi
 fi
+
+mkdir -p $FALCON_LOG_DIR
 
 pushd ${BASEDIR} > /dev/null
 
-APP_TYPE=$1
-if [ ! -d ${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF ]; then
-  mkdir -p ${BASEDIR}/server/webapp/$APP_TYPE
-  cd ${BASEDIR}/server/webapp/$APP_TYPE
-  jar -xf ../$APP_TYPE.war
-  cd -
-fi
-
-FALCONCPPATH="$FALCON_CONF:${BASEDIR}/conf:${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/classes:"
-for i in "${BASEDIR}/server/webapp/$APP_TYPE/WEB-INF/lib/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-
-for i in "${BASEDIR}/libext/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-
-HADOOPDIR=`which hadoop`
-if [ "$HADOOPDIR" != "" ]; then
-  echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
-  FALCONCPPATH="${FALCONCPPATH}:`hadoop classpath`"
-elif [ "$HADOOP_HOME" != "" ]; then
-  echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into falcon classpath"
-  for i in "${HADOOP_HOME}/lib/"*.jar; do
-    FALCONCPPATH="${FALCONCPPATH}:$i"
-  done
-else
-  echo "Could not find installed hadoop and HADOOP_HOME is not set."
-  echo "Using the default jars bundled in ${BASEDIR}/hadooplibs/"
-  for i in "${BASEDIR}/hadooplibs/"*.jar; do
-    FALCONCPPATH="${FALCONCPPATH}:$i"
-  done
-fi
-
-if [ -z "$FALCON_CONF" ]; then
-  CONF_PATH=${BASEDIR}/conf
-else
-  CONF_PATH=$FALCON_CONF
-fi
- 
-JAVA_PROPERTIES="$FALCON_OPTS $FALCON_PROPERTIES -Dfalcon.embeddedmq.data=${BASEDIR}/logs/data -Dfalcon.home=${BASEDIR} -Dconfig.location=$CONF_PATH"
+JAVA_PROPERTIES="$FALCON_OPTS $FALCON_PROPERTIES -Dfalcon.log.dir=$FALCON_LOG_DIR -Dfalcon.embeddedmq.data=$FALCON_DATA_DIR -Dfalcon.home=${FALCON_HOME_DIR} -Dconfig.location=$FALCON_CONF -Dfalcon.app.type=$APP_TYPE"
 shift
 
 while [[ ${1} =~ ^\-D ]]; do
@@ -90,9 +52,8 @@ while [[ ${1} =~ ^\-D ]]; do
 done
 TIME=`date +%Y%m%d%H%M%s`
 
-
-nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/*.war $* 2> ${BASEDIR}/logs/$APP_TYPE.out.$TIME &
-echo $! > ${BASEDIR}/logs/$APP_TYPE.pid
+nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.Main -app ${BASEDIR}/server/webapp/${APP_TYPE}.war $* > "${FALCON_LOG_DIR}/$APP_TYPE.out.$TIME" 2>&1 < /dev/null &
+echo $! > $FALCON_PID_FILE
 popd > /dev/null
 
-echo "Falcon started using hadoop version: " `${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.hadoop.util.VersionInfo | head -1`
+echo "$APP_TYPE started using hadoop version: " `${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.hadoop.util.VersionInfo | head -1`

@@ -101,21 +101,24 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                 retryHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
                         System.currentTimeMillis());
+
                 GenericAlert.instrumentFailedInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         "", "", duration);
+
             } else if (status.equalsIgnoreCase("SUCCEEDED")) {
                 latedataHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId,
                         System.currentTimeMillis());
+
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
                         entityName, nominalTime, workflowId, runId, operation,
                         SchemaHelper.formatDateUTC(startTime),
                         duration);
+
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }
-
         } catch (JMSException e) {
             LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
         } catch (FalconException e) {

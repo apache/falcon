@@ -306,7 +306,7 @@ public class FalconClient {
                 getServletInputStream(clusters, sourceClusters, null), null, colo);
     }
 
-    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public String rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
                                  String clusters, String sourceClusters)
@@ -330,7 +330,7 @@ public class FalconClient {
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
                 getServletInputStream(clusters, sourceClusters, temp), null, colo);
     }
-    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String rerunInstances(String type, String entity, String start,
                                  String end, String colo, String clusters, String sourceClusters)

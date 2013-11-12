@@ -84,7 +84,7 @@ public abstract class AbstractCleanupHandler {
         return paths;
     }
 
-    private FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
+    protected FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
         throws FalconException {
 
         FileSystem fs;
@@ -101,6 +101,16 @@ public abstract class AbstractCleanupHandler {
         throws FalconException {
 
         FileStatus[] logs = getAllLogs(cluster, entity);
+        delete(cluster, entity, retention, logs);
+    }
+
+    protected void delete(Cluster cluster, Entity entity, long retention, FileStatus[] logs)
+        throws FalconException {
+        if (logs == null || logs.length == 0) {
+            LOG.info("Nothing to delete for cluster: " + cluster.getName() + ", entity: " + entity.getName());
+            return;
+        }
+
         long now = System.currentTimeMillis();
 
         for (FileStatus log : logs) {
@@ -126,7 +136,6 @@ public abstract class AbstractCleanupHandler {
                         + log.getPath());
             }
         }
-
     }
 
     private void deleteParentIfEmpty(FileSystem fs, Path parent) throws IOException {
@@ -136,7 +145,6 @@ public abstract class AbstractCleanupHandler {
             fs.delete(parent, true);
             deleteParentIfEmpty(fs, parent.getParent());
         }
-
     }
 
     public abstract void cleanup() throws FalconException;

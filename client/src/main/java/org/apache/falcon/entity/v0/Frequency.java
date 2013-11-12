@@ -46,9 +46,9 @@ public class Frequency {
     }
 
     private TimeUnit timeUnit;
-    private int frequency;
+    private String frequency;
 
-    public Frequency(int freq, TimeUnit timeUnit) {
+    public Frequency(String freq, TimeUnit timeUnit) {
         this.frequency = freq;
         this.timeUnit = timeUnit;
     }
@@ -60,7 +60,7 @@ public class Frequency {
         }
 
         timeUnit = TimeUnit.valueOf(matcher.group(1));
-        frequency = Integer.valueOf(matcher.group(2));
+        frequency = matcher.group(2);
     }
 
     public static Frequency fromString(String strValue) {
@@ -80,8 +80,12 @@ public class Frequency {
         return timeUnit;
     }
 
-    public int getFrequency() {
+    public String getFrequency() {
         return frequency;
+    }
+
+    public int getFrequencyAsInt() {
+        return Integer.valueOf(frequency);
     }
 
     @Override
@@ -95,7 +99,7 @@ public class Frequency {
         }
 
         Frequency freq = (Frequency) obj;
-        return this == freq || this.getFrequency() == freq.getFrequency()
+        return this == freq || this.getFrequency().equals(freq.getFrequency())
                 && this.getTimeUnit() == freq.getTimeUnit();
 
     }
@@ -103,7 +107,7 @@ public class Frequency {
     @Override
     public int hashCode() {
         int result = timeUnit.hashCode();
-        result = 31 * result + frequency;
+        result = 31 * result + frequency.hashCode();
         return result;
     }
 }

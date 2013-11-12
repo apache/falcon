@@ -40,22 +40,27 @@ Tar is structured as follows
    |- falcon
    |- falcon-start
    |- falcon-stop
+   |- falcon-config.sh
+   |- service-start.sh
+   |- service-stop.sh
 |- conf
    |- startup.properties
    |- runtime.properties
    |- client.properties
    |- log4j.xml
-|- src
+   |- falcon-env.sh
 |- docs
 |- client
    |- lib (client support libs)
 |- server
    |- webapp
-      |- classes (serer support classes)
-      |- lib (server support libs)
-   |- falcon.war
-|- logs (application log files & temp data files)
-   |- falcon.pid
+      |- falcon.war
+|- hadooplibs
+|- README
+|- NOTICE.txt
+|- LICENSE.txt
+|- DISCLAIMER.txt
+|- CHANGES.txt
 
 2. Installing & running Falcon
 ------------------------------
@@ -63,8 +68,8 @@ Tar is structured as follows
 a. Installing falcon
 ~~~~~~~~~~~~~~~~~~~~
 
-* tar -xzvf falcon-${project.version}.tar.gz
-* cd falcon-main-${project.version}
+* tar -xzvf falcon-${project.version}-bin.tar.gz
+* cd falcon-${project.version}
 
 b. Starting Falcon Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,4 +96,4 @@ d. Stopping Falcon Server
 * cd <<project home>>
 * src/bin/pacakge.sh <<hadoop-version>>
   >> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
-  >> oozie bundle available in target/package/oozie-3.2.0-incubating/distro/target/oozie-3.2.2-distro.tar.gz
+  >> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz

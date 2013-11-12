@@ -73,9 +73,9 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
         properties.put(inName + ".done-flag", "notused");
 
-        String locPath = FeedHelper.getLocation(feed, LocationType.DATA, clusterName).getPath().replace('$', '%');
-        properties.put(inName + ".uri-template",
-                new Path(locPath).toUri().getScheme() != null ? locPath : "${nameNode}" + locPath);
+        String locPath = FeedHelper.createStorage(clusterName, feed)
+                .getUriTemplate(LocationType.DATA).replace('$', '%');
+        properties.put(inName + ".uri-template", locPath);
 
         properties.put(inName + ".start-instance", in.getStart());
         properties.put(inName + ".end-instance", in.getEnd());

@@ -28,22 +28,7 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
-
-FALCONCPPATH="$FALCON_CONF:${BASEDIR}/conf:"
-for i in "${BASEDIR}/client/lib/"*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-for i in "${BASEDIR}/server/webapp/"*/WEB-INF/lib/*.jar; do
-  FALCONCPPATH="${FALCONCPPATH}:$i"
-done
-
-
-if test -z ${JAVA_HOME}
-then
-    JAVA_BIN=java
-else
-    JAVA_BIN=${JAVA_HOME}/bin/java
-fi
+. ${BASEDIR}/bin/falcon-config.sh 'client'
 
 JAVA_PROPERTIES="$FALCON_OPTS"
 while [[ ${1} =~ ^\-D ]]; do
@@ -51,4 +36,3 @@ while [[ ${1} =~ ^\-D ]]; do
   shift
 done
 ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"
-

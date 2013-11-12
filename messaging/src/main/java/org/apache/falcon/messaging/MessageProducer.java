@@ -129,7 +129,11 @@ public class MessageProducer extends Configured implements Tool {
     }
 
     private static void addOption(Options options, Option opt) {
-        opt.setRequired(true);
+        addOption(options, opt, true);
+    }
+
+    private static void addOption(Options options, Option opt, boolean isRequired) {
+        opt.setRequired(isRequired);
         options.addOption(opt);
     }
 
@@ -172,5 +176,4 @@ public class MessageProducer extends Configured implements Tool {
         }
         return 0;
     }
-
 }

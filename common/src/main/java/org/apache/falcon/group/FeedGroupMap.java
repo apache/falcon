@@ -114,8 +114,8 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
         return groupSet;
     }
 
-    public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed) {
+    public Set<FeedGroup> getGroups(org.apache.falcon.entity.v0.feed.Feed feed) throws FalconException {
         return getGroups(feed.getGroups(), feed.getFrequency(),
-                FeedHelper.getLocation(feed, LocationType.DATA).getPath());
+                FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA));
     }
 }

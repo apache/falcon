@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.latedata.LateDataHandler;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -71,11 +72,9 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                 return;
             }
 
-            LOG.info("Late changes detected in the following feeds: "
-                    + detectLate);
+            LOG.info("Late changes detected in the following feeds: " + detectLate);
 
-            handler.getWfEngine().reRun(message.getClusterName(),
-                    message.getWfId(), null);
+            handler.getWfEngine().reRun(message.getClusterName(), message.getWfId(), null);
             LOG.info("Scheduled late rerun for wf-id: " + message.getWfId()
                     + " on cluster: " + message.getClusterName());
         } catch (Exception e) {
@@ -95,54 +94,48 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
     public String detectLate(LaterunEvent message) throws Exception {
         LateDataHandler late = new LateDataHandler();
-        String falconInputFeeds = handler.getWfEngine().getWorkflowProperty(
-                message.getClusterName(), message.getWfId(), "falconInputFeeds");
-        String logDir = handler.getWfEngine().getWorkflowProperty(
-                message.getClusterName(), message.getWfId(), "logDir");
-        String falconInPaths = handler.getWfEngine().getWorkflowProperty(
-                message.getClusterName(), message.getWfId(), "falconInPaths");
-        String nominalTime = handler.getWfEngine().getWorkflowProperty(
-                message.getClusterName(), message.getWfId(), "nominalTime");
-        String srcClusterName = handler.getWfEngine().getWorkflowProperty(
-                message.getClusterName(), message.getWfId(), "srcClusterName");
+        Properties properties = handler.getWfEngine().getWorkflowProperties(
+                message.getClusterName(), message.getWfId());
+        String falconInputFeeds = properties.getProperty("falconInputFeeds");
+        String falconInPaths = properties.getProperty("falconInPaths");
+        String falconInputFeedStorageTypes = properties.getProperty("falconInputFeedStorageTypes");
+        String logDir = properties.getProperty("logDir");
+        String nominalTime = properties.getProperty("nominalTime");
+        String srcClusterName = properties.getProperty("srcClusterName");
+        Path lateLogPath = handler.getLateLogPath(logDir, nominalTime, srcClusterName);
 
-        Configuration conf = handler.getConfiguration(message.getClusterName(),
-                message.getWfId());
-        Path lateLogPath = handler.getLateLogPath(logDir, nominalTime,
-                srcClusterName);
+        final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
+        Configuration conf = LateRerunHandler.getConfiguration(storageEndpoint);
         FileSystem fs = FileSystem.get(conf);
         if (!fs.exists(lateLogPath)) {
             LOG.warn("Late log file:" + lateLogPath + " not found:");
             return "";
         }
-        Map<String, Long> feedSizes = new LinkedHashMap<String, Long>();
+
         String[] pathGroups = falconInPaths.split("#");
         String[] inputFeeds = falconInputFeeds.split("#");
-        Entity entity = EntityUtil.getEntity(message.getEntityType(),
-                message.getEntityName());
+        String[] inputFeedStorageTypes = falconInputFeedStorageTypes.split("#");
 
-        List<String> lateFeed = new ArrayList<String>();
+        Map<String, Long> computedMetrics = new LinkedHashMap<String, Long>();
+        Entity entity = EntityUtil.getEntity(message.getEntityType(), message.getEntityName());
         if (EntityUtil.getLateProcess(entity) != null) {
-            for (LateInput li : EntityUtil.getLateProcess(entity)
-                    .getLateInputs()) {
+            List<String> lateFeed = new ArrayList<String>();
+            for (LateInput li : EntityUtil.getLateProcess(entity).getLateInputs()) {
                 lateFeed.add(li.getInput());
             }
+
             for (int index = 0; index < pathGroups.length; index++) {
                 if (lateFeed.contains(inputFeeds[index])) {
-                    long usage = 0;
-                    for (String pathElement : pathGroups[index].split(",")) {
-                        Path inPath = new Path(pathElement);
-                        usage += late.usage(inPath, conf);
-                    }
-                    feedSizes.put(inputFeeds[index], usage);
+                    long computedMetric = late.computeStorageMetric(
+                            pathGroups[index], inputFeedStorageTypes[index], conf);
+                    computedMetrics.put(inputFeeds[index], computedMetric);
                 }
             }
         } else {
             LOG.warn("Late process is not configured for entity: "
-                    + message.getEntityType() + "(" + message.getEntityName()
-                    + ")");
+                    + message.getEntityType() + "(" + message.getEntityName() + ")");
         }
 
-        return late.detectChanges(lateLogPath, feedSizes, conf);
+        return late.detectChanges(lateLogPath, computedMetrics, conf);
     }
 }

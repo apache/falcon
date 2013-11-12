@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.group;
 
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.Frequency;
@@ -93,8 +94,9 @@ public class FeedGroup {
         return datePattern;
     }
 
-    public boolean canContainFeed(org.apache.falcon.entity.v0.feed.Feed feed) {
+    public boolean canContainFeed(org.apache.falcon.entity.v0.feed.Feed feed) throws FalconException {
         return this.frequency.equals(feed.getFrequency())
-                && this.datePattern.equals(getDatePattern(FeedHelper.getLocation(feed, LocationType.DATA).getPath()));
+                && this.datePattern.equals(getDatePattern(
+                    FeedHelper.createStorage(feed).getUriTemplate(LocationType.DATA)));
     }
 }

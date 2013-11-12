@@ -81,7 +81,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
 
-    public abstract String getWorkflowProperty(String cluster, String jobId, String property) throws FalconException;
+    public abstract Properties getWorkflowProperties(String cluster, String jobId) throws FalconException;
 
     public abstract InstancesResult getJobDetails(String cluster, String jobId) throws FalconException;
 }

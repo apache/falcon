@@ -56,7 +56,7 @@ public class FalconPostProcessing extends Configured implements Tool {
         USER_BRKR_URL("userBrokerUrl", "user broker url"),
         BRKR_TTL("brokerTTL", "time to live for broker message in sec"),
         FEED_NAMES("feedNames", "name of the feeds which are generated/replicated/deleted"),
-        FEED_INSTANCE_PATHS("feedInstancePaths", "comma seperated feed instance paths"),
+        FEED_INSTANCE_PATHS("feedInstancePaths", "comma separated feed instance paths"),
         LOG_FILE("logFile", "log file path where feeds to be deleted are recorded"),
         WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie"),
         USER_SUBFLOW_ID("subflowId", "external id of user workflow"),

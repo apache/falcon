@@ -85,6 +85,55 @@ individual operations performed are recorded into a transaction journal. This jo
 the overall user action. In some cases, it is not possible to undo the action. In such cases, Falcon attempts
 to keep the system in an consistent state.
 
+---+++ Storage
+Falcon introduces a new abstraction to encapsulate the storage for a given feed which can either be
+expressed as a path on the file system, File System Storage or a table in a catalog such as Hive, Catalog Storage.
+
+<verbatim>
+    <xs:choice minOccurs="1" maxOccurs="1">
+        <xs:element type="locations" name="locations"/>
+        <xs:element type="catalog-table" name="table"/>
+    </xs:choice>
+</verbatim>
+
+Feed should contain one of the two storage options. Locations on File System or Table in a Catalog.
+
+---++++ File System Storage
+
+This is expressed as a location on the file system. Location specifies where the feed is available on this cluster.
+A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
+A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is
+generated periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
+The granularity of date pattern in the path should be at least that of a frequency of a feed.
+
+<verbatim>
+ <location type="data" path="/projects/falcon/clicks" />
+ <location type="stats" path="/projects/falcon/clicksStats" />
+ <location type="meta" path="/projects/falcon/clicksMetaData" />
+</verbatim>
+
+---++++ Catalog Storage (Table)
+
+A table tag specifies the table URI in the catalog registry as:
+<verbatim>
+catalog:$database-name:$table-name#partition-key=partition-value);partition-key=partition-value);*
+</verbatim>
+
+This is modeled as a URI (similar to an ISBN URI). It does not have any reference to Hive or HCatalog. Its quite
+generic so it can be tied to other implementations of a catalog registry. The catalog implementation specified
+in the startup config provides implementation for the catalog URI.
+
+Top-level partition has to be a dated pattern and the granularity of date pattern should be at least that
+of a frequency of a feed.
+
+Examples:
+<verbatim>
+<table uri="catalog:default:clicks#ds=${YEAR}-${MONTH}-${DAY}-${HOUR};region=${region}" />
+<table uri="catalog:src_demo_db:customer_raw#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+<table uri="catalog:tgt_demo_db:customer_bcp#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
+</verbatim>
+
+
 ---++ Entity Management actions
 All the following operation can also be done using [[restapi/ResourceList][Falcon's RESTful API]].
 
@@ -171,7 +220,7 @@ In all the cases where your request is syntactically correct but logically not, 
 
 ---++ Retention
 In coherence with it's feed lifecycle management philosophy, Falcon allows the user to retain data in the system
-for a specific period of time for a scheduled feed. The user can specify the retention period in the respective 
+for a specific period of time for a scheduled feed. The user can specify the retention period in the respective
 feed/data xml in the following manner for each cluster the feed can belong to :
 <verbatim>
 <clusters>
@@ -186,6 +235,8 @@ feed/data xml in the following manner for each cluster the feed can belong to :
 The 'limit' attribute can be specified in units of minutes/hours/days/months, and a corresponding numeric value can
 be attached to it. It essentially instructs the system to retain data spanning from the current moment to the time specified
 in the attribute spanning backwards in time. Any data beyond the limit (past/future) is erased from the system.
+
+With the integration of Hive, Falcon also provides retention for tables in Hive catalog.
 
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
@@ -229,18 +280,27 @@ Ideally, the feeds data path should have the same granularity as that for freque
 </verbatim>
 
 If more than 1 source cluster is defined, then partition expression is compulsory, a partition can also have a constant.
-The expression is required to avoid copying data from different source location to the same target location, also only the data in the partition is considered for replication if it is present. The partitions defined in the cluster should be less than or equal to the number of partition declared in the feed definition.
+The expression is required to avoid copying data from different source location to the same target location,
+also only the data in the partition is considered for replication if it is present. The partitions defined in the
+cluster should be less than or equal to the number of partition declared in the feed definition.
 
-Falcon uses pull based replication mechanism, meaning in every target cluster, for a given source cluster, a coordinator is scheduled which pulls the data using distcp from source cluster. So in the above example, 2 coordinators are scheduled in backupCluster, one which pulls the data from sourceCluster1 and another from sourceCluster2.
-Also, for every feed instance which is replicated Falcon sends a JMS message on success or failure of replication instance.
+Falcon uses pull based replication mechanism, meaning in every target cluster, for a given source cluster,
+a coordinator is scheduled which pulls the data using distcp from source cluster. So in the above example,
+2 coordinators are scheduled in backupCluster, one which pulls the data from sourceCluster1 and another
+from sourceCluster2. Also, for every feed instance which is replicated Falcon sends a JMS message on success or
+failure of replication instance.
 
-Replication can be scheduled with the past date, the time frame considered for replication is the minimum overlapping window of start and end time of source and target cluster, ex: if s1 and e1 is the start and end time of source cluster respectively,
-and s2 and e2 of target cluster, then the coordinator is scheduled in target cluster with start time max(s1,s2) and min(e1,e2).
+Replication can be scheduled with the past date, the time frame considered for replication is the minimum
+overlapping window of start and end time of source and target cluster, ex: if s1 and e1 is the start and end time
+of source cluster respectively, and s2 and e2 of target cluster, then the coordinator is scheduled in
+target cluster with start time max(s1,s2) and min(e1,e2).
 
-A feed can also optionally specify the delay for replication instance in the cluster tag, the delay governs the replication instance delays. If the frequency of the feed is hours(2) and delay is hours(1), then the replication instance will run every 2 hours and replicates data with an offset of 1 hour, i.e. at
-09:00 UTC, feed instance which is eligible for replication is 08:00; and 11:00 UTC, feed instance of 10:00 UTC is eligible and so on.
+A feed can also optionally specify the delay for replication instance in the cluster tag, the delay governs the
+replication instance delays. If the frequency of the feed is hours(2) and delay is hours(1), then the replication
+instance will run every 2 hours and replicates data with an offset of 1 hour, i.e. at 09:00 UTC, feed instance which
+is eligible for replication is 08:00; and 11:00 UTC, feed instance of 10:00 UTC is eligible and so on.
 
----+++ Where is the feed path defined?
+---+++ Where is the feed path defined for File System Storage?
 
 It's defined in the feed xml within the location tag.
 
@@ -273,6 +333,22 @@ may have a different feed path.
         </cluster>
     </clusters>
 </verbatim>
+
+---+++ Hive Table Replication
+
+With the integration of Hive, Falcon adds table replication of Hive catalog tables. Replication will be triggered
+for a partition when the partition is complete at the source.
+
+   * Falcon will use HCatalog (Hive) API to export the data for a given table and the partition,
+which will result in a data collection that includes metadata on the data's storage format, the schema,
+how the data is sorted, what table the data came from, and values of any partition keys from that table.
+   * Falcon will use DistCp tool to copy the exported data collection into the secondary cluster into a staging
+directory used by Falcon.
+   * Falcon will then import the data into HCatalog (Hive) using the HCatalog (Hive) API. If the specified table does
+not yet exist, Falcon will create it, using the information in the imported metadata to set defaults for the table
+such as schema, storage format, etc.
+   * The partition is not complete and hence not visible to users until all the data is committed on the secondary
+cluster, (no dirty reads)
 
 
 ---+++ Relation between feed's retention limit and feed's late arrival cut off period:
@@ -454,6 +530,9 @@ explicitly set the feed names in late-input which needs to be checked for late d
         <late-input input="clicks" workflow-path="hdfs://clicks/late/workflow" />
    </late-process>
 </verbatim>
+
+*NOTE:* Feeds configured with table storage does not support late input data handling at this point. This will be
+made available in the near future.
 
 ---++ Idempotency
 All the operations in Falcon are Idempotent. That is if you make same request to the falcon server / prism again you will get a SUCCESSFUL return if it was SUCCESSFUL in the first attempt. For example, you submit a new process / feed and get SUCCESSFUL message return. Now if you run the same command / api request on same entity you will again get a SUCCESSFUL message. Same is true for other operations like schedule, kill, suspend and resume.

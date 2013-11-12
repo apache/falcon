@@ -27,8 +27,11 @@ import org.apache.falcon.entity.parser.ProcessEntityParser;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Partition;
 import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
@@ -39,6 +42,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.io.InputStream;
 
 /**
  * Test for Update helper methods.
@@ -117,11 +122,11 @@ public class UpdateHelperTest extends AbstractTestBase {
         newFeed.getLateArrival().setCutOff(oldFeed.getLateArrival().getCutOff());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        FeedHelper.getLocation(newFeed, LocationType.DATA).setPath("/test");
+        getLocation(newFeed, LocationType.DATA).setPath("/test");
         Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
-        FeedHelper.getLocation(newFeed, LocationType.DATA).setPath(
-                FeedHelper.getLocation(oldFeed, LocationType.DATA).getPath());
+        getLocation(newFeed, LocationType.DATA).setPath(
+                getLocation(oldFeed, LocationType.DATA).getPath());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
 
         newFeed.setFrequency(Frequency.fromString("months(1)"));
@@ -153,5 +158,51 @@ public class UpdateHelperTest extends AbstractTestBase {
                 setStart(FeedHelper.getCluster(oldFeed,
                         process.getClusters().getClusters().get(0).getName()).getValidity().getStart());
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+    }
+
+    @Test
+    public void testShouldUpdateTable() throws Exception {
+        InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
+        Feed oldTableFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(inputStream);
+        getStore().publish(EntityType.FEED, oldTableFeed);
+
+        String cluster = "testCluster";
+        Feed newTableFeed = (Feed) oldTableFeed.copy();
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldTableFeed, newTableFeed, cluster));
+
+        newTableFeed.setGroups("newgroups");
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldTableFeed, newTableFeed, cluster));
+        newTableFeed.setFrequency(Frequency.fromString("days(1)"));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldTableFeed, newTableFeed, cluster));
+
+        final CatalogTable table = new CatalogTable();
+        table.setUri("catalog:default:clicks-blah#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}");
+        newTableFeed.setTable(table);
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldTableFeed, newTableFeed, cluster));
+
+        inputStream = getClass().getResourceAsStream("/config/process/process-table.xml");
+        Process oldProcess = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(inputStream);
+        Process newProcess = (Process) oldProcess.copy();
+
+        newProcess.getRetry().setPolicy(PolicyType.FINAL);
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
+        newProcess.setFrequency(Frequency.fromString("days(1)"));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldProcess, newProcess, cluster));
+    }
+
+    private static Location getLocation(Feed feed, LocationType type) {
+        return getLocation(feed.getLocations(), type);
+    }
+
+    private static Location getLocation(Locations locations, LocationType type) {
+        for (Location loc : locations.getLocations()) {
+            if (loc.getType() == type) {
+                return loc;
+            }
+        }
+        Location loc = new Location();
+        loc.setPath("/tmp");
+        loc.setType(type);
+        return loc;
     }
 }

@@ -55,12 +55,22 @@ public class EntityInstanceMessage {
      * properties available in feed entity operation workflow.
      */
     public enum ARG {
-        entityName("entityName"), feedNames("feedNames"), feedInstancePaths(
-                "feedInstancePaths"), workflowId("workflowId"), runId("runId"), nominalTime(
-                "nominalTime"), timeStamp("timeStamp"), brokerUrl("broker.url"), brokerImplClass(
-                "broker.impl.class"), entityType("entityType"), operation(
-                "operation"), logFile("logFile"), topicName("topicName"), status(
-                "status"), brokerTTL("broker.ttlInMins"), cluster("cluster");
+        entityName("entityName"),
+        feedNames("feedNames"),
+        feedInstancePaths("feedInstancePaths"),
+        workflowId("workflowId"),
+        runId("runId"),
+        nominalTime("nominalTime"),
+        timeStamp("timeStamp"),
+        brokerUrl("broker.url"),
+        brokerImplClass("broker.impl.class"),
+        entityType("entityType"),
+        operation("operation"),
+        logFile("logFile"),
+        topicName("topicName"),
+        status("status"),
+        brokerTTL("broker.ttlInMins"),
+        cluster("cluster");
 
         private String propName;
 
@@ -219,6 +229,5 @@ public class EntityInstanceMessage {
         DateFormat falconFormat = new SimpleDateFormat(
                 "yyyy'-'MM'-'dd'T'HH':'mm'Z'");
         return falconFormat.format(nominalDate);
-
     }
 }

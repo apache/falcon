@@ -56,7 +56,6 @@ public class RerunEventFactory<T extends RerunEvent> {
                 map.get("entityType"), map.get("entityName"), map.get("instance"),
                 Integer.parseInt(map.get("runId")), Integer.parseInt(map.get("attempts")),
                 Integer.parseInt(map.get("failRetryCount")));
-
     }
 
     private Map<String, String> getMap(String message) {
@@ -68,5 +67,4 @@ public class RerunEventFactory<T extends RerunEvent> {
         }
         return map;
     }
-
 }

@@ -5,13 +5,92 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+  
+    FALCON-85 Hive (HCatalog) integration. (Venkatesh Seetharam
+    via Srikanth Sundarrajan)
+
+    FALCON-163 Merge FALCON-85 branch into main line. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-169 multiple "/" in target for replication for
+    multi target feed. (Venkatesh Seetharam)
+
+    FALCON-168 Different validity of clusters in feed
+    not handled. (Venkatesh Seetharam)
+
+    FALCON-154 Remove webhcat startup in HadoopStartupListener
+    as its not used. (Venkatesh Seetharam)
+
+    FALCON-161 Feed evictor evicts instances not eligible when
+    pattern has dash. (Venkatesh Seetharam)
+
+    FALCON-143 Enable Late data handling for hive tables.
+    (Venkatesh Seetharam)
+
+    FALCON-95 Enable embedding hive scripts directly in a process.
+    (Venkatesh Seetharam)
+
+    FALCON-153 Feed Storage type isn't passed in replication.
+    (Venkatesh Seetharam)
+
+    FALCON-91 Handle feed updates in purview of tables. (Venkatesh
+    Seetharam via Srikanth Sundarrajan) 
+
+    FALCON-104 FALCON-86 introduces a backward incompatible change.
+    (Venkatesh Seetharam via Srikanth Sundarrajan)
+
+    FALCON-113 Update documentation for Hive integration. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-129 Disable Late data handling for hive tables. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-90 Propagate hive table through Process mapper. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-93 Replication to handle hive table replication. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-94 Retention to handle hive table eviction. (Venkatesh 
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-102 Add integration tests for feed entity parser for table.
+    (Venkatesh Seetharam)
+
+    FALCON-103 Upgrade oozie to 4.0.x. (Venkatesh Seetharam)
+
+    FALCON-96 Hive client to talk to the metastore. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-87 Hive table integration with feed entity. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-86 Hive table integration with cluster entity. (Venaktesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-88 Add embedded hive and webhcat for integration tests. 
+    (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-107 Adding extensions. (Shwetha GS)
 
     FALCON-62 Falcon compilation with hadoop 2.0 libs. (Shwetha GS
     via Srikanth Sundarrajan)
 
   IMPROVEMENTS
-    FALCON-151 Document the REST APIs for Falcon. (Raghav Kumar 
+
+    FALCON-187 Update Falcon start script to also redirect
+    stdout to the log file. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-174 Bind activemq to all interfaces rather than
+    just localhost. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-165 Simplify packaging to create one package instead of
+    client, falcon and prism packages. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-162 Update falcon scripts to let the user set the log
+    and pid locations. (Arpit Gupta via Venkatesh Seetharam)
+
+    FALCON-151 Document the REST APIs for Falcon. (Raghav Kumar
     Gautham via Srikanth Sundarrajan) 
 
     FALCON-152 REST API for entity & Admin resources only returns 
@@ -35,7 +114,7 @@ Trunk (Unreleased)
     FALCON-131 Remove set -e from falcon scripts. (Suresh Srinivas
     via Srikanth Sundarrajan)
 
-    FALCON-69 Exception from ConfigurationChangeListener should fail 
+    FALCON-69 Exception from ConfigurationChangeListener should fail
     the API. (Shwetha GS via Srikanth Sundarrajan)
 
     FALCON-63 Ability to ingest hadoop libs to falcon release package.
@@ -55,6 +134,15 @@ Trunk (Unreleased)
     Srikanth Sundarrajan)
 
   BUG FIXES
+    FALCON-180 Disable table replication for multiple sources. (Venkatesh
+    Seetharam via Srikanth Sundarrajan)
+
+    FALCON-179 Table replication must drop partition before import as 
+    late reruns fails. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
+    FALCON-182 Disable specifying partitions in inputs with table storage 
+    for process. (Venkatesh Seetharam via Srikanth Sundarrajan)
+
     FALCON-138 Remove perf4j dependency. (Jean-Baptiste Onofré via
     Shwetha GS)
 

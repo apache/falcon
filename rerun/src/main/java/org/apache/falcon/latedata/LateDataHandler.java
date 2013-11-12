@@ -19,6 +19,12 @@
 package org.apache.falcon.latedata;
 
 import org.apache.commons.cli.*;
+import org.apache.falcon.FalconException;
+import org.apache.falcon.catalog.CatalogPartition;
+import org.apache.falcon.catalog.CatalogServiceFactory;
+import org.apache.falcon.entity.CatalogStorage;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -29,6 +35,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -56,12 +63,19 @@ public class LateDataHandler extends Configured implements Tool {
         Option opt = new Option("out", true, "Out file name");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("paths", true,
                 "Comma separated path list, further separated by #");
         opt.setRequired(true);
         options.addOption(opt);
+
         opt = new Option("falconInputFeeds", true,
                 "Input feed names, further separated by #");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("falconInputFeedStorageTypes", true,
+                "Feed storage types corresponding to Input feed names, separated by #");
         opt.setRequired(true);
         options.addOption(opt);
 
@@ -70,34 +84,23 @@ public class LateDataHandler extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-
         CommandLine command = getCommand(args);
 
-        Path file = new Path(command.getOptionValue("out"));
-        Map<String, Long> map = new LinkedHashMap<String, Long>();
         String pathStr = getOptionValue(command, "paths");
         if (pathStr == null) {
             return 0;
         }
 
+        String[] inputFeeds = getOptionValue(command, "falconInputFeeds").split("#");
         String[] pathGroups = pathStr.split("#");
-        String[] inputFeeds = getOptionValue(command, "falconInputFeeds").split(
-                "#");
-        for (int index = 0; index < pathGroups.length; index++) {
-            long usage = 0;
-            for (String pathElement : pathGroups[index].split(",")) {
-                Path inPath = new Path(pathElement);
-                usage += usage(inPath, getConf());
-            }
-            map.put(inputFeeds[index], usage);
-        }
-        LOG.info("MAP data: " + map);
+        String[] inputFeedStorageTypes = getOptionValue(command, "falconInputFeedStorageTypes").split("#");
 
-        OutputStream out = file.getFileSystem(getConf()).create(file);
-        for (Map.Entry<String, Long> entry : map.entrySet()) {
-            out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
-        }
-        out.close();
+        Map<String, Long> metrics = computeMetrics(inputFeeds, pathGroups, inputFeedStorageTypes);
+        LOG.info("MAP data: " + metrics);
+
+        Path file = new Path(command.getOptionValue("out"));
+        persistMetrics(metrics, file);
+
         return 0;
     }
 
@@ -109,7 +112,142 @@ public class LateDataHandler extends Configured implements Tool {
         return value;
     }
 
-    public String detectChanges(Path file, Map<String, Long> map, Configuration conf)
+    private Map<String, Long> computeMetrics(String[] inputFeeds, String[] pathGroups,
+                                             String[] inputFeedStorageTypes)
+        throws IOException, FalconException, URISyntaxException {
+
+        Map<String, Long> computedMetrics = new LinkedHashMap<String, Long>();
+        for (int index = 0; index < pathGroups.length; index++) {
+            long storageMetric = computeStorageMetric(pathGroups[index], inputFeedStorageTypes[index], getConf());
+            computedMetrics.put(inputFeeds[index], storageMetric);
+        }
+
+        return computedMetrics;
+    }
+
+    private void persistMetrics(Map<String, Long> metrics, Path file) throws IOException {
+        OutputStream out = null;
+        try {
+            out = file.getFileSystem(getConf()).create(file);
+
+            for (Map.Entry<String, Long> entry : metrics.entrySet()) {
+                out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
+            }
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
+     * This method computes the storage metrics for a given feed's instance or partition.
+     * It uses size on disk as the metric for File System Storage.
+     * It uses create time as the metric for Catalog Table Storage.
+     *
+     * The assumption is that if a partition has changed or reinstated, the underlying
+     * metric would change, either size or create time.
+     *
+     * @param feedUriTemplate URI for the feed storage, filesystem path or table uri
+     * @param feedStorageType feed storage type
+     * @param conf configuration
+     * @return computed metric
+     * @throws IOException
+     * @throws FalconException
+     * @throws URISyntaxException
+     */
+    public long computeStorageMetric(String feedUriTemplate, String feedStorageType, Configuration conf)
+        throws IOException, FalconException, URISyntaxException {
+
+        Storage.TYPE storageType = Storage.TYPE.valueOf(feedStorageType);
+
+        if (storageType == Storage.TYPE.FILESYSTEM) {
+            // usage on file system is the metric
+            return getFileSystemUsageMetric(feedUriTemplate, conf);
+        } else if (storageType == Storage.TYPE.TABLE) {
+            // todo: this should have been done in oozie mapper but el ${coord:dataIn('input')} returns hcat scheme
+            feedUriTemplate = feedUriTemplate.replace("hcat", "thrift");
+            // creation time of the given partition is the metric
+            return getTablePartitionCreateTimeMetric(feedUriTemplate);
+        }
+
+        throw new IllegalArgumentException("Unknown storage type: " + feedStorageType);
+    }
+
+    /**
+     * The storage metric for File System Storage is the size of content
+     * this feed's instance represented by the path uses on the file system.
+     *
+     * If this instance was reinstated, the assumption is that the size of
+     * this instance on disk would change.
+     *
+     * @param pathGroup path on file system
+     * @param conf configuration
+     * @return metric as the size of data on file system
+     * @throws IOException
+     */
+    private long getFileSystemUsageMetric(String pathGroup, Configuration conf)
+        throws IOException {
+        long usage = 0;
+        for (String pathElement : pathGroup.split(",")) {
+            Path inPath = new Path(pathElement);
+            usage += usage(inPath, conf);
+        }
+
+        return usage;
+    }
+
+    private long usage(Path inPath, Configuration conf) throws IOException {
+        FileSystem fs = inPath.getFileSystem(conf);
+        FileStatus[] fileStatuses = fs.globStatus(inPath);
+        if (fileStatuses == null || fileStatuses.length == 0) {
+            return 0;
+        }
+        long totalSize = 0;
+        for (FileStatus fileStatus : fileStatuses) {
+            totalSize += fs.getContentSummary(fileStatus.getPath()).getLength();
+        }
+        return totalSize;
+    }
+
+    /**
+     * The storage metric for Table Storage is the create time of the given partition
+     * since there is API in Hive nor HCatalog to find if a partition has changed.
+     *
+     * If this partition was reinstated, the assumption is that the create time of
+     * this partition would change.
+     *
+     * @param feedUriTemplate catalog table uri
+     * @return metric as creation time of the given partition
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws FalconException
+     */
+    private long getTablePartitionCreateTimeMetric(String feedUriTemplate)
+        throws IOException, URISyntaxException, FalconException {
+
+        CatalogStorage storage = (CatalogStorage)
+                FeedHelper.createStorage(Storage.TYPE.TABLE.name(), feedUriTemplate);
+        CatalogPartition partition = CatalogServiceFactory.getCatalogService().getPartition(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), storage.getPartitions());
+        return partition == null ? 0 : partition.getCreateTime();
+    }
+
+    /**
+     * This method compares the recorded metrics persisted in file against
+     * the recently computed metrics and returns the list of feeds that has changed.
+     *
+     * @param file persisted metrics from the first run
+     * @param metrics newly computed metrics
+     * @param conf configuration
+     * @return list if feed names which has changed, empty string is none has changed
+     * @throws Exception
+     */
+    public String detectChanges(Path file, Map<String, Long> metrics, Configuration conf)
         throws Exception {
 
         StringBuilder buffer = new StringBuilder();
@@ -117,7 +255,7 @@ public class LateDataHandler extends Configured implements Tool {
                 file.getFileSystem(conf).open(file)));
         String line;
         try {
-            Map<String, Long> recorded = new LinkedHashMap<String, Long>();
+            Map<String, Long> recordedMetrics = new LinkedHashMap<String, Long>();
             while ((line = in.readLine()) != null) {
                 if (line.isEmpty()) {
                     continue;
@@ -125,17 +263,17 @@ public class LateDataHandler extends Configured implements Tool {
                 int index = line.indexOf('=');
                 String key = line.substring(0, index);
                 long size = Long.parseLong(line.substring(index + 1));
-                recorded.put(key, size);
+                recordedMetrics.put(key, size);
             }
 
-            for (Map.Entry<String, Long> entry : map.entrySet()) {
-                if (recorded.get(entry.getKey()) == null) {
+            for (Map.Entry<String, Long> entry : metrics.entrySet()) {
+                if (recordedMetrics.get(entry.getKey()) == null) {
                     LOG.info("No matching key " + entry.getKey());
                     continue;
                 }
-                if (!recorded.get(entry.getKey()).equals(entry.getValue())) {
-                    LOG.info("Recorded size:" + recorded.get(entry.getKey()) + "  is different from new size"
-                            + entry.getValue());
+                if (!recordedMetrics.get(entry.getKey()).equals(entry.getValue())) {
+                    LOG.info("Recorded size:" + recordedMetrics.get(entry.getKey())
+                            + " is different from new size" + entry.getValue());
                     buffer.append(entry.getKey()).append(',');
                 }
             }
@@ -148,18 +286,5 @@ public class LateDataHandler extends Configured implements Tool {
         } finally {
             in.close();
         }
-    }
-
-    public long usage(Path inPath, Configuration conf) throws IOException {
-        FileSystem fs = inPath.getFileSystem(conf);
-        FileStatus[] status = fs.globStatus(inPath);
-        if (status == null || status.length == 0) {
-            return 0;
-        }
-        long totalSize = 0;
-        for (FileStatus statu : status) {
-            totalSize += fs.getContentSummary(statu.getPath()).getLength();
-        }
-        return totalSize;
     }
 }
