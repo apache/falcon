@@ -21,7 +21,15 @@ Remote-User: rgautam
 ---+++ Result
 <verbatim>
 {
-    Version:"0.4-incubating-SNAPSHOT-rc0f2701549628f2f97746bd024518512c07d5442",
-    Mode:"embedded"
+    "properties":[
+        {
+            "key":"Version",
+            "value":"0.4-incubating-SNAPSHOT-rb47788d1112fcf949c22a3860934167237b395b0"
+        },
+        {
+            "key":"Mode",
+            "value":"embedded"
+        }
+    ]
 }
 </verbatim>

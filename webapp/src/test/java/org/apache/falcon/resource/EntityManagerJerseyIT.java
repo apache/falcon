@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
@@ -345,11 +346,18 @@ public class EntityManagerJerseyIT {
         response = context.service
                 .path("api/admin/version")
                 .header("Remote-User", TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
-        String status = response.getEntity(String.class);
-        Assert.assertEquals(status, "{Version:\""
-                + BuildProperties.get().getProperty("build.version") + "\",Mode:\""
-                + DeploymentProperties.get().getProperty("deploy.mode") + "\"}");
+                .accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        String json = response.getEntity(String.class);
+        String buildVersion = BuildProperties.get().getProperty("build.version");
+        String deployMode = DeploymentProperties.get().getProperty("deploy.mode");
+        Assert.assertTrue(Pattern.matches(
+                ".*\\{\\s*\"key\"\\s*:\\s*\"Version\"\\s*,\\s*\"value\"\\s*:\\s*\""
+                        + buildVersion + "\"\\s*}.*", json),
+                "No build.version found in /api/admin/version");
+        Assert.assertTrue(Pattern.matches(
+                ".*\\{\\s*\"key\"\\s*:\\s*\"Mode\"\\s*,\\s*\"value\"\\s*:\\s*\""
+                        + deployMode + "\"\\s*}.*", json),
+                "No deploy.mode found in /api/admin/version");
     }
 
     @Test

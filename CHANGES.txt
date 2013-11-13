@@ -78,6 +78,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-159 Version API endpoint does not emit valid JSON
+    (Srimanth Gunturi via Venkatesh Seetharam)
+
     FALCON-171 Provide status in /api/entities/list.
     (Haohui Mai via Venkatesh Seetharam)
 

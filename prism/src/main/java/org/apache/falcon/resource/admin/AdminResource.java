@@ -64,15 +64,27 @@ public class AdminResource {
         return builder.toString();
     }
 
-    private String version;
+    private PropertyList version;
 
     @GET
     @Path("version")
-    @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public String getVersion() {
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    public PropertyList getVersion() {
         if (version == null) {
-            version = "{Version:\"" + BuildProperties.get().getProperty("build.version")
-                    + "\",Mode:\"" + DeploymentProperties.get().getProperty("deploy.mode") + "\"}";
+            List<Property> props = new ArrayList<Property>();
+
+            Property property = new Property();
+            property.key = "Version";
+            property.value = BuildProperties.get().getProperty("build.version");
+            props.add(property);
+
+            property = new Property();
+            property.key = "Mode";
+            property.value = DeploymentProperties.get().getProperty("deploy.mode");
+            props.add(property);
+
+            version = new PropertyList();
+            version.properties = props;
         }
         return version;
     }

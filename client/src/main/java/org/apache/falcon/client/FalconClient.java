@@ -153,7 +153,7 @@ public class FalconClient {
     protected static enum AdminOperations {
 
         STACK("api/admin/stack", HttpMethod.GET, MediaType.TEXT_PLAIN),
-        VERSION("api/admin/version", HttpMethod.GET, MediaType.TEXT_PLAIN);
+        VERSION("api/admin/version", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
