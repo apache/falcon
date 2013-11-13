@@ -184,9 +184,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
+                <version>2.4</version>
                 <configuration>
                     <webResources>
+                        <resource>
+                            <directory>../html5-ui</directory>
+                        </resource>
                         <resource>
                             <directory>src/main/webapp/WEB-INF/embedded</directory>
                             <targetPath>WEB-INF</targetPath>
@@ -400,14 +403,14 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
-                        <version>2.1.1</version>
+                        <version>2.4</version>
                         <configuration>
                             <packagingExcludes>WEB-INF/classes/deploy.properties</packagingExcludes>
                             <webResources>
-                                <resource>
-                                    <directory>src/main/webapp/WEB-INF/distributed</directory>
-                                    <targetPath>WEB-INF</targetPath>
-                                </resource>
+                              <resource>
+                                <directory>src/main/webapp/WEB-INF/distributed</directory>
+                                <targetPath>WEB-INF</targetPath>
+                              </resource>
                             </webResources>
                         </configuration>
                     </plugin>

@@ -134,8 +134,13 @@
         <plugins>
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
+                <version>2.4</version>
                 <configuration>
+                    <webResources>
+                        <resource>
+                            <directory>../html5-ui</directory>
+			            </resource>
+                    </webResources>
                     <attachClasses>true</attachClasses>
                 </configuration>
             </plugin>

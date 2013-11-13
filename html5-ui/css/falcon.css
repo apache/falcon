@@ -1,0 +1,138 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one or more
+* contributor license agreements.  See the NOTICE file distributed with
+* this work for additional information regarding copyright ownership.
+* The ASF licenses this file to You under the Apache License, Version 2.0
+* (the "License"); you may not use this file except in compliance with
+* the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+.falcon-brand {
+  padding-left: 40px;
+  background-image: url('../img/falcon-64.png');
+  background-size: 40px 40px;
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+.btn-entity-list {
+  cursor: pointer;
+}
+
+.link-icons:before {
+  position: relative;
+  display: inline-block;
+  font-family: 'Glyphicons Halflings';
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  padding-right: 0.4em;
+  vertical-align: -20%;
+  font-size: 120%;
+}
+
+.entity-title:before {
+  color: #428bca;
+  vertical-align: -20%;
+}
+
+.entity-link-cluster:before {
+  content: "\2601";
+}
+
+.entity-link-process:before {
+  content: "\e110";
+}
+
+.entity-link-feed:before {
+  content: "\e181";
+}
+
+#entity-paginator {
+  text-align: right;
+}
+
+.instance-icons:before {
+  position: relative;
+  display: inline-block;
+  font-family: 'Glyphicons Halflings';
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  padding-right: 0.3em;
+  font-size: 100%;
+  vertical-align: top;
+}
+
+.instance-link-SUCCEEDED:before {
+  color: green;
+  content: "\e013";
+}
+
+.instance-link-RUNNING:before {
+  color: green;
+  content: "\e072";
+}
+
+.instance-link-WAITING:before {
+  color: orange;
+  content: "\e023";
+}
+
+.instance-link-FAILED:before {
+  color: red;
+  content: "\e014";
+}
+
+.node-name:before {
+  font-family: 'Glyphicons Halflings';
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  padding-right: 0.3em;
+  vertical-align: -20%;
+  font-size: 110%;
+  color: #428bca;
+}
+
+.node-name-cluster:before {
+  content: "\2601";
+}
+
+.node-name-process:before {
+  content: "\e110";
+}
+
+.node-name-feed:before {
+  content: "\e181";
+}
+
+.node rect {
+  stroke-width: 0.5px;
+  stroke: #999;
+  fill: #ffffff;
+  fill-opacity: 80%;
+}
+
+.edge path {
+  fill: none;
+  stroke: #333;
+  stroke-width: 1px;
+}
+
+.node-name {
+  vertical-align: middle;
+  margin: 10px;
+}
+

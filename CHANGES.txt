@@ -5,7 +5,19 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-  
+
+    FALCON-193 Update the documentation to reflect the current
+    work of dashboard (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-175 Visualize dependency information
+    (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-178 Implement client-side pagination
+    (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-164 Provide Falcon Web UI
+    (Haohui Mai via Venkatesh Seetharam)
+
     FALCON-85 Hive (HCatalog) integration. (Venkatesh Seetharam
     via Srikanth Sundarrajan)
 

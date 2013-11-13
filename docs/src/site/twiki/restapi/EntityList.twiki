@@ -1,4 +1,4 @@
----++  GET /api/entities/list/:entity-type
+---++  GET /api/entities/list/:entity-type?fields=:fields
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -9,6 +9,8 @@ Get list of the entities.
 
 ---++ Parameters
    * :entity-type can be cluster, feed or process.
+   * :fields (optional) additional fields that the client are interested in, separated by commas.
+     Currently falcon only support status as a valid field.
 
 ---++ Results
 List of the entities.
@@ -30,6 +32,29 @@ Remote-User: rgautam
         {
             "name": "SampleInput",
             "type": "feed"
+        }
+    ]
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/feed?fields=status
+Remote-User: rgautam
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "entity": [
+        {
+            "name"  : "SampleOutput",
+            "type"  : "feed",
+            "status": "RUNNING"
+        },
+        {
+            "name": "SampleInput",
+            "type": "feed",
+            "status": "RUNNING"
         }
     ]
 }
