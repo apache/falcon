@@ -142,6 +142,9 @@ Trunk (Unreleased)
 
   BUG FIXES
 
+    FALCON-186 Enable scheduler support for embedded activemq
+    (Shwetha GS via Venkatesh Seetharam)
+
     FALCON-185 Timestamp handled as int (Shwetha GS via Venkatesh Seetharam)
 
     FALCON-159 Version API endpoint does not emit valid JSON

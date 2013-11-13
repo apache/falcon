@@ -82,6 +82,7 @@ public final class Main {
             broker.setDataDirectory(dataDir);
             broker.addConnector("vm://localhost");
             broker.addConnector("tcp://0.0.0.0:" + mqport);
+            broker.setSchedulerSupport(true);
             broker.start();
         }
 
