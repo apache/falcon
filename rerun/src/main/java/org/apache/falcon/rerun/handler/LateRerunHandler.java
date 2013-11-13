@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.FalconException;
@@ -133,13 +134,11 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         return wait;
     }
 
-    public static Date addTime(Date date, int milliSecondsToAdd) {
+    public static Date addTime(Date date, long milliSecondsToAdd) {
         return new Date(date.getTime() + milliSecondsToAdd);
     }
 
     public static Date getCutOffTime(Entity entity, String nominalTime) throws FalconException {
-
-        ConfigurationStore store = ConfigurationStore.get();
         ExpressionHelper evaluator = ExpressionHelper.get();
         Date instanceStart = EntityUtil.parseDateUTC(nominalTime);
         ExpressionHelper.setReferenceDate(instanceStart);
@@ -155,10 +154,11 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     .toString();
             endTime = EntityUtil.parseDateUTC(nominalTime);
             long feedCutOffPeriod = evaluator.evaluate(lateCutOff, Long.class);
-            endTime = addTime(endTime, (int) feedCutOffPeriod);
+            endTime = addTime(endTime, feedCutOffPeriod);
             return endTime;
         } else if (entity.getEntityType() == EntityType.PROCESS) {
             Process process = (Process) entity;
+            ConfigurationStore store = ConfigurationStore.get();
             for (LateInput lp : process.getLateProcess().getLateInputs()) {
                 Feed feed = null;
                 String endInstanceTime = "";
@@ -182,7 +182,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 endTime = evaluator.evaluate(endInstanceTime, Date.class);
                 long feedCutOffPeriod = evaluator.evaluate(lateCutOff,
                         Long.class);
-                endTime = addTime(endTime, (int) feedCutOffPeriod);
+                endTime = addTime(endTime, feedCutOffPeriod);
 
                 if (endTime.after(feedCutOff)) {
                     feedCutOff = endTime;

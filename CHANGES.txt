@@ -81,9 +81,6 @@ Trunk (Unreleased)
     FALCON-188 hadoop-2 profile is not carried through to
     oozie package (Haohui Mai via Venkatesh Seetharam)
 
-    FALCON-159 Version API endpoint does not emit valid JSON
-    (Srimanth Gunturi via Venkatesh Seetharam)
-
     FALCON-171 Provide status in /api/entities/list.
     (Haohui Mai via Venkatesh Seetharam)
 
@@ -139,10 +136,17 @@ Trunk (Unreleased)
     (Shwetha GS via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
+
     FALCON-67 Remove ant dependency in oozie workflows. (Shwetha GS via
     Srikanth Sundarrajan)
 
   BUG FIXES
+
+    FALCON-185 Timestamp handled as int (Shwetha GS via Venkatesh Seetharam)
+
+    FALCON-159 Version API endpoint does not emit valid JSON
+    (Srimanth Gunturi via Venkatesh Seetharam)
+
     FALCON-180 Disable table replication for multiple sources. (Venkatesh
     Seetharam via Srikanth Sundarrajan)
 
