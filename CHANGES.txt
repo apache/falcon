@@ -78,6 +78,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-190 Entity list REST API should allow the client to
+    query different fields (Haohui Mai via Venkatesh Seetharam)
+
     FALCON-188 hadoop-2 profile is not carried through to
     oozie package (Haohui Mai via Venkatesh Seetharam)
 

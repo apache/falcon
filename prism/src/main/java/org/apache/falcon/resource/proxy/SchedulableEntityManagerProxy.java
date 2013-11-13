@@ -283,8 +283,9 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     @Path("list/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Override
-    public EntityList getDependencies(@PathParam("type") String type) {
-        return super.getDependencies(type);
+    public EntityList getEntityList(@PathParam("type") String type,
+                                    @DefaultValue("") @QueryParam("fields") String fields) {
+        return super.getEntityList(type, fields);
     }
 
     @GET

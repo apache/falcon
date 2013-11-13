@@ -58,8 +58,9 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "dependencies")
     @Override
-    public EntityList getDependencies(@Dimension("type") @PathParam("type") String type) {
-        return super.getDependencies(type);
+    public EntityList getEntityList(@Dimension("type") @PathParam("type") String type,
+                                    @DefaultValue("") @QueryParam("fields") String fields) {
+        return super.getEntityList(type, fields);
     }
 
     @GET

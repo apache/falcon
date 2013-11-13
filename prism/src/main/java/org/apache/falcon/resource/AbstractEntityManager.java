@@ -436,9 +436,17 @@ public abstract class AbstractEntityManager {
      * Returns the list of entities registered of a given type.
      *
      * @param type entity type
+     * @param fieldStr fields that the query is interested in, separated by comma
+     *
+     * @param type entity type
      * @return String
      */
-    public EntityList getDependencies(String type) {
+    public EntityList getEntityList(String type, String fieldStr) {
+        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.split(",")));
+
+        // Currently only the status of the entity is supported
+        boolean requireStatus = fields.contains("status");
+
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             final String entityTypeString = type.toLowerCase();
@@ -456,14 +464,16 @@ public abstract class AbstractEntityManager {
                 EntityList.EntityElement elem = new EntityList.EntityElement();
                 elem.name = e.getName();
                 elem.type = entityTypeString;
-                String statusString;
-                try {
-                    EntityStatus status = getStatus(e, entityType);
-                    statusString = status.name();
-                } catch (FalconException e1) {
-                    statusString = "UNKNOWN";
+                if (requireStatus) {
+                    String statusString;
+                    try {
+                        EntityStatus status = getStatus(e, entityType);
+                        statusString = status.name();
+                    } catch (FalconException e1) {
+                        statusString = "UNKNOWN";
+                    }
+                    elem.status = statusString;
                 }
-                elem.status = statusString;
                 elements[i++] = elem;
             }
             return new EntityList(elements);

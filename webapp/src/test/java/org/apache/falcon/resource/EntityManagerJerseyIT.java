@@ -79,7 +79,7 @@ public class EntityManagerJerseyIT {
     public void testLibExtensions() throws Exception {
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
-        ClientResponse response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        ClientResponse response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
         FileSystem fs = context.getCluster().getFileSystem();
         assertLibs(fs, new Path("/project/falcon/working/libext/FEED/retention"));
@@ -296,7 +296,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -319,10 +319,10 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
     }
 
@@ -382,7 +382,7 @@ public class EntityManagerJerseyIT {
         Map<String, String> overlay = context.getUniqueOverlay();
 
         InputStream stream = context.getServletInputStream(
-                context.overlayParametersOverTemplate(context.CLUSTER_TEMPLATE, overlay));
+                context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay));
 
         clientRepsonse = context.service.path("api/entities/validate/cluster")
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
@@ -397,7 +397,7 @@ public class EntityManagerJerseyIT {
         ClientResponse clientRepsonse;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        clientRepsonse = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay,
+        clientRepsonse = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay,
                 EntityType.CLUSTER);
         context.assertSuccessful(clientRepsonse);
 
@@ -435,7 +435,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -454,7 +454,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -509,7 +509,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -580,7 +580,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -599,7 +599,7 @@ public class EntityManagerJerseyIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -650,7 +650,7 @@ public class EntityManagerJerseyIT {
     }
 
     @Test
-    public void testGetDependencies() throws Exception {
+    public void testGetEntityList() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
         response = context.service
@@ -660,14 +660,35 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(response.getStatus(), 200);
 
         Map<String, String> overlay = context.getUniqueOverlay();
-
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        overlay.put("cluster", "WTF-" + overlay.get("cluster"));
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.service
                 .path("api/entities/list/cluster/")
-                .header("Remote-User", TestContext.REMOTE_USER).type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+                .header("Remote-User", TestContext.REMOTE_USER)
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
+        EntityList result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        for (EntityList.EntityElement entityElement : result.getElements()) {
+            Assert.assertNull(entityElement.status); // status is null
+        }
+
+        response = context.service
+                .path("api/entities/list/cluster/")
+                .queryParam("fields", "status")
+                .header("Remote-User", TestContext.REMOTE_USER)
+                .type(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        for (EntityList.EntityElement entityElement : result.getElements()) {
+            Assert.assertNotNull(entityElement.status); // status is null
+        }
     }
 }
