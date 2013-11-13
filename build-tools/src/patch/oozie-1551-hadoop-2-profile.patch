@@ -1,0 +1,63 @@
+diff -urN oozie-4.0.0/hadooplibs/hadoop-2/pom.xml oozie-4.0.0-new/hadooplibs/hadoop-2/pom.xml
+--- oozie-4.0.0/hadooplibs/hadoop-2/pom.xml	2013-08-27 12:47:42.000000000 -0700
++++ oozie-4.0.0-new/hadooplibs/hadoop-2/pom.xml	2013-11-12 13:06:07.000000000 -0800
+@@ -27,7 +27,7 @@
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-hadoop</artifactId>
+-    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0</version>
+     <description>Apache Oozie Hadoop ${project.version}</description>
+     <name>Apache Oozie Hadoop ${project.version}</name>
+     <packaging>jar</packaging>
+@@ -36,7 +36,7 @@
+         <dependency>
+             <groupId>org.apache.hadoop</groupId>
+             <artifactId>hadoop-client</artifactId>
+-            <version>2.2.0-SNAPSHOT</version>
++            <version>2.2.0</version>
+             <scope>compile</scope>
+         </dependency>
+     </dependencies>
+diff -urN oozie-4.0.0/hadooplibs/hadoop-distcp-2/pom.xml oozie-4.0.0-new/hadooplibs/hadoop-distcp-2/pom.xml
+--- oozie-4.0.0/hadooplibs/hadoop-distcp-2/pom.xml	2013-08-27 12:47:42.000000000 -0700
++++ oozie-4.0.0-new/hadooplibs/hadoop-distcp-2/pom.xml	2013-11-12 13:06:19.000000000 -0800
+@@ -27,7 +27,7 @@
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-hadoop-distcp</artifactId>
+-    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0</version>
+     <description>Apache Oozie Hadoop Distcp ${project.version}</description>
+     <name>Apache Oozie Hadoop Distcp ${project.version}</name>
+     <packaging>jar</packaging>
+@@ -36,7 +36,7 @@
+         <dependency>
+             <groupId>org.apache.hadoop</groupId>
+             <artifactId>hadoop-distcp</artifactId>
+-            <version>2.2.0-SNAPSHOT</version>
++            <version>2.2.0</version>
+             <scope>compile</scope>
+         </dependency>
+     </dependencies>
+diff -urN oozie-4.0.0/hadooplibs/hadoop-test-2/pom.xml oozie-4.0.0-new/hadooplibs/hadoop-test-2/pom.xml
+--- oozie-4.0.0/hadooplibs/hadoop-test-2/pom.xml	2013-08-27 12:47:42.000000000 -0700
++++ oozie-4.0.0-new/hadooplibs/hadoop-test-2/pom.xml	2013-11-12 13:06:30.000000000 -0800
+@@ -27,7 +27,7 @@
+     </parent>
+     <groupId>org.apache.oozie</groupId>
+     <artifactId>oozie-hadoop-test</artifactId>
+-    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0</version>
+     <description>Apache Oozie Hadoop ${project.version} Test</description>
+     <name>Apache Oozie Hadoop ${project.version} Test</name>
+     <packaging>jar</packaging>
+@@ -36,7 +36,7 @@
+         <dependency>
+             <groupId>org.apache.hadoop</groupId>
+             <artifactId>hadoop-minicluster</artifactId>
+-            <version>2.2.0-SNAPSHOT</version>
++            <version>2.2.0</version>
+             <scope>compile</scope>
+         </dependency>
+     </dependencies>

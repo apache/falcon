@@ -78,6 +78,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-188 hadoop-2 profile is not carried through to
+    oozie package (Haohui Mai via Venkatesh Seetharam)
+
     FALCON-159 Version API endpoint does not emit valid JSON
     (Srimanth Gunturi via Venkatesh Seetharam)
 

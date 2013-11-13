@@ -54,9 +54,12 @@ curl "http://www.apache.org/dist/oozie/4.0.0/oozie-4.0.0.tar.gz" -o oozie-4.0.0.
 tar -xzvf oozie-4.0.0.tgz 2> /dev/null
 rm oozie-4.0.0.tgz
 cd oozie-4.0.0
+
 echo "Patching oozie with falcon extensions and marking version as 4.0.0 ..."
+patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-1551-hadoop-2-profile.patch
 patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-4.0.0-falcon.patch
 patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-bundle-el-extension.patch
+
 echo "Building oozie & creating tar ball ..."
 bin/mkdistro.sh -DskipTests > /dev/null
 

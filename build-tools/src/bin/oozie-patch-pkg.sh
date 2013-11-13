@@ -31,7 +31,10 @@ curl -v "http://www.apache.org/dist/oozie/4.0.0/oozie-4.0.0.tar.gz" -o oozie-4.0
 tar -xzvf oozie-4.0.0.tgz
 cd oozie-4.0.0
 pwd
+
+patch -p1 < ../../build-tools/src/patch/oozie-1551-hadoop-2-profile.patch
 patch -p0 < ../../build-tools/src/patch/oozie-4.0.0-falcon.patch
+
 if [ -z "${MAVEN_HOME}" ]
 then
     export MVN_CMD=`which mvn`;

@@ -31,8 +31,8 @@ Index: hadooplibs/hadoop-test-2/pom.xml
      </parent>
      <groupId>org.apache.oozie</groupId>
      <artifactId>oozie-hadoop-test</artifactId>
--    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
-+    <version>2.2.0-SNAPSHOT.oozie-4.0.0-falcon</version>
+-    <version>2.2.0.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0-falcon</version>
      <description>Apache Oozie Hadoop ${project.version} Test</description>
      <name>Apache Oozie Hadoop ${project.version} Test</name>
      <packaging>jar</packaging>
@@ -107,8 +107,8 @@ Index: hadooplibs/hadoop-2/pom.xml
      </parent>
      <groupId>org.apache.oozie</groupId>
      <artifactId>oozie-hadoop</artifactId>
--    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
-+    <version>2.2.0-SNAPSHOT.oozie-4.0.0-falcon</version>
+-    <version>2.2.0.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0-falcon</version>
      <description>Apache Oozie Hadoop ${project.version}</description>
      <name>Apache Oozie Hadoop ${project.version}</name>
      <packaging>jar</packaging>
@@ -201,8 +201,8 @@ Index: hadooplibs/hadoop-distcp-2/pom.xml
      </parent>
      <groupId>org.apache.oozie</groupId>
      <artifactId>oozie-hadoop-distcp</artifactId>
--    <version>2.2.0-SNAPSHOT.oozie-4.0.0</version>
-+    <version>2.2.0-SNAPSHOT.oozie-4.0.0-falcon</version>
+-    <version>2.2.0.oozie-4.0.0</version>
++    <version>2.2.0.oozie-4.0.0-falcon</version>
      <description>Apache Oozie Hadoop Distcp ${project.version}</description>
      <name>Apache Oozie Hadoop Distcp ${project.version}</name>
      <packaging>jar</packaging>
