@@ -78,6 +78,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+    FALCON-171 Provide status in /api/entities/list.
+    (Haohui Mai via Venkatesh Seetharam)
+
     FALCON-187 Update Falcon start script to also redirect
     stdout to the log file. (Arpit Gupta via Venkatesh Seetharam)
 

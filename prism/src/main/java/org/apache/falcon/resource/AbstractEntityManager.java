@@ -382,22 +382,8 @@ public abstract class AbstractEntityManager {
         try {
             entityObj = EntityUtil.getEntity(type, entity);
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            String status;
-
-            if (entityType.isSchedulable()) {
-                if (workflowEngine.isActive(entityObj)) {
-                    if (workflowEngine.isSuspended(entityObj)) {
-                        status = EntityStatus.SUSPENDED.name();
-                    } else {
-                        status = EntityStatus.RUNNING.name();
-                    }
-                } else {
-                    status = EntityStatus.SUBMITTED.name();
-                }
-            } else {
-                status = EntityStatus.SUBMITTED.name();
-            }
-            return new APIResult(Status.SUCCEEDED, status);
+            EntityStatus status = getStatus(entityObj, entityType);
+            return new APIResult(Status.SUCCEEDED, status.name());
         } catch (FalconWebException e) {
             throw e;
         } catch (Exception e) {
@@ -405,6 +391,25 @@ public abstract class AbstractEntityManager {
             LOG.error("Unable to get status for entity " + entity + "(" + type + ")", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+    }
+
+    protected EntityStatus getStatus(Entity entity, EntityType type) throws FalconException {
+        EntityStatus status;
+
+        if (type.isSchedulable()) {
+            if (workflowEngine.isActive(entity)) {
+                if (workflowEngine.isSuspended(entity)) {
+                    status = EntityStatus.SUSPENDED;
+                } else {
+                    status = EntityStatus.RUNNING;
+                }
+            } else {
+                status = EntityStatus.SUBMITTED;
+            }
+        } else {
+            status = EntityStatus.SUBMITTED;
+        }
+        return status;
     }
 
     /**
@@ -436,16 +441,32 @@ public abstract class AbstractEntityManager {
     public EntityList getDependencies(String type) {
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
+            final String entityTypeString = type.toLowerCase();
             Collection<String> entityNames = configStore.getEntities(entityType);
             if (entityNames == null || entityNames.isEmpty()) {
                 return new EntityList(new Entity[]{});
             }
-            Entity[] entities = new Entity[entityNames.size()];
-            int index = 0;
+
+            int len = entityNames.size();
+            EntityList.EntityElement[] elements = new EntityList.EntityElement[len];
+
+            int i = 0;
             for (String entityName : entityNames) {
-                entities[index++] = configStore.get(entityType, entityName);
+                Entity e = configStore.get(entityType, entityName);
+                EntityList.EntityElement elem = new EntityList.EntityElement();
+                elem.name = e.getName();
+                elem.type = entityTypeString;
+                String statusString;
+                try {
+                    EntityStatus status = getStatus(e, entityType);
+                    statusString = status.name();
+                } catch (FalconException e1) {
+                    statusString = "UNKNOWN";
+                }
+                elem.status = statusString;
+                elements[i++] = elem;
             }
-            return new EntityList(entities);
+            return new EntityList(elements);
         } catch (Exception e) {
             LOG.error("Unable to get list for entities for (" + type + ")", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);

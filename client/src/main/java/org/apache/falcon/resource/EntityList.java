@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class EntityList {
 
     @XmlElement(name = "entity")
-    private EntityElement[] elements;
+    private final EntityElement[] elements;
 
     /**
      * Element within an entity.
@@ -45,32 +45,35 @@ public class EntityList {
         public String type;
         @XmlElement
         public String name;
+        @XmlElement
+        public String status;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
-
-        public EntityElement() {
-
-        }
-
-        public EntityElement(String type, String name) {
-            this.type = type;
-            this.name = name;
-        }
 
         @Override
         public String toString() {
-            return "(" + type + ") " + name + "\n";
+            return "(" + type + ") " + name + "(" + status + ")\n";
         }
     }
 
     //For JAXB
     public EntityList() {
+        this.elements = null;
+    }
+
+    public EntityList(EntityElement[] elements) {
+        this.elements = elements;
     }
 
     public EntityList(Entity[] elements) {
-        EntityElement[] items = new EntityElement[elements.length];
-        for (int index = 0; index < elements.length; index++) {
-            items[index] = new EntityElement(elements[index].
-                    getEntityType().name().toLowerCase(), elements[index].getName());
+        int len = elements.length;
+        EntityElement[] items = new EntityElement[len];
+        for (int i = 0; i < len; i++) {
+            Entity e = elements[i];
+            EntityElement o = new EntityElement();
+            o.type = e.getEntityType().name().toLowerCase();
+            o.name = e.getName();
+            o.status = "";
+            items[i] = o;
         }
         this.elements = items;
     }
