@@ -13,6 +13,7 @@ Trunk (Unreleased)
   BUG FIXES
 
 
+
 Release Version: 0.4-incubating
 
    NEW FEATURES
@@ -172,6 +173,8 @@ Release Version: 0.4-incubating
     FALCON-187: Update Falcon start script to also redirect stdout to the log file
 
     FALCON-188: hadoop-2 profile is not carried through to oozie package
+
+    FALCON-194 Import external libraries into the repository
 
 
 
