@@ -114,6 +114,8 @@ Release Version: 0.4-incubating
 
     FALCON-138: Remove perf4j dependency
 
+    FALCON-198 Update LICENSE.txt to contain license information for all third-party libraries
+
   BUG FIXES
 
     FALCON-24: Allow re-run of timedout instances
