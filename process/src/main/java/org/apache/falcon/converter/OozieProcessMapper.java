@@ -375,9 +375,12 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         propagateCommonCatalogTableProperties(tableStorage, props, prefix);
 
-        props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
-        props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
-        props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
+        props.put(prefix + "_partition_filter_pig",
+                "${coord:dataInPartitionFilter('" + input.getName() + "', 'pig')}");
+        props.put(prefix + "_partition_filter_hive",
+                "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
+        props.put(prefix + "_partition_filter_java",
+                "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
     }
 
     private void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage,
@@ -386,7 +389,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
         propagateCommonCatalogTableProperties(tableStorage, props, prefix);
 
-        props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
+        props.put(prefix + "_dataout_partitions",
+                "${coord:dataOutPartitions('" + output.getName() + "')}");
+        props.put(prefix + "_dated_partition_value", "${coord:dataOutPartitionValue('"
+                + output.getName() + "', '" + tableStorage.getDatedPartitionKey() + "')}");
     }
 
     private String join(Iterator<String> itr, char sep) {
