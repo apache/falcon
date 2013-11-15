@@ -178,6 +178,9 @@ Release Version: 0.4-incubating
 
     FALCON-194 Import external libraries into the repository
 
+    FALCON-204 Process mapper generates params assuming table input and output
+    as names literally (Venkatesh Seetharam)
+
 
 
 Release Version: 0.3-incubating

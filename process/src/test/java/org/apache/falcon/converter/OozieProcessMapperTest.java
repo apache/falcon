@@ -278,7 +278,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
         Assert.assertFalse(hiveAction.getParam().isEmpty());
-        Assert.assertEquals(10, hiveAction.getParam().size());
+        Assert.assertEquals(11, hiveAction.getParam().size());
     }
 
     @Test
@@ -356,11 +356,11 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         props.put(prefix + "_database", tableStorage.getDatabase());
         props.put(prefix + "_table", tableStorage.getTable());
 
-        if (prefix.equals("input")) {
+        if (prefix.equals("falcon_input")) {
             props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
             props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
             props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
-        } else if (prefix.equals("output")) {
+        } else if (prefix.equals("falcon_output")) {
             props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
         }
     }
