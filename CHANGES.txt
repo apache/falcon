@@ -181,6 +181,9 @@ Release Version: 0.4-incubating
     FALCON-204 Process mapper generates params assuming table input and output
     as names literally (Venkatesh Seetharam)
 
+    FALCON-201 Package oozie-el-extensions jar files as part of tarball
+    (Ashish Singh via Venkatesh Seetharam)
+
 
 
 Release Version: 0.3-incubating

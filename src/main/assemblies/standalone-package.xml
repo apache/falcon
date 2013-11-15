@@ -98,6 +98,11 @@
         </file>
 
         <file>
+            <source>oozie-el-extensions/target/falcon-oozie-el-extension-${project.version}.jar</source>
+            <outputDirectory>oozie/libext</outputDirectory>
+        </file>
+
+        <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>
