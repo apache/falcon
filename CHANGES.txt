@@ -184,6 +184,9 @@ Release Version: 0.4-incubating
     FALCON-201 Package oozie-el-extensions jar files as part of tarball
     (Ashish Singh via Venkatesh Seetharam)
 
+    FALCON-203 Do not generate transitive closure for the dependency graph
+    (Haohui Mai via Venkatesh Seetharam)
+
 
 
 Release Version: 0.3-incubating

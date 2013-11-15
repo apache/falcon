@@ -63,9 +63,6 @@
       var nodes = {};
       var next_node_id = 0;
 
-      var STATE_UNINITIALIZED = 0;
-      var STATE_REQUEST_SENT = 1;
-
       var requests_in_fly = 0;
 
       function key(type, name) {
@@ -78,7 +75,6 @@
           return nodes[k];
 
         var n = {
-          "request_state": STATE_UNINITIALIZED,
           "id": next_node_id++,
           "type": type,
           "name": name,
@@ -102,36 +98,39 @@
             var l = data.entity.length;
             for (var i = 0; i < l; ++i) {
               var e = data.entity[i];
-              node.dependency.push(getOrCreateNode(e.type, e.name).id);
-              enqueue(e.type, e.name);
+              /**
+               * The REST API provides both the in and the out egeds
+               * of the dependency graph. Here we add the edeges based
+               * on the rules. (-> means the dependency edge)
+               *
+               * Feed->cluster, process->feed, process->cluster
+               */
+              var d = getOrCreateNode(e.type, e.name);
+              var src = null, dst = null;
+              if (d.type === "cluster") {
+                src = node; dst = d;
+              } else if (d.type === "process") {
+                src = d; dst = node;
+              } else {
+                if (node.type === "cluster") {
+                  src = d; dst = node;
+                } else {
+                  src = node; dst = d;
+                }
+              }
+              console.log(src.name + '->' + dst.name);
+              src.dependency.push(dst.id);
             }
-          })
-          .always(function () {
-            --requests_in_fly;
 
-            if (requests_in_fly == 0)
-              done_callback(nodes);
-          });
+            done_callback(nodes);
+          })
       }
 
-      function enqueue(type, name) {
-        // There's no dependency for clusters
-        if (type === 'cluster')
-          return;
-
-        var k = key(type, name);
-
-        if (nodes[k] !== undefined && nodes[k].request_state !== STATE_UNINITIALIZED)
-          return;
-
-        var n = getOrCreateNode(type, name);
-        n.request_state = STATE_REQUEST_SENT;
-
-        ++requests_in_fly;
+      function load() {
+        var n = getOrCreateNode(entity_type, entity_name);
         loadEntry(n);
       }
-
-      enqueue(entity_type, entity_name);
+      load();
     }
   };
 

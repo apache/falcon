@@ -111,6 +111,7 @@
     var NODE_HEIGHT = 60;
     var RECT_ROUND  = 5;
     var SEPARATION  = 40;
+    var UNIVERSAL_SEP = 80;
 
     // Function to draw the lines of the edge
     var LINE_FUNCTION = d3.svg.line()
@@ -223,12 +224,12 @@
         var n = nodes[key];
         for (var i = 0, l = n.dependency.length; i < l; ++i) {
           var d = n.dependency[i];
-          g.addEdge(null, d, n.id);
+          g.addEdge(null, n.id, d);
         }
       }
 
       layout = dagre.layout()
-        .universalSep(100).rankSep(SEPARATION)
+        .universalSep(UNIVERSAL_SEP).rankSep(SEPARATION)
         .run(g);
       layout.eachEdge(drawEdge);
       layout.eachNode(drawNode);
