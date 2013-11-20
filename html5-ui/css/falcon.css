@@ -90,7 +90,22 @@
 }
 
 .instance-link-FAILED:before {
+  color: darkred;
+  content: "\e107";
+}
+
+.instance-link-SUSPENDED:before {
+  color: orangered;
+  content: "\e165";
+}
+
+.instance-link-KILLED:before {
   color: red;
+  content: "\e101";
+}
+
+.instance-link-ERROR:before {
+  color: darkred;
   content: "\e014";
 }
 
