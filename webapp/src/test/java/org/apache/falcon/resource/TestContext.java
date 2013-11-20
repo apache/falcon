@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -414,6 +415,8 @@ public class TestContext {
     }
 
     public static void prepare(String clusterTemplate) throws Exception {
+        // setup a logged in user
+        CurrentUser.authenticate(REMOTE_USER);
 
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));

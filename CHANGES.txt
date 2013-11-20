@@ -187,6 +187,9 @@ Release Version: 0.4-incubating
     FALCON-203 Do not generate transitive closure for the dependency graph
     (Haohui Mai via Venkatesh Seetharam)
 
+    FALCON-212 OozieClient does not propagate user in request to
+    Oozie server (Venkatesh Seetharam)
+
 
 
 Release Version: 0.3-incubating

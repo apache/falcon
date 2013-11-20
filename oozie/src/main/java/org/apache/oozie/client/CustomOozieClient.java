@@ -18,7 +18,9 @@
 
 package org.apache.oozie.client;
 
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.log4j.Logger;
 import org.apache.oozie.client.rest.RestConstants;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -37,6 +39,7 @@ import java.util.Properties;
  */
 public class CustomOozieClient extends OozieClient {
 
+    private static final Logger LOG = Logger.getLogger(CustomOozieClient.class);
     private static final Map<String, String> NONE = new HashMap<String, String>();
 
     public CustomOozieClient(String oozieUrl) {
@@ -53,6 +56,16 @@ public class CustomOozieClient extends OozieClient {
 
     @Override
     protected HttpURLConnection createConnection(URL url, String method) throws IOException, OozieClientException {
+        String strUrl = url.toString();
+        if (!strUrl.contains(OozieClient.USER_NAME)) { // decorate the url with the user in request
+            String paramSeparator = (strUrl.contains("?")) ? "&" : "?";
+            strUrl += paramSeparator + OozieClient.USER_NAME + "=" + CurrentUser.getUser();
+            url = new URL(strUrl);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Decorated url with user info: " + url);
+            }
+        }
+
         HttpURLConnection conn = super.createConnection(url, method);
 
         int connectTimeout = Integer.valueOf(RuntimeProperties.get().getProperty("oozie.connect.timeout", "1000"));
