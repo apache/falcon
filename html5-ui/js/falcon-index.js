@@ -82,7 +82,7 @@
    **/
   function refreshEntities(type) {
     falcon.getJson('api/entities/list/' + type + '?fields=status', function (data) {
-      if (data.entity == null)
+      if (data === null || data.entity == null)
         return;
 
       if (!($.isArray(data.entity)))
