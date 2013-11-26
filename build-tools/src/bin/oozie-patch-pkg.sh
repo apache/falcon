@@ -18,7 +18,15 @@
 
 set -e
 
-if [ -d `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/4.0.0-falcon ]
+if [ -z "${MAVEN_HOME}" ]
+then
+    export MVN_CMD=`which mvn`;
+else
+    export MVN_CMD=${MAVEN_HOME}/bin/mvn;
+fi
+echo "Using maven from " $MVN_CMD
+
+if [ -d `$MVN_CMD help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-core/4.0.0-falcon ]
 then
     echo "Oozie already setup. skipping";
     exit 0;
@@ -35,13 +43,6 @@ pwd
 patch -p1 < ../../build-tools/src/patch/oozie-1551-hadoop-2-profile.patch
 patch -p0 < ../../build-tools/src/patch/oozie-4.0.0-falcon.patch
 
-if [ -z "${MAVEN_HOME}" ]
-then
-    export MVN_CMD=`which mvn`;
-else
-    export MVN_CMD=${MAVEN_HOME}/bin/mvn;
-fi
-echo "Using maven from " $MVN_CMD
 $MVN_CMD clean install -DskipTests
 cd ..
 rm -rf oozie-4.0.0*
