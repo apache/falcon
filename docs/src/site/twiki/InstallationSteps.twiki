@@ -12,6 +12,7 @@ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install [For had
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -Dhadoop.profile=2 [For hadoop 2]
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie. Oozie versions >= 3.oozie-3.2.0-incubating are supported]
 
 </verbatim>
 
@@ -216,12 +217,12 @@ bin/falcon-stop
 bin/prism-stop
 </verbatim>
 
----+++ Preparing oozie bundle for use with Falcon
+---+++ Preparing Oozie and Falcon packages for deployment
 <verbatim>
 cd <<project home>>
-mkdir target/package
-src/bin/pacakge.sh <<hadoop-version>>
+src/bin/pacakge.sh <<hadoop-version>> <<oozie-version>>
 
->> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
->> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz
+>> ex. src/bin/pacakge.sh 1.1.2 3.1.3-incubating or src/bin/pacakge.sh 0.20.2-cdh3u5 4.0.0
+>> Falcon pacakge is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
+>> Oozie pacakge is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
 </verbatim>

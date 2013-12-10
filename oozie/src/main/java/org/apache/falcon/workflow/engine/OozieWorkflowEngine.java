@@ -704,7 +704,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
 
             for (CoordinatorJob coord : applicableCoords) {
-                Frequency freq = createFrequency(coord.getFrequency(), coord.getTimeUnit());
+                Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
                 Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
                 Date iterEnd = (coord.getNextMaterializedTime().before(end) ? coord.getNextMaterializedTime() : end);
@@ -722,7 +722,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     }
                     Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                     startCal.setTime(iterStart);
-                    startCal.add(freq.getTimeUnit().getCalendarUnit(), Integer.parseInt(coord.getFrequency()));
+                    startCal.add(freq.getTimeUnit().getCalendarUnit(), Integer.valueOf((coord.getFrequency())));
                     iterStart = startCal.getTime();
                 }
             }
@@ -890,8 +890,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             Calendar cal = Calendar.getInstance(EntityUtil.getTimeZone(coord
                     .getTimeZone()));
             cal.setTime(coord.getLastActionTime());
-            Frequency freq = createFrequency(coord.getFrequency(),
-                    coord.getTimeUnit());
+            Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
             cal.add(freq.getTimeUnit().getCalendarUnit(), -freq.getFrequencyAsInt());
             return cal.getTime();
         }

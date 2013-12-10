@@ -1,0 +1,481 @@
+Index: core/src/test/java/org/apache/oozie/test/XTestCase.java
+===================================================================
+--- core/src/test/java/org/apache/oozie/test/XTestCase.java	(revision 1485571)
++++ core/src/test/java/org/apache/oozie/test/XTestCase.java	(working copy)
+@@ -92,13 +92,13 @@
+  * From within testcases, system properties must be changed using the {@link #setSystemProperty} method.
+  */
+ public abstract class XTestCase extends TestCase {
+-    private Map<String, String> sysProps;
++    protected Map<String, String> sysProps;
+     private String testCaseDir;
+     private String testCaseConfDir;
+     private String hadoopVersion;
+     protected XLog log = new XLog(LogFactory.getLog(getClass()));
+ 
+-    private static File OOZIE_SRC_DIR = null;
++    protected static File OOZIE_SRC_DIR = null;
+     private static final String OOZIE_TEST_PROPERTIES = "oozie.test.properties";
+ 
+     public static float WAITFOR_RATIO = Float.parseFloat(System.getProperty("oozie.test.waitfor.ratio", "1"));
+Index: core/src/test/java/org/apache/oozie/test/XDataTestCase.java
+===================================================================
+--- core/src/test/java/org/apache/oozie/test/XDataTestCase.java	(revision 1485571)
++++ core/src/test/java/org/apache/oozie/test/XDataTestCase.java	(working copy)
+@@ -121,6 +121,25 @@
+     }
+ 
+     /**
++     * Inserts the passed coord job
++     * @param coord job bean
++     * @throws Exception
++     */
++    protected void addRecordToCoordJobTable(CoordinatorJobBean coordJob) throws Exception {
++        try {
++            JPAService jpaService = Services.get().get(JPAService.class);
++            assertNotNull(jpaService);
++            CoordJobInsertJPAExecutor coordInsertCmd = new CoordJobInsertJPAExecutor(coordJob);
++            jpaService.execute(coordInsertCmd);
++        }
++        catch (JPAExecutorException je) {
++            je.printStackTrace();
++            fail("Unable to insert the test coord job record to table");
++            throw je;
++        }
++    }
++
++    /**
+      * Insert coord job for testing.
+      *
+      * @param status coord job status
+Index: core/src/test/java/org/apache/oozie/command/coord/CoordELExtensions.java
+===================================================================
+--- core/src/test/java/org/apache/oozie/command/coord/CoordELExtensions.java	(revision 0)
++++ core/src/test/java/org/apache/oozie/command/coord/CoordELExtensions.java	(revision 0)
+@@ -0,0 +1,77 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ package org.apache.oozie.command.coord;
++
++import java.util.Calendar;
++
++import org.apache.oozie.coord.CoordELFunctions;
++import org.apache.oozie.util.ELEvaluator;
++
++public class CoordELExtensions {
++    private static final String PREFIX = "coordext:";
++
++    public static String ph1_today_echo(int hr, int min) {
++        ELEvaluator eval = ELEvaluator.getCurrent();
++        eval.setVariable(".wrap", "true");
++        return PREFIX + "today(" + hr + ", " + min + ")"; // Unresolved
++    }
++
++    public static String ph2_today_inst(int hr, int min) throws Exception {
++        Calendar nominalInstanceCal = CoordELFunctions.getEffectiveNominalTime();
++        if (nominalInstanceCal == null) {
++            return "";
++        }
++
++        Calendar dsInstanceCal = Calendar.getInstance(CoordELFunctions.getDatasetTZ());
++        dsInstanceCal.setTime(nominalInstanceCal.getTime());
++        dsInstanceCal.set(Calendar.HOUR_OF_DAY, hr);
++        dsInstanceCal.set(Calendar.MINUTE, min);
++        dsInstanceCal.set(Calendar.SECOND, 0);
++        dsInstanceCal.set(Calendar.MILLISECOND, 0);
++
++        int[] instCnt = new int[1];
++        Calendar compInstCal = CoordELFunctions
++                .getCurrentInstance(dsInstanceCal.getTime(), instCnt);
++        if (compInstCal == null) {
++            return "";
++        }
++        int dsInstanceCnt = instCnt[0];
++
++        compInstCal = CoordELFunctions.getCurrentInstance(nominalInstanceCal.getTime(), instCnt);
++        if (compInstCal == null) {
++            return "";
++        }
++        int nominalInstanceCnt = instCnt[0];
++
++        return "coord:current(" + (dsInstanceCnt - nominalInstanceCnt) + ")";
++    }
++
++    public static String ph2_today(int hr, int min) throws Exception {
++        String inst = ph2_today_inst(hr, min);
++        return evaluateCurrent(inst);
++    }
++
++    private static String evaluateCurrent(String curExpr) throws Exception {
++        if (curExpr.equals("")) {
++            return curExpr;
++        }
++
++        int inst = CoordCommandUtils.parseOneArg(curExpr);
++        return CoordELFunctions.ph2_coord_current(inst);
++    }
++}
+\ No newline at end of file
+Index: core/src/test/java/org/apache/oozie/command/coord/TestCoordELExtensions.java
+===================================================================
+--- core/src/test/java/org/apache/oozie/command/coord/TestCoordELExtensions.java	(revision 0)
++++ core/src/test/java/org/apache/oozie/command/coord/TestCoordELExtensions.java	(revision 0)
+@@ -0,0 +1,82 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++ package org.apache.oozie.command.coord;
++
++import java.io.File;
++import java.util.Date;
++import java.util.HashMap;
++
++import org.apache.oozie.CoordinatorActionBean;
++import org.apache.oozie.CoordinatorJobBean;
++import org.apache.oozie.client.CoordinatorJob;
++import org.apache.oozie.service.Services;
++import org.apache.oozie.store.CoordinatorStore;
++import org.apache.oozie.store.StoreException;
++import org.apache.oozie.test.XDataTestCase;
++import org.apache.oozie.util.DateUtils;
++
++public class TestCoordELExtensions extends XDataTestCase {
++    private Services services;
++    private String[] excludedServices = { "org.apache.oozie.service.StatusTransitService",
++            "org.apache.oozie.service.PauseTransitService",
++            "org.apache.oozie.service.RecoveryService" };
++
++    @Override
++    protected void setUp() throws Exception {
++        sysProps = new HashMap<String, String>();
++        setSystemProperty("oozie.test.config.file", new File(OOZIE_SRC_DIR,
++                "core/src/test/resources/oozie-site-coordel.xml").getAbsolutePath());
++        super.setUp();
++        services = new Services();
++        setClassesToBeExcluded(services.getConf(), excludedServices);
++        services.init();
++        cleanUpDBTables();
++    }
++
++    @Override
++    protected void tearDown() throws Exception {
++        services.destroy();
++        super.tearDown();
++    }
++
++    public void testCoordELActionMater() throws Exception {
++        Date startTime = DateUtils.parseDateUTC("2009-03-06T010:00Z");
++        Date endTime = DateUtils.parseDateUTC("2009-03-07T12:00Z");
++        CoordinatorJobBean job = createCoordJob("coord-job-for-elext.xml",
++                CoordinatorJob.Status.PREMATER, startTime, endTime, false, false, 0);
++        addRecordToCoordJobTable(job);
++
++        new CoordActionMaterializeCommand(job.getId(), startTime, endTime).call();
++        checkCoordAction(job.getId() + "@1");
++    }
++
++    protected CoordinatorActionBean checkCoordAction(String actionId) throws StoreException {
++        CoordinatorStore store = new CoordinatorStore(false);
++        try {
++            CoordinatorActionBean action = store.getCoordinatorAction(actionId, false);
++            assertEquals(
++                    "file://#testDir/2009/03/06/00/_SUCCESS#file://#testDir/2009/03/05/23/_SUCCESS",
++                    action.getMissingDependencies());
++            return action;
++        } catch (StoreException se) {
++            se.printStackTrace();
++            fail("Action ID " + actionId + " was not stored properly in db");
++        }
++        return null;
++    }
++}
+\ No newline at end of file
+Index: core/src/test/resources/oozie-site-coordel.xml
+===================================================================
+--- core/src/test/resources/oozie-site-coordel.xml	(revision 0)
++++ core/src/test/resources/oozie-site-coordel.xml	(revision 0)
+@@ -0,0 +1,65 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!--
++  Licensed to the Apache Software Foundation (ASF) under one
++  or more contributor license agreements.  See the NOTICE file
++  distributed with this work for additional information
++  regarding copyright ownership.  The ASF licenses this file
++  to you under the Apache License, Version 2.0 (the
++  "License"); you may not use this file except in compliance
++  with the License.  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++-->
++<configuration>
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-job-submit-instances
++        </name>
++        <value>
++            coordext:today=org.apache.oozie.command.coord.CoordELExtensions#ph1_today_echo
++        </value>
++        <description>
++            EL functions declarations, separated by commas,
++            format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a
++            convenience property to add extensions to the built in
++            executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-action-create-inst
++        </name>
++        <value>
++            coordext:today=org.apache.oozie.command.coord.CoordELExtensions#ph2_today_inst
++        </value>
++        <description>
++            EL functions declarations, separated by commas,
++            format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a
++            convenience property to add extensions to the built in
++            executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++    <property>
++        <name>oozie.service.ELService.ext.functions.coord-action-create
++        </name>
++        <value>
++            coordext:today=org.apache.oozie.command.coord.CoordELExtensions#ph2_today
++        </value>
++        <description>
++            EL functions declarations, separated by commas,
++            format is [PREFIX:]NAME=CLASS#METHOD.
++            This property is a
++            convenience property to add extensions to the built in
++            executors without having to
++            include all the built in ones.
++        </description>
++    </property>
++</configuration>
+\ No newline at end of file
+Index: core/src/test/resources/coord-job-for-elext.xml
+===================================================================
+--- core/src/test/resources/coord-job-for-elext.xml	(revision 0)
++++ core/src/test/resources/coord-job-for-elext.xml	(revision 0)
+@@ -0,0 +1,63 @@
++<!--
++  Licensed to the Apache Software Foundation (ASF) under one
++  or more contributor license agreements.  See the NOTICE file
++  distributed with this work for additional information
++  regarding copyright ownership.  The ASF licenses this file
++  to you under the Apache License, Version 2.0 (the
++  "License"); you may not use this file except in compliance
++  with the License.  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++-->
++<coordinator-app xmlns='uri:oozie:coordinator:0.2' name='NAME'
++    frequency="1" start='2009-02-01T01:00Z' end='2009-02-03T23:59Z'
++    timezone='UTC' freq_timeunit='DAY' end_of_duration='NONE'>
++    <controls>
++        <timeout>10</timeout>
++        <concurrency>2</concurrency>
++        <execution>LIFO</execution>
++    </controls>
++    <input-events>
++        <data-in name='A' dataset='a'>
++            <dataset name='a' frequency='1' initial-instance='2009-02-01T00:00Z'
++                timezone='UTC' freq_timeunit='HOUR' end_of_duration='NONE'>
++                <uri-template>file://#testDir/${YEAR}/${MONTH}/${DAY}/${HOUR}
++                </uri-template>
++            </dataset>
++            <start-instance>${coordext:today(-1,0)}</start-instance>
++            <end-instance>${coordext:today(0,0)}</end-instance>
++        </data-in>
++    </input-events>
++    <output-events>
++        <data-out name='LOCAL_A' dataset='local_a'>
++            <dataset name='local_a' frequency='1'
++                initial-instance='2009-02-01T00:00Z' timezone='UTC'
++                freq_timeunit='HOUR' end_of_duration='NONE'>
++                <uri-template>file://#testDir/${YEAR}/${DAY}
++                </uri-template>
++            </dataset>
++            <instance>${coordext:today(0,0)}</instance>
++        </data-out>
++    </output-events>
++    <action>
++        <workflow>
++            <app-path>hdfs:///tmp/workflows/</app-path>
++            <configuration>
++                <property>
++                    <name>inputA</name>
++                    <value>${coord:dataIn('A')}</value>
++                </property>
++                <property>
++                    <name>inputB</name>
++                    <value>${coord:dataOut('LOCAL_A')}</value>
++                </property>
++            </configuration>
++        </workflow>
++    </action>
++</coordinator-app>
+\ No newline at end of file
+Index: core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java
+===================================================================
+--- core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java	(revision 1485571)
++++ core/src/main/java/org/apache/oozie/command/coord/CoordCommandUtils.java	(working copy)
+@@ -63,28 +63,36 @@
+      * <p/>
+      *
+      * @param function
+-     * @param event
+-     * @param appInst
+-     * @param conf
+      * @param restArg
+      * @return int instanceNumber
+      * @throws Exception
+      */
+-    public static int getInstanceNumber(String function, Element event, SyncCoordAction appInst, Configuration conf,
+-            StringBuilder restArg) throws Exception {
+-        ELEvaluator eval = CoordELEvaluator
+-                .createInstancesELEvaluator("coord-action-create-inst", event, appInst, conf);
+-        String newFunc = CoordELFunctions.evalAndWrap(eval, function);
+-        int funcType = getFuncType(newFunc);
++    public static int getInstanceNumber(String function, StringBuilder restArg) throws Exception {
++        int funcType = getFuncType(function);
+         if (funcType == CURRENT || funcType == LATEST) {
+-            return parseOneArg(newFunc);
++            return parseOneArg(function);
+         }
+         else {
+-            return parseMoreArgs(newFunc, restArg);
++            return parseMoreArgs(function, restArg);
+         }
+     }
+ 
+-    private static int parseOneArg(String funcName) throws Exception {
++    /**
++     * Evaluates function for coord-action-create-inst tag
++     * @param event
++     * @param appInst
++     * @param conf
++     * @param function
++     * @return evaluation result
++     * @throws Exception
++     */
++    private static String evaluateInstanceFunction(Element event, SyncCoordAction appInst, Configuration conf,
++            String function) throws Exception {
++        ELEvaluator eval = CoordELEvaluator.createInstancesELEvaluator("coord-action-create-inst", event, appInst, conf);
++        return CoordELFunctions.evalAndWrap(eval, function);
++    }
++
++    public static int parseOneArg(String funcName) throws Exception {
+         int firstPos = funcName.indexOf("(");
+         int lastPos = funcName.lastIndexOf(")");
+         if (firstPos >= 0 && lastPos > firstPos) {
+@@ -181,17 +189,17 @@
+         Element eStartInst = event.getChild("start-instance", event.getNamespace());
+         Element eEndInst = event.getChild("end-instance", event.getNamespace());
+         if (eStartInst != null && eEndInst != null) {
+-            String strStart = eStartInst.getTextTrim();
+-            String strEnd = eEndInst.getTextTrim();
++            String strStart = evaluateInstanceFunction(event, appInst, conf, eStartInst.getTextTrim());
++            String strEnd = evaluateInstanceFunction(event, appInst, conf, eEndInst.getTextTrim());
+             checkIfBothSameType(strStart, strEnd);
+             StringBuilder restArg = new StringBuilder(); // To store rest
+                                                          // arguments for
+                                                          // future
+                                                          // function
+-            int startIndex = getInstanceNumber(strStart, event, appInst, conf, restArg);
++            int startIndex = getInstanceNumber(strStart, restArg);
+             String startRestArg = restArg.toString();
+             restArg.delete(0, restArg.length());
+-            int endIndex = getInstanceNumber(strEnd, event, appInst, conf, restArg);
++            int endIndex = getInstanceNumber(strEnd, restArg);
+             String endRestArg = restArg.toString();
+             int funcType = getFuncType(strStart);
+             if (funcType == OFFSET) {
+Index: core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java
+===================================================================
+--- core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java	(revision 1485571)
++++ core/src/main/java/org/apache/oozie/coord/CoordELFunctions.java	(working copy)
+@@ -1250,7 +1250,7 @@
+      * @return current instance i.e. current(0) returns null if effectiveTime is earlier than Initial Instance time of
+      *         the dataset.
+      */
+-    private static Calendar getCurrentInstance(Date effectiveTime, int instanceCount[]) {
++    public static Calendar getCurrentInstance(Date effectiveTime, int instanceCount[]) {
+         ELEvaluator eval = ELEvaluator.getCurrent();
+         return getCurrentInstance(effectiveTime, instanceCount, eval);
+     }
+@@ -1294,7 +1294,7 @@
+         return current;
+     }
+ 
+-    private static Calendar getEffectiveNominalTime() {
++    public static Calendar getEffectiveNominalTime() {
+         Date datasetInitialInstance = getInitialInstance();
+         TimeZone dsTZ = getDatasetTZ();
+         // Convert Date to Calendar for corresponding TZ
+@@ -1356,7 +1356,7 @@
+     /**
+      * @return dataset TimeZone
+      */
+-    private static TimeZone getDatasetTZ() {
++    public static TimeZone getDatasetTZ() {
+         ELEvaluator eval = ELEvaluator.getCurrent();
+         return getDatasetTZ(eval);
+     }
+Index: bin/test-patch-05-patch-raw-analysis
+===================================================================
+--- bin/test-patch-05-patch-raw-analysis	(revision 1485571)
++++ bin/test-patch-05-patch-raw-analysis	(working copy)
+@@ -30,7 +30,8 @@
+ }
+ ###############################################################################
+ printUsage() {
+-  echo "Usage: $0 --taskname | (--op=pre|post|report --tempdir=<TEMP DIR> --reportdir=<REPORT DIR> --summaryfile=<SUMMARY FILE>)"
++  echo "Usage: $0 --taskname | (--op=pre|post|report --tempdir=<TEMP DIR> --reportdir=<REPORT DIR> --summaryfile=<SUMMARY FILE> "
++  echo "--patchfile=<PATCH FILE>)"
+   echo
+ }
+ ###############################################################################

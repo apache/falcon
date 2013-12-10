@@ -20,6 +20,7 @@ package org.apache.oozie.extensions;
 
 import java.io.File;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.coord.CoordELFunctions;
@@ -52,7 +53,17 @@ public class TestOozieELExtensions {
         Services.setOozieHome();
 
         Services services = new Services();
-        services.getConf().set("oozie.services", "org.apache.oozie.service.ELService");
+        Configuration conf = services.getConf();
+        try {
+            Class.forName("org.apache.oozie.service.URIHandlerService");
+            conf.set("oozie.services", "org.apache.oozie.service.HadoopAccessorService,"
+                    + "org.apache.oozie.service.ELService,org.apache.oozie.service.URIHandlerService");
+        } catch (ClassNotFoundException e) {
+            conf.set("oozie.services", "org.apache.oozie.service.HadoopAccessorService,"
+                    + "org.apache.oozie.service.ELService");
+        }
+        conf.set("oozie.service.HadoopAccessorService.hadoop.configurations", "*=..");
+        conf.set("oozie.service.HadoopAccessorService.action.configurations", "*=..");
         services.init();
 
         instEval = Services.get().get(ELService.class).createEvaluator("coord-action-create-inst");
@@ -119,7 +130,7 @@ public class TestOozieELExtensions {
         eval.setVariable(inName + ".freq_timeunit", ds.getTimeUnit().name());
         eval.setVariable(inName + ".timezone", ds.getTimeZone().getID());
         eval.setVariable(inName + ".end_of_duration", Timeunit.NONE.name());
-        eval.setVariable(inName + ".initial-instance", DateUtils.formatDateOozieTZ(ds.getInitInstance()));
+        eval.setVariable(inName + ".initial-instance", OozieELExtensions.formatDateUTC(ds.getInitInstance()));
         eval.setVariable(inName + ".done-flag", "notused");
         eval.setVariable(inName + ".uri-template", ds.getUriTemplate());
         eval.setVariable(inName + ".start-instance", "now(-1,0)");
@@ -245,7 +256,7 @@ public class TestOozieELExtensions {
         ds.setFrequency(1);
         ds.setInitInstance(DateUtils.parseDateUTC(initialInstance));
         ds.setTimeUnit(TimeUnit.HOUR);
-        ds.setTimeZone(DateUtils.getTimeZone("UTC"));
+        ds.setTimeZone(OozieELExtensions.UTC);
         ds.setName("test");
         ds.setUriTemplate("hdfs://localhost:8020/clicks/${YEAR}/${MONTH}/${DAY}/${HOUR}");
         ds.setType("SYNC");
@@ -258,7 +269,7 @@ public class TestOozieELExtensions {
         appInst = new SyncCoordAction();
         appInst.setActualTime(DateUtils.parseDateUTC(actualTime));
         appInst.setNominalTime(DateUtils.parseDateUTC(nominalTime));
-        appInst.setTimeZone(DateUtils.getTimeZone("UTC"));
+        appInst.setTimeZone(OozieELExtensions.UTC);
         appInst.setActionId("00000-oozie-C@1");
         appInst.setName("mycoordinator-app");
         return appInst;

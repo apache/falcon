@@ -21,9 +21,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.falcon</groupId>
+        <artifactId>falcon-main</artifactId>
+        <version>0.5-incubating-SNAPSHOT</version>
+    </parent>
     <groupId>org.apache.falcon</groupId>
     <artifactId>build-tools</artifactId>
-    <version>0.5-incubating-SNAPSHOT</version>
     <name>Build Tools</name>
 
     <build>
@@ -31,7 +35,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.2.1</version>
                 <executions>
                     <execution>
                         <id>BUILD-OOZIE</id>
@@ -39,11 +43,16 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <configuration>
-                            <executable>src/bin/oozie-patch-pkg.sh</executable>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <executable>src/bin/build-oozie.sh</executable>
+                    <arguments>
+                        <argument>${oozie.version}</argument>
+                        <argument>${oozie.buildversion}</argument>
+                        <argument>${oozie.forcebuild}</argument>
+                    </arguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

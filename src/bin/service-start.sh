@@ -43,7 +43,7 @@ mkdir -p $FALCON_LOG_DIR
 
 pushd ${BASEDIR} > /dev/null
 
-JAVA_PROPERTIES="$FALCON_OPTS $FALCON_PROPERTIES -Dfalcon.log.dir=$FALCON_LOG_DIR -Dfalcon.embeddedmq.data=$FALCON_DATA_DIR -Dfalcon.home=${FALCON_HOME_DIR} -Dconfig.location=$FALCON_CONF -Dfalcon.app.type=$APP_TYPE"
+JAVA_PROPERTIES="$FALCON_OPTS $FALCON_PROPERTIES -Dfalcon.log.dir=$FALCON_LOG_DIR -Dfalcon.embeddedmq.data=$FALCON_DATA_DIR -Dfalcon.home=${FALCON_HOME_DIR} -Dconfig.location=$FALCON_CONF -Dfalcon.app.type=$APP_TYPE -Dfalcon.catalog.service.enabled=$CATALOG_ENABLED"
 shift
 
 while [[ ${1} =~ ^\-D ]]; do

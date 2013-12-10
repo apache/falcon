@@ -18,7 +18,11 @@
 
 package org.apache.oozie.extensions;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -27,7 +31,6 @@ import org.apache.oozie.coord.CoordELEvaluator;
 import org.apache.oozie.coord.CoordELFunctions;
 import org.apache.oozie.coord.SyncCoordAction;
 import org.apache.oozie.coord.SyncCoordDataset;
-import org.apache.oozie.util.DateUtils;
 import org.apache.oozie.util.ELEvaluator;
 import org.apache.oozie.util.ParamChecker;
 import org.apache.oozie.util.XLog;
@@ -41,6 +44,9 @@ import org.jdom.Text;
 @SuppressWarnings("unchecked")
 //SUSPEND CHECKSTYLE CHECK MethodName
 public final class OozieELExtensions {
+
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm'Z'";
+    public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     private enum TruncateBoundary {
         NONE, DAY, MONTH, QUARTER, YEAR
@@ -226,7 +232,23 @@ public final class OozieELExtensions {
     private static String getEffectiveTimeStr(TruncateBoundary trunc, int yr, int mon,
                                               int day, int hr, int min) throws Exception {
         Calendar time = getEffectiveTime(trunc, yr, mon, day, hr, min);
-        return DateUtils.formatDateOozieTZ(time);
+        return formatDateUTC(time);
+    }
+
+    private static DateFormat getISO8601DateFormat(TimeZone tz) {
+        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        // Stricter parsing to prevent dates such as 2011-12-50T01:00Z (December 50th) from matching
+        dateFormat.setLenient(false);
+        dateFormat.setTimeZone(tz);
+        return dateFormat;
+    }
+
+    public static String formatDateUTC(Date d) throws Exception {
+        return (d != null) ? getISO8601DateFormat(UTC).format(d) : "NULL";
+    }
+
+    public static String formatDateUTC(Calendar c) throws Exception {
+        return (c != null) ? formatDateUTC(c.getTime()) : "NULL";
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"SF_SWITCH_FALLTHROUGH"})

@@ -285,7 +285,7 @@
                         <goals>
                             <goal>run</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>pre-integration-test</phase>
                     </execution>
                 </executions>
             </plugin>

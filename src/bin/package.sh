@@ -16,9 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "${1}"x == "x" ]
+set -e
+set -x
+
+if [ $# -ne 2 ]
 then
-  echo "Usage ${0} <<hadoop-version>>"
+  echo "Usage ${0} <<hadoop-version>> <<oozie-version>>"
   exit 1
 fi
 
@@ -39,30 +42,27 @@ BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR};pwd`
 
 FALCON_SRC=${BASEDIR}/../..
-PACKAGE_HOME=${FALCON_SRC}/target/package
+
+HADOOP_VERSION=$1
+OOZIE_VERSION=$2
 
 pushd ${FALCON_SRC}
-echo "Building falcon & falcon-oozie-el-extensions ....."
-mvn clean assembly:assembly -Dhadoop.version=${1} -DskipTests -DskipCheck=true > /dev/null
+echo "Builing oozie-el-extension and oozie"
+mvn clean install -pl build-tools,hadoop-dependencies,oozie-el-extensions -am -Dhadoop.version=$HADOOP_VERSION -Doozie.version=$OOZIE_VERSION -Doozie.forcebuild=true -DskipTests
+pushd target/oozie-$OOZIE_VERSION
+bin/mkdistro.sh -DskipTests
+pushd distro/target/oozie-*
+mkdir -p WEB-INF/lib
+cp ${FALCON_SRC}/oozie-el-extensions/target/falcon-oozie-el-extension*.jar WEB-INF/lib/
+jar uvf oozie-*/oozie.war WEB-INF/lib/*.jar
+mkdir libext
+cp ${FALCON_SRC}/hadoop-dependencies/target/dependency/*.jar libext
+tar -zcvf ${FALCON_SRC}/target/oozie-$OOZIE_VERSION-distro.tar.gz oozie-*
+
 popd
+popd
+mvn assembly:assembly -Dhadoop.version=$HADOOP_VERSION -Doozie.version=$OOZIE_VERSION -Doozie.forcebuild=true -DskipTests -DskipCheck=true
 
-mkdir -p ${PACKAGE_HOME}
-pushd ${PACKAGE_HOME}
-rm -rf oozie-*
-echo "Getting oozie release tar ball of version 4.0.0 ..."
-curl "http://www.apache.org/dist/oozie/4.0.0/oozie-4.0.0.tar.gz" -o oozie-4.0.0.tgz
-tar -xzvf oozie-4.0.0.tgz 2> /dev/null
-rm oozie-4.0.0.tgz
-cd oozie-4.0.0
-
-echo "Patching oozie with falcon extensions and marking version as 4.0.0 ..."
-patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-1551-hadoop-2-profile.patch
-patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-4.0.0-falcon.patch
-patch -p0 < ${FALCON_SRC}/build-tools/src/patch/oozie-bundle-el-extension.patch
-
-echo "Building oozie & creating tar ball ..."
-bin/mkdistro.sh -DskipTests > /dev/null
-
-echo "Falcon pacakge is available in ${FALCON_SRC}/target/falcon-<<version>>/falcon-<<version>>.tar.gz"
-echo "Oozie pacakge is available in ${FALCON_SRC}/target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz"
+echo "Falcon pacakge is available in ${FALCON_SRC}/target/falcon-<<version>>-bin.tar.gz"
+echo "Oozie pacakge is available in ${FALCON_SRC}/target/oozie-$OOZIE_VERSION-distro.tar.gz"
 popd

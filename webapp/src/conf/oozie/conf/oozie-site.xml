@@ -22,7 +22,6 @@
         Refer to the oozie-default.xml file for the complete list of
         Oozie configuration properties and their default values.
     -->
-
     <property>
         <name>oozie.service.ActionService.executor.ext.classes</name>
         <value>

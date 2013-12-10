@@ -11,6 +11,19 @@
     <!-- Uncomment to enable additional actions (email). <property> <name>oozie.service.ActionService.executor.ext.classes</name> <value> org.apache.oozie.action.email.EmailActionExecutor 
         </value> </property> <property> <name>oozie.service.SchemaService.wf.ext.schemas</name> <value>email-action-0.1.xsd</value> </property> -->
 
+    <!-- HCatalog Integration Properties -->
+    <property>
+        <name>oozie.service.ActionService.executor.ext.classes</name>
+        <value>
+            org.apache.oozie.action.hadoop.HiveActionExecutor
+        </value>
+    </property>
+
+    <property>
+        <name>oozie.service.SchemaService.wf.ext.schemas</name>
+        <value>hive-action-0.2.xsd</value>
+    </property>
+
     <property>
         <name>oozie.system.id</name>
         <value>oozie-${user.name}</value>

@@ -100,7 +100,8 @@
         <hadoop.version>1.1.2</hadoop.version>
         <slf4j.version>1.6.1</slf4j.version>
         <oozie.version>4.0.0</oozie.version>
-        <falcon.oozie.version>${oozie.version}-falcon</falcon.oozie.version>
+        <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
+        <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.11.0</hive.version>
         <hcatalog.version>0.11.0</hcatalog.version>
@@ -144,6 +145,7 @@
     </profiles>
 
     <modules>
+        <module>checkstyle</module>
         <module>build-tools</module>
         <module>client</module>
         <module>metrics</module>
@@ -526,7 +528,7 @@
             <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-client</artifactId>
-                <version>${falcon.oozie.version}</version>
+                <version>${oozie.buildversion}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
@@ -562,7 +564,7 @@
             <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-core</artifactId>
-                <version>${falcon.oozie.version}</version>
+                <version>${oozie.buildversion}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
@@ -618,7 +620,7 @@
             <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-webapp</artifactId>
-                <version>${falcon.oozie.version}</version>
+                <version>${oozie.buildversion}</version>
                 <type>war</type>
             </dependency>
 
@@ -741,18 +743,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hive</groupId>
-                <artifactId>hive-metastore</artifactId>
-                <version>${hive.version}</version>
-                <exclusions>
-                    <exclusion> <!--Oozie already imports this-->
-                        <groupId>org.apache.derby</groupId>
-                        <artifactId>derby</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.hcatalog</groupId>
                 <artifactId>webhcat-java-client</artifactId>
                 <version>${hcatalog.version}</version>
@@ -762,6 +752,12 @@
                 <groupId>net.sourceforge.findbugs</groupId>
                 <artifactId>annotations</artifactId>
                 <version>1.3.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.10.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -889,6 +885,30 @@
 
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.3.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>oozie.version</property>
+                                    <regex>^(?:(?!3\.1\.3-incubating).)*$</regex>
+                                    <regexMessage>Oozie version 3.1.3-incubating is not supported. Use a higher version of oozie</regexMessage>
+                                </requireProperty>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
                 <executions>
@@ -1008,7 +1028,7 @@
                         <exclude>**/target/**</exclude>
                         <exclude>**/activemq-data/**</exclude>
                         <exclude>**/build/**</exclude>
-                        <exclude>*.patch</exclude>
+                        <exclude>**/*.patch</exclude>
                         <exclude>derby.log</exclude>
                         <exclude>**/logs/**</exclude>
                         <exclude>**/.classpath</exclude>
@@ -1020,7 +1040,6 @@
                         <exclude>**/.externalToolBuilders/**</exclude>
                         <exclude>html5-ui/**</exclude>
                     </excludes>
-                    <argLine>-Dfalcon.log.dir=target/logs -Dfalcon.embeddedmq.data=target/data</argLine>
                 </configuration>
                 <executions>
                     <execution>
@@ -1039,7 +1058,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.falcon</groupId>
-                        <artifactId>build-tools</artifactId>
+                        <artifactId>checkstyle</artifactId>
                         <version>${project.version}</version>
                     </dependency>
                 </dependencies>
@@ -1067,7 +1086,7 @@
                 <configuration>
                     <!--debug>true</debug -->
                     <xmlOutput>true</xmlOutput>
-                    <excludeFilterFile>${basedir}/../build-tools/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                    <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
                     <failOnError>true</failOnError>
                     <skip>${skipCheck}</skip>
                 </configuration>
