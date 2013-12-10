@@ -25,7 +25,15 @@ FORCE_BUILD=$3
 
 echo "oozie version $OOZIE_VERSION"
 
-if [[ ($FORCE_BUILD == 'false') && ( -f `mvn help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-webapp/$BUILD_VERSION/oozie-webapp-$BUILD_VERSION.war) ]]
+if [ -z "${MAVEN_HOME}" ]
+then
+    export MVN_CMD=`which mvn`;
+else
+    export MVN_CMD=${MAVEN_HOME}/bin/mvn;
+fi
+echo "Using maven from " $MVN_CMD
+
+if [[ ($FORCE_BUILD == 'false') && ( -f `$MVN_CMD help:effective-settings | grep localRepository | cut -d\> -f2 | cut -d\< -f1`/org/apache/oozie/oozie-webapp/$BUILD_VERSION/oozie-webapp-$BUILD_VERSION.war) ]]
 then
     echo "Oozie already setup. skipping";
     exit 0;
@@ -82,15 +90,6 @@ esac
 
 rm `find . -name 'pom.xml.bak'`
 
-
-if [ -z "${MAVEN_HOME}" ]
-then
-    export MVN_CMD=`which mvn`;
-else
-    export MVN_CMD=${MAVEN_HOME}/bin/mvn;
-fi
-
-echo "Using maven from " $MVN_CMD
 $MVN_CMD clean install -DskipTests
 
 popd
