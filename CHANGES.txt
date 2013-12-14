@@ -13,6 +13,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-228 Build failed on build-tools module. (Jean-Baptiste Onofré
+    via Shwetha GS)
 
 
 

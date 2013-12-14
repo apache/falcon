@@ -58,32 +58,32 @@ cd $PKG
 
 case $VERSION in
 3.2.0-incubating )
-    sed -i .bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-882.patch
     ;;
 3.3.0 )
-    sed -i .bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
     ;;
 3.3.1 )
-    sed -i .bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
     ;;
 3.3.2 )
-    sed -i .bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1465-3.3.2.patch
     ;;
 4* )
-    sed -i .bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     ;;
 esac
