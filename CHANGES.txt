@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+    FALCON-106 Falcon compilation fails for hadoop-2 profile. (Shwetha GS
+    via Srikanth Sundarrajan)
+
     FALCON-66 Make oozie version change configurable. (Shwetha GS
     via Srikanth Sundarrajan)
 

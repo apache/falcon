@@ -9,7 +9,7 @@ git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
 cd falcon
 
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install [For hadoop 1]
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -Dhadoop.profile=2 [For hadoop 2]
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -P hadoop-2 [For hadoop 2]
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie. Oozie versions >= 3.oozie-3.2.0-incubating are supported]
@@ -22,7 +22,7 @@ Once the build successfully completes, artifacts can be packaged for deployment.
 <verbatim>
 
 mvn clean assembly:assembly -DskipTests -DskipCheck=true [For hadoop 1]
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -Dhadoop.profile=2 [For hadoop 2]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -P hadoop-2 [For hadoop 2]
 
 </verbatim>
 
@@ -63,8 +63,8 @@ Tar is structured as follows
 
 <verbatim>
 
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed -Dhadoop.profile=1 [For hadoop 1]
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed -Dhadoop.profile=2 [For hadoop 2]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed,hadoop-1 [For hadoop 1]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed,hadoop-2 [For hadoop 2]
 
 </verbatim>
 

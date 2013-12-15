@@ -96,8 +96,6 @@
 
         <include.prism>true</include.prism>
 
-        <hadoop.profile>1</hadoop.profile>
-        <hadoop.version>1.1.2</hadoop.version>
         <slf4j.version>1.6.1</slf4j.version>
         <oozie.version>4.0.0</oozie.version>
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
@@ -113,19 +111,138 @@
 
     <profiles>
         <profile>
-            <id>hadoop-2</id>
+            <id>hadoop-1</id>
             <activation>
-                <property>
-                    <name>hadoop.profile</name>
-                    <value>2</value>
-                </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
+
             <properties>
-                <hadoop.profile>2</hadoop.profile>
+                <hadoop.version>1.1.2</hadoop.version>
+            </properties>
+
+           <dependencyManagement>
+                <dependencies>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-core</artifactId>
+		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
+		                <exclusions>
+		                    <exclusion>
+		                        <groupId>org.eclipse.jdt</groupId>
+		                        <artifactId>core</artifactId>
+		                    </exclusion>
+		                    <exclusion>
+		                        <groupId>tomcat</groupId>
+		                        <artifactId>jasper-runtime</artifactId>
+		                    </exclusion>
+		                    <exclusion>
+		                        <groupId>tomcat</groupId>
+		                        <artifactId>jasper-compiler</artifactId>
+		                    </exclusion>
+		                </exclusions>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-test</artifactId>
+		                <version>${hadoop.version}</version>
+                        <scope>test</scope>
+		                <exclusions>
+		                    <exclusion>
+		                        <groupId>org.slf4j</groupId>
+		                        <artifactId>slf4j-api</artifactId>
+		                    </exclusion>
+		                    <exclusion>
+		                        <groupId>org.apache.ftpserver</groupId>
+		                        <artifactId>ftpserver-core</artifactId>
+		                    </exclusion>
+		                    <exclusion>
+		                        <groupId>org.apache.ftpserver</groupId>
+		                        <artifactId>ftpserver-deprecated</artifactId>
+		                    </exclusion>
+		                </exclusions>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-client</artifactId>
+		                <version>${hadoop1.version}</version>
+		                <exclusions>
+		                    <exclusion>
+		                        <groupId>org.glassfish</groupId>
+		                        <artifactId>javax.servlet</artifactId>
+		                    </exclusion>
+		                </exclusions>
+		            </dependency>
+                </dependencies>
+          </dependencyManagement>
+        </profile>
+
+        <profile>
+            <id>hadoop-2</id>
+            <properties>
                 <hadoop.version>2.0.2-alpha</hadoop.version>
             </properties>
+            <dependencyManagement>
+                <dependencies>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-client</artifactId>
+		                <version>${hadoop.version}</version>
+		                <exclusions>
+		                    <exclusion>
+		                        <groupId>org.glassfish</groupId>
+		                        <artifactId>javax.servlet</artifactId>
+		                    </exclusion>
+		                </exclusions>
+		            </dependency>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-hdfs</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-common</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-hdfs</artifactId>
+		                <version>${hadoop.version}</version>
+		                <classifier>tests</classifier>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-common</artifactId>
+		                <version>${hadoop.version}</version>
+		                <classifier>tests</classifier>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-auth</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+                </dependencies>
+          </dependencyManagement>
         </profile>
-        
+
         <profile>
             <id>distributed</id>
             <build>
@@ -232,84 +349,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-core</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jdt</groupId>
-                        <artifactId>core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-runtime</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-compiler</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-test</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.ftpserver</groupId>
-                        <artifactId>ftpserver-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.ftpserver</groupId>
-                        <artifactId>ftpserver-deprecated</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.glassfish</groupId>
-                        <artifactId>javax.servlet</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-hdfs</artifactId>
-                <version>${hadoop.version}</version>
-                <classifier>tests</classifier>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-                <version>${hadoop.version}</version>
-                <classifier>tests</classifier>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-                                        
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -591,14 +630,6 @@
                         <artifactId>slf4j-log4j12</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>javax.servlet</groupId>
-                        <artifactId>servlet-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet.jsp</groupId>
-                        <artifactId>jsp-api</artifactId>
-                    </exclusion>
-                    <exclusion>
                         <groupId>org.mortbay.jetty</groupId>
                         <artifactId>jetty</artifactId>
                     </exclusion>
@@ -733,6 +764,12 @@
                 <groupId>org.apache.hive</groupId>
                 <artifactId>hive-common</artifactId>
                 <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--  this is needed for embedded oozie -->
@@ -740,6 +777,20 @@
                 <groupId>org.apache.hive</groupId>
                 <artifactId>hive-exec</artifactId>
                 <version>${hive.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.hbase</groupId>
+                        <artifactId>hbase-client</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>

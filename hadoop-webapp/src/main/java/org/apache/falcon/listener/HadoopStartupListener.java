@@ -49,13 +49,11 @@ public class HadoopStartupListener implements ServletContextListener {
 
             NameNode.format(conf);
             final String[] emptyArgs = {};
-            String hadoopProfle = System.getProperty("hadoop.profile", "1");
-            if (hadoopProfle.equals("1")) {
-                startHadoop1Services(conf, emptyArgs);
-            } else if (hadoopProfle.equals("2")) {
+            try {
+                Class.forName("org.apache.hadoop.mapreduce.task.JobContextImpl");
                 startHadoop2Services(conf, emptyArgs);
-            } else {
-                throw new RuntimeException("Unhandled hadoop profile " + hadoopProfle);
+            } catch (ClassNotFoundException cnfe) {
+                startHadoop1Services(conf, emptyArgs);
             }
 
             startBroker();
