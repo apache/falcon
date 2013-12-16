@@ -19,6 +19,7 @@ Trunk (Unreleased)
     FALCON-228 Build failed on build-tools module. (Jean-Baptiste Onofré
     via Shwetha GS)
 
+    FALCON-232 mvn clean verify fails with oozie war not found. (Shwetha GS)
 
 
 Release Version: 0.4-incubating
