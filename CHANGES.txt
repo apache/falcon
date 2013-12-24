@@ -21,6 +21,7 @@ Trunk (Unreleased)
 
     FALCON-232 mvn clean verify fails with oozie war not found. (Shwetha GS)
 
+    FALCON-124 unable to schedule deleted feed. (Shwetha GS via Shaik Idris)
 
 Release Version: 0.4-incubating
 
