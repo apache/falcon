@@ -19,10 +19,10 @@ package org.apache.falcon.service;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.falcon.FalconException;
 import org.apache.falcon.messaging.EntityInstanceMessage;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.mortbay.log.Log;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -39,17 +39,19 @@ public class FalconTopicSubscriberTest {
     // "tcp://localhost:61616?daemon=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "FALCON.ENTITY.TOPIC";
+    private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
     private BrokerService broker;
 
     @BeforeClass
     public void setup() throws Exception {
         broker = new BrokerService();
-        broker.setUseJmx(true);
         broker.addConnector(BROKER_URL);
+        broker.setDataDirectory("target/activemq");
+        broker.setBrokerName("localhost");
         broker.start();
     }
 
-    public void sendMessages() throws JMSException {
+    public void sendMessages(String topic) throws JMSException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
                 BROKER_URL);
         Connection connection = connectionFactory.createConnection();
@@ -57,11 +59,11 @@ public class FalconTopicSubscriberTest {
 
         Session session = connection.createSession(false,
                 Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createTopic(TOPIC_NAME);
-        javax.jms.MessageProducer producer = session
+        Topic destination = session.createTopic(topic);
+        MessageProducer producer = session
                 .createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 3; i++) {
             EntityInstanceMessage falconMessage = getMockFalconMessage(i);
             MapMessage message = session.createMapMessage();
             for (ARG arg : ARG.values()) {
@@ -73,9 +75,13 @@ public class FalconTopicSubscriberTest {
         }
 
         EntityInstanceMessage message = getMockFalconMessage(15);
+        MapMessage mapMessage = session.createMapMessage();
         message.getKeyValueMap().put(ARG.status, "FAILED");
-        TextMessage textMessage = session.createTextMessage(message.toString());
-        producer.send(textMessage);
+        for (ARG arg : ARG.values()) {
+            mapMessage.setString(arg.getPropName(), message
+                    .getKeyValueMap().get(arg));
+        }
+        producer.send(mapMessage);
     }
 
     private EntityInstanceMessage getMockFalconMessage(int i) {
@@ -99,17 +105,22 @@ public class FalconTopicSubscriberTest {
     }
 
     @Test
-    public void testSubscriber() throws FalconException, JMSException {
-        FalconTopicSubscriber subscriber1 = new FalconTopicSubscriber(
-                BROKER_IMPL_CLASS, "", "", BROKER_URL, TOPIC_NAME);
-
-        subscriber1.startSubscriber();
-        sendMessages();
-        subscriber1.closeSubscriber();
+    public void testSubscriber() throws Exception{
+        //Comma separated topics are supported in startup properties
+        FalconTopicSubscriber subscriber = new FalconTopicSubscriber(
+                BROKER_IMPL_CLASS, "", "", BROKER_URL, TOPIC_NAME+","+SECONDARY_TOPIC_NAME);
+        subscriber.startSubscriber();
+        sendMessages(TOPIC_NAME);
+        Assert.assertEquals(broker.getAdminView().getTotalEnqueueCount(), 9);
+        sendMessages(SECONDARY_TOPIC_NAME);
+        Assert.assertEquals(broker.getAdminView().getTotalEnqueueCount(), 17);
+        Assert.assertEquals(broker.getAdminView().getTotalConsumerCount(), 2);
+        subscriber.closeSubscriber();
     }
 
     @AfterClass
     public void tearDown() throws Exception {
+        broker.deleteAllMessages();
         broker.stop();
     }
 }

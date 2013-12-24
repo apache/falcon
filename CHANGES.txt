@@ -23,6 +23,9 @@ Trunk (Unreleased)
 
     FALCON-124 unable to schedule deleted feed. (Shwetha GS via Shaik Idris)
 
+    FALCON-226 Tests for subscribing/listening to multiple active-mq topics.  (Shaik Idris 
+    via Shwetha GS)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES

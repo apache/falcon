@@ -17,6 +17,10 @@
  */
 package org.apache.falcon.messaging;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
@@ -37,7 +41,9 @@ public class FalconTopicProducerTest {
     // "tcp://localhost:61616?daemon=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "FALCON.ENTITY.TOPIC";
+    private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
     private BrokerService broker;
+    private List<MapMessage> mapMessages;
 
     private volatile AssertionError error;
 
@@ -58,72 +64,122 @@ public class FalconTopicProducerTest {
 
     @Test
     public void testWithFeedOutputPaths() throws Exception {
-        String[] args = new String[]{"-" + ARG.entityName.getArgName(), "agg-coord",
-                                     "-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
-                                     "-" + ARG.feedInstancePaths.getArgName(),
-                                     "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
-                                     "-" + ARG.workflowId.getArgName(), "workflow-01-00",
-                                     "-" + ARG.runId.getArgName(), "1",
-                                     "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
-                                     "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
-                                     "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
-                                     "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
-                                     "-" + ARG.entityType.getArgName(), ("process"),
-                                     "-" + ARG.operation.getArgName(), ("GENERATE"),
-                                     "-" + ARG.logFile.getArgName(), ("/logFile"),
-                                     "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
-                                     "-" + ARG.status.getArgName(), ("SUCCEEDED"),
-                                     "-" + ARG.brokerTTL.getArgName(), "10",
-                                     "-" + ARG.cluster.getArgName(), "corp", };
-        testProcessMessageCreator(args);
+        List<String> args = createCommonArgs();
+        List<String> newArgs = new ArrayList<String>(Arrays.asList(
+                "-" + ARG.entityName.getArgName(), "agg-coord",
+                "-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
+                "-" + ARG.feedInstancePaths.getArgName(),
+                "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
+                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+        args.addAll(newArgs);
+        List<String[]> messages = new ArrayList<String[]>();
+        messages.add(args.toArray(new String[args.size()]));
+        testProcessMessageCreator(messages, TOPIC_NAME);
+        for (MapMessage m : mapMessages) {
+            assertMessage(m);
+            Assert.assertTrue((m.getString(ARG.feedNames.getArgName())
+                    .equals("click-logs,raw-logs")));
+            Assert.assertTrue(m
+                    .getString(ARG.feedInstancePaths.getArgName())
+                    .equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
+        }
     }
 
     @Test
     public void testWithEmptyFeedOutputPaths() throws Exception {
-        String[] args = new String[]{"-" + ARG.entityName.getArgName(), "agg-coord",
-                                     "-" + ARG.feedNames.getArgName(), "null",
-                                     "-" + ARG.feedInstancePaths.getArgName(),
-                                     "null",
-                                     "-" + ARG.workflowId.getArgName(), "workflow-01-00",
-                                     "-" + ARG.runId.getArgName(), "1",
-                                     "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
-                                     "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
-                                     "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
-                                     "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
-                                     "-" + ARG.entityType.getArgName(), ("process"),
-                                     "-" + ARG.operation.getArgName(), ("GENERATE"),
-                                     "-" + ARG.logFile.getArgName(), ("/logFile"),
-                                     "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
-                                     "-" + ARG.status.getArgName(), ("SUCCEEDED"),
-                                     "-" + ARG.brokerTTL.getArgName(), "10",
-                                     "-" + ARG.cluster.getArgName(), "corp", };
-        testProcessMessageCreator(args);
+        List<String> args = createCommonArgs();
+        List<String> newArgs = new ArrayList<String>(Arrays.asList(
+                "-" + ARG.entityName.getArgName(), "agg-coord",
+                "-" + ARG.feedNames.getArgName(), "null",
+                "-" + ARG.feedInstancePaths.getArgName(), "null",
+                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+        args.addAll(newArgs);
+        List<String[]> messages = new ArrayList<String[]>();
+        messages.add(args.toArray(new String[args.size()]));
+        testProcessMessageCreator(messages, TOPIC_NAME);
+        for (MapMessage m : mapMessages) {
+            assertMessage(m);
+            assertMessage(m);
+            Assert.assertTrue(m.getString(ARG.feedNames.getArgName()).equals(
+                    "null"));
+            Assert.assertTrue(m.getString(ARG.feedInstancePaths.getArgName())
+                    .equals("null"));
+        }
     }
 
-    private void testProcessMessageCreator(String[] args) throws Exception {
+    @Test
+    public void testConsumerWithMultipleTopics() throws Exception {
+        List<String[]> messages = new ArrayList<String[]>();
+        List<String> args = createCommonArgs();
+        List<String> newArgs = new ArrayList<String>(Arrays.asList(
+                "-" + ARG.entityName.getArgName(), "agg-coord",
+                "-" + ARG.feedNames.getArgName(), "raw-logs",
+                "-" + ARG.feedInstancePaths.getArgName(),
+                "/raw-logs/10/05/05/00/20",
+                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+        args.addAll(newArgs);
+        messages.add(args.toArray(new String[args.size()]));
+
+        args = createCommonArgs();
+        newArgs = new ArrayList<String>(Arrays.asList(
+                "-" + ARG.entityName.getArgName(), "agg-coord",
+                "-" + ARG.feedNames.getArgName(), "click-logs",
+                "-" + ARG.feedInstancePaths.getArgName(),
+                "/click-logs/10/05/05/00/20",
+                "-" + ARG.topicName.getArgName(), SECONDARY_TOPIC_NAME));
+        args.addAll(newArgs);
+        messages.add(args.toArray(new String[args.size()]));
+
+        testProcessMessageCreator(messages, TOPIC_NAME+","+SECONDARY_TOPIC_NAME);
+        Assert.assertEquals(mapMessages.size(), 2);
+        for (MapMessage m : mapMessages) {
+            assertMessage(m);
+        }
+    }
+
+    private List<String> createCommonArgs() {
+        List<String> args = new ArrayList<String>(Arrays.asList(
+                "-" + ARG.workflowId.getArgName(), "workflow-01-00",
+                "-" + ARG.runId.getArgName(), "1",
+                "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
+                "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
+                "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
+                "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
+                "-" + ARG.entityType.getArgName(), ("process"),
+                "-" + ARG.operation.getArgName(), ("GENERATE"),
+                "-" + ARG.logFile.getArgName(), ("/logFile"),
+                "-" + ARG.status.getArgName(), ("SUCCEEDED"),
+                "-" + ARG.brokerTTL.getArgName(), "10",
+                "-" + ARG.cluster.getArgName(), "corp"));
+        return args;
+    }
+
+    private void testProcessMessageCreator(final List<String[]> messages,
+             final String topicsToListen) throws Exception {
 
         Thread t = new Thread() {
             @Override
             public void run() {
                 try {
-                    consumer();
+                    consumer(messages.size(), topicsToListen);
                 } catch (AssertionError e) {
                     error = e;
-                } catch (JMSException ignore) {
+                } catch (Exception ignore) {
                     error = null;
                 }
             }
         };
         t.start();
-        Thread.sleep(1500);
-        new MessageProducer().run(args);
+        for (String[] message : messages) {
+            new MessageProducer().run(message);
+        }
         t.join();
         if (error != null) {
             throw error;
         }
     }
 
-    private void consumer() throws JMSException {
+    private void consumer(int size, String topicsToListen) throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
                 BROKER_URL);
         Connection connection = connectionFactory.createConnection();
@@ -131,23 +187,14 @@ public class FalconTopicProducerTest {
 
         Session session = connection.createSession(false,
                 Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createTopic(TOPIC_NAME);
+        Destination destination = session.createTopic(topicsToListen);
         MessageConsumer consumer = session.createConsumer(destination);
-
-        // wait till you get atleast one message
-        MapMessage m;
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
+        mapMessages = new ArrayList<MapMessage>();
+        for (int i=0; i<size; i++) {
+            MapMessage m = (MapMessage) consumer.receive();
+            mapMessages.add(m);
+            System.out.println("Consumed: " + m.toString());
         }
-        System.out.println("Consumed: " + m.toString());
-
-        assertMessage(m);
-        Assert.assertTrue((m.getString(ARG.feedNames.getArgName())
-                .equals("click-logs,raw-logs"))
-                || (m.getString(ARG.feedNames.getArgName()).equals("null")));
-        Assert.assertTrue(m.getString(ARG.feedInstancePaths.getArgName())
-                .equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20")
-                || (m.getString(ARG.feedInstancePaths.getArgName()).equals("null")));
 
         connection.close();
     }
