@@ -133,6 +133,8 @@ Release Version: 0.4-incubating
 
   BUG FIXES
 
+    FALCON-223: hive-exec bundles protobuf-2.4.1 which is incompatible with hadoop-2 requiring protobuf-2.5
+
     FALCON-213: Validating Storage Exists (table) should be called only from the server (not from prism)
 
     FALCON-24: Allow re-run of timedout instances

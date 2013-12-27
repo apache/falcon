@@ -73,19 +73,7 @@ case $type in
       echo "Invalid option for app: ${app}. Valid choices are falcon and prism"
       exit 1
     fi
-    FALCON_EXPANDED_WEBAPP_DIR=${FALCON_EXPANDED_WEBAPP_DIR:-${BASEDIR}/server/webapp}
-    export FALCON_EXPANDED_WEBAPP_DIR
-    # set the server classpath
-    if [ ! -d ${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF ]; then
-      mkdir -p ${FALCON_EXPANDED_WEBAPP_DIR}/$app
-      cd ${FALCON_EXPANDED_WEBAPP_DIR}/$app
-      $JAR_BIN -xf ${BASEDIR}/server/webapp/$app.war
-      cd -
-    fi
-    
-    FALCONCPPATH="$FALCON_CONF:${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF/classes"
-    FALCONCPPATH="${FALCONCPPATH}:${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF/lib/*:${BASEDIR}/libext/*"
-    
+    FALCONCPPATH="$FALCON_CONF" 
     HADOOPDIR=`which hadoop`
     if [ "$HADOOPDIR" != "" ]; then
       echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
@@ -98,6 +86,18 @@ case $type in
       echo "Using the default jars bundled in ${BASEDIR}/hadooplibs/"
       FALCONCPPATH="${FALCONCPPATH}:${BASEDIR}/hadooplibs/*"
     fi
+    FALCON_EXPANDED_WEBAPP_DIR=${FALCON_EXPANDED_WEBAPP_DIR:-${BASEDIR}/server/webapp}
+    export FALCON_EXPANDED_WEBAPP_DIR
+    # set the server classpath
+    if [ ! -d ${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF ]; then
+      mkdir -p ${FALCON_EXPANDED_WEBAPP_DIR}/$app
+      cd ${FALCON_EXPANDED_WEBAPP_DIR}/$app
+      $JAR_BIN -xf ${BASEDIR}/server/webapp/$app.war
+      cd -
+    fi
+    FALCONCPPATH="${FALCONCPPATH}:${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF/classes"
+    FALCONCPPATH="${FALCONCPPATH}:${FALCON_EXPANDED_WEBAPP_DIR}/$app/WEB-INF/lib/*:${BASEDIR}/libext/*"
+    
     # log and pid dirs for applications
     FALCON_LOG_DIR="${FALCON_LOG_DIR:-$BASEDIR/logs}"
     export FALCON_LOG_DIR
