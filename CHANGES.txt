@@ -16,6 +16,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-236 Falcon process output events which is optional should have at least one event 
+    if defined. (Shaik Idris Ali via Shwetha GS)
+
     FALCON-228 Build failed on build-tools module. (Jean-Baptiste Onofré
     via Shwetha GS)
 

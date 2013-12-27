@@ -236,7 +236,7 @@
 
     <xs:complexType name="inputs">
         <xs:sequence>
-            <xs:element type="input" name="input" maxOccurs="unbounded" minOccurs="0">
+            <xs:element type="input" name="input" maxOccurs="unbounded" minOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Defines input for the workflow. Each input maps to a feed. Input path and
                         frequency are picked from feed definition.
@@ -263,7 +263,7 @@
 
     <xs:complexType name="outputs">
         <xs:sequence>
-            <xs:element type="output" name="output" maxOccurs="unbounded" minOccurs="0">
+            <xs:element type="output" name="output" maxOccurs="unbounded" minOccurs="1">
                 <xs:annotation>
                     <xs:documentation>Each output maps to a feed. The Output path and frequency are picked from the
                         corresponding feed definition.
