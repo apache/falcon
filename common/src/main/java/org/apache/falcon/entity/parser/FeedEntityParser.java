@@ -344,23 +344,20 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateStorageExists(Feed feed) throws FalconException {
-        StringBuilder buffer = new StringBuilder();
         for (Cluster cluster : feed.getClusters().getClusters()) {
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+            if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
+                continue;
+            }
+
             final Storage storage = FeedHelper.createStorage(cluster, feed);
             if (!storage.exists()) {
                 // this is only true for table, filesystem always returns true
                 CatalogStorage catalogStorage = (CatalogStorage) storage;
-                buffer.append("Table [")
-                        .append(catalogStorage.getTable())
-                        .append("] does not exist for feed: ")
-                        .append(feed.getName())
-                        .append(", cluster: ")
-                        .append(cluster.getName());
+                throw new ValidationException("Table [" + catalogStorage.getTable()
+                        + "] does not exist for feed: " + feed.getName() + ", cluster: " + cluster.getName());
             }
-        }
-
-        if (buffer.length() > 0) {
-            throw new ValidationException(buffer.toString());
         }
     }
 }
