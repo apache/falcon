@@ -40,13 +40,18 @@ fi
 
 if test -z ${JAVA_HOME}
 then
-    JAVA_BIN=java
-    JAR_BIN=jar
+    JAVA_BIN=`which java`
+    JAR_BIN=`which jar`
 else
     JAVA_BIN=${JAVA_HOME}/bin/java
     JAR_BIN=${JAVA_HOME}/bin/jar
 fi
 export JAVA_BIN
+
+if [ ! -e $JAVA_BIN ] || [ ! -e $JAR_BIN ]; then
+  echo "$JAVA_BIN and/or $JAR_BIN not found on the system. Please make sure java and jar commands are available."
+  exit 1
+fi
 
 # default the heap size to 1GB
 DEFAULT_JAVA_HEAP_MAX=-Xmx1024m
