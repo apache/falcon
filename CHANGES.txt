@@ -213,6 +213,8 @@ Release Version: 0.4-incubating
 
     FALCON-158 Fix failing jenkins nightly build. (Venkatesh Seetharam)
 
+    FALCON-215 Falcon-start fails. (Arpit Gupta via Venkatesh Seetharam)
+
 
 
 Release Version: 0.3-incubating
