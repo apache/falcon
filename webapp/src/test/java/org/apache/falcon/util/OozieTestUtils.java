@@ -67,9 +67,7 @@ public final class OozieTestUtils {
     }
 
     public static Path getOozieLogPath(Cluster cluster, WorkflowJob jobInfo) throws Exception {
-
-        Path stagingPath = new Path(ClusterHelper.getLocation(cluster, "staging"),
-                EntityUtil.getStagingPath(cluster) + "/../logs");
+        Path stagingPath = EntityUtil.getLogPath(cluster, cluster);
         final Path logPath = new Path(ClusterHelper.getStorageUrl(cluster), stagingPath);
         LogMover.main(new String[] {
             "-workflowEngineUrl", ClusterHelper.getOozieUrl(cluster),

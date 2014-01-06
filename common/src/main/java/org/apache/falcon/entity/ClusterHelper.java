@@ -18,9 +18,13 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.cluster.*;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
 
 /**
  * Helper to get end points relating to the cluster.
@@ -41,6 +45,14 @@ public final class ClusterHelper {
             }
         }
         return conf;
+    }
+
+    public static FileSystem getFileSystem(Cluster cluster) throws FalconException {
+        try {
+            return FileSystem.get(getConfiguration(cluster));
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
     }
 
     public static String getOozieUrl(Cluster cluster) {

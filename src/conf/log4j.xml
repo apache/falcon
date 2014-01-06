@@ -42,15 +42,6 @@
         </layout>
     </appender>
 
-    <appender name="TRANSACTIONLOG" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="${falcon.log.dir}/${falcon.app.type}.tranlog.log"/>
-        <param name="Append" value="true"/>
-        <param name="Threshold" value="debug"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %x %m%n"/>
-        </layout>
-    </appender>
-
     <appender name="METRIC" class="org.apache.log4j.DailyRollingFileAppender">
         <param name="File" value="${falcon.log.dir}/${falcon.app.type}.metric.log"/>
         <param name="Append" value="true"/>
@@ -68,11 +59,6 @@
     <logger name="AUDIT">
         <level value="info"/>
         <appender-ref ref="AUDIT"/>
-    </logger>
-
-    <logger name="TRANSACTIONLOG">
-        <level value="info"/>
-        <appender-ref ref="TRANSACTIONLOG"/>
     </logger>
 
     <logger name="METRIC">

@@ -18,9 +18,9 @@
 
 package org.apache.falcon.replication;
 
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.SimpleCopyListing;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 /**
  * An implementation of CopyListing that overrides the default behavior by suppressing file,
- * FileOutputCommitter.SUCCEEDED_FILE_NAME and copies that in the last so downstream apps
+ * EntityUtil.SUCCEEDED_FILE_NAME and copies that in the last so downstream apps
  * depending on data availability will work correctly.
  */
 public class FilteredCopyListing extends SimpleCopyListing {
@@ -66,7 +66,7 @@ public class FilteredCopyListing extends SimpleCopyListing {
 
     @Override
     protected boolean shouldCopy(Path path, DistCpOptions options) {
-        if (path.getName().equals(FileOutputCommitter.SUCCEEDED_FILE_NAME)) {
+        if (path.getName().equals(EntityUtil.SUCCEEDED_FILE_NAME)) {
             return false;
         }
         return regex == null || regex.matcher(path.toString()).find();

@@ -19,9 +19,11 @@
 package org.apache.falcon.update;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -31,10 +33,17 @@ import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
 
 /**
  * Helper methods to facilitate entity updates.
@@ -52,7 +61,7 @@ public final class UpdateHelper {
 
     private UpdateHelper() {}
 
-    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
+    public static boolean isEntityUpdated(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
         Entity oldView = EntityUtil.getClusterView(oldEntity, cluster);
         Entity newView = EntityUtil.getClusterView(newEntity, cluster);
         switch (oldEntity.getEntityType()) {
@@ -61,14 +70,106 @@ public final class UpdateHelper {
 
         case PROCESS:
             return !EntityUtil.equals(oldView, newView, PROCESS_FIELDS);
+
         default:
         }
         throw new IllegalArgumentException("Unhandled entity type " + oldEntity.getEntityType());
     }
 
+    //Read checksum file
+    private static Map<String, String> readChecksums(FileSystem fs, Path path) throws FalconException {
+        try {
+            Map<String, String> checksums = new HashMap<String, String>();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)));
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("=");
+                    checksums.put(parts[0], parts[1]);
+                }
+            } finally {
+                reader.close();
+            }
+            return checksums;
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    //Checks if the user workflow or lib is updated
+    public static boolean isWorkflowUpdated(String cluster, Entity entity) throws FalconException {
+        if (entity.getEntityType() != EntityType.PROCESS) {
+            return false;
+        }
+
+        try {
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+            Path bundlePath = EntityUtil.getLastCommittedStagingPath(clusterEntity, process);
+            if (bundlePath == null) {
+                return true;
+            }
+
+            Path checksum = new Path(bundlePath, EntityUtil.PROCESS_CHECKSUM_FILE);
+            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(clusterEntity));
+            if (!fs.exists(checksum)) {
+                //Update if there is no checksum file(for migration)
+                return true;
+            }
+            Map<String, String> checksums = readChecksums(fs, checksum);
+
+            //Get checksum from user wf/lib
+            Map<String, String> wfPaths = checksumAndCopy(fs, new Path(process.getWorkflow().getPath()), null);
+            if (process.getWorkflow().getLib() != null) {
+                wfPaths.putAll(checksumAndCopy(fs, new Path(process.getWorkflow().getLib()), null));
+            }
+
+            //Update if the user wf/lib is updated i.e., if checksums are different
+            if (!wfPaths.equals(checksums)) {
+                return true;
+            }
+
+            return false;
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    //Recursively traverses each file and tracks checksum
+    //If dest != null, each traversed file is copied to dest
+    public static Map<String, String> checksumAndCopy(FileSystem fs, Path src, Path dest) throws FalconException {
+        try {
+            if (dest != null && !fs.exists(dest) && !fs.mkdirs(dest)) {
+                throw new FalconException("mkdir failed on " + dest);
+            }
+
+            Configuration conf = new Configuration();
+            Map<String, String> paths = new HashMap<String, String>();
+            if (fs.isFile(src)) {
+                paths.put(src.toString(), fs.getFileChecksum(src).toString());
+                if (dest != null) {
+                    Path target = new Path(dest, src.getName());
+                    FileUtil.copy(fs, src, fs, target, false, conf);
+                    LOG.debug("Copied " + src + " to " + target);
+                }
+            } else {
+                FileStatus[] files = fs.listStatus(src);
+                if (files != null) {
+                    for (FileStatus file : files) {
+                        paths.putAll(checksumAndCopy(fs, file.getPath(),
+                                ((dest == null) ? null : new Path(dest, file.getPath().getName()))));
+                    }
+                }
+            }
+            return paths;
+        } catch(IOException e) {
+            throw new FalconException(e);
+        }
+    }
+
     public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, Entity affectedEntity)
         throws FalconException {
-
         if (oldEntity.getEntityType() == EntityType.FEED && affectedEntity.getEntityType() == EntityType.PROCESS) {
             return shouldUpdate((Feed) oldEntity, (Feed) newEntity, (Process) affectedEntity);
         } else {

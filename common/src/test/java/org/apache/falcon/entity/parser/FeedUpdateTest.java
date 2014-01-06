@@ -25,6 +25,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -123,6 +124,8 @@ public class FeedUpdateTest extends AbstractTestBase {
         Feed feed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
         ConfigurationStore.get().publish(EntityType.FEED, feed);
+
+        dfsCluster.getFileSystem().mkdirs(new Path("/falcon/test/workflow"));
         Process process = processParser.parseAndValidate(this.getClass()
                 .getResourceAsStream(PROCESS1_XML));
         ConfigurationStore.get().publish(EntityType.PROCESS, process);

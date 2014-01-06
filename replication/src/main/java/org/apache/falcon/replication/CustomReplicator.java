@@ -29,7 +29,7 @@ import java.io.IOException;
 
 /**
  * A custom implementation of DistCp that overrides the behavior of CopyListing
- * interface to copy FileOutputCommitter.SUCCEEDED_FILE_NAME last so downstream apps
+ * interface to copy EntityUtil.SUCCEEDED_FILE_NAME last so downstream apps
  * depending on data availability will work correctly.
  */
 public class CustomReplicator extends DistCp {

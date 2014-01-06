@@ -16,6 +16,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-206 Process update for wf changes. (Shwetha GS)
+
     FALCON-236 Falcon process output events which is optional should have at least one event 
     if defined. (Shaik Idris Ali via Shwetha GS)
 

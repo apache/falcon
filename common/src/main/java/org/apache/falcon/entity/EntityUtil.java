@@ -36,8 +36,12 @@ import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -52,6 +56,11 @@ public final class EntityUtil {
     private static final long HOUR_IN_MS = 3600000L;
     private static final long DAY_IN_MS = 86400000L;
     private static final long MONTH_IN_MS = 2592000000L;
+
+    public static final String PROCESS_CHECKSUM_FILE = "checksums";
+    public static final String PROCESS_USER_DIR = "user";
+    public static final String PROCESS_USERLIB_DIR = "userlib";
+    public static final String SUCCEEDED_FILE_NAME = "_SUCCESS";
 
     private EntityUtil() {}
 
@@ -395,15 +404,6 @@ public final class EntityUtil {
         }
     }
 
-    public static String getStagingPath(Entity entity) throws FalconException {
-        try {
-            return "falcon/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName() + "/"
-                    + md5(entity);
-        } catch (Exception e) {
-            throw new FalconException(e);
-        }
-    }
-
     public static WorkflowName getWorkflowName(Tag tag, List<String> suffixes,
                                                Entity entity) {
         WorkflowNameBuilder<Entity> builder = new WorkflowNameBuilder<Entity>(
@@ -537,15 +537,60 @@ public final class EntityUtil {
         }
     }
 
-    public static Path getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-        throws FalconException {
+    //Staging path that stores scheduler configs like oozie coord/bundle xmls, parent workflow xml
+    //Each entity update creates a new staging path and creates staging path/_SUCCESS when update is complete
+    //Base staging path is the base path for all staging dirs
+    public static Path getBaseStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+        return new Path(ClusterHelper.getLocation(cluster, "staging"),
+                "falcon/workflows/" + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
+    }
 
+    //Creates new staging path for entity schedule/update
+    public static Path getNewStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+        return new Path(getBaseStagingPath(cluster, entity), String.valueOf(System.currentTimeMillis()));
+    }
+
+    private static Path getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Path path)
+        throws FalconException {
         try {
-            return new Path(ClusterHelper.getLocation(cluster, "staging"),
-                    EntityUtil.getStagingPath(entity));
-        } catch (Exception e) {
+            FileSystem fs = ClusterHelper.getFileSystem(cluster);
+            FileStatus latest = null;
+            FileStatus[] files = fs.globStatus(path, new PathFilter() {
+                @Override
+                public boolean accept(Path path) {
+                    if (path.getName().equals("logs")) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            if (files == null || files.length == 0) {
+                return null;
+            }
+
+            for (FileStatus file : files) {
+                if (latest == null || latest.getModificationTime() < file.getModificationTime()) {
+                    latest = file;
+                }
+            }
+            return latest.getPath();
+        } catch (IOException e) {
             throw new FalconException(e);
         }
+    }
+
+    //Returns latest staging path - includes incomplete staging paths as well (updates are not complete)
+    public static Path getLatestStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+        return getStagingPath(cluster, new Path(getBaseStagingPath(cluster, entity), "*"));
+    }
+
+    //Returns latest staging path for which update is complete (latest that contains _SUCCESS)
+    public static Path getLastCommittedStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
+        throws FalconException {
+        Path stagingPath = getStagingPath(cluster, new Path(getBaseStagingPath(cluster, entity),
+                "*/" + SUCCEEDED_FILE_NAME));
+        return stagingPath == null ? null : stagingPath.getParent();
     }
 
     public static LateProcess getLateProcess(Entity entity)
@@ -553,17 +598,14 @@ public final class EntityUtil {
 
         switch (entity.getEntityType()) {
         case FEED:
-            if (!RuntimeProperties.get()
-                    .getProperty("feed.late.allowed", "true")
-                    .equalsIgnoreCase("true")) {
+            if (!RuntimeProperties.get().getProperty("feed.late.allowed", "true").equalsIgnoreCase("true")) {
                 return null;
             }
 
             LateProcess lateProcess = new LateProcess();
-            lateProcess.setDelay(new Frequency(RuntimeProperties.get()
-                    .getProperty("feed.late.frequency", "hours(3)")));
-            lateProcess.setPolicy(PolicyType.fromValue(RuntimeProperties.get()
-                    .getProperty("feed.late.policy", "exp-backoff")));
+            lateProcess.setDelay(new Frequency(RuntimeProperties.get().getProperty("feed.late.frequency", "hours(3)")));
+            lateProcess.setPolicy(
+                    PolicyType.fromValue(RuntimeProperties.get().getProperty("feed.late.policy", "exp-backoff")));
             LateInput lateInput = new LateInput();
             lateInput.setInput(entity.getName());
             //TODO - Assuming the late workflow is not used
@@ -578,11 +620,8 @@ public final class EntityUtil {
         }
     }
 
-    public static Path getLogPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-        throws FalconException {
-
-        return new Path(ClusterHelper.getLocation(cluster,
-                "staging"), EntityUtil.getStagingPath(entity) + "/../logs");
+    public static Path getLogPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity) {
+        return new Path(getBaseStagingPath(cluster, entity), "logs");
     }
 
     public static String fromUTCtoURIDate(String utc) throws FalconException {

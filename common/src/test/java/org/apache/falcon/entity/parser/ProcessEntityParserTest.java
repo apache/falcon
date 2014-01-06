@@ -37,6 +37,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -76,6 +77,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         storeEntity(EntityType.FEED, "imp-click-join1");
         storeEntity(EntityType.FEED, "imp-click-join2");
         storeEntity(EntityType.PROCESS, "sample");
+        dfsCluster.getFileSystem().mkdirs(new Path("/falcon/test/workflow"));
     }
 
     @Test
@@ -111,7 +113,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
 
         Assert.assertEquals(process.getWorkflow().getEngine().name().toLowerCase(), "oozie");
-        Assert.assertEquals(process.getWorkflow().getPath(), "/path/to/workflow");
+        Assert.assertEquals(process.getWorkflow().getPath(), "/falcon/test/workflow");
 
         StringWriter stringWriter = new StringWriter();
         Marshaller marshaller = EntityType.PROCESS.getMarshaller();

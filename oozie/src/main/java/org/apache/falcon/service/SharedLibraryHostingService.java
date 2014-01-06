@@ -89,12 +89,11 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
 
     public static void pushLibsToHDFS(String src, Path target, Cluster cluster, FalconPathFilter pathFilter)
         throws IOException, FalconException {
-        LOG.debug("Copying libs from " + src);
-
         if (StringUtils.isEmpty(src)) {
             return;
         }
 
+        LOG.debug("Copying libs from " + src);
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         conf.setInt("ipc.client.connect.max.retries", 10);
         FileSystem fs = null;

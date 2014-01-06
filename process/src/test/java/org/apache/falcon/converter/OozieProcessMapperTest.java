@@ -62,10 +62,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -199,6 +196,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Process process = ConfigurationStore.get().get(EntityType.PROCESS, "pig-process");
         Assert.assertEquals("pig", process.getWorkflow().getEngine().value());
 
+        prepare(process);
         WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "12", "360");
         testParentWorkflow(process, parentWorkflow);
 
@@ -208,7 +206,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Assert.assertEquals("user-pig-job", pigActionNode.getName());
 
         final PIG pigAction = pigActionNode.getPig();
-        Assert.assertEquals("${nameNode}/apps/pig/id.pig", pigAction.getScript());
+        Assert.assertEquals(pigAction.getScript(), "${nameNode}/falcon/staging/workflows/pig-process/user/id.pig");
         Assert.assertNotNull(pigAction.getPrepare());
         Assert.assertEquals(1, pigAction.getPrepare().getDelete().size());
         Assert.assertFalse(pigAction.getParam().isEmpty());
@@ -236,8 +234,9 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
 
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        prepare(process);
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path("/tmp/seetharam", EntityUtil.getStagingPath(process));
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         mapper.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
@@ -274,11 +273,18 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = mapper.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
-        Assert.assertEquals("${nameNode}/apps/hive/script.hql", hiveAction.getScript());
+        Assert.assertEquals(hiveAction.getScript(),
+                "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
         Assert.assertFalse(hiveAction.getParam().isEmpty());
         Assert.assertEquals(11, hiveAction.getParam().size());
+    }
+
+    private void prepare(Process process) throws IOException {
+        Path wf = new Path(process.getWorkflow().getPath());
+        fs.mkdirs(wf.getParent());
+        fs.create(wf).close();
     }
 
     @Test
@@ -297,7 +303,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         mapper.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
@@ -396,7 +402,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         throws Exception {
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessMapper mapper = new OozieProcessMapper(process);
-        Path bundlePath = new Path("/", EntityUtil.getStagingPath(process));
+        Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         mapper.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 

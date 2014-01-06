@@ -414,6 +414,18 @@ public class TestContext {
         prepare(TestContext.CLUSTER_TEMPLATE);
     }
 
+    private static void mkdir(FileSystem fs, Path path) throws Exception {
+        if (!fs.exists(path) && !fs.mkdirs(path)) {
+            throw new Exception("mkdir failed for " + path);
+        }
+    }
+
+    private static void mkdir(FileSystem fs, Path path, FsPermission perm) throws Exception {
+        if (!fs.exists(path) && !fs.mkdirs(path, perm)) {
+            throw new Exception("mkdir failed for " + path);
+        }
+    }
+
     public static void prepare(String clusterTemplate) throws Exception {
         // setup a logged in user
         CurrentUser.authenticate(REMOTE_USER);
@@ -429,19 +441,18 @@ public class TestContext {
 
         // setup dependent workflow and lipath in hdfs
         FileSystem fs = FileSystem.get(cluster.getConf());
-        fs.mkdirs(new Path("/falcon"), new FsPermission((short) 511));
+        mkdir(fs, new Path("/falcon"), new FsPermission((short) 511));
 
         Path wfParent = new Path("/falcon/test");
         fs.delete(wfParent, true);
         Path wfPath = new Path(wfParent, "workflow");
-        fs.mkdirs(wfPath);
+        mkdir(fs, wfPath);
         fs.copyFromLocalFile(false, true,
                 new Path(TestContext.class.getResource("/fs-workflow.xml").getPath()),
                 new Path(wfPath, "workflow.xml"));
-        fs.mkdirs(new Path(wfParent, "input/2012/04/20/00"));
+        mkdir(fs, new Path(wfParent, "input/2012/04/20/00"));
         Path outPath = new Path(wfParent, "output");
-        fs.mkdirs(outPath);
-        fs.setPermission(outPath, new FsPermission((short) 511));
+        mkdir(fs, outPath, new FsPermission((short) 511));
     }
 
     public static void cleanupStore() throws Exception {
