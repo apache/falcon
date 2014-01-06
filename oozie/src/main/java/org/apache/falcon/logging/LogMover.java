@@ -95,7 +95,14 @@ public class LogMover extends Configured implements Tool {
                     || notUserWorkflowEngineIsOozie(args.userWorkflowEngine)) {
                 // if replication wf or PIG Process
                 copyOozieLog(client, fs, path, jobInfo.getId());
-                copyTTlogs(fs, path, jobInfo.getActions().get(2));
+
+                List<WorkflowAction> workflowActions = jobInfo.getActions();
+                for (int i=0; i < workflowActions.size(); i++) {
+                    if (workflowActions.get(i).getName().equals("replication")) {
+                        copyTTlogs(fs, path, jobInfo.getActions().get(i));
+                        break;
+                    }
+                }
             } else {
                 // if process wf with oozie engine
                 String subflowId = jobInfo.getExternalId();

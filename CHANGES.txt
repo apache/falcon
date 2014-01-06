@@ -15,6 +15,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-241 The job logs are not copied during Post-Processing step in Replication workflows.
+    (Suhas Vasu via Shwetha GS)
+
     FALCON-106 Falcon compilation fails for hadoop-2 profile. (Shwetha GS
     via Srikanth Sundarrajan)
 
