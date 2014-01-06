@@ -20,12 +20,7 @@ package org.apache.falcon.resource;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletInputStream;
@@ -33,8 +28,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
 
+import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
@@ -47,6 +44,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
@@ -117,11 +115,19 @@ public class EntityManagerJerseyIT {
     }
 
     private void update(TestContext context, Entity entity) throws Exception {
+        update(context, entity, null);
+    }
+
+    private void update(TestContext context, Entity entity, Date endTime) throws Exception {
         File tmpFile = context.getTempFile();
         entity.getEntityType().getMarshaller().marshal(entity, tmpFile);
-        ClientResponse response = context.service.path("api/entities/update/"
-                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName())
-                .header("Remote-User", TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
+        WebResource resource = context.service.path("api/entities/update/"
+                + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
+        if (endTime != null) {
+            resource = resource.queryParam("end", SchemaHelper.formatDateUTC(endTime));
+        }
+        ClientResponse response =
+                resource.header("Remote-User", TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
         context.assertSuccessful(response);
     }
@@ -276,13 +282,16 @@ public class EntityManagerJerseyIT {
         input.setEnd("today(20,20)");
         process.getInputs().getInputs().add(input);
 
+        Date endTime = getEndTime();
         updateEndtime(process);
-        update(context, process);
+        update(context, process, endTime);
 
         //Assert that update creates new bundle and old coord is running
         bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
-        Assert.assertEquals(ozClient.getCoordJobInfo(coordId).getStatus(), Status.RUNNING);
+        CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
+        Assert.assertEquals(coord.getStatus(), Status.RUNNING);
+        Assert.assertEquals(coord.getEndTime(), endTime);
     }
 
     @Test
@@ -700,5 +709,13 @@ public class EntityManagerJerseyIT {
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNotNull(entityElement.status); // status is null
         }
+    }
+
+    public Date getEndTime() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.HOUR, 1);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 }

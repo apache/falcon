@@ -34,6 +34,7 @@ import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
+import java.util.Date;
 
 /**
  * A driver for debugging purposes.
@@ -95,7 +96,7 @@ public final class Debug {
         StartupProperties.get().setProperty("current.colo", "ua1");
         OozieWorkflowEngine engine = new OozieWorkflowEngine();
         ConfigurationStore.get().initiateUpdate(newEntity);
-        engine.update(obj, newEntity, newEntity.getClusters().getClusters().get(0).getName());
+        engine.update(obj, newEntity, newEntity.getClusters().getClusters().get(0).getName(), new Date());
         engine.delete(newEntity);
         System.exit(0);
     }

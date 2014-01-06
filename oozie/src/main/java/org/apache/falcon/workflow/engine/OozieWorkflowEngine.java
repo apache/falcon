@@ -788,18 +788,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public void update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
+    public Date update(Entity oldEntity, Entity newEntity, String cluster, Date reqEndTime) throws FalconException {
         boolean entityUpdated = UpdateHelper.isEntityUpdated(oldEntity, newEntity, cluster);
         boolean wfUpdated = UpdateHelper.isWorkflowUpdated(cluster, newEntity);
 
         if (!entityUpdated && !wfUpdated) {
             LOG.debug("Nothing to update for cluster " + cluster);
-            return;
+            return null;
         }
 
         Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
         Path stagingPath = EntityUtil.getLastCommittedStagingPath(clusterEntity, oldEntity);
-
+        Date effectiveEndTime = null;
         if (stagingPath != null) {  //update if entity is scheduled
             BundleJob bundle = findBundleForStagingPath(cluster, oldEntity, stagingPath);
             bundle = getBundleInfo(cluster, bundle.getId());
@@ -817,12 +817,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
                 updateCoords(cluster, bundle, EntityUtil.getParallel(newEntity),
                         EntityUtil.getEndTime(newEntity, cluster));
-                return;
+                return newEndTime;
             }
 
             LOG.debug("Going to update ! : " + newEntity.toShortString() + "for cluster " + cluster + ", bundle: "
                     + bundle.getId());
-            updateInternal(oldEntity, newEntity, cluster, bundle, false);
+            effectiveEndTime = updateInternal(oldEntity, newEntity, cluster, bundle, false, reqEndTime);
             LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: " + bundle.getId());
         }
 
@@ -854,12 +854,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 //            boolean processCreated = feedBundle.getCreatedTime().before(
 //                    affectedProcBundle.getCreatedTime());
 
-            updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle,
-                    false);
+            Date depEndTime =
+                    updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle, false, reqEndTime);
+            if (effectiveEndTime == null || effectiveEndTime.after(depEndTime)) {
+                effectiveEndTime = depEndTime;
+            }
             LOG.info("Entity update complete : " + affectedEntity.toShortString() + cluster
                     + ", bundle: " + affectedProcBundle.getId());
         }
         LOG.info("Entity update and all dependent entities updated: " + oldEntity.toShortString());
+        return effectiveEndTime;
     }
 
     //Returns bundle whose app path is same as the staging path(argument)
@@ -944,8 +948,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private void updateInternal(Entity oldEntity, Entity newEntity, String cluster, BundleJob oldBundle,
-                                boolean alreadyCreated) throws FalconException {
+    private Date updateInternal(Entity oldEntity, Entity newEntity, String cluster, BundleJob oldBundle,
+                                boolean alreadyCreated, Date reqEndTime) throws FalconException {
         OozieWorkflowBuilder<Entity> builder =
                 (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
 
@@ -961,6 +965,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             // new entity is not scheduled yet, create new bundle
             LOG.info("New bundle hasn't been created yet. So will create one");
             endTime = offsetTime(now(), 3);
+            if (reqEndTime != null && reqEndTime.after(endTime)) {
+                endTime = reqEndTime;
+            }
             Date newStartTime = builder.getNextStartTime(newEntity, cluster, endTime);
             newBundle =
                     getBundleInfo(cluster, scheduleForUpdate(newEntity, cluster, newStartTime, oldBundle.getUser()));
@@ -983,6 +990,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         //create _SUCCESS in staging path to mark update is complete(to handle roll-forward for updates)
         commitStagingPath(cluster, newBundle.getAppPath());
+        return endTime;
     }
 
     private String scheduleForUpdate(Entity entity, String cluster, Date startDate, String user)

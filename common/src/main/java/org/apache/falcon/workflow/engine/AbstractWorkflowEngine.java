@@ -77,7 +77,7 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException;
 
-    public abstract void update(Entity oldEntity, Entity newEntity, String cluster) throws FalconException;
+    public abstract Date update(Entity oldEntity, Entity newEntity, String cluster, Date end) throws FalconException;
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;
 

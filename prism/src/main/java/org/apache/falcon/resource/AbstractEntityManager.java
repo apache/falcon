@@ -31,10 +31,7 @@ import org.apache.falcon.entity.parser.EntityParserFactory;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.store.EntityAlreadyExistsException;
-import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityGraph;
-import org.apache.falcon.entity.v0.EntityIntegrityChecker;
-import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.*;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.security.CurrentUser;
@@ -44,6 +41,7 @@ import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.datanucleus.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -219,7 +217,8 @@ public abstract class AbstractEntityManager {
 
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo) {
+    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo,
+                                         String endTime) {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -231,6 +230,8 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
+            List<String> endTimes = new ArrayList<String>();
+            Date reqEndTime = StringUtils.isEmpty(endTime) ? null : EntityUtil.parseDateUTC(endTime);
             //Update in workflow engine
             if (!DeploymentUtil.isPrism()) {
                 Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
@@ -239,7 +240,10 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    getWorkflowEngine().update(oldEntity, newEntity, cluster);
+                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, reqEndTime);
+                    if (effectiveEndTime != null) {
+                        endTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
+                    }
                 }
                 for (String cluster : oldClusters) {
                     getWorkflowEngine().delete(oldEntity, cluster);
@@ -248,7 +252,8 @@ public abstract class AbstractEntityManager {
 
             configStore.update(entityType, newEntity);
 
-            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully");
+            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully"
+                    + (endTimes.isEmpty() ? "" : " with endTime " + endTimes));
         } catch (Throwable e) {
             LOG.error("Updation failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
