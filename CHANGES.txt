@@ -7,15 +7,17 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-    FALCON-106 Falcon compilation fails for hadoop-2 profile. (Shwetha GS
-    via Srikanth Sundarrajan)
-
+    FALCON-64 Add example entity xmls in falcon package. (Shwetha GS)
+    
     FALCON-66 Make oozie version change configurable. (Shwetha GS
     via Srikanth Sundarrajan)
 
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-106 Falcon compilation fails for hadoop-2 profile. (Shwetha GS
+    via Srikanth Sundarrajan)
+
     FALCON-206 Process update for wf changes. (Shwetha GS)
 
     FALCON-236 Falcon process output events which is optional should have at least one event 

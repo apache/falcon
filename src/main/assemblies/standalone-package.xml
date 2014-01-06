@@ -89,6 +89,11 @@
             <directory>hadoop-dependencies/target/dependency</directory>
             <outputDirectory>hadooplibs</outputDirectory>
         </fileSet>
+
+        <fileSet>
+            <directory>src/main/examples</directory>
+            <outputDirectory>examples</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <files>

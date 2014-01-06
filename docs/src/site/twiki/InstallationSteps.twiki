@@ -226,3 +226,37 @@ src/bin/pacakge.sh <<hadoop-version>> <<oozie-version>>
 >> Falcon pacakge is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
 >> Oozie pacakge is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
 </verbatim>
+
+---+++ Running Examples using embedded package
+<verbatim>
+bin/falcon-start
+</verbatim>
+Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/standalone-cluster.xml
+<verbatim>
+bin/falcon entity -submit -type cluster -file examples/entity/standalone-cluster.xml
+</verbatim>
+Submit input and output feeds:
+<verbatim>
+bin/falcon entity -submit -type feed -file examples/entity/in-feed.xml
+bin/falcon entity -submit -type feed -file examples/entity/out-feed.xml
+</verbatim>
+Set-up workflow for the process:
+<verbatim>
+hadoop fs -put examples/app /
+</verbatim>
+Submit and schedule the process:
+<verbatim>
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/oozie-mr-process.xml
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/pig-process.xml
+</verbatim>
+Generate input data:
+<verbatim>
+examples/data/generate.sh <<hdfs endpoint>>
+</verbatim>
+Get status of instances:
+<verbatim>
+bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11-15T00:05Z -end 2013-11-15T01:00Z
+</verbatim>
+
+
+
