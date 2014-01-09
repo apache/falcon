@@ -9,7 +9,7 @@ git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
 cd falcon
 
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install [For hadoop 1]
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -P hadoop-2 [For hadoop 2]
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -Phadoop-2 [For hadoop 2]
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie. Oozie versions >= 3.oozie-3.2.0-incubating are supported]
@@ -63,8 +63,8 @@ Tar is structured as follows
 
 <verbatim>
 
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed,hadoop-1 [For hadoop 1]
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -P distributed,hadoop-2 [For hadoop 2]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-1 [For hadoop 1]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2 [For hadoop 2]
 
 </verbatim>
 
@@ -114,9 +114,10 @@ cd falcon-distributed-${project.version} or falcon-${project.version}
 
 *Configuring Falcon*
 
-By default config directory used by faclon is {package dir}/conf. To override this set environemnt variable FALCON_CONF to the path of the conf dir. 
+By default config directory used by falcon is {package dir}/conf. To override this set environment variable FALCON_CONF to the path of the conf dir.
 
-falcon-env.sh has been added to the falcon conf. This file can be used to set various enviornment variables that you need for you services. In addition you can set any other environment variables you might need. This file will be sourced by falcon scripts before any commands are exectuted. The following enviornment variables are available to set.
+falcon-env.sh has been added to the falcon conf. This file can be used to set various environment variables that you need for you services.
+In addition you can set any other environment variables you might need. This file will be sourced by falcon scripts before any commands are executed. The following environment variables are available to set.
 
 <verbatim>
 # The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
@@ -131,10 +132,10 @@ falcon-env.sh has been added to the falcon conf. This file can be used to set va
 # java heap size we want to set for the client. Default is 1024MB
 #export FALCON_CLIENT_HEAP=
 
-# any additional opts you want to set for prisim service.
+# any additional opts you want to set for prism service.
 #export FALCON_PRISM_OPTS=
 
-# java heap size we want to set for the prisim service. Default is 1024MB
+# java heap size we want to set for the prism service. Default is 1024MB
 #export FALCON_PRISM_HEAP=
 
 # any additional opts you want to set for falcon service.
@@ -143,16 +144,16 @@ falcon-env.sh has been added to the falcon conf. This file can be used to set va
 # java heap size we want to set for the falcon server. Default is 1024MB
 #export FALCON_SERVER_HEAP=
 
-# What is is considered as falcon home dir. Default is the base locaion of the installed software
+# What is is considered as falcon home dir. Default is the base location of the installed software
 #export FALCON_HOME_DIR=
 
-# Where log files are stored. Defatult is logs directory under the base install location
+# Where log files are stored. Default is logs directory under the base install location
 #export FALCON_LOG_DIR=
 
-# Where pid files are stored. Defatult is logs directory under the base install location
+# Where pid files are stored. Default is logs directory under the base install location
 #export FALCON_PID_DIR=
 
-# where the falcon active mq data is stored. Defatult is logs/data directory under the base install location
+# where the falcon active mq data is stored. Default is logs/data directory under the base install location
 #export FALCON_DATA_DIR=
 
 # Where do you want to expand the war file. By Default it is in /server/webapp dir under the base install dir.
@@ -220,11 +221,11 @@ bin/prism-stop
 ---+++ Preparing Oozie and Falcon packages for deployment
 <verbatim>
 cd <<project home>>
-src/bin/pacakge.sh <<hadoop-version>> <<oozie-version>>
+src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 
->> ex. src/bin/pacakge.sh 1.1.2 3.1.3-incubating or src/bin/pacakge.sh 0.20.2-cdh3u5 4.0.0
->> Falcon pacakge is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
->> Oozie pacakge is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
+>> ex. src/bin/package.sh 1.1.2 3.1.3-incubating or src/bin/package.sh 0.20.2-cdh3u5 4.0.0
+>> Falcon package is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
+>> Oozie package is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
 </verbatim>
 
 ---+++ Running Examples using embedded package

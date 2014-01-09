@@ -16,6 +16,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-249 Fix mistakes in docs/InstallationSteps.html. (Jean-Baptiste Onofré
+    via Shwetha GS)
+
     FALCON-241 The job logs are not copied during Post-Processing step in Replication workflows.
     (Suhas Vasu via Shwetha GS)
 
