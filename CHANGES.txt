@@ -8,6 +8,9 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-233 Update hadoop 2 version to 2.2.0. (Venkatesh Seetharam
+    via Shwetha GS)
+
     FALCON-64 Add example entity xmls in falcon package. (Shwetha GS)
     
     FALCON-66 Make oozie version change configurable. (Shwetha GS

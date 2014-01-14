@@ -182,7 +182,7 @@
         <profile>
             <id>hadoop-2</id>
             <properties>
-                <hadoop.version>2.0.2-alpha</hadoop.version>
+                <hadoop.version>2.2.0</hadoop.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
