@@ -203,6 +203,23 @@ public class OozieFeedMapperTest {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataIn('input')}");
 
         assertLibExtensions(coord, "replication");
+        assertWorkflowRetries(coord);
+    }
+
+    private void assertWorkflowRetries(COORDINATORAPP coord) throws JAXBException, IOException {
+        WORKFLOWAPP wf = getWorkflowapp(coord);
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            String actionName = action.getName();
+            if (AbstractOozieEntityMapper.FALCON_ACTIONS.contains(actionName)) {
+                Assert.assertEquals(action.getRetryMax(), "3");
+                Assert.assertEquals(action.getRetryInterval(), "1");
+            }
+        }
     }
 
     private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
@@ -430,7 +447,7 @@ public class OozieFeedMapperTest {
     }
 
     @Test
-    public void testRetentionCoords() throws FalconException {
+    public void testRetentionCoords() throws FalconException, JAXBException, IOException {
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, srcCluster.getName());
         final Calendar instance = Calendar.getInstance();
         instance.roll(Calendar.YEAR, 1);
@@ -468,5 +485,8 @@ public class OozieFeedMapperTest {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
+
+        assertWorkflowRetries(coord);
     }
+
 }

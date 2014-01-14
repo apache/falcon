@@ -15,10 +15,14 @@ Trunk (Unreleased)
     
     FALCON-66 Make oozie version change configurable. (Shwetha GS
     via Srikanth Sundarrajan)
+    
+    FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing) should have multiple retries. (Shaik Idris)
+
 
   OPTIMIZATIONS
 
   BUG FIXES
+
     FALCON-262 Example files should use aligned dependency versions. (Jean-Baptiste Onofré
     via Shwetha GS)
 

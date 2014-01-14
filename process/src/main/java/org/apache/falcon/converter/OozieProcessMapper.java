@@ -519,6 +519,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 decoratePIGAction(cluster, process, processWorkflow, action.getPig(), parentWfPath);
             } else if (engineType == EngineType.HIVE && actionName.equals("user-hive-job")) {
                 decorateHiveAction(cluster, process, processWorkflow, action, parentWfPath);
+            } else if (FALCON_ACTIONS.contains(actionName)) {
+                decorateWithOozieRetries(action);
             }
         }
 
@@ -812,4 +814,5 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             throw new RuntimeException("Unable to marshall hive action.", e);
         }
     }
+
 }
