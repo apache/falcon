@@ -19,6 +19,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-262 Example files should use aligned dependency versions. (Jean-Baptiste Onofré
+    via Shwetha GS)
+
     FALCON-249 Fix mistakes in docs/InstallationSteps.html. (Jean-Baptiste Onofré
     via Shwetha GS)
 

@@ -31,7 +31,7 @@
 
         <interface type="workflow" endpoint="http://localhost:11000/oozie/" version="4.0.0"/>
 
-        <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"  version="5.1.6"/>
+        <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"  version="5.4.3"/>
     </interfaces>
     <locations>
         <location name="staging" path="/projects/falcon/staging"/>
