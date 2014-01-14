@@ -513,7 +513,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
                 InstancesResult.Instance instance = new InstancesResult.Instance(
                         cluster, nominalTimeStr, WorkflowStatus.valueOf(status));
-                if (coordinatorAction.getExternalId() != null) {
+                if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
                     WorkflowJob jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
                     instance.startTime = jobInfo.getStartTime();
                     instance.endTime = jobInfo.getEndTime();
@@ -536,7 +536,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                                  Properties props) throws FalconException {
         WorkflowJob jobInfo = null;
         String status = coordinatorAction.getStatus().name();
-        if (coordinatorAction.getExternalId() != null) {
+        if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
             jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
             status = jobInfo.getStatus().name();
         }

@@ -22,6 +22,7 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+    FALCON-258 Falcon status throws an error when external jobids are missing (Suhas Vasu via Shaik Idris)
 
     FALCON-262 Example files should use aligned dependency versions. (Jean-Baptiste Onofré
     via Shwetha GS)
