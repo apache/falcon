@@ -57,9 +57,11 @@
                 <include>falcon</include>
                 <include>falcon-config.sh</include>
                 <include>falcon-start</include>
+                <include>falcon-status</include>
                 <include>falcon-stop</include>
                 <include>service-start.sh</include>
                 <include>service-stop.sh</include>
+                <include>service-status.sh</include>
             </includes>
         </fileSet>
 

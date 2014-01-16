@@ -47,6 +47,7 @@ public class FalconCLI {
     public static final String FALCON_URL = "FALCON_URL";
     public static final String URL_OPTION = "url";
     public static final String VERSION_OPTION = "version";
+    public static final String STATUS_OPTION = "status";
     public static final String ADMIN_CMD = "admin";
     public static final String HELP_CMD = "help";
     private static final String VERSION_CMD = "version";
@@ -121,7 +122,7 @@ public class FalconCLI {
         parser.addCommand(VERSION_CMD, "", "show client version", new Options(), false);
         parser.addCommand(ENTITY_CMD,
                 "",
-                "Entity opertions like submit, suspend, resume, delete, status, defintion, submitAndSchedule",
+                "Entity operations like submit, suspend, resume, delete, status, definition, submitAndSchedule",
                 entityOptions(), false);
         parser.addCommand(INSTANCE_CMD,
                 "",
@@ -370,11 +371,12 @@ public class FalconCLI {
         adminOptions.addOption(url);
 
         OptionGroup group = new OptionGroup();
-        // Option status = new Option(STATUS_OPTION, false,
-        // "show the current system status");
+        Option status = new Option(STATUS_OPTION, false,
+                "show the current system status");
         Option version = new Option(VERSION_OPTION, false,
                 "show Falcon server build version");
         Option help = new Option("help", false, "show Falcon help");
+        group.addOption(status);
         group.addOption(version);
         group.addOption(help);
 
@@ -574,7 +576,22 @@ public class FalconCLI {
             result = client.getThreadDump();
             OUT.get().println(result);
         }
-        if (optionsList.contains(VERSION_OPTION)) {
+        if (optionsList.contains(STATUS_OPTION)) {
+            int status = 0;
+            try {
+                status = client.getStatus();
+                if (status != 200) {
+                    ERR.get().println("Falcon server is not fully operational (on " + falconUrl + "). Please check log files.");
+                    System.exit(status);
+                } else {
+                    OUT.get().println("Falcon server is running (on " + falconUrl + ")");
+                    System.exit(0);
+                }
+            } catch (Exception e) {
+                ERR.get().println("Falcon server doesn't seem to be running on " + falconUrl);
+                System.exit(-1);
+            }
+        } else if (optionsList.contains(VERSION_OPTION)) {
             result = client.getVersion();
             OUT.get().println("Falcon server build version: " + result);
         } else if (optionsList.contains(HELP_CMD)) {

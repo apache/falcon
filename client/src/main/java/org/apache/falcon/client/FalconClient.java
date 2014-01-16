@@ -356,6 +356,14 @@ public class FalconClient {
         return sendAdminRequest(AdminOperations.VERSION);
     }
 
+    public int getStatus() throws FalconCLIException {
+        AdminOperations job =  AdminOperations.VERSION;
+        ClientResponse clientResponse = service.path(job.path)
+                .header(REMOTE_USER, USER).accept(job.mimeType)
+                .type(MediaType.TEXT_PLAIN).method(job.method, ClientResponse.class);
+        return clientResponse.getStatus();
+    }
+
     /**
      * Converts a InputStream into ServletInputStream.
      *
