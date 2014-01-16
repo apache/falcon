@@ -8,6 +8,8 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-252 Upgrade to json-simple 1.1.1. ( Jean-Baptiste Onofré via Shwetha GS)
+
     FALCON-233 Update hadoop 2 version to 2.2.0. (Venkatesh Seetharam
     via Shwetha GS)
 
