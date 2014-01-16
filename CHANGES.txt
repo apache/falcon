@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-254 Bootstrap designer module. (Srikanth Sundarrajan via Shwetha GS)
+
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
