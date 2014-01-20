@@ -581,15 +581,13 @@ public class FalconCLI {
             try {
                 status = client.getStatus();
                 if (status != 200) {
-                    ERR.get().println("Falcon server is not fully operational (on " + falconUrl + "). Please check log files.");
-                    System.exit(status);
+                    ERR.get().println("Falcon server is not fully operational (on " + falconUrl + "). "
+                            + "Please check log files.");
                 } else {
                     OUT.get().println("Falcon server is running (on " + falconUrl + ")");
-                    System.exit(0);
                 }
             } catch (Exception e) {
                 ERR.get().println("Falcon server doesn't seem to be running on " + falconUrl);
-                System.exit(-1);
             }
         } else if (optionsList.contains(VERSION_OPTION)) {
             result = client.getVersion();
