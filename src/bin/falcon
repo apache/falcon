@@ -30,9 +30,4 @@ BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 . ${BASEDIR}/bin/falcon-config.sh 'client'
 
-JAVA_PROPERTIES="$FALCON_OPTS"
-while [[ ${1} =~ ^\-D ]]; do
-  JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
-  shift
-done
-${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"
+${JAVA_BIN} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"

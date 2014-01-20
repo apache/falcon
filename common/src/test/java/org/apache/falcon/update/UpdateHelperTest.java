@@ -94,6 +94,27 @@ public class UpdateHelperTest extends AbstractTestBase {
     }
 
     @Test
+    public void testCopyUserWorkflow() throws Exception {
+        FileSystem fs = dfsCluster.getFileSystem();
+        Path basePath = new Path("/tmp/basepath");
+        fs.mkdirs(basePath);
+        Path wfdir = new Path(basePath, "workflow");
+        fs.mkdirs(wfdir);
+        Path wf = new Path(wfdir, "workflow.xml");
+        Path lib = new Path(wfdir, "common.jar");
+        fs.create(wf).close();
+        fs.create(lib).close();
+        Path dest = new Path("/tmp/dest");
+        UpdateHelper.checksumAndCopy(fs, wfdir, dest);
+        Assert.assertTrue(fs.exists(new Path(dest, "workflow.xml")) && fs.isFile(new Path(dest, "workflow.xml")));
+        Assert.assertTrue(fs.exists(new Path(dest, "common.jar")) && fs.isFile(new Path(dest, "common.jar")));
+
+        fs.delete(dest, true);
+        UpdateHelper.checksumAndCopy(fs, wf, dest);
+        Assert.assertTrue(fs.exists(new Path(dest, "workflow.xml")) && fs.isFile(new Path(dest, "workflow.xml")));
+    }
+
+    @Test
     public void testWorkflowUpdate() throws IOException, FalconException {
         FileSystem fs = dfsCluster.getFileSystem();
         Process process = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
