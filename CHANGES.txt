@@ -20,6 +20,8 @@ Release Version: 0.4-incubating
 
     FALCON-54: Falcon support for hadoop 2.0
 
+    FALCON-64 Add example entity xmls in falcon package. (Shwetha GS)
+    
     FALCON-85: Hive (HCatalog) integration
 
     FALCON-164: Provide Falcon Prism Web UI
