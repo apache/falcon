@@ -37,7 +37,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Test class for Process Instance REST API.
  */
-@Test(enabled = false)
+@Test(enabled = false, groups = {"exhaustive"})
 public class ProcessInstanceManagerIT {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
 

@@ -95,12 +95,12 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Cluster cluster = store.get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
         ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).setEndpoint("thrift://localhost:49083");
-        fs = new Path(hdfsUrl).getFileSystem(new Configuration());
+        fs = new Path(hdfsUrl).getFileSystem(EmbeddedCluster.newConfiguration());
         fs.create(new Path(ClusterHelper.getLocation(cluster, "working"), "libext/PROCESS/ext.jar")).close();
 
         Process process = store.get(EntityType.PROCESS, "clicksummary");
         Path wfpath = new Path(process.getWorkflow().getPath());
-        assert new Path(hdfsUrl).getFileSystem(new Configuration()).mkdirs(wfpath);
+        assert new Path(hdfsUrl).getFileSystem(EmbeddedCluster.newConfiguration()).mkdirs(wfpath);
     }
 
     public void testDefCoordMap(Process process, COORDINATORAPP coord) throws Exception {

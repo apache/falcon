@@ -71,7 +71,7 @@ public class TableStorageFeedEvictorIT {
     private static final String DATABASE_NAME = "falcon_db";
     private static final String TABLE_NAME = "clicks";
     private static final String EXTERNAL_TABLE_NAME = "clicks_external";
-    private static final String STORAGE_URL = "hdfs://localhost:41020";
+    private static final String STORAGE_URL = "jail://global:00";
     private static final String EXTERNAL_TABLE_LOCATION = STORAGE_URL + "/falcon/staging/clicks_external/";
 
     private final InMemoryWriter stream = new InMemoryWriter(System.out);

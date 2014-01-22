@@ -111,8 +111,9 @@
         <hcatalog.version>0.11.0</hcatalog.version>
         <hadoop-distcp.version>0.9</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
+        <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
-        <skipCheck>false</skipCheck>
+        <excluded.test.groups>exhaustive</excluded.test.groups>
     </properties>
 
     <profiles>
@@ -134,6 +135,18 @@
 		                <version>${hadoop.version}</version>
                         <scope>provided</scope>
 		                <exclusions>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-server</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-json</artifactId>
+                            </exclusion>
 		                    <exclusion>
 		                        <groupId>org.eclipse.jdt</groupId>
 		                        <artifactId>core</artifactId>
@@ -175,6 +188,18 @@
 		                <artifactId>hadoop-client</artifactId>
 		                <version>${hadoop1.version}</version>
 		                <exclusions>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-server</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-json</artifactId>
+                            </exclusion>
 		                    <exclusion>
 		                        <groupId>org.glassfish</groupId>
 		                        <artifactId>javax.servlet</artifactId>
@@ -197,6 +222,18 @@
 		                <artifactId>hadoop-client</artifactId>
 		                <version>${hadoop.version}</version>
 		                <exclusions>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-server</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>com.sun.jersey</groupId>
+                                <artifactId>jersey-json</artifactId>
+                            </exclusion>
 		                    <exclusion>
 		                        <groupId>org.glassfish</groupId>
 		                        <artifactId>javax.servlet</artifactId>
@@ -212,6 +249,12 @@
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-common</artifactId>
+		                <version>${hadoop.version}</version>
+		            </dependency>
+
+		            <dependency>
+		                <groupId>org.apache.hadoop</groupId>
+		                <artifactId>hadoop-mapreduce-client-common</artifactId>
 		                <version>${hadoop.version}</version>
 		            </dependency>
 
@@ -247,7 +290,7 @@
 		                <version>${hadoop.version}</version>
 		            </dependency>
                 </dependencies>
-            </dependencyManagement>
+          </dependencyManagement>
         </profile>
 
         <profile>
@@ -266,6 +309,110 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>test-patch</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <useDefaultExcludes>true</useDefaultExcludes>
+                            <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                            <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
+                            <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+                            <excludeSubProjects>true</excludeSubProjects>
+                            <excludes>
+                                <exclude>*.txt</exclude>
+                                <exclude>.git/**</exclude>
+                                <exclude>**/.idea/**</exclude>
+                                <exclude>**/*.twiki</exclude>
+                                <exclude>**/*.iml</exclude>
+                                <exclude>**/target/**</exclude>
+                                <exclude>**/activemq-data/**</exclude>
+                                <exclude>**/build/**</exclude>
+                                <exclude>**/*.patch</exclude>
+                                <exclude>derby.log</exclude>
+                                <exclude>**/logs/**</exclude>
+                                <exclude>**/.classpath</exclude>
+                                <exclude>**/.project</exclude>
+                                <exclude>**/.settings/**</exclude>
+                                <exclude>**/test-output/**</exclude>
+                                <exclude>**/data.txt</exclude>
+                                <exclude>**/maven-eclipse.xml</exclude>
+                                <exclude>**/.externalToolBuilders/**</exclude>
+                                <exclude>html5-ui/**</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>rat-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.falcon</groupId>
+                                <artifactId>checkstyle</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <id>checkstyle-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <consoleOutput>true</consoleOutput>
+                                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                                    <configLocation>falcon/checkstyle.xml</configLocation>
+                                    <failOnViolation>true</failOnViolation>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>findbugs-maven-plugin</artifactId>
+                        <configuration>
+                            <!--debug>true</debug -->
+                            <xmlOutput>true</xmlOutput>
+                            <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
+                            <failOnError>true</failOnError>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>findbugs-check</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Source code metrics: mvn javancss:report or mvn site -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>javancss-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <excluded.test.groups/>
+            </properties>
+         </profile>
     </profiles>
 
     <modules>
@@ -443,13 +590,13 @@
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
-                <version>1.8</version>
+                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
-                <version>1.8</version>
+                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>
@@ -461,6 +608,12 @@
             <dependency>
                 <groupId>org.apache.falcon</groupId>
                 <artifactId>falcon-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon</groupId>
+                <artifactId>falcon-hadoop-dependencies</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -511,7 +664,7 @@
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-server</artifactId>
-                <version>1.8</version>
+                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>
@@ -660,6 +813,12 @@
                 <artifactId>oozie-webapp</artifactId>
                 <version>${oozie.buildversion}</version>
                 <type>war</type>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet.jsp</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
             </dependency>
 
             <dependency>
@@ -845,12 +1004,12 @@
                 </includes>
             </resource>
             <resource>
-              <directory>..</directory>
-              <targetPath>META-INF</targetPath>
-              <includes>
-                <include>LICENSE.txt</include>
-                <include>NOTICE.txt</include>
-              </includes>
+                <directory>..</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE.txt</include>
+                    <include>NOTICE.txt</include>
+                </includes>
             </resource>
         </resources>
         <testResources>
@@ -865,12 +1024,6 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
                     <version>1.0</version>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.5</version>
                 </plugin>
 
                 <plugin>
@@ -891,10 +1044,16 @@
                     <version>2.8.1</version>
                 </plugin>
 
-                <plugin>
+               <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.14</version>
+                    <version>2.16</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.16</version>
                 </plugin>
 
                 <plugin>
@@ -985,11 +1144,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -1004,7 +1158,7 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>package</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>jar-no-fork</goal>
                         </goals>
@@ -1018,19 +1172,13 @@
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <phase>package</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <skip>${skipCheck}</skip>
-                        </configuration>
-                    </execution>
+                     </execution>
                 </executions>
-                <configuration>
-                    <skip>${skipCheck}</skip>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -1047,121 +1195,40 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.16</version>
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <forkMode>always</forkMode>
                     <argLine>-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>
+                    <excludedGroups>${excluded.test.groups}</excludedGroups>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.16</version>
                 <configuration>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                    <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
-                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                    <excludeSubProjects>true</excludeSubProjects>
-                    <excludes>
-                        <exclude>*.txt</exclude>
-                        <exclude>.git/**</exclude>
-                        <exclude>.idea/**</exclude>
-                        <exclude>**/*.twiki</exclude>
-                        <exclude>**/*.iml</exclude>
-                        <exclude>**/target/**</exclude>
-                        <exclude>**/activemq-data/**</exclude>
-                        <exclude>**/build/**</exclude>
-                        <exclude>**/*.patch</exclude>
-                        <exclude>derby.log</exclude>
-                        <exclude>**/logs/**</exclude>
-                        <exclude>**/.classpath</exclude>
-                        <exclude>**/.project</exclude>
-                        <exclude>**/.settings/**</exclude>
-                        <exclude>**/test-output/**</exclude>
-                        <exclude>**/data.txt</exclude>
-                        <exclude>**/maven-eclipse.xml</exclude>
-                        <exclude>**/.externalToolBuilders/**</exclude>
-                        <exclude>html5-ui/**</exclude>
-                    </excludes>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <forkMode>always</forkMode>
+                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=
+                        -Dhadoop.tmp.dir=${project.build.directory}/tmp-hadoop-${user.name}</argLine>
+                    <excludedGroups>${excluded.test.groups}</excludedGroups>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>rat-check</id>
+                        <id>integration-test</id>
                         <goals>
-                            <goal>check</goal>
+                            <goal>integration-test</goal>
                         </goals>
-                        <phase>verify</phase>
                     </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.falcon</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
                     <execution>
-                        <id>checkstyle-check</id>
+                        <id>verify</id>
                         <goals>
-                            <goal>check</goal>
+                            <goal>verify</goal>
                         </goals>
-                        <phase>verify</phase>
-                        <configuration>
-                            <consoleOutput>true</consoleOutput>
-                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                            <configLocation>falcon/checkstyle.xml</configLocation>
-                            <failOnViolation>true</failOnViolation>
-                            <skip>${skipCheck}</skip>
-                        </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <configuration>
-                    <!--debug>true</debug -->
-                    <xmlOutput>true</xmlOutput>
-                    <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml</excludeFilterFile>
-                    <failOnError>true</failOnError>
-                    <skip>${skipCheck}</skip>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>findbugs-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>verify</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Source code metrics: mvn javancss:report or mvn site -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>javancss-maven-plugin</artifactId>
             </plugin>
 
             <plugin>

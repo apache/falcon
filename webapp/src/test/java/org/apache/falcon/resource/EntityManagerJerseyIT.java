@@ -17,10 +17,15 @@
  */
 package org.apache.falcon.resource;
 
-import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletInputStream;
@@ -28,11 +33,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
-import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
@@ -44,7 +54,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
@@ -53,13 +62,17 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.sun.jersey.api.client.ClientResponse;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 
 /**
  * Test class for Entity REST APIs.
  *
  * Tests should be enabled only in local environments as they need running instance of the web server.
  */
+@Test(groups = {"exhaustive"})
 public class EntityManagerJerseyIT {
 
     private static final int ONE_HR = 2 * 24 * 60 * 60 * 1000;
@@ -69,7 +82,7 @@ public class EntityManagerJerseyIT {
         TestContext.prepare();
     }
 
-    private void assertLibs(FileSystem fs, Path path) throws IOException {
+    static void assertLibs(FileSystem fs, Path path) throws IOException {
         FileStatus[] libs = fs.listStatus(path);
         Assert.assertNotNull(libs);
         Assert.assertEquals(libs.length, 1);
@@ -102,7 +115,7 @@ public class EntityManagerJerseyIT {
         String tmpFileName = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(new File(tmpFileName));
         Location location = new Location();
-        location.setPath("fsext://localhost:41020/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}");
+        location.setPath("fsext://global:00/falcon/test/input/${YEAR}/${MONTH}/${DAY}/${HOUR}");
         location.setType(LocationType.DATA);
         Cluster cluster = feed.getClusters().getClusters().get(0);
         cluster.setLocations(new Locations());
@@ -138,7 +151,8 @@ public class EntityManagerJerseyIT {
         Map<String, String> overlay = context.getUniqueOverlay();
         String tmpFileName = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
-        updateEndtime(process);
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
         File tmpFile = context.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
@@ -148,11 +162,22 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(bundles.size(), 1);
         Assert.assertEquals(bundles.get(0).getUser(), TestContext.REMOTE_USER);
 
-        Feed feed = (Feed) getDefinition(context, EntityType.FEED, context.outputFeedName);
+        ClientResponse response = context.service.path("api/entities/definition/feed/"
+                + context.outputFeedName).header(
+                "Remote-User", TestContext.REMOTE_USER)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Feed feed = (Feed) EntityType.FEED.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
 
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
-        update(context, feed);
+        tmpFile = context.getTempFile();
+        EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
+        response = context.service.path("api/entities/update/feed/"
+                + context.outputFeedName).header("Remote-User",
+                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
+        context.assertSuccessful(response);
 
         bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
@@ -176,7 +201,6 @@ public class EntityManagerJerseyIT {
         contexts.remove();
     }
 
-    @Test(enabled = false)
     public void testOptionalInput() throws Exception {
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
@@ -200,7 +224,6 @@ public class EntityManagerJerseyIT {
         context.waitForWorkflowStart(context.processName);
     }
 
-    @Test
     public void testProcessDeleteAndSchedule() throws Exception {
         //Submit process with invalid property so that coord submit fails and bundle goes to failed state
         TestContext context = newContext();
@@ -214,7 +237,7 @@ public class EntityManagerJerseyIT {
         File tmpFile = context.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        context.waitForBundleStart(Status.FAILED);
+        context.waitForBundleStart(Status.FAILED, Status.KILLED);
 
         //Delete and re-submit the process with correct workflow
         ClientResponse clientRepsonse = context.service.path("api/entities/delete/process/"
@@ -267,12 +290,18 @@ public class EntityManagerJerseyIT {
         OozieClient ozClient = context.getOozieClient();
         String coordId = ozClient.getBundleJobInfo(bundles.get(0).getId()).getCoordinators().get(0).getId();
 
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        ClientResponse response = context.service.path("api/entities/definition/process/"
+                + context.processName).header(
+                "Remote-User", TestContext.REMOTE_USER)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
+
         String feed3 = "f3" + System.currentTimeMillis();
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("inputFeedName", feed3);
         overlay.put("cluster", context.clusterName);
-        ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
+        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
         context.assertSuccessful(response);
 
         Input input = new Input();
@@ -282,34 +311,48 @@ public class EntityManagerJerseyIT {
         input.setEnd("today(20,20)");
         process.getInputs().getInputs().add(input);
 
-        Date endTime = getEndTime();
-        updateEndtime(process);
-        update(context, process, endTime);
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
+        File tmpFile = context.getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        response = context.service.path("api/entities/update/process/"
+                + context.processName).header("Remote-User",
+                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
+        context.assertSuccessful(response);
 
         //Assert that update creates new bundle and old coord is running
         bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
-        CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
-        Assert.assertEquals(coord.getStatus(), Status.RUNNING);
-        Assert.assertEquals(coord.getEndTime(), endTime);
+        Assert.assertEquals(ozClient.getCoordJobInfo(coordId).getStatus(), Status.RUNNING);
     }
 
-    @Test
     public void testProcessEndtimeUpdate() throws Exception {
         TestContext context = newContext();
         context.scheduleProcess();
         context.waitForBundleStart(Job.Status.RUNNING);
 
-        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
-        updateEndtime(process);
-        update(context, process);
+        ClientResponse response = context.service.path("api/entities/definition/process/"
+                + context.processName).header(
+                "Remote-User", TestContext.REMOTE_USER)
+                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
+                .unmarshal(new StringReader(response.getEntity(String.class)));
+
+        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
+        processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
+        File tmpFile = context.getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        response = context.service.path("api/entities/update/process/" + context.processName).header("Remote-User",
+                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
+                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
+        context.assertSuccessful(response);
 
         //Assert that update does not create new bundle
         List<BundleJob> bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 1);
     }
 
-    @Test
     public void testStatus() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -332,7 +375,6 @@ public class EntityManagerJerseyIT {
 
     }
 
-    @Test
     public void testIdempotentSubmit() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -345,7 +387,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
-    @Test
     public void testNotFoundStatus() {
         TestContext context = newContext();
         ClientResponse response;
@@ -358,7 +399,6 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
     }
 
-    @Test
     public void testVersion() {
         TestContext context = newContext();
         ClientResponse response;
@@ -379,7 +419,6 @@ public class EntityManagerJerseyIT {
                 "No deploy.mode found in /api/admin/version");
     }
 
-    @Test
     public void testValidate() {
         TestContext context = newContext();
         ServletInputStream stream = context.getServletInputStream(getClass().
@@ -394,7 +433,6 @@ public class EntityManagerJerseyIT {
         context.assertFailure(clientRepsonse);
     }
 
-    @Test
     public void testClusterValidate() throws Exception {
         TestContext context = newContext();
         ClientResponse clientRepsonse;
@@ -410,7 +448,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(clientRepsonse);
     }
 
-    @Test
     public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
         TestContext context = newContext();
         ClientResponse clientRepsonse;
@@ -448,7 +485,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(clientRepsonse);
     }
 
-    @Test
     public void testSubmit() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -467,7 +503,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
-    @Test
     public void testGetEntityDefinition() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -494,7 +529,6 @@ public class EntityManagerJerseyIT {
         }
     }
 
-    @Test
     public void testInvalidGetEntityDefinition() {
         TestContext context = newContext();
         ClientResponse clientRepsonse = context.service
@@ -504,7 +538,6 @@ public class EntityManagerJerseyIT {
         context.assertFailure(clientRepsonse);
     }
 
-    @Test
     public void testScheduleSuspendResume() throws Exception {
         TestContext context = newContext();
         context.scheduleProcess();
@@ -522,7 +555,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(clientRepsonse);
     }
 
-    @Test(enabled = true)
     public void testFeedSchedule() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -543,7 +575,7 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(clientRepsonse);
     }
 
-    private List<Path> createTestData(TestContext context) throws Exception {
+    static List<Path> createTestData(TestContext context) throws Exception {
         List<Path> list = new ArrayList<Path>();
         FileSystem fs = context.cluster.getFileSystem();
         fs.mkdirs(new Path("/user/guest"));
@@ -593,7 +625,6 @@ public class EntityManagerJerseyIT {
         return list;
     }
 
-    @Test
     public void testDeleteDataSet() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
@@ -612,7 +643,6 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
-    @Test
     public void testDelete() throws Exception {
         TestContext context = newContext();
         ClientResponse response;

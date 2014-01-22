@@ -131,17 +131,18 @@ public class FalconCLI {
 
         try {
             CLIParser.Command command = parser.parse(args);
+            int exitValue = 0;
             if (command.getName().equals(HELP_CMD)) {
                 parser.showHelp();
             } else if (command.getName().equals(ADMIN_CMD)) {
-                adminCommand(command.getCommandLine());
+                exitValue = adminCommand(command.getCommandLine());
             } else if (command.getName().equals(ENTITY_CMD)) {
                 entityCommand(command.getCommandLine());
             } else if (command.getName().equals(INSTANCE_CMD)) {
                 instanceCommand(command.getCommandLine());
             }
 
-            return 0;
+            return exitValue;
         } catch (FalconCLIException ex) {
             ERR.get().println("Error: " + ex.getMessage());
             return -1;
@@ -562,7 +563,7 @@ public class FalconCLI {
         return url;
     }
 
-    private void adminCommand(CommandLine commandLine) throws FalconCLIException, IOException {
+    private int adminCommand(CommandLine commandLine) throws FalconCLIException, IOException {
         String result;
         String falconUrl = getFalconEndpoint(commandLine);
         FalconClient client = new FalconClient(falconUrl);
@@ -576,6 +577,7 @@ public class FalconCLI {
             result = client.getThreadDump();
             OUT.get().println(result);
         }
+        int exitValue = 0;
         if (optionsList.contains(STATUS_OPTION)) {
             int status = 0;
             try {
@@ -583,11 +585,13 @@ public class FalconCLI {
                 if (status != 200) {
                     ERR.get().println("Falcon server is not fully operational (on " + falconUrl + "). "
                             + "Please check log files.");
+                    exitValue = status;
                 } else {
                     OUT.get().println("Falcon server is running (on " + falconUrl + ")");
                 }
             } catch (Exception e) {
                 ERR.get().println("Falcon server doesn't seem to be running on " + falconUrl);
+                exitValue = -1;
             }
         } else if (optionsList.contains(VERSION_OPTION)) {
             result = client.getVersion();
@@ -595,6 +599,7 @@ public class FalconCLI {
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         }
+        return exitValue;
     }
 
     private Properties getClientProperties() throws IOException {

@@ -75,8 +75,8 @@ public class FileSystemStorageTest {
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
-        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "hdfs://localhost:41020/foo/bar");
+        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "jail://global:00/foo/bar");
     }
 
     @Test
@@ -106,21 +106,21 @@ public class FileSystemStorageTest {
         StringBuilder expected = new StringBuilder();
         expected.append(LocationType.DATA)
                 .append(FileSystemStorage.LOCATION_TYPE_SEP)
-                .append("hdfs://localhost:41020/data/foo/bar")
+                .append("jail://global:00/data/foo/bar")
                 .append(FileSystemStorage.FEED_PATH_SEP)
                 .append(LocationType.META)
                 .append(FileSystemStorage.LOCATION_TYPE_SEP)
-                .append("hdfs://localhost:41020/meta/foo/bar")
+                .append("jail://global:00/meta/foo/bar")
                 .append(FileSystemStorage.FEED_PATH_SEP)
                 .append(LocationType.STATS)
                 .append(FileSystemStorage.LOCATION_TYPE_SEP)
-                .append("hdfs://localhost:41020/stats/foo/bar")
+                .append("jail://global:00/stats/foo/bar")
                 .append(FileSystemStorage.FEED_PATH_SEP)
                 .append(LocationType.TMP)
                 .append(FileSystemStorage.LOCATION_TYPE_SEP)
-                .append("hdfs://localhost:41020/tmp/foo/bar");
+                .append("jail://global:00/tmp/foo/bar");
 
-        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
         Assert.assertEquals(storage.getUriTemplate(), expected.toString());
     }
 
@@ -139,9 +139,9 @@ public class FileSystemStorageTest {
     @DataProvider(name = "locationTestDataProvider")
     private Object[][] createLocationTestData() {
         return new Object[][] {
-            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2", "/localDC/rc/billing/ua2"},
-            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2/", "/localDC/rc/billing/ua2"},
-            {"hdfs://localhost:41020", "/localDC/rc/billing/ua2//", "/localDC/rc/billing/ua2"},
+            {"jail://global:00", "/localDC/rc/billing/ua2", "/localDC/rc/billing/ua2"},
+            {"jail://global:00", "/localDC/rc/billing/ua2/", "/localDC/rc/billing/ua2"},
+            {"jail://global:00", "/localDC/rc/billing/ua2//", "/localDC/rc/billing/ua2"},
             {"${nameNode}", "/localDC/rc/billing/ua2", "/localDC/rc/billing/ua2"},
             {"${nameNode}", "/localDC/rc/billing/ua2/", "/localDC/rc/billing/ua2"},
             {"${nameNode}", "/localDC/rc/billing/ua2//", "/localDC/rc/billing/ua2"},
@@ -169,13 +169,13 @@ public class FileSystemStorageTest {
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
         Assert.assertTrue(storage.exists());
     }
 
     @Test
     public void testIsIdentical() throws Exception {
-        final String storageUrl = "hdfs://localhost:41020";
+        final String storageUrl = "jail://global:00";
         final Location location1 = new Location();
         location1.setPath("/foo/bar");
         location1.setType(LocationType.DATA);
@@ -195,7 +195,7 @@ public class FileSystemStorageTest {
 
     @Test
     public void testIsIdenticalNegative() throws Exception {
-        final String storageUrl = "hdfs://localhost:41020";
+        final String storageUrl = "jail://global:00";
         final Location location1 = new Location();
         location1.setPath("/foo/baz");
         location1.setType(LocationType.DATA);

@@ -27,7 +27,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
-import org.apache.falcon.cluster.util.StandAloneCluster;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -39,6 +38,7 @@ import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.log4j.Logger;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
@@ -66,10 +66,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,6 +80,8 @@ import java.util.regex.Pattern;
  * Base test class for CLI, Entity and Process Instances.
  */
 public class TestContext {
+    private static final Logger LOG = Logger.getLogger(TestContext.class);
+
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
 
@@ -170,7 +175,7 @@ public class TestContext {
             }
 
             System.out.println("Waiting for workflow to start");
-            Thread.sleep(i * 1000);
+            Thread.sleep(i * 500);
         }
         throw new Exception("Workflow for " + entityName + " hasn't started in oozie");
     }
@@ -183,25 +188,26 @@ public class TestContext {
         waitForWorkflowStart(outputFeedName);
     }
 
-    public void waitForBundleStart(Status status) throws Exception {
+    public void waitForBundleStart(Status... status) throws Exception {
         OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
         List<BundleJob> bundles = getBundles();
         if (bundles.isEmpty()) {
             return;
         }
 
+        Set<Status> statuses = new HashSet<Status>(Arrays.asList(status));
         String bundleId = bundles.get(0).getId();
         for (int i = 0; i < 15; i++) {
             Thread.sleep(i * 1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (bundle.getStatus() == status) {
-                if (status == Status.FAILED) {
+            if (statuses.contains(bundle.getStatus())) {
+                if (statuses.contains(Status.FAILED) || statuses.contains(Status.KILLED)) {
                     return;
                 }
 
                 boolean done = false;
                 for (CoordinatorJob coord : bundle.getCoordinators()) {
-                    if (coord.getStatus() == status) {
+                    if (statuses.contains(coord.getStatus())) {
                         done = true;
                     }
                 }
@@ -220,14 +226,13 @@ public class TestContext {
                     InstancesResult.class);
             unmarshaller = jaxbContext.createUnmarshaller();
             marshaller = jaxbContext.createMarshaller();
-
+            configure();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        configure();
     }
 
-    public void configure() {
+    public void configure() throws Exception {
         StartupProperties.get().setProperty(
                 "application.services",
                 StartupProperties.get().getProperty("application.services")
@@ -236,12 +241,14 @@ public class TestContext {
         StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
+        client.setReadTimeout(500000);
+        client.setConnectTimeout(500000);
         this.service = client.resource(UriBuilder.fromUri(BASE_URL).build());
     }
 
-    public void setCluster(String file) throws Exception {
-        cluster = StandAloneCluster.newCluster(file);
-        clusterName = cluster.getCluster().getName();
+    public void setCluster(String cName) throws Exception {
+        cluster = EmbeddedCluster.newCluster(cName, true);
+        this.clusterName = cluster.getCluster().getName();
     }
 
     /**
@@ -280,7 +287,7 @@ public class TestContext {
         String tmpFile = overlayParametersOverTemplate(template, overlay);
         if (entityType == EntityType.CLUSTER) {
             try {
-                cluster = StandAloneCluster.newCluster(tmpFile);
+                cluster = EmbeddedCluster.newCluster(overlay.get("cluster"), true);
                 clusterName = cluster.getCluster().getName();
             } catch (Exception e) {
                 throw new IOException("Unable to setup cluster info", e);
@@ -434,8 +441,8 @@ public class TestContext {
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
         overlay.put("colo", "gs");
         TestContext context = new TestContext();
-        String file = context.overlayParametersOverTemplate(clusterTemplate, overlay);
-        EmbeddedCluster cluster = StandAloneCluster.newCluster(file);
+        context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster(overlay.get("cluster"), true);
 
         cleanupStore();
 

@@ -90,6 +90,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-hadoop-dependencies</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>

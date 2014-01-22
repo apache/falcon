@@ -19,9 +19,9 @@
 
 <cluster colo="##colo##" description="" name="##cluster##" xmlns="uri:falcon:cluster:0.1">
     <interfaces>
-        <interface type="readonly" endpoint="hftp://localhost:41110"
+        <interface type="readonly" endpoint="jail://global:00"
                    version="0.20.2"/>
-        <interface type="write" endpoint="hdfs://localhost:41020"
+        <interface type="write" endpoint="jail://global:00"
                    version="0.20.2"/>
         <interface type="execute" endpoint="localhost:41021" version="0.20.2"/>
         <interface type="workflow" endpoint="http://localhost:41000/oozie/"

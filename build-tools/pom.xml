@@ -30,6 +30,14 @@
     <artifactId>build-tools</artifactId>
     <name>Build Tools</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

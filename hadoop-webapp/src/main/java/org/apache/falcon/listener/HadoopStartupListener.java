@@ -18,21 +18,13 @@
 
 package org.apache.falcon.listener;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.falcon.JobTrackerService;
+import org.apache.hadoop.hive.metastore.HiveMetaStore;
+import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
-import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.server.datanode.DataNode;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hive.metastore.HiveMetaStore;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.log4j.Logger;
 
 /**
  * Listener for bootstrapping embedded hadoop cluster for integration tests.
@@ -44,80 +36,27 @@ public class HadoopStartupListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
-            FileUtils.deleteDirectory(new File(System.getProperty("hadoop.tmp.dir")));
-            final Configuration conf = new Configuration();
-
-            NameNode.format(conf);
-            final String[] emptyArgs = {};
-            try {
-                Class.forName("org.apache.hadoop.mapreduce.task.JobContextImpl");
-                startHadoop2Services(conf, emptyArgs);
-            } catch (ClassNotFoundException cnfe) {
-                startHadoop1Services(conf, emptyArgs);
-            }
+            startLocalJobRunner();
 
             startBroker();
-
             startHiveMetaStore();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            LOG.error("Unable to start hadoop cluster", e);
-            throw new RuntimeException("Unable to start hadoop cluster", e);
+            LOG.error("Unable to start daemons", e);
+            throw new RuntimeException("Unable to start daemons", e);
         }
     }
 
-    private void startHadoop1Services(Configuration conf, String[] emptyArgs)
-        throws IOException, IllegalAccessException, InvocationTargetException,
-               NoSuchMethodException, ClassNotFoundException, InstantiationException {
-
-        NameNode.createNameNode(emptyArgs, conf);
-        DataNode.createDataNode(emptyArgs, conf);
-
-        JobConf jobConf = new JobConf(conf);
-        // JobTracker jt = JobTracker.startTracker(jobConf);
-        // jt.offerService();
-        // TaskTracker tt = new TaskTracker(jobConf);
-        // tt.run();
-
-        Object jt = Class.forName("org.apache.hadoop.mapred.JobTracker")
-                        .getMethod("startTracker", JobConf.class).invoke(null, jobConf);
-        startService(jt, "offerService");
-
-        Object tt = Class.forName("org.apache.hadoop.mapred.TaskTracker")
-                        .getConstructor(JobConf.class).newInstance(jobConf);
-        startService(tt, "run");
-    }
-
-    private void startHadoop2Services(Configuration conf, String[] emptyArgs) throws Exception {
-
-        // DefaultMetricsSystem.setMiniClusterMode(true);
-        // ResourceManager resourceManager = new ResourceManager(new MemStore());
-        // YarnConfiguration yarnConf = new YarnConfiguration(conf);
-        // resourceManager.init(yarnConf);
-        // resourceManager.start();
-        // NodeManager nodeManager = new NodeManager();
-        // nodeManager.init(yarnConf);
-        // nodeManager.start();
-
-        Class.forName("org.apache.hadoop.metrics2.lib.DefaultMetricsSystem")
-                        .getMethod("setMiniClusterMode", boolean.class).invoke(null, true);
-
-        NameNode.createNameNode(emptyArgs, conf);
-        DataNode.createDataNode(emptyArgs, conf);
-
-        Object memStore = instance("org.apache.hadoop.yarn.server.resourcemanager.recovery.MemStore");
-        Object resourceManager = Class.forName("org.apache.hadoop.yarn.server.resourcemanager.ResourceManager")
-                .getConstructor(Class.forName("org.apache.hadoop.yarn.server.resourcemanager.recovery.Store"))
-                .newInstance(memStore);
-        Object yarnConf = Class.forName("org.apache.hadoop.yarn.conf.YarnConfiguration")
-                .getConstructor(Configuration.class).newInstance(conf);
-        invoke(resourceManager, "init", Configuration.class, yarnConf);
-        startService(resourceManager, "start");
-
-        Object nodeManager = instance("org.apache.hadoop.yarn.server.nodemanager.NodeManager");
-        invoke(nodeManager, "init", Configuration.class, yarnConf);
-        startService(nodeManager, "start");
+    @SuppressWarnings("unchecked")
+    private void startLocalJobRunner() throws Exception {
+        String className = "org.apache.hadoop.mapred.LocalRunnerV1";
+        try {
+            Class<? extends JobTrackerService>  runner = (Class<? extends JobTrackerService>) Class.forName(className);
+            JobTrackerService service = runner.newInstance();
+            service.start();
+        } catch (ClassNotFoundException e) {
+            LOG.warn("v1 Hadoop components not found. Assuming v2", e);
+        }
     }
 
     private void startBroker() throws Exception {

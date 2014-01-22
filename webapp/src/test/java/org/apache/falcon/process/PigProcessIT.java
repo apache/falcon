@@ -58,8 +58,8 @@ public class PigProcessIT {
 
         overlay = context.getUniqueOverlay();
 
-        String filePath = context.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
-        context.setCluster(filePath);
+        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(overlay.get("cluster"));
 
         final Cluster cluster = context.getCluster().getCluster();
         final String storageUrl = ClusterHelper.getStorageUrl(cluster);
@@ -88,7 +88,7 @@ public class PigProcessIT {
     public void testSubmitAndSchedulePigProcess() throws Exception {
         overlay.put("cluster", "primary-cluster");
 
-        String filePath = context.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
+        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
         // context.setCluster(filePath);
 

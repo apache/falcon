@@ -29,6 +29,7 @@ Trunk (Unreleased)
 
 
   OPTIMIZATIONS
+    FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
     FALCON-260 When a process is scheduled, the user workflow is failing with OozieClientException.

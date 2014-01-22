@@ -138,7 +138,7 @@ public class FalconTopicProducerTest {
     }
 
     private List<String> createCommonArgs() {
-        List<String> args = new ArrayList<String>(Arrays.asList(
+        return new ArrayList<String>(Arrays.asList(
                 "-" + ARG.workflowId.getArgName(), "workflow-01-00",
                 "-" + ARG.runId.getArgName(), "1",
                 "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
@@ -151,7 +151,6 @@ public class FalconTopicProducerTest {
                 "-" + ARG.status.getArgName(), ("SUCCEEDED"),
                 "-" + ARG.brokerTTL.getArgName(), "10",
                 "-" + ARG.cluster.getArgName(), "corp"));
-        return args;
     }
 
     private void testProcessMessageCreator(final List<String[]> messages,

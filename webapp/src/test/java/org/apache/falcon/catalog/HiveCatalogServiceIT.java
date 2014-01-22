@@ -48,7 +48,7 @@ public class HiveCatalogServiceIT {
     private static final String DATABASE_NAME = "falcon_db";
     private static final String TABLE_NAME = "falcon_table";
     private static final String EXTERNAL_TABLE_NAME = "falcon_external";
-    private static final String EXTERNAL_TABLE_LOCATION = "hdfs://localhost:41020/falcon/staging/falcon_external";
+    private static final String EXTERNAL_TABLE_LOCATION = "jail://global:00/falcon/staging/falcon_external";
 
     private HiveCatalogService hiveCatalogService;
     private HCatClient client;

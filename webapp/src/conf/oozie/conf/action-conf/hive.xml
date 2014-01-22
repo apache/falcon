@@ -30,7 +30,7 @@
 
     <property>
         <name>fs.default.name</name>
-        <value>hdfs://localhost:41020</value>
+        <value>jail://global:00</value>
     </property>
 
     <!-- Forcing the creation of the db dir under target so mvn clean will clean up -->

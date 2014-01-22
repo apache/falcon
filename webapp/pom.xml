@@ -143,6 +143,10 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-core</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-test</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -218,19 +222,17 @@
                 <executions>
                     <execution>
                         <id>uber-javadocs</id>
-                        <phase>package</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipCheck}</skip>
                             <includeTransitiveDependencySources>false</includeTransitiveDependencySources>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>
                                 <dependencySourceInclude>org.apache.falcon:*</dependencySourceInclude>
                             </dependencySourceIncludes>
-                            <skip>${skipCheck}</skip>
                         </configuration>
                     </execution>
                 </executions>
@@ -317,6 +319,23 @@
                                     <outputDirectory>${project.build.directory}/libext</outputDirectory>
                                     <destFileName>kahadb.jar</destFileName>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.falcon</groupId>
+                                    <artifactId>falcon-hadoop-dependencies</artifactId>
+                                    <version>${project.version}</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/falcon-webapp-${project.version}/WEB-INF/lib</outputDirectory>
+                                    <destFileName>falcon-hadoop-dependencies-${project.version}.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.pig</groupId>
+                                    <artifactId>pig</artifactId>
+                                    <version>0.11.1</version>
+                                    <type>jar</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/sharelib</outputDirectory>
+                                    <destFileName>pig.jar</destFileName>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -341,31 +360,6 @@
                             <goal>run</goal>
                         </goals>
                         <phase>pre-integration-test</phase>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.15</version>
-                <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <forkMode>always</forkMode>
-                    <argLine>-Djava.security.krb5.realm= -Djava.security.krb5.kdc=</argLine>                    
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>integration-test</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -434,7 +428,6 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipCheck}</skip>
                             <daemon>true</daemon>
                         </configuration>
                     </execution>
@@ -447,6 +440,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 

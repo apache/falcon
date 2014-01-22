@@ -18,22 +18,20 @@
 
 package org.apache.falcon.cluster.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfaces;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.entity.v0.cluster.Locations;
+import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * A utility class that doles out an embedded Hadoop cluster with DFS and/or MR.
@@ -45,16 +43,26 @@ public class EmbeddedCluster {
     protected EmbeddedCluster() {
     }
 
-    private Configuration conf = new Configuration();
-    private MiniDFSCluster dfsCluster;
+    //private MiniDFSCluster dfsCluster;
+    protected Configuration conf = newConfiguration();
     protected Cluster clusterEntity;
 
     public Configuration getConf() {
         return conf;
     }
 
+    public static Configuration newConfiguration() {
+        Configuration configuration = new Configuration();
+        configuration.set("fs.jail.impl", JailedFileSystem.class.getName());
+        return configuration;
+    }
+
     public static EmbeddedCluster newCluster(final String name) throws Exception {
-        return createClusterAsUser(name);
+        return createClusterAsUser(name, false);
+    }
+
+    public static EmbeddedCluster newCluster(final String name, boolean global) throws Exception {
+        return createClusterAsUser(name, global);
     }
 
     public static EmbeddedCluster newCluster(final String name,
@@ -63,30 +71,16 @@ public class EmbeddedCluster {
         return hdfsUser.doAs(new PrivilegedExceptionAction<EmbeddedCluster>() {
             @Override
             public EmbeddedCluster run() throws Exception {
-                return createClusterAsUser(name);
+                return createClusterAsUser(name, false);
             }
         });
     }
 
-    private static EmbeddedCluster createClusterAsUser(String name) throws IOException {
+    private static EmbeddedCluster createClusterAsUser(String name, boolean global) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
-        File target = new File("webapp/target");
-        if (!target.exists()) {
-            target = new File("target");
-            System.setProperty("test.build.data", "target/" + name + "/data");
-        } else {
-            System.setProperty("test.build.data", "webapp/target/" + name + "/data");
-        }
-        cluster.conf.set("hadoop.tmp.dir", target.getAbsolutePath());
-        cluster.conf.set("hadoop.log.dir", new File(target, "tmp").getAbsolutePath());
-        cluster.conf.set("hadoop.proxyuser.oozie.groups", "*");
-        cluster.conf.set("hadoop.proxyuser.oozie.hosts", "127.0.0.1");
-        cluster.conf.set("hadoop.proxyuser.hdfs.groups", "*");
-        cluster.conf.set("hadoop.proxyuser.hdfs.hosts", "127.0.0.1");
-        cluster.conf.set("mapreduce.jobtracker.kerberos.principal", "");
-        cluster.conf.set("dfs.namenode.kerberos.principal", "");
-        cluster.dfsCluster = new MiniDFSCluster(cluster.conf, 1, true, null);
-        ProxyUsers.refreshSuperUserGroupsConfiguration(cluster.conf);
+        cluster.conf.set("jail.base", System.getProperty("hadoop.tmp.dir",
+                cluster.conf.get("hadoop.tmp.dir", "/tmp")));
+        cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = " + hdfsUrl);
         cluster.buildClusterObject(name);
@@ -97,7 +91,7 @@ public class EmbeddedCluster {
         return FileSystem.get(conf);
     }
 
-    private void buildClusterObject(String name) {
+    protected void buildClusterObject(String name) {
         clusterEntity = new Cluster();
         clusterEntity.setName(name);
         clusterEntity.setColo("local");
@@ -105,17 +99,16 @@ public class EmbeddedCluster {
 
         Interfaces interfaces = new Interfaces();
         interfaces.getInterfaces().add(newInterface(Interfacetype.WORKFLOW,
-                "http://localhost:11000/oozie", "0.1"));
+                "http://localhost:41000/oozie", "0.1"));
         String fsUrl = conf.get("fs.default.name");
         interfaces.getInterfaces().add(newInterface(Interfacetype.READONLY, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,
-                conf.get("mapred.job.tracker"), "0.1"));
+                "localhost:41021", "0.1"));
         interfaces.getInterfaces().add(
                 newInterface(Interfacetype.REGISTRY, "thrift://localhost:49083", "0.1"));
         interfaces.getInterfaces().add(
                 newInterface(Interfacetype.MESSAGING, "vm://localhost", "0.1"));
-
         clusterEntity.setInterfaces(interfaces);
 
         Location location = new Location();
@@ -125,7 +118,7 @@ public class EmbeddedCluster {
         locs.getLocations().add(location);
         location = new Location();
         location.setName("working");
-        location.setPath("/projects/falcon/working");
+        location.setPath("/project/falcon/working");
         locs.getLocations().add(location);
         clusterEntity.setLocations(locs);
     }
@@ -140,7 +133,7 @@ public class EmbeddedCluster {
     }
 
     public void shutdown() {
-        dfsCluster.shutdown();
+        //dfsCluster.shutdown();
     }
 
     public Cluster getCluster() {

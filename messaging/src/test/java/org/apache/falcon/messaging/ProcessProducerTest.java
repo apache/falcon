@@ -92,7 +92,7 @@ public class ProcessProducerTest {
             }
         };
         t.start();
-        Thread.sleep(1500);
+        Thread.sleep(100);
         new MessageProducer().run(this.args);
         t.join();
         if (error != null) {
