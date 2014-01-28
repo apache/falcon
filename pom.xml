@@ -377,6 +377,7 @@
                                     <consoleOutput>true</consoleOutput>
                                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                     <configLocation>falcon/checkstyle.xml</configLocation>
+                                    <headerLocation>falcon/checkstyle-java-header.txt</headerLocation>
                                     <failOnViolation>true</failOnViolation>
                                 </configuration>
                             </execution>

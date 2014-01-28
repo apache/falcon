@@ -34,6 +34,8 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via Shwetha GS)
+
     FALCON-260 When a process is scheduled, the user workflow is failing with OozieClientException.
     (Shwetha GS)
 
