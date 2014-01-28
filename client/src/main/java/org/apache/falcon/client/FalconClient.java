@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
@@ -40,6 +41,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -137,7 +139,8 @@ public class FalconClient {
         SUSPEND("api/instance/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUME("api/instance/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RERUN("api/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
-        LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -276,6 +279,14 @@ public class FalconClient {
                                        String colo) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
+                null, null, colo);
+    }
+
+    public String getSummaryOfInstances(String type, String entity,
+                                       String start, String end,
+                                       String colo) throws FalconCLIException {
+
+        return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end,
                 null, null, colo);
     }
 
@@ -547,6 +558,8 @@ public class FalconClient {
 
         if (instances.name().equals("LOG")) {
             return parseProcessInstanceResultLogs(clientResponse, runid);
+        } else if (instances.name().equals("SUMMARY")) {
+            return summarizeProcessInstanceResult(clientResponse);
         } else {
             return parseProcessInstanceResult(clientResponse);
         }
@@ -585,6 +598,35 @@ public class FalconClient {
         throws FalconCLIException {
 
         return clientResponse.getEntity(String.class);
+    }
+
+    private String summarizeProcessInstanceResult(ClientResponse clientResponse) {
+        InstancesSummaryResult result = clientResponse
+                .getEntity(InstancesSummaryResult.class);
+        StringBuilder sb = new StringBuilder();
+        String toAppend;
+
+        sb.append("Consolidated Status: ").append(result.getStatus()).append("\n");
+        sb.append("\nInstances Summary:\n");
+
+        if (result.getInstancesSummary() != null) {
+            for (InstancesSummaryResult.InstanceSummary summary : result.getInstancesSummary()) {
+                toAppend = summary.getCluster() != null ? summary.getCluster() : "-";
+                sb.append("Cluster: ").append(toAppend).append("\n");
+
+                sb.append("Status\t\tCount\n");
+                sb.append("-------------------------\n");
+
+                for (Map.Entry<String, Long> entry : summary.getSummaryMap().entrySet()) {
+                    sb.append(entry.getKey()).append("\t\t").append(entry.getValue()).append("\n");
+                }
+            }
+        }
+
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(result.getMessage());
+        sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
     }
 
     private String parseProcessInstanceResult(ClientResponse clientResponse) {

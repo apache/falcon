@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -76,6 +77,8 @@ public abstract class AbstractWorkflowEngine {
         throws FalconException;
 
     public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException;
+
+    public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end) throws FalconException;
 
     public abstract Date update(Entity oldEntity, Entity newEntity, String cluster, Date end) throws FalconException;
 

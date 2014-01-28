@@ -96,6 +96,26 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
+    public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr,
+                                     String colo) {
+        checkColo(colo);
+        checkType(type);
+        try {
+            validateParams(type, entity, startStr, endStr);
+
+            Date start = EntityUtil.parseDateUTC(startStr);
+            Date end = getEndDate(start, endStr);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
+
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            return wfEngine.getSummary(entityObject, start, end);
+        } catch (Throwable e) {
+            LOG.error("Failed to get instances status", e);
+            throw FalconWebException
+                    .newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
     public InstancesResult getLogs(String type, String entity, String startStr,
                                    String endStr, String colo, String runId) {
 

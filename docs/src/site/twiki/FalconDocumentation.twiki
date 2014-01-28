@@ -213,7 +213,9 @@ Parameters -start and -end are used to mention the date range within which you w
    * 4. *suspend*: -suspend is used to suspend a instance or instances for the given process. This option pauses the parent workflow at the state, which it was in at the time of execution of this command. This command is similar to SUSPEND process command in functionality only difference being, SUSPEND process suspends all the instance whereas suspend instance suspend only that instance or instances in the range. 
 
    * 5.	*resume*: -resume option is used to resume any instance that is in suspended state. (Note: due to a bug in oozie �resume option in some cases may not actually resume the suspended instance/ instances)
-   * 6. *kill*: -kill option can be used to kill an instance or multiple instances 
+   * 6. *kill*: -kill option can be used to kill an instance or multiple instances
+
+   * 7. *summary*: -summary option via CLI can be used to get the consolidated status of the instances between the specified time period. Each status along with the corresponding instance count are listed for each of the applicable colos.
 
 
 In all the cases where your request is syntactically correct but logically not, the instance / instances are returned with the same status as earlier. Example: trying to resume a KILLED / SUCCEEDED instance will return the instance with KILLED / SUCCEEDED, without actually performing any operation. This is so because only an instance in SUSPENDED state can be resumed. Same thing is valid for rerun a SUSPENDED or RUNNING options etc. 

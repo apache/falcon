@@ -27,6 +27,8 @@ import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractInstanceManager;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesResult.Instance;
+import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 
@@ -99,6 +101,25 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
+                        type, entity, startStr, endStr, colo);
+            }
+        }.execute(colo, type, entity);
+    }
+
+    @GET
+    @Path("summary/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-summary")
+    @Override
+    public InstancesSummaryResult getSummary(@Dimension("entityType") @PathParam("type") final String type,
+                                             @Dimension("entityName") @PathParam("entity") final String entity,
+                                             @Dimension("start-time") @QueryParam("start") final String startStr,
+                                             @Dimension("end-time") @QueryParam("end") final String endStr,
+                                             @Dimension("colo") @QueryParam("colo") final String colo) {
+        return new InstanceSummaryProxy() {
+            @Override
+            protected InstancesSummaryResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("getSummary",
                         type, entity, startStr, endStr, colo);
             }
         }.execute(colo, type, entity);
@@ -239,6 +260,33 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         protected abstract InstancesResult doExecute(String colo) throws FalconException;
     }
 
+    private abstract class InstanceSummaryProxy {
+
+        public InstancesSummaryResult execute(String coloExpr, String type, String name) {
+            Set<String> colos = getColosFromExpression(coloExpr, type, name);
+
+            Map<String, InstancesSummaryResult> results = new HashMap<String, InstancesSummaryResult>();
+            for (String colo : colos) {
+                try {
+                    InstancesSummaryResult resultHolder = doExecute(colo);
+                    results.put(colo, resultHolder);
+                } catch (FalconException e) {
+                    results.put(colo, new InstancesSummaryResult(APIResult.Status.FAILED,
+                            e.getClass().getName() + "::" + e.getMessage(),
+                            new InstancesSummaryResult.InstanceSummary[0]));
+                }
+            }
+            InstancesSummaryResult finalResult = consolidateInstanceSummaryResult(results);
+            if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
+                throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
+            } else {
+                return finalResult;
+            }
+        }
+
+        protected abstract InstancesSummaryResult doExecute(String colo) throws FalconException;
+    }
+
     private InstancesResult consolidateInstanceResult(Map<String, InstancesResult> results) {
         if (results == null || results.isEmpty()) {
             return null;
@@ -268,6 +316,40 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
         APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
                 : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
         InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
+        result.setRequestId(requestIds.toString());
+        return result;
+    }
+
+    private InstancesSummaryResult consolidateInstanceSummaryResult(Map<String, InstancesSummaryResult> results) {
+        if (results == null || results.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder message = new StringBuilder();
+        StringBuilder requestIds = new StringBuilder();
+        List<InstanceSummary> instances = new ArrayList<InstanceSummary>();
+        int statusCount = 0;
+        for (Map.Entry<String, InstancesSummaryResult> entry : results.entrySet()) {
+            String colo = entry.getKey();
+            InstancesSummaryResult result = results.get(colo);
+            message.append(colo).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
+            statusCount += result.getStatus().ordinal();
+
+            if (result.getInstancesSummary() == null) {
+                continue;
+            }
+
+            for (InstanceSummary instance : result.getInstancesSummary()) {
+                instance.summaryMap = instance.getSummaryMap();
+                instances.add(instance);
+            }
+        }
+        InstanceSummary[] arrInstances = new InstanceSummary[instances.size()];
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
+                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+        InstancesSummaryResult result = new InstancesSummaryResult(status, message.toString(),
+                instances.toArray(arrInstances));
         result.setRequestId(requestIds.toString());
         return result;
     }

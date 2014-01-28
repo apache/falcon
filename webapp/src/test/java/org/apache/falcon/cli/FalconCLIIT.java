@@ -366,6 +366,36 @@ public class FalconCLIIT {
                         + " -start " + START_INSTANCE));
     }
 
+    public void testInstanceRunningAndSummaryCommands() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
+
+        Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type process -name "
+                        + overlay.get("processName")));
+
+        Assert.assertEquals(0,
+                executeWithURL("entity -schedule -type feed -name "
+                        + overlay.get("outputFeedName")));
+        context.waitForProcessWFtoStart();
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -status -type feed -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + START_INSTANCE));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type process -name "
+                        + overlay.get("processName")));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -summary -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE));
+    }
+
+
     public void testInstanceSuspendAndResume() throws Exception {
         TestContext context = new TestContext();
         Map<String, String> overlay = context.getUniqueOverlay();

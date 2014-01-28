@@ -57,6 +57,18 @@ public class InstanceManager extends AbstractInstanceManager {
     }
 
     @GET
+    @Path("summary/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-summary")
+    public InstancesSummaryResult getSummary(@Dimension("type") @PathParam("type") String type,
+                                     @Dimension("entity") @PathParam("entity") String entity,
+                                     @Dimension("start-time") @QueryParam("start") String startStr,
+                                     @Dimension("end-time") @QueryParam("end") String endStr,
+                                     @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.getSummary(type, entity, startStr, endStr, colo);
+    }
+
+    @GET
     @Path("logs/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "instance-logs")
