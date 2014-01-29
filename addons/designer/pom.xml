@@ -376,7 +376,7 @@
 
             <dependency>
                 <groupId>net.sourceforge.findbugs</groupId>
-                <artifactId>annotations</artifactId>
+                <artifactId>jsr305</artifactId>
                 <version>1.3.2</version>
             </dependency>
         </dependencies>
@@ -567,20 +567,20 @@
                     <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
                     <excludeSubProjects>true</excludeSubProjects>
                     <excludes>
-                        <exclude>*.txt</exclude>
-                        <exclude>.git</exclude>
-                        <exclude>.idea</exclude>
-                        <exclude>*.twiki</exclude>
-                        <exclude>*.iml</exclude>
-                        <exclude>target</exclude>
-                        <exclude>*.patch</exclude>
-                        <exclude>*.log</exclude>
-                        <exclude>logs</exclude>
-                        <exclude>.classpath</exclude>
-                        <exclude>.project</exclude>
-                        <exclude>.settings</exclude>
-                        <exclude>maven-eclipse.xml</exclude>
-                        <exclude>.externalToolBuilders</exclude>
+                        <exclude>**/*.txt</exclude>
+                        <exclude>**/.git</exclude>
+                        <exclude>.idea/**</exclude>
+                        <exclude>**/*.twiki</exclude>
+                        <exclude>**/*.iml</exclude>
+                        <exclude>**/target</exclude>
+                        <exclude>**/*.patch</exclude>
+                        <exclude>**/*.log</exclude>
+                        <exclude>**/logs</exclude>
+                        <exclude>**/.classpath</exclude>
+                        <exclude>**/.project</exclude>
+                        <exclude>**/.settings</exclude>
+                        <exclude>**/maven-eclipse.xml</exclude>
+                        <exclude>**/.externalToolBuilders</exclude>
                     </excludes>
                 </configuration>
                 <executions>

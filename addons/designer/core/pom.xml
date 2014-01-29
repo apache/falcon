@@ -34,8 +34,18 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.falcon</groupId>
+            <artifactId>falcon-client</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
     </dependencies>
 
