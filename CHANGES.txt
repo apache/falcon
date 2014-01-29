@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+    FALCON-281 Design Action Interface. (Srikanth Sundarrajan)
+
     FALCON-259 Design Transformation Interface. (Srikanth Sundarrajan)
 
     FALCON-26 Pipeline Monitor addition. (Suhas Vasu via Shwetha GS)
