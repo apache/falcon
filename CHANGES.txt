@@ -16,6 +16,8 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-60 Feed retention doesn't delete empty parent dirs. (Shaik Idris)
+
     FALCON-247 Add scripts to check the status of falcon and prism. (Jean-Baptiste Onofré
     via Shwetha GS)
 

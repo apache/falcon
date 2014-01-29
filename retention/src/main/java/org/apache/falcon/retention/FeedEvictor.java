@@ -104,7 +104,7 @@ public class FeedEvictor extends Configured implements Tool {
     public int run(String[] args) throws Exception {
 
         CommandLine cmd = getCommand(args);
-        String feedBasePath = cmd.getOptionValue("feedBasePath")
+        String feedPattern = cmd.getOptionValue("feedBasePath")
                 .replaceAll(Storage.QUESTION_EXPR_START_REGEX, Storage.DOLLAR_EXPR_START_REGEX);
         String retentionType = cmd.getOptionValue("retentionType");
         String retentionLimit = cmd.getOptionValue("retentionLimit");
@@ -113,11 +113,11 @@ public class FeedEvictor extends Configured implements Tool {
         String logFile = cmd.getOptionValue("logFile");
         String feedStorageType = cmd.getOptionValue("falconFeedStorageType");
 
-        LOG.info("Applying retention on " + feedBasePath + " type: " + retentionType
+        LOG.info("Applying retention on " + feedPattern + " type: " + retentionType
                 + ", Limit: " + retentionLimit + ", timezone: " + timeZone
                 + ", frequency: " + frequency + ", storage" + feedStorageType);
 
-        Storage storage = FeedHelper.createStorage(feedStorageType, feedBasePath);
+        Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
         evict(storage, retentionLimit, timeZone);
 
         logInstancePaths(new Path(logFile));
@@ -150,18 +150,18 @@ public class FeedEvictor extends Configured implements Tool {
         }
     }
 
-    private void fileSystemEvictor(String feedBasePath, String retentionLimit, String timeZone)
+    private void fileSystemEvictor(String feedPath, String retentionLimit, String timeZone)
         throws IOException, ELException {
 
-        Path normalizedPath = new Path(feedBasePath);
+        Path normalizedPath = new Path(feedPath);
         FileSystem fs = normalizedPath.getFileSystem(getConf());
-        feedBasePath = normalizedPath.toUri().getPath();
-        LOG.info("Normalized path : " + feedBasePath);
+        feedPath = normalizedPath.toUri().getPath();
+        LOG.info("Normalized path : " + feedPath);
 
         Pair<Date, Date> range = getDateRange(retentionLimit);
-        String dateMask = getDateFormatInPath(feedBasePath);
+        String dateMask = getDateFormatInPath(feedPath);
 
-        List<Path> toBeDeleted = discoverInstanceToDelete(feedBasePath, timeZone, dateMask, range.first, fs);
+        List<Path> toBeDeleted = discoverInstanceToDelete(feedPath, timeZone, dateMask, range.first, fs);
         if (toBeDeleted.isEmpty()) {
             LOG.info("No instances to delete.");
             return;
@@ -169,14 +169,23 @@ public class FeedEvictor extends Configured implements Tool {
 
         DateFormat dateFormat = new SimpleDateFormat(FORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        Path feedBasePath = getFeedBasePath(feedPath);
         for (Path path : toBeDeleted) {
-            if (deleteInstance(fs, path)) {
-                LOG.info("Deleted instance " + path);
-                Date date = getDate(path, feedBasePath, dateMask, timeZone);
-                buffer.append(dateFormat.format(date)).append(',');
-                instancePaths.append(path).append(",");
-            }
+            deleteInstance(fs, path, feedBasePath);
+            Date date = getDate(path, feedPath, dateMask, timeZone);
+            buffer.append(dateFormat.format(date)).append(',');
+            instancePaths.append(path).append(",");
         }
+    }
+
+    private Path getFeedBasePath(String feedPath) throws IOException {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedPath);
+        if (matcher.find()) {
+            return new Path(feedPath.substring(0, matcher.start()));
+        } else {
+            throw new IOException("Unable to resolve pattern for feedPath: " + feedPath);
+        }
+
     }
 
     private void logInstancePaths(Path path) throws IOException {
@@ -305,8 +314,13 @@ public class FeedEvictor extends Configured implements Tool {
         return date.compareTo(start) >= 0;
     }
 
-    private boolean deleteInstance(FileSystem fs, Path path) throws IOException {
-        return fs.delete(path, true);
+    private void deleteInstance(FileSystem fs, Path path, Path feedBasePath) throws IOException {
+        if (fs.delete(path, true)) {
+            LOG.info("Deleted instance :" + path);
+        }else{
+            throw new IOException("Unable to delete instance: " + path);
+        }
+        deleteParentIfEmpty(fs, path.getParent(), feedBasePath);
     }
 
     private void debug(FileSystem fs, Path outPath) throws IOException {
@@ -443,4 +457,22 @@ public class FeedEvictor extends Configured implements Tool {
 
         return dropped && deleted;
     }
+
+    private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {
+        if (feedBasePath.equals(parent)) {
+            LOG.info("Not deleting feed base path:" + parent);
+        } else {
+            FileStatus[] files = fs.listStatus(parent);
+            if (files != null && files.length == 0) {
+                LOG.info("Parent path: " + parent + " is empty, deleting path");
+                if (fs.delete(parent, true)) {
+                    LOG.info("Deleted empty dir: " + parent);
+                } else {
+                    throw new IOException("Unable to delete parent path:" + parent);
+                }
+                deleteParentIfEmpty(fs, parent.getParent(), feedBasePath);
+            }
+        }
+    }
+
 }

@@ -124,6 +124,14 @@ public class FeedEvictorTest {
 
             Assert.assertEquals(readLogFile(new Path(logFile)),
                     getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")));
+            String deletedPath = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")).
+                    split(",")[0].split("=")[1];
+            Assert.assertFalse(fs.exists(new Path(deletedPath)));
+            //empty parents
+            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent()));
+            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent().getParent()));
+            //base path not deleted
+            Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
