@@ -17,22 +17,6 @@
  */
 package org.apache.falcon.resource;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
-
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.falcon.entity.v0.Entity;
@@ -54,6 +38,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
@@ -62,10 +47,24 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import javax.servlet.ServletInputStream;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 /**
  * Test class for Entity REST APIs.
@@ -99,7 +98,7 @@ public class EntityManagerJerseyIT {
 
     private void updateEndtime(Process process) {
         Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        processValidity.setEnd(new Date(new Date().getTime() + ONE_HR));
+        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
     }
 
     @Test
@@ -137,7 +136,7 @@ public class EntityManagerJerseyIT {
         WebResource resource = context.service.path("api/entities/update/"
                 + entity.getEntityType().name().toLowerCase() + "/" + entity.getName());
         if (endTime != null) {
-            resource = resource.queryParam("end", SchemaHelper.formatDateUTC(endTime));
+            resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(endTime));
         }
         ClientResponse response =
                 resource.header("Remote-User", TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
@@ -151,8 +150,7 @@ public class EntityManagerJerseyIT {
         Map<String, String> overlay = context.getUniqueOverlay();
         String tmpFileName = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
-        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
+        updateEndtime(process);
         File tmpFile = context.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
@@ -162,22 +160,11 @@ public class EntityManagerJerseyIT {
         Assert.assertEquals(bundles.size(), 1);
         Assert.assertEquals(bundles.get(0).getUser(), TestContext.REMOTE_USER);
 
-        ClientResponse response = context.service.path("api/entities/definition/feed/"
-                + context.outputFeedName).header(
-                "Remote-User", TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-        Feed feed = (Feed) EntityType.FEED.getUnmarshaller()
-                .unmarshal(new StringReader(response.getEntity(String.class)));
+        Feed feed = (Feed) getDefinition(context, EntityType.FEED, context.outputFeedName);
 
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
-        tmpFile = context.getTempFile();
-        EntityType.FEED.getMarshaller().marshal(feed, tmpFile);
-        response = context.service.path("api/entities/update/feed/"
-                + context.outputFeedName).header("Remote-User",
-                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(response);
+        update(context, feed);
 
         bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
@@ -290,18 +277,13 @@ public class EntityManagerJerseyIT {
         OozieClient ozClient = context.getOozieClient();
         String coordId = ozClient.getBundleJobInfo(bundles.get(0).getId()).getCoordinators().get(0).getId();
 
-        ClientResponse response = context.service.path("api/entities/definition/process/"
-                + context.processName).header(
-                "Remote-User", TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
-                .unmarshal(new StringReader(response.getEntity(String.class)));
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
 
         String feed3 = "f3" + System.currentTimeMillis();
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("inputFeedName", feed3);
         overlay.put("cluster", context.clusterName);
-        response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
+        ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
         context.assertSuccessful(response);
 
         Input input = new Input();
@@ -311,20 +293,16 @@ public class EntityManagerJerseyIT {
         input.setEnd("today(20,20)");
         process.getInputs().getInputs().add(input);
 
-        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        processValidity.setEnd(new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000));
-        File tmpFile = context.getTempFile();
-        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = context.service.path("api/entities/update/process/"
-                + context.processName).header("Remote-User",
-                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(response);
+        updateEndtime(process);
+        Date endTime = getEndTime();
+        update(context, process, endTime);
 
         //Assert that update creates new bundle and old coord is running
         bundles = context.getBundles();
         Assert.assertEquals(bundles.size(), 2);
-        Assert.assertEquals(ozClient.getCoordJobInfo(coordId).getStatus(), Status.RUNNING);
+        CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
+        Assert.assertEquals(coord.getStatus(), Status.RUNNING);
+        Assert.assertEquals(coord.getEndTime(), endTime);
     }
 
     public void testProcessEndtimeUpdate() throws Exception {
@@ -332,21 +310,10 @@ public class EntityManagerJerseyIT {
         context.scheduleProcess();
         context.waitForBundleStart(Job.Status.RUNNING);
 
-        ClientResponse response = context.service.path("api/entities/definition/process/"
-                + context.processName).header(
-                "Remote-User", TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_XML).get(ClientResponse.class);
-        Process process = (Process) EntityType.PROCESS.getUnmarshaller()
-                .unmarshal(new StringReader(response.getEntity(String.class)));
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
 
-        Validity processValidity = process.getClusters().getClusters().get(0).getValidity();
-        processValidity.setEnd(new Date(new Date().getTime() + 60 * 60 * 1000));
-        File tmpFile = context.getTempFile();
-        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        response = context.service.path("api/entities/update/process/" + context.processName).header("Remote-User",
-                TestContext.REMOTE_USER).accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(response);
+        updateEndtime(process);
+        update(context, process);
 
         //Assert that update does not create new bundle
         List<BundleJob> bundles = context.getBundles();
@@ -742,8 +709,10 @@ public class EntityManagerJerseyIT {
     }
 
     public Date getEndTime() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.HOUR, 1);
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();

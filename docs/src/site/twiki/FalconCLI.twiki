@@ -57,7 +57,7 @@ Update operation allows an already submitted/scheduled entity to be updated. Clu
 not allowed.
 
 Usage:
-$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update
+$FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -update [-effective <<effective time>>]
 
 ---+++Status
 

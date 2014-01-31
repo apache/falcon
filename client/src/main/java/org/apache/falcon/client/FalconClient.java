@@ -41,6 +41,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
@@ -225,12 +226,19 @@ public class FalconClient {
                 entityStream, null);
     }
 
-    public String update(String entityType, String entityName, String filePath)
+    public String update(String entityType, String entityName, String filePath, Date effectiveTime)
         throws FalconCLIException {
-
         InputStream entityStream = getServletInputStream(filePath);
-        return sendEntityRequestWithNameAndObject(Entities.UPDATE, entityType,
-                entityName, entityStream);
+        Entities operation = Entities.UPDATE;
+        WebResource resource = service.path(operation.path).path(entityType).path(entityName);
+        if (effectiveTime != null) {
+            resource = resource.queryParam("time", SchemaHelper.formatDateUTC(effectiveTime));
+        }
+        ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
+                .accept(operation.mimeType).type(MediaType.TEXT_XML)
+                .method(operation.method, ClientResponse.class, entityStream);
+        checkIfSuccessfull(clientResponse);
+        return parseAPIResult(clientResponse);
     }
 
     public String submitAndSchedule(String entityType, String filePath)
@@ -490,19 +498,6 @@ public class FalconClient {
             resource = resource.queryParam("colo", colo);
         }
         ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
-                .accept(entities.mimeType).type(MediaType.TEXT_XML)
-                .method(entities.method, ClientResponse.class, requestObject);
-
-        checkIfSuccessfull(clientResponse);
-
-        return parseAPIResult(clientResponse);
-    }
-
-    private String sendEntityRequestWithNameAndObject(Entities entities, String entityType, String entityName,
-                                                      Object requestObject) throws FalconCLIException {
-
-        ClientResponse clientResponse = service.path(entities.path)
-                .path(entityType).path(entityName).header(REMOTE_USER, USER)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class, requestObject);
 

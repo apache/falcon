@@ -27,10 +27,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
+import org.apache.falcon.entity.v0.SchemaHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -75,6 +77,7 @@ public class FalconCLI {
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
     public static final String END_OPT = "end";
+    public static final String EFFECTIVE_OPT = "effective";
     public static final String RUNNING_OPT = "running";
     public static final String KILL_OPT = "kill";
     public static final String RERUN_OPT = "rerun";
@@ -270,7 +273,7 @@ public class FalconCLI {
         String entityName = commandLine.getOptionValue(ENTITY_NAME_OPT);
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
         String colo = commandLine.getOptionValue(COLO_OPT);
-
+        String time = commandLine.getOptionValue(EFFECTIVE_OPT);
 
         validateEntityType(entityType);
 
@@ -282,7 +285,8 @@ public class FalconCLI {
             validateFilePath(filePath);
             validateColo(optionsList);
             validateEntityName(entityName);
-            result = client.update(entityType, entityName, filePath);
+            Date effectiveTime = validateTime(time);
+            result = client.update(entityType, entityName, filePath, effectiveTime);
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateFilePath(filePath);
             validateColo(optionsList);
@@ -354,9 +358,19 @@ public class FalconCLI {
         }
     }
 
+    private Date validateTime(String time) throws FalconCLIException {
+        if (time != null && !time.isEmpty()) {
+            try {
+                return SchemaHelper.parseDateUTC(time);
+            } catch(Exception e) {
+                throw new FalconCLIException("Time " + time + " is not valid", e);
+            }
+        }
+        return null;
+    }
+
     private void validateEntityName(String entityName)
         throws FalconCLIException {
-
         if (entityName == null || entityName.equals("")) {
             throw new FalconCLIException("Missing argument: name");
         }

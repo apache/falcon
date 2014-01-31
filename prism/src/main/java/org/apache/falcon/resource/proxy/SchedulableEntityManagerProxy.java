@@ -188,7 +188,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") final String type,
             @Dimension("entityName") @PathParam("entity") final String entityName,
             @Dimension("colo") @QueryParam("colo") String ignore,
-            @Dimension("end") @DefaultValue("") @QueryParam("end") final String end) {
+            @Dimension("effective") @DefaultValue("") @QueryParam("effective") final String effectiveTime) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         final Set<String> oldColos = getApplicableColos(type, entityName);
@@ -223,7 +223,8 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
                 @Override
                 protected APIResult doExecute(String colo) throws FalconException {
-                    return getConfigSyncChannel(colo).invoke("update", bufferedRequest, type, entityName, colo, end);
+                    return getConfigSyncChannel(colo).invoke("update", bufferedRequest, type, entityName, colo,
+                            effectiveTime);
                 }
             }.execute());
         }
@@ -243,7 +244,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         if (!embeddedMode) {
-            results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo, end));
+            results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo, effectiveTime));
         }
 
         return consolidateResult(results);

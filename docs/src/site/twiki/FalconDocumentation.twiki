@@ -159,6 +159,9 @@ Oozie scheduler. (It is possible to extend Falcon to use an alternate workflow e
 Falcon overrides the workflow instance's external id in Oozie to reflect the process/feed and the nominal
 time. This external Id can then be used for instance management functions.
 
+The schedule copies the user specified workflow and library to a staging path, and the scheduler references the workflow
+and lib from the staging path.
+
 ---+++ Suspend
 This action is applicable only on scheduled entity. This triggers suspend on the oozie bundle that was
 scheduled earlier through the schedule function. No further instances are executed on a suspended process/feed.
@@ -180,13 +183,17 @@ no dependent entities on the deleted entity.
 
 ---+++ Update
 Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
-not allowed. Feed update can cause cascading update to all the processes already scheduled. The following
-set of actions are performed in Oozie to realize an update.
-
-   * Suspend the previously scheduled Oozie coordinator. This is prevent any new action from being triggered.
+not allowed. Feed update can cause cascading update to all the processes already scheduled. Process update triggers
+update in falcon if entity is updated/the user specified workflow/lib is updated. The following set of actions are
+performed in Oozie to realize an update:
+   * Suspend the previously scheduled Oozie coordinator. This is to prevent any new action from being triggered.
    * Update the coordinator to set the end time to "now"
    * Resume the suspended coordinators
    * Schedule as per the new process/feed definition with the start time as "now"
+
+Update optionally takes effective time as a parameter which is used as the endtime of previously scheduled coordinator.
+So, the updated configuration will be effective since the given timestamp.
+
 
 ---++ Instance Management actions
 

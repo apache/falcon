@@ -218,7 +218,7 @@ public abstract class AbstractEntityManager {
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
     public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo,
-                                         String endTime) {
+                                         String effectiveTimeStr) {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
@@ -230,8 +230,9 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            List<String> endTimes = new ArrayList<String>();
-            Date reqEndTime = StringUtils.isEmpty(endTime) ? null : EntityUtil.parseDateUTC(endTime);
+            List<String> effectiveTimes = new ArrayList<String>();
+            Date effectiveTime =
+                StringUtils.isEmpty(effectiveTimeStr) ? null : EntityUtil.parseDateUTC(effectiveTimeStr);
             //Update in workflow engine
             if (!DeploymentUtil.isPrism()) {
                 Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
@@ -240,9 +241,9 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, reqEndTime);
+                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, effectiveTime);
                     if (effectiveEndTime != null) {
-                        endTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
+                        effectiveTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
                     }
                 }
                 for (String cluster : oldClusters) {
@@ -253,7 +254,7 @@ public abstract class AbstractEntityManager {
             configStore.update(entityType, newEntity);
 
             return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully"
-                    + (endTimes.isEmpty() ? "" : " with endTime " + endTimes));
+                    + (effectiveTimes.isEmpty() ? "" : " with effect from " + effectiveTimes));
         } catch (Throwable e) {
             LOG.error("Updation failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);

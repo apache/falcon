@@ -65,7 +65,7 @@ public class ConfigSyncService extends AbstractEntityManager {
                             @Dimension("entityType") @PathParam("type") String type,
                             @Dimension("entityName") @PathParam("entity") String entityName,
                             @Dimension("colo") @QueryParam("colo") String colo,
-                            @Dimension("end") @DefaultValue("") @QueryParam("end") String reqEndTime) {
-        return super.update(request, type, entityName, colo, reqEndTime);
+                            @Dimension("effective") @DefaultValue("") @QueryParam("effective") String effectiveTime) {
+        return super.update(request, type, entityName, colo, effectiveTime);
     }
 }
