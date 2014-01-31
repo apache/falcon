@@ -122,10 +122,10 @@ public class FeedEvictorTest {
             assertFailures(fs, pair);
             compare(map.get("feed1"), stream.getBuffer());
 
-            Assert.assertEquals(readLogFile(new Path(logFile)),
-                    getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")));
-            String deletedPath = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")).
-                    split(",")[0].split("=")[1];
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, ""));
+            Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
+
+            String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
             Assert.assertFalse(fs.exists(new Path(deletedPath)));
             //empty parents
             Assert.assertFalse(fs.exists(new Path(deletedPath).getParent()));

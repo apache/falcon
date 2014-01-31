@@ -28,11 +28,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
-import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hadoop.mapred.TaskCompletionEvent;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -205,22 +201,19 @@ public class LogMover extends Configured implements Tool {
     }
 
     private String getTTlogURL(String jobId) throws Exception {
-        JobConf jobConf = new JobConf(getConf());
-        JobClient jobClient = new JobClient(jobConf);
-        RunningJob job = jobClient.getJob(JobID.forName(jobId));
-        if (job == null) {
-            LOG.warn("No running job for job id: " + jobId);
-            return null;
+        TaskLogURLRetriever logRetriever = ReflectionUtils.newInstance(getLogRetrieverClassName(), getConf());
+        return logRetriever.retrieveTaskLogURL(jobId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<? extends TaskLogURLRetriever> getLogRetrieverClassName() {
+        try {
+            return (Class<? extends TaskLogURLRetriever>)
+                    Class.forName("org.apache.falcon.logging.v1.TaskLogRetrieverV1");
+        } catch (ClassNotFoundException e) {
+            LOG.warn("V1 Retriever missing, falling back to Default retriever");
+            return DefaultTaskLogRetriever.class;
         }
-        TaskCompletionEvent[] tasks = job.getTaskCompletionEvents(0);
-        // 0th even is setup, 1 event is launcher, 2 event is cleanup
-        if (tasks != null && tasks.length == 3 && tasks[1] != null) {
-            return tasks[1].getTaskTrackerHttp() + "/tasklog?attemptid="
-                    + tasks[1].getTaskAttemptId() + "&all=true";
-        } else {
-            LOG.warn("No running task for job: " + jobId);
-        }
-        return null;
     }
 
     private InputStream getURLinputStream(URL url) throws IOException {

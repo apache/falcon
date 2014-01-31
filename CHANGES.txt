@@ -18,12 +18,14 @@ Trunk (Unreleased)
   IMPROVEMENTS
     FALCON-60 Feed retention doesn't delete empty parent dirs. (Shaik Idris)
 
-    FALCON-247 Add scripts to check the status of falcon and prism. (Jean-Baptiste Onofré
-    via Shwetha GS)
+    FALCON-247 Add scripts to check the status of falcon and prism. (Jean-Baptiste 
+    Onofré via Shwetha GS)
 
-    FALCON-245 POM should use Apache POM as parent. (Jean-Baptiste Onofré via Shwetha GS)
+    FALCON-245 POM should use Apache POM as parent. (Jean-Baptiste Onofré via 
+    Shwetha GS)
 
-    FALCON-252 Upgrade to json-simple 1.1.1. (Jean-Baptiste Onofré via Shwetha GS)
+    FALCON-252 Upgrade to json-simple 1.1.1. (Jean-Baptiste Onofré via 
+    Shwetha GS)
 
     FALCON-233 Update hadoop 2 version to 2.2.0. (Venkatesh Seetharam
     via Shwetha GS)
@@ -33,21 +35,27 @@ Trunk (Unreleased)
     FALCON-66 Make oozie version change configurable. (Shwetha GS
     via Srikanth Sundarrajan)
     
-    FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing) should have multiple retries. (Shaik Idris)
+    FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing) 
+    should have multiple retries. (Shaik Idris)
 
 
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
-    FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via Shwetha GS)
+    FALCON-221 Logmover is not copying all action level logs. (Srikanth Sundarrajan)
 
-    FALCON-260 When a process is scheduled, the user workflow is failing with OozieClientException.
-    (Shwetha GS)
+    FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via 
+    Shwetha GS)
 
-    FALCON-268 Checkstyle/Findbugs issues on FalconCLI. (Jean-Baptiste Onofré via Shwetha GS)
+    FALCON-260 When a process is scheduled, the user workflow is failing with 
+    OozieClientException. (Shwetha GS)
 
-    FALCON-258 Falcon status throws an error when external jobids are missing (Suhas Vasu via Shaik Idris)
+    FALCON-268 Checkstyle/Findbugs issues on FalconCLI. (Jean-Baptiste Onofré via 
+    Shwetha GS)
+
+    FALCON-258 Falcon status throws an error when external jobids are missing 
+    (Suhas Vasu via Shaik Idris)
 
     FALCON-262 Example files should use aligned dependency versions. (Jean-Baptiste Onofré
     via Shwetha GS)
