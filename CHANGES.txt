@@ -46,6 +46,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-239 Build failed on build-tools due to a missing SNAPSHOT. (Srikanth 
+    Sundarrajan)
+
     FALCON-221 Logmover is not copying all action level logs. (Srikanth Sundarrajan)
 
     FALCON-270 Checkstyle can not be run on a module. (Jean-Baptiste Onofré via 

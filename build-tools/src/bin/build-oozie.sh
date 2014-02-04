@@ -85,6 +85,7 @@ case $VERSION in
 4* )
     sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
+    patch -p1 --verbose < ../../build-tools/src/patches/OOZIE-1551-4.0.patch
     ;;
 esac
 
