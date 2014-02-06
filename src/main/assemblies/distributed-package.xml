@@ -54,6 +54,9 @@
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
+            <excludes>
+                <exclude>package.sh</exclude>
+            </excludes>
         </fileSet>
 
         <fileSet>

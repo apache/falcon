@@ -16,6 +16,9 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-304 Simplify assembly for script in standalone and distributed
+    mode. (Suresh Srinivas via Venkatesh Seetharam)
+
     FALCON-264 Update with effectiveTime in CLI. (Shwetha GS via Srikanth
     Sundarrajan)
 

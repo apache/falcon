@@ -53,16 +53,10 @@
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
-            <includes>
-                <include>falcon</include>
-                <include>falcon-config.sh</include>
-                <include>falcon-start</include>
-                <include>falcon-status</include>
-                <include>falcon-stop</include>
-                <include>service-start.sh</include>
-                <include>service-stop.sh</include>
-                <include>service-status.sh</include>
-            </includes>
+            <excludes>
+                <exclude>prism*</exclude>
+                <exclude>package.sh</exclude>
+            </excludes>
         </fileSet>
 
         <fileSet>
