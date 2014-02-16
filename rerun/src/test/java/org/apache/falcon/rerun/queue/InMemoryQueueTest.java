@@ -45,7 +45,7 @@ public class InMemoryQueueTest {
             long time = System.currentTimeMillis();
             int delay = ((5 - index) / 2) * 50;
             MyEvent event = new MyEvent("someCluster", Integer.toString(index),
-                    time, delay, "someType", "someName", "someInstance", 0);
+                    time, delay, "someType", "someName", "someInstance", 0, "falcon");
             queue.offer(event);
             boolean inserted = false;
             for (int posn = 0; posn < events.size(); posn++) {
@@ -73,9 +73,9 @@ public class InMemoryQueueTest {
         //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
         public MyEvent(String clusterName, String wfId,
                        long msgInsertTime, long delay, String entityType,
-                       String entityName, String instance, int runId) {
+                       String entityName, String instance, int runId, String workflowUser) {
             super(clusterName, wfId, msgInsertTime, delay,
-                    entityType, entityName, instance, runId);
+                    entityType, entityName, instance, runId, workflowUser);
         }
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 

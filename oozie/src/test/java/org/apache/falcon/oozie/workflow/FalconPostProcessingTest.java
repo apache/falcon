@@ -52,6 +52,7 @@ public class FalconPostProcessingTest {
                             "-" + Arg.FEED_INSTANCE_PATHS.getOptionName(),
                             "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
                             "-" + Arg.WORKFLOW_ID.getOptionName(), "workflow-01-00",
+                            "-" + Arg.WORKFLOW_USER.getOptionName(), "falcon",
                             "-" + Arg.RUN_ID.getOptionName(), "1",
                             "-" + Arg.NOMINAL_TIME.getOptionName(), "2011-01-01-01-00",
                             "-" + Arg.TIMESTAMP.getOptionName(), "2012-01-01-01-00",
@@ -150,6 +151,10 @@ public class FalconPostProcessingTest {
                 "agg-coord");
         Assert.assertEquals(m.getString(Arg.WORKFLOW_ID.getOptionName()),
                 "workflow-01-00");
+        String workflowUser = m.getString(Arg.WORKFLOW_USER.getOptionName());
+        if (workflowUser != null) { // in case of user message, its NULL
+            Assert.assertEquals(workflowUser, "falcon");
+        }
         Assert.assertEquals(m.getString(Arg.RUN_ID.getOptionName()), "1");
         Assert.assertEquals(m.getString(Arg.NOMINAL_TIME.getOptionName()),
                 "2011-01-01T01:00Z");

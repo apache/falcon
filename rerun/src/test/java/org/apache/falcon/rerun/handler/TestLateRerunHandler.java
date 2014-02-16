@@ -18,12 +18,12 @@
 
 package org.apache.falcon.rerun.handler;
 
-import junit.framework.Assert;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LateArrival;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Date;

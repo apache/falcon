@@ -37,8 +37,7 @@ public final class CurrentUser {
         return INSTANCE;
     }
 
-    private final ThreadLocal<Subject> currentSubject =
-            new ThreadLocal<Subject>();
+    private final ThreadLocal<Subject> currentSubject = new ThreadLocal<Subject>();
 
     public static void authenticate(String user) {
         if (user == null || user.isEmpty()) {

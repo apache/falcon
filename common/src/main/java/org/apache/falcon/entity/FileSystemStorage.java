@@ -170,12 +170,6 @@ public class FileSystemStorage implements Storage {
     }
 
     @Override
-    public boolean exists() throws FalconException {
-        // Directories on FS will be created if they don't exist.
-        return true;
-    }
-
-    @Override
     public boolean isIdentical(Storage toCompareAgainst) throws FalconException {
         FileSystemStorage fsStorage = (FileSystemStorage) toCompareAgainst;
         final List<Location> fsStorageLocations = fsStorage.getLocations();

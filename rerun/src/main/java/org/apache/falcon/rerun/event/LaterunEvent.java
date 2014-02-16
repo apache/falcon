@@ -23,10 +23,11 @@ package org.apache.falcon.rerun.event;
 public class LaterunEvent extends RerunEvent {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
-    public LaterunEvent(String clusterName, String wfId, long msgInsertTime, long delay,
-                        String entityType, String entityName, String instance, int runId) {
+    public LaterunEvent(String clusterName, String wfId, long msgInsertTime,
+                        long delay, String entityType, String entityName,
+                        String instance, int runId, String workflowUser) {
         super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
-                instance, runId);
+                instance, runId, workflowUser);
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
@@ -37,6 +38,6 @@ public class LaterunEvent extends RerunEvent {
                 + "msgInsertTime=" + msgInsertTime + SEP + "delayInMilliSec="
                 + delayInMilliSec + SEP + "entityType=" + entityType + SEP
                 + "entityName=" + entityName + SEP + "instance=" + instance
-                + SEP + "runId=" + runId;
+                + SEP + "runId=" + runId + SEP + "workflowUser=" + workflowUser;
     }
 }

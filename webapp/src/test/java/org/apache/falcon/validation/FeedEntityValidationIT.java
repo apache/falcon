@@ -97,7 +97,7 @@ public class FeedEntityValidationIT {
         overlay.put("colo", "default"); // validations will be ignored if not default & tests fail
         overlay.put("tableUri", TABLE_URI);
 
-        String filePath = context.overlayParametersOverTemplate("/hive-table-feed.xml", overlay);
+        String filePath = TestContext.overlayParametersOverTemplate("/hive-table-feed.xml", overlay);
         InputStream stream = new FileInputStream(filePath);
         FeedEntityParser parser = (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
         Feed feed = parser.parse(stream);

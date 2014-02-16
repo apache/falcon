@@ -28,9 +28,9 @@ public class RetryEvent extends RerunEvent {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public RetryEvent(String clusterName, String wfId, long msgInsertTime,
                       long delay, String entityType, String entityName, String instance,
-                      int runId, int attempts, int failRetryCount) {
+                      int runId, int attempts, int failRetryCount, String workflowUser) {
         super(clusterName, wfId, msgInsertTime, delay, entityType, entityName,
-                instance, runId);
+                instance, runId, workflowUser);
         this.attempts = attempts;
         this.failRetryCount = failRetryCount;
     }
@@ -56,7 +56,7 @@ public class RetryEvent extends RerunEvent {
                 + delayInMilliSec + SEP + "entityType=" + entityType + SEP
                 + "entityName=" + entityName + SEP + "instance=" + instance
                 + SEP + "runId=" + runId + SEP + "attempts=" + attempts + SEP
-                + "failRetryCount=" + failRetryCount;
+                + "failRetryCount=" + failRetryCount + SEP + "workflowUser=" + workflowUser;
     }
 
 }

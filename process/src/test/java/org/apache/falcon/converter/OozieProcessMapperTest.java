@@ -46,6 +46,7 @@ import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -82,6 +83,8 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
+        CurrentUser.authenticate("falcon");
+
         EmbeddedCluster cluster = EmbeddedCluster.newCluster("testCluster");
         Configuration conf = cluster.getConf();
         hdfsUrl = conf.get("fs.default.name");

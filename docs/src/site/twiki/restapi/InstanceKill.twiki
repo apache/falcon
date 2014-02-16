@@ -19,7 +19,6 @@ Result of the kill operation.
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/instance/kill/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>

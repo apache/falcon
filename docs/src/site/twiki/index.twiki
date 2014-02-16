@@ -30,7 +30,8 @@ describes steps to on-board a pipeline to Falcon. It also gives a sample pipelin
 describes various options for the command line utility provided by Falcon.
 
 Falcon provides OOTB [[HiveIntegration][lifecycle management for Tables in Hive (HCatalog)]]
-such as table replication for BCP and table eviction.
+such as table replication for BCP and table eviction. Falcon also enforces
+[[Security][kerberos authentication]] on protected resources and enables SSL.
 
 #LicenseInfo
 ---+ Licensing Information

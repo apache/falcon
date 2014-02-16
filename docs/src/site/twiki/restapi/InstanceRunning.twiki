@@ -18,7 +18,6 @@ List of instances currently running.
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -941,10 +941,15 @@
 
             <!--  this is needed for embedded oozie -->
             <dependency>
-                <groupId>org.apache.hive</groupId>
-                <artifactId>hive-exec</artifactId>
-                <version>${hive.version}</version>
+                <groupId>org.apache.hcatalog</groupId>
+                <artifactId>webhcat-java-client</artifactId>
+                <version>${hcatalog.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <!-- This implies you cannot use orc files -->
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>org.apache.hbase</groupId>
                         <artifactId>hbase-server</artifactId>
@@ -958,12 +963,6 @@
                         <artifactId>hbase-client</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat-java-client</artifactId>
-                <version>${hcatalog.version}</version>
             </dependency>
 
             <dependency>

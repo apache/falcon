@@ -30,4 +30,4 @@ BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 . ${BASEDIR}/bin/falcon-config.sh 'client'
 
-${JAVA_BIN} -cp ${FALCONCPPATH} org.apache.falcon.cli.FalconCLI "${@}"
+${JAVA_BIN} -cp ${FALCONCPPATH} -Dfalcon.log.dir=$HOME -Dfalcon.app.type=client org.apache.falcon.cli.FalconCLI "${@}"

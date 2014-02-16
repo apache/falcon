@@ -21,6 +21,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
+import org.apache.falcon.util.OozieTestUtils;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
@@ -57,7 +58,7 @@ public class EntityManagerJerseySmokeIT {
     public void cleanup() throws Exception {
         TestContext testContext = contexts.get();
         if (testContext != null) {
-            testContext.killOozieJobs();
+            OozieTestUtils.killOozieJobs(testContext);
         }
         contexts.remove();
     }
@@ -66,34 +67,37 @@ public class EntityManagerJerseySmokeIT {
         //Submit process with invalid property so that coord submit fails and bundle goes to failed state
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
-        String tmpFileName = context.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         Property prop = new Property();
         prop.setName("newProp");
         prop.setValue("${formatTim()}");
         process.getProperties().getProperties().add(prop);
-        File tmpFile = context.getTempFile();
+        File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        context.waitForBundleStart(Status.FAILED);
+        OozieTestUtils.waitForBundleStart(context, Status.FAILED);
 
         //Delete and re-submit the process with correct workflow
-        ClientResponse clientRepsonse = context.service.path("api/entities/delete/process/"
-                + context.processName).header(
-                "Remote-User", TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_XML).delete(ClientResponse.class);
-        context.assertSuccessful(clientRepsonse);
+        ClientResponse clientResponse = context.service
+                .path("api/entities/delete/process/" + context.processName)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .delete(ClientResponse.class);
+        context.assertSuccessful(clientResponse);
+
         process.getWorkflow().setPath("/falcon/test/workflow");
-        tmpFile = context.getTempFile();
+        tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        clientRepsonse = context.service.path("api/entities/submitAndSchedule/process").
-                header("Remote-User", TestContext.REMOTE_USER)
+
+        clientResponse = context.service.path("api/entities/submitAndSchedule/process")
+                .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(clientRepsonse);
+        context.assertSuccessful(clientResponse);
 
         //Assert that new schedule creates new bundle
-        List<BundleJob> bundles = context.getBundles();
+        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 2);
     }
 
@@ -102,7 +106,7 @@ public class EntityManagerJerseySmokeIT {
         ClientResponse response;
         Map<String, String> overlay = context.getUniqueOverlay();
 
-        response = context.submitToFalcon(context.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
 
         response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
@@ -111,7 +115,7 @@ public class EntityManagerJerseySmokeIT {
         EntityManagerJerseyIT.createTestData(context);
         ClientResponse clientRepsonse = context.service
                 .path("api/entities/schedule/feed/" + overlay.get("inputFeedName"))
-                .header("Remote-User", TestContext.REMOTE_USER)
+                .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
                 .post(ClientResponse.class);
         context.assertSuccessful(clientRepsonse);

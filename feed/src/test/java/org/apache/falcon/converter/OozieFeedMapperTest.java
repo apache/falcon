@@ -40,6 +40,7 @@ import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -82,6 +83,8 @@ public class OozieFeedMapperTest {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
+        CurrentUser.authenticate("falcon");
+
         srcMiniDFS = EmbeddedCluster.newCluster("cluster1");
         String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
 

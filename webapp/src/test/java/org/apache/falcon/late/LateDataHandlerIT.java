@@ -67,7 +67,7 @@ public class LateDataHandlerIT {
     public void prepare() throws Exception {
         TestContext.cleanupStore();
 
-        String filePath = context.overlayParametersOverTemplate(
+        String filePath = TestContext.overlayParametersOverTemplate(
                 TestContext.CLUSTER_TEMPLATE, context.getUniqueOverlay());
         context.setCluster(filePath);
 

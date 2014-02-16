@@ -58,7 +58,7 @@ public class PigProcessIT {
 
         overlay = context.getUniqueOverlay();
 
-        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        // String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         context.setCluster(overlay.get("cluster"));
 
         final Cluster cluster = context.getCluster().getCluster();
@@ -88,22 +88,22 @@ public class PigProcessIT {
     public void testSubmitAndSchedulePigProcess() throws Exception {
         overlay.put("cluster", "primary-cluster");
 
-        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
         // context.setCluster(filePath);
 
-        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
 
-        filePath = context.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submit -type feed -file " + filePath));
 
         final String pigProcessName = "pig-" + context.getProcessName();
         overlay.put("processName", pigProcessName);
 
-        filePath = context.overlayParametersOverTemplate(TestContext.PIG_PROCESS_TEMPLATE, overlay);
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.PIG_PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submitAndSchedule -type process -file " + filePath));
 
@@ -112,7 +112,7 @@ public class PigProcessIT {
         Assert.assertEquals(WorkflowJob.Status.SUCCEEDED, jobInfo.getStatus());
 
         InstancesResult response = context.getService().path("api/instance/running/process/" + pigProcessName)
-                .header("Remote-User", "guest")
+                .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());

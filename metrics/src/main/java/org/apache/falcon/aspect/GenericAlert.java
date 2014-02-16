@@ -38,6 +38,7 @@ public final class GenericAlert {
             @Dimension(value = "entity-name") String entityName,
             @Dimension(value = "nominal-name") String nominalTime,
             @Dimension(value = "wf-id") String wfId,
+            @Dimension(value = "wf-user") String workflowUser,
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "error-message") String message) {
         return "IGNORE";
@@ -49,6 +50,7 @@ public final class GenericAlert {
             @Dimension(value = "entity-name") String entityName,
             @Dimension(value = "nominal-name") String nominalTime,
             @Dimension(value = "wf-id") String wfId,
+            @Dimension(value = "wf-user") String workflowUser,
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "error-message") String message) {
         return "IGNORE";
@@ -62,6 +64,7 @@ public final class GenericAlert {
             @Dimension(value = "entity-name") String entityName,
             @Dimension(value = "nominal-time") String nominalTime,
             @Dimension(value = "wf-id") String workflowId,
+            @Dimension(value = "wf-user") String workflowUser,
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "operation") String operation,
             @Dimension(value = "start-time") String startTime,
@@ -80,6 +83,7 @@ public final class GenericAlert {
             @Dimension(value = "entity-name") String entityName,
             @Dimension(value = "nominal-time") String nominalTime,
             @Dimension(value = "wf-id") String workflowId,
+            @Dimension(value = "wf-user") String workflowUser,
             @Dimension(value = "run-id") String runId,
             @Dimension(value = "operation") String operation,
             @Dimension(value = "start-time") String startTime,

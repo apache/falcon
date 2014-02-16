@@ -37,8 +37,6 @@ import javax.jms.*;
 public class FalconTopicProducerTest {
 
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-    // private static final String BROKER_URL =
-    // "tcp://localhost:61616?daemon=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "FALCON.ENTITY.TOPIC";
     private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
@@ -140,6 +138,7 @@ public class FalconTopicProducerTest {
     private List<String> createCommonArgs() {
         return new ArrayList<String>(Arrays.asList(
                 "-" + ARG.workflowId.getArgName(), "workflow-01-00",
+                "-" + ARG.workflowUser.getArgName(), "falcon",
                 "-" + ARG.runId.getArgName(), "1",
                 "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
                 "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
@@ -169,6 +168,7 @@ public class FalconTopicProducerTest {
             }
         };
         t.start();
+        Thread.sleep(100);
         for (String[] message : messages) {
             new MessageProducer().run(message);
         }
@@ -203,6 +203,8 @@ public class FalconTopicProducerTest {
                 "agg-coord");
         Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
                 "workflow-01-00");
+        Assert.assertEquals(m.getString(ARG.workflowUser.getArgName()),
+                "falcon");
         Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
         Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
                 "2011-01-01T01:00Z");

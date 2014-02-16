@@ -41,18 +41,16 @@ public class EntityInstanceMessageCreator {
 
     public Message createMessage(Session session) throws JMSException {
         mapMessage = session.createMapMessage();
-        for (Entry<ARG, String> entry : instanceMessage.getKeyValueMap()
-                .entrySet()) {
-            mapMessage.setString(entry.getKey().getArgName(), instanceMessage
-                    .getKeyValueMap().get(entry.getKey()));
+        for (Entry<ARG, String> entry : instanceMessage.getKeyValueMap().entrySet()) {
+            mapMessage.setString(entry.getKey().getArgName(),
+                    instanceMessage.getKeyValueMap().get(entry.getKey()));
         }
-        return mapMessage;
 
+        return mapMessage;
     }
 
     @Override
     public String toString() {
         return this.mapMessage.toString();
     }
-
 }

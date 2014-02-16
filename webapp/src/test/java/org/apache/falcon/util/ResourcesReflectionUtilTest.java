@@ -45,7 +45,7 @@ public class ResourcesReflectionUtilTest {
 
         Assert.assertEquals("wf-instance-failed",
                 ResourcesReflectionUtil.getResourceMonitorName("GenericAlert.instrumentFailedInstance"));
-        Assert.assertEquals(new Integer(10),
+        Assert.assertEquals(new Integer(11),
                 ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.instrumentFailedInstance"));
         Assert.assertEquals(null,
                 ResourcesReflectionUtil.getResourceTimeTakenName("GenericAlert.alertLateRerunFailed"));

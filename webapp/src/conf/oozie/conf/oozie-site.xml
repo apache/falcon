@@ -304,7 +304,7 @@
 
     <property>
         <name>oozie.authentication.simple.anonymous.allowed</name>
-        <value>true</value>
+        <value>false</value>
         <description>
             Indicates if anonymous requests are allowed.
             This setting is meaningful only when using 'simple' authentication.
@@ -485,51 +485,11 @@
     <!-- Proxyuser Configuration -->
     <property>
         <name>oozie.service.ProxyUserService.proxyuser.${user.name}.hosts</name>
-        <value>localhost</value>
-        <description></description>
+        <value>*</value>
     </property>
     <property>
         <name>oozie.service.ProxyUserService.proxyuser.${user.name}.groups</name>
-        <value>users</value>
-        <description></description>
-    </property>
-
-    <!--
-
-    <property>
-        <name>oozie.service.ProxyUserService.proxyuser.#USER#.hosts</name>
         <value>*</value>
-        <description>
-            List of hosts the '#USER#' user is allowed to perform 'doAs'
-            operations.
-
-            The '#USER#' must be replaced with the username o the user who is
-            allowed to perform 'doAs' operations.
-
-            The value can be the '*' wildcard or a list of hostnames.
-
-            For multiple users copy this property and replace the user name
-            in the property name.
-        </description>
     </property>
-
-    <property>
-        <name>oozie.service.ProxyUserService.proxyuser.#USER#.groups</name>
-        <value>*</value>
-        <description>
-            List of groups the '#USER#' user is allowed to impersonate users
-            from to perform 'doAs' operations.
-
-            The '#USER#' must be replaced with the username o the user who is
-            allowed to perform 'doAs' operations.
-
-            The value can be the '*' wildcard or a list of groups.
-
-            For multiple users copy this property and replace the user name
-            in the property name.
-        </description>
-    </property>
-
-    -->
 
 </configuration>

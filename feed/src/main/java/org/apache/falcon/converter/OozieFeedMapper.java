@@ -38,6 +38,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.messaging.EntityInstanceMessage.EntityOps;
 import org.apache.falcon.oozie.coordinator.ACTION;
@@ -45,6 +46,7 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
@@ -426,7 +428,7 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                     propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
                     propagateTableCopyProperties(srcCluster, sourceTableStorage,
                             trgCluster, targetTableStorage, props);
-                    setupHiveConfiguration(trgCluster, sourceTableStorage, targetTableStorage, wfPath);
+                    setupHiveConfiguration(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, wfPath);
                 }
 
                 propagateLateDataProperties(feed, instancePaths, sourceStorage.getType().name(), props);
@@ -479,9 +481,11 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             props.put(prefix + "Partition", "${coord:dataInPartitionFilter('input', 'hive')}");
         }
 
-        private void setupHiveConfiguration(Cluster trgCluster, CatalogStorage sourceStorage,
-                                            CatalogStorage targetStorage, Path wfPath) throws IOException {
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(trgCluster));
+        private void setupHiveConfiguration(Cluster srcCluster, CatalogStorage sourceStorage,
+                                            Cluster trgCluster, CatalogStorage targetStorage, Path wfPath)
+            throws IOException, FalconException {
+            Configuration conf = ClusterHelper.getConfiguration(trgCluster);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
             // copy import export scripts to stagingDir
             Path scriptPath = new Path(wfPath, "scripts");
@@ -490,8 +494,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
 
             // create hive conf to stagingDir
             Path confPath = new Path(wfPath + "/conf");
-            createHiveConf(fs, confPath, sourceStorage.getCatalogUrl(), "falcon-source-");
-            createHiveConf(fs, confPath, targetStorage.getCatalogUrl(), "falcon-target-");
+            createHiveConf(fs, confPath, sourceStorage.getCatalogUrl(), srcCluster, "falcon-source-");
+            createHiveConf(fs, confPath, targetStorage.getCatalogUrl(), trgCluster, "falcon-target-");
         }
 
         private void copyHiveScript(FileSystem fs, Path scriptPath,

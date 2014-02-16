@@ -207,6 +207,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.hcatalog</groupId>
+            <artifactId>webhcat-java-client</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.falcon</groupId>
             <artifactId>falcon-hadoop-webapp</artifactId>
             <type>war</type>

@@ -109,9 +109,8 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
         if (!retryFile.exists()) {
             LOG.warn("Rerun file deleted or renamed for process-instance: "
                     + event.getEntityName() + ":" + event.getInstance());
-            GenericAlert.alertRetryFailed(event.getEntityType(),
-                    event.getEntityName(), event.getInstance(),
-                    event.getWfId(), Integer.toString(event.getRunId()),
+            GenericAlert.alertRetryFailed(event.getEntityType(), event.getEntityName(), event.getInstance(),
+                    event.getWfId(), event.getWorkflowUser(), Integer.toString(event.getRunId()),
                     "Rerun file deleted or renamed for process-instance:");
         } else {
             if (!retryFile.delete()) {

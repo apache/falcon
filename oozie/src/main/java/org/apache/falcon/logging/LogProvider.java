@@ -25,6 +25,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesResult.InstanceAction;
 import org.apache.hadoop.conf.Configuration;
@@ -48,15 +49,12 @@ public final class LogProvider {
 
         Cluster clusterObj = ConfigurationStore.get().get(
                 EntityType.CLUSTER, instance.cluster);
-        String resolvedRunId = "-";
         try {
-            FileSystem fs = FileSystem.get(
-                    new Path(ClusterHelper.getStorageUrl(clusterObj)).toUri(),
-                    new Configuration());
-            resolvedRunId = getResolvedRunId(fs, clusterObj, entity, instance,
-                    runId);
-            // if runId param is not resolved, i.e job is killed or not started
-            // or running
+            Configuration conf = ClusterHelper.getConfiguration(clusterObj);
+            // fs on behalf of the end user.
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+            String resolvedRunId = getResolvedRunId(fs, clusterObj, entity, instance, runId);
+            // if runId param is not resolved, i.e job is killed or not started or running
             if (resolvedRunId.equals("-")
                     && StringUtils.isEmpty(instance.logFile)) {
                 instance.logFile = "-";
@@ -107,13 +105,13 @@ public final class LogProvider {
     }
 
     private Instance populateActionLogUrls(FileSystem fs, Cluster cluster,
-                                           Entity entity, Instance instance, String formatedRunId)
+                                           Entity entity, Instance instance, String formattedRunId)
         throws FalconException, OozieClientException, IOException {
 
         Path actionPaths = new Path(ClusterHelper.getStorageUrl(cluster),
                 EntityUtil.getLogPath(cluster, entity) + "/job-"
                         + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
-                        + formatedRunId + "/*");
+                        + formattedRunId + "/*");
         FileStatus[] actions = fs.globStatus(actionPaths);
         InstanceAction[] instanceActions = new InstanceAction[actions.length - 1];
         instance.actions = instanceActions;
@@ -124,7 +122,7 @@ public final class LogProvider {
                     ClusterHelper.getStorageUrl(cluster),
                     EntityUtil.getLogPath(cluster, entity) + "/job-"
                             + EntityUtil.fromUTCtoURIDate(instance.instance) + "/"
-                            + formatedRunId, file.getPath().getName());
+                            + formattedRunId, file.getPath().getName());
             if (filePath.getName().equals("oozie.log")) {
                 instance.logFile = dfsBrowserUrl;
                 continue;

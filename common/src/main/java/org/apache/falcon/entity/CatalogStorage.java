@@ -19,7 +19,6 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -322,11 +321,6 @@ public class CatalogStorage implements Storage {
         uriTemplate.setLength(uriTemplate.length() - 1);
 
         return uriTemplate.toString();
-    }
-
-    @Override
-    public boolean exists() throws FalconException {
-        return CatalogServiceFactory.getCatalogService().tableExists(catalogUrl, database, table);
     }
 
     @Override

@@ -218,6 +218,8 @@
             <arg>${wf:id()}</arg>
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
+            <arg>-workflowUser</arg>
+            <arg>${wf:user()}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>
@@ -283,6 +285,8 @@
             <arg>${wf:id()}</arg>
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
+            <arg>-workflowUser</arg>
+            <arg>${wf:user()}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>

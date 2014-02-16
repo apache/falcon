@@ -26,6 +26,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cli.FalconCLI;
+import org.apache.falcon.client.FalconCLIException;
+import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -34,17 +36,11 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.log4j.Logger;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorJob;
-import org.apache.oozie.client.Job;
-import org.apache.oozie.client.Job.Status;
-import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.WorkflowJob;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.testng.Assert;
 
 import javax.servlet.ServletInputStream;
@@ -65,14 +61,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,8 +71,6 @@ import java.util.regex.Pattern;
  * Base test class for CLI, Entity and Process Instances.
  */
 public class TestContext {
-    private static final Logger LOG = Logger.getLogger(TestContext.class);
-
     public static final String FEED_TEMPLATE1 = "/feed-template1.xml";
     public static final String FEED_TEMPLATE2 = "/feed-template2.xml";
 
@@ -92,133 +81,22 @@ public class TestContext {
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
     public static final String BASE_URL = "http://localhost:41000/falcon-webapp";
-    public static final String REMOTE_USER = System.getProperty("user.name");
+    public static final String REMOTE_USER = FalconClient.USER;
+
+    private static final String AUTH_COOKIE_EQ = AuthenticatedURL.AUTH_COOKIE + "=";
 
     protected Unmarshaller unmarshaller;
     protected Marshaller marshaller;
 
     protected EmbeddedCluster cluster;
     protected WebResource service = null;
+    private AuthenticatedURL.Token authenticationToken;
+
     protected String clusterName;
     protected String processName;
     protected String outputFeedName;
 
     public static final Pattern VAR_PATTERN = Pattern.compile("##[A-Za-z0-9_]*##");
-
-    public Unmarshaller getUnmarshaller() {
-        return unmarshaller;
-    }
-
-    public Marshaller getMarshaller() {
-        return marshaller;
-    }
-
-    public EmbeddedCluster getCluster() {
-        return cluster;
-    }
-
-    public WebResource getService() {
-        return service;
-    }
-
-    public String getClusterName() {
-        return clusterName;
-    }
-
-    public String getProcessName() {
-        return processName;
-    }
-
-    public String getOutputFeedName() {
-        return outputFeedName;
-    }
-
-    public String getClusterFileTemplate() {
-        return CLUSTER_TEMPLATE;
-    }
-
-    public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
-        ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        assertSuccessful(response);
-
-        response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
-        assertSuccessful(response);
-
-        response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
-        assertSuccessful(response);
-
-        response = submitToFalcon(processTemplate, overlay, EntityType.PROCESS);
-        assertSuccessful(response);
-        ClientResponse clientRepsonse = this.service.path("api/entities/schedule/process/" + processName)
-                .header("Remote-User", REMOTE_USER).accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(
-                        ClientResponse.class);
-        assertSuccessful(clientRepsonse);
-    }
-
-    public void scheduleProcess() throws Exception {
-        scheduleProcess(PROCESS_TEMPLATE, getUniqueOverlay());
-    }
-
-    private List<WorkflowJob> getRunningJobs(String entityName) throws Exception {
-        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-        StringBuilder builder = new StringBuilder();
-        builder.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING).append(';');
-        builder.append(OozieClient.FILTER_NAME).append('=').append("FALCON_PROCESS_DEFAULT_").append(entityName);
-        return ozClient.getJobsInfo(builder.toString());
-    }
-
-    public void waitForWorkflowStart(String entityName) throws Exception {
-        for (int i = 0; i < 10; i++) {
-            List<WorkflowJob> jobs = getRunningJobs(entityName);
-            if (jobs != null && !jobs.isEmpty()) {
-                return;
-            }
-
-            System.out.println("Waiting for workflow to start");
-            Thread.sleep(i * 500);
-        }
-        throw new Exception("Workflow for " + entityName + " hasn't started in oozie");
-    }
-
-    public void waitForProcessWFtoStart() throws Exception {
-        waitForWorkflowStart(processName);
-    }
-
-    public void waitForOutputFeedWFtoStart() throws Exception {
-        waitForWorkflowStart(outputFeedName);
-    }
-
-    public void waitForBundleStart(Status... status) throws Exception {
-        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-        List<BundleJob> bundles = getBundles();
-        if (bundles.isEmpty()) {
-            return;
-        }
-
-        Set<Status> statuses = new HashSet<Status>(Arrays.asList(status));
-        String bundleId = bundles.get(0).getId();
-        for (int i = 0; i < 15; i++) {
-            Thread.sleep(i * 1000);
-            BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (statuses.contains(bundle.getStatus())) {
-                if (statuses.contains(Status.FAILED) || statuses.contains(Status.KILLED)) {
-                    return;
-                }
-
-                boolean done = false;
-                for (CoordinatorJob coord : bundle.getCoordinators()) {
-                    if (statuses.contains(coord.getStatus())) {
-                        done = true;
-                    }
-                }
-                if (done) {
-                    return;
-                }
-            }
-            System.out.println("Waiting for bundle " + bundleId + " in " + status + " state");
-        }
-        throw new Exception("Bundle " + bundleId + " is not " + status + " in oozie");
-    }
 
     public TestContext() {
         try {
@@ -239,6 +117,17 @@ public class TestContext {
                         .replace("org.apache.falcon.service.ProcessSubscriberService", ""));
         String store = StartupProperties.get().getProperty("config.store.uri");
         StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
+
+        try {
+            String baseUrl = BASE_URL;
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+            this.authenticationToken = FalconClient.getToken(baseUrl);
+        } catch (FalconCLIException e) {
+            throw new AuthenticationException(e);
+        }
+
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
         client.setReadTimeout(500000);
@@ -249,6 +138,55 @@ public class TestContext {
     public void setCluster(String cName) throws Exception {
         cluster = EmbeddedCluster.newCluster(cName, true);
         this.clusterName = cluster.getCluster().getName();
+    }
+
+    public EmbeddedCluster getCluster() {
+        return cluster;
+    }
+
+    public WebResource getService() {
+        return service;
+    }
+
+    public String getAuthenticationToken() {
+        return AUTH_COOKIE_EQ + authenticationToken;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public String getProcessName() {
+        return processName;
+    }
+
+    public String getClusterFileTemplate() {
+        return CLUSTER_TEMPLATE;
+    }
+
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
+        ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
+        assertSuccessful(response);
+
+        response = submitToFalcon(FEED_TEMPLATE1, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
+        assertSuccessful(response);
+
+        response = submitToFalcon(processTemplate, overlay, EntityType.PROCESS);
+        assertSuccessful(response);
+
+        ClientResponse clientRepsonse = this.service
+                .path("api/entities/schedule/process/" + processName)
+                .header("Cookie", getAuthenticationToken())
+                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .post(ClientResponse.class);
+        assertSuccessful(clientRepsonse);
+    }
+
+    public void scheduleProcess() throws Exception {
+        scheduleProcess(PROCESS_TEMPLATE, getUniqueOverlay());
     }
 
     /**
@@ -278,7 +216,9 @@ public class TestContext {
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
         return this.service.path("api/entities/submitAndSchedule/" + entityType.name().toLowerCase())
-                .header("Remote-User", TestContext.REMOTE_USER).accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+                .header("Cookie", getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);
     }
 
@@ -300,50 +240,44 @@ public class TestContext {
 
         ServletInputStream rawlogStream = getServletInputStream(tmpFile);
 
-        return this.service.path("api/entities/submit/" + entityType.name().toLowerCase()).header("Remote-User",
-                TestContext.REMOTE_USER)
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML).post(ClientResponse.class, rawlogStream);
+        return this.service.path("api/entities/submit/" + entityType.name().toLowerCase())
+                .header("Cookie", getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .type(MediaType.TEXT_XML)
+                .post(ClientResponse.class, rawlogStream);
     }
 
-    public void assertRequestId(ClientResponse clientRepsonse) {
-        String response = clientRepsonse.getEntity(String.class);
-        try {
-            APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
-            Assert.assertNotNull(result.getRequestId());
-        } catch (JAXBException e) {
-            Assert.fail("Reponse " + response + " is not valid");
-        }
-    }
-
-    public void assertStatus(ClientResponse clientRepsonse, APIResult.Status status) {
-        String response = clientRepsonse.getEntity(String.class);
+    public void assertStatus(ClientResponse clientResponse, APIResult.Status status) {
+        String response = clientResponse.getEntity(String.class);
         try {
             APIResult result = (APIResult) unmarshaller.unmarshal(new StringReader(response));
             Assert.assertEquals(result.getStatus(), status);
         } catch (JAXBException e) {
-            Assert.fail("Reponse " + response + " is not valid");
+            Assert.fail("Response " + response + " is not valid");
         }
     }
 
-    public void assertFailure(ClientResponse clientRepsonse) {
-        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-        assertStatus(clientRepsonse, APIResult.Status.FAILED);
+    public void assertFailure(ClientResponse clientResponse) {
+        Assert.assertEquals(clientResponse.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+        assertStatus(clientResponse, APIResult.Status.FAILED);
     }
 
-    public void assertSuccessful(ClientResponse clientRepsonse) {
-        Assert.assertEquals(clientRepsonse.getStatus(), Response.Status.OK.getStatusCode());
-        assertStatus(clientRepsonse, APIResult.Status.SUCCEEDED);
+    public void assertSuccessful(ClientResponse clientResponse) {
+        Assert.assertEquals(clientResponse.getStatus(), Response.Status.OK.getStatusCode());
+        assertStatus(clientResponse, APIResult.Status.SUCCEEDED);
     }
 
-    public String overlayParametersOverTemplate(String template, Map<String, String> overlay) throws IOException {
+    public static String overlayParametersOverTemplate(String template,
+                                                       Map<String, String> overlay) throws IOException {
         File tmpFile = getTempFile();
         OutputStream out = new FileOutputStream(tmpFile);
 
         InputStreamReader in;
-        if (getClass().getResourceAsStream(template) == null) {
+        InputStream resourceAsStream = TestContext.class.getResourceAsStream(template);
+        if (resourceAsStream == null) {
             in = new FileReader(template);
         } else {
-            in = new InputStreamReader(getClass().getResourceAsStream(template));
+            in = new InputStreamReader(resourceAsStream);
         }
         BufferedReader reader = new BufferedReader(in);
         String line;
@@ -362,42 +296,13 @@ public class TestContext {
         return tmpFile.getAbsolutePath();
     }
 
-    public File getTempFile() throws IOException {
+    public static File getTempFile() throws IOException {
         File target = new File("webapp/target");
         if (!target.exists()) {
             target = new File("target");
         }
 
         return File.createTempFile("test", ".xml", target);
-    }
-
-    public OozieClient getOozieClient() throws FalconException {
-        return OozieClientFactory.get(cluster.getCluster());
-    }
-
-    public List<BundleJob> getBundles() throws Exception {
-        List<BundleJob> bundles = new ArrayList<BundleJob>();
-        if (clusterName == null) {
-            return bundles;
-        }
-
-        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-        return ozClient.getBundleJobsInfo("name=FALCON_PROCESS_" + processName, 0, 10);
-    }
-
-    public boolean killOozieJobs() throws Exception {
-        if (cluster == null) {
-            return true;
-        }
-
-        OozieClient ozClient = OozieClientFactory.get(cluster.getCluster());
-        List<BundleJob> bundles = getBundles();
-        if (bundles != null) {
-            for (BundleJob bundle : bundles) {
-                ozClient.kill(bundle.getId());
-            }
-        }
-        return false;
     }
 
     public Map<String, String> getUniqueOverlay() throws FalconException {
@@ -440,8 +345,7 @@ public class TestContext {
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
         overlay.put("colo", "gs");
-        TestContext context = new TestContext();
-        context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        TestContext.overlayParametersOverTemplate(clusterTemplate, overlay);
         EmbeddedCluster cluster = EmbeddedCluster.newCluster(overlay.get("cluster"), true);
 
         cleanupStore();

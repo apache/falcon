@@ -107,6 +107,8 @@
             <arg>${wf:conf("broker.ttlInMins")}</arg>
             <arg>-cluster</arg>
             <arg>${cluster}</arg>
+            <arg>-workflowUser</arg>
+            <arg>${wf:user()}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>
@@ -119,8 +121,8 @@
     </action>
 
     <kill name="fail">
-        <message>Workflow failed, error
-            message[${wf:errorMessage(wf:lastErrorNode())}]
+        <message>
+            Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
         </message>
     </kill>
     <end name='end'/>

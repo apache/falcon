@@ -20,7 +20,9 @@ package org.apache.falcon.entity.parser;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.CatalogStorage;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
@@ -38,6 +40,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
@@ -344,6 +347,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
     }
 
     private void validateStorageExists(Feed feed) throws FalconException {
+        StringBuilder buffer = new StringBuilder();
         for (Cluster cluster : feed.getClusters().getClusters()) {
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
                     EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
@@ -352,12 +356,27 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
 
             final Storage storage = FeedHelper.createStorage(cluster, feed);
-            if (!storage.exists()) {
-                // this is only true for table, filesystem always returns true
-                CatalogStorage catalogStorage = (CatalogStorage) storage;
-                throw new ValidationException("Table [" + catalogStorage.getTable()
-                        + "] does not exist for feed: " + feed.getName() + ", cluster: " + cluster.getName());
+            // this is only true for table, filesystem always returns true
+            if (storage.getType() == Storage.TYPE.FILESYSTEM) {
+                continue;
             }
+
+            CatalogStorage catalogStorage = (CatalogStorage) storage;
+            String metaStorePrincipal = ClusterHelper.getPropertyValue(clusterEntity,
+                    SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+            if (!CatalogServiceFactory.getCatalogService().tableExists(catalogStorage.getCatalogUrl(),
+                    catalogStorage.getDatabase(), catalogStorage.getTable(), metaStorePrincipal)) {
+                buffer.append("Table [")
+                        .append(catalogStorage.getTable())
+                        .append("] does not exist for feed: ")
+                        .append(feed.getName())
+                        .append(" in cluster: ")
+                        .append(cluster.getName());
+            }
+        }
+
+        if (buffer.length() > 0) {
+            throw new ValidationException(buffer.toString());
         }
     }
 }

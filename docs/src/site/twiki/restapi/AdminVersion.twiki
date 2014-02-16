@@ -16,7 +16,6 @@ Version of the server.
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/admin/version
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>

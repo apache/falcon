@@ -65,15 +65,6 @@ public interface Storage {
     String getUriTemplate(LocationType locationType);
 
     /**
-     * Check if the storage, filesystem location or catalog table exists.
-     * Filesystem location always returns true.
-     *
-     * @return true if table exists else false
-     * @throws FalconException an exception
-     */
-    boolean exists() throws FalconException;
-
-    /**
      * Check for equality of this instance against the one in question.
      *
      * @param toCompareAgainst instance to compare

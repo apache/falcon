@@ -46,8 +46,11 @@ public abstract class AbstractRerunHandler<T extends RerunEvent, M extends Delay
         this.delayQueue.init();
     }
 
-    public abstract void handleRerun(String cluster, String entityType, String entityName,
-                                     String nominalTime, String runId, String wfId, long msgReceivedTime);
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public abstract void handleRerun(String clusterName, String entityType,
+                                     String entityName, String nominalTime, String runId,
+                                     String wfId, String workflowUser, long msgReceivedTime);
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public AbstractWorkflowEngine getWfEngine() {
         return wfEngine;

@@ -23,6 +23,7 @@ import org.apache.falcon.logging.LogMover;
 import org.apache.falcon.messaging.MessageProducer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -61,7 +62,8 @@ public class FalconPostProcessing extends Configured implements Tool {
         WF_ENGINE_URL("workflowEngineUrl", "url of workflow engine server, ex:oozie"),
         USER_SUBFLOW_ID("subflowId", "external id of user workflow"),
         USER_WORKFLOW_ENGINE("userWorkflowEngine", "user workflow engine type"),
-        LOG_DIR("logDir", "log dir where job logs are copied");
+        LOG_DIR("logDir", "log dir where job logs are copied"),
+        WORKFLOW_USER("workflowUser", "user who owns the feed instance (partition)");
 
         private String name;
         private String description;
@@ -96,7 +98,7 @@ public class FalconPostProcessing extends Configured implements Tool {
         LOG.info("Sending user message " + cmd);
         invokeUserMessageProducer(cmd);
 
-        //LogMover doesnt throw exception, a failed logmover will not fail the user workflow
+        //LogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs " + cmd);
         invokeLogProducer(cmd);
 
@@ -155,11 +157,18 @@ public class FalconPostProcessing extends Configured implements Tool {
         addArg(args, cmd, Arg.FEED_NAMES);
         addArg(args, cmd, Arg.FEED_INSTANCE_PATHS);
         addArg(args, cmd, Arg.LOG_FILE);
+        addArg(args, cmd, Arg.WORKFLOW_USER);
 
         MessageProducer.main(args.toArray(new String[0]));
     }
 
     private void invokeLogProducer(CommandLine cmd) throws Exception {
+        // todo: need to move this out to Falcon in-process
+        if (UserGroupInformation.isSecurityEnabled()) {
+            LOG.info("Unable to move logs as security is enabled.");
+            return;
+        }
+
         List<String> args = new ArrayList<String>();
         addArg(args, cmd, Arg.WF_ENGINE_URL);
         addArg(args, cmd, Arg.ENTITY_TYPE);
@@ -204,6 +213,8 @@ public class FalconPostProcessing extends Configured implements Tool {
         addOption(options, Arg.USER_SUBFLOW_ID);
         addOption(options, Arg.USER_WORKFLOW_ENGINE, false);
         addOption(options, Arg.LOG_DIR);
+        addOption(options, Arg.WORKFLOW_USER);
+
         return new GnuParser().parse(options, arguments);
     }
 

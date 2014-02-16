@@ -26,6 +26,7 @@ import org.apache.falcon.rerun.event.RerunEvent.RerunType;
 import org.apache.falcon.rerun.handler.AbstractRerunHandler;
 import org.apache.falcon.rerun.handler.RerunHandlerFactory;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.log4j.Logger;
@@ -40,13 +41,14 @@ import java.util.Date;
 public class FalconTopicSubscriber implements MessageListener, ExceptionListener {
     private static final Logger LOG = Logger.getLogger(FalconTopicSubscriber.class);
 
-    private TopicSubscriber subscriber;
-    private String implementation;
-    private String userName;
-    private String password;
-    private String url;
-    private String topicName;
+    private final String implementation;
+    private final String userName;
+    private final String password;
+    private final String url;
+    private final String topicName;
+
     private Connection connection;
+    private TopicSubscriber subscriber;
 
     private AbstractRerunHandler retryHandler = RerunHandlerFactory.getRerunHandler(RerunType.RETRY);
     private AbstractRerunHandler latedataHandler = RerunHandlerFactory.getRerunHandler(RerunType.LATE);
@@ -62,8 +64,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
 
     public void startSubscriber() throws FalconException {
         try {
-            connection = createAndGetConnection(implementation, userName,
-                    password, url);
+            connection = createAndGetConnection(implementation, userName, password, url);
             TopicSession session = (TopicSession) connection.createSession(
                     false, Session.AUTO_ACKNOWLEDGE);
             Topic destination = session.createTopic(topicName);
@@ -72,8 +73,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             connection.setExceptionListener(this);
             connection.start();
         } catch (Exception e) {
-            LOG.error("Error starting subscriber of topic: " + this.toString(),
-                    e);
+            LOG.error("Error starting subscriber of topic: " + this.toString(), e);
             throw new FalconException(e);
         }
     }
@@ -82,40 +82,41 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     public void onMessage(Message message) {
         MapMessage mapMessage = (MapMessage) message;
         try {
-            debug(mapMessage);
+            if (LOG.isDebugEnabled()) {debug(mapMessage); }
             String cluster = mapMessage.getString(ARG.cluster.getArgName());
             String entityName = mapMessage.getString(ARG.entityName.getArgName());
             String entityType = mapMessage.getString(ARG.entityType.getArgName());
             String workflowId = mapMessage.getString(ARG.workflowId.getArgName());
+            String workflowUser = mapMessage.getString(ARG.workflowUser.getArgName());
             String runId = mapMessage.getString(ARG.runId.getArgName());
             String nominalTime = mapMessage.getString(ARG.nominalTime.getArgName());
             String status = mapMessage.getString(ARG.status.getArgName());
             String operation = mapMessage.getString(ARG.operation.getArgName());
 
+            CurrentUser.authenticate(workflowUser);
             AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
             InstancesResult result = wfEngine.getJobDetails(cluster, workflowId);
             Date startTime = result.getInstances()[0].startTime;
             Date endTime = result.getInstances()[0].endTime;
             Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
+
             if (status.equalsIgnoreCase("FAILED")) {
                 retryHandler.handleRerun(cluster, entityType, entityName,
-                        nominalTime, runId, workflowId,
+                        nominalTime, runId, workflowId, workflowUser,
                         System.currentTimeMillis());
 
                 GenericAlert.instrumentFailedInstance(cluster, entityType,
-                        entityName, nominalTime, workflowId, runId, operation,
-                        SchemaHelper.formatDateUTC(startTime),
-                        "", "", duration);
+                        entityName, nominalTime, workflowId, workflowUser, runId, operation,
+                        SchemaHelper.formatDateUTC(startTime), "", "", duration);
 
             } else if (status.equalsIgnoreCase("SUCCEEDED")) {
                 latedataHandler.handleRerun(cluster, entityType, entityName,
-                        nominalTime, runId, workflowId,
+                        nominalTime, runId, workflowId, workflowUser,
                         System.currentTimeMillis());
 
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
-                        entityName, nominalTime, workflowId, runId, operation,
-                        SchemaHelper.formatDateUTC(startTime),
-                        duration);
+                        entityName, nominalTime, workflowId, workflowUser, runId, operation,
+                        SchemaHelper.formatDateUTC(startTime), duration);
 
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }
@@ -143,17 +144,14 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     }
 
     private void debug(MapMessage mapMessage) throws JMSException {
-        if (LOG.isDebugEnabled()) {
-            StringBuffer buff = new StringBuffer();
-            buff.append("Received:{");
-            for (ARG arg : ARG.values()) {
-                buff.append(arg.getArgName()).append('=').
-                        append(mapMessage.getString(arg.getArgName())).
-                        append(", ");
-            }
-            buff.append("}");
-            LOG.debug(buff);
+        StringBuilder buff = new StringBuilder();
+        buff.append("Received:{");
+        for (ARG arg : ARG.values()) {
+            buff.append(arg.getArgName()).append('=')
+                .append(mapMessage.getString(arg.getArgName())).append(", ");
         }
+        buff.append("}");
+        LOG.debug(buff);
     }
 
     @Override
@@ -164,11 +162,14 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
     public void closeSubscriber() throws FalconException {
         try {
             LOG.info("Closing subscriber on topic : " + this.topicName);
-            subscriber.close();
-            connection.close();
+            if (subscriber != null) {
+                subscriber.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
         } catch (JMSException e) {
-            LOG.error("Error closing subscriber of topic: " + this.toString(),
-                    e);
+            LOG.error("Error closing subscriber of topic: " + this.toString(), e);
             throw new FalconException(e);
         }
     }

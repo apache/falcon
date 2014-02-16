@@ -43,7 +43,6 @@ public class EmbeddedCluster {
     protected EmbeddedCluster() {
     }
 
-    //private MiniDFSCluster dfsCluster;
     protected Configuration conf = newConfiguration();
     protected Cluster clusterEntity;
 
@@ -81,6 +80,7 @@ public class EmbeddedCluster {
         cluster.conf.set("jail.base", System.getProperty("hadoop.tmp.dir",
                 cluster.conf.get("hadoop.tmp.dir", "/tmp")));
         cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
+
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = " + hdfsUrl);
         cluster.buildClusterObject(name);
@@ -133,17 +133,9 @@ public class EmbeddedCluster {
     }
 
     public void shutdown() {
-        //dfsCluster.shutdown();
     }
 
     public Cluster getCluster() {
         return clusterEntity;
-    }
-
-    public Cluster clone(String cloneName) {
-        EmbeddedCluster clone = new EmbeddedCluster();
-        clone.conf = this.conf;
-        clone.buildClusterObject(cloneName);
-        return clone.clusterEntity;
     }
 }

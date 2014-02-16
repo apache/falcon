@@ -29,7 +29,14 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
@@ -43,8 +50,6 @@ import java.util.Properties;
  */
 public class HTTPChannel extends AbstractChannel {
     private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
-
-    private static final String REMOTE_USER = "Remote-User";
 
     private static final HttpServletRequest DEFAULT_NULL_REQUEST = new NullServletRequest();
 
@@ -84,8 +89,9 @@ public class HTTPChannel extends AbstractChannel {
 
             ClientResponse response = Client.create(new DefaultClientConfig())
                     .resource(UriBuilder.fromUri(url).build())
-                    .header(REMOTE_USER, user).accept(accept)
-                    .type(mimeType).method(httpMethod, ClientResponse.class,
+                    .queryParam("user.name", user)
+                    .accept(accept).type(mimeType)
+                    .method(httpMethod, ClientResponse.class,
                             (isPost(httpMethod) ? incomingRequest.getInputStream() : null));
             incomingRequest.getInputStream().reset();
 
@@ -185,13 +191,5 @@ public class HTTPChannel extends AbstractChannel {
             return MediaType.TEXT_PLAIN;
         }
         return consumes.value()[0];
-    }
-
-    private String getProduces(Method method) {
-        Produces produces = method.getAnnotation(Produces.class);
-        if (produces.value() == null) {
-            return MediaType.WILDCARD;
-        }
-        return produces.value()[0];
     }
 }

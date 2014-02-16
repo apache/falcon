@@ -73,7 +73,7 @@ public class TableStorageFeedReplicationIT {
         TestContext.cleanupStore();
 
         Map<String, String> overlay = sourceContext.getUniqueOverlay();
-        String sourceFilePath = sourceContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
+        String sourceFilePath = TestContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
         sourceContext.setCluster(sourceFilePath);
 
         final Cluster sourceCluster = sourceContext.getCluster().getCluster();
@@ -88,7 +88,7 @@ public class TableStorageFeedReplicationIT {
         HiveTestUtils.loadData(sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME, sourcePath,
                 PARTITION_VALUE);
 
-        String targetFilePath = targetContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
+        String targetFilePath = TestContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
         targetContext.setCluster(targetFilePath);
 
         final Cluster targetCluster = targetContext.getCluster().getCluster();
@@ -144,17 +144,17 @@ public class TableStorageFeedReplicationIT {
     public void testTableReplication() throws Exception {
         final String feedName = "customer-table-replicating-feed";
         final Map<String, String> overlay = sourceContext.getUniqueOverlay();
-        String filePath = sourceContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
+        String filePath = TestContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
 
-        filePath = targetContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
 
         HCatPartition sourcePartition = HiveTestUtils.getPartition(
                 sourceMetastoreUrl, SOURCE_DATABASE_NAME, SOURCE_TABLE_NAME, "ds", PARTITION_VALUE);
         Assert.assertNotNull(sourcePartition);
 
-        filePath = sourceContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
 
         // wait until the workflow job completes
@@ -168,7 +168,7 @@ public class TableStorageFeedReplicationIT {
         Assert.assertNotNull(targetPartition);
 
         InstancesResult response = targetContext.getService().path("api/instance/running/feed/" + feedName)
-                .header("Remote-User", "guest")
+                .header("Cookie", targetContext.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);
@@ -182,10 +182,10 @@ public class TableStorageFeedReplicationIT {
     public void testTableReplicationWithExistingTargetPartition() throws Exception {
         final String feedName = "customer-table-replicating-feed";
         final Map<String, String> overlay = sourceContext.getUniqueOverlay();
-        String filePath = sourceContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
+        String filePath = TestContext.overlayParametersOverTemplate("/table/primary-cluster.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
 
-        filePath = targetContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/bcp-cluster.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
 
         HCatPartition sourcePartition = HiveTestUtils.getPartition(
@@ -199,7 +199,7 @@ public class TableStorageFeedReplicationIT {
                 targetMetastoreUrl, TARGET_DATABASE_NAME, TARGET_TABLE_NAME, "ds", PARTITION_VALUE);
         Assert.assertNotNull(targetPartition);
 
-        filePath = sourceContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/customer-table-replicating-feed.xml", overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
 
         // wait until the workflow job completes
@@ -213,7 +213,7 @@ public class TableStorageFeedReplicationIT {
         Assert.assertNotNull(targetPartition);
 
         InstancesResult response = targetContext.getService().path("api/instance/running/feed/" + feedName)
-                .header("Remote-User", "guest")
+                .header("Cookie", targetContext.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED);

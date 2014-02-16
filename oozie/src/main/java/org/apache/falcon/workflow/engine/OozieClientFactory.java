@@ -24,8 +24,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.log4j.Logger;
-import org.apache.oozie.client.CustomOozieClient;
-import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.ProxyOozieClient;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,42 +34,43 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class OozieClientFactory {
 
     private static final Logger LOG = Logger.getLogger(OozieClientFactory.class);
-
-    private static final ConcurrentHashMap<String, OozieClient> CACHE =
-        new ConcurrentHashMap<String, OozieClient>();
     private static final String LOCAL_OOZIE = "local";
+
+    private static final ConcurrentHashMap<String, ProxyOozieClient> CACHE =
+            new ConcurrentHashMap<String, ProxyOozieClient>();
     private static volatile boolean localInitialized = false;
 
     private OozieClientFactory() {}
 
-    public static synchronized OozieClient get(Cluster cluster)
+    public static synchronized ProxyOozieClient get(Cluster cluster)
         throws FalconException {
 
         assert cluster != null : "Cluster cant be null";
         String oozieUrl = ClusterHelper.getOozieUrl(cluster);
         if (!CACHE.containsKey(oozieUrl)) {
-            OozieClient ref = getClientRef(oozieUrl);
+            ProxyOozieClient ref = getClientRef(oozieUrl);
             LOG.info("Caching Oozie client object for " + oozieUrl);
             CACHE.putIfAbsent(oozieUrl, ref);
         }
+
         return CACHE.get(oozieUrl);
     }
 
-    public static OozieClient get(String cluster) throws FalconException {
-        return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, cluster));
+    public static ProxyOozieClient get(String clusterName) throws FalconException {
+        return get((Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, clusterName));
     }
 
-    private static OozieClient getClientRef(String oozieUrl)
+    private static ProxyOozieClient getClientRef(String oozieUrl)
         throws FalconException {
 
         if (LOCAL_OOZIE.equals(oozieUrl)) {
             return getLocalOozieClient();
         } else {
-            return new CustomOozieClient(oozieUrl);
+            return new ProxyOozieClient(oozieUrl);
         }
     }
 
-    private static OozieClient getLocalOozieClient() throws FalconException {
+    private static ProxyOozieClient getLocalOozieClient() throws FalconException {
         try {
             if (!localInitialized) {
                 //LocalOozie.start();

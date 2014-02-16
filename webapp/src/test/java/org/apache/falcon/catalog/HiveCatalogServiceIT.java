@@ -19,6 +19,8 @@
 package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hcatalog.api.HCatAddPartitionDesc;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatCreateDBDesc;
@@ -55,6 +57,9 @@ public class HiveCatalogServiceIT {
 
     @BeforeClass
     public void setUp() throws Exception {
+        // setup a logged in user
+        CurrentUser.authenticate(TestContext.REMOTE_USER);
+
         hiveCatalogService = new HiveCatalogService();
         client = HiveCatalogService.get(METASTORE_URL);
 
@@ -168,22 +173,23 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testIsAlive() throws Exception {
-        Assert.assertTrue(hiveCatalogService.isAlive(METASTORE_URL));
+        Assert.assertTrue(hiveCatalogService.isAlive(METASTORE_URL, "metaStorePrincipal"));
     }
 
-    @Test (expectedExceptions = FalconException.class)
+    @Test (expectedExceptions = Exception.class)
     public void testIsAliveNegative() throws Exception {
-        hiveCatalogService.isAlive("thrift://localhost:9999");
+        hiveCatalogService.isAlive("thrift://localhost:9999", "metaStorePrincipal");
     }
 
     @Test (expectedExceptions = FalconException.class)
     public void testTableExistsNegative() throws Exception {
-        hiveCatalogService.tableExists(METASTORE_URL, DATABASE_NAME, "blah");
+        hiveCatalogService.tableExists(METASTORE_URL, DATABASE_NAME, "blah", "metaStorePrincipal");
     }
 
     @Test
     public void testTableExists() throws Exception {
-        Assert.assertTrue(hiveCatalogService.tableExists(METASTORE_URL, DATABASE_NAME, TABLE_NAME));
+        Assert.assertTrue(hiveCatalogService.tableExists(
+                METASTORE_URL, DATABASE_NAME, TABLE_NAME, "metaStorePrincipal"));
     }
 
     @Test

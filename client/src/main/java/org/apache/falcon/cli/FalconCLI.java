@@ -138,12 +138,18 @@ public class FalconCLI {
             int exitValue = 0;
             if (command.getName().equals(HELP_CMD)) {
                 parser.showHelp();
-            } else if (command.getName().equals(ADMIN_CMD)) {
-                exitValue = adminCommand(command.getCommandLine());
-            } else if (command.getName().equals(ENTITY_CMD)) {
-                entityCommand(command.getCommandLine());
-            } else if (command.getName().equals(INSTANCE_CMD)) {
-                instanceCommand(command.getCommandLine());
+            } else {
+                CommandLine commandLine = command.getCommandLine();
+                String falconUrl = getFalconEndpoint(commandLine);
+                FalconClient client = new FalconClient(falconUrl);
+
+                if (command.getName().equals(ADMIN_CMD)) {
+                    exitValue = adminCommand(commandLine, client, falconUrl);
+                } else if (command.getName().equals(ENTITY_CMD)) {
+                    entityCommand(commandLine, client);
+                } else if (command.getName().equals(INSTANCE_CMD)) {
+                    instanceCommand(commandLine, client);
+                }
             }
 
             return exitValue;
@@ -167,10 +173,8 @@ public class FalconCLI {
         }
     }
 
-    private void instanceCommand(CommandLine commandLine) throws FalconCLIException, IOException {
-        String falconUrl = getFalconEndpoint(commandLine);
-        FalconClient client = new FalconClient(falconUrl);
-
+    private void instanceCommand(CommandLine commandLine, FalconClient client)
+        throws FalconCLIException, IOException {
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -257,12 +261,8 @@ public class FalconCLI {
         }
     }
 
-    private void entityCommand(CommandLine commandLine)
+    private void entityCommand(CommandLine commandLine, FalconClient client)
         throws FalconCLIException, IOException {
-
-        String falconUrl = getFalconEndpoint(commandLine);
-        FalconClient client = new FalconClient(falconUrl);
-
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -395,9 +395,12 @@ public class FalconCLI {
                 "show the current system status");
         Option version = new Option(VERSION_OPTION, false,
                 "show Falcon server build version");
+        Option stack = new Option(STACK_OPTION, false,
+                "show the thread stack dump");
         Option help = new Option("help", false, "show Falcon help");
         group.addOption(status);
         group.addOption(version);
+        group.addOption(stack);
         group.addOption(help);
 
         adminOptions.addOptionGroup(group);
@@ -587,11 +590,9 @@ public class FalconCLI {
         return url;
     }
 
-    private int adminCommand(CommandLine commandLine) throws FalconCLIException, IOException {
+    private int adminCommand(CommandLine commandLine, FalconClient client,
+                             String falconUrl) throws FalconCLIException, IOException {
         String result;
-        String falconUrl = getFalconEndpoint(commandLine);
-        FalconClient client = new FalconClient(falconUrl);
-
         Set<String> optionsList = new HashSet<String>();
         for (Option option : commandLine.getOptions()) {
             optionsList.add(option.getOpt());
@@ -603,9 +604,8 @@ public class FalconCLI {
         }
         int exitValue = 0;
         if (optionsList.contains(STATUS_OPTION)) {
-            int status = 0;
             try {
-                status = client.getStatus();
+                int status = client.getStatus();
                 if (status != 200) {
                     ERR.get().println("Falcon server is not fully operational (on " + falconUrl + "). "
                             + "Please check log files.");
@@ -623,6 +623,7 @@ public class FalconCLI {
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         }
+
         return exitValue;
     }
 

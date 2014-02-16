@@ -73,6 +73,7 @@ public class FeedProducerTest {
                             "-" + ARG.feedInstancePaths.getArgName(),
                             "/click-logs/10/05/05/00/20",
                             "-" + ARG.workflowId.getArgName(), "workflow-01-00",
+                            "-" + ARG.workflowUser.getArgName(), "falcon",
                             "-" + ARG.runId.getArgName(), "1",
                             "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
                             "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
@@ -200,6 +201,8 @@ public class FeedProducerTest {
         Assert.assertEquals(m.getString(ARG.operation.getArgName()), "DELETE");
         Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
                 "workflow-01-00");
+        Assert.assertEquals(m.getString(ARG.workflowUser.getArgName()),
+                "falcon");
         Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
         Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
                 "2011-01-01T01:00Z");

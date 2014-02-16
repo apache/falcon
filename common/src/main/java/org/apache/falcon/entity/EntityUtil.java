@@ -34,6 +34,7 @@ import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -553,7 +554,7 @@ public final class EntityUtil {
     private static Path getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster cluster, Path path)
         throws FalconException {
         try {
-            FileSystem fs = ClusterHelper.getFileSystem(cluster);
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
             FileStatus latest = null;
             FileStatus[] files = fs.globStatus(path, new PathFilter() {
                 @Override

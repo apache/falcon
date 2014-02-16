@@ -32,11 +32,13 @@ public abstract class AbstractCatalogService {
     /**
      * This method checks if the catalog service is alive.
      *
-     * @param catalogBaseUrl url for the catalog service
+     * @param catalogUrl url for the catalog service
+     * @param metaStorePrincipal kerberos principal for hive metastore as this is executed in falcon on behalf of user
      * @return if the service was reachable
      * @throws FalconException exception
      */
-    public abstract boolean isAlive(String catalogBaseUrl) throws FalconException;
+    public abstract boolean isAlive(String catalogUrl,
+                                    String metaStorePrincipal) throws FalconException;
 
     /**
      * This method checks if the given table exists in the catalog.
@@ -44,14 +46,15 @@ public abstract class AbstractCatalogService {
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
      * @param tableName tableName to check if it exists
+     * @param metaStorePrincipal kerberos principal for hive metastore as this is executed in falcon on behalf of user
      * @return if the table exists
      * @throws FalconException exception
      */
-    public abstract boolean tableExists(String catalogUrl, String database, String tableName)
-        throws FalconException;
+    public abstract boolean tableExists(String catalogUrl, String database, String tableName,
+                                        String metaStorePrincipal) throws FalconException;
 
     /**
-     * Returns if the table is external or not.
+     * Returns if the table is external or not. Executed in the workflow engine.
      *
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
@@ -63,7 +66,7 @@ public abstract class AbstractCatalogService {
                                             String tableName) throws FalconException;
 
     /**
-     * List partitions by filter.
+     * List partitions by filter. Executed in the workflow engine.
      *
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
@@ -79,7 +82,7 @@ public abstract class AbstractCatalogService {
         throws FalconException;
 
     /**
-     * Drops a given partition.
+     * Drops a given partition. Executed in the workflow engine.
      *
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to
@@ -92,7 +95,7 @@ public abstract class AbstractCatalogService {
                                            Map<String, String> partitions) throws FalconException;
 
     /**
-     * Gets the partition.
+     * Gets the partition. Executed in the workflow engine.
      *
      * @param catalogUrl url for the catalog service
      * @param database database the table belongs to

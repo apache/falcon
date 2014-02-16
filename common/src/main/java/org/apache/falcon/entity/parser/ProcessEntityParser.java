@@ -41,6 +41,7 @@ import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,6 +98,13 @@ public class ProcessEntityParser extends EntityParser<Process> {
         validateLateInputs(process);
     }
 
+    /**
+     * Validate if the user submitting this entity has access to the specific dirs on HDFS.
+     *
+     * @param process process
+     * @param clusterName cluster the process is materialized on
+     * @throws FalconException
+     */
     private void validateHDFSPaths(Process process, String clusterName) throws FalconException {
         org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
                 clusterName);
@@ -109,9 +117,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
         String libPath = process.getWorkflow().getLib();
         String nameNode = getNameNode(cluster, clusterName);
         try {
-            Configuration configuration = new Configuration();
-            configuration.set("fs.default.name", nameNode);
-            FileSystem fs = FileSystem.get(configuration);
+            Configuration configuration = ClusterHelper.getConfiguration(cluster);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(configuration);
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException(
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);

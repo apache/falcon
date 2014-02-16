@@ -26,9 +26,9 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,8 +44,8 @@ import java.io.IOException;
  */
 public abstract class AbstractCleanupHandler {
 
-    protected static final Logger LOG = Logger
-            .getLogger(AbstractCleanupHandler.class);
+    protected static final Logger LOG = Logger.getLogger(AbstractCleanupHandler.class);
+
     protected static final ConfigurationStore STORE = ConfigurationStore.get();
     public static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     public static final ExpressionHelper RESOLVER = ExpressionHelper.get();
@@ -66,7 +66,6 @@ public abstract class AbstractCleanupHandler {
     private String getRetentionValue(Frequency.TimeUnit timeunit) {
         return RuntimeProperties.get().getProperty(
                 "log.cleanup.frequency." + timeunit + ".retention", "days(1)");
-
     }
 
     protected FileStatus[] getAllLogs(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
@@ -87,14 +86,7 @@ public abstract class AbstractCleanupHandler {
     protected FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
         throws FalconException {
 
-        FileSystem fs;
-        try {
-            fs = new Path(ClusterHelper.getStorageUrl(cluster))
-                    .getFileSystem(new Configuration());
-        } catch (IOException e) {
-            throw new FalconException(e);
-        }
-        return fs;
+        return HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
     }
 
     protected void delete(Cluster cluster, Entity entity, long retention)
@@ -116,8 +108,7 @@ public abstract class AbstractCleanupHandler {
         for (FileStatus log : logs) {
             if (now - log.getModificationTime() > retention) {
                 try {
-                    boolean isDeleted = getFileSystem(cluster).delete(
-                            log.getPath(), true);
+                    boolean isDeleted = getFileSystem(cluster).delete(log.getPath(), true);
                     if (!isDeleted) {
                         LOG.error("Unable to delete path: " + log.getPath());
                     } else {

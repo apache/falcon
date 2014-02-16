@@ -38,8 +38,9 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         AbstractRerunHandler<RetryEvent, M> {
 
     @Override
-    public void handleRerun(String cluster, String entityType, String entityName,
-                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public void handleRerun(String clusterName, String entityType, String entityName, String nominalTime,
+                            String runId, String wfId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
@@ -58,9 +59,9 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
             if (attempts > intRunId) {
                 AbstractRerunPolicy rerunPolicy = RerunPolicyFactory.getRetryPolicy(policy);
                 long delayTime = rerunPolicy.getDelay(delay, Integer.parseInt(runId));
-                RetryEvent event = new RetryEvent(cluster, wfId,
+                RetryEvent event = new RetryEvent(clusterName, wfId,
                         msgReceivedTime, delayTime, entityType, entityName,
-                        nominalTime, intRunId, attempts, 0);
+                        nominalTime, intRunId, attempts, 0, workflowUser);
                 offerToQueue(event);
             } else {
                 LOG.warn("All retry attempt failed out of configured: "
@@ -69,15 +70,17 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
                         + wfId);
 
                 GenericAlert.alertRetryFailed(entityType, entityName,
-                        nominalTime, wfId, runId,
+                        nominalTime, wfId, workflowUser, runId,
                         "All retry attempt failed out of configured: "
                                 + attempts + " attempt for entity instance::");
             }
         } catch (FalconException e) {
             LOG.error("Error during retry of entity instance " + entityName + ":" + nominalTime, e);
-            GenericAlert.alertRetryFailed(entityType, entityName, nominalTime, wfId, runId, e.getMessage());
+            GenericAlert.alertRetryFailed(entityType, entityName, nominalTime,
+                    wfId, workflowUser, runId, e.getMessage());
         }
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     @Override
     public void init(M aDelayQueue) throws FalconException {

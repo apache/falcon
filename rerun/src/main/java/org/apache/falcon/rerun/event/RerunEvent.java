@@ -38,6 +38,7 @@ public class RerunEvent implements Delayed {
 
     protected String clusterName;
     protected String wfId;
+    protected String workflowUser;
     protected long msgInsertTime;
     protected long delayInMilliSec;
     protected String entityType;
@@ -47,9 +48,10 @@ public class RerunEvent implements Delayed {
 
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public RerunEvent(String clusterName, String wfId, long msgInsertTime, long delay,
-                      String entityType, String entityName, String instance, int runId) {
+                      String entityType, String entityName, String instance, int runId, String workflowUser) {
         this.clusterName = clusterName;
         this.wfId = wfId;
+        this.workflowUser = workflowUser;
         this.msgInsertTime = msgInsertTime;
         this.delayInMilliSec = delay;
         this.entityName = entityName;
@@ -65,6 +67,10 @@ public class RerunEvent implements Delayed {
 
     public String getWfId() {
         return wfId;
+    }
+
+    public String getWorkflowUser() {
+        return workflowUser;
     }
 
     public long getDelayInMilliSec() {

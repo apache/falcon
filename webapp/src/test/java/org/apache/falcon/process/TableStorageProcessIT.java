@@ -69,7 +69,7 @@ public class TableStorageProcessIT {
         TestContext.prepare(CLUSTER_TEMPLATE);
 
         overlay = context.getUniqueOverlay();
-        String filePath = context.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
+        String filePath = TestContext.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
         context.setCluster(filePath);
 
         final Cluster cluster = context.getCluster().getCluster();
@@ -117,14 +117,14 @@ public class TableStorageProcessIT {
     private void scheduleFeeds() throws Exception {
         overlay.put("cluster", "primary-cluster");
 
-        String filePath = context.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
+        String filePath = TestContext.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);
         Assert.assertEquals(0, TestContext.executeWithURL("entity -submit -type cluster -file " + filePath));
 
-        filePath = context.overlayParametersOverTemplate("/table/table-feed-input.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/table-feed-input.xml", overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
 
-        filePath = context.overlayParametersOverTemplate("/table/table-feed-output.xml", overlay);
+        filePath = TestContext.overlayParametersOverTemplate("/table/table-feed-output.xml", overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
     }
@@ -161,7 +161,7 @@ public class TableStorageProcessIT {
         final String pigProcessName = "pig-tables-" + context.getProcessName();
         overlay.put("processName", pigProcessName);
 
-        String filePath = context.overlayParametersOverTemplate("/table/pig-process-tables.xml", overlay);
+        String filePath = TestContext.overlayParametersOverTemplate("/table/pig-process-tables.xml", overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submitAndSchedule -type process -file " + filePath));
 
@@ -174,7 +174,7 @@ public class TableStorageProcessIT {
         Assert.assertTrue(partition != null);
 
         InstancesResult response = context.getService().path("api/instance/running/process/" + pigProcessName)
-                .header("Remote-User", "guest")
+                .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -188,7 +188,7 @@ public class TableStorageProcessIT {
         final String hiveProcessName = "hive-tables-" + context.getProcessName();
         overlay.put("processName", hiveProcessName);
 
-        String filePath = context.overlayParametersOverTemplate("/table/hive-process-template.xml", overlay);
+        String filePath = TestContext.overlayParametersOverTemplate("/table/hive-process-template.xml", overlay);
         Assert.assertEquals(0,
                 TestContext.executeWithURL("entity -submitAndSchedule -type process -file " + filePath));
 
@@ -201,7 +201,7 @@ public class TableStorageProcessIT {
         Assert.assertTrue(partition != null);
 
         InstancesResult response = context.getService().path("api/instance/running/process/" + hiveProcessName)
-                .header("Remote-User", "guest")
+                .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());

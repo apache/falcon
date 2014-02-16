@@ -56,7 +56,7 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
                     delete(currentCluster, feed, retention);
                     deleteStagedData(currentCluster, feed, retention);
                 } else {
-                    LOG.info("Ignoring cleanup for process:" + feedName
+                    LOG.info("Ignoring cleanup for feed:" + feedName
                             + " in  cluster: " + cluster.getName() + " as this does not belong to current colo");
                 }
             }

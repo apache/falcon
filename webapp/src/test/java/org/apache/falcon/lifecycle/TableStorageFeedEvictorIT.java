@@ -356,6 +356,7 @@ public class TableStorageFeedEvictorIT {
             super.println(x);
         }
 
+        @SuppressWarnings("UnusedDeclaration")
         public String getBuffer() {
             return buffer.toString();
         }

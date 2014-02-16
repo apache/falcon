@@ -27,6 +27,9 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
+import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
+import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.falcon.resource.InstancesSummaryResult;
 
 import javax.ws.rs.HttpMethod;
@@ -41,6 +44,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -51,55 +55,83 @@ import java.util.Properties;
  */
 public class FalconClient {
 
-    private final WebResource service;
     public static final String WS_HEADER_PREFIX = "header:";
-    private static final String REMOTE_USER = "Remote-User";
-    private static final String USER = System.getProperty("user.name");
+    public static final String USER = System.getProperty("user.name");
+    public static final String AUTH_URL = "api/options?" + PseudoAuthenticator.USER_NAME + "=" + USER;
+
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     private static final String FALCON_INSTANCE_SOURCE_CLUSTERS = "falcon.instance.source.clusters";
+
+    /**
+     * Name of the HTTP cookie used for the authentication token between the client and the server.
+     */
+    public static final String AUTH_COOKIE = "hadoop.auth";
+    private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
+    private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
+
+    private final WebResource service;
+    private final AuthenticatedURL.Token authenticationToken;
 
     /**
      * Create a Falcon client instance.
      *
      * @param falconUrl of the server to which client interacts
-     * @throws IOException
+     * @throws FalconCLIException
      */
-    public FalconClient(String falconUrl) throws IOException {
+    public FalconClient(String falconUrl) throws FalconCLIException {
         String baseUrl = notEmpty(falconUrl, "FalconUrl");
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
+
         Client client = Client.create(new DefaultClientConfig());
         setFalconTimeOut(client);
         service = client.resource(UriBuilder.fromUri(baseUrl).build());
-        client.resource(UriBuilder.fromUri(baseUrl).build());
 
-        // addHeaders();
+        authenticationToken = getToken(baseUrl);
     }
 
-    private void setFalconTimeOut(Client client) throws IOException {
-        Properties prop = new Properties();
-        int readTimeout;
-        int connectTimeout;
-        InputStream inputStream = null;
+    private void setFalconTimeOut(Client client) throws FalconCLIException {
         try {
-            inputStream = FalconClient.class.getResourceAsStream("/client.properties");
-            if (inputStream != null) {
-                prop.load(inputStream);
-                readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
-                        .parseInt(prop.getProperty("falcon.read.timeout")) : 180000;
-                connectTimeout = prop.containsKey("falcon.connect.timeout") ? Integer
-                        .parseInt(prop.getProperty("falcon.connect.timeout"))
-                        : 180000;
-            } else {
-                readTimeout = 180000;
-                connectTimeout = 180000;
+            Properties prop = new Properties();
+            int readTimeout;
+            int connectTimeout;
+            InputStream inputStream = null;
+            try {
+                inputStream = FalconClient.class.getResourceAsStream("/client.properties");
+                if (inputStream != null) {
+                    prop.load(inputStream);
+                    readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
+                            .parseInt(prop.getProperty("falcon.read.timeout")) : 180000;
+                    connectTimeout = prop.containsKey("falcon.connect.timeout") ? Integer
+                            .parseInt(prop.getProperty("falcon.connect.timeout"))
+                            : 180000;
+                } else {
+                    readTimeout = 180000;
+                    connectTimeout = 180000;
+                }
+            } finally {
+                IOUtils.closeQuietly(inputStream);
             }
-        } finally {
-            IOUtils.closeQuietly(inputStream);
+            client.setConnectTimeout(connectTimeout);
+            client.setReadTimeout(readTimeout);
+        } catch (IOException e) {
+            throw new FalconCLIException("An error occurred while reading client.properties file.", e);
         }
-        client.setConnectTimeout(connectTimeout);
-        client.setReadTimeout(readTimeout);
+    }
+
+    public static AuthenticatedURL.Token getToken(String baseUrl) throws FalconCLIException {
+        AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
+        try {
+            URL url = new URL(baseUrl + AUTH_URL);
+            // using KerberosAuthenticator which falls back to PsuedoAuthenticator
+            // instead of passing authentication type from the command line - bad factory
+            new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
+        } catch (Exception ex) {
+            throw new FalconCLIException("Could not authenticate, " + ex.getMessage(), ex);
+        }
+
+        return currentToken;
     }
 
     /**
@@ -234,10 +266,11 @@ public class FalconClient {
         if (effectiveTime != null) {
             resource = resource.queryParam("time", SchemaHelper.formatDateUTC(effectiveTime));
         }
-        ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(operation.mimeType).type(MediaType.TEXT_XML)
                 .method(operation.method, ClientResponse.class, entityStream);
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
         return parseAPIResult(clientResponse);
     }
 
@@ -253,7 +286,6 @@ public class FalconClient {
         throws FalconCLIException {
 
         return sendEntityRequest(Entities.STATUS, entityType, entityName, colo);
-
     }
 
     public String getDefinition(String entityType, String entityName)
@@ -261,7 +293,6 @@ public class FalconClient {
 
         return sendDefinitionRequest(Entities.DEFINITION, entityType,
                 entityName);
-
     }
 
     public String getDependency(String entityType, String entityName)
@@ -378,8 +409,9 @@ public class FalconClient {
     public int getStatus() throws FalconCLIException {
         AdminOperations job =  AdminOperations.VERSION;
         ClientResponse clientResponse = service.path(job.path)
-                .header(REMOTE_USER, USER).accept(job.mimeType)
-                .type(MediaType.TEXT_PLAIN).method(job.method, ClientResponse.class);
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(job.mimeType).type(MediaType.TEXT_PLAIN)
+                .method(job.method, ClientResponse.class);
         return clientResponse.getStatus();
     }
 
@@ -443,11 +475,12 @@ public class FalconClient {
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
         }
-        ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
 
         return parseAPIResult(clientResponse);
     }
@@ -455,24 +488,26 @@ public class FalconClient {
     private String sendDefinitionRequest(Entities entities, String entityType,
                                          String entityName) throws FalconCLIException {
 
-        ClientResponse clientResponse = service.path(entities.path)
-                .path(entityType).path(entityName).header(REMOTE_USER, USER)
+        ClientResponse clientResponse = service
+                .path(entities.path).path(entityType).path(entityName)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
         return clientResponse.getEntity(String.class);
     }
 
     private String sendDependencyRequest(Entities entities, String entityType,
                                          String entityName) throws FalconCLIException {
 
-        ClientResponse clientResponse = service.path(entities.path)
-                .path(entityType).path(entityName).header(REMOTE_USER, USER)
+        ClientResponse clientResponse = service
+                .path(entities.path).path(entityType).path(entityName)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
 
         return parseEntityList(clientResponse);
     }
@@ -480,12 +515,13 @@ public class FalconClient {
     private String sendListRequest(Entities entities, String entityType)
         throws FalconCLIException {
 
-        ClientResponse clientResponse = service.path(entities.path)
-                .path(entityType).header(REMOTE_USER, USER)
+        ClientResponse clientResponse = service
+                .path(entities.path).path(entityType)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class);
 
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
 
         return parseEntityList(clientResponse);
     }
@@ -497,27 +533,14 @@ public class FalconClient {
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
         }
-        ClientResponse clientResponse = resource.header(REMOTE_USER, USER)
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(entities.mimeType).type(MediaType.TEXT_XML)
                 .method(entities.method, ClientResponse.class, requestObject);
 
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
 
         return parseAPIResult(clientResponse);
-    }
-
-    public InstancesResult instanceCmd(Instances instances, String type, String name,
-                                       String start, String end, String colo) {
-        WebResource resource = service.path(instances.path).path(type).path(name);
-        resource = resource.queryParam("start", start);
-        if (end != null) {
-            resource = resource.queryParam("end", end);
-        }
-        resource = resource.queryParam("colo", colo);
-
-        return resource.header(REMOTE_USER, USER)
-                .accept(instances.mimeType)
-                .method(instances.method, InstancesResult.class);
     }
 
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
@@ -541,15 +564,17 @@ public class FalconClient {
 
         ClientResponse clientResponse;
         if (props == null) {
-            clientResponse = resource.header(REMOTE_USER, USER)
+            clientResponse = resource
+                    .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                     .accept(instances.mimeType)
                     .method(instances.method, ClientResponse.class);
         } else {
-            clientResponse = resource.header(REMOTE_USER, USER)
+            clientResponse = resource
+                    .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                     .accept(instances.mimeType)
                     .method(instances.method, ClientResponse.class, props);
         }
-        checkIfSuccessfull(clientResponse);
+        checkIfSuccessful(clientResponse);
 
         if (instances.name().equals("LOG")) {
             return parseProcessInstanceResultLogs(clientResponse, runid);
@@ -566,8 +591,10 @@ public class FalconClient {
         throws FalconCLIException {
 
         ClientResponse clientResponse = service.path(job.path)
-                .header(REMOTE_USER, USER).accept(job.mimeType)
-                .type(MediaType.TEXT_PLAIN).method(job.method, ClientResponse.class);
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(job.mimeType)
+                .type(job.mimeType)
+                .method(job.method, ClientResponse.class);
         return parseStringResult(clientResponse);
     }
 
@@ -720,7 +747,7 @@ public class FalconClient {
         return sb.toString();
     }
 
-    private void checkIfSuccessfull(ClientResponse clientResponse)
+    private void checkIfSuccessful(ClientResponse clientResponse)
         throws FalconCLIException {
 
         if (clientResponse.getStatus() == Response.Status.BAD_REQUEST

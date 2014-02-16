@@ -87,7 +87,7 @@ public class ClusterEntityValidationIT {
     public void testClusterEntityWithInvalidInterfaces(Interfacetype interfacetype, String endpoint)
         throws Exception {
         overlay = context.getUniqueOverlay();
-        String filePath = context.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         InputStream stream = new FileInputStream(filePath);
         Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
         Assert.assertNotNull(cluster);
@@ -96,7 +96,7 @@ public class ClusterEntityValidationIT {
         Interface anInterface = ClusterHelper.getInterface(cluster, interfacetype);
         anInterface.setEndpoint(endpoint);
 
-        File tmpFile = context.getTempFile();
+        File tmpFile = TestContext.getTempFile();
         EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertFailure(response);

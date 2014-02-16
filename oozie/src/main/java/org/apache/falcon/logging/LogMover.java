@@ -46,7 +46,7 @@ import java.net.URLConnection;
 import java.util.List;
 
 /**
- * Utitlity called in the post process of oozie workflow to move oozie action executor log.
+ * Utility called in the post process of oozie workflow to move oozie action executor log.
  */
 public class LogMover extends Configured implements Tool {
 

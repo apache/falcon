@@ -54,6 +54,15 @@
         </layout>
     </appender>
 
+    <appender name="SECURITY" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="${user.dir}/target/logs/security.audit.log"/>
+        <param name="Append" value="true"/>
+        <param name="Threshold" value="debug"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %x %m%n"/>
+        </layout>
+    </appender>
+
     <logger name="org.apache.falcon" additivity="false">
         <level value="debug"/>
         <appender-ref ref="FILE"/>
@@ -67,6 +76,26 @@
     <logger name="METRIC">
         <level value="info"/>
         <appender-ref ref="METRIC"/>
+    </logger>
+
+    <logger name="org.apache.hadoop.security" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="SECURITY"/>
+    </logger>
+
+    <logger name="org.apache.hadoop" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.apache.oozie" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.apache.hadoop.hive" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="FILE"/>
     </logger>
 
     <root>

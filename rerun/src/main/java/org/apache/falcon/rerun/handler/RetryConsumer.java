@@ -38,7 +38,7 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
     }
 
     @Override
-    protected void handleRerun(String cluster, String jobStatus,
+    protected void handleRerun(String clusterName, String jobStatus,
                                RetryEvent message) {
         try {
             if (!jobStatus.equals("KILLED")) {
@@ -80,7 +80,7 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
                     LOG.error("Unable to re-offer to queue:", ex);
                     GenericAlert.alertRetryFailed(message.getEntityType(),
                             message.getEntityName(), message.getInstance(),
-                            message.getWfId(),
+                            message.getWfId(), message.getWorkflowUser(),
                             Integer.toString(message.getRunId()),
                             ex.getMessage());
                 }
@@ -91,7 +91,7 @@ public class RetryConsumer<T extends RetryHandler<DelayedQueue<RetryEvent>>>
                                 + message.getInstance(), e);
                 GenericAlert.alertRetryFailed(message.getEntityType(),
                         message.getEntityName(), message.getInstance(),
-                        message.getWfId(),
+                        message.getWfId(), message.getWorkflowUser(),
                         Integer.toString(message.getRunId()),
                         "Failure retry attempts exhausted");
             }

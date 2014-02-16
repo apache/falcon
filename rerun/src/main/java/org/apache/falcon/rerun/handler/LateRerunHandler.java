@@ -29,13 +29,13 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.*;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -50,8 +50,9 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         AbstractRerunHandler<LaterunEvent, M> {
 
     @Override
-    public void handleRerun(String cluster, String entityType, String entityName,
-                            String nominalTime, String runId, String wfId, long msgReceivedTime) {
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public void handleRerun(String cluster, String entityType, String entityName, String nominalTime,
+                            String runId, String wfId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
             try {
@@ -66,6 +67,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 LOG.error("Unable to get Late Process for entity:" + entityName);
                 return;
             }
+
             int intRunId = Integer.parseInt(runId);
             Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
             Long wait = getEventDelay(entity, nominalTime);
@@ -81,7 +83,8 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
                 LOG.info("Going to delete path:" + lateLogPath);
                 final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
-                FileSystem fs = FileSystem.get(getConfiguration(storageEndpoint));
+                Configuration conf = getConfiguration(storageEndpoint);
+                FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
                     if (deleted) {
@@ -95,16 +98,17 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                     + entityType + "(" + entityName + ")" + ":" + nominalTime
                     + " And WorkflowId: " + wfId);
             LaterunEvent event = new LaterunEvent(cluster, wfId, msgInsertTime.getTime(),
-                    wait, entityType, entityName, nominalTime, intRunId);
+                    wait, entityType, entityName, nominalTime, intRunId, workflowUser);
             offerToQueue(event);
         } catch (Exception e) {
             LOG.error("Unable to schedule late rerun for entity instance : "
                     + entityType + "(" + entityName + ")" + ":" + nominalTime
                     + " And WorkflowId: " + wfId, e);
             GenericAlert.alertLateRerunFailed(entityType, entityName,
-                    nominalTime, wfId, runId, e.getMessage());
+                    nominalTime, wfId, workflowUser, runId, e.getMessage());
         }
     }
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
 
     private long getEventDelay(Entity entity, String nominalTime) throws FalconException {
 
@@ -217,7 +221,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
 
     public static Configuration getConfiguration(String storageEndpoint) throws FalconException {
         Configuration conf = new Configuration();
-        conf.set(CommonConfigurationKeys.FS_DEFAULT_NAME_KEY, storageEndpoint);
+        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageEndpoint);
         return conf;
     }
 }

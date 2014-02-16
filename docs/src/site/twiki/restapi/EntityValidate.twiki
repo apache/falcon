@@ -17,7 +17,6 @@ Result of the validation.
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/validate/cluster
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cluster xmlns="uri:falcon:cluster:0.1" name="primary-cluster" description="Primary Cluster" colo="west-coast">
     <interfaces>
@@ -46,7 +45,6 @@ Remote-User: rgautam
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/validate/feed
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Hourly sample input data -->
 
@@ -88,7 +86,6 @@ Remote-User: rgautam
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/validate/feed
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample output data -->
 
@@ -125,7 +122,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/validate/process
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
 <process xmlns="uri:falcon:process:0.1" name="SampleProcess" >

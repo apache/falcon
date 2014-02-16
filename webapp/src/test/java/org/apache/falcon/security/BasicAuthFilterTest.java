@@ -20,9 +20,11 @@ package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.servlet.Filter;
@@ -30,9 +32,9 @@ import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static org.mockito.Mockito.*;
 
 /**
  * Test for BasicAuthFilter using mock objects.
@@ -56,28 +58,43 @@ public class BasicAuthFilterTest {
         MockitoAnnotations.initMocks(this);
     }
 
+    @BeforeMethod
+    private void initAuthType() {
+        ConcurrentHashMap<String, String> conf = new ConcurrentHashMap<String, String>();
+        conf.put("type", "simple");
+        conf.put("config.prefix.type", "");
+        conf.put("anonymous.allowed", "true");
+        Mockito.when(mockConfig.getInitParameterNames()).thenReturn(conf.keys());
+
+        for (Map.Entry<String, String> entry : conf.entrySet()) {
+            Mockito.when(mockConfig.getInitParameter(entry.getKey())).thenReturn(entry.getValue());
+        }
+
+        Mockito.when(mockRequest.getMethod()).thenReturn("OPTIONS");
+
+        StringBuffer requestUrl = new StringBuffer("http://localhost");
+        Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+    }
+
     @Test
     public void testDoFilter() throws Exception {
         Filter filter = new BasicAuthFilter();
         synchronized (StartupProperties.get()) {
-            StartupProperties.get().setProperty("security.enabled", "false");
             filter.init(mockConfig);
         }
 
         CurrentUser.authenticate("nouser");
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
-        when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
+
+        CurrentUser.authenticate("guest");
+        Mockito.when(mockRequest.getQueryString()).thenReturn("user.name=guest");
         filter.doFilter(mockRequest, mockResponse, mockChain);
         Assert.assertEquals(CurrentUser.getUser(), "guest");
 
-        synchronized (StartupProperties.get()) {
-            StartupProperties.get().remove("security.enabled");
-            filter.init(mockConfig);
-        }
-
         CurrentUser.authenticate("nouser");
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
-        when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
+        CurrentUser.authenticate("testuser");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
         filter.doFilter(mockRequest, mockResponse, mockChain);
         Assert.assertEquals(CurrentUser.getUser(), "testuser");
     }
@@ -87,13 +104,14 @@ public class BasicAuthFilterTest {
         Filter filter = new BasicAuthFilter();
 
         synchronized (StartupProperties.get()) {
-            StartupProperties.get().setProperty("security.enabled", "true");
             filter.init(mockConfig);
         }
 
         CurrentUser.authenticate("nouser");
         Assert.assertEquals(CurrentUser.getUser(), "nouser");
-        when(mockRequest.getHeader("Remote-User")).thenReturn("testuser");
+
+        CurrentUser.authenticate("testuser");
+        Mockito.when(mockRequest.getRemoteUser()).thenReturn("testuser");
         filter.doFilter(mockRequest, mockResponse, mockChain);
         Assert.assertEquals(CurrentUser.getUser(), "testuser");
     }
@@ -103,14 +121,52 @@ public class BasicAuthFilterTest {
         Filter filter = new BasicAuthFilter();
 
         synchronized (StartupProperties.get()) {
-            StartupProperties.get().setProperty("security.enabled", "true");
             filter.init(mockConfig);
         }
 
-        HttpServletResponse errorResponse = mock(HttpServletResponse.class);
-        when(mockRequest.getHeader("Remote-User")).thenReturn(null);
-        filter.doFilter(mockRequest, errorResponse, mockChain);
-        verify(errorResponse).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Remote user header can't be empty");
+        final String userName = System.getProperty("user.name");
+        try {
+            System.setProperty("user.name", "");
+
+            Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+            Mockito.when(mockRequest.getQueryString()).thenReturn("");
+            Mockito.when(mockRequest.getRemoteUser()).thenReturn(null);
+
+            HttpServletResponse errorResponse = Mockito.mock(HttpServletResponse.class);
+            filter.doFilter(mockRequest, errorResponse, mockChain);
+        } finally {
+            System.setProperty("user.name", userName);
+        }
+    }
+
+    @Test
+    public void testDoFilterForClientBackwardsCompatibility() throws Exception {
+        Filter filter = new BasicAuthFilter();
+
+        final String userName = System.getProperty("user.name");
+        final String httpAuthType =
+                StartupProperties.get().getProperty("falcon.http.authentication.type", "simple");
+        try {
+            System.setProperty("user.name", "");
+            StartupProperties.get().setProperty("falcon.http.authentication.type",
+                    "org.apache.falcon.security.RemoteUserInHeaderBasedAuthenticationHandler");
+
+            synchronized (StartupProperties.get()) {
+                filter.init(mockConfig);
+            }
+
+            Mockito.when(mockRequest.getMethod()).thenReturn("POST");
+            Mockito.when(mockRequest.getQueryString()).thenReturn("");
+            Mockito.when(mockRequest.getRemoteUser()).thenReturn(null);
+            Mockito.when(mockRequest.getHeader("Remote-User")).thenReturn("remote-user");
+
+            filter.doFilter(mockRequest, mockResponse, mockChain);
+
+            Assert.assertEquals(CurrentUser.getUser(), "remote-user");
+
+        } finally {
+            System.setProperty("user.name", userName);
+            StartupProperties.get().setProperty("falcon.http.authentication.type", httpAuthType);
+        }
     }
 }

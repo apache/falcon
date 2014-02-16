@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -94,14 +95,13 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         }
 
         LOG.debug("Copying libs from " + src);
-        Configuration conf = ClusterHelper.getConfiguration(cluster);
-        conf.setInt("ipc.client.connect.max.retries", 10);
-        FileSystem fs = null;
+        FileSystem fs;
         try {
-            fs = FileSystem.get(conf);
+            fs = getFileSystem(cluster);
+            fs.getConf().set("dfs.umaskmode", "022");  // drwxr-xr-x
         } catch (Exception e) {
             throw new FalconException("Unable to connect to HDFS: "
-                    + ClusterHelper.getStorageUrl(cluster));
+                    + ClusterHelper.getStorageUrl(cluster), e);
         }
         if (!fs.exists(target)) {
             fs.mkdirs(target);
@@ -135,6 +135,15 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                 LOG.info("Copied " + file.getAbsolutePath() + " to " + targetFile.toString() + " in " + fs.getUri());
             }
         }
+    }
+
+    // the dir is owned by Falcon but world-readable
+    private static FileSystem getFileSystem(Cluster cluster)
+        throws FalconException, IOException {
+        Configuration conf = ClusterHelper.getConfiguration(cluster);
+        conf.setInt("ipc.client.connect.max.retries", 10);
+
+        return HadoopClientFactory.get().createFileSystem(conf);
     }
 
     @Override

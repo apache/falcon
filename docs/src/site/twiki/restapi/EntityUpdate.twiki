@@ -19,7 +19,6 @@ Result of the validation.
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/update/process/SampleProcess?effective=2014-01-01T00:00Z
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
 <process xmlns="uri:falcon:process:0.1" name="SampleProcess" >

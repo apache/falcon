@@ -70,7 +70,8 @@ public class EntityInstanceMessage {
         topicName("topicName"),
         status("status"),
         brokerTTL("broker.ttlInMins"),
-        cluster("cluster");
+        cluster("cluster"),
+        workflowUser("workflowUser");
 
         private String propName;
 

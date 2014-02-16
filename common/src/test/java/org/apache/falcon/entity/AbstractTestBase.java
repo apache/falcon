@@ -25,10 +25,10 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -71,6 +71,8 @@ public class AbstractTestBase {
                 listeners.replace("org.apache.falcon.service.SharedLibraryHostingService", ""));
         store = ConfigurationStore.get();
         store.init();
+
+        CurrentUser.authenticate("falcon");
     }
 
     protected void cleanupStore() throws FalconException {
@@ -135,14 +137,5 @@ public class AbstractTestBase {
         StringWriter stringWriter = new StringWriter();
         marshaller.marshal(entity, stringWriter);
         return stringWriter.toString();
-    }
-
-    private Interface newInterface(Interfacetype type, String endPoint,
-                                   String version) {
-        Interface iface = new Interface();
-        iface.setType(type);
-        iface.setEndpoint(endPoint);
-        iface.setVersion(version);
-        return iface;
     }
 }

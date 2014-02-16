@@ -34,9 +34,7 @@ import javax.jms.*;
  */
 public class FalconTopicSubscriberTest {
 
-    private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
-    // private static final String BROKER_URL =
-    // "tcp://localhost:61616?daemon=true";
+    private static final String BROKER_URL = "vm://localhost";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
     private static final String TOPIC_NAME = "FALCON.ENTITY.TOPIC";
     private static final String SECONDARY_TOPIC_NAME = "FALCON.ENTITY.SEC.TOPIC";
@@ -78,8 +76,7 @@ public class FalconTopicSubscriberTest {
         MapMessage mapMessage = session.createMapMessage();
         message.getKeyValueMap().put(ARG.status, "FAILED");
         for (ARG arg : ARG.values()) {
-            mapMessage.setString(arg.getPropName(), message
-                    .getKeyValueMap().get(arg));
+            mapMessage.setString(arg.getPropName(), message.getKeyValueMap().get(arg));
         }
         producer.send(mapMessage);
     }
@@ -101,6 +98,7 @@ public class FalconTopicSubscriberTest {
         message.getKeyValueMap().put(ARG.workflowId, "workflow-" + i);
         message.getKeyValueMap().put(ARG.topicName, TOPIC_NAME);
         message.getKeyValueMap().put(ARG.status, "SUCCEEDED");
+        message.getKeyValueMap().put(ARG.workflowUser, "falcon");
         return message;
     }
 

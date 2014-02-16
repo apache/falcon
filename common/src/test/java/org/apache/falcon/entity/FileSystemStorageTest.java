@@ -162,18 +162,6 @@ public class FileSystemStorageTest {
     }
 
     @Test
-    public void testExists() throws Exception {
-        final Location location = new Location();
-        location.setPath("/foo/bar");
-        location.setType(LocationType.DATA);
-        List<Location> locations = new ArrayList<Location>();
-        locations.add(location);
-
-        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
-        Assert.assertTrue(storage.exists());
-    }
-
-    @Test
     public void testIsIdentical() throws Exception {
         final String storageUrl = "jail://global:00";
         final Location location1 = new Location();

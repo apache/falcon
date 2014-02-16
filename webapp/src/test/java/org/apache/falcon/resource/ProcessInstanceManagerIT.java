@@ -26,8 +26,9 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesResult.WorkflowStatus;
+import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
-import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -43,14 +44,16 @@ public class ProcessInstanceManagerIT {
 
     protected void schedule(TestContext context) throws Exception {
         context.scheduleProcess();
-        context.waitForProcessWFtoStart();
+        OozieTestUtils.waitForProcessWFtoStart(context);
     }
 
     public void testGetRunningInstances() throws Exception {
         TestContext context = new TestContext();
         schedule(context);
         InstancesResult response = context.service.path("api/instance/running/process/" + context.processName)
-                .header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON).get(InstancesResult.class);
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
@@ -68,7 +71,9 @@ public class ProcessInstanceManagerIT {
         TestContext context = new TestContext();
         schedule(context);
         InstancesResult response = context.service.path("api/instance/status/process/" + context.processName)
-                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -80,7 +85,9 @@ public class ProcessInstanceManagerIT {
         testKillInstances();
         TestContext context = new TestContext();
         InstancesResult response = context.service.path("api/instance/rerun/process/" + context.processName)
-                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
 
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
@@ -95,7 +102,9 @@ public class ProcessInstanceManagerIT {
         TestContext context = new TestContext();
         schedule(context);
         InstancesResult response = context.service.path("api/instance/kill/process/" + context.processName)
-                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -109,7 +118,9 @@ public class ProcessInstanceManagerIT {
         TestContext context = new TestContext();
         schedule(context);
         InstancesResult response = context.service.path("api/instance/suspend/process/" + context.processName)
-                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -124,7 +135,9 @@ public class ProcessInstanceManagerIT {
 
         TestContext context = new TestContext();
         InstancesResult response = context.service.path("api/instance/resume/process/" + context.processName)
-                .queryParam("start", START_INSTANCE).header("Remote-User", "guest").accept(MediaType.APPLICATION_JSON)
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
@@ -137,7 +150,7 @@ public class ProcessInstanceManagerIT {
     private void waitForWorkflow(String instance, WorkflowJob.Status status) throws Exception {
         TestContext context = new TestContext();
         ExternalId extId = new ExternalId(context.processName, Tag.DEFAULT, EntityUtil.parseDateUTC(instance));
-        OozieClient ozClient = OozieClientFactory.get(
+        ProxyOozieClient ozClient = OozieClientFactory.get(
                 (Cluster) ConfigurationStore.get().get(EntityType.CLUSTER, context.clusterName));
         String jobId = ozClient.getJobId(extId.getId());
         WorkflowJob jobInfo = null;
@@ -149,6 +162,8 @@ public class ProcessInstanceManagerIT {
             System.out.println("Waiting for workflow job " + jobId + " status " + status);
             Thread.sleep((i + 1) * 1000);
         }
+
+        Assert.assertNotNull(jobInfo);
         Assert.assertEquals(status, jobInfo.getStatus());
     }
 }

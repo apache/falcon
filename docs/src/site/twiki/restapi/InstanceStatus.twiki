@@ -20,7 +20,6 @@ Status of the specified instance.
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>

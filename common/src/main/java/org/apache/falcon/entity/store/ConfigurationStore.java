@@ -21,14 +21,16 @@ package org.apache.falcon.entity.store;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.log4j.Logger;
 
 import javax.xml.bind.JAXBException;
@@ -84,8 +86,26 @@ public final class ConfigurationStore implements FalconService {
 
         String uri = StartupProperties.get().getProperty("config.store.uri");
         storePath = new Path(uri);
+        fs = initializeFileSystem();
+    }
+
+    /**
+     * Falcon owns this dir on HDFS which no one has permissions to read.
+     *
+     * @return FileSystem handle
+     */
+    private FileSystem initializeFileSystem() {
         try {
-            fs = FileSystem.get(storePath.toUri(), new Configuration());
+            FileSystem fileSystem = HadoopClientFactory.get().createFileSystem(storePath.toUri());
+            if (!fileSystem.exists(storePath)) {
+                LOG.info("Creating configuration store directory: " + storePath);
+                fileSystem.mkdirs(storePath);
+                // set permissions so config store dir is owned by falcon alone
+                FsPermission permission = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+                fileSystem.setPermission(storePath, permission);
+            }
+
+            return fileSystem;
         } catch (Exception e) {
             throw new RuntimeException("Unable to bring up config store", e);
         }
@@ -305,8 +325,7 @@ public final class ConfigurationStore implements FalconService {
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
         fs.mkdirs(archivePath);
         fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
-                new Path(archivePath,
-                        URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
+                new Path(archivePath, URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
         LOG.info("Archived configuration " + type + "/" + name);
     }
 

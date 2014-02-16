@@ -1,7 +1,31 @@
 ---+ RESTful Resources
+
+---++ Resource List
    * <a href="#REST_Call_on_Entity_Resource">REST Call on Entity Resource</a>
    * <a href="#REST_Call_on_Feed_and_Process_Instances">REST Call on Feed/Process Instances</a>
    * <a href="#REST_Call_on_Admin_Resource">REST Call on Admin Resource</a>
+
+---++ Authentication
+
+When security is off (Pseudo/Simple), the authenticated user is the username specified in the user.name query
+parameter. If the user.name parameter is not set, the server may either set the authenticated user to a default web
+user, if there is any, or return an error response.
+
+When security is on (kerberos), authentication is performed by Kerberos SPNEGO.
+
+Below are examples using the curl command tool.
+
+Authentication when security is off (Pseudo/Simple):
+<verbatim>
+curl -i "http://<HOST>:<PORT>/<PATH>?[user.name=<USER>&]<PARAM>=..."
+</verbatim>
+
+Authentication using Kerberos SPNEGO when security is on:
+<verbatim>
+curl -i --negotiate -u : "http://<HOST>:<PORT>/<PATH>?<PARAM>=..."
+</verbatim>
+
+See also: [[../Security.twiki][Security in Falcon]]
 
 ---++ REST Call on Admin Resource
 

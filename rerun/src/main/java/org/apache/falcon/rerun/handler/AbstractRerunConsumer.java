@@ -24,6 +24,7 @@ import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.ExpBackoffPolicy;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.log4j.Logger;
 
 /**
@@ -51,7 +52,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
         Frequency frequency = new Frequency("minutes(1)");
         while (true) {
             try {
-                T message = null;
+                T message;
                 try {
                     message = handler.takeFromQueue();
                     attempt = 1;
@@ -64,6 +65,8 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                     attempt++;
                     continue;
                 }
+
+                CurrentUser.authenticate(message.getWorkflowUser());
                 String jobStatus = handler.getWfEngine().getWorkflowStatus(
                         message.getClusterName(), message.getWfId());
                 handleRerun(message.getClusterName(), jobStatus, message);
@@ -72,8 +75,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                 LOG.error("Error in rerun consumer:", e);
             }
         }
-
     }
 
-    protected abstract void handleRerun(String cluster, String jobStatus, T message);
+    protected abstract void handleRerun(String clusterName, String jobStatus, T message);
 }

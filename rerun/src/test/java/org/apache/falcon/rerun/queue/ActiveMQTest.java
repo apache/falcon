@@ -51,7 +51,7 @@ public class ActiveMQTest {
 
         RerunEvent event = new LaterunEvent("clusterName", "wfId",
                 System.currentTimeMillis(), 60 * 1000, "entityType",
-                "entityName", "instance", 0);
+                "entityName", "instance", 0, "falcon");
 
         try {
             activeMQueue.offer(event);

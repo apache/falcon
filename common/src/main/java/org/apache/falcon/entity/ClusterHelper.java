@@ -18,13 +18,10 @@
 
 package org.apache.falcon.entity;
 
-import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.cluster.*;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
 
 /**
  * Helper to get end points relating to the cluster.
@@ -37,22 +34,21 @@ public final class ClusterHelper {
 
     public static Configuration getConfiguration(Cluster cluster) {
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", getStorageUrl(cluster));
-        conf.set("mapred.job.tracker", getMREndPoint(cluster));
+
+        final String storageUrl = getStorageUrl(cluster);
+        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
+
+        final String executeEndPoint = getMREndPoint(cluster);
+        conf.set(HadoopClientFactory.MR_JOB_TRACKER_KEY, executeEndPoint);
+        conf.set(HadoopClientFactory.YARN_RM_ADDRESS_KEY, executeEndPoint);
+
         if (cluster.getProperties() != null) {
             for (Property prop : cluster.getProperties().getProperties()) {
                 conf.set(prop.getName(), prop.getValue());
             }
         }
-        return conf;
-    }
 
-    public static FileSystem getFileSystem(Cluster cluster) throws FalconException {
-        try {
-            return FileSystem.get(getConfiguration(cluster));
-        } catch (IOException e) {
-            throw new FalconException(e);
-        }
+        return conf;
     }
 
     public static String getOozieUrl(Cluster cluster) {

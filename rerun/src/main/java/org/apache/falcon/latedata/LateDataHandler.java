@@ -25,11 +25,14 @@ import org.apache.falcon.catalog.CatalogServiceFactory;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -125,10 +128,15 @@ public class LateDataHandler extends Configured implements Tool {
         return computedMetrics;
     }
 
-    private void persistMetrics(Map<String, Long> metrics, Path file) throws IOException {
+    private void persistMetrics(Map<String, Long> metrics, Path file) throws IOException, FalconException {
         OutputStream out = null;
         try {
-            out = file.getFileSystem(getConf()).create(file);
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(file.toUri(), getConf());
+            out = fs.create(file);
+
+            // making sure falcon can read this file
+            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+            fs.setPermission(file, permission);
 
             for (Map.Entry<String, Long> entry : metrics.entrySet()) {
                 out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
@@ -191,7 +199,7 @@ public class LateDataHandler extends Configured implements Tool {
      * @throws IOException
      */
     private long getFileSystemUsageMetric(String pathGroup, Configuration conf)
-        throws IOException {
+        throws IOException, FalconException {
         long usage = 0;
         for (String pathElement : pathGroup.split(",")) {
             Path inPath = new Path(pathElement);
@@ -201,8 +209,8 @@ public class LateDataHandler extends Configured implements Tool {
         return usage;
     }
 
-    private long usage(Path inPath, Configuration conf) throws IOException {
-        FileSystem fs = inPath.getFileSystem(conf);
+    private long usage(Path inPath, Configuration conf) throws IOException, FalconException {
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(inPath.toUri(), conf);
         FileStatus[] fileStatuses = fs.globStatus(inPath);
         if (fileStatuses == null || fileStatuses.length == 0) {
             return 0;
@@ -251,8 +259,8 @@ public class LateDataHandler extends Configured implements Tool {
         throws Exception {
 
         StringBuilder buffer = new StringBuilder();
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-                file.getFileSystem(conf).open(file)));
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(file.toUri(), conf);
+        BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(file)));
         String line;
         try {
             Map<String, Long> recordedMetrics = new LinkedHashMap<String, Long>();

@@ -17,7 +17,6 @@ Result of the submit and schedule command.
 ---+++ Rest Call
 <verbatim>
 POST http://localhost:15000/api/entities/submitAndSchedule/process
-Remote-User: rgautam
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Daily sample process. Runs at 6th hour every day. Input - last day's hourly data. Generates output for yesterday -->
 <process xmlns="uri:falcon:process:0.1" name="SampleProcess" >

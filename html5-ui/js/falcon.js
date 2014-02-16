@@ -17,21 +17,26 @@
 (function(exports) {
   "use strict";
 
-  var USER_ID = 'admin';
+  var USER_ID = 'dashboard';
 
   function onError (msg) {
     alert(msg);
   }
 
   function ajax_impl(options) {
-    $.extend(options, {'headers': { 'Remote-User': USER_ID }});
+    // $.extend(options, add_user(options.url));
     return $.ajax(options);
+  }
+
+  function add_user(url) {
+    var paramSeparator = (url.indexOf('?') != -1) ? '&' : '?';
+    return url + paramSeparator + 'user.name=' + USER_ID;
   }
 
   function getJson_impl(url, success) {
     return ajax_impl({
       'dataType': 'json',
-      'url': url,
+      'url': add_user(url),
       'success': success
     });
   }
@@ -39,7 +44,7 @@
   function getText_impl(url, success) {
     return ajax_impl({
       'dataType': 'text',
-      'url': url,
+      'url': add_user(url),
       'success': success
     });
   }

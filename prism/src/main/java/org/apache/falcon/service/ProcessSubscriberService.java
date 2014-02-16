@@ -62,6 +62,8 @@ public class ProcessSubscriberService implements FalconService {
 
     @Override
     public void destroy() throws FalconException {
-        subscriber.closeSubscriber();
+        if (subscriber != null) { // in case there was an exception while starting subscriber
+            subscriber.closeSubscriber();
+        }
     }
 }

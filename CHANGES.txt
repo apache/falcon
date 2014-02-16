@@ -3,6 +3,7 @@ Apache Falcon (incubating) Change log
 Trunk (Unreleased)
 
   INCOMPATIBLE CHANGES
+    FALCON-11 Add support for security in Falcon (Venkatesh Seetharam)
 
   NEW FEATURES
     FALCON-281 Design Action Interface. (Srikanth Sundarrajan)

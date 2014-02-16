@@ -45,7 +45,7 @@ public class RerunEventFactory<T extends RerunEvent> {
         return (T) new LaterunEvent(map.get("clusterName"), map.get("wfId"),
                 Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map.get("delayInMilliSec")),
                 map.get("entityType"), map.get("entityName"), map.get("instance"),
-                Integer.parseInt(map.get("runId")));
+                Integer.parseInt(map.get("runId")), map.get("workflowUser"));
     }
 
     @SuppressWarnings("unchecked")
@@ -55,7 +55,7 @@ public class RerunEventFactory<T extends RerunEvent> {
                 Long.parseLong(map.get("msgInsertTime")), Long.parseLong(map.get("delayInMilliSec")),
                 map.get("entityType"), map.get("entityName"), map.get("instance"),
                 Integer.parseInt(map.get("runId")), Integer.parseInt(map.get("attempts")),
-                Integer.parseInt(map.get("failRetryCount")));
+                Integer.parseInt(map.get("failRetryCount")), map.get("workflowUser"));
     }
 
     private Map<String, String> getMap(String message) {

@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.COORDINATOR;
@@ -37,6 +38,7 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.ObjectFactory;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.FalconPathFilter;
 import org.apache.falcon.service.SharedLibraryHostingService;
 import org.apache.falcon.util.RuntimeProperties;
@@ -45,8 +47,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -141,7 +145,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
             String coordXmlName = marshal(cluster, coordinatorapp, coordPath,
                     EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
-            createTempDir(cluster, coordPath);
+            createLogsDir(cluster, coordPath);
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
             bundleCoord.setAppPath(getStoragePath(coordPath) + "/" + coordXmlName);
@@ -192,9 +196,9 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, EntityType type, String lifecycle)
-        throws IOException {
+        throws IOException, FalconException {
         String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
-        FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
         addExtensionJars(fs, new Path(libext), wf);
         addExtensionJars(fs, new Path(libext, type.name()), wf);
         if (StringUtils.isNotEmpty(lifecycle)) {
@@ -208,7 +212,6 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
             SharedLibraryHostingService.pushLibsToHDFS(StartupProperties.get().getProperty("system.lib.location"),
                     libPath, cluster, FALCON_JAR_FILTER);
         } catch (IOException e) {
-            LOG.error("Failed to copy shared libs on cluster " + cluster.getName(), e);
             throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(), e);
         }
     }
@@ -286,11 +289,11 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
     protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
         throws FalconException {
-
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            FileSystem fs = outPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(
+                    outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
             try {
                 marshaller.marshal(jaxbElement, out);
@@ -310,12 +313,16 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
         }
     }
 
-    private void createTempDir(Cluster cluster, Path coordPath) throws FalconException {
+    private void createLogsDir(Cluster cluster, Path coordPath) throws FalconException {
         try {
-            FileSystem fs = coordPath.getFileSystem(ClusterHelper.getConfiguration(cluster));
-            Path tempDir = new Path(coordPath, "../../logs");
-            fs.mkdirs(tempDir);
-            fs.setPermission(tempDir, new FsPermission((short) 511));
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(
+                    coordPath.toUri(), ClusterHelper.getConfiguration(cluster));
+            Path logsDir = new Path(coordPath, "../../logs");
+            fs.mkdirs(logsDir);
+
+            // logs are copied with in oozie as the user in Post Processing and hence 777 permissions
+            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+            fs.setPermission(logsDir, permission);
         } catch (Exception e) {
             throw new FalconException("Unable to create temp dir in " + coordPath, e);
         }
@@ -334,8 +341,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
 
         marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
                 BUNDLE_JAXB_CONTEXT,
-                new Path(
-                        outPath, "bundle.xml"));
+                new Path(outPath, "bundle.xml"));
     }
 
     protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
@@ -394,10 +400,16 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     }
 
     protected void createHiveConf(FileSystem fs, Path confPath, String metastoreUrl,
-                                  String prefix) throws IOException {
+                                  Cluster cluster, String prefix) throws IOException {
         Configuration hiveConf = new Configuration(false);
         hiveConf.set(HiveConf.ConfVars.METASTOREURIS.varname, metastoreUrl);
         hiveConf.set("hive.metastore.local", "false");
+
+        if (UserGroupInformation.isSecurityEnabled()) {
+            hiveConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
+                    ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL));
+            hiveConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
+        }
 
         OutputStream out = null;
         try {

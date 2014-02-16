@@ -19,7 +19,6 @@ List of the entities.
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/entities/list/feed
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>
@@ -40,7 +39,6 @@ Remote-User: rgautam
 ---+++ Rest Call
 <verbatim>
 GET http://localhost:15000/api/entities/list/feed?fields=status
-Remote-User: rgautam
 </verbatim>
 ---+++ Result
 <verbatim>

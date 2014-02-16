@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,7 +113,8 @@ public final class UpdateHelper {
             }
 
             Path checksum = new Path(bundlePath, EntityUtil.PROCESS_CHECKSUM_FILE);
-            FileSystem fs = FileSystem.get(ClusterHelper.getConfiguration(clusterEntity));
+            Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
             if (!fs.exists(checksum)) {
                 //Update if there is no checksum file(for migration)
                 return true;
@@ -126,11 +128,7 @@ public final class UpdateHelper {
             }
 
             //Update if the user wf/lib is updated i.e., if checksums are different
-            if (!wfPaths.equals(checksums)) {
-                return true;
-            }
-
-            return false;
+            return !wfPaths.equals(checksums);
         } catch (IOException e) {
             throw new FalconException(e);
         }
