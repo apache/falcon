@@ -20,6 +20,7 @@ package org.apache.falcon.service;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.rerun.event.RerunEvent.RerunType;
@@ -110,13 +111,19 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                         SchemaHelper.formatDateUTC(startTime), "", "", duration);
 
             } else if (status.equalsIgnoreCase("SUCCEEDED")) {
-                latedataHandler.handleRerun(cluster, entityType, entityName,
+                Entity entity = EntityUtil.getEntity(entityType, entityName);
+                //late data handling not applicable for feed retention action
+                if (!operation.equalsIgnoreCase("DELETE") && EntityUtil.getLateProcess(entity) != null) {
+                    latedataHandler.handleRerun(cluster, entityType, entityName,
                         nominalTime, runId, workflowId, workflowUser,
                         System.currentTimeMillis());
-
+                } else {
+                    LOG.info("Late date handling not applicable for entityType: " + entityType + ", entityName: "
+                        + entityName + " operation: " + operation);
+                }
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
-                        entityName, nominalTime, workflowId, workflowUser, runId, operation,
-                        SchemaHelper.formatDateUTC(startTime), duration);
+                    entityName, nominalTime, workflowId, workflowUser, runId, operation,
+                    SchemaHelper.formatDateUTC(startTime), duration);
 
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
             }

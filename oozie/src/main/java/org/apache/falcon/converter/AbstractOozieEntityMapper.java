@@ -85,7 +85,7 @@ public abstract class AbstractOozieEntityMapper<T extends Entity> {
     protected static final JAXBContext BUNDLE_JAXB_CONTEXT;
     protected static final JAXBContext HIVE_ACTION_JAXB_CONTEXT;
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(Arrays.asList(new String[] { "recordsize",
-        "succeeded-post-processing", "failed-post-processing", "eviction", "jms-messaging", }));
+        "succeeded-post-processing", "failed-post-processing", }));
 
     protected static final FalconPathFilter FALCON_JAR_FILTER = new FalconPathFilter() {
         @Override

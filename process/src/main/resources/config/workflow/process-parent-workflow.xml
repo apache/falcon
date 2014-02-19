@@ -60,7 +60,7 @@
             <capture-output/>
         </java>
         <ok to="user-workflow"/>
-        <error to="fail"/>
+        <error to="failed-post-processing"/>
     </action>
 
     <decision name='user-workflow'>

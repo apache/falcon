@@ -208,6 +208,12 @@ public class EntityInstanceMessage {
         //else case of feed retention
         Path logFile = new Path(cmd.getOptionValue(ARG.logFile.getArgName()));
         FileSystem fs = FileSystem.get(logFile.toUri(), new Configuration());
+
+        if (!fs.exists(logFile)) {
+            //Evictor Failed without deleting a single path
+            return new String[0];
+        }
+
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream instance = fs.open(logFile);
         IOUtils.copyBytes(instance, writer, 4096, true);

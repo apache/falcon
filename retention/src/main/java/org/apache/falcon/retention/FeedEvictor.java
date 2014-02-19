@@ -462,8 +462,7 @@ public class FeedEvictor extends Configured implements Tool {
         if (feedBasePath.equals(parent)) {
             LOG.info("Not deleting feed base path:" + parent);
         } else {
-            FileStatus[] files = fs.listStatus(parent);
-            if (files != null && files.length == 0) {
+            if (fs.getContentSummary(parent).getFileCount() == 0) {
                 LOG.info("Parent path: " + parent + " is empty, deleting path");
                 if (fs.delete(parent, true)) {
                     LOG.info("Deleted empty dir: " + parent);

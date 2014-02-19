@@ -60,7 +60,7 @@
             <capture-output/>
         </java>
         <ok to="replication-decision"/>
-        <error to="fail"/>
+        <error to="failed-post-processing"/>
     </action>
     <decision name="replication-decision">
         <switch>
@@ -96,7 +96,7 @@
             <param>falconSourceStagingDir=${distcpSourcePaths}</param>
         </hive>
         <ok to="replication"/>
-        <error to="fail"/>
+        <error to="failed-post-processing"/>
     </action>
     <!-- Replication action -->
     <action name="replication">

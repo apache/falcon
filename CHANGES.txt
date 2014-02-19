@@ -45,6 +45,7 @@ Trunk (Unreleased)
     FALCON-38 Falcon's parent workflow actions (pre-processing & prost-processing) 
     should have multiple retries. (Shaik Idris)
 
+    FALCON-242 Post processing is not called in Retention workflows (Shaik Idris)
 
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)

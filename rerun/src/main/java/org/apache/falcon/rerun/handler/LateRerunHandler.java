@@ -55,19 +55,6 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                             String runId, String wfId, String workflowUser, long msgReceivedTime) {
         try {
             Entity entity = EntityUtil.getEntity(entityType, entityName);
-            try {
-                if (EntityUtil.getLateProcess(entity) == null
-                        || EntityUtil.getLateProcess(entity).getLateInputs() == null
-                        || EntityUtil.getLateProcess(entity).getLateInputs()
-                        .size() == 0) {
-                    LOG.info("Late rerun not configured for entity: " + entityName);
-                    return;
-                }
-            } catch (FalconException e) {
-                LOG.error("Unable to get Late Process for entity:" + entityName);
-                return;
-            }
-
             int intRunId = Integer.parseInt(runId);
             Date msgInsertTime = EntityUtil.parseDateUTC(nominalTime);
             Long wait = getEventDelay(entity, nominalTime);

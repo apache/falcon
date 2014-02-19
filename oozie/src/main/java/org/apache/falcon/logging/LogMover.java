@@ -43,7 +43,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Utility called in the post process of oozie workflow to move oozie action executor log.
@@ -51,6 +54,8 @@ import java.util.List;
 public class LogMover extends Configured implements Tool {
 
     private static final Logger LOG = Logger.getLogger(LogMover.class);
+    public static final Set<String> FALCON_ACTIONS =
+        new HashSet<String>(Arrays.asList(new String[]{"eviction", "replication", }));
 
     /**
      * Args to the command.
@@ -89,12 +94,12 @@ public class LogMover extends Configured implements Tool {
 
             if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())
                     || notUserWorkflowEngineIsOozie(args.userWorkflowEngine)) {
-                // if replication wf or PIG Process
+                // if replication wf, retention wf or PIG Process
                 copyOozieLog(client, fs, path, jobInfo.getId());
 
                 List<WorkflowAction> workflowActions = jobInfo.getActions();
                 for (int i=0; i < workflowActions.size(); i++) {
-                    if (workflowActions.get(i).getName().equals("replication")) {
+                    if (FALCON_ACTIONS.contains(workflowActions.get(i).getName())) {
                         copyTTlogs(fs, path, jobInfo.getActions().get(i));
                         break;
                     }
