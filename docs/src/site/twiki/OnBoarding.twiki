@@ -7,7 +7,7 @@
    * Create cluster definition for the cluster, specifying name node, job tracker, workflow engine endpoint, messaging endpoint. Refer to [[EntitySpecification][cluster definition]] for details.
    * Create Feed definitions for each of the input and output specifying frequency, data path, ownership. Refer to [[EntitySpecification][feed definition]] for details.
    * Create Process definition for your job. Process defines configuration for the workflow job. Important attributes are frequency, inputs/outputs and workflow path. Refer to [[EntitySpecification][process definition]] for process details.
-   * Define workflow for your job using the workflow engine(only oozie is supported as of now). Refer [[http://incubator.apache.org/oozie/docs/3.1.3/docs/WorkflowFunctionalSpec.html][Oozie Workflow Specification]]. The libraries required for the workflow should be available in lib folder in workflow path.
+   * Define workflow for your job using the workflow engine(only oozie is supported as of now). Refer [[http://oozie.apache.org/docs/3.1.3-incubating/WorkflowFunctionalSpec.html][Oozie Workflow Specification]]. The libraries required for the workflow should be available in lib folder in workflow path.
    * Set-up workflow definition, libraries and referenced scripts on hadoop. 
    * Submit cluster definition
    * Submit and schedule feed and process definitions
@@ -114,7 +114,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </verbatim>
 
 ---++++ Process
-Sample process which runs daily at 6th hour on corp cluster. It takes one input - SampleInput for the previous day(24 instances). It generates one output - SampleOutput for previous day. The workflow is defined at /projects/bootcamp/workflow/workflow.xml. Any libraries available for the workflow should be at /projects/bootcamp/workflow/lib. The process also defines properties queueName, ssh.host, and fileTimestamp which are passed to the workflow. In addition, Falcon exposes the following properties to the workflow: nameNode, jobTracker(hadoop properties), input and output(Input/Output properties).
+Sample process which runs daily at 6th hour on corp cluster. It takes one input - !SampleInput for the previous day(24 instances). It generates one output - !SampleOutput for previous day. The workflow is defined at /projects/bootcamp/workflow/workflow.xml. Any libraries available for the workflow should be at /projects/bootcamp/workflow/lib. The process also defines properties queueName, ssh.host, and fileTimestamp which are passed to the workflow. In addition, Falcon exposes the following properties to the workflow: nameNode, jobTracker(hadoop properties), input and output(Input/Output properties).
 
 <verbatim>
 <?xml version="1.0" encoding="UTF-8"?>

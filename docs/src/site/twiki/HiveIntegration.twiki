@@ -72,7 +72,7 @@ HCatalog server. If this is absent, no HCatalog publication will be done from Fa
    * Falcon will use HCatalog (Hive) API to export the data for a given table and the partition,
 which will result in a data collection that includes metadata on the data's storage format, the schema,
 how the data is sorted, what table the data came from, and values of any partition keys from that table.
-   * Falcon will use DistCp tool to copy the exported data collection into the secondary cluster into a staging
+   * Falcon will use discp tool to copy the exported data collection into the secondary cluster into a staging
 directory used by Falcon.
    * Falcon will then import the data into HCatalog (Hive) using the HCatalog (Hive) API. If the specified table does
 not yet exist, Falcon will create it, using the information in the imported metadata to set defaults for the

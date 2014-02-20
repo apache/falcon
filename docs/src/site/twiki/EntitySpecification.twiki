@@ -35,7 +35,7 @@ using the same write interface.
 <interface type="execute" endpoint="localhost:8021" version="0.20.2" />
 </verbatim>
 An execute interface specifies the interface for job tracker, it's endpoint is the value of mapred.job.tracker. 
-Falcon uses this interface to submit the processes as jobs on JobTracker defined here.
+Falcon uses this interface to submit the processes as jobs on !JobTracker defined here.
 
 <verbatim>
 <interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.1" />
@@ -176,7 +176,7 @@ Examples:
 </verbatim>
 A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be equal to or more than the cluster partitions.
 
-*Note:* This will only apply for FileSystem storage but not Table storage as partitions are defined and maintained in
+*Note:* This will only apply for !FileSystem storage but not Table storage as partitions are defined and maintained in
 Hive (Hcatalog) registry.
 
 ---+++ Groups
@@ -215,7 +215,7 @@ A late-arrival specifies the cut-off period till which the feed is expected to a
 The cut-off period is specified by expression frequency(times), ex: if the feed can arrive late
 upto 8 hours then late-arrival's cut-off="hours(8)"
 
-*Note:* This will only apply for FileSystem storage but not Table storage until a future time.
+*Note:* This will only apply for !FileSystem storage but not Table storage until a future time.
 
 ---++++ Custom Properties
 
@@ -471,7 +471,7 @@ Example:
 </process>
 </verbatim>
 
-*Note:* This is only supported for FileSystem storage but not Table storage at this point.
+*Note:* This is only supported for !FileSystem storage but not Table storage at this point.
 
 
 ---++++ Outputs
@@ -594,8 +594,8 @@ There are 2 engines supported today.
 ---+++++ Oozie
 
 As part of oozie workflow engine support, users can embed a oozie workflow.
-Refer to oozie [[http://incubator.apache.org/oozie/overview.html][workflow overview]] and
-[[http://incubator.apache.org/oozie/docs/3.1.3/docs/WorkflowFunctionalSpec.html][workflow specification]] for details.
+Refer to oozie [[http://oozie.apache.org/docs/3.1.3-incubating/DG_Overview.html][workflow overview]] and
+[[http://oozie.apache.org/docs/3.1.3-incubating/WorkflowFunctionalSpec.html][workflow specification]] for details.
 
 Syntax:
 <verbatim>
@@ -720,4 +720,4 @@ Example:
 </verbatim>
 This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Falcon should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml
 
-*Note:* This is only supported for FileSystem storage but not Table storage at this point.
+*Note:* This is only supported for !FileSystem storage but not Table storage at this point.

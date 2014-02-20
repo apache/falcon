@@ -351,7 +351,7 @@ for a partition when the partition is complete at the source.
    * Falcon will use HCatalog (Hive) API to export the data for a given table and the partition,
 which will result in a data collection that includes metadata on the data's storage format, the schema,
 how the data is sorted, what table the data came from, and values of any partition keys from that table.
-   * Falcon will use DistCp tool to copy the exported data collection into the secondary cluster into a staging
+   * Falcon will use discp tool to copy the exported data collection into the secondary cluster into a staging
 directory used by Falcon.
    * Falcon will then import the data into HCatalog (Hive) using the HCatalog (Hive) API. If the specified table does
 not yet exist, Falcon will create it, using the information in the imported metadata to set defaults for the table
@@ -526,7 +526,7 @@ instance. From the perspective of late handling, there are two main configuratio
 and late-inputs section in feed and process entity definition that are central. These configurations govern
 how and when the late processing happens. In the current implementation (oozie based) the late handling is very
 simple and basic. The falcon system looks at all dependent input feeds for a process and computes the max late
-cut-off period. Then it uses a scheduled messaging framework, like the one available in Apache ActiveMQ or Java's DelayQueue to schedule a message with a cut-off period, then after a cut-off period the message is dequeued and Falcon checks for changes in the feed data which is recorded in HDFS in latedata file by falcons "record-size" action, if it detects any changes then the workflow will be rerun with the new set of feed data.
+cut-off period. Then it uses a scheduled messaging framework, like the one available in Apache ActiveMQ or Java's !DelayQueue to schedule a message with a cut-off period, then after a cut-off period the message is dequeued and Falcon checks for changes in the feed data which is recorded in HDFS in latedata file by falcons "record-size" action, if it detects any changes then the workflow will be rerun with the new set of feed data.
 
 *Example:*
 The late rerun policy can be configured in the process definition.
@@ -607,12 +607,12 @@ Users may register consumers on the required topic to check the availability or 
  
 For a given process that is scheduled, the name of the topic is same as the process name.
 Falcon sends a Map message for every feed produced by the instance of a process to the JMS topic.
-The JMS MapMessage sent to a topic has the following properties:
+The JMS !MapMessage sent to a topic has the following properties:
 entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
 For a given feed that is scheduled, the name of the topic is same as the feed name.
 Falcon sends a map message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
-The JMS MapMessage sent to a topic has the following properties:
+The JMS !MapMessage sent to a topic has the following properties:
 entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
 
 The JMS messages are automatically purged after a certain period (default 3 days) by the Falcon JMS house-keeping service.TTL (Time-to-live) for JMS message
