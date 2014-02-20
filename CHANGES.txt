@@ -51,6 +51,8 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-278 Changes in feed availability info doesn't update process. (Shwetha GS)
+
     FALCON-239 Build failed on build-tools due to a missing SNAPSHOT. (Srikanth 
     Sundarrajan)
 

@@ -161,7 +161,7 @@ public class UpdateHelperTest extends AbstractTestBase {
     }
 
     @Test
-    public void testShouldUpdate2() throws Exception {
+    public void testShouldUpdateProcess() throws Exception {
         Feed oldFeed = parser.parseAndValidate(this.getClass()
                 .getResourceAsStream(FEED_XML));
         String cluster = "testCluster";
@@ -191,60 +191,58 @@ public class UpdateHelperTest extends AbstractTestBase {
     }
 
     @Test
-    public void testShouldUpdate() throws Exception {
-        Feed oldFeed = parser.parseAndValidate(this.getClass()
-                .getResourceAsStream(FEED_XML));
+    public void testShouldUpdateFeed() throws Exception {
+        Feed oldFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
 
         Feed newFeed = (Feed) oldFeed.copy();
-        Process process = processParser.parseAndValidate(this.getClass().
-                getResourceAsStream(PROCESS_XML));
+        Process process = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
         prepare(process);
-        Process newProcess = (Process) process.copy();
+        String cluster = process.getClusters().getClusters().get(0).getName();
 
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(1)"));
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         newFeed.getLateArrival().setCutOff(oldFeed.getLateArrival().getCutOff());
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        getLocation(newFeed, LocationType.DATA, cluster).setPath("/test");
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
-        getLocation(newFeed, LocationType.DATA).setPath("/test");
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
-
-        getLocation(newFeed, LocationType.DATA).setPath(
-                getLocation(oldFeed, LocationType.DATA).getPath());
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
-
+        getLocation(newFeed, LocationType.DATA, cluster).setPath(
+                getLocation(oldFeed, LocationType.DATA, cluster).getPath());
         newFeed.setFrequency(Frequency.fromString("months(1)"));
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         newFeed.setFrequency(oldFeed.getFrequency());
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
-
         Partition partition = new Partition();
         partition.setName("1");
         newFeed.getPartitions().getPartitions().add(partition);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         Property property = new Property();
         property.setName("1");
         property.setValue("1");
         newFeed.setProperties(new Properties());
         newFeed.getProperties().getProperties().add(property);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         newFeed.getProperties().getProperties().remove(0);
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().setStart(
                 SchemaHelper.parseDateUTC("2012-11-01T00:00Z"));
-        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().
                 setStart(FeedHelper.getCluster(oldFeed,
                         process.getClusters().getClusters().get(0).getName()).getValidity().getStart());
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process));
+
+        //Change location to table should trigger process update
+        newFeed.setLocations(null);
+        CatalogTable table = new CatalogTable();
+        table.setUri("catalog:default:clicks-blah#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}");
+        newFeed.setTable(table);
+        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
     }
 
     @Test
@@ -283,7 +281,11 @@ public class UpdateHelperTest extends AbstractTestBase {
         Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
     }
 
-    private static Location getLocation(Feed feed, LocationType type) {
+    private static Location getLocation(Feed feed, LocationType type, String cluster) {
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster);
+        if (feedCluster.getLocations() != null) {
+            return getLocation(feedCluster.getLocations(), type);
+        }
         return getLocation(feed.getLocations(), type);
     }
 

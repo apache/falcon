@@ -18,20 +18,17 @@
 
 package org.apache.falcon.update;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.feed.Partition;
-import org.apache.falcon.entity.v0.feed.Partitions;
-import org.apache.falcon.entity.v0.process.Cluster;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -44,7 +41,8 @@ import org.apache.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Helper methods to facilitate entity updates.
@@ -176,83 +174,43 @@ public final class UpdateHelper {
         }
     }
 
-    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, Entity affectedEntity)
+    public static boolean shouldUpdate(Entity oldEntity, Entity newEntity, Entity affectedEntity, String cluster)
         throws FalconException {
         if (oldEntity.getEntityType() == EntityType.FEED && affectedEntity.getEntityType() == EntityType.PROCESS) {
-            return shouldUpdate((Feed) oldEntity, (Feed) newEntity, (Process) affectedEntity);
+
+            Feed oldFeed = (Feed) oldEntity;
+            Feed newFeed = (Feed) newEntity;
+            Process affectedProcess = (Process) affectedEntity;
+
+            //check if affectedProcess is defined for this cluster
+            if (ProcessHelper.getCluster(affectedProcess, cluster) == null) {
+                LOG.debug("Process " + affectedProcess.getName() + " is not defined for cluster " + cluster);
+                return false;
+            }
+
+            if (!oldFeed.getFrequency().equals(newFeed.getFrequency())) {
+                LOG.debug(oldFeed.toShortString() + ": Frequency has changed. Updating...");
+                return true;
+            }
+
+            if (!StringUtils.equals(oldFeed.getAvailabilityFlag(), newFeed.getAvailabilityFlag())) {
+                LOG.debug(oldFeed.toShortString() + ": Availability flag has changed. Updating...");
+                return true;
+            }
+
+            Storage oldFeedStorage = FeedHelper.createStorage(cluster, oldFeed);
+            Storage newFeedStorage = FeedHelper.createStorage(cluster, newFeed);
+
+            if (!oldFeedStorage.isIdentical(newFeedStorage)) {
+                LOG.debug(oldFeed.toShortString() + ": Storage has changed. Updating...");
+                return true;
+            }
+            return false;
+
         } else {
             LOG.debug(newEntity.toShortString());
             LOG.debug(affectedEntity.toShortString());
             throw new FalconException("Don't know what to do. Unexpected scenario");
         }
-    }
-
-    public static boolean shouldUpdate(Feed oldFeed, Feed newFeed, Process affectedProcess)
-        throws FalconException {
-        Storage oldFeedStorage = FeedHelper.createStorage(oldFeed);
-        Storage newFeedStorage = FeedHelper.createStorage(newFeed);
-
-        if (!oldFeedStorage.isIdentical(newFeedStorage)) {
-            return true;
-        }
-        LOG.debug(oldFeed.toShortString() + ": Storage identical. Ignoring...");
-
-        if (!oldFeed.getFrequency().equals(newFeed.getFrequency())) {
-            return true;
-        }
-        LOG.debug(oldFeed.toShortString() + ": Frequency identical. Ignoring...");
-
-        // it is not possible to have oldFeed partitions as non empty and
-        // new being empty. validator should have gated this.
-        // Also if new partitions are added and old is empty, then there is
-        // nothing
-        // to update in process
-        boolean partitionApplicable = false;
-        Inputs affectedInputs = affectedProcess.getInputs();
-        if (affectedInputs != null && affectedInputs.getInputs() != null) {
-            for (Input input : affectedInputs.getInputs()) {
-                if (input.getFeed().equals(oldFeed.getName())) {
-                    if (input.getPartition() != null && !input.getPartition().isEmpty()) {
-                        partitionApplicable = true;
-                    }
-                }
-            }
-            if (partitionApplicable) {
-                LOG.debug("Partitions are applicable. Checking ...");
-                if (newFeed.getPartitions() != null && oldFeed.getPartitions() != null) {
-                    List<String> newParts = getPartitions(newFeed.getPartitions());
-                    List<String> oldParts = getPartitions(oldFeed.getPartitions());
-                    if (newParts.size() != oldParts.size()) {
-                        return true;
-                    }
-                    if (!newParts.containsAll(oldParts)) {
-                        return true;
-                    }
-                }
-                LOG.debug(oldFeed.toShortString() + ": Partitions identical. Ignoring...");
-            }
-        }
-
-        for (Cluster cluster : affectedProcess.getClusters().getClusters()) {
-            oldFeedStorage = FeedHelper.createStorage(cluster.getName(), oldFeed);
-            newFeedStorage = FeedHelper.createStorage(cluster.getName(), newFeed);
-
-            if (!FeedHelper.getCluster(oldFeed, cluster.getName()).getValidity().getStart()
-                    .equals(FeedHelper.getCluster(newFeed, cluster.getName()).getValidity().getStart())
-                    || !oldFeedStorage.isIdentical(newFeedStorage)) {
-                return true;
-            }
-            LOG.debug(oldFeed.toShortString() + ": Feed on cluster" + cluster.getName() + " identical. Ignoring...");
-        }
-
-        return false;
-    }
-
-    private static List<String> getPartitions(Partitions partitions) {
-        List<String> parts = new ArrayList<String>();
-        for (Partition partition : partitions.getPartitions()) {
-            parts.add(partition.getName());
-        }
-        return parts;
     }
 }

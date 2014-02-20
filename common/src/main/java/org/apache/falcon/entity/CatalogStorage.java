@@ -325,6 +325,10 @@ public class CatalogStorage implements Storage {
 
     @Override
     public boolean isIdentical(Storage toCompareAgainst) throws FalconException {
+        if (!(toCompareAgainst instanceof CatalogStorage)) {
+            return false;
+        }
+
         CatalogStorage catalogStorage = (CatalogStorage) toCompareAgainst;
 
         return !(getCatalogUrl() != null && !getCatalogUrl().equals(catalogStorage.getCatalogUrl()))

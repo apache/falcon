@@ -921,7 +921,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             }
 
             LOG.info("Dependent entities need to be updated " + affectedEntity.toShortString());
-            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, affectedEntity)) {
+            if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, affectedEntity, cluster)) {
                 continue;
             }
 

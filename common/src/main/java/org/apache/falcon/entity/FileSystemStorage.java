@@ -171,6 +171,10 @@ public class FileSystemStorage implements Storage {
 
     @Override
     public boolean isIdentical(Storage toCompareAgainst) throws FalconException {
+        if (!(toCompareAgainst instanceof FileSystemStorage)) {
+            return false;
+        }
+
         FileSystemStorage fsStorage = (FileSystemStorage) toCompareAgainst;
         final List<Location> fsStorageLocations = fsStorage.getLocations();
 
