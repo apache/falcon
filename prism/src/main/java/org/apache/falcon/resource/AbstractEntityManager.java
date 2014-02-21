@@ -241,7 +241,8 @@ public abstract class AbstractEntityManager {
                 oldClusters.removeAll(newClusters); //deleted clusters
 
                 for (String cluster : newClusters) {
-                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, effectiveTime);
+                    Date myEffectiveTime = validateEffectiveTime(newEntity, cluster, effectiveTime);
+                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime);
                     if (effectiveEndTime != null) {
                         effectiveTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
                     }
@@ -261,6 +262,15 @@ public abstract class AbstractEntityManager {
         } finally {
             ConfigurationStore.get().cleanupUpdateInit();
         }
+    }
+
+    private Date validateEffectiveTime(Entity entity, String cluster, Date effectiveTime) {
+        Date start = EntityUtil.getStartTime(entity, cluster);
+        Date end = EntityUtil.getEndTime(entity, cluster);
+        if (effectiveTime == null || effectiveTime.before(start) || effectiveTime.after(end)) {
+            return null;
+        }
+        return effectiveTime;
     }
 
     private void validateUpdate(Entity oldEntity, Entity newEntity) throws FalconException {
