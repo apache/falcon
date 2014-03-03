@@ -21,6 +21,7 @@ package org.apache.falcon;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -45,6 +46,13 @@ public class FalconWebException extends WebApplicationException {
         return newInstanceException(e.getMessage() + "\n" + getAddnInfo(e), status);
     }
 
+    public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
+        LOG.error("Failure reason", e);
+        String message = e.getMessage() + "\n" + getAddnInfo(e);
+        LOG.error("Action failed: " + status + "\nError:" + message);
+        APIResult result = new InstancesSummaryResult(APIResult.Status.FAILED, message);
+        return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
+    }
 
     public static FalconWebException newException(APIResult result,
                                                   Response.Status status) {

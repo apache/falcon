@@ -455,17 +455,6 @@ public class FalconClient {
         stream = new ByteArrayInputStream(buffer.toString().getBytes());
         return (buffer.length() == 0) ? null : stream;
     }
-    // private ServletInputStream getServletInputStream(final InputStream
-    // stream)
-    // throws IOException {
-    // return new ServletInputStream() {
-    //
-    // @Override
-    // public int read() throws IOException {
-    // return stream.read();
-    // }
-    // };
-    // }
 
     private String sendEntityRequest(Entities entities, String entityType,
                                      String entityName, String colo) throws FalconCLIException {

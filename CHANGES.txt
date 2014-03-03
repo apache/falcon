@@ -57,6 +57,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-319 Summary instance API returning wrong exception. (Shwetha GS via 
+    Shaik Idris)
+
     FALCON-321 Feed evictor deleting more stuff than it should. (Shaik Idris)
 
     FALCON-330 Build fails for the module 'Apache Falcon CLI client ' on ubuntu.

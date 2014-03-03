@@ -96,8 +96,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr,
-                                     String colo) {
+    public InstancesSummaryResult getSummary(String type, String entity, String startStr, String endStr, String colo) {
         checkColo(colo);
         checkType(type);
         try {
@@ -111,14 +110,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return wfEngine.getSummary(entityObject, start, end);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
-            throw FalconWebException
-                    .newInstanceException(e, Response.Status.BAD_REQUEST);
+            throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
         }
     }
 
     public InstancesResult getLogs(String type, String entity, String startStr,
                                    String endStr, String colo, String runId) {
-
         try {
             // TODO getStatus does all validations and filters clusters
             InstancesResult result = getStatus(type, entity, startStr, endStr,
