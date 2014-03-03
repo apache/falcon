@@ -17,7 +17,7 @@
   limitations under the License.
   -->
 <jaxb:bindings
-        jaxb:version="2.1"
+        version="2.1"
         jaxb:extensionBindingPrefixes="xjc jaxb xs inheritance annox"
         xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"

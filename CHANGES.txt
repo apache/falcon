@@ -54,6 +54,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-330 Build fails for the module 'Apache Falcon CLI client ' on ubuntu.
+    (Deepak Marathe via Shwetha GS)
+
     FALCON-297 Validations on update with effective time. (Shwetha GS)
 
     FALCON-278 Changes in feed availability info doesn't update process. (Shwetha GS)
