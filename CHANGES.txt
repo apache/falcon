@@ -57,6 +57,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-323 Summary API deserialization fails if array has only one element.
+    (Shwetha GS via Shaik Idris)
+
     FALCON-319 Summary instance API returning wrong exception. (Shwetha GS via 
     Shaik Idris)
 

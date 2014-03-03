@@ -22,6 +22,8 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.api.json.JSONJAXBContext;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -42,7 +44,10 @@ public class JAXBContextResolver implements ContextResolver<JAXBContext> {
         InstancesResult.class,
         APIResult.class,
         InstancesResult.Instance.class,
-        InstancesResult.WorkflowStatus.class, };
+        InstancesResult.WorkflowStatus.class,
+        InstancesSummaryResult.class,
+        InstanceSummary.class,
+    };
 
     static {
         try {
