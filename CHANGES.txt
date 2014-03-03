@@ -17,6 +17,9 @@ Trunk (Unreleased)
     FALCON-238 Support updates at specific time. (Shwetha GS)
    
   IMPROVEMENTS
+    FALCON-333 jsp-api dependency is defined twice. (Jean-Baptiste
+    Onofrévia Shaik Idris)
+
     FALCON-311 Several dead links in Falcon documentation.
     (Suresh Srinivas via Venkatesh Seetharam)
 
