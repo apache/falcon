@@ -363,6 +363,57 @@ public class FeedEvictorTest {
         }
     }
 
+    @Test
+    public void testEvictionWithEmptyDirs() throws Exception {
+        try {
+            Configuration conf = cluster.getConf();
+            FileSystem fs = FileSystem.get(conf);
+            fs.delete(new Path("/"), true);
+            stream.clear();
+
+            Pair<List<String>, List<String>> pair = generateInstances(fs, "feed1",
+                "yyyy/MM/dd/'more'/yyyy", 10, TimeUnit.DAYS, "/data", false);
+            final String storageUrl = cluster.getConf().get("fs.default.name");
+            String dataPath = LocationType.DATA.name() + "="
+                + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/more/?{YEAR}";
+            String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
+
+            FeedEvictor.main(new String[]{
+                "-feedBasePath", dataPath,
+                "-retentionType", "instance",
+                "-retentionLimit", "days(10)",
+                "-timeZone", "UTC",
+                "-frequency", "daily",
+                "-logFile", logFile,
+                "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+            });
+
+            compare(map.get("feed1"), stream.getBuffer());
+
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, ""));
+            Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
+
+            String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
+            Assert.assertFalse(fs.exists(new Path(deletedPath)));
+            //empty parents
+            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent()));
+            Assert.assertFalse(fs.exists(new Path(deletedPath).getParent().getParent()));
+            //base path not deleted
+            Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
+            //non-eligible empty dirs
+            Assert.assertEquals(fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount(),
+                34);
+            for(String path: pair.second){
+                Assert.assertTrue(fs.exists(new Path(path)));
+            }
+
+
+        } catch (Exception e) {
+            Assert.fail("Unknown exception", e);
+        }
+    }
+
+
     private Pair<List<String>, List<String>> createTestData(String locationType) throws Exception {
         Configuration conf = cluster.getConf();
         FileSystem fs = FileSystem.get(conf);
@@ -370,10 +421,10 @@ public class FeedEvictorTest {
         List<String> outOfRange = new ArrayList<String>();
         List<String> inRange = new ArrayList<String>();
 
-        touch(fs, locationType + "/YYYY/feed3/dd/MM/02/more/hello");
-        touch(fs, locationType + "/YYYY/feed4/dd/MM/02/more/hello");
-        touch(fs, locationType + "/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
-        touch(fs, locationType + "/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
+        touch(fs, locationType + "/YYYY/feed3/dd/MM/02/more/hello", true);
+        touch(fs, locationType + "/YYYY/feed4/dd/MM/02/more/hello", true);
+        touch(fs, locationType + "/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello", true);
+        touch(fs, locationType + "/somedir/feed1/mmHH/dd/MM/bad-va-lue/more/hello", true);
         outOfRange.add(locationType + "/YYYY/feed3/dd/MM/02/more/hello");
         outOfRange.add(locationType + "/YYYY/feed4/dd/MM/02/more/hello");
         outOfRange.add(locationType + "/YYYY/feed1/mmHH/dd/MM/bad-va-lue/more/hello");
@@ -395,7 +446,7 @@ public class FeedEvictorTest {
         outOfRange.addAll(pair.second);
         inRange.addAll(pair.first);
 
-        pair = generateInstances(fs, feed, mask, period, timeUnit, locationType);
+        pair = generateInstances(fs, feed, mask, period, timeUnit, locationType, true);
         outOfRange.addAll(pair.second);
         inRange.addAll(pair.first);
         return Pair.of(inRange, outOfRange);
@@ -403,7 +454,7 @@ public class FeedEvictorTest {
 
     private Pair<List<String>, List<String>> generateInstances(
             FileSystem fs, String feed, String formatString,
-            int range, TimeUnit timeUnit, String locationType) throws Exception {
+            int range, TimeUnit timeUnit, String locationType, boolean generateFiles) throws Exception {
 
         List<String> outOfRange = new ArrayList<String>();
         List<String> inRange = new ArrayList<String>();
@@ -421,7 +472,7 @@ public class FeedEvictorTest {
              date > now - timeUnit.toMillis(range + 6);
              date -= timeUnit.toMillis(1)) {
             String path = locationType + "/YYYY/" + feed + "/mmHH/dd/MM/" + format.format(date);
-            touch(fs, path);
+            touch(fs, path, generateFiles);
             if (date <= now && date > now - timeUnit.toMillis(range)) {
                 outOfRange.add(path);
             } else {
@@ -434,8 +485,12 @@ public class FeedEvictorTest {
         return Pair.of(inRange, outOfRange);
     }
 
-    private void touch(FileSystem fs, String path) throws Exception {
-        fs.create(new Path(path)).close();
+    private void touch(FileSystem fs, String path, boolean generateFiles) throws Exception {
+        if (generateFiles) {
+            fs.create(new Path(path)).close();
+        } else {
+            fs.mkdirs(new Path(path));
+        }
     }
 
     private String getFeedBasePath(LocationType locationType, String storageUrl) {
@@ -465,4 +520,8 @@ public class FeedEvictorTest {
             buffer.delete(0, buffer.length());
         }
     }
+
+
+
+
 }
