@@ -564,7 +564,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
                 Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
-                Date iterEnd = (coord.getLastActionTime().before(end) ? coord.getLastActionTime() : end);
+                Date iterEnd = (coord.getLastActionTime() != null && coord.getLastActionTime().before(end) ?
+                        coord.getLastActionTime() : end);
 
                 if (i == (applicableCoords.size() - 1)) {
                     isLastCoord = true;
