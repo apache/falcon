@@ -222,6 +222,9 @@ Release Version: 0.4-incubating
 
     FALCON-198 Update LICENSE.txt to contain license information for all third-party libraries
 
+    FALCON-286 Capture information in process entity about the user workflow
+    (Venkatesh Seetharam)
+
   BUG FIXES
 
     FALCON-223: hive-exec bundles protobuf-2.4.1 which is incompatible with hadoop-2 requiring protobuf-2.5

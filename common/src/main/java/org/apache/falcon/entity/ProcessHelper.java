@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 
@@ -35,5 +36,9 @@ public final class ProcessHelper {
             }
         }
         return null;
+    }
+
+    public static String getProcessWorkflowName(String workflowName, String processName) {
+        return StringUtils.isEmpty(workflowName) ? processName + "-workflow" : workflowName;
     }
 }

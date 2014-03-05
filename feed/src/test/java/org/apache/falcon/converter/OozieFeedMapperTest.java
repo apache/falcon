@@ -202,7 +202,12 @@ public class OozieFeedMapperTest {
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+
+        // verify workflow params
+        Assert.assertEquals("replication-policy", props.get("userWorkflowName"));
+        Assert.assertEquals("0.5", props.get("userWorkflowVersion"));
+        Assert.assertEquals("falcon", props.get("userWorkflowEngine"));
 
         assertLibExtensions(coord, "replication");
         assertWorkflowRetries(coord);
@@ -434,7 +439,7 @@ public class OozieFeedMapperTest {
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
-        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataIn('input')}");
+        Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
     }
 
     private void assertTableStorageProperties(Cluster cluster, CatalogStorage tableStorage,

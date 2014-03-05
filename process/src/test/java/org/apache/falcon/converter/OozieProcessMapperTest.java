@@ -38,6 +38,8 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.entity.v0.process.Workflow;
+import org.apache.falcon.messaging.EntityInstanceMessage;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
@@ -63,7 +65,11 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -332,12 +338,12 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         }
 
         // verify the late data params
-        Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getName());
+        Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getFeed());
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
 
         // verify the post processing params
-        Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getName());
+        Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getFeed());
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
     }
 
@@ -372,6 +378,14 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         } else if (prefix.equals("falcon_output")) {
             props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
         }
+    }
+
+    @Test
+    public void testProcessWorkflowMapper() throws Exception {
+        Process process = ConfigurationStore.get().get(EntityType.PROCESS, "clicksummary");
+        Workflow processWorkflow = process.getWorkflow();
+        Assert.assertEquals("test", processWorkflow.getName());
+        Assert.assertEquals("1.0.0", processWorkflow.getVersion());
     }
 
     @SuppressWarnings("unchecked")
@@ -496,5 +510,48 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore.get().remove(EntityType.PROCESS, "table-process");
         ConfigurationStore.get().remove(EntityType.FEED, "clicks-raw-table");
         ConfigurationStore.get().remove(EntityType.FEED, "clicks-summary-table");
+        ConfigurationStore.get().remove(EntityType.PROCESS, "dumb-process");
+    }
+
+    @Test
+    public void testProcessWithNoInputsAndOutputs() throws Exception {
+        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
+        ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
+
+        URL resource = this.getClass().getResource("/config/process/dumb-process.xml");
+        Process processEntity = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
+        ConfigurationStore.get().publish(EntityType.PROCESS, processEntity);
+
+        OozieProcessMapper mapper = new OozieProcessMapper(processEntity);
+        Path bundlePath = new Path("/falcon/staging/workflows", processEntity.getName());
+        mapper.map(cluster, bundlePath);
+        assertTrue(fs.exists(bundlePath));
+
+        BUNDLEAPP bundle = getBundle(bundlePath);
+        assertEquals(EntityUtil.getWorkflowName(processEntity).toString(), bundle.getName());
+        assertEquals(1, bundle.getCoordinator().size());
+        assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, processEntity).toString(),
+                bundle.getCoordinator().get(0).getName());
+        String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+
+        COORDINATORAPP coord = getCoordinator(new Path(coordPath));
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+
+        String[] expected = {
+            EntityInstanceMessage.ARG.feedNames.getPropName(),
+            EntityInstanceMessage.ARG.feedInstancePaths.getPropName(),
+            "falconInputFeeds",
+            "falconInPaths",
+            "userWorkflowName",
+            "userWorkflowVersion",
+            "userWorkflowEngine",
+        };
+
+        for (String property : expected) {
+            Assert.assertTrue(props.containsKey(property), "expected property missing: " + property);
+        }
     }
 }

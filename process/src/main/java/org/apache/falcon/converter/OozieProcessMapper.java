@@ -190,7 +190,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         initializeOutputPaths(cluster, process, coord, props);  // outputs
 
         Workflow processWorkflow = process.getWorkflow();
-        props.put("userWorkflowEngine", processWorkflow.getEngine().value());
+        propagateUserWorkflowProperties(processWorkflow, props, process.getName());
 
         // create parent wf
         createWorkflow(cluster, process, processWorkflow, coordName, coordPath);
@@ -247,6 +247,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     private void initializeInputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
                                       Map<String, String> props) throws FalconException {
         if (process.getInputs() == null) {
+            props.put("falconInputFeeds", "NONE");
+            props.put("falconInPaths", "IGNORE");
             return;
         }
 
@@ -281,7 +283,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
                 propagateCatalogTableProperties(input, (CatalogStorage) storage, props);
             }
 
-            inputFeeds.add(input.getName());
+            inputFeeds.add(feed.getName());
             inputPaths.add(inputExpr);
             inputFeedStorageTypes.add(storage.getType().name());
         }
@@ -303,6 +305,8 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
     private void initializeOutputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
                                        Map<String, String> props) throws FalconException {
         if (process.getOutputs() == null) {
+            props.put(ARG.feedNames.getPropName(), "NONE");
+            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
             return;
         }
 
@@ -327,7 +331,7 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
             coord.getOutputEvents().getDataOut().add(dataout);
 
             String outputExpr = "${coord:dataOut('" + output.getName() + "')}";
-            outputFeeds.add(output.getName());
+            outputFeeds.add(feed.getName());
             outputPaths.add(outputExpr);
 
             if (storage.getType() == Storage.TYPE.FILESYSTEM) {
@@ -486,6 +490,14 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
         return props;
     }
 
+    private void propagateUserWorkflowProperties(Workflow processWorkflow,
+                                                 Map<String, String> props, String processName) {
+        props.put("userWorkflowName", ProcessHelper.getProcessWorkflowName(
+                processWorkflow.getName(), processName));
+        props.put("userWorkflowVersion", processWorkflow.getVersion());
+        props.put("userWorkflowEngine", processWorkflow.getEngine().value());
+    }
+
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
                                   String wfName, Path parentWfPath) throws FalconException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
@@ -615,6 +627,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private List<String> getPrepareDeleteOutputPathList(Process process) throws FalconException {
         final List<String> deleteList = new ArrayList<String>();
+        if (process.getOutputs() == null) {
+            return deleteList;
+        }
+
         for (Output output : process.getOutputs().getOutputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
 
@@ -630,6 +646,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private void addInputFeedsAsParams(List<String> paramList, Process process, Cluster cluster,
                                        String engineType) throws FalconException {
+        if (process.getInputs() == null) {
+            return;
+        }
+
         for (Input input : process.getInputs().getInputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
@@ -653,6 +673,10 @@ public class OozieProcessMapper extends AbstractOozieEntityMapper<Process> {
 
     private void addOutputFeedsAsParams(List<String> paramList, Process process,
                                         Cluster cluster) throws FalconException {
+        if (process.getOutputs() == null) {
+            return;
+        }
+
         for (Output output : process.getOutputs().getOutputs()) {
             Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
             Storage storage = FeedHelper.createStorage(cluster, feed);
