@@ -118,6 +118,8 @@ Trunk (Unreleased)
     FALCON-226 Tests for subscribing/listening to multiple active-mq topics.  (Shaik Idris 
     via Shwetha GS)
 
+    FALCON-336 Fix check style error - builds fail (Venkatesh Seetharam)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES
