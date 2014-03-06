@@ -18,7 +18,6 @@
 
 package org.apache.falcon.cli;
 
-import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.falcon.util.StartupProperties;
@@ -62,11 +61,6 @@ public class FalconCLISmokeIT {
         Assert.assertEquals(0, executeWithURL("graph -vertices -all"));
         Assert.assertEquals(0, executeWithURL("graph -edges -all"));
         Assert.assertEquals(0, executeWithURL("graph -vertices -name name -value " + context.getClusterName()));
-
-        // verify lineage
-        FalconClient client = new FalconClient(TestContext.BASE_URL);
-        String clusterVertex = client.getVertices("name", context.getClusterName());
-        Assert.assertTrue(clusterVertex.contains(context.getClusterName()));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,

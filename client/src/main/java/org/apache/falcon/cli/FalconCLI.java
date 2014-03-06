@@ -636,20 +636,19 @@ public class FalconCLI {
         String name = commandLine.getOptionValue(NAME_OPT);
         String value = commandLine.getOptionValue(VALUE_OPT);
         String direction = commandLine.getOptionValue(DIRECTION_OPT);
-        String dump = commandLine.getOptionValue(DUMP_OPT);
 
         if (optionsList.contains(VERTEX_CMD)) {
             validateId(id);
             result = client.getVertex(id);
         } else if (optionsList.contains(VERTICES_CMD)) {
-            if (isDump(dump)) {
+            if (optionsList.contains(DUMP_OPT)) {
                 result = client.getVertices();
             } else {
                 validateVerticesCommand(name, value);
                 result = client.getVertices(name, value);
             }
         } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
-            if (isDump(dump)) {
+            if (optionsList.contains(DUMP_OPT)) {
                 result = client.getEdges();
             } else {
                 validateVertexEdgesCommand(id, direction);
@@ -669,10 +668,6 @@ public class FalconCLI {
         if (id == null || id.length() == 0) {
             throw new FalconCLIException("Missing argument: id");
         }
-    }
-
-    private boolean isDump(String dump) {
-        return dump != null;
     }
 
     private void validateVerticesCommand(String name, String value) throws FalconCLIException {
