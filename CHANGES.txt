@@ -18,6 +18,11 @@ Trunk (Unreleased)
     FALCON-254 Bootstrap designer module. (Srikanth Sundarrajan via Shwetha GS)
 
     FALCON-238 Support updates at specific time. (Shwetha GS)
+
+    FALCON-285 Support Lineage information capture (Venkatesh Seetharam)
+
+    FALCON-289 Provide REST APIs for discovering lineage metadata over the store.
+    (Venkatesh Seetharam)
    
   IMPROVEMENTS
     FALCON-333 jsp-api dependency is defined twice. (Jean-Baptiste

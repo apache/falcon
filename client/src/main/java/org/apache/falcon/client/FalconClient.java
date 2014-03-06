@@ -736,6 +736,80 @@ public class FalconClient {
         return sb.toString();
     }
 
+    protected static enum GraphOperations {
+
+        VERTICES("api/graphs/lineage/vertices", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        EDGES("api/graphs/lineage/edges", HttpMethod.GET, MediaType.APPLICATION_JSON);
+
+        private String path;
+        private String method;
+        private String mimeType;
+
+        GraphOperations(String path, String method, String mimeType) {
+            this.path = path;
+            this.method = method;
+            this.mimeType = mimeType;
+        }
+    }
+
+    public String getVertex(String id) throws FalconCLIException {
+        return sendGraphRequest(GraphOperations.VERTICES, id);
+    }
+
+    public String getVertices(String key, String value) throws FalconCLIException {
+        return sendGraphRequest(GraphOperations.VERTICES, key, value);
+    }
+
+    public String getVertexEdges(String id, String direction) throws FalconCLIException {
+        return sendGraphRequestForEdges(GraphOperations.VERTICES, id, direction);
+    }
+
+    public String getEdge(String id) throws FalconCLIException {
+        return sendGraphRequest(GraphOperations.EDGES, id);
+    }
+
+    public String getVertices() throws FalconCLIException {
+        return sendGraphRequest(GraphOperations.VERTICES, "all");
+    }
+
+    public String getEdges() throws FalconCLIException {
+        return sendGraphRequest(GraphOperations.EDGES, "all");
+    }
+
+    private String sendGraphRequest(GraphOperations job, String id) throws FalconCLIException {
+        ClientResponse clientResponse = service.path(job.path)
+                .path(id)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(job.mimeType)
+                .type(job.mimeType)
+                .method(job.method, ClientResponse.class);
+        return parseStringResult(clientResponse);
+    }
+
+    private String sendGraphRequest(GraphOperations job, String name,
+                                    String value) throws FalconCLIException {
+        ClientResponse clientResponse = service.path(job.path)
+                .queryParam("name", name)
+                .queryParam("value", value)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(job.mimeType)
+                .type(job.mimeType)
+                .method(job.method, ClientResponse.class);
+        return parseStringResult(clientResponse);
+    }
+
+    private String sendGraphRequestForEdges(GraphOperations job, String id,
+                                            String direction) throws FalconCLIException {
+        ClientResponse clientResponse = service.path(job.path)
+                .path(id)
+                .path(direction)
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(job.mimeType)
+                .type(job.mimeType)
+                .method(job.method, ClientResponse.class);
+        return parseStringResult(clientResponse);
+    }
+
     private void checkIfSuccessful(ClientResponse clientResponse)
         throws FalconCLIException {
 

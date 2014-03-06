@@ -89,6 +89,20 @@ public class FalconCLI {
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
 
+    // Graph Commands
+    public static final String GRAPH_CMD = "graph";
+    public static final String VERTEX_CMD = "vertex";
+    public static final String VERTICES_CMD = "vertices";
+    public static final String VERTEX_EDGES_CMD = "edges";
+
+    // Graph Command Options
+    public static final String EDGE_CMD = "edge";
+    public static final String ID_OPT = "id";
+    public static final String NAME_OPT = "name";
+    public static final String VALUE_OPT = "value";
+    public static final String DIRECTION_OPT = "direction";
+    public static final String DUMP_OPT = "all";
+
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
      * completion this method exits the JVM with '0' (success) or '-1'
@@ -132,6 +146,7 @@ public class FalconCLI {
                 "",
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceOptions(), false);
+        parser.addCommand(GRAPH_CMD, "", "graph operations", createGraphOptions(), true);
 
         try {
             CLIParser.Command command = parser.parse(args);
@@ -149,6 +164,8 @@ public class FalconCLI {
                     entityCommand(commandLine, client);
                 } else if (command.getName().equals(INSTANCE_CMD)) {
                     instanceCommand(commandLine, client);
+                } else if (command.getName().equals(GRAPH_CMD)) {
+                    graphCommand(commandLine, client);
                 }
             }
 
@@ -570,6 +587,112 @@ public class FalconCLI {
         instanceOptions.addOption(colo);
 
         return instanceOptions;
+    }
+
+    private Options createGraphOptions() {
+        Options graphOptions = new Options();
+        Option url = new Option(URL_OPTION, true, "Falcon URL");
+        graphOptions.addOption(url);
+
+        Option vertex = new Option(VERTEX_CMD, false, "show the vertices");
+        Option vertices = new Option(VERTICES_CMD, false, "show the vertices");
+        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, "show the edges for a given vertex");
+        Option edges = new Option(EDGE_CMD, false, "show the edges");
+
+        OptionGroup group = new OptionGroup();
+        group.addOption(vertex);
+        group.addOption(vertices);
+        group.addOption(vertexEdges);
+        group.addOption(edges);
+        graphOptions.addOptionGroup(group);
+
+        Option id = new Option(ID_OPT, true, "vertex or edge id");
+        graphOptions.addOption(id);
+
+        Option name = new Option(NAME_OPT, true, "name property");
+        graphOptions.addOption(name);
+
+        Option value = new Option(VALUE_OPT, true, "value property");
+        graphOptions.addOption(value);
+
+        Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
+        graphOptions.addOption(direction);
+
+        Option dump = new Option(DUMP_OPT, false, "dump all elements");
+        graphOptions.addOption(dump);
+
+        return graphOptions;
+    }
+
+    private void graphCommand(CommandLine commandLine,
+                              FalconClient client) throws FalconCLIException {
+        Set<String> optionsList = new HashSet<String>();
+        for (Option option : commandLine.getOptions()) {
+            optionsList.add(option.getOpt());
+        }
+
+        String result;
+        String id = commandLine.getOptionValue(ID_OPT);
+        String name = commandLine.getOptionValue(NAME_OPT);
+        String value = commandLine.getOptionValue(VALUE_OPT);
+        String direction = commandLine.getOptionValue(DIRECTION_OPT);
+        String dump = commandLine.getOptionValue(DUMP_OPT);
+
+        if (optionsList.contains(VERTEX_CMD)) {
+            validateId(id);
+            result = client.getVertex(id);
+        } else if (optionsList.contains(VERTICES_CMD)) {
+            if (isDump(dump)) {
+                result = client.getVertices();
+            } else {
+                validateVerticesCommand(name, value);
+                result = client.getVertices(name, value);
+            }
+        } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
+            if (isDump(dump)) {
+                result = client.getEdges();
+            } else {
+                validateVertexEdgesCommand(id, direction);
+                result = client.getVertexEdges(id, direction);
+            }
+        } else if (optionsList.contains(EDGE_CMD)) {
+            validateId(id);
+            result = client.getEdge(id);
+        } else {
+            throw new FalconCLIException("Invalid command");
+        }
+
+        OUT.get().println(result);
+    }
+
+    private void validateId(String id) throws FalconCLIException {
+        if (id == null || id.length() == 0) {
+            throw new FalconCLIException("Missing argument: id");
+        }
+    }
+
+    private boolean isDump(String dump) {
+        return dump != null;
+    }
+
+    private void validateVerticesCommand(String name, String value) throws FalconCLIException {
+        if (name == null || name.length() == 0) {
+            throw new FalconCLIException("Missing argument: name");
+        }
+
+        if (value == null || value.length() == 0) {
+            throw new FalconCLIException("Missing argument: value");
+        }
+    }
+
+    private void validateVertexEdgesCommand(String id, String direction) throws FalconCLIException {
+        if (id == null || id.length() == 0) {
+            throw new FalconCLIException("Missing argument: id");
+        }
+
+        if (direction == null || direction.length() == 0) {
+            throw new FalconCLIException("Missing argument: direction");
+        }
     }
 
     protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {
