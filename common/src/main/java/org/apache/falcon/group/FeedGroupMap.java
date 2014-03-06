@@ -54,7 +54,7 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
+    public void onAdd(Entity entity) throws FalconException {
 
         if (entity.getEntityType().equals(EntityType.FEED)) {
             Feed feed = (Feed) entity;
@@ -64,7 +64,6 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
             Set<FeedGroup> groupSet = getGroups(feed);
             addGroups(feed.getName(), groupSet);
         }
-
     }
 
     @Override
@@ -83,7 +82,6 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
             }
 
         }
-
     }
 
     @Override
@@ -91,7 +89,12 @@ public final class FeedGroupMap implements ConfigurationChangeListener {
         throws FalconException {
 
         onRemove(oldEntity);
-        onAdd(newEntity, false);
+        onAdd(newEntity);
+    }
+
+    @Override
+    public void onReload(Entity entity) throws FalconException {
+        onAdd(entity);
     }
 
     private void addGroups(String feed, Set<FeedGroup> groups) {

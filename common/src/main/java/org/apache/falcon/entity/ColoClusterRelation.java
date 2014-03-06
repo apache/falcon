@@ -51,7 +51,7 @@ public final class ColoClusterRelation implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onAdd(Entity entity, boolean ignoreFailure) {
+    public void onAdd(Entity entity) {
         if (entity.getEntityType() != EntityType.CLUSTER) {
             return;
         }
@@ -80,5 +80,10 @@ public final class ColoClusterRelation implements ConfigurationChangeListener {
             return;
         }
         throw new FalconException("change shouldn't be supported on cluster!");
+    }
+
+    @Override
+    public void onReload(Entity entity) throws FalconException {
+        onAdd(entity);
     }
 }

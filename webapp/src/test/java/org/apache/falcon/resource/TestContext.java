@@ -342,6 +342,11 @@ public class TestContext {
         // setup a logged in user
         CurrentUser.authenticate(REMOTE_USER);
 
+        // disable recording lineage metadata if enabled
+        String services = StartupProperties.get().getProperty("application.services");
+        StartupProperties.get().setProperty("application.services",
+                services.replace("org.apache.falcon.metadata.MetadataMappingService", ""));
+
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
         overlay.put("colo", "gs");

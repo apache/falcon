@@ -136,7 +136,7 @@ public final class ConfigurationStore implements FalconService {
                         String entityName = URLDecoder.decode(encodedEntityName, UTF_8);
                         Entity entity = restore(type, entityName);
                         entityMap.put(entityName, entity);
-                        onAdd(entity, true);
+                        onReload(entity);
                     }
                 }
             }
@@ -162,7 +162,7 @@ public final class ConfigurationStore implements FalconService {
         try {
             if (get(type, entity.getName()) == null) {
                 persist(type, entity);
-                onAdd(entity, false);
+                onAdd(entity);
                 dictionary.get(type).put(entity.getName(), entity);
             } else {
                 throw new EntityAlreadyExistsException(
@@ -200,15 +200,21 @@ public final class ConfigurationStore implements FalconService {
         }
     }
 
-    private void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
+    private void onAdd(Entity entity) throws FalconException {
         for (ConfigurationChangeListener listener : listeners) {
-            listener.onAdd(entity, ignoreFailure);
+            listener.onAdd(entity);
         }
     }
 
     private void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
         for (ConfigurationChangeListener listener : listeners) {
             listener.onChange(oldEntity, newEntity);
+        }
+    }
+
+    private void onReload(Entity entity) throws FalconException {
+        for (ConfigurationChangeListener listener : listeners) {
+            listener.onReload(entity);
         }
     }
 

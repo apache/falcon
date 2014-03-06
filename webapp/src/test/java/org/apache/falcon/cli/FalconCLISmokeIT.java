@@ -20,6 +20,7 @@ package org.apache.falcon.cli;
 
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
+import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -36,6 +37,10 @@ public class FalconCLISmokeIT {
     @BeforeClass
     public void prepare() throws Exception {
         TestContext.prepare();
+
+        String services = StartupProperties.get().getProperty("application.services");
+        StartupProperties.get().setProperty("application.services",
+                services + ",org.apache.falcon.metadata.MetadataMappingService");
     }
 
     @Test
@@ -47,18 +52,20 @@ public class FalconCLISmokeIT {
 
         filePath = TestContext.overlayParametersOverTemplate(context.getClusterFileTemplate(), overlay);
         Assert.assertEquals(-1,
-                executeWithURL("entity -submitAndSchedule -type cluster -file "
-                        + filePath));
+                executeWithURL("entity -submitAndSchedule -type cluster -file " + filePath));
         context.setCluster(overlay.get("cluster"));
+
+        // this is necessary for lineage
+        Assert.assertEquals(0, executeWithURL("entity -submit -type cluster -file " + filePath));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
-                executeWithURL("entity -submitAndSchedule -type feed -file "
-                        + filePath));
+                executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
         Assert.assertEquals(0,
-                executeWithURL("entity -submitAndSchedule -type feed -file "
-                        + filePath));
+                executeWithURL("entity -submitAndSchedule -type feed -file " + filePath));
+
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,
                 executeWithURL("entity -submit -type feed -file " + filePath));
@@ -69,8 +76,7 @@ public class FalconCLISmokeIT {
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(0,
-                executeWithURL("entity -validate -type process -file "
-                        + filePath));
+                executeWithURL("entity -validate -type process -file " + filePath));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Assert.assertEquals(0,
@@ -80,17 +86,14 @@ public class FalconCLISmokeIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         Assert.assertEquals(0,
-                executeWithURL("entity -definition -type cluster -name "
-                        + overlay.get("cluster")));
+                executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")));
 
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type feed -name "
-                        + overlay.get("outputFeedName")
-                        + " -start " + START_INSTANCE));
+                        + overlay.get("outputFeedName") + " -start " + START_INSTANCE));
 
         Assert.assertEquals(0,
-                executeWithURL("instance -running -type process -name "
-                        + overlay.get("processName")));
+                executeWithURL("instance -running -type process -name " + overlay.get("processName")));
     }
 
     private int executeWithURL(String command) throws Exception {

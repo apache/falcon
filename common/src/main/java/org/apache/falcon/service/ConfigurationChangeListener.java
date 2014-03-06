@@ -26,9 +26,36 @@ import org.apache.falcon.entity.v0.Entity;
  */
 public interface ConfigurationChangeListener {
 
-    void onAdd(Entity entity, boolean ignoreFailure) throws FalconException;
+    /**
+     * This is upon adding a new entity to Store.
+     *
+     * @param entity entity object
+     * @throws FalconException
+     */
+    void onAdd(Entity entity) throws FalconException;
 
+    /**
+     * This is upon removing an existing entity from the Store.
+     *
+     * @param entity entity object
+     * @throws FalconException
+     */
     void onRemove(Entity entity) throws FalconException;
 
+    /**
+     * This is upon updating an entity to the store.
+     *
+     * @param oldEntity old entity object
+     * @param newEntity updated entity object
+     * @throws FalconException
+     */
     void onChange(Entity oldEntity, Entity newEntity) throws FalconException;
+
+    /**
+     * This is when existing entities are read from the store during startup.
+     *
+     * @param entity entity object
+     * @throws FalconException
+     */
+    void onReload(Entity entity) throws FalconException;
 }

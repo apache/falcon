@@ -23,6 +23,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
+import org.apache.falcon.metadata.MetadataMappingService;
 import org.apache.falcon.rerun.event.RerunEvent.RerunType;
 import org.apache.falcon.rerun.handler.AbstractRerunHandler;
 import org.apache.falcon.rerun.handler.RerunHandlerFactory;
@@ -126,6 +127,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                     SchemaHelper.formatDateUTC(startTime), duration);
 
                 notifySLAService(cluster, entityName, entityType, nominalTime, duration);
+                notifyMetadataMappingService(entityName, operation, mapMessage.getString(ARG.logDir.getArgName()));
             }
         } catch (JMSException e) {
             LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
@@ -148,6 +150,12 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
 
     private SLAMonitoringService getSLAMonitoringService() {
         return Services.get().getService(SLAMonitoringService.SERVICE_NAME);
+    }
+
+    private void notifyMetadataMappingService(String entityName, String operation,
+                                              String logDir) throws FalconException {
+        MetadataMappingService service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
+        service.mapLineage(entityName, operation, logDir);
     }
 
     private void debug(MapMessage mapMessage) throws JMSException {

@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
     FALCON-11 Add support for security in Falcon (Venkatesh Seetharam)
 
+    FALCON-288 Persist lineage information into a persistent store
+    (Venkatesh Seetharam)
+
   NEW FEATURES
     FALCON-281 Design Action Interface. (Srikanth Sundarrajan)
 

@@ -970,6 +970,48 @@
                 <artifactId>xercesImpl</artifactId>
                 <version>2.10.0</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.tinkerpop.blueprints</groupId>
+                <artifactId>blueprints-core</artifactId>
+                <version>2.4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.thinkaurelius.titan</groupId>
+                <artifactId>titan-core-jre6</artifactId>
+                <version>0.4.2</version>
+                <exclusions>
+                    <!-- rexster does not work with servlet-api -->
+                    <exclusion>
+                        <groupId>com.tinkerpop.rexster</groupId>
+                        <artifactId>rexster-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.tinkerpop.rexster</groupId>
+                        <artifactId>rexster-server</artifactId>
+                    </exclusion>
+                    <!-- asm 4.0 does not work with jersey asm 3.1 -->
+                    <exclusion>
+                        <groupId>com.tinkerpop</groupId>
+                        <artifactId>frames</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.esotericsoftware.reflectasm</groupId>
+                        <artifactId>reflectasm</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.thinkaurelius.titan</groupId>
+                <artifactId>titan-berkeleyje-jre6</artifactId>
+                <version>0.4.2</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

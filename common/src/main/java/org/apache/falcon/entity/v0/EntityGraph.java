@@ -69,7 +69,7 @@ public final class EntityGraph implements ConfigurationChangeListener {
     }
 
     @Override
-    public void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
+    public void onAdd(Entity entity) throws FalconException {
         Map<Node, Set<Node>> nodeEdges = null;
         switch (entity.getEntityType()) {
         case PROCESS:
@@ -124,7 +124,12 @@ public final class EntityGraph implements ConfigurationChangeListener {
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
         onRemove(oldEntity);
-        onAdd(newEntity, false);
+        onAdd(newEntity);
+    }
+
+    @Override
+    public void onReload(Entity entity) throws FalconException {
+        onAdd(entity);
     }
 
     private Map<Node, Set<Node>> getEdgesFor(Process process) {

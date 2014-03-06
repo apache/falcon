@@ -47,7 +47,7 @@ public class ConfigurationStoreTest {
 
     private class TestListener implements ConfigurationChangeListener {
         @Override
-        public void onAdd(Entity entity, boolean ignoreFailure) throws FalconException {
+        public void onAdd(Entity entity) throws FalconException {
             throw new FalconException("For test");
         }
 
@@ -58,6 +58,11 @@ public class ConfigurationStoreTest {
 
         @Override
         public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
+            throw new FalconException("For test");
+        }
+
+        @Override
+        public void onReload(Entity entity) throws FalconException {
             throw new FalconException("For test");
         }
     }

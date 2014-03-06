@@ -112,7 +112,7 @@ case $type in
     export FALCON_PID_DIR
     FALCON_PID_FILE=${FALCON_PID_DIR}/${app}.pid
     export FALCON_PID_FILE
-    FALCON_DATA_DIR=${FALCON_DATA_DIR:-${BASEDIR}/logs/data}
+    FALCON_DATA_DIR=${FALCON_DATA_DIR:-${BASEDIR}/data}
     FALCON_HOME_DIR="${FALCON_HOME_DIR:-$BASEDIR}"
     export FALCON_HOME_DIR
   ;;

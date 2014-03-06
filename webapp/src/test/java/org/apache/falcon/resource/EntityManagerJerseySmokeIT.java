@@ -63,6 +63,7 @@ public class EntityManagerJerseySmokeIT {
         contexts.remove();
     }
 
+    @Test (dependsOnMethods = "testFeedSchedule")
     public void testProcessDeleteAndSchedule() throws Exception {
         //Submit process with invalid property so that coord submit fails and bundle goes to failed state
         TestContext context = newContext();
@@ -101,6 +102,7 @@ public class EntityManagerJerseySmokeIT {
         Assert.assertEquals(bundles.size(), 2);
     }
 
+    @Test
     public void testFeedSchedule() throws Exception {
         TestContext context = newContext();
         ClientResponse response;
