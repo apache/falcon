@@ -71,7 +71,8 @@ public class EntityInstanceMessage {
         status("status"),
         brokerTTL("broker.ttlInMins"),
         cluster("cluster"),
-        workflowUser("workflowUser");
+        workflowUser("workflowUser"),
+        logDir("logDir");
 
         private String propName;
 

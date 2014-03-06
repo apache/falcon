@@ -214,12 +214,22 @@
             <arg>${logDir}/instancePaths-${nominalTime}-${srcClusterName}.csv</arg>
             <arg>-workflowEngineUrl</arg>
             <arg>${workflowEngineUrl}</arg>
+            <arg>-userWorkflowName</arg>
+            <arg>${userWorkflowName}</arg>
+            <arg>-userWorkflowVersion</arg>
+            <arg>${userWorkflowVersion}</arg>
+            <arg>-userWorkflowEngine</arg>
+            <arg>${userWorkflowEngine}</arg>
             <arg>-subflowId</arg>
             <arg>${wf:id()}</arg>
             <arg>-logDir</arg>
             <arg>${logDir}/job-${nominalTime}/${srcClusterName}/</arg>
             <arg>-workflowUser</arg>
             <arg>${wf:user()}</arg>
+            <arg>-falconInputFeeds</arg>
+            <arg>${falconInputFeeds}</arg>
+            <arg>-falconInputPaths</arg>
+            <arg>${falconInPaths}</arg>
             <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
             <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>
             <file>${wf:conf("falcon.libpath")}/jms.jar</file>

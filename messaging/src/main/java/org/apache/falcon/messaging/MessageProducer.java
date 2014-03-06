@@ -125,6 +125,8 @@ public class MessageProducer extends Configured implements Tool {
                 "cluster name"));
         addOption(options, new Option(ARG.workflowUser.getArgName(), true,
                 "workflow user id"), false);
+        addOption(options, new Option(ARG.logDir.getArgName(), true,
+                "log dir where job logs are copied"), false);
 
         return new GnuParser().parse(options, arguments);
     }

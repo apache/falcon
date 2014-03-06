@@ -53,6 +53,11 @@ Trunk (Unreleased)
 
     FALCON-242 Post processing is not called in Retention workflows (Shaik Idris)
 
+    FALCON-286 Capture information in process entity about the user workflow
+    (Venkatesh Seetharam)
+
+    FALCON-287 Record lineage information in post processing (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
@@ -221,9 +226,6 @@ Release Version: 0.4-incubating
     FALCON-138: Remove perf4j dependency
 
     FALCON-198 Update LICENSE.txt to contain license information for all third-party libraries
-
-    FALCON-286 Capture information in process entity about the user workflow
-    (Venkatesh Seetharam)
 
   BUG FIXES
 
