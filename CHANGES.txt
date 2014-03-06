@@ -70,6 +70,8 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-302 Issues with distributed package properties. (Shwetha GS)
+
     FALCON-331 Summary API returning NPE if only start is passed. (Shwetha GS)
 
     FALCON-323 Summary API deserialization fails if array has only one element.

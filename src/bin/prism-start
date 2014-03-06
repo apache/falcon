@@ -33,5 +33,5 @@ if [[ $* != *-port* ]]; then
   ARGS="-port 16000"
 fi
 
-export FALCON_PROPERTIES="-Dfalcon.embeddedmq=false -Dfalcon.domain=prism"
+export FALCON_PROPERTIES="-Dfalcon.embeddedmq=false"
 exec ${BASEDIR}/bin/service-start.sh prism $ARGS $*

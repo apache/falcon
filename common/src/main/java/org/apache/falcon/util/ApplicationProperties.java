@@ -135,16 +135,20 @@ public abstract class ApplicationProperties extends Properties {
             domain = origProps.getProperty("*.domain");
             if (domain == null) {
                 throw new FalconException("Domain is not set!");
+            } else {
+                domain = ExpressionHelper.substitute(domain);
             }
         }
 
-        LOG.info("Initializing properties with domain " + domain);
+        LOG.info("Initializing " + this.getClass().getName() + " properties with domain " + domain);
         Set<String> keys = getKeys(origProps.keySet());
         for (String key : keys) {
             String value = origProps.getProperty(domain + "." + key, origProps.getProperty("*." + key));
-            value = ExpressionHelper.substitute(value);
-            LOG.debug(key + "=" + value);
-            put(key, value);
+            if (value != null) {
+                value = ExpressionHelper.substitute(value);
+                LOG.debug(key + "=" + value);
+                put(key, value);
+            }
         }
     }
 
