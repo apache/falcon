@@ -20,8 +20,8 @@ package org.apache.falcon.metadata;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
-import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -216,10 +216,13 @@ public class MetadataMappingServiceTest {
 
     @Test(dependsOnMethods = "testOnAdd")
     public void testMapLineage() throws Exception {
+        // shutdown the graph and resurrect for testing
+        service.destroy();
+        service.init();
 
         LineageRecorder.main(getTestMessageArgs());
 
-        service.mapLineage(PROCESS_ENTITY_NAME, OPERATION, LOGS_DIR);
+        service.onSuccessfulWorkflowCompletion(PROCESS_ENTITY_NAME, OPERATION, LOGS_DIR);
 
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
@@ -233,6 +236,10 @@ public class MetadataMappingServiceTest {
 
     @Test (dependsOnMethods = "testMapLineage")
     public void testOnChange() throws Exception {
+        // shutdown the graph and resurrect for testing
+        service.destroy();
+        service.init();
+
         // cannot modify cluster, adding a new cluster
         bcpCluster = buildCluster("bcp-cluster", "east-coast", "classification=bcp");
         configStore.publish(EntityType.CLUSTER, bcpCluster);
@@ -284,12 +291,13 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "data-warehouse");
 
         // new cluster
-        Iterator<Edge> clusterEdgeIterator = feedVertex.getEdges(Direction.OUT,
-                RelationshipGraphBuilder.FEED_CLUSTER_EDGE_LABEL).iterator();
-        edge = clusterEdgeIterator.next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), clusterEntity.getName());
-        edge = clusterEdgeIterator.next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), bcpCluster.getName());
+        List<String> actual = new ArrayList<String>();
+        for (Edge clusterEdge : feedVertex.getEdges(
+                Direction.OUT, RelationshipGraphBuilder.FEED_CLUSTER_EDGE_LABEL)) {
+            actual.add(clusterEdge.getVertex(Direction.IN).<String>getProperty("name"));
+        }
+        Assert.assertTrue(actual.containsAll(Arrays.asList("primary-cluster", "bcp-cluster")),
+                "Actual does not contain expected: " + actual);
     }
 
     @Test(dependsOnMethods = "testOnFeedEntityChange")
@@ -320,14 +328,6 @@ public class MetadataMappingServiceTest {
                 RelationshipGraphBuilder.PROCESS_CLUSTER_EDGE_LABEL).iterator().next();
         Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), bcpCluster.getName());
 
-/*
-        // workflow
-        edge = processVertex.getEdges(Direction.OUT,
-                RelationshipGraphBuilder.PROCESS_WORKFLOW_EDGE_LABEL).iterator().next();
-        Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("version"),
-                newProcess.getWorkflow().getVersion());
-*/
-
         // inputs
         edge = processVertex.getEdges(Direction.IN,
                 RelationshipGraphBuilder.FEED_PROCESS_EDGE_LABEL).iterator().next();
@@ -340,7 +340,7 @@ public class MetadataMappingServiceTest {
         }
     }
 
-    public static void debug(final KeyIndexableGraph graph) {
+    public static void debug(final Graph graph) {
         System.out.println("*****Vertices of " + graph);
         for (Vertex vertex : graph.getVertices()) {
             System.out.println(GraphUtils.vertexString(vertex));
@@ -631,7 +631,7 @@ public class MetadataMappingServiceTest {
         Assert.assertTrue(actual.containsAll(expected), "Actual does not contain expected: " + actual);
     }
 
-    public long getVerticesCount(final KeyIndexableGraph graph) {
+    public long getVerticesCount(final Graph graph) {
         long count = 0;
         for (Vertex ignored : graph.getVertices()) {
             count++;
@@ -640,7 +640,7 @@ public class MetadataMappingServiceTest {
         return count;
     }
 
-    public long getEdgesCount(final KeyIndexableGraph graph) {
+    public long getEdgesCount(final Graph graph) {
         long count = 0;
         for (Edge ignored : graph.getEdges()) {
             count++;
@@ -656,7 +656,7 @@ public class MetadataMappingServiceTest {
                 "imp-click-join1/20140101", "imp-click-join2/20140101");
         Assert.assertTrue(feedNamesOwnedByUser.containsAll(expected));
 
-        KeyIndexableGraph graph = service.getGraph();
+        Graph graph = service.getGraph();
 
         Iterator<Vertex> vertices = graph.getVertices("name", "impression-feed/20140101").iterator();
         Assert.assertTrue(vertices.hasNext());
@@ -708,7 +708,7 @@ public class MetadataMappingServiceTest {
         };
     }
 
-    private void cleanupGraphStore(KeyIndexableGraph graph) {
+    private void cleanupGraphStore(Graph graph) {
         for (Edge edge : graph.getEdges()) {
             graph.removeEdge(edge);
         }

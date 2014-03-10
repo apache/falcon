@@ -18,7 +18,7 @@
 
 package org.apache.falcon.metadata;
 
-import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -47,7 +47,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public static final String PROCESS_ENTITY_TYPE = "process-entity";
 
 
-    public EntityRelationshipGraphBuilder(KeyIndexableGraph graph, boolean preserveHistory) {
+    public EntityRelationshipGraphBuilder(Graph graph, boolean preserveHistory) {
         super(graph, preserveHistory);
     }
 
@@ -77,7 +77,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Updating feed entity: " + newFeed.getName());
         Vertex feedEntityVertex = findVertex(oldFeed.getName(), FEED_ENTITY_TYPE);
         if (feedEntityVertex == null) {
-            throw new IllegalStateException(oldFeed.getName() + " entity vertex must exist.");
+            // todo - throw new IllegalStateException(oldFeed.getName() + " entity vertex must exist.");
+            LOG.error("Illegal State: Feed entity vertex must exist for " + oldFeed.getName());
+            return;
         }
 
         updateDataClassification(oldFeed.getTags(), newFeed.getTags(), feedEntityVertex);
@@ -108,7 +110,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Updating process entity: " + newProcess.getName());
         Vertex processEntityVertex = findVertex(oldProcess.getName(), PROCESS_ENTITY_TYPE);
         if (processEntityVertex == null) {
-            throw new IllegalStateException(oldProcess.getName() + " entity vertex must exist.");
+            // todo - throw new IllegalStateException(oldProcess.getName() + " entity vertex must exist");
+            LOG.error("Illegal State: Process entity vertex must exist for " + oldProcess.getName());
+            return;
         }
 
         updateWorkflowProperties(oldProcess.getWorkflow(), newProcess.getWorkflow(),
@@ -128,7 +132,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addRelationToCluster(Vertex fromVertex, String clusterName, String edgeLabel) {
         Vertex clusterVertex = findVertex(clusterName, CLUSTER_ENTITY_TYPE);
         if (clusterVertex == null) { // cluster must exist before adding other entities
-            throw new IllegalStateException("Cluster entity vertex must exist: " + clusterName);
+            // todo - throw new IllegalStateException("Cluster entity vertex must exist: " + clusterName);
+            LOG.error("Illegal State: Cluster entity vertex must exist for " + clusterName);
+            return;
         }
 
         addEdge(fromVertex, clusterVertex, edgeLabel);
@@ -157,7 +163,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addProcessFeedEdge(Vertex processVertex, String feedName, String edgeLabel) {
         Vertex feedVertex = findVertex(feedName, FEED_ENTITY_TYPE);
         if (feedVertex == null) {
-            throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
+            // todo - throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
+            LOG.error("Illegal State: Feed entity vertex must exist for " + feedName);
+            return;
         }
 
         addProcessFeedEdge(processVertex, feedVertex, edgeLabel);
@@ -366,7 +374,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void removeProcessFeedEdge(Vertex processVertex, String feedName, String edgeLabel) {
         Vertex feedVertex = findVertex(feedName, FEED_ENTITY_TYPE);
         if (feedVertex == null) {
-            throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
+            // todo - throw new IllegalStateException("Feed entity vertex must exist: " + feedName);
+            LOG.error("Illegal State: Feed entity vertex must exist for " + feedName);
+            return;
         }
 
         if (edgeLabel.equals(FEED_PROCESS_EDGE_LABEL)) {

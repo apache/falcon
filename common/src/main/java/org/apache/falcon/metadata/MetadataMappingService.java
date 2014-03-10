@@ -18,9 +18,12 @@
 
 package org.apache.falcon.metadata;
 
+import com.thinkaurelius.titan.graphdb.blueprints.TitanBlueprintsGraph;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphFactory;
 import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -48,13 +51,6 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
     private static final Logger LOG = Logger.getLogger(MetadataMappingService.class);
 
     /**
-     * Entity operations.
-     */
-    public enum EntityOperations {
-        GENERATE, REPLICATE, DELETE
-    }
-
-    /**
      * Constance for the service name.
      */
     public static final String SERVICE_NAME = MetadataMappingService.class.getSimpleName();
@@ -64,7 +60,8 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
      */
     private static final String FALCON_PREFIX = "falcon.graph.";
 
-    private KeyIndexableGraph graph;
+
+    private Graph graph;
     private Set<String> vertexIndexedKeys;
     private Set<String> edgeIndexedKeys;
     private EntityRelationshipGraphBuilder entityGraphBuilder;
@@ -78,12 +75,14 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
     @Override
     public void init() throws FalconException {
         graph = initializeGraphDB();
+        createIndicesForVertexKeys();
+        // todo - create Edge Cardinality Constraints
         LOG.info("Initialized graph db: " + graph);
 
-        vertexIndexedKeys = graph.getIndexedKeys(Vertex.class);
+        vertexIndexedKeys = getIndexableGraph().getIndexedKeys(Vertex.class);
         LOG.info("Init vertex property keys: " + vertexIndexedKeys);
 
-        edgeIndexedKeys = graph.getIndexedKeys(Edge.class);
+        edgeIndexedKeys = getIndexableGraph().getIndexedKeys(Edge.class);
         LOG.info("Init edge property keys: " + edgeIndexedKeys);
 
         boolean preserveHistory = Boolean.valueOf(StartupProperties.get().getProperty(
@@ -94,16 +93,14 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         ConfigurationStore.get().registerListener(this);
     }
 
-    protected KeyIndexableGraph initializeGraphDB() {
+    protected Graph initializeGraphDB() {
         LOG.info("Initializing graph db");
 
         Configuration graphConfig = getConfiguration();
-        KeyIndexableGraph graphDB = (KeyIndexableGraph) GraphFactory.open(graphConfig);
-        createIndicesForVertexKeys(graphDB);
-        return graphDB;
+        return GraphFactory.open(graphConfig);
     }
 
-    public Configuration getConfiguration() {
+    public static Configuration getConfiguration() {
         Configuration graphConfig = new BaseConfiguration();
 
         Properties configProperties = StartupProperties.get();
@@ -119,17 +116,56 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         return graphConfig;
     }
 
-    protected void createIndicesForVertexKeys(KeyIndexableGraph graphDB) {
-        LOG.info("Creating indexes for graph");
+    /**
+     * This unfortunately requires a handle to Titan implementation since
+     * com.tinkerpop.blueprints.KeyIndexableGraph#createKeyIndex does not create an index.
+     */
+    protected void createIndicesForVertexKeys() {
+        if (!((KeyIndexableGraph) graph).getIndexedKeys(Vertex.class).isEmpty()) {
+            LOG.info("Indexes already exist for graph");
+            return;
+        }
+
+        LOG.info("Indexes does not exist, Creating indexes for graph");
         // todo - externalize this
-        graphDB.createKeyIndex(RelationshipGraphBuilder.NAME_PROPERTY_KEY, Vertex.class);
-        graphDB.createKeyIndex(RelationshipGraphBuilder.TYPE_PROPERTY_KEY, Vertex.class);
-        graphDB.createKeyIndex(RelationshipGraphBuilder.VERSION_PROPERTY_KEY, Vertex.class);
-        graphDB.createKeyIndex(RelationshipGraphBuilder.TIMESTAMP_PROPERTY_KEY, Vertex.class);
+        makeNameKeyIndex();
+        makeKeyIndex(RelationshipGraphBuilder.TYPE_PROPERTY_KEY);
+        makeKeyIndex(RelationshipGraphBuilder.TIMESTAMP_PROPERTY_KEY);
+        makeKeyIndex(RelationshipGraphBuilder.VERSION_PROPERTY_KEY);
     }
 
-    public KeyIndexableGraph getGraph() {
+    private void makeNameKeyIndex() {
+        getTitanGraph().makeKey(RelationshipGraphBuilder.NAME_PROPERTY_KEY)
+                .dataType(String.class)
+                .indexed(Vertex.class)
+                .indexed(Edge.class)
+                // .unique() todo this ought to be unique?
+                .make();
+        getTitanGraph().commit();
+    }
+
+    private void makeKeyIndex(String key) {
+        getTitanGraph().makeKey(key)
+                .dataType(String.class)
+                .indexed(Vertex.class)
+                .make();
+        getTitanGraph().commit();
+    }
+
+    public Graph getGraph() {
         return graph;
+    }
+
+    public KeyIndexableGraph getIndexableGraph() {
+        return (KeyIndexableGraph) graph;
+    }
+
+    public TransactionalGraph getTransactionalGraph() {
+        return (TransactionalGraph) graph;
+    }
+
+    public TitanBlueprintsGraph getTitanGraph() {
+        return (TitanBlueprintsGraph) graph;
     }
 
     public Set<String> getVertexIndexedKeys() {
@@ -154,14 +190,17 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         switch (entityType) {
         case CLUSTER:
             entityGraphBuilder.addClusterEntity((Cluster) entity);
+            getTransactionalGraph().commit();
             break;
 
         case FEED:
             entityGraphBuilder.addFeedEntity((Feed) entity);
+            getTransactionalGraph().commit();
             break;
 
         case PROCESS:
             entityGraphBuilder.addProcessEntity((Process) entity);
+            getTransactionalGraph().commit();
             break;
 
         default:
@@ -186,10 +225,12 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
 
         case FEED:
             entityGraphBuilder.updateFeedEntity((Feed) oldEntity, (Feed) newEntity);
+            getTransactionalGraph().commit();
             break;
 
         case PROCESS:
             entityGraphBuilder.updateProcessEntity((Process) oldEntity, (Process) newEntity);
+            getTransactionalGraph().commit();
             break;
 
         default:
@@ -202,8 +243,15 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         // are already added to the graph
     }
 
-    public void mapLineage(String entityName, String operation,
-                           String logDir) throws FalconException {
+    /**
+     * Entity operations.
+     */
+    public enum EntityOperations {
+        GENERATE, REPLICATE, DELETE
+    }
+
+    public void onSuccessfulWorkflowCompletion(String entityName, String operation,
+                                               String logDir) throws FalconException {
         String lineageFile = LineageRecorder.getFilePath(logDir, entityName);
 
         LOG.info("Parsing lineage metadata from: " + lineageFile);
@@ -215,6 +263,7 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         switch (entityOperation) {
         case GENERATE:
             onProcessInstanceAdded(lineageMetadata);
+            getTransactionalGraph().commit();
             break;
 
         case REPLICATE:

@@ -104,17 +104,17 @@ public class FalconPostProcessing extends Configured implements Tool {
         LOG.info("Sending user message " + cmd);
         invokeUserMessageProducer(cmd);
 
+        if ("SUCCEEDED".equals(Arg.STATUS.getOptionValue(cmd))) {
+            LOG.info("Recording lineage for " + cmd);
+            recordLineageMetadata(cmd);
+        }
+
         //LogMover doesn't throw exception, a failed log mover will not fail the user workflow
         LOG.info("Moving logs " + cmd);
         invokeLogProducer(cmd);
 
         LOG.info("Sending falcon message " + cmd);
         invokeFalconMessageProducer(cmd);
-
-        if ("SUCCEEDED".equals(Arg.STATUS.getOptionValue(cmd))) {
-            LOG.info("Recording lineage for " + cmd);
-            recordLineageMetadata(cmd);
-        }
 
         return 0;
     }

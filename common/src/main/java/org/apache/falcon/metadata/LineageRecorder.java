@@ -106,6 +106,14 @@ public class LineageRecorder  extends Configured implements Tool {
         return logDir + entityName + "-lineage.json";
     }
 
+    /**
+     * this method is invoked from with in the workflow.
+     *
+     * @param lineageMetadata metadata to persist
+     * @param lineageFile file to serialize the metadata
+     * @throws IOException
+     * @throws FalconException
+     */
     protected void persistLineageMetadata(Map<String, String> lineageMetadata,
                                           String lineageFile) throws IOException, FalconException {
         OutputStream out = null;

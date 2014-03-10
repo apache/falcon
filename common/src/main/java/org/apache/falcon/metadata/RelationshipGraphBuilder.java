@@ -20,8 +20,8 @@ package org.apache.falcon.metadata;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
-import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.log4j.Logger;
@@ -65,7 +65,7 @@ public abstract class RelationshipGraphBuilder {
     /**
      * A blueprints graph.
      */
-    private final KeyIndexableGraph graph;
+    private final Graph graph;
 
     /**
      * If enabled, preserves history of tags and groups for instances else will only
@@ -73,12 +73,12 @@ public abstract class RelationshipGraphBuilder {
      */
     private final boolean preserveHistory;
 
-    protected RelationshipGraphBuilder(KeyIndexableGraph graph, boolean preserveHistory) {
+    protected RelationshipGraphBuilder(Graph graph, boolean preserveHistory) {
         this.graph = graph;
         this.preserveHistory = preserveHistory;
     }
 
-    protected KeyIndexableGraph getGraph() {
+    public Graph getGraph() {
         return graph;
     }
 
@@ -121,7 +121,7 @@ public abstract class RelationshipGraphBuilder {
                 .has(NAME_PROPERTY_KEY, name)
                 .has(TYPE_PROPERTY_KEY, type);
         Iterator<Vertex> results = query.vertices().iterator();
-        return results.hasNext() ? results.next() : null;
+        return results.hasNext() ? results.next() : null;  // returning one since name is unique
     }
 
     protected Vertex createVertex(String name, String type) {
@@ -142,37 +142,38 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Edge addEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
-        Edge edge = findEdge(fromVertex, edgeLabel);
-        return edgeExists(edge, toVertex) ? edge : fromVertex.addEdge(edgeLabel, toVertex);
+        Edge edge = findEdge(fromVertex, toVertex, edgeLabel);
+        return edge != null ? edge : fromVertex.addEdge(edgeLabel, toVertex);
     }
 
     protected void removeEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
-        Edge edge = findEdge(fromVertex, edgeLabel);
-        if (edgeExists(edge, toVertex)) {
+        Edge edge = findEdge(fromVertex, toVertex, edgeLabel);
+        if (edge != null) {
             getGraph().removeEdge(edge);
         }
     }
 
     protected void removeEdge(Vertex fromVertex, Object toVertexName, String edgeLabel) {
-        Edge edge = findEdge(fromVertex, edgeLabel);
-        if (edgeExists(edge, toVertexName)) {
+        Edge edge = findEdge(fromVertex, toVertexName, edgeLabel);
+        if (edge != null) {
             getGraph().removeEdge(edge);
         }
     }
 
-    protected boolean edgeExists(Edge edge, Object toVertexName) {
-        return edge != null && edge.getVertex(Direction.IN).getProperty(NAME_PROPERTY_KEY)
-                .equals(toVertexName);
+    protected Edge findEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
+        return findEdge(fromVertex, toVertex.getProperty(NAME_PROPERTY_KEY), edgeLabel);
     }
 
-    protected boolean edgeExists(Edge edge, Vertex toVertex) {
-        return edge != null && edge.getVertex(Direction.IN).getProperty(NAME_PROPERTY_KEY)
-                .equals(toVertex.getProperty(NAME_PROPERTY_KEY));
-    }
+    protected Edge findEdge(Vertex fromVertex, Object toVertexName, String edgeLabel) {
+        Edge edgeToFind = null;
+        for (Edge edge : fromVertex.getEdges(Direction.OUT, edgeLabel)) {
+            if (edge.getVertex(Direction.IN).getProperty(NAME_PROPERTY_KEY).equals(toVertexName)) {
+                edgeToFind = edge;
+                break;
+            }
+        }
 
-    protected Edge findEdge(Vertex fromVertex, String edgeLabel) {
-        Iterator<Edge> edges = fromVertex.getEdges(Direction.OUT, edgeLabel).iterator();
-        return edges.hasNext() ? edges.next() : null;
+        return edgeToFind;
     }
 
     protected void addUserRelation(Vertex fromVertex) {

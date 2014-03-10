@@ -18,7 +18,7 @@
 
 package org.apache.falcon.metadata;
 
-import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
@@ -27,10 +27,10 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.log4j.Logger;
 
 import java.net.URISyntaxException;
@@ -61,7 +61,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     // instance edge labels
     public static final String INSTANCE_ENTITY_EDGE_LABEL = "instance-of";
 
-    public InstanceRelationshipGraphBuilder(KeyIndexableGraph graph, boolean preserveHistory) {
+    public InstanceRelationshipGraphBuilder(Graph graph, boolean preserveHistory) {
         super(graph, preserveHistory);
     }
 
@@ -108,7 +108,9 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         Vertex entityVertex = findVertex(entityName, entityType);
         LOG.info("Vertex exists? name=" + entityName + ", type=" + entityType + ", v=" + entityVertex);
         if (entityVertex == null) {
-            throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
+            // todo - throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
+            LOG.error("Illegal State: " + entityType + " vertex must exist for " + entityName);
+            return;
         }
 
         addEdge(instanceVertex, entityVertex, edgeLabel);

@@ -20,7 +20,8 @@ package org.apache.falcon.resource.metadata;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
-import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.Element;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
@@ -65,7 +66,7 @@ public class LineageMetadataResource {
         }
     }
 
-    private KeyIndexableGraph getGraph() {
+    private Graph getGraph() {
         return service.getGraph();
     }
 
@@ -113,17 +114,7 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get All Vertices");
         try {
-            JSONArray vertexArray = new JSONArray();
-            long counter = 0;
-            for (Vertex vertex : getGraph().getVertices()) {
-                counter++;
-                vertexArray.put(GraphSONUtility.jsonFromElement(
-                        vertex, getVertexIndexedKeys(), GraphSONMode.NORMAL));
-            }
-
-            JSONObject response = new JSONObject();
-            response.put(RESULTS, vertexArray);
-            response.put(TOTAL_SIZE, counter);
+            JSONObject response = buildJSONResponse(getGraph().getVertices());
             return Response.ok(response).build();
         } catch (JSONException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -176,20 +167,9 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertices for property name= " + name + ", value= " + value);
         try {
-            Iterable<Vertex> vertices = getGraph().getVertices(name, value);
-            final JSONArray vertexArray = new JSONArray();
-
-            long counter = 0;
-            for (Vertex vertex : vertices) {
-                counter++;
-                vertexArray.put(GraphSONUtility.jsonFromElement(
-                        vertex, getVertexIndexedKeys(), GraphSONMode.NORMAL));
-            }
-
-            JSONObject response = new JSONObject();
-            response.put(RESULTS, vertexArray);
-            response.put(TOTAL_SIZE, counter);
+            JSONObject response = buildJSONResponse(getGraph().getVertices(name, value));
             return Response.ok(response).build();
+
         } catch (JSONException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
@@ -219,51 +199,56 @@ public class LineageMetadataResource {
                         .entity(JSONObject.quote(message)).build());
             }
 
-            // break out the segment into the return and the direction
-            VertexQueryArguments queryArguments = new VertexQueryArguments(direction);
-            // if this is a query and the _return is "count" then we don't bother to send back the result array
-            boolean countOnly = queryArguments.isCountOnly();
-            // what kind of data the calling client wants back (vertices, edges, count, vertex identifiers)
-            ReturnType returnType = queryArguments.getReturnType();
-            // the query direction (both, out, in)
-            Direction queryDirection = queryArguments.getQueryDirection();
+            return getVertexEdges(vertex, direction);
 
-            VertexQuery query = vertex.query().direction(queryDirection);
-
-            JSONArray elementArray = new JSONArray();
-            long counter = 0;
-            if (returnType == ReturnType.VERTICES || returnType == ReturnType.VERTEX_IDS) {
-                Iterable<Vertex> vertexQueryResults = query.vertices();
-                for (Vertex v : vertexQueryResults) {
-                    if (returnType.equals(ReturnType.VERTICES)) {
-                        elementArray.put(GraphSONUtility.jsonFromElement(
-                                v, getVertexIndexedKeys(), GraphSONMode.NORMAL));
-                    } else {
-                        elementArray.put(v.getId());
-                    }
-                    counter++;
-                }
-            } else if (returnType == ReturnType.EDGES) {
-                Iterable<Edge> edgeQueryResults = query.edges();
-                for (Edge e : edgeQueryResults) {
-                    elementArray.put(GraphSONUtility.jsonFromElement(
-                            e, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
-                    counter++;
-                }
-            } else if (returnType == ReturnType.COUNT) {
-                counter = query.count();
-            }
-
-            JSONObject response = new JSONObject();
-            if (!countOnly) {
-                response.put(RESULTS, elementArray);
-            }
-            response.put(TOTAL_SIZE, counter);
-            return Response.ok(response).build();
         } catch (JSONException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
         }
+    }
+
+    private Response getVertexEdges(Vertex vertex, String direction) throws JSONException {
+        // break out the segment into the return and the direction
+        VertexQueryArguments queryArguments = new VertexQueryArguments(direction);
+        // if this is a query and the _return is "count" then we don't bother to send back the result array
+        boolean countOnly = queryArguments.isCountOnly();
+        // what kind of data the calling client wants back (vertices, edges, count, vertex identifiers)
+        ReturnType returnType = queryArguments.getReturnType();
+        // the query direction (both, out, in)
+        Direction queryDirection = queryArguments.getQueryDirection();
+
+        VertexQuery query = vertex.query().direction(queryDirection);
+
+        JSONArray elementArray = new JSONArray();
+        long counter = 0;
+        if (returnType == ReturnType.VERTICES || returnType == ReturnType.VERTEX_IDS) {
+            Iterable<Vertex> vertexQueryResults = query.vertices();
+            for (Vertex v : vertexQueryResults) {
+                if (returnType.equals(ReturnType.VERTICES)) {
+                    elementArray.put(GraphSONUtility.jsonFromElement(
+                            v, getVertexIndexedKeys(), GraphSONMode.NORMAL));
+                } else {
+                    elementArray.put(v.getId());
+                }
+                counter++;
+            }
+        } else if (returnType == ReturnType.EDGES) {
+            Iterable<Edge> edgeQueryResults = query.edges();
+            for (Edge e : edgeQueryResults) {
+                elementArray.put(GraphSONUtility.jsonFromElement(
+                        e, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
+                counter++;
+            }
+        } else if (returnType == ReturnType.COUNT) {
+            counter = query.count();
+        }
+
+        JSONObject response = new JSONObject();
+        if (!countOnly) {
+            response.put(RESULTS, elementArray);
+        }
+        response.put(TOTAL_SIZE, counter);
+        return Response.ok(response).build();
     }
 
     /**
@@ -279,18 +264,9 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get All Edges.");
         try {
-            JSONArray vertexArray = new JSONArray();
-            long counter = 0;
-            for (Edge edge : getGraph().getEdges()) {
-                counter++;
-                vertexArray.put(GraphSONUtility.jsonFromElement(
-                        edge, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
-            }
-
-            JSONObject response = new JSONObject();
-            response.put(RESULTS, vertexArray);
-            response.put(TOTAL_SIZE, counter);
+            JSONObject response = buildJSONResponse(getGraph().getEdges());
             return Response.ok(response).build();
+
         } catch (JSONException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
@@ -326,6 +302,22 @@ public class LineageMetadataResource {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
         }
+    }
+
+    private <T extends Element> JSONObject buildJSONResponse(Iterable<T> elements) throws JSONException {
+        JSONArray vertexArray = new JSONArray();
+        long counter = 0;
+        for (Element element : elements) {
+            counter++;
+            vertexArray.put(GraphSONUtility.jsonFromElement(
+                    element, getVertexIndexedKeys(), GraphSONMode.NORMAL));
+        }
+
+        JSONObject response = new JSONObject();
+        response.put(RESULTS, vertexArray);
+        response.put(TOTAL_SIZE, counter);
+
+        return response;
     }
 
     private void checkIfMetadataMappingServiceIsEnabled() {

@@ -20,7 +20,7 @@ package org.apache.falcon.metadata;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
-import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONWriter;
 import org.apache.log4j.Logger;
@@ -38,7 +38,7 @@ public final class GraphUtils {
     private GraphUtils() {
     }
 
-    public static void dumpToLog(final KeyIndexableGraph graph) {
+    public static void dumpToLog(final Graph graph) {
         LOG.debug("Vertices of " + graph);
         for (Vertex vertex : graph.getVertices()) {
             LOG.debug(vertexString(vertex));
@@ -50,15 +50,15 @@ public final class GraphUtils {
         }
     }
 
-    public static void dump(final KeyIndexableGraph graph) throws IOException {
+    public static void dump(final Graph graph) throws IOException {
         dump(graph, System.out);
     }
 
-    public static void dump(final KeyIndexableGraph graph, OutputStream outputStream) throws IOException {
+    public static void dump(final Graph graph, OutputStream outputStream) throws IOException {
         GraphSONWriter.outputGraph(graph, outputStream);
     }
 
-    public static void dump(final KeyIndexableGraph graph, String fileName) throws IOException {
+    public static void dump(final Graph graph, String fileName) throws IOException {
         GraphSONWriter.outputGraph(graph, fileName);
     }
 
