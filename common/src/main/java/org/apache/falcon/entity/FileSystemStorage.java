@@ -23,6 +23,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.fs.Path;
 
 import java.net.URI;
@@ -166,7 +167,30 @@ public class FileSystemStorage implements Storage {
         }
 
         // normalize the path so trailing and double '/' are removed
-        return storageUrl + new Path(locationForType.getPath());
+        Path locationPath = new Path(locationForType.getPath());
+        locationPath = locationPath.makeQualified(getDefaultUri(), getWorkingDir());
+
+        if (isRelativePath(locationPath)) {
+            locationPath = new Path(storageUrl + locationPath);
+        }
+
+        return locationPath.toString();
+    }
+
+    private boolean isRelativePath(Path locationPath) {
+        return locationPath.toUri().getAuthority() == null && isStorageUrlATemplate();
+    }
+
+    private boolean isStorageUrlATemplate() {
+        return storageUrl.startsWith(FILE_SYSTEM_URL);
+    }
+
+    private URI getDefaultUri() {
+        return new Path(isStorageUrlATemplate() ? "/" : storageUrl).toUri();
+    }
+
+    public Path getWorkingDir() {
+        return new Path(CurrentUser.getSubject() == null ? "/" : "/user/" + CurrentUser.getUser());
     }
 
     @Override

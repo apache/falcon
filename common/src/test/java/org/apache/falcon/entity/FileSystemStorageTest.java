@@ -20,7 +20,9 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.security.CurrentUser;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -31,6 +33,13 @@ import java.util.List;
  * Test class for File System Storage.
  */
 public class FileSystemStorageTest {
+
+    private static final String USER = "falcon";
+
+    @BeforeClass
+    public void setUp() {
+        CurrentUser.authenticate(USER);
+    }
 
     @Test
     public void testGetType() throws Exception {
@@ -77,6 +86,102 @@ public class FileSystemStorageTest {
 
         FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
         Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "jail://global:00/foo/bar");
+    }
+
+    @Test
+    public void testFSHomeDir() {
+        final Location location = new Location();
+        location.setPath("foo/bar"); // relative path
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        Assert.assertEquals(storage.getWorkingDir().toString(), "/user/falcon");
+    }
+
+    @Test
+    public void testGetUriTemplateForDataWithRelativePath() throws Exception {
+        final Location location = new Location();
+        location.setPath("foo/bar"); // relative path
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA),
+                "hdfs://localhost:41020/user/" + USER + "/foo/bar");
+
+        storage = new FileSystemStorage("hdfs://localhost:41020/", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA),
+                "hdfs://localhost:41020/user/" + USER + "/foo/bar");
+    }
+
+    @Test
+    public void testGetUriTemplateForDataWithAbsolutePath() throws Exception {
+        final Location location = new Location();
+        location.setPath("/foo/bar"); // absolute path
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "hdfs://localhost:41020/foo/bar");
+
+        storage = new FileSystemStorage("hdfs://localhost:41020/", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), "hdfs://localhost:41020/foo/bar");
+    }
+
+    @Test
+    public void testGetUriTemplateForDataWithAbsoluteURL() throws Exception {
+        final String absoluteUrl = "s3://host:1000/foo/bar";
+        final Location location = new Location();
+        location.setPath(absoluteUrl); // absolute url
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("hdfs://localhost:41020", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), absoluteUrl);
+
+        storage = new FileSystemStorage("hdfs://localhost:41020/", locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), absoluteUrl);
+    }
+
+    @DataProvider(name = "locationTestWithRelativePathDataProvider")
+    private Object[][] createLocationTestDataWithRelativePath() {
+        return new Object[][] {
+            {"hdfs://h:0", "localDC/rc/billing/ua2", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"hdfs://h:0/", "localDC/rc/billing/ua2", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"hdfs://h:0", "localDC/rc/billing/ua2/", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"hdfs://h:0/", "localDC/rc/billing/ua2/", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"hdfs://h:0", "localDC/rc/billing/ua2//", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"hdfs://h:0/", "localDC/rc/billing/ua2//", "hdfs://h:0/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "localDC/rc/billing/ua2", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}/", "localDC/rc/billing/ua2", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "localDC/rc/billing/ua2/", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}/", "localDC/rc/billing/ua2/", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "localDC/rc/billing/ua2//", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}/", "localDC/rc/billing/ua2//", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}/", "localDC/rc/billing/ua2//", "${nameNode}/user/" + USER + "/localDC/rc/billing/ua2"},
+            {"${nameNode}", "s3://h:p/localDC/rc/billing/ua2//", "s3://h:p/localDC/rc/billing/ua2"},
+            {"${nameNode}/", "s3://h:p/localDC/rc/billing/ua2//", "s3://h:p/localDC/rc/billing/ua2"},
+            {"hdfs://h:0", "s3://h:p/localDC/rc/billing/ua2//", "s3://h:p/localDC/rc/billing/ua2"},
+            {"hdfs://h:0/", "s3://h:p/localDC/rc/billing/ua2//", "s3://h:p/localDC/rc/billing/ua2"},
+        };
+    }
+
+    @Test (dataProvider = "locationTestWithRelativePathDataProvider")
+    public void testGetUriTemplateWithRelativePath(String storageUrl, String path,
+                                                   String expected) throws Exception {
+        final Location location = new Location();
+        location.setPath(path);
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage(storageUrl, locations);
+        Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), expected);
     }
 
     @Test

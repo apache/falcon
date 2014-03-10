@@ -66,6 +66,9 @@ Trunk (Unreleased)
 
     FALCON-287 Record lineage information in post processing (Venkatesh Seetharam)
 
+    FALCON-257 File system storage wont work with relative paths
+    (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
