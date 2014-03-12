@@ -377,6 +377,7 @@ public class FeedEvictorTest {
             String dataPath = LocationType.DATA.name() + "="
                 + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/more/?{YEAR}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
+            long beforeDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
 
             FeedEvictor.main(new String[]{
                 "-feedBasePath", dataPath,
@@ -401,8 +402,8 @@ public class FeedEvictorTest {
             //base path not deleted
             Assert.assertTrue(fs.exists(new Path("/data/YYYY/feed1/mmHH/dd/MM/")));
             //non-eligible empty dirs
-            Assert.assertEquals(fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount(),
-                34);
+            long afterDelCount = fs.getContentSummary(new Path(("/data/YYYY/feed1/mmHH/dd/MM/"))).getDirectoryCount();
+            Assert.assertEquals((beforeDelCount - afterDelCount), 19);
             for(String path: pair.second){
                 Assert.assertTrue(fs.exists(new Path(path)));
             }
