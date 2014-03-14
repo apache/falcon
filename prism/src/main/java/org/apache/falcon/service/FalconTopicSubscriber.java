@@ -126,7 +126,6 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                     entityName, nominalTime, workflowId, workflowUser, runId, operation,
                     SchemaHelper.formatDateUTC(startTime), duration);
 
-                notifySLAService(cluster, entityName, entityType, nominalTime, duration);
                 notifyMetadataMappingService(entityName, operation, mapMessage.getString(ARG.logDir.getArgName()));
             }
         } catch (JMSException e) {
@@ -136,20 +135,6 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
         } catch (Exception e) {
             LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
         }
-    }
-
-    private void notifySLAService(String cluster, String entityName,
-                                  String entityType, String nominalTime, Long duration) {
-        try {
-            getSLAMonitoringService().notifyCompletion(EntityUtil.getEntity(entityType, entityName),
-                    cluster, SchemaHelper.parseDateUTC(nominalTime), duration);
-        } catch (Throwable e) {
-            LOG.warn("Unable to notify SLA Service", e);
-        }
-    }
-
-    private SLAMonitoringService getSLAMonitoringService() {
-        return Services.get().getService(SLAMonitoringService.SERVICE_NAME);
     }
 
     private void notifyMetadataMappingService(String entityName, String operation,

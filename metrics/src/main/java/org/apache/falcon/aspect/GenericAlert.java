@@ -102,15 +102,6 @@ public final class GenericAlert {
 
     }
 
-    @Monitored(event = "sla-miss")
-    public static String alertOnLikelySLAMiss(
-            @Dimension(value = "cluster") String cluster,
-            @Dimension(value = "entity-type") String entityType,
-            @Dimension(value = "entity-name") String entityName,
-            @Dimension(value = "nominal-time") String nominalTime) {
-        return "IGNORE";
-    }
-
     @Monitored(event = "log-cleanup-service-failed")
     public static String alertLogCleanupServiceFailed(
             @Dimension(value = "message") String message,
