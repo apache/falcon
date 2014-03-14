@@ -154,8 +154,10 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
 
     private void notifyMetadataMappingService(String entityName, String operation,
                                               String logDir) throws FalconException {
-        MetadataMappingService service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
-        service.onSuccessfulWorkflowCompletion(entityName, operation, logDir);
+        if (Services.get().isRegistered(MetadataMappingService.SERVICE_NAME)) {
+            MetadataMappingService service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
+            service.onSuccessfulWorkflowCompletion(entityName, operation, logDir);
+        }
     }
 
     private void debug(MapMessage mapMessage) throws JMSException {
