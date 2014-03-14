@@ -205,9 +205,14 @@ public class OozieFeedMapperTest {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         // verify workflow params
-        Assert.assertEquals("replication-policy", props.get("userWorkflowName"));
-        Assert.assertEquals("0.5", props.get("userWorkflowVersion"));
-        Assert.assertEquals("falcon", props.get("userWorkflowEngine"));
+        Assert.assertEquals(props.get("userWorkflowName"), "replication-policy");
+        Assert.assertEquals(props.get("userWorkflowVersion"), "0.5");
+        Assert.assertEquals(props.get("userWorkflowEngine"), "falcon");
+
+        // verify default params
+        Assert.assertEquals(props.get("queueName"), "default");
+        Assert.assertEquals(props.get("jobPriority"), "NORMAL");
+        Assert.assertEquals(props.get("maxMaps"), "5");
 
         assertLibExtensions(coord, "replication");
         assertWorkflowRetries(coord);
@@ -331,6 +336,7 @@ public class OozieFeedMapperTest {
         Assert.assertEquals(props.get("distcpSourcePaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
+        Assert.assertEquals(props.get("maxMaps"), "33");
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP parentWorkflow) {

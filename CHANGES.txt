@@ -71,6 +71,9 @@ Trunk (Unreleased)
 
     FALCON-334 Add indexing to the graph property keys. (Venkatesh Seetharam)
 
+    FALCON-342 Add ability to set maxMaps on replication (Michael Miklavcic
+    via Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 

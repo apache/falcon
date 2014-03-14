@@ -47,6 +47,7 @@ import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.util.BuildProperties;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -215,6 +216,8 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
     }
 
     private class ReplicationOozieWorkflowMapper {
+        private static final String MR_MAX_MAPS = "maxMaps";
+
         private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
         private static final String REPLICATION_COORD_TEMPLATE = "/config/coordinator/replication-coordinator.xml";
@@ -415,6 +418,9 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
                 Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
                 props.put("srcClusterName", srcCluster.getName());
                 props.put("srcClusterColo", srcCluster.getColo());
+                if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden
+                    props.put(MR_MAX_MAPS, getDefaultMaxMaps());
+                }
 
                 // the storage type is uniform across source and target feeds for replication
                 props.put("falconFeedStorageType", sourceStorage.getType().name());
@@ -448,6 +454,10 @@ public class OozieFeedMapper extends AbstractOozieEntityMapper<Feed> {
             }
 
             return replicationAction;
+        }
+
+        private String getDefaultMaxMaps() {
+            return RuntimeProperties.get().getProperty("falcon.replication.workflow.maxmaps", "5");
         }
 
         private String getPathsWithPartitions(Cluster srcCluster, Cluster trgCluster,

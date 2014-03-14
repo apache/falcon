@@ -42,7 +42,7 @@ public class FeedReplicatorTest {
          */
         final String[] args = {
             "true",
-            "-maxMaps", "5",
+            "-maxMaps", "3",
             "-sourcePaths", "hdfs://localhost:8020/tmp/",
             "-targetPath", "hdfs://localhost1:8020/tmp/",
             "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),

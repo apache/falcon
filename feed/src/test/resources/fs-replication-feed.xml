@@ -61,4 +61,7 @@
 
     <ACL permission="0x755" group="group" owner="fetl"/>
     <schema provider="protobuf" location="/databus/streams_local/click_rr/schema/"/>
+    <properties>
+        <property name="maxMaps" value="33" />
+    </properties>
 </feed>

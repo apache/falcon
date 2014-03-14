@@ -118,7 +118,7 @@
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-maxMaps</arg>
-            <arg>5</arg>
+            <arg>${maxMaps}</arg>
             <arg>-sourcePaths</arg>
             <arg>${distcpSourcePaths}</arg>
             <arg>-targetPath</arg>
