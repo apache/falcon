@@ -74,9 +74,9 @@ public class MetadataMappingServiceTest {
     public static final String WORKFLOW_NAME = "imp-click-join-workflow";
     public static final String WORKFLOW_VERSION = "1.0.9";
 
-    public static final String INPUT_FEED_NAMES = "impression-feed,clicks-feed";
+    public static final String INPUT_FEED_NAMES = "impression-feed#clicks-feed";
     public static final String INPUT_INSTANCE_PATHS =
-        "jail://global:00/falcon/impression-feed/20140101,jail://global:00/falcon/clicks-feed/20140101";
+        "jail://global:00/falcon/impression-feed/20140101#jail://global:00/falcon/clicks-feed/20140101";
 
     public static final String OUTPUT_FEED_NAMES = "imp-click-join1,imp-click-join2";
     public static final String OUTPUT_INSTANCE_PATHS =

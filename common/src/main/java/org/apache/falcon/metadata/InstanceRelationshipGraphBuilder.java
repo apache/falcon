@@ -139,9 +139,9 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
 
         String[] inputFeedNames =
-                lineageMetadata.get(LineageArgs.INPUT_FEED_NAMES.getOptionName()).split(",");
+                lineageMetadata.get(LineageArgs.INPUT_FEED_NAMES.getOptionName()).split("#");
         String[] inputFeedInstancePaths =
-                lineageMetadata.get(LineageArgs.INPUT_FEED_PATHS.getOptionName()).split(",");
+                lineageMetadata.get(LineageArgs.INPUT_FEED_PATHS.getOptionName()).split("#");
 
         addFeedInstances(inputFeedNames, inputFeedInstancePaths,
                 processInstance, FEED_PROCESS_EDGE_LABEL, lineageMetadata);
@@ -156,6 +156,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             String feedName = feedNames[index];
             String feedInstancePath = feedInstancePaths[index];
 
+            LOG.info("Computing feed instance for : name=" + feedName + ", path= "
+                    + feedInstancePath + ", in cluster: " + clusterName);
             String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstancePath);
             LOG.info("Adding feed instance: " + feedInstanceName);
             Vertex feedInstance = addVertex(feedInstanceName, FEED_INSTANCE_TYPE,

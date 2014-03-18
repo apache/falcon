@@ -152,6 +152,9 @@ Trunk (Unreleased)
     FALCON-354 Bug when MetadataMappingService is not configured as one of the
     application services. (Venkatesh Seetharam)
 
+    FALCON-360 Lineage recording fails with NPE for processes with >1 inputs.
+    (Venkatesh Seetharam)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES
