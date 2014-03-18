@@ -20,6 +20,7 @@ package org.apache.falcon.util;
 
 import org.apache.falcon.FalconException;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 /**
@@ -30,12 +31,11 @@ public final class ReflectionUtils {
     private ReflectionUtils() {}
 
     public static <T> T getInstance(String classKey) throws FalconException {
-        String clazzName = StartupProperties.get().getProperty(classKey);
-        try {
-            return ReflectionUtils.<T>getInstanceByClassName(clazzName);
-        } catch (FalconException e) {
-            throw new FalconException("Unable to get instance for key: " + classKey, e);
-        }
+        return ReflectionUtils.<T>getInstanceByClassName(StartupProperties.get().getProperty(classKey));
+    }
+
+    public static <T> T getInstance(String classKey, Class<?> argCls, Object arg) throws FalconException {
+        return ReflectionUtils.<T>getInstanceByClassName(StartupProperties.get().getProperty(classKey), argCls, arg);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,6 +48,27 @@ public final class ReflectionUtils {
                 Method method = clazz.getMethod("get");
                 return (T) method.invoke(null);
             }
+        } catch (Exception e) {
+            throw new FalconException("Unable to get instance for " + clazzName, e);
+        }
+    }
+
+    /**
+     * Invokes constructor with one argument.
+     * @param clazzName - classname
+     * @param argCls - Class of the argument
+     * @param arg - constructor argument
+     * @param <T> - instance type
+     * @return Class instance
+     * @throws FalconException
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getInstanceByClassName(String clazzName, Class<?> argCls, Object arg) throws
+        FalconException {
+        try {
+            Class<T> clazz = (Class<T>) ReflectionUtils.class.getClassLoader().loadClass(clazzName);
+            Constructor<T> constructor = clazz.getConstructor(argCls);
+            return constructor.newInstance(arg);
         } catch (Exception e) {
             throw new FalconException("Unable to get instance for " + clazzName, e);
         }

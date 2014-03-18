@@ -41,6 +41,8 @@ import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.workflow.OozieFeedWorkflowBuilder;
+import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -63,7 +65,7 @@ import java.util.Map;
 /**
  * Tests for Oozie workflow definition for feed replication & retention.
  */
-public class OozieFeedMapperTest {
+public class OozieFeedWorkflowBuilderTest {
     private EmbeddedCluster srcMiniDFS;
     private EmbeddedCluster trgMiniDFS;
     private final ConfigurationStore store = ConfigurationStore.get();
@@ -106,7 +108,7 @@ public class OozieFeedMapperTest {
     protected Entity storeEntity(EntityType type, String template, String writeEndpoint) throws Exception {
         Unmarshaller unmarshaller = type.getUnmarshaller();
         Entity entity = (Entity) unmarshaller
-                .unmarshal(OozieFeedMapperTest.class.getResource(template));
+                .unmarshal(OozieFeedWorkflowBuilderTest.class.getResource(template));
         store.publish(type, entity);
 
         if (type == EntityType.CLUSTER) {
@@ -137,9 +139,8 @@ public class OozieFeedMapperTest {
 
     @Test
     public void testReplicationCoordsForFSStorage() throws Exception {
-        OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
-        List<COORDINATORAPP> coords = feedMapper.getCoordinators(trgCluster,
-                new Path("/projects/falcon/"));
+        OozieWorkflowBuilder builder = new OozieFeedWorkflowBuilder(feed);
+        List<COORDINATORAPP> coords = builder.getCoordinators(trgCluster, new Path("/projects/falcon/"));
         //Assert retention coord
         COORDINATORAPP coord = coords.get(0);
         assertLibExtensions(coord, "retention");
@@ -227,7 +228,7 @@ public class OozieFeedMapperTest {
             }
             ACTION action = (ACTION) obj;
             String actionName = action.getName();
-            if (AbstractOozieEntityMapper.FALCON_ACTIONS.contains(actionName)) {
+            if (OozieWorkflowBuilder.FALCON_ACTIONS.contains(actionName)) {
                 Assert.assertEquals(action.getRetryMax(), "3");
                 Assert.assertEquals(action.getRetryInterval(), "1");
             }
@@ -267,9 +268,9 @@ public class OozieFeedMapperTest {
 
     @Test
     public void testReplicationCoordsForFSStorageWithMultipleTargets() throws Exception {
-        OozieFeedMapper feedMapper = new OozieFeedMapper(fsReplFeed);
+        OozieWorkflowBuilder builder = new OozieFeedWorkflowBuilder(fsReplFeed);
 
-        List<COORDINATORAPP> alphaCoords = feedMapper.getCoordinators(alphaTrgCluster, new Path("/alpha/falcon/"));
+        List<COORDINATORAPP> alphaCoords = builder.getCoordinators(alphaTrgCluster, new Path("/alpha/falcon/"));
         final COORDINATORAPP alphaCoord = alphaCoords.get(0);
         Assert.assertEquals(alphaCoord.getStart(), "2012-10-01T12:05Z");
         Assert.assertEquals(alphaCoord.getEnd(), "2012-10-01T12:11Z");
@@ -277,7 +278,7 @@ public class OozieFeedMapperTest {
         String pathsWithPartitions = getPathsWithPartitions(srcCluster, alphaTrgCluster, fsReplFeed);
         assertReplCoord(alphaCoord, fsReplFeed, alphaTrgCluster.getName(), pathsWithPartitions);
 
-        List<COORDINATORAPP> betaCoords = feedMapper.getCoordinators(betaTrgCluster, new Path("/beta/falcon/"));
+        List<COORDINATORAPP> betaCoords = builder.getCoordinators(betaTrgCluster, new Path("/beta/falcon/"));
         final COORDINATORAPP betaCoord = betaCoords.get(0);
         Assert.assertEquals(betaCoord.getStart(), "2012-10-01T12:10Z");
         Assert.assertEquals(betaCoord.getEnd(), "2012-10-01T12:26Z");
@@ -356,8 +357,8 @@ public class OozieFeedMapperTest {
 
     @Test
     public void testReplicationCoordsForTableStorage() throws Exception {
-        OozieFeedMapper feedMapper = new OozieFeedMapper(tableFeed);
-        List<COORDINATORAPP> coords = feedMapper.getCoordinators(
+        OozieWorkflowBuilder builder = new OozieFeedWorkflowBuilder(tableFeed);
+        List<COORDINATORAPP> coords = builder.getCoordinators(
                 trgCluster, new Path("/projects/falcon/"));
         COORDINATORAPP coord = coords.get(0);
 
@@ -466,8 +467,8 @@ public class OozieFeedMapperTest {
         instance.roll(Calendar.YEAR, 1);
         cluster.getValidity().setEnd(instance.getTime());
 
-        OozieFeedMapper feedMapper = new OozieFeedMapper(feed);
-        List<COORDINATORAPP> coords = feedMapper.getCoordinators(srcCluster, new Path("/projects/falcon/"));
+        OozieWorkflowBuilder builder = new OozieFeedWorkflowBuilder(feed);
+        List<COORDINATORAPP> coords = builder.getCoordinators(srcCluster, new Path("/projects/falcon/"));
         COORDINATORAPP coord = coords.get(0);
 
         Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(), "${nameNode}/projects/falcon/RETENTION");
@@ -501,5 +502,4 @@ public class OozieFeedMapperTest {
 
         assertWorkflowRetries(coord);
     }
-
 }

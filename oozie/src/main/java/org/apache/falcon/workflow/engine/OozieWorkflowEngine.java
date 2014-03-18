@@ -116,7 +116,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         if (!schedClusters.isEmpty()) {
             WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-            Map<String, Properties> newFlows = builder.newWorkflowSchedule(entity, schedClusters);
+            Map<String, Properties> newFlows = builder.newWorkflowSchedule(schedClusters.toArray(new
+                String[schedClusters.size()]));
             for (Map.Entry<String, Properties> entry : newFlows.entrySet()) {
                 String cluster = entry.getKey();
                 LOG.info("Scheduling " + entity.toShortString() + " on cluster " + cluster);
@@ -380,7 +381,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             List<Instance> runInstances = new ArrayList<Instance>();
-            String[] wfNames = builder.getWorkflowNames(entity);
+            String[] wfNames = builder.getWorkflowNames();
             List<String> coordNames = new ArrayList<String>();
             for (String wfName : wfNames) {
                 if (EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString().equals(wfName)) {
@@ -1059,11 +1060,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private String scheduleForUpdate(Entity entity, String cluster, Date startDate, String user)
         throws FalconException {
-        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-        Properties bundleProps = builder.newWorkflowSchedule(entity, startDate, cluster, user);
+        Entity clone = entity.copy();
+        EntityUtil.setStartDate(entity, cluster, startDate);
+        WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, clone);
+        Map<String, Properties> bundleProps = builder.newWorkflowSchedule(cluster);
         LOG.info("Scheduling " + entity.toShortString() + " on cluster " + cluster + " with props " + bundleProps);
-        if (bundleProps != null) {
-            return scheduleEntity(cluster, bundleProps, entity);
+        if (bundleProps != null && bundleProps.size() > 0) {
+            return scheduleEntity(cluster, bundleProps.get(cluster), entity);
         } else {
             LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
             return null;

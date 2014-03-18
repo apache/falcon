@@ -25,6 +25,8 @@ Trunk (Unreleased)
     (Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-356 Merge OozieProcessMapper and OozieProcessWorkflowBuilder. (Shwetha GS)
+
     FALCON-355 Remove SLAMonitoringService. (Shwetha GS)
 
     FALCON-333 jsp-api dependency is defined twice. (Jean-Baptiste

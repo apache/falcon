@@ -49,7 +49,9 @@ import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.OozieProcessWorkflowBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -82,7 +84,7 @@ import static org.testng.Assert.assertTrue;
 /**
  * Test for the Falcon entities mapping into Oozie artifacts.
  */
-public class OozieProcessMapperTest extends AbstractTestBase {
+public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     private String hdfsUrl;
     private FileSystem fs;
@@ -244,9 +246,9 @@ public class OozieProcessMapperTest extends AbstractTestBase {
 
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         prepare(process);
-        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
-        mapper.map(cluster, bundlePath);
+        builder.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(bundlePath);
@@ -279,7 +281,7 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
         Assert.assertEquals("user-hive-job", hiveNode.getName());
 
-        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = mapper.unMarshalHiveAction(hiveNode);
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
 
         Assert.assertEquals(hiveAction.getScript(),
@@ -311,9 +313,9 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
 
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
-        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
-        mapper.map(cluster, bundlePath);
+        builder.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(bundlePath);
@@ -418,9 +420,9 @@ public class OozieProcessMapperTest extends AbstractTestBase {
     private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
         throws Exception {
         Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
-        OozieProcessMapper mapper = new OozieProcessMapper(process);
+        OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
-        mapper.map(cluster, bundlePath);
+        builder.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(bundlePath);
@@ -522,9 +524,9 @@ public class OozieProcessMapperTest extends AbstractTestBase {
         Process processEntity = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.PROCESS, processEntity);
 
-        OozieProcessMapper mapper = new OozieProcessMapper(processEntity);
+        OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(processEntity);
         Path bundlePath = new Path("/falcon/staging/workflows", processEntity.getName());
-        mapper.map(cluster, bundlePath);
+        builder.map(cluster, bundlePath);
         assertTrue(fs.exists(bundlePath));
 
         BUNDLEAPP bundle = getBundle(bundlePath);

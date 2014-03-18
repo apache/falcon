@@ -22,8 +22,6 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.util.ReflectionUtils;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -32,16 +30,22 @@ import java.util.Properties;
  * @param <T>
  */
 public abstract class WorkflowBuilder<T extends Entity> {
+    protected T entity;
+
+    protected WorkflowBuilder(T entity) {
+        this.entity = entity;
+    }
+
+    public T getEntity() {
+        return  entity;
+    }
 
     public static WorkflowBuilder<Entity> getBuilder(String engine, Entity entity) throws FalconException {
         String classKey = engine + "." + entity.getEntityType().name().toLowerCase() + ".workflow.builder";
-        return ReflectionUtils.getInstance(classKey);
+        return ReflectionUtils.getInstance(classKey, entity.getEntityType().getEntityClass(), entity);
     }
 
-    public abstract Map<String, Properties> newWorkflowSchedule(T entity, List<String> clusters) throws FalconException;
+    public abstract Map<String, Properties> newWorkflowSchedule(String... clusters) throws FalconException;
 
-    public abstract Properties newWorkflowSchedule(T entity, Date startDate, String clusterName, String user)
-        throws FalconException;
-
-    public abstract String[] getWorkflowNames(T entity);
+    public abstract String[] getWorkflowNames();
 }

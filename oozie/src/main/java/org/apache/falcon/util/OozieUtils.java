@@ -17,8 +17,20 @@
  */
 package org.apache.falcon.util;
 
+import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
+import org.apache.falcon.oozie.hive.ACTION;
+import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.xerces.dom.ElementNSImpl;
+import org.w3c.dom.Document;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.dom.DOMResult;
 import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.Properties;
@@ -27,6 +39,23 @@ import java.util.Properties;
  * Help methods relating to oozie configuration.
  */
 public final class OozieUtils {
+    public static final JAXBContext WORKFLOW_JAXB_CONTEXT;
+    public static final JAXBContext COORD_JAXB_CONTEXT;
+    public static final JAXBContext BUNDLE_JAXB_CONTEXT;
+    protected static final JAXBContext HIVE_ACTION_JAXB_CONTEXT;
+
+    static {
+        try {
+            WORKFLOW_JAXB_CONTEXT = JAXBContext.newInstance(WORKFLOWAPP.class);
+            COORD_JAXB_CONTEXT = JAXBContext.newInstance(COORDINATORAPP.class);
+            BUNDLE_JAXB_CONTEXT = JAXBContext.newInstance(BUNDLEAPP.class);
+            HIVE_ACTION_JAXB_CONTEXT = JAXBContext.newInstance(
+                org.apache.falcon.oozie.hive.ACTION.class.getPackage().getName());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to create JAXB context", e);
+        }
+    }
+
 
     private OozieUtils() {}
 
@@ -39,4 +68,29 @@ public final class OozieUtils {
         }
         return jobprops;
     }
+
+    @SuppressWarnings("unchecked")
+    public static  JAXBElement<ACTION> unMarshalHiveAction(org.apache.falcon.oozie.workflow.ACTION wfAction) {
+        try {
+            Unmarshaller unmarshaller = HIVE_ACTION_JAXB_CONTEXT.createUnmarshaller();
+            unmarshaller.setEventHandler(new javax.xml.bind.helpers.DefaultValidationEventHandler());
+            return (JAXBElement<org.apache.falcon.oozie.hive.ACTION>)
+                unmarshaller.unmarshal((ElementNSImpl) wfAction.getAny());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to unmarshall hive action.", e);
+        }
+    }
+
+    public static  void marshalHiveAction(org.apache.falcon.oozie.workflow.ACTION wfAction,
+        JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionjaxbElement) {
+        try {
+            DOMResult hiveActionDOM = new DOMResult();
+            Marshaller marshaller = HIVE_ACTION_JAXB_CONTEXT.createMarshaller();
+            marshaller.marshal(actionjaxbElement, hiveActionDOM);
+            wfAction.setAny(((Document) hiveActionDOM.getNode()).getDocumentElement());
+        } catch (JAXBException e) {
+            throw new RuntimeException("Unable to marshall hive action.", e);
+        }
+    }
+
 }
