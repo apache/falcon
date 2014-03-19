@@ -60,7 +60,7 @@ public class FalconCLISmokeIT {
         // verify
         Assert.assertEquals(0, executeWithURL("graph -vertices -all"));
         Assert.assertEquals(0, executeWithURL("graph -edges -all"));
-        Assert.assertEquals(0, executeWithURL("graph -vertices -name name -value " + context.getClusterName()));
+        Assert.assertEquals(0, executeWithURL("graph -vertices -key name -value " + context.getClusterName()));
 
         filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Assert.assertEquals(0,

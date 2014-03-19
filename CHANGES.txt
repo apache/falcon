@@ -260,6 +260,8 @@ Release Version: 0.4-incubating
     FALCON-363 Jetty is started with war when the war is already expanded
     (Venkatesh Seetharam)
 
+    FALCON-358 REST API does not conform to Rexster (Venkatesh Seetharam)
+
   BUG FIXES
 
     FALCON-223: hive-exec bundles protobuf-2.4.1 which is incompatible with hadoop-2 requiring protobuf-2.5

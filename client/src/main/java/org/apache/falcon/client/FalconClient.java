@@ -786,10 +786,10 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendGraphRequest(GraphOperations job, String name,
+    private String sendGraphRequest(GraphOperations job, String key,
                                     String value) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
-                .queryParam("name", name)
+                .queryParam("key", key)
                 .queryParam("value", value)
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(job.mimeType)

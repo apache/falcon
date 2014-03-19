@@ -47,6 +47,8 @@ import java.util.Set;
 
 /**
  * Jersey Resource for lineage metadata operations.
+ * Implements most of the GET operations of Rexster API with out the indexes.
+ * https://github.com/tinkerpop/rexster/wiki/Basic-REST-API
  */
 @Path("graphs/lineage")
 public class LineageMetadataResource {
@@ -154,20 +156,20 @@ public class LineageMetadataResource {
     }
 
     /**
-     * Get a list of vertices matching a property name and a value.
+     * Get a list of vertices matching a property key and a value.
      * <p/>
-     * GET http://host/graphs/lineage/vertices?name=<name>&value=<value>
-     * graph.getVertices(name, value);
+     * GET http://host/graphs/lineage/vertices?key=<key>&value=<value>
+     * graph.getVertices(key, value);
      */
     @GET
     @Path("/vertices")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getVertices(@QueryParam("name") final String name,
+    public Response getVertices(@QueryParam("key") final String key,
                                 @QueryParam("value") final String value) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertices for property name= " + name + ", value= " + value);
+        LOG.info("Get vertices for property key= " + key + ", value= " + value);
         try {
-            JSONObject response = buildJSONResponse(getGraph().getVertices(name, value));
+            JSONObject response = buildJSONResponse(getGraph().getVertices(key, value));
             return Response.ok(response).build();
 
         } catch (JSONException e) {
