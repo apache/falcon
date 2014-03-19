@@ -29,6 +29,8 @@ import java.util.TimeZone;
  */
 public final class SchemaHelper {
 
+    public static final String ISO8601_FORMAT = "yyyy-MM-dd'T'HH:mm'Z'";
+
     private SchemaHelper() {}
 
     public static String getTimeZoneId(TimeZone tz) {
@@ -36,7 +38,7 @@ public final class SchemaHelper {
     }
 
     private static DateFormat getDateFormat() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        DateFormat dateFormat = new SimpleDateFormat(ISO8601_FORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat;
     }
@@ -51,6 +53,17 @@ public final class SchemaHelper {
         }
         try {
             return getDateFormat().parse(dateStr);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String formatDateUTCToISO8601(final String dateString, final String dateStringFormat) {
+
+        try {
+            DateFormat dateFormat = new SimpleDateFormat(dateStringFormat.substring(0, dateString.length()));
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return SchemaHelper.formatDateUTC(dateFormat.parse(dateString));
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }

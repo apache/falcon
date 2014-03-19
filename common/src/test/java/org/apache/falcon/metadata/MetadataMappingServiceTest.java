@@ -652,13 +652,13 @@ public class MetadataMappingServiceTest {
     private void verifyLineageGraph(String feedType) {
         // feeds owned by a user
         List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(feedType);
-        List<String> expected = Arrays.asList("impression-feed/20140101", "clicks-feed/20140101",
-                "imp-click-join1/20140101", "imp-click-join2/20140101");
+        List<String> expected = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z");
         Assert.assertTrue(feedNamesOwnedByUser.containsAll(expected));
 
         Graph graph = service.getGraph();
 
-        Iterator<Vertex> vertices = graph.getVertices("name", "impression-feed/20140101").iterator();
+        Iterator<Vertex> vertices = graph.getVertices("name", "impression-feed/2014-01-01T00:00Z").iterator();
         Assert.assertTrue(vertices.hasNext());
         Vertex feedInstanceVertex = vertices.next();
         Assert.assertEquals(
@@ -671,11 +671,13 @@ public class MetadataMappingServiceTest {
 
         // feeds classified as secure
         verifyFeedsClassifiedAsSecure(feedType,
-                Arrays.asList("impression-feed/20140101", "clicks-feed/20140101", "imp-click-join2/20140101"));
+                Arrays.asList("impression-feed/2014-01-01T00:00Z",
+                        "clicks-feed/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z"));
 
         // feeds owned by a user and classified as secure
         verifyFeedsOwnedByUserAndClassification(feedType, "Financial",
-                Arrays.asList("clicks-feed/20140101", "imp-click-join1/20140101", "imp-click-join2/20140101"));
+                Arrays.asList("clicks-feed/2014-01-01T00:00Z",
+                        "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z"));
     }
 
     private static String[] getTestMessageArgs() {

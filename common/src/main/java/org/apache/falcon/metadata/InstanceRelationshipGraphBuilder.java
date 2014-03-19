@@ -27,6 +27,7 @@ import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -42,6 +43,9 @@ import java.util.Map;
 public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
     private static final Logger LOG = Logger.getLogger(InstanceRelationshipGraphBuilder.class);
+
+    private static final String PROCESS_INSTANCE_FORMAT = "yyyy-MM-dd-HH-mm"; // nominal time
+    private static final String FEED_INSTANCE_FORMAT = "yyyyMMddHHmm"; // computed
 
     // instance vertex types
     public static final String FEED_INSTANCE_TYPE = "feed-instance";
@@ -99,8 +103,10 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 lineageMetadata.get(LineageArgs.USER_WORKFLOW_VERSION.getOptionName()));
     }
 
-    public String getProcessInstanceName(String entityName, String nominalTime) {
-        return entityName + "/" + nominalTime;
+    public String getProcessInstanceName(String entityName,
+                                         String nominalTime) {
+        return entityName + "/"
+                + SchemaHelper.formatDateUTCToISO8601(nominalTime, PROCESS_INSTANCE_FORMAT);
     }
 
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,
@@ -214,6 +220,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             instance = instance.replaceFirst(element, "");
         }
 
-        return feed.getName() + "/" + instance;
+        return feed.getName() + "/"
+                + SchemaHelper.formatDateUTCToISO8601(instance, FEED_INSTANCE_FORMAT);
     }
 }

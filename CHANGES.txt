@@ -262,6 +262,9 @@ Release Version: 0.4-incubating
 
     FALCON-358 REST API does not conform to Rexster (Venkatesh Seetharam)
 
+    FALCON-359 Instance id's captured are of different formats in process and feed
+    (Venkatesh Seetharam)
+
   BUG FIXES
 
     FALCON-223: hive-exec bundles protobuf-2.4.1 which is incompatible with hadoop-2 requiring protobuf-2.5
