@@ -169,7 +169,7 @@ By default,
 * falcon server starts at port 15000. To change the port, use -port option
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
-   * falcon.emeddedmq.port=<port> - Port for embedded active mq, default 61616
+   * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
    * falcon.embeddedmq.data=<path> - Data path for embedded active mq, default {package dir}/logs/data
 * falcon server starts with conf from {package dir}/conf. To override this (to use the same conf with multiple falcon upgrades), set environment variable FALCON_CONF to the path of conf dir
 

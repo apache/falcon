@@ -74,7 +74,7 @@ public final class Main {
         boolean startActiveMq = Boolean.valueOf(System.getProperty("falcon.embeddedmq", "true"));
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
-            int mqport = Integer.valueOf(System.getProperty("falcon.emeddedmq.port", "61616"));
+            int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
             LOG.info("Starting activemq at port " + mqport + " with data dir " + dataDir);
 
             BrokerService broker = new BrokerService();

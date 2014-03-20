@@ -82,6 +82,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-269 Mistake in the embedded ActiveMQ port property. (Jean-Baptiste Onofré
+    via Shwetha GS)
+
     FALCON-344 FeedEvictorTest. (Shaik Idris Ali via Shwetha GS)
 
     FALCON-302 Issues with distributed package properties. (Shwetha GS)
