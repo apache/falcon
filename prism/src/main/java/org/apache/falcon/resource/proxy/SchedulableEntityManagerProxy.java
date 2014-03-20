@@ -51,6 +51,7 @@ import java.util.Set;
 @Path("entities")
 public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityManager {
     private static final String PRISM_TAG = "prism";
+    public static final String FALCON_TAG = "falcon";
 
     private final Map<String, Channel> entityManagerChannels = new HashMap<String, Channel>();
     private final Map<String, Channel> configSyncChannels = new HashMap<String, Channel>();
@@ -108,17 +109,20 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             @Dimension("colo") @QueryParam("colo") final String ignore) {
 
         final HttpServletRequest bufferedRequest = getBufferedRequest(request);
-        if (!embeddedMode) {
-            super.submit(bufferedRequest, type, currentColo);
-        }
 
         final String entity = getEntity(bufferedRequest, type).getName();
-        return new EntityProxy(type, entity) {
+        Map<String, APIResult> results = new HashMap<String, APIResult>();
+        results.put(FALCON_TAG, new EntityProxy(type, entity) {
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
                 return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, type, colo);
             }
-        }.execute();
+        }.execute());
+
+        if (!embeddedMode) {
+            results.put(PRISM_TAG, super.submit(bufferedRequest, type, currentColo));
+        }
+        return consolidateResult(results);
     }
 
     private Entity getEntity(HttpServletRequest request, String type) {
@@ -154,7 +158,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         Map<String, APIResult> results = new HashMap<String, APIResult>();
 
-        results.put("falcon", new EntityProxy(type, entity) {
+        results.put(FALCON_TAG, new EntityProxy(type, entity) {
             @Override
             public APIResult execute() {
                 try {
@@ -201,7 +205,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         if (!oldColos.isEmpty()) {
-            results.put("delete", new EntityProxy(type, entityName) {
+            results.put(FALCON_TAG + "/delete", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return oldColos;
@@ -215,7 +219,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         if (!mergedColos.isEmpty()) {
-            results.put("update", new EntityProxy(type, entityName) {
+            results.put(FALCON_TAG + "/update", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return mergedColos;
@@ -230,7 +234,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         if (!newColos.isEmpty()) {
-            results.put("submit", new EntityProxy(type, entityName) {
+            results.put(FALCON_TAG + "/submit", new EntityProxy(type, entityName) {
                 @Override
                 protected Set<String> getColosToApply() {
                     return newColos;

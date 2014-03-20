@@ -82,6 +82,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-28 unable to submit/delete feed or process which had been attempted submit 
+    with wrong cluster. (Shwetha GS)
+
     FALCON-269 Mistake in the embedded ActiveMQ port property. (Jean-Baptiste Onofré
     via Shwetha GS)
 
