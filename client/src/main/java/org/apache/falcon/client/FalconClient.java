@@ -768,14 +768,6 @@ public class FalconClient {
         return sendGraphRequest(GraphOperations.EDGES, id);
     }
 
-    public String getVertices() throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.VERTICES, "all");
-    }
-
-    public String getEdges() throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.EDGES, "all");
-    }
-
     private String sendGraphRequest(GraphOperations job, String id) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .path(id)

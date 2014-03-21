@@ -101,7 +101,6 @@ public class FalconCLI {
     public static final String KEY_OPT = "key";
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
-    public static final String DUMP_OPT = "all";
 
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
@@ -618,9 +617,6 @@ public class FalconCLI {
         Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
         graphOptions.addOption(direction);
 
-        Option dump = new Option(DUMP_OPT, false, "dump all elements");
-        graphOptions.addOption(dump);
-
         return graphOptions;
     }
 
@@ -641,19 +637,11 @@ public class FalconCLI {
             validateId(id);
             result = client.getVertex(id);
         } else if (optionsList.contains(VERTICES_CMD)) {
-            if (optionsList.contains(DUMP_OPT)) {
-                result = client.getVertices();
-            } else {
-                validateVerticesCommand(key, value);
-                result = client.getVertices(key, value);
-            }
+            validateVerticesCommand(key, value);
+            result = client.getVertices(key, value);
         } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
-            if (optionsList.contains(DUMP_OPT)) {
-                result = client.getEdges();
-            } else {
-                validateVertexEdgesCommand(id, direction);
-                result = client.getVertexEdges(id, direction);
-            }
+            validateVertexEdgesCommand(id, direction);
+            result = client.getVertexEdges(id, direction);
         } else if (optionsList.contains(EDGE_CMD)) {
             validateId(id);
             result = client.getEdge(id);

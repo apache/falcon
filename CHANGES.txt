@@ -80,6 +80,8 @@ Trunk (Unreleased)
 
     FALCON-366 Add a REST API to get properties for a given vertex (Venkatesh Seetharam)
 
+    FALCON-370 Remove Graph dump option in CLI (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
