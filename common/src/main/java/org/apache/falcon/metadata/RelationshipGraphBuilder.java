@@ -23,14 +23,13 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.log4j.Logger;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * Base class for Metadata relationship mapping helper.
@@ -38,29 +37,6 @@ import java.util.TimeZone;
 public abstract class RelationshipGraphBuilder {
 
     private static final Logger LOG = Logger.getLogger(RelationshipGraphBuilder.class);
-
-    // vertex property keys
-    public static final String NAME_PROPERTY_KEY = "name";
-    public static final String TYPE_PROPERTY_KEY = "type";
-    public static final String TIMESTAMP_PROPERTY_KEY = "timestamp";
-    public static final String VERSION_PROPERTY_KEY = "version";
-
-    // vertex types
-    public static final String USER_TYPE = "user";
-    public static final String COLO_TYPE = "data-center";
-    public static final String TAGS_TYPE = "classification";
-    public static final String GROUPS_TYPE = "group";
-
-    // edge labels
-    public static final String USER_LABEL = "owned-by";
-    public static final String CLUSTER_COLO_LABEL = "collocated";
-    public static final String GROUPS_LABEL = "grouped-as";
-
-    // entity edge labels
-    public static final String FEED_CLUSTER_EDGE_LABEL = "stored-in";
-    public static final String PROCESS_CLUSTER_EDGE_LABEL = "runs-on";
-    public static final String FEED_PROCESS_EDGE_LABEL = "input";
-    public static final String PROCESS_FEED_EDGE_LABEL = "output";
 
     /**
      * A blueprints graph.
@@ -86,7 +62,7 @@ public abstract class RelationshipGraphBuilder {
         return preserveHistory;
     }
 
-    public Vertex addVertex(String name, String type) {
+    public Vertex addVertex(String name, RelationshipType type) {
         Vertex vertex = findVertex(name, type);
         if (vertex != null) {
             if (LOG.isDebugEnabled()) {
@@ -99,7 +75,7 @@ public abstract class RelationshipGraphBuilder {
         return createVertex(name, type);
     }
 
-    protected Vertex addVertex(String name, String type, String timestamp) {
+    protected Vertex addVertex(String name, RelationshipType type, String timestamp) {
         Vertex vertex = findVertex(name, type);
         if (vertex != null) {
             if (LOG.isDebugEnabled()) {
@@ -112,31 +88,31 @@ public abstract class RelationshipGraphBuilder {
         return createVertex(name, type, timestamp);
     }
 
-    protected Vertex findVertex(String name, String type) {
+    protected Vertex findVertex(String name, RelationshipType type) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Finding vertex for: name=" + name + ", type=" + type);
         }
 
         GraphQuery query = graph.query()
-                .has(NAME_PROPERTY_KEY, name)
-                .has(TYPE_PROPERTY_KEY, type);
+                .has(RelationshipProperty.NAME.getName(), name)
+                .has(RelationshipProperty.TYPE.getName(), type.getName());
         Iterator<Vertex> results = query.vertices().iterator();
         return results.hasNext() ? results.next() : null;  // returning one since name is unique
     }
 
-    protected Vertex createVertex(String name, String type) {
+    protected Vertex createVertex(String name, RelationshipType type) {
         return createVertex(name, type, getCurrentTimeStamp());
     }
 
-    protected Vertex createVertex(String name, String type, String timestamp) {
+    protected Vertex createVertex(String name, RelationshipType type, String timestamp) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Creating a new vertex for: name=" + name + ", type=" + type);
         }
 
         Vertex vertex = graph.addVertex(null);
-        vertex.setProperty(NAME_PROPERTY_KEY, name);
-        vertex.setProperty(TYPE_PROPERTY_KEY, type);
-        vertex.setProperty(TIMESTAMP_PROPERTY_KEY, timestamp);
+        vertex.setProperty(RelationshipProperty.NAME.getName(), name);
+        vertex.setProperty(RelationshipProperty.TYPE.getName(), type.getName());
+        vertex.setProperty(RelationshipProperty.TIMESTAMP.getName(), timestamp);
 
         return vertex;
     }
@@ -161,13 +137,13 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Edge findEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
-        return findEdge(fromVertex, toVertex.getProperty(NAME_PROPERTY_KEY), edgeLabel);
+        return findEdge(fromVertex, toVertex.getProperty(RelationshipProperty.NAME.getName()), edgeLabel);
     }
 
     protected Edge findEdge(Vertex fromVertex, Object toVertexName, String edgeLabel) {
         Edge edgeToFind = null;
         for (Edge edge : fromVertex.getEdges(Direction.OUT, edgeLabel)) {
-            if (edge.getVertex(Direction.IN).getProperty(NAME_PROPERTY_KEY).equals(toVertexName)) {
+            if (edge.getVertex(Direction.IN).getProperty(RelationshipProperty.NAME.getName()).equals(toVertexName)) {
                 edgeToFind = edge;
                 break;
             }
@@ -177,11 +153,11 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected void addUserRelation(Vertex fromVertex) {
-        addUserRelation(fromVertex, USER_LABEL);
+        addUserRelation(fromVertex, RelationshipLabel.USER.getName());
     }
 
     protected void addUserRelation(Vertex fromVertex, String edgeLabel) {
-        Vertex relationToUserVertex = addVertex(CurrentUser.getUser(), USER_TYPE);
+        Vertex relationToUserVertex = addVertex(CurrentUser.getUser(), RelationshipType.USER);
         addEdge(fromVertex, relationToUserVertex, edgeLabel);
     }
 
@@ -196,7 +172,7 @@ public abstract class RelationshipGraphBuilder {
             String tagKey = tag.substring(0, index);
             String tagValue = tag.substring(index + 1, tag.length());
 
-            Vertex tagValueVertex = addVertex(tagValue, TAGS_TYPE);
+            Vertex tagValueVertex = addVertex(tagValue, RelationshipType.TAGS);
             addEdge(entityVertex, tagValueVertex, tagKey);
         }
     }
@@ -208,23 +184,22 @@ public abstract class RelationshipGraphBuilder {
 
         String[] groupTags = groups.split(",");
         for (String groupTag : groupTags) {
-            Vertex groupVertex = addVertex(groupTag, GROUPS_TYPE);
-            addEdge(fromVertex, groupVertex, GROUPS_LABEL);
+            Vertex groupVertex = addVertex(groupTag, RelationshipType.GROUPS);
+            addEdge(fromVertex, groupVertex, RelationshipLabel.GROUPS.getName());
         }
     }
 
-    protected void addProcessFeedEdge(Vertex processVertex, Vertex feedVertex, String edgeLabel) {
-        if (edgeLabel.equals(FEED_PROCESS_EDGE_LABEL)) {
-            addEdge(feedVertex, processVertex, edgeLabel);
+    protected void addProcessFeedEdge(Vertex processVertex, Vertex feedVertex,
+                                      RelationshipLabel edgeLabel) {
+        if (edgeLabel == RelationshipLabel.FEED_PROCESS_EDGE) {
+            addEdge(feedVertex, processVertex, edgeLabel.getName());
         } else {
-            addEdge(processVertex, feedVertex, edgeLabel);
+            addEdge(processVertex, feedVertex, edgeLabel.getName());
         }
     }
 
     protected String getCurrentTimeStamp() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return dateFormat.format(new Date());
+        return SchemaHelper.formatDateUTC(new Date());
     }
 
     protected void addProperty(Vertex vertex, Map<String, String> lineageMetadata, String optionName) {

@@ -78,6 +78,8 @@ Trunk (Unreleased)
     FALCON-342 Add ability to set maxMaps on replication (Michael Miklavcic
     via Venkatesh Seetharam)
 
+    FALCON-366 Add a REST API to get properties for a given vertex (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 

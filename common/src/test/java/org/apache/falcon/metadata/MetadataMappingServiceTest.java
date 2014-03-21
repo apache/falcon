@@ -138,7 +138,7 @@ public class MetadataMappingServiceTest {
         clusterEntity = buildCluster(CLUSTER_ENTITY_NAME, COLO_NAME, "classification=production");
         configStore.publish(EntityType.CLUSTER, clusterEntity);
 
-        verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY);
         verifyClusterEntityEdges();
 
         Assert.assertEquals(getVerticesCount(service.getGraph()), 3); // +3 = cluster, colo, tag
@@ -151,7 +151,7 @@ public class MetadataMappingServiceTest {
                 Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, impressionsFeed);
         inputFeeds.add(impressionsFeed);
-        verifyEntityWasAddedToGraph(impressionsFeed.getName(), EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(impressionsFeed.getName(), RelationshipType.FEED_ENTITY);
         verifyFeedEntityEdges(impressionsFeed.getName());
         Assert.assertEquals(getVerticesCount(service.getGraph()), 7); // +4 = feed, tag, group, user
         Assert.assertEquals(getEdgesCount(service.getGraph()), 6); // +4 = cluster, tag, group, user
@@ -160,8 +160,7 @@ public class MetadataMappingServiceTest {
                 "analytics", Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, clicksFeed);
         inputFeeds.add(clicksFeed);
-        verifyEntityWasAddedToGraph(clicksFeed.getName(),
-                EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(clicksFeed.getName(), RelationshipType.FEED_ENTITY);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 9); // feed and financial vertex
         Assert.assertEquals(getEdgesCount(service.getGraph()), 11); // +5 = cluster + user + 2Group + Tag
 
@@ -169,16 +168,16 @@ public class MetadataMappingServiceTest {
                 Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join1Feed);
         outputFeeds.add(join1Feed);
-        verifyEntityWasAddedToGraph(join1Feed.getName(),
-                EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(join1Feed.getName(), RelationshipType.FEED_ENTITY);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 12); // + 3 = 1 feed and 2 groups
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 16); // +5 = cluster + user + Group + 2Tags
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 16); // +5 = cluster + user +
+        // Group + 2Tags
 
         Feed join2Feed = buildFeed("imp-click-join2", clusterEntity, "classified-as=Secure,classified-as=Financial",
                 "reporting,bi", Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join2Feed);
         outputFeeds.add(join2Feed);
-        verifyEntityWasAddedToGraph(join2Feed.getName(), EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(join2Feed.getName(), RelationshipType.FEED_ENTITY);
 
         Assert.assertEquals(getVerticesCount(service.getGraph()), 13); // +1 feed
         // +6 = user + 2tags + 2Groups + Cluster
@@ -200,7 +199,7 @@ public class MetadataMappingServiceTest {
 
         configStore.publish(EntityType.PROCESS, processEntity);
 
-        verifyEntityWasAddedToGraph(processEntity.getName(), EntityRelationshipGraphBuilder.PROCESS_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph(processEntity.getName(), RelationshipType.PROCESS_ENTITY);
         verifyProcessEntityEdges();
 
         // +2 = 1 process + 1 tag
@@ -211,7 +210,7 @@ public class MetadataMappingServiceTest {
 
     @Test (dependsOnMethods = "testOnAddProcessEntity")
     public void testOnAdd() throws Exception {
-        verifyEntityGraph(EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE, "Secure");
+        verifyEntityGraph(RelationshipType.FEED_ENTITY, "Secure");
     }
 
     @Test(dependsOnMethods = "testOnAdd")
@@ -226,7 +225,7 @@ public class MetadataMappingServiceTest {
 
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
-        verifyLineageGraph(InstanceRelationshipGraphBuilder.FEED_INSTANCE_TYPE);
+        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
 
         // +6 = 1 process, 2 inputs,2 outputs
         Assert.assertEquals(getVerticesCount(service.getGraph()), 20);
@@ -243,7 +242,7 @@ public class MetadataMappingServiceTest {
         // cannot modify cluster, adding a new cluster
         bcpCluster = buildCluster("bcp-cluster", "east-coast", "classification=bcp");
         configStore.publish(EntityType.CLUSTER, bcpCluster);
-        verifyEntityWasAddedToGraph("bcp-cluster", EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE);
+        verifyEntityWasAddedToGraph("bcp-cluster", RelationshipType.CLUSTER_ENTITY);
 
         Assert.assertEquals(getVerticesCount(service.getGraph()), 23); // +3 = cluster, colo, tag
         // +2 edges to above, no user but only to colo and new tag
@@ -277,11 +276,10 @@ public class MetadataMappingServiceTest {
     }
 
     private void verifyUpdatedEdges(Feed newFeed) {
-        Vertex feedVertex = getEntityVertex(newFeed.getName(),
-                EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        Vertex feedVertex = getEntityVertex(newFeed.getName(), RelationshipType.FEED_ENTITY);
 
         // groups
-        Edge edge = feedVertex.getEdges(Direction.OUT, RelationshipGraphBuilder.GROUPS_LABEL).iterator().next();
+        Edge edge = feedVertex.getEdges(Direction.OUT, RelationshipLabel.GROUPS.getName()).iterator().next();
         Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), "reporting");
 
         // tags
@@ -292,8 +290,7 @@ public class MetadataMappingServiceTest {
 
         // new cluster
         List<String> actual = new ArrayList<String>();
-        for (Edge clusterEdge : feedVertex.getEdges(
-                Direction.OUT, RelationshipGraphBuilder.FEED_CLUSTER_EDGE_LABEL)) {
+        for (Edge clusterEdge : feedVertex.getEdges(Direction.OUT, RelationshipLabel.FEED_CLUSTER_EDGE.getName())) {
             actual.add(clusterEdge.getVertex(Direction.IN).<String>getProperty("name"));
         }
         Assert.assertTrue(actual.containsAll(Arrays.asList("primary-cluster", "bcp-cluster")),
@@ -320,22 +317,20 @@ public class MetadataMappingServiceTest {
     }
 
     private void verifyUpdatedEdges(Process newProcess) {
-        Vertex processVertex = getEntityVertex(newProcess.getName(),
-                EntityRelationshipGraphBuilder.PROCESS_ENTITY_TYPE);
+        Vertex processVertex = getEntityVertex(newProcess.getName(), RelationshipType.PROCESS_ENTITY);
 
         // cluster
         Edge edge = processVertex.getEdges(Direction.OUT,
-                RelationshipGraphBuilder.PROCESS_CLUSTER_EDGE_LABEL).iterator().next();
+                RelationshipLabel.PROCESS_CLUSTER_EDGE.getName()).iterator().next();
         Assert.assertEquals(edge.getVertex(Direction.IN).getProperty("name"), bcpCluster.getName());
 
         // inputs
-        edge = processVertex.getEdges(Direction.IN,
-                RelationshipGraphBuilder.FEED_PROCESS_EDGE_LABEL).iterator().next();
+        edge = processVertex.getEdges(Direction.IN, RelationshipLabel.FEED_PROCESS_EDGE.getName()).iterator().next();
         Assert.assertEquals(edge.getVertex(Direction.OUT).getProperty("name"),
                 newProcess.getInputs().getInputs().get(0).getFeed());
 
         // outputs
-        for (Edge e : processVertex.getEdges(Direction.OUT, RelationshipGraphBuilder.PROCESS_FEED_EDGE_LABEL)) {
+        for (Edge e : processVertex.getEdges(Direction.OUT, RelationshipLabel.PROCESS_FEED_EDGE.getName())) {
             Assert.fail("there should not be any edges to output feeds" + e);
         }
     }
@@ -453,72 +448,72 @@ public class MetadataMappingServiceTest {
         outputs.getOutputs().add(output);
     }
 
-    private void verifyEntityWasAddedToGraph(String entityName, String entityType) {
+    private void verifyEntityWasAddedToGraph(String entityName, RelationshipType entityType) {
         Vertex entityVertex = getEntityVertex(entityName, entityType);
         Assert.assertNotNull(entityVertex);
         verifyEntityProperties(entityVertex, entityName, entityType);
     }
 
-    private void verifyEntityProperties(Vertex entityVertex, String entityName, String entityType) {
-        Assert.assertEquals(entityName, entityVertex.getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY));
-        Assert.assertEquals(entityType, entityVertex.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY));
-        Assert.assertNotNull(entityVertex.getProperty(EntityRelationshipGraphBuilder.TIMESTAMP_PROPERTY_KEY));
+    private void verifyEntityProperties(Vertex entityVertex, String entityName, RelationshipType entityType) {
+        Assert.assertEquals(entityName, entityVertex.getProperty(RelationshipProperty.NAME.getName()));
+        Assert.assertEquals(entityType.getName(), entityVertex.getProperty(RelationshipProperty.TYPE.getName()));
+        Assert.assertNotNull(entityVertex.getProperty(RelationshipProperty.TIMESTAMP.getName()));
     }
 
     private void verifyClusterEntityEdges() {
         Vertex clusterVertex = getEntityVertex(CLUSTER_ENTITY_NAME,
-                EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE);
+                RelationshipType.CLUSTER_ENTITY);
 
         // verify edge to user vertex
-        verifyVertexForEdge(clusterVertex, Direction.OUT, EntityRelationshipGraphBuilder.USER_LABEL,
-                FALCON_USER, EntityRelationshipGraphBuilder.USER_TYPE);
+        verifyVertexForEdge(clusterVertex, Direction.OUT, RelationshipLabel.USER.getName(),
+                FALCON_USER, RelationshipType.USER.getName());
         // verify edge to colo vertex
-        verifyVertexForEdge(clusterVertex, Direction.OUT, EntityRelationshipGraphBuilder.CLUSTER_COLO_LABEL,
-                COLO_NAME, EntityRelationshipGraphBuilder.COLO_TYPE);
+        verifyVertexForEdge(clusterVertex, Direction.OUT, RelationshipLabel.CLUSTER_COLO.getName(),
+                COLO_NAME, RelationshipType.COLO.getName());
         // verify edge to tags vertex
         verifyVertexForEdge(clusterVertex, Direction.OUT, "classification",
-                "production", EntityRelationshipGraphBuilder.TAGS_TYPE);
+                "production", RelationshipType.TAGS.getName());
     }
 
     private void verifyFeedEntityEdges(String feedName) {
-        Vertex feedVertex = getEntityVertex(feedName, EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE);
+        Vertex feedVertex = getEntityVertex(feedName, RelationshipType.FEED_ENTITY);
 
         // verify edge to cluster vertex
-        verifyVertexForEdge(feedVertex, Direction.OUT, EntityRelationshipGraphBuilder.FEED_CLUSTER_EDGE_LABEL,
-                CLUSTER_ENTITY_NAME, EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE);
+        verifyVertexForEdge(feedVertex, Direction.OUT, RelationshipLabel.FEED_CLUSTER_EDGE.getName(),
+                CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY.getName());
         // verify edge to user vertex
-        verifyVertexForEdge(feedVertex, Direction.OUT, EntityRelationshipGraphBuilder.USER_LABEL,
-                FALCON_USER, EntityRelationshipGraphBuilder.USER_TYPE);
+        verifyVertexForEdge(feedVertex, Direction.OUT, RelationshipLabel.USER.getName(),
+                FALCON_USER, RelationshipType.USER.getName());
         // verify edge to tags vertex
         verifyVertexForEdge(feedVertex, Direction.OUT, "classified-as",
-                "Secure", EntityRelationshipGraphBuilder.TAGS_TYPE);
+                "Secure", RelationshipType.TAGS.getName());
         // verify edge to group vertex
-        verifyVertexForEdge(feedVertex, Direction.OUT, EntityRelationshipGraphBuilder.GROUPS_LABEL,
-                "analytics", EntityRelationshipGraphBuilder.GROUPS_TYPE);
+        verifyVertexForEdge(feedVertex, Direction.OUT, RelationshipLabel.GROUPS.getName(),
+                "analytics", RelationshipType.GROUPS.getName());
     }
 
     private void verifyProcessEntityEdges() {
         Vertex processVertex = getEntityVertex(PROCESS_ENTITY_NAME,
-                EntityRelationshipGraphBuilder.PROCESS_ENTITY_TYPE);
+                RelationshipType.PROCESS_ENTITY);
 
         // verify edge to cluster vertex
-        verifyVertexForEdge(processVertex, Direction.OUT, EntityRelationshipGraphBuilder.FEED_CLUSTER_EDGE_LABEL,
-                CLUSTER_ENTITY_NAME, EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE);
+        verifyVertexForEdge(processVertex, Direction.OUT, RelationshipLabel.FEED_CLUSTER_EDGE.getName(),
+                CLUSTER_ENTITY_NAME, RelationshipType.CLUSTER_ENTITY.getName());
         // verify edge to user vertex
-        verifyVertexForEdge(processVertex, Direction.OUT, EntityRelationshipGraphBuilder.USER_LABEL,
-                FALCON_USER, EntityRelationshipGraphBuilder.USER_TYPE);
+        verifyVertexForEdge(processVertex, Direction.OUT, RelationshipLabel.USER.getName(),
+                FALCON_USER, RelationshipType.USER.getName());
         // verify edge to tags vertex
         verifyVertexForEdge(processVertex, Direction.OUT, "classified-as",
-                "Critical", EntityRelationshipGraphBuilder.TAGS_TYPE);
+                "Critical", RelationshipType.TAGS.getName());
 
         // verify edges to inputs
         List<String> actual = new ArrayList<String>();
         for (Edge edge : processVertex.getEdges(Direction.IN,
-                EntityRelationshipGraphBuilder.FEED_PROCESS_EDGE_LABEL)) {
+                RelationshipLabel.FEED_PROCESS_EDGE.getName())) {
             Vertex outVertex = edge.getVertex(Direction.OUT);
-            Assert.assertEquals(EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE,
-                    outVertex.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY));
-            actual.add(outVertex.<String>getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY));
+            Assert.assertEquals(RelationshipType.FEED_ENTITY.getName(),
+                    outVertex.getProperty(RelationshipProperty.TYPE.getName()));
+            actual.add(outVertex.<String>getProperty(RelationshipProperty.NAME.getName()));
         }
 
         Assert.assertTrue(actual.containsAll(Arrays.asList("impression-feed", "clicks-feed")),
@@ -527,20 +522,20 @@ public class MetadataMappingServiceTest {
         actual.clear();
         // verify edges to outputs
         for (Edge edge : processVertex.getEdges(Direction.OUT,
-                EntityRelationshipGraphBuilder.PROCESS_FEED_EDGE_LABEL)) {
+                RelationshipLabel.PROCESS_FEED_EDGE.getName())) {
             Vertex outVertex = edge.getVertex(Direction.IN);
-            Assert.assertEquals(EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE,
-                    outVertex.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY));
-            actual.add(outVertex.<String>getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY));
+            Assert.assertEquals(RelationshipType.FEED_ENTITY.getName(),
+                    outVertex.getProperty(RelationshipProperty.TYPE.getName()));
+            actual.add(outVertex.<String>getProperty(RelationshipProperty.NAME.getName()));
         }
         Assert.assertTrue(actual.containsAll(Arrays.asList("imp-click-join1", "imp-click-join2")),
                 "Actual does not contain expected: " + actual);
     }
 
-    private Vertex getEntityVertex(String entityName, String entityType) {
+    private Vertex getEntityVertex(String entityName, RelationshipType entityType) {
         GraphQuery entityQuery = getQuery()
-                .has(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY, entityName)
-                .has(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY, entityType);
+                .has(RelationshipProperty.NAME.getName(), entityName)
+                .has(RelationshipProperty.TYPE.getName(), entityType.getName());
         Iterator<Vertex> iterator = entityQuery.vertices().iterator();
         Assert.assertTrue(iterator.hasNext());
 
@@ -555,38 +550,38 @@ public class MetadataMappingServiceTest {
         for (Edge edge : fromVertex.getEdges(direction, label)) {
             Vertex outVertex = edge.getVertex(Direction.IN);
             Assert.assertEquals(
-                    outVertex.getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY), expectedName);
+                    outVertex.getProperty(RelationshipProperty.NAME.getName()), expectedName);
             Assert.assertEquals(
-                    outVertex.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY), expectedType);
+                    outVertex.getProperty(RelationshipProperty.TYPE.getName()), expectedType);
         }
     }
 
-    private void verifyEntityGraph(String feedType, String classification) {
+    private void verifyEntityGraph(RelationshipType feedType, String classification) {
         // feeds owned by a user
-        List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(feedType);
+        List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(feedType.getName());
         Assert.assertEquals(feedNamesOwnedByUser,
                 Arrays.asList("impression-feed", "clicks-feed", "imp-click-join1", "imp-click-join2"));
 
         // feeds classified as secure
-        verifyFeedsClassifiedAsSecure(feedType,
+        verifyFeedsClassifiedAsSecure(feedType.getName(),
                 Arrays.asList("impression-feed", "clicks-feed", "imp-click-join2"));
 
         // feeds owned by a user and classified as secure
-        verifyFeedsOwnedByUserAndClassification(feedType, classification,
+        verifyFeedsOwnedByUserAndClassification(feedType.getName(), classification,
                 Arrays.asList("impression-feed", "clicks-feed", "imp-click-join2"));
     }
 
     private List<String> getFeedsOwnedByAUser(String feedType) {
         GraphQuery userQuery = getQuery()
-                .has(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY, FALCON_USER)
-                .has(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY, EntityRelationshipGraphBuilder.USER_TYPE);
+                .has(RelationshipProperty.NAME.getName(), FALCON_USER)
+                .has(RelationshipProperty.TYPE.getName(), RelationshipType.USER.getName());
 
         List<String> feedNames = new ArrayList<String>();
         for (Vertex userVertex : userQuery.vertices()) {
-            for (Vertex feed : userVertex.getVertices(Direction.IN, EntityRelationshipGraphBuilder.USER_LABEL)) {
-                if (feed.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY).equals(feedType)) {
+            for (Vertex feed : userVertex.getVertices(Direction.IN, RelationshipLabel.USER.getName())) {
+                if (feed.getProperty(RelationshipProperty.TYPE.getName()).equals(feedType)) {
                     System.out.println(FALCON_USER + " owns -> " + GraphUtils.vertexString(feed));
-                    feedNames.add(feed.<String>getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY));
+                    feedNames.add(feed.<String>getProperty(RelationshipProperty.NAME.getName()));
                 }
             }
         }
@@ -596,15 +591,15 @@ public class MetadataMappingServiceTest {
 
     private void verifyFeedsClassifiedAsSecure(String feedType, List<String> expected) {
         GraphQuery classQuery = getQuery()
-                .has(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY, "Secure")
-                .has(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY, EntityRelationshipGraphBuilder.TAGS_TYPE);
+                .has(RelationshipProperty.NAME.getName(), "Secure")
+                .has(RelationshipProperty.TYPE.getName(), RelationshipType.TAGS.getName());
 
         List<String> actual = new ArrayList<String>();
         for (Vertex feedVertex : classQuery.vertices()) {
             for (Vertex feed : feedVertex.getVertices(Direction.BOTH, "classified-as")) {
-                if (feed.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY).equals(feedType)) {
+                if (feed.getProperty(RelationshipProperty.TYPE.getName()).equals(feedType)) {
                     System.out.println(" Secure classification -> " + GraphUtils.vertexString(feed));
-                    actual.add(feed.<String>getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY));
+                    actual.add(feed.<String>getProperty(RelationshipProperty.NAME.getName()));
                 }
             }
         }
@@ -615,13 +610,13 @@ public class MetadataMappingServiceTest {
     private void verifyFeedsOwnedByUserAndClassification(String feedType, String classification,
                                                          List<String> expected) {
         List<String> actual = new ArrayList<String>();
-        Vertex userVertex = getEntityVertex(FALCON_USER, EntityRelationshipGraphBuilder.USER_TYPE);
-        for (Vertex feed : userVertex.getVertices(Direction.IN, EntityRelationshipGraphBuilder.USER_LABEL)) {
-            if (feed.getProperty(EntityRelationshipGraphBuilder.TYPE_PROPERTY_KEY).equals(feedType)) {
+        Vertex userVertex = getEntityVertex(FALCON_USER, RelationshipType.USER);
+        for (Vertex feed : userVertex.getVertices(Direction.IN, RelationshipLabel.USER.getName())) {
+            if (feed.getProperty(RelationshipProperty.TYPE.getName()).equals(feedType)) {
                 for (Vertex classVertex : feed.getVertices(Direction.OUT, "classified-as")) {
-                    if (classVertex.getProperty(EntityRelationshipGraphBuilder.NAME_PROPERTY_KEY)
+                    if (classVertex.getProperty(RelationshipProperty.NAME.getName())
                             .equals(classification)) {
-                        actual.add(feed.<String>getProperty(RelationshipGraphBuilder.NAME_PROPERTY_KEY));
+                        actual.add(feed.<String>getProperty(RelationshipProperty.NAME.getName()));
                         System.out.println(classification + " feed owned by falcon-user -> "
                                 + GraphUtils.vertexString(feed));
                     }
@@ -661,9 +656,8 @@ public class MetadataMappingServiceTest {
         Iterator<Vertex> vertices = graph.getVertices("name", "impression-feed/2014-01-01T00:00Z").iterator();
         Assert.assertTrue(vertices.hasNext());
         Vertex feedInstanceVertex = vertices.next();
-        Assert.assertEquals(
-                feedInstanceVertex.getProperty(RelationshipGraphBuilder.TYPE_PROPERTY_KEY),
-                InstanceRelationshipGraphBuilder.FEED_INSTANCE_TYPE);
+        Assert.assertEquals(feedInstanceVertex.getProperty(RelationshipProperty.TYPE.getName()),
+                RelationshipType.FEED_INSTANCE.getName());
 
         Object vertexId = feedInstanceVertex.getId();
         Vertex vertexById = graph.getVertex(vertexId);

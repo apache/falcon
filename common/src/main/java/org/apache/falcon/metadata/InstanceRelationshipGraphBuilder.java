@@ -47,10 +47,6 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     private static final String PROCESS_INSTANCE_FORMAT = "yyyy-MM-dd-HH-mm"; // nominal time
     private static final String FEED_INSTANCE_FORMAT = "yyyyMMddHHmm"; // computed
 
-    // instance vertex types
-    public static final String FEED_INSTANCE_TYPE = "feed-instance";
-    public static final String PROCESS_INSTANCE_TYPE = "process-instance";
-
     // process workflow properties from message
     private static final String[] INSTANCE_WORKFLOW_PROPERTIES = {
         LineageArgs.USER_WORKFLOW_NAME.getOptionName(),
@@ -62,8 +58,6 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LineageArgs.USER_SUBFLOW_ID.getOptionName(),
     };
 
-    // instance edge labels
-    public static final String INSTANCE_ENTITY_EDGE_LABEL = "instance-of";
 
     public InstanceRelationshipGraphBuilder(Graph graph, boolean preserveHistory) {
         super(graph, preserveHistory);
@@ -75,16 +69,16 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
         LOG.info("Adding process instance: " + processInstanceName);
 
-        String timestamp = lineageMetadata.get(LineageArgs.TIMESTAMP.getOptionName());
-        Vertex processInstance = addVertex(processInstanceName, PROCESS_INSTANCE_TYPE, timestamp);
+        String timestamp = getTimestamp(lineageMetadata);
+        Vertex processInstance = addVertex(processInstanceName, RelationshipType.PROCESS_INSTANCE, timestamp);
         addWorkflowInstanceProperties(processInstance, lineageMetadata);
 
         addInstanceToEntity(processInstance, entityName,
-                EntityRelationshipGraphBuilder.PROCESS_ENTITY_TYPE, INSTANCE_ENTITY_EDGE_LABEL);
+                RelationshipType.PROCESS_ENTITY, RelationshipLabel.INSTANCE_ENTITY_EDGE);
         addInstanceToEntity(processInstance, lineageMetadata.get(LineageArgs.CLUSTER.getOptionName()),
-                EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE, PROCESS_CLUSTER_EDGE_LABEL);
-        addInstanceToEntity(processInstance,
-                lineageMetadata.get(LineageArgs.WORKFLOW_USER.getOptionName()), USER_TYPE, USER_LABEL);
+                RelationshipType.CLUSTER_ENTITY, RelationshipLabel.PROCESS_CLUSTER_EDGE);
+        addInstanceToEntity(processInstance, lineageMetadata.get(LineageArgs.WORKFLOW_USER.getOptionName()),
+                RelationshipType.USER, RelationshipLabel.USER);
 
         if (isPreserveHistory()) {
             Process process = ConfigurationStore.get().get(EntityType.PROCESS, entityName);
@@ -94,12 +88,17 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         return processInstance;
     }
 
+    private String getTimestamp(Map<String, String> lineageMetadata) {
+        String timestamp = lineageMetadata.get(LineageArgs.TIMESTAMP.getOptionName());
+        return SchemaHelper.formatDateUTCToISO8601(timestamp, PROCESS_INSTANCE_FORMAT);
+    }
+
     public void addWorkflowInstanceProperties(Vertex processInstance,
                                               Map<String, String> lineageMetadata) {
         for (String instanceWorkflowProperty : INSTANCE_WORKFLOW_PROPERTIES) {
             addProperty(processInstance, lineageMetadata, instanceWorkflowProperty);
         }
-        processInstance.setProperty(VERSION_PROPERTY_KEY,
+        processInstance.setProperty(RelationshipProperty.VERSION.getName(),
                 lineageMetadata.get(LineageArgs.USER_WORKFLOW_VERSION.getOptionName()));
     }
 
@@ -110,7 +109,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,
-                                    String entityType, String edgeLabel) {
+                                    RelationshipType entityType, RelationshipLabel edgeLabel) {
         Vertex entityVertex = findVertex(entityName, entityType);
         LOG.info("Vertex exists? name=" + entityName + ", type=" + entityType + ", v=" + entityVertex);
         if (entityVertex == null) {
@@ -119,7 +118,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             return;
         }
 
-        addEdge(instanceVertex, entityVertex, edgeLabel);
+        addEdge(instanceVertex, entityVertex, edgeLabel.getName());
     }
 
     public void addOutputFeedInstances(Map<String, String> lineageMetadata,
@@ -134,7 +133,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 lineageMetadata.get(LineageArgs.FEED_INSTANCE_PATHS.getOptionName()).split(",");
 
         addFeedInstances(outputFeedNames, outputFeedInstancePaths,
-                processInstance, PROCESS_FEED_EDGE_LABEL, lineageMetadata);
+                processInstance, RelationshipLabel.PROCESS_FEED_EDGE, lineageMetadata);
     }
 
     public void addInputFeedInstances(Map<String, String> lineageMetadata,
@@ -150,11 +149,11 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                 lineageMetadata.get(LineageArgs.INPUT_FEED_PATHS.getOptionName()).split("#");
 
         addFeedInstances(inputFeedNames, inputFeedInstancePaths,
-                processInstance, FEED_PROCESS_EDGE_LABEL, lineageMetadata);
+                processInstance, RelationshipLabel.FEED_PROCESS_EDGE, lineageMetadata);
     }
 
     public void addFeedInstances(String[] feedNames, String[] feedInstancePaths,
-                                  Vertex processInstance, String edgeLabel,
+                                  Vertex processInstance, RelationshipLabel edgeLabel,
                                   Map<String, String> lineageMetadata) throws FalconException {
         String clusterName = lineageMetadata.get(LineageArgs.CLUSTER.getOptionName());
 
@@ -166,17 +165,17 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
                     + feedInstancePath + ", in cluster: " + clusterName);
             String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstancePath);
             LOG.info("Adding feed instance: " + feedInstanceName);
-            Vertex feedInstance = addVertex(feedInstanceName, FEED_INSTANCE_TYPE,
-                    lineageMetadata.get(LineageArgs.TIMESTAMP.getOptionName()));
+            Vertex feedInstance = addVertex(feedInstanceName, RelationshipType.FEED_INSTANCE,
+                    getTimestamp(lineageMetadata));
 
             addProcessFeedEdge(processInstance, feedInstance, edgeLabel);
 
             addInstanceToEntity(feedInstance, feedName,
-                    EntityRelationshipGraphBuilder.FEED_ENTITY_TYPE, INSTANCE_ENTITY_EDGE_LABEL);
+                    RelationshipType.FEED_ENTITY, RelationshipLabel.INSTANCE_ENTITY_EDGE);
             addInstanceToEntity(feedInstance, lineageMetadata.get(LineageArgs.CLUSTER.getOptionName()),
-                    EntityRelationshipGraphBuilder.CLUSTER_ENTITY_TYPE, FEED_CLUSTER_EDGE_LABEL);
-            addInstanceToEntity(feedInstance,
-                    lineageMetadata.get(LineageArgs.WORKFLOW_USER.getOptionName()), USER_TYPE, USER_LABEL);
+                    RelationshipType.CLUSTER_ENTITY, RelationshipLabel.FEED_CLUSTER_EDGE);
+            addInstanceToEntity(feedInstance, lineageMetadata.get(LineageArgs.WORKFLOW_USER.getOptionName()),
+                    RelationshipType.USER, RelationshipLabel.USER);
 
             if (isPreserveHistory()) {
                 Feed feed = ConfigurationStore.get().get(EntityType.FEED, feedName);

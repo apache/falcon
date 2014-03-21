@@ -28,6 +28,9 @@ import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
 import org.apache.falcon.metadata.GraphUtils;
 import org.apache.falcon.metadata.MetadataMappingService;
+import org.apache.falcon.metadata.RelationshipLabel;
+import org.apache.falcon.metadata.RelationshipProperty;
+import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
@@ -35,6 +38,7 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -43,6 +47,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -92,7 +98,7 @@ public class LineageMetadataResource {
     public Response serializeGraph() {
         checkIfMetadataMappingServiceIsEnabled();
         String file = StartupProperties.get().getProperty("falcon.graph.serialize.path")
-                + "lineage-graph-" + System.currentTimeMillis() + ".json";
+                + "/lineage-graph-" + System.currentTimeMillis() + ".json";
         LOG.info("Serialize Graph to: " + file);
         try {
             GraphUtils.dump(getGraph(), file);
@@ -137,13 +143,7 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex for vertexId= " + vertexId);
         try {
-            Vertex vertex = getGraph().getVertex(vertexId);
-            if (vertex == null) {
-                String message = "Vertex with [" + vertexId + "] cannot be found.";
-                LOG.info(message);
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(JSONObject.quote(message)).build());
-            }
+            Vertex vertex = findVertex(vertexId);
 
             JSONObject response = new JSONObject();
             response.put(RESULTS, GraphSONUtility.jsonFromElement(
@@ -152,6 +152,118 @@ public class LineageMetadataResource {
         } catch (JSONException e) {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+        }
+    }
+
+    private Vertex findVertex(String vertexId) {
+        Vertex vertex = getGraph().getVertex(vertexId);
+        if (vertex == null) {
+            String message = "Vertex with [" + vertexId + "] cannot be found.";
+            LOG.info(message);
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity(JSONObject.quote(message)).build());
+        }
+
+        return vertex;
+    }
+
+    /**
+     * Get properties for a single vertex with a unique id.
+     * This is NOT a rexster API.
+     * <p/>
+     * GET http://host/graphs/lineage/vertices/properties/id
+     */
+    @GET
+    @Path("/vertices/properties/{id}")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getVertexProperties(@PathParam("id") final String vertexId,
+                                        @DefaultValue("false") @QueryParam("relationships")
+                                        final String relationships) {
+        checkIfMetadataMappingServiceIsEnabled();
+        LOG.info("Get vertex for vertexId= " + vertexId);
+        try {
+            Vertex vertex = findVertex(vertexId);
+
+            Map<String, String> vertexProperties = getVertexProperties(vertex, Boolean.valueOf(relationships));
+
+            JSONObject response = new JSONObject();
+            response.put(RESULTS, new JSONObject(vertexProperties));
+            response.put(TOTAL_SIZE, vertexProperties.size());
+            return Response.ok(response).build();
+        } catch (JSONException e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+        }
+    }
+
+    private Map<String, String> getVertexProperties(Vertex vertex, boolean captureRelationships) {
+        Map<String, String> vertexProperties = new HashMap<String, String>();
+        for (String key : vertex.getPropertyKeys()) {
+            vertexProperties.put(key, vertex.<String>getProperty(key));
+        }
+
+        RelationshipType vertexType = RelationshipType.fromString(
+                vertex.<String>getProperty(RelationshipProperty.TYPE.getName()));
+        // get the properties from relationships
+        if (captureRelationships && (vertexType == RelationshipType.FEED_INSTANCE
+                || vertexType == RelationshipType.PROCESS_INSTANCE)) {
+            for (Edge edge : vertex.getEdges(Direction.OUT)) {
+                Vertex toVertex = edge.getVertex(Direction.IN);
+                addRelationships(vertexType, toVertex, vertexProperties);
+            }
+        }
+
+        return vertexProperties;
+    }
+
+    private void addRelationships(RelationshipType fromVertexType, Vertex toVertex,
+                                  Map<String, String> vertexProperties) {
+        String value = toVertex.getProperty(RelationshipProperty.NAME.getName());
+        RelationshipType toVertexType = RelationshipType.fromString(
+                toVertex.<String>getProperty(RelationshipProperty.TYPE.getName()));
+
+        switch (toVertexType) {
+        case CLUSTER_ENTITY:
+            String key = fromVertexType == RelationshipType.FEED_INSTANCE
+                    ? RelationshipLabel.FEED_CLUSTER_EDGE.getName()
+                    : RelationshipLabel.PROCESS_CLUSTER_EDGE.getName();
+            vertexProperties.put(key, value);
+            break;
+
+        case USER:
+            vertexProperties.put(RelationshipLabel.USER.getName(), value);
+            break;
+
+        case FEED_ENTITY:
+            addEntityRelationships(toVertex, vertexProperties);
+            break;
+
+        case PROCESS_ENTITY:
+            addEntityRelationships(toVertex, vertexProperties);
+            break;
+
+        default:
+        }
+    }
+
+    private void addEntityRelationships(Vertex vertex, Map<String, String> vertexProperties) {
+        for (Edge edge : vertex.getEdges(Direction.OUT)) {
+            Vertex toVertex = edge.getVertex(Direction.IN);
+            String value = toVertex.getProperty(RelationshipProperty.NAME.getName());
+            RelationshipType toVertexType = RelationshipType.fromString(
+                    toVertex.<String>getProperty(RelationshipProperty.TYPE.getName()));
+
+            switch (toVertexType) {
+            case TAGS:
+                vertexProperties.put(edge.getLabel(), value);
+                break;
+
+            case GROUPS:
+                vertexProperties.put(RelationshipLabel.GROUPS.getName(), value);
+                break;
+
+            default:
+            }
         }
     }
 
@@ -193,13 +305,7 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex edges for vertexId= " + vertexId + ", direction= " + direction);
         try {
-            Vertex vertex = getGraph().getVertex(vertexId);
-            if (vertex == null) {
-                String message = "Vertex with [" + vertexId + "] cannot be found.";
-                LOG.info(message);
-                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                        .entity(JSONObject.quote(message)).build());
-            }
+            Vertex vertex = findVertex(vertexId);
 
             return getVertexEdges(vertex, direction);
 

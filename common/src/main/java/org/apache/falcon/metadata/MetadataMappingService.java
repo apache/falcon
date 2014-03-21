@@ -129,13 +129,13 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         LOG.info("Indexes does not exist, Creating indexes for graph");
         // todo - externalize this
         makeNameKeyIndex();
-        makeKeyIndex(RelationshipGraphBuilder.TYPE_PROPERTY_KEY);
-        makeKeyIndex(RelationshipGraphBuilder.TIMESTAMP_PROPERTY_KEY);
-        makeKeyIndex(RelationshipGraphBuilder.VERSION_PROPERTY_KEY);
+        makeKeyIndex(RelationshipProperty.TYPE.getName());
+        makeKeyIndex(RelationshipProperty.TIMESTAMP.getName());
+        makeKeyIndex(RelationshipProperty.VERSION.getName());
     }
 
     private void makeNameKeyIndex() {
-        getTitanGraph().makeKey(RelationshipGraphBuilder.NAME_PROPERTY_KEY)
+        getTitanGraph().makeKey(RelationshipProperty.NAME.getName())
                 .dataType(String.class)
                 .indexed(Vertex.class)
                 .indexed(Edge.class)
