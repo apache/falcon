@@ -37,6 +37,21 @@
         <value>shell-action-0.1.xsd,hive-action-0.2.xsd,sqoop-action-0.2.xsd</value>
     </property>
 
+   <property>
+        <name>oozie.service.HadoopAccessorService.action.configurations</name>
+        <value>*=${oozie.action.conf}</value>
+        <description>
+            Comma separated AUTHORITY=ACTION_CONF_DIR, where AUTHORITY is the HOST:PORT of
+            the Hadoop MapReduce service (JobTracker, YARN). The wildcard '*' configuration is
+            used when there is no exact match for an authority. The ACTION_CONF_DIR may contain
+            ACTION.xml files where ACTION is the action type ('java', 'map-reduce', 'pig',
+            'hive', 'sqoop', etc.). If the ACTION.xml file exists, its properties will be used
+            as defaults properties for the action. If the path is relative is looked within
+            the Oozie configuration directory; though the path can be absolute (i.e. to point
+            to Hadoop client conf/ directories in the local filesystem.
+        </description>
+    </property>
+
     <property>
         <name>oozie.system.id</name>
         <value>oozie-${user.name}</value>

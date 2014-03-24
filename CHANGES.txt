@@ -25,6 +25,8 @@ Trunk (Unreleased)
     (Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-365 Remove the checked in oozie xsds. (Shwetha GS)
+
     FALCON-356 Merge OozieProcessMapper and OozieProcessWorkflowBuilder. (Shwetha GS)
 
     FALCON-355 Remove SLAMonitoringService. (Shwetha GS)

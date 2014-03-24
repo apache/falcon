@@ -114,76 +114,106 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.sun.tools.xjc.maven2</groupId>
-                <artifactId>maven-jaxb-plugin</artifactId>
-                <version>1.1.1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>1</id>
-                        <!-- <phase>generate-sources</phase> -->
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.oozie</groupId>
+                                    <artifactId>oozie-client</artifactId>
+                                    <outputDirectory>${project.build.directory}/oozie-schemas</outputDirectory>
+                                    <includes>**/*.xsd</includes>
+                                    <excludes>**/*.class</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>coord-gen</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <!-- <generateDirectory>src/main/java</generateDirectory> -->
+                            <forceRegenerate>true</forceRegenerate>
                             <generatePackage>org.apache.falcon.oozie.coordinator</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>oozie-coordinator-0.3.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <excludeBinding>jaxb-binding.xjb</excludeBinding>
-                            </excludeBindings>
+                            <schemas>
+                                <schema>
+                                    <dependencyResource>
+                                        <groupId>org.apache.oozie</groupId>
+                                        <artifactId>oozie-client</artifactId>
+                                        <resource>oozie-coordinator-0.3.xsd</resource>
+                                    </dependencyResource>
+                                </schema>
+                            </schemas>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>2</id>
-                        <!-- <phase>generate-sources</phase> -->
+                        <id>wf-gen</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <!-- <generateDirectory>src/main/java</generateDirectory> -->
+                            <!-- Uses workflow xsd from unpacked oozie client jar to customize jaxb binding.
+                            jaxb binding is required to avoid 'Property "Any" is already defined' error-->
+                            <forceRegenerate>true</forceRegenerate>
                             <generatePackage>org.apache.falcon.oozie.workflow</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>oozie-workflow-0.3.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <excludeBinding>jaxb-binding.xjb</excludeBinding>
-                            </excludeBindings>
+                            <bindingDirectory>src/main/resources/binding</bindingDirectory>
+                            <schemaDirectory>${project.build.directory}/oozie-schemas</schemaDirectory>
+                            <schemaIncludes>
+                                <include>oozie-workflow-0.3.xsd</include>
+                            </schemaIncludes>
+                            <debug>true</debug>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>3</id>
-                        <!-- <phase>generate-sources</phase> -->
+                        <id>hive-gen</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <!-- <generateDirectory>src/main/java</generateDirectory> -->
+                            <forceRegenerate>true</forceRegenerate>
                             <generatePackage>org.apache.falcon.oozie.hive</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>hive-action-0.2.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <excludeBinding>jaxb-binding.xjb</excludeBinding>
-                            </excludeBindings>
+                            <schemas>
+                                <schema>
+                                    <dependencyResource>
+                                        <groupId>org.apache.oozie</groupId>
+                                        <artifactId>oozie-client</artifactId>
+                                        <resource>hive-action-0.2.xsd</resource>
+                                    </dependencyResource>
+                                </schema>
+                            </schemas>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>4</id>
-                        <!-- <phase>generate-sources</phase> -->
+                        <id>bundle-gen</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <!-- <generateDirectory>src/main/java</generateDirectory> -->
+                            <forceRegenerate>true</forceRegenerate>
                             <generatePackage>org.apache.falcon.oozie.bundle</generatePackage>
-                            <includeSchemas>
-                                <includeSchema>oozie-bundle-0.1.xsd</includeSchema>
-                            </includeSchemas>
-                            <excludeBindings>
-                                <excludeBinding>jaxb-binding.xjb</excludeBinding>
-                            </excludeBindings>
+                            <schemas>
+                                <schema>
+                                    <dependencyResource>
+                                        <groupId>org.apache.oozie</groupId>
+                                        <artifactId>oozie-client</artifactId>
+                                        <resource>oozie-bundle-0.1.xsd</resource>
+                                    </dependencyResource>
+                                </schema>
+                            </schemas>
                         </configuration>
                     </execution>
                 </executions>
