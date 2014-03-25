@@ -151,3 +151,72 @@
   margin: 10px;
 }
 
+.lineage-link {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 1.5px;
+}
+
+.lineage-node, .lineage-href {
+  cursor: pointer;
+}
+
+.lineage-node-terminal {
+  stroke: #000;
+  stroke-opacity: 0.3;
+  stroke-width: 8px;
+}
+
+.lineage-node-active {
+  stroke: #45a2b5;
+  stroke-opacity: 0.3;
+  stroke-width: 8px;
+}
+
+.lineage-node-text {
+  font-size: 8pt;
+  fill: #fff;
+}
+
+.lineage-node-feed-instance {
+  fill: #6ab545;
+}
+
+.lineage-node-process-instance {
+  fill: #456ab5;
+}
+
+ul.lineage-legend {
+  list-style-type: none;
+}
+
+.lineage-legend li {
+  padding-left: 20px;
+  display: inline;
+}
+
+ul.lineage-legend li:before {
+  content: "\25cf";
+  position: relative;
+  display: inline-block;
+  top: 2px;
+  font-style: normal;
+  font-size: 16pt;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  padding-right: 5px;
+}
+
+.lineage-legend-feed-inst:before {
+color: #6ab545;
+}
+
+.lineage-legend-process-inst:before {
+color: #456ab5;
+}
+
+
+.lineage-legend-terminal:before {
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: #ccc;
+}

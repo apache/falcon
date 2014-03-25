@@ -54,6 +54,9 @@
 
       dust.render('instance', data, function(err, out) {
         $('#panel-instance > .panel-body').html(out);
+        $('.lineage-href').click(function() {
+          falcon.load_lineage_graph(entityId, $(this).attr('data-instance-name'));
+        });
         $('.instance-hdfs-log').tooltip();
         $('#panel-instance').show();
       });
@@ -234,10 +237,10 @@
       layout.eachEdge(drawEdge);
       layout.eachNode(drawNode);
 
-      var bb = layout.graph().bbox;
+      var graph = layout.graph();
 
-      $('#entity-dep-graph').attr('width', bb.width);
-      $('#entity-dep-graph').attr('height', bb.height);
+      $('#entity-dep-graph').attr('width', graph.width);
+      $('#entity-dep-graph').attr('height', graph.height);
       postRender();
     }
     plot();

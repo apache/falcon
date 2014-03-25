@@ -84,6 +84,17 @@ Trunk (Unreleased)
 
     FALCON-370 Remove Graph dump option in CLI (Venkatesh Seetharam)
 
+    FALCON-367 Bump dagre and jquery version for the web UI (Haohui Mai
+    via Venkatesh Seetharam)
+
+    FALCON-290 Visualize lineage information on the dashboard (Haohui Mai
+    via Venkatesh Seetharam)
+
+    FALCON-371 Show vertex information in the web UI (Haohui Mai via Venkatesh Seetharam)
+
+    FALCON-373 Display lineage link only for jobs that are succeeded in the web UI
+    (Haohui Mai via Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
