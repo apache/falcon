@@ -217,7 +217,7 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="FIFO"/>
             <xs:enumeration value="LIFO"/>
-            <xs:enumeration value="ONLYLAST"/>
+            <xs:enumeration value="LAST_ONLY"/>
         </xs:restriction>
     </xs:simpleType>
 
