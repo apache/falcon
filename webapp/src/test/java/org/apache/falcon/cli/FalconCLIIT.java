@@ -126,6 +126,10 @@ public class FalconCLIIT {
         Assert.assertEquals(0,
                 executeWithURL("entity -submitAndSchedule -type process -file "
                         + filePath));
+
+        Assert.assertEquals(0,
+            executeWithURL("entity -update -name " + overlay.get("processName") + " -type process -file "
+                + filePath + " -effective 2025-04-20T00:00Z"));
     }
 
     public void testValidateValidCommands() throws Exception {

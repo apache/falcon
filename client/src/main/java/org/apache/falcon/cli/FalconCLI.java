@@ -477,6 +477,7 @@ public class FalconCLI {
         Option colo = new Option(COLO_OPT, true,
                 "Colo name");
         colo.setRequired(false);
+        Option effective = new Option(EFFECTIVE_OPT, true, "Effective time for update");
 
         entityOptions.addOption(url);
         entityOptions.addOptionGroup(group);
@@ -484,6 +485,7 @@ public class FalconCLI {
         entityOptions.addOption(entityName);
         entityOptions.addOption(filePath);
         entityOptions.addOption(colo);
+        entityOptions.addOption(effective);
 
         return entityOptions;
     }

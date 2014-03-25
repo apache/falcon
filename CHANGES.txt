@@ -99,6 +99,8 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-374 Update with effective time in CLI. (Shwetha GS)
+
     FALCON-98 starting embedded hadoop fails sometimes. (Shwetha GS)
 
     FALCON-28 unable to submit/delete feed or process which had been attempted submit 
