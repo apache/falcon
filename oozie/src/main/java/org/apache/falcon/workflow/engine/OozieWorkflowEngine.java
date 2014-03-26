@@ -753,22 +753,29 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
 
             for (CoordinatorJob coord : applicableCoords) {
+                Date nextMaterializedTime = coord.getNextMaterializedTime();
+                if (nextMaterializedTime == null) {
+                    continue;
+                }
+
                 Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
                 Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
-                Date iterEnd = (coord.getNextMaterializedTime().before(end) ? coord.getNextMaterializedTime() : end);
+                Date iterEnd = (nextMaterializedTime.before(end) ? nextMaterializedTime : end);
+
                 while (!iterStart.after(iterEnd)) {
                     int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterStart);
                     String actionId = coord.getId() + "@" + sequence;
-                    CoordinatorAction coordActionInfo = null;
+
                     try {
-                        coordActionInfo = client.getCoordActionInfo(actionId);
+                        CoordinatorAction coordActionInfo = client.getCoordActionInfo(actionId);
+                        if (coordActionInfo != null) {
+                            actions.add(coordActionInfo);
+                        }
                     } catch (OozieClientException e) {
                         LOG.debug("Unable to get action for " + actionId + " " + e.getMessage());
                     }
-                    if (coordActionInfo != null) {
-                        actions.add(coordActionInfo);
-                    }
+
                     Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
                     startCal.setTime(iterStart);
                     startCal.add(freq.getTimeUnit().getCalendarUnit(), Integer.valueOf((coord.getFrequency())));
@@ -805,18 +812,19 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private List<CoordinatorJob> getApplicableCoords(Entity entity, ProxyOozieClient client, Date start, Date end,
-        List<BundleJob> bundles) throws FalconException {
-
+    private List<CoordinatorJob> getApplicableCoords(Entity entity, ProxyOozieClient client, Date start,
+                                                     Date end, List<BundleJob> bundles) throws FalconException {
+        String retentionCoordName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
         List<CoordinatorJob> applicableCoords = new ArrayList<CoordinatorJob>();
         try {
             for (BundleJob bundle : bundles) {
                 List<CoordinatorJob> coords = client.getBundleJobInfo(bundle.getId()).getCoordinators();
                 for (CoordinatorJob coord : coords) {
-                    String coordName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
-                    if (coordName.equals(coord.getAppName())) {
+                    // ignore coords in PREP state, not yet running and retention coord
+                    if (coord.getStatus() == Status.PREP || retentionCoordName.equals(coord.getAppName())) {
                         continue;
                     }
+
                     // if end time is before coord-start time or start time is
                     // after coord-end time ignore.
                     if (!(end.compareTo(coord.getStartTime()) <= 0 || start.compareTo(coord.getEndTime()) >= 0)) {

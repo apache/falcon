@@ -185,6 +185,9 @@ Trunk (Unreleased)
     FALCON-360 Lineage recording fails with NPE for processes with >1 inputs.
     (Venkatesh Seetharam)
 
+    FALCON-378 Feed status fails with NPE post update when the new coordinator
+    is in PREP state (Venkatesh Seetharam)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES
