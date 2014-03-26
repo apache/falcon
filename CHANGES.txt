@@ -188,6 +188,9 @@ Trunk (Unreleased)
     FALCON-378 Feed status fails with NPE post update when the new coordinator
     is in PREP state (Venkatesh Seetharam)
 
+    FALCON-377 Unit test fails consistently - EntityManagerJerseyIT.testProcessInputUpdate.
+    (Shwetha GS via Venkatesh Seetharam)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES
