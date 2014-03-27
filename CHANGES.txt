@@ -99,6 +99,8 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-352 old properties not removed on refresh of runtime properties. (Shaik Idris)
+
     FALCON-332 Oozie execution order is wrongly mapped in Falcon for LAST_ONLY. 
     (Shaik Idris)
 

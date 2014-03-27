@@ -77,6 +77,7 @@ public final class RuntimeProperties extends ApplicationProperties {
             while (true) {
                 try {
                     try {
+                        applicationProperties.clear();
                         applicationProperties.loadProperties();
                         backOffDelay = REFRESH_DELAY;
                     } catch (FalconException e) {
@@ -85,7 +86,7 @@ public final class RuntimeProperties extends ApplicationProperties {
                     }
                     Thread.sleep(Math.min(MAX_ITER * REFRESH_DELAY, backOffDelay));
                 } catch (InterruptedException e) {
-                    LOG.info("Application is stopping. Aborting...");
+                    LOG.error("Application is stopping. Aborting...");
                     break;
                 }
             }
