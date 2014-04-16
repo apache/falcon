@@ -38,8 +38,6 @@ public final class RuntimeProperties extends ApplicationProperties {
 
     private RuntimeProperties() throws FalconException {
         super();
-        Thread refreshThread = new Thread(new DynamicLoader(this));
-        refreshThread.start();
     }
 
     @Override
@@ -50,7 +48,13 @@ public final class RuntimeProperties extends ApplicationProperties {
     public static Properties get() {
         try {
             if (INSTANCE.get() == null) {
-                INSTANCE.compareAndSet(null, new RuntimeProperties());
+                RuntimeProperties properties = new RuntimeProperties();
+                properties.loadProperties();
+                INSTANCE.compareAndSet(null, properties);
+                if (INSTANCE.get() == properties) {
+                    Thread refreshThread = new Thread(new DynamicLoader());
+                    refreshThread.start();
+                }
             }
             return INSTANCE.get();
         } catch (FalconException e) {
@@ -65,11 +69,6 @@ public final class RuntimeProperties extends ApplicationProperties {
 
         private static final long REFRESH_DELAY = 300000L;
         private static final int MAX_ITER = 20;  //1hr
-        private final ApplicationProperties applicationProperties;
-
-        private DynamicLoader(ApplicationProperties applicationProperties) {
-            this.applicationProperties = applicationProperties;
-        }
 
         @Override
         public void run() {
@@ -77,8 +76,9 @@ public final class RuntimeProperties extends ApplicationProperties {
             while (true) {
                 try {
                     try {
-                        applicationProperties.clear();
-                        applicationProperties.loadProperties();
+                        RuntimeProperties newProperties = new RuntimeProperties();
+                        newProperties.loadProperties();
+                        INSTANCE.set(newProperties);
                         backOffDelay = REFRESH_DELAY;
                     } catch (FalconException e) {
                         LOG.warn("Error refreshing runtime properties", e);
