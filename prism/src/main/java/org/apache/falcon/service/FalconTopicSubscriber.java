@@ -119,7 +119,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                         nominalTime, runId, workflowId, workflowUser,
                         System.currentTimeMillis());
                 } else {
-                    LOG.info("Late date handling not applicable for entityType: " + entityType + ", entityName: "
+                    LOG.info("Late data handling not applicable for entityType: " + entityType + ", entityName: "
                         + entityName + " operation: " + operation);
                 }
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
