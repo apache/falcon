@@ -32,9 +32,10 @@
 <link rel="shortcut icon" href="img/favicon.png" />
 </head>
 <body>
-<div class="navbar navbar-default">
+
+<div class="navbar navbar-inverse falcon-docs-nav">
 <div class="navbar-header"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=
-".navbar-collapse"></button> <a class="navbar-brand falcon-brand">Falcon Server</a></div>
+".navbar-collapse"></button> <a class="navbar-brand falcon-brand">Apache Falcon</a></div>
 <div class="navbar-collapse navbar-right collapse">
 <ul class="nav navbar-nav">
 <li><a class="btn-entity-list" data-entity-type="feed" href="index.html?type=feed">Data sets</a></li>
@@ -44,6 +45,12 @@
 </div>
 </div>
 <div class="container">
+<div id="alert-panel">
+  <div class="alert alert-danger">
+    <button type="button" class="close" onclick="$('#alert-panel').hide();">&times;</button>
+    <div class="alert-body" id="alert-panel-body"></div>
+  </div>
+</div>
 <div id="entity-list-container"></div>
 <div id="entity-paginator"></div>
 <hr />

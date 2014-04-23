@@ -98,6 +98,9 @@ Trunk (Unreleased)
     FALCON-373 Display lineage link only for jobs that are succeeded in the web UI
     (Haohui Mai via Venkatesh Seetharam)
 
+    FALCON-393 Display error messages when the web UI fails to get the data from the server
+    (Haohui Mai via Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 

@@ -60,7 +60,7 @@
         $('.instance-hdfs-log').tooltip();
         $('#panel-instance').show();
       });
-    });
+    }).fail(falcon.ajaxFailureHandler);
   }
 
   function loadDependency() {
@@ -81,7 +81,7 @@
         switchDependencyView('list');
         $('#panel-dependency').show();
       });
-    });
+    }).fail(falcon.ajaxFailureHandler);
   }
 
   function load() {
@@ -99,7 +99,7 @@
           loadInstance(e.attr('start'), e.attr('end'));
         }
       }
-    });
+    }).fail(falcon.ajaxFailureHandler);
 
     if (!isCluster) {
       loadDependency();

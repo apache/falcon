@@ -91,7 +91,7 @@
       $('#entity-paginator').data('activePage', 1);
       falcon.entities = data.entity;
       gotoPage(1);
-    });
+    }).fail(falcon.ajaxFailureHandler);
   }
 
   function initialize() {

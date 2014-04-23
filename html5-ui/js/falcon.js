@@ -19,8 +19,10 @@
 
   var USER_ID = 'dashboard';
 
-  function onError (msg) {
-    alert(msg);
+  function onError(msg) {
+    $('#alert-panel-body').html(msg);
+    $('#alert-panel').alert();
+    $('#alert-panel').show();
   }
 
   function ajax_impl(options) {
@@ -60,6 +62,11 @@
     ajax: ajax_impl,
     getJson: getJson_impl,
     getText: getText_impl,
+    ajaxFailureHandler: function(jqXHR, status, err) {
+      if (jqXHR.status !== 0) {
+        onError('Failed to load data. Error: ' + jqXHR.status + ' ' + err);
+      }
+    },
 
     /**
      * Calling the REST API recursively to get the dependency graph

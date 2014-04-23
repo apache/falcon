@@ -60,9 +60,10 @@
           data.nodes[n._id] = n;
           q.push({'id': n._id, 'depth': depth - 1});
         }
-      }).always(function() {
-        process_queue(done_cb);
-      });
+      }).fail(falcon.ajaxFailureHandler)
+        .always(function() {
+          process_queue(done_cb);
+        });
     }
 
     var v = data.queue.pop();
@@ -81,9 +82,10 @@
         data.edges[e._id] = e;
       }
       node.is_terminal = !(terminal_has_in_edge && terminal_has_out_edge);
-    }).always(function () {
-      visit_neighbor(v);
-    });
+    }).fail(falcon.ajaxFailureHandler)
+      .always(function () {
+        visit_neighbor(v);
+      });
   }
 
   function draw_graph() {
@@ -111,7 +113,7 @@
             dust.render('info', resp, function(err, out) {
               $('#lineage-info-panel').html(out);
             });
-          });
+          }).fail(falcon.ajaxFailureHandler);
         };
       }
 
@@ -233,6 +235,6 @@
       data.nodes[n._id] = n;
       update_graph();
       $('#lineage-modal').modal('show');
-    });
+    }).fail(falcon.ajaxFailureHandler);
   };
 })(falcon);
