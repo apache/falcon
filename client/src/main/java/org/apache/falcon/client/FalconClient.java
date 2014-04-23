@@ -295,14 +295,12 @@ public class FalconClient {
                 entityName);
     }
 
-    public String getDependency(String entityType, String entityName)
+    public EntityList getDependency(String entityType, String entityName)
         throws FalconCLIException {
-
-        return sendDependencyRequest(Entities.DEPENDENCY, entityType,
-                entityName);
+        return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
     }
 
-    public String getEntityList(String entityType) throws FalconCLIException {
+    public EntityList getEntityList(String entityType) throws FalconCLIException {
         return sendListRequest(Entities.LIST, entityType);
     }
 
@@ -487,7 +485,7 @@ public class FalconClient {
         return clientResponse.getEntity(String.class);
     }
 
-    private String sendDependencyRequest(Entities entities, String entityType,
+    private EntityList sendDependencyRequest(Entities entities, String entityType,
                                          String entityName) throws FalconCLIException {
 
         ClientResponse clientResponse = service
@@ -501,7 +499,7 @@ public class FalconClient {
         return parseEntityList(clientResponse);
     }
 
-    private String sendListRequest(Entities entities, String entityType)
+    private EntityList sendListRequest(Entities entities, String entityType)
         throws FalconCLIException {
 
         ClientResponse clientResponse = service
@@ -594,14 +592,14 @@ public class FalconClient {
         return result.getMessage();
     }
 
-    private String parseEntityList(ClientResponse clientResponse)
+    private EntityList parseEntityList(ClientResponse clientResponse)
         throws FalconCLIException {
 
         EntityList result = clientResponse.getEntity(EntityList.class);
         if (result == null || result.getElements() == null) {
-            return "";
+            return null;
         }
-        return result.toString();
+        return result;
 
     }
 

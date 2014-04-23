@@ -25,11 +25,13 @@ GET http://localhost:15000/api/entities/dependencies/process/SampleProcess
     "entity": [
         {
             "name": "SampleInput",
-            "type": "feed"
+            "type": "feed",
+            "tag": [Input]
         },
         {
             "name": "SampleOutput",
             "type": "feed"
+            "tag": [Output]
         },
         {
             "name": "primary-cluster",

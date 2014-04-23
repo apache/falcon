@@ -19,6 +19,7 @@ package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -31,6 +32,7 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.OozieTestUtils;
@@ -226,6 +228,16 @@ public class EntityManagerJerseyIT {
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
         OozieTestUtils.waitForBundleStart(context, Status.FAILED, Status.KILLED);
+
+        FalconClient client = new FalconClient(TestContext.BASE_URL);
+        EntityList deps = client.getDependency(EntityType.PROCESS.name(), process.getName());
+        for (EntityElement dep : deps.getElements()) {
+            if (dep.name.equals(process.getInputs().getInputs().get(0).getName())) {
+                Assert.assertEquals("Input", dep.tag);
+            } else if (dep.name.equals(process.getOutputs().getOutputs().get(0).getName())) {
+                Assert.assertEquals("Output", dep.tag);
+            }
+        }
 
         //Delete and re-submit the process with correct workflow
         ClientResponse clientResponse = context.service

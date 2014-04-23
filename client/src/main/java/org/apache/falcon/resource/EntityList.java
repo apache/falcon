@@ -18,12 +18,16 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
+import org.apache.falcon.entity.v0.process.Process;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entity list used for marshalling / unmarshalling with REST calls.
@@ -47,11 +51,22 @@ public class EntityList {
         public String name;
         @XmlElement
         public String status;
+        @XmlElementWrapper(name = "list")
+        public List<String> tag;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
         @Override
         public String toString() {
-            return "(" + type + ") " + name + "(" + status + ")\n";
+            String outString = "(" + type + ") " + name;
+            if (StringUtils.isNotEmpty(status)) {
+                outString += "(" + status + ")";
+            }
+
+            if (tag != null && !tag.isEmpty()) {
+                outString += " - " + tag.toString();
+            }
+            outString += "\n";
+            return outString;
         }
     }
 
@@ -72,7 +87,22 @@ public class EntityList {
             EntityElement o = new EntityElement();
             o.type = e.getEntityType().name().toLowerCase();
             o.name = e.getName();
-            o.status = "";
+            o.status = null;
+            items[i] = o;
+        }
+        this.elements = items;
+    }
+
+    public EntityList(Entity[] dependentEntities, Entity entity) {
+        int len = dependentEntities.length;
+        EntityElement[] items = new EntityElement[len];
+        for (int i = 0; i < len; i++) {
+            Entity e = dependentEntities[i];
+            EntityElement o = new EntityElement();
+            o.type = e.getEntityType().name().toLowerCase();
+            o.name = e.getName();
+            o.status = null;
+            o.tag = getEntityTag(e, entity);
             items[i] = o;
         }
         this.elements = items;
@@ -86,8 +116,42 @@ public class EntityList {
     public String toString() {
         StringBuilder buffer = new StringBuilder();
         for (EntityElement element : elements) {
-            buffer.append(element);
+            buffer.append(element.toString());
         }
         return buffer.toString();
+    }
+
+    private List<String> getEntityTag(Entity dependentEntity, Entity entity) {
+        List<String> tagList = new ArrayList<String>();
+
+        if (entity.getEntityType().equals(EntityType.CLUSTER)) {
+            return tagList;
+        }
+
+        Process process = null;
+        String entityNameToMatch = null;
+        if (dependentEntity.getEntityType().equals(EntityType.PROCESS)) {
+            process = (Process) dependentEntity;
+            entityNameToMatch = entity.getName();
+        } else if (dependentEntity.getEntityType().equals(EntityType.FEED)
+                && entity.getEntityType().equals(EntityType.PROCESS)) {
+            process = (Process) entity;
+            entityNameToMatch = dependentEntity.getName();
+        }
+
+        if (process != null) {
+            for (Input i : process.getInputs().getInputs()) {
+                if (i.getFeed().equals(entityNameToMatch)) {
+                    tagList.add("Input");
+                }
+            }
+            for (Output o : process.getOutputs().getOutputs()) {
+                if (o.getFeed().equals(entityNameToMatch)) {
+                    tagList.add("Output");
+                }
+            }
+        }
+
+        return tagList;
     }
 }

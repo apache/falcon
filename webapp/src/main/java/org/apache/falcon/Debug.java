@@ -25,6 +25,8 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.DeploymentProperties;
@@ -59,14 +61,13 @@ public final class Debug {
         FalconClient client = new FalconClient(falconUrl);
         for (int index = 2; index < args.length; index++) {
             entity = args[index];
-            String[] deps = client.getDependency(type, entity).split("\n");
-            for (String line : deps) {
-                String[] fields = line.replace("(", "").replace(")", "").split(" ");
-                EntityType eType = EntityType.valueOf(fields[0].toUpperCase());
-                if (ConfigurationStore.get().get(eType, fields[1]) != null) {
+            EntityList deps = client.getDependency(type, entity);
+            for (EntityElement dep : deps.getElements()) {
+                EntityType eType = EntityType.valueOf(dep.type.toUpperCase());
+                if (ConfigurationStore.get().get(eType, dep.name) != null) {
                     continue;
                 }
-                String xml = client.getDefinition(eType.name().toLowerCase(), fields[1]);
+                String xml = client.getDefinition(eType.name().toLowerCase(), dep.name);
                 System.out.println(xml);
                 store(eType, xml);
             }

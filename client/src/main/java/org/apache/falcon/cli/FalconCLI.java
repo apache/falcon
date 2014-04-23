@@ -338,10 +338,10 @@ public class FalconCLI {
         } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateColo(optionsList);
             validateEntityName(entityName);
-            result = client.getDependency(entityType, entityName);
+            result = client.getDependency(entityType, entityName).toString();
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
-            result = client.getEntityList(entityType);
+            result = client.getEntityList(entityType).toString();
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {

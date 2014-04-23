@@ -438,8 +438,8 @@ public abstract class AbstractEntityManager {
         try {
             Entity entityObj = EntityUtil.getEntity(type, entityName);
             Set<Entity> dependents = EntityGraph.get().getDependents(entityObj);
-            Entity[] entities = dependents.toArray(new Entity[dependents.size()]);
-            return new EntityList(entities);
+            Entity[] dependentEntities = dependents.toArray(new Entity[dependents.size()]);
+            return new EntityList(dependentEntities, entityObj);
         } catch (Exception e) {
             LOG.error("Unable to get dependencies for entityName " + entityName + "(" + type + ")", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
