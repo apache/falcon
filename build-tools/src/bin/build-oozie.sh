@@ -39,10 +39,10 @@ then
     exit 0;
 fi
 
-PKG_URL="http://www.apache.org/dist/oozie/$VERSION/oozie-$VERSION.tar.gz"
+PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION.tar.gz"
 if [ $VERSION == '3.1.3-incubating' ]
 then
-    PKG_URL="http://www.apache.org/dist/oozie/$VERSION/oozie-$VERSION-src.tar.gz"
+    PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION-src.tar.gz"
 fi
 
 PKG=oozie-$VERSION
