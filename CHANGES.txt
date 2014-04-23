@@ -104,6 +104,9 @@ Trunk (Unreleased)
     FALCON-395 Falcon service does not start when _HOST is used in the spnego principal
     (Venkatesh Seetharam)
 
+    FALCON-397 DistCp uses JobSubmissionFiles API which is incompatible between hadoop versions
+    (Venkatesh Seetharam)
+
   OPTIMIZATIONS
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 

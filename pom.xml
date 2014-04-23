@@ -109,7 +109,7 @@
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.11.0</hive.version>
         <hcatalog.version>0.11.0</hcatalog.version>
-        <hadoop-distcp.version>0.9</hadoop-distcp.version>
+        <hadoop-distcp.version>0.11</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
