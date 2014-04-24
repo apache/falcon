@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 
 /**
  * Test for FeedEvictor for table.
@@ -71,8 +72,12 @@ public class TableStorageFeedEvictorIT {
     private static final String DATABASE_NAME = "falcon_db";
     private static final String TABLE_NAME = "clicks";
     private static final String EXTERNAL_TABLE_NAME = "clicks_external";
+    private static final String MULTI_COL_DATED_TABLE_NAME = "downloads";
+    private static final String MULTI_COL_DATED_EXTERNAL_TABLE_NAME = "downloads_external";
     private static final String STORAGE_URL = "jail://global:00";
     private static final String EXTERNAL_TABLE_LOCATION = STORAGE_URL + "/falcon/staging/clicks_external/";
+    private static final String MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION = STORAGE_URL
+        + "/falcon/staging/downloads_external/";
 
     private final InMemoryWriter stream = new InMemoryWriter(System.out);
 
@@ -89,12 +94,19 @@ public class TableStorageFeedEvictorIT {
         HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME, partitionKeys);
         HiveTestUtils.createExternalTable(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME,
                 partitionKeys, EXTERNAL_TABLE_LOCATION);
+
+        final List<String> multiColDatedPartitionKeys = Arrays.asList("year", "month", "day", "region");
+        HiveTestUtils.createTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_TABLE_NAME, multiColDatedPartitionKeys);
+        HiveTestUtils.createExternalTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_EXTERNAL_TABLE_NAME,
+                multiColDatedPartitionKeys, MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION);
     }
 
     @AfterClass
     public void close() throws Exception {
         HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, EXTERNAL_TABLE_NAME);
         HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, TABLE_NAME);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_EXTERNAL_TABLE_NAME);
+        HiveTestUtils.dropTable(METASTORE_URL, DATABASE_NAME, MULTI_COL_DATED_TABLE_NAME);
         HiveTestUtils.dropDatabase(METASTORE_URL, DATABASE_NAME);
     }
 
@@ -162,8 +174,7 @@ public class TableStorageFeedEvictorIT {
                     "Unexpected number of evicted partitions");
 
             final String actualInstancesEvicted = readLogFile(new Path(logFile));
-            Assert.assertEquals(actualInstancesEvicted, expectedInstancePaths.toString(),
-                    "Unexpected number of Logged partitions");
+            validateInstancePaths(actualInstancesEvicted, expectedInstancePaths.toString());
 
             if (isExternal) {
                 verifyFSPartitionsAreDeleted(candidatePartitions, range.first, dateMask, timeZone);
@@ -216,6 +227,74 @@ public class TableStorageFeedEvictorIT {
         }
     }
 
+    @DataProvider (name = "multiColDatedEvictorTestDataProvider")
+    private Object[][] createMultiColDatedEvictorTestData() {
+        return new Object[][] {
+            {"days(10)", false},
+            {"days(10)", true},
+            {"days(15)", false},
+            {"days(15)", true},
+            {"days(100)", false},
+            {"days(100)", true},
+        };
+    }
+
+    @Test (dataProvider = "multiColDatedEvictorTestDataProvider")
+    public void testFeedEvictorForMultiColDatedTableStorage(String retentionLimit, boolean isExternal)
+        throws Exception {
+        final String tableName = isExternal ? MULTI_COL_DATED_EXTERNAL_TABLE_NAME : MULTI_COL_DATED_TABLE_NAME;
+        final String timeZone = "UTC";
+
+        List<Map<String, String>> candidatePartitions = getMultiColDatedCandidatePartitions("days(10)", timeZone, 3);
+        addMultiColDatedPartitions(tableName, candidatePartitions, isExternal);
+
+        List<HCatPartition> partitions = client.getPartitions(DATABASE_NAME, tableName);
+        Assert.assertEquals(partitions.size(), candidatePartitions.size());
+        Pair<Date, Date> range = getDateRange(retentionLimit);
+        List<HCatPartition> filteredPartitions = getMultiColDatedFilteredPartitions(tableName, timeZone, range);
+
+        try {
+            stream.clear();
+
+            final String tableUri = DATABASE_NAME + "/" + tableName
+                + "/year=${YEAR};month=${MONTH};day=${DAY};region=us";
+            String feedBasePath = METASTORE_URL + tableUri;
+            String logFile = STORAGE_URL + "/falcon/staging/feed/instancePaths-2013-09-13-01-00.csv";
+
+            FeedEvictor.main(new String[]{
+                "-feedBasePath", feedBasePath,
+                "-retentionType", "instance",
+                "-retentionLimit", retentionLimit,
+                "-timeZone", timeZone,
+                "-frequency", "daily",
+                "-logFile", logFile,
+                "-falconFeedStorageType", Storage.TYPE.TABLE.name(),
+            });
+
+            StringBuilder expectedInstancePaths = new StringBuilder();
+            List<Map<String, String>> expectedInstancesEvicted = getMultiColDatedExpectedEvictedInstances(
+                candidatePartitions, range.first, timeZone, expectedInstancePaths);
+            int expectedSurvivorSize = candidatePartitions.size() - expectedInstancesEvicted.size();
+
+            List<HCatPartition> survivingPartitions = client.getPartitions(DATABASE_NAME, tableName);
+            Assert.assertEquals(survivingPartitions.size(), expectedSurvivorSize,
+                "Unexpected number of surviving partitions");
+
+            Assert.assertEquals(expectedInstancesEvicted.size(), filteredPartitions.size(),
+                "Unexpected number of evicted partitions");
+
+            final String actualInstancesEvicted = readLogFile(new Path(logFile));
+            validateInstancePaths(actualInstancesEvicted, expectedInstancePaths.toString());
+
+            if (isExternal) {
+                verifyMultiColDatedFSPartitionsAreDeleted(candidatePartitions, range.first, timeZone);
+            }
+        } finally {
+            dropMultiColDatedPartitions(tableName, candidatePartitions);
+            Assert.assertEquals(client.getPartitions(DATABASE_NAME, tableName).size(), 0);
+        }
+    }
+
     public List<String> getCandidatePartitions(String retentionLimit, String dateMask,
                                                String timeZone, int limit) throws Exception {
         List<String> partitions = new ArrayList<String>();
@@ -239,6 +318,41 @@ public class TableStorageFeedEvictorIT {
         for (int i = 1; i <= limit; i++) {
             calendar.add(Calendar.DAY_OF_MONTH, -(i + 1));
             partitions.add(dateFormat.format(calendar.getTime()));
+        }
+
+        return partitions;
+    }
+
+    public List<Map<String, String>> getMultiColDatedCandidatePartitions(String retentionLimit,
+        String timeZone, int limit) throws Exception {
+        List<Map<String, String>> partitions = new ArrayList<Map<String, String>>();
+
+        Pair<Date, Date> range = getDateRange(retentionLimit);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(range.first);
+        for (int i = 1; i <= limit; i++) {
+            calendar.add(Calendar.DAY_OF_MONTH, -(i + 1));
+            String[] dateCols = dateFormat.format(calendar.getTime()).split("-");
+            Map<String, String> dateParts = new TreeMap<String, String>();
+            dateParts.put("year", dateCols[0]);
+            dateParts.put("month", dateCols[1]);
+            dateParts.put("day", dateCols[2]);
+            partitions.add(dateParts);
+        }
+
+        calendar.setTime(range.second);
+        for (int i = 1; i <= limit; i++) {
+            calendar.add(Calendar.DAY_OF_MONTH, -(i + 1));
+            String[] dateCols = dateFormat.format(calendar.getTime()).split("-");
+            Map<String, String> dateParts = new TreeMap<String, String>();
+            dateParts.put("year", dateCols[0]);
+            dateParts.put("month", dateCols[1]);
+            dateParts.put("day", dateCols[2]);
+            partitions.add(dateParts);
         }
 
         return partitions;
@@ -271,6 +385,28 @@ public class TableStorageFeedEvictorIT {
         }
     }
 
+    private void addMultiColDatedPartitions(String tableName, List<Map<String, String>> candidatePartitions,
+        boolean isTableExternal) throws Exception {
+        Path path = new Path(MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION);
+        FileSystem fs = path.getFileSystem(new Configuration());
+
+        for (Map<String, String> candidatePartition : candidatePartitions) {
+            if (isTableExternal) {
+                StringBuilder pathStr = new StringBuilder(MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION);
+                for (Map.Entry<String, String> entry : candidatePartition.entrySet()) {
+                    pathStr.append(entry.getKey()).append("=").append(entry.getValue()).append("/");
+                }
+                pathStr.append("region=in");
+                touch(fs, pathStr.toString());
+            }
+
+            candidatePartition.put("region", "in");
+            HCatAddPartitionDesc addPtn = HCatAddPartitionDesc.create(
+                DATABASE_NAME, tableName, null, candidatePartition).build();
+            client.addPartition(addPtn);
+        }
+    }
+
     private void touch(FileSystem fs, String path) throws Exception {
         fs.create(new Path(path)).close();
     }
@@ -285,12 +421,38 @@ public class TableStorageFeedEvictorIT {
         }
     }
 
+    private void dropMultiColDatedPartitions(String tableName, List<Map<String, String>> candidatePartitions)
+        throws Exception {
+
+        for (Map<String, String> partition : candidatePartitions) {
+            client.dropPartitions(DATABASE_NAME, tableName, partition, true);
+        }
+    }
+
     private List<HCatPartition> getFilteredPartitions(String tableName, String timeZone, String dateMask,
                                                       Pair<Date, Date> range) throws HCatException {
         DateFormat dateFormat = new SimpleDateFormat(dateMask);
         dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
 
         String filter = "ds < '" + dateFormat.format(range.first) + "'";
+        return client.listPartitionsByFilter(DATABASE_NAME, tableName, filter);
+    }
+
+    private List<HCatPartition> getMultiColDatedFilteredPartitions(String tableName, String timeZone,
+        Pair<Date, Date> range) throws HCatException {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(range.first);
+        String[] dateCols = dateFormat.format(calendar.getTime()).split("-");
+        // filter eg: "(year < '2014') or (year = '2014' and month < '02') or
+        // (year = '2014' and month = '02' and day < '24')"
+        String filter1 = "(year < '" + dateCols[0] + "')";
+        String filter2 = "(year = '" + dateCols[0] + "' and month < '" + dateCols[1] + "')";
+        String filter3 = "(year = '" + dateCols[0] + "' and month = '" + dateCols[1]
+            + "' and day < '" + dateCols[2] + "')";
+        String filter = filter1 + " or " + filter2 + " or " + filter3;
         return client.listPartitionsByFilter(DATABASE_NAME, tableName, filter);
     }
 
@@ -307,9 +469,29 @@ public class TableStorageFeedEvictorIT {
         for (String candidatePartition : candidatePartitions) {
             if (candidatePartition.compareTo(startDate) < 0) {
                 expectedInstances.add(candidatePartition);
+                instancePaths.append("[").append(candidatePartition).append("; in],");
+            }
+        }
+
+        return expectedInstances;
+    }
+
+    public List<Map<String, String>> getMultiColDatedExpectedEvictedInstances(List<Map<String, String>>
+            candidatePartitions, Date date, String timeZone, StringBuilder instancePaths) throws Exception {
+        instancePaths.append("instancePaths=");
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        String startDate = dateFormat.format(date);
+
+        List<Map<String, String>> expectedInstances = new ArrayList<Map<String, String>>();
+        for (Map<String, String> partition : candidatePartitions) {
+            String partDate = partition.get("year") + partition.get("month") + partition.get("day");
+            if (partDate.compareTo(startDate) < 0) {
+                expectedInstances.add(partition);
                 instancePaths.append("[")
-                        .append(candidatePartition)
-                        .append(", in],");
+                    .append(partition.values().toString().replace("," , ";"))
+                    .append("; in],");
             }
         }
 
@@ -335,11 +517,49 @@ public class TableStorageFeedEvictorIT {
         }
     }
 
+    private void verifyMultiColDatedFSPartitionsAreDeleted(List<Map<String, String>> candidatePartitions,
+        Date date, String timeZone) throws Exception {
+
+        FileSystem fs = new Path(MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION).getFileSystem(new Configuration());
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        String startDate = dateFormat.format(date);
+
+        for (Map<String, String> partition : candidatePartitions) {
+            String partDate = partition.get("year") + partition.get("month") + partition.get("day");
+            final String path = MULTI_COL_DATED_EXTERNAL_TABLE_LOCATION
+                + partition.get("year") + "/" + partition.get("month") + "/" + partition.get("day") + "/region=in";
+            if (partDate.compareTo(startDate) < 0 && fs.exists(new Path(path))) {
+                Assert.fail("Expecting " + path + " to be deleted");
+            }
+        }
+    }
+
     private String readLogFile(Path logFile) throws IOException {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream date = logFile.getFileSystem(new Configuration()).open(logFile);
         IOUtils.copyBytes(date, writer, 4096, true);
         return writer.toString();
+    }
+
+    // instance paths could be deleted in any order; compare the list of evicted paths
+    private void validateInstancePaths(String actualInstancesEvicted, String expectedInstancePaths) {
+        String[] actualEvictedPathStr = actualInstancesEvicted.split("=");
+        String[] expectedEvictedPathStr = expectedInstancePaths.split("=");
+        if (actualEvictedPathStr.length == 1) {
+            Assert.assertEquals(expectedEvictedPathStr.length, 1);
+        } else {
+            Assert.assertEquals(actualEvictedPathStr.length, 2);
+            Assert.assertEquals(expectedEvictedPathStr.length, 2);
+
+            String[] actualEvictedPaths = actualEvictedPathStr[1].split(",");
+            String[] expectedEvictedPaths = actualEvictedPathStr[1].split(",");
+            Arrays.sort(actualEvictedPaths);
+            Arrays.sort(expectedEvictedPaths);
+            Assert.assertEquals(actualEvictedPaths, expectedEvictedPaths,
+                "Unexpected number of Logged partitions");
+        }
     }
 
     private static class InMemoryWriter extends PrintStream {

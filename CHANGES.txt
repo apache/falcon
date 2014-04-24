@@ -113,6 +113,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-284 Hcatalog based feed retention doesn't work when partition filter spans across 
+    multiple partition keys. (Satish Mittal via Shwetha GS)
+
     FALCON-409 Not able to create a package. (Raju Bairishetti via Shwetha GS)
 
     FALCON-396 minor logging typo in FalconTopicSubscriber. (Raghav Kumar Gautam via Shwetha GS)

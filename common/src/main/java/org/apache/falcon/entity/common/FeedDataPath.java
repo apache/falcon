@@ -52,6 +52,15 @@ public final class FeedDataPath {
             }
             return null;
         }
+
+        public static VARS presentIn(String str) {
+            for (VARS var : VARS.values()) {
+                if (str.contains(var.datePattern)) {
+                    return var;
+                }
+            }
+            return null;
+        }
     }
 
     public static final Pattern PATTERN = Pattern.compile(VARS.YEAR.regex()

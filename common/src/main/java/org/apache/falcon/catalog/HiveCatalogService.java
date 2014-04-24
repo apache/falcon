@@ -173,6 +173,7 @@ public class HiveCatalogService extends AbstractCatalogService {
             HCatClient client = get(catalogUrl);
             List<HCatPartition> hCatPartitions = client.listPartitionsByFilter(database, tableName, filter);
             for (HCatPartition hCatPartition : hCatPartitions) {
+                LOG.info("Partition: " + hCatPartition.getValues());
                 CatalogPartition partition = createCatalogPartition(hCatPartition);
                 catalogPartitionList.add(partition);
             }
@@ -231,6 +232,25 @@ public class HiveCatalogService extends AbstractCatalogService {
             return createCatalogPartition(hCatPartition);
         } catch (HCatException e) {
             throw new FalconException("Exception fetching partition:" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<String> getTablePartitionCols(String catalogUrl, String database,
+                                            String tableName) throws FalconException {
+        LOG.info("Fetching partition columns of table: " + tableName);
+
+        try {
+            HCatClient client = get(catalogUrl);
+            HCatTable table = client.getTable(database, tableName);
+            List<HCatFieldSchema> partSchema = table.getPartCols();
+            List<String> partCols = new ArrayList<String>();
+            for (HCatFieldSchema part : partSchema) {
+                partCols.add(part.getName());
+            }
+            return partCols;
+        } catch (HCatException e) {
+            throw new FalconException("Exception fetching partition columns: " + e.getMessage(), e);
         }
     }
 }

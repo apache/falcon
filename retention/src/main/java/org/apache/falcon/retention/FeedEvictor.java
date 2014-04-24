@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,6 +84,15 @@ public class FeedEvictor extends Configured implements Tool {
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     private static final String FORMAT = "yyyyMMddHHmm";
+
+    // constants to be used while preparing HCatalog partition filter query
+    private static final String FILTER_ST_BRACKET = "(";
+    private static final String FILTER_END_BRACKET = ")";
+    private static final String FILTER_QUOTE = "'";
+    private static final String FILTER_AND = " and ";
+    private static final String FILTER_OR = " or ";
+    private static final String FILTER_LESS_THAN = " < ";
+    private static final String FILTER_EQUALS = " = ";
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -375,16 +385,13 @@ public class FeedEvictor extends Configured implements Tool {
         LOG.info("Applying retention on " + storage.getTable()
                 + ", Limit: " + retentionLimit + ", timezone: " + timeZone);
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
-        String datePattern = storage.getPartitionValue(datedPartitionKey);
-        String dateMask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
-                .replaceAll(VARS.MONTH.regex(), "MM")
-                .replaceAll(VARS.DAY.regex(), "dd")
-                .replaceAll(VARS.HOUR.regex(), "HH")
-                .replaceAll(VARS.MINUTE.regex(), "mm");
+        // get sorted date partition keys and values
+        List<String> datedPartKeys = new ArrayList<String>();
+        List<String> datedPartValues = new ArrayList<String>();
+        fillSortedDatedPartitionKVs(storage, datedPartKeys, datedPartValues, retentionLimit, timeZone);
 
         List<CatalogPartition> toBeDeleted = discoverPartitionsToDelete(
-                storage, retentionLimit, timeZone, dateMask);
+                storage, datedPartKeys, datedPartValues);
         if (toBeDeleted.isEmpty()) {
             LOG.info("No partitions to delete.");
             return;
@@ -393,69 +400,164 @@ public class FeedEvictor extends Configured implements Tool {
         final boolean isTableExternal = CatalogServiceFactory.getCatalogService().isTableExternal(
                 storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
 
-        dropPartitions(storage, toBeDeleted, isTableExternal);
+        dropPartitions(storage, toBeDeleted, datedPartKeys, isTableExternal);
     }
 
-    private List<CatalogPartition> discoverPartitionsToDelete(CatalogStorage storage, String retentionLimit,
-                                                           String timeZone, String dateMask)
-        throws FalconException, ELException {
+    private List<CatalogPartition> discoverPartitionsToDelete(CatalogStorage storage,
+        List<String> datedPartKeys, List<String> datedPartValues) throws FalconException, ELException {
 
-        final String filter = createFilter(storage, retentionLimit, timeZone, dateMask);
+        final String filter = createFilter(datedPartKeys, datedPartValues);
         return CatalogServiceFactory.getCatalogService().listPartitionsByFilter(
                 storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), filter);
     }
 
-    private String createFilter(CatalogStorage storage, String retentionLimit,
-                                String timeZone, String dateMask) throws ELException {
-
+    private void fillSortedDatedPartitionKVs(CatalogStorage storage, List<String> sortedPartKeys,
+        List<String> sortedPartValues, String retentionLimit, String timeZone) throws ELException {
         Pair<Date, Date> range = getDateRange(retentionLimit);
-        DateFormat dateFormat = new SimpleDateFormat(dateMask);
-        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-        String beforeDate = dateFormat.format(range.first);
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
+        // sort partition keys and values by the date pattern present in value
+        Map<VARS, String> sortedPartKeyMap = new TreeMap<VARS, String>();
+        Map<VARS, String> sortedPartValueMap = new TreeMap<VARS, String>();
+        for (Entry<String, String> entry : storage.getPartitions().entrySet()) {
+            String datePattern = entry.getValue();
+            String mask = datePattern.replaceAll(VARS.YEAR.regex(), "yyyy")
+                .replaceAll(VARS.MONTH.regex(), "MM")
+                .replaceAll(VARS.DAY.regex(), "dd")
+                .replaceAll(VARS.HOUR.regex(), "HH")
+                .replaceAll(VARS.MINUTE.regex(), "mm");
 
+            // find the first date pattern present in date mask
+            VARS vars = VARS.presentIn(mask);
+            // skip this partition if date mask doesn't contain any date format
+            if (vars == null) {
+                continue;
+            }
+
+            // construct dated partition value as per format
+            DateFormat dateFormat = new SimpleDateFormat(mask);
+            dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+            String partitionValue = dateFormat.format(range.first);
+
+            // add partition key and value in their sorted maps
+            if (!sortedPartKeyMap.containsKey(vars)) {
+                sortedPartKeyMap.put(vars, entry.getKey());
+            }
+
+            if (!sortedPartValueMap.containsKey(vars)) {
+                sortedPartValueMap.put(vars, partitionValue);
+            }
+        }
+
+        // add map entries to lists of partition keys and values
+        sortedPartKeys.addAll(sortedPartKeyMap.values());
+        sortedPartValues.addAll(sortedPartValueMap.values());
+    }
+
+    private String createFilter(List<String> datedPartKeys, List<String> datedPartValues)
+        throws ELException {
+
+        int numPartitions = datedPartKeys.size();
+
+        /* Construct filter query string. As an example, suppose the dated partition keys
+         * are: [year, month, day, hour] and dated partition values are [2014, 02, 24, 10].
+         * Then the filter query generated is of the format:
+         * "(year < '2014') or (year = '2014' and month < '02') or
+         * (year = '2014' and month = '02' and day < '24') or
+         * or (year = '2014' and month = '02' and day = '24' and hour < '10')"
+         */
         StringBuilder filterBuffer = new StringBuilder();
-        filterBuffer.append(datedPartitionKey)
-                .append(" < ")
-                .append("'")
-                .append(beforeDate)
-                .append("'");
+        for (int curr = 0; curr < numPartitions; curr++) {
+            if (curr > 0) {
+                filterBuffer.append(FILTER_OR);
+            }
+            filterBuffer.append(FILTER_ST_BRACKET);
+            for (int prev = 0; prev < curr; prev++) {
+                filterBuffer.append(datedPartKeys.get(prev))
+                    .append(FILTER_EQUALS)
+                    .append(FILTER_QUOTE)
+                    .append(datedPartValues.get(prev))
+                    .append(FILTER_QUOTE)
+                    .append(FILTER_AND);
+            }
+            filterBuffer.append(datedPartKeys.get(curr))
+                  .append(FILTER_LESS_THAN)
+                  .append(FILTER_QUOTE)
+                  .append(datedPartValues.get(curr))
+                  .append(FILTER_QUOTE)
+                  .append(FILTER_END_BRACKET);
+        }
 
         return filterBuffer.toString();
     }
 
     private void dropPartitions(CatalogStorage storage, List<CatalogPartition> partitionsToDelete,
-                                boolean isTableExternal) throws FalconException, IOException {
+        List<String> datedPartKeys, boolean isTableExternal) throws FalconException, IOException {
 
+        // get table partition columns
+        List<String> partColumns = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
+            storage.getCatalogUrl(), storage.getDatabase(), storage.getTable());
+
+        /* In case partition columns are a super-set of dated partitions, there can be multiple
+         * partitions that share the same set of date-partition values. All such partitions can
+         * be deleted by issuing a single HCatalog dropPartition call per date-partition values.
+         * Arrange the partitions grouped by each set of date-partition values.
+         */
+        Map<Map<String, String>, List<CatalogPartition>> dateToPartitionsMap = new HashMap<
+            Map<String, String>, List<CatalogPartition>>();
         for (CatalogPartition partitionToDrop : partitionsToDelete) {
-            if (dropPartition(storage, partitionToDrop, isTableExternal)) {
-                LOG.info("Deleted partition: " + partitionToDrop.getValues());
-                buffer.append(partitionToDrop.getValues().get(0)).append(',');
-                instancePaths.append(partitionToDrop.getValues()).append(",");
+            // create a map of name-values of all columns of this partition
+            Map<String, String> partitions = new HashMap<String, String>();
+            for (int i = 0; i < partColumns.size(); i++) {
+                partitions.put(partColumns.get(i), partitionToDrop.getValues().get(i));
             }
+
+            // create a map of name-values of dated sub-set of this partition
+            Map<String, String> datedPartitions = new HashMap<String, String>();
+            for (String datedPart : datedPartKeys) {
+                datedPartitions.put(datedPart, partitions.get(datedPart));
+            }
+
+            // add a map entry of this catalog partition corresponding to its date-partition values
+            List<CatalogPartition> catalogPartitions;
+            if (dateToPartitionsMap.containsKey(datedPartitions)) {
+                catalogPartitions = dateToPartitionsMap.get(datedPartitions);
+            } else {
+                catalogPartitions = new ArrayList<CatalogPartition>();
+            }
+            catalogPartitions.add(partitionToDrop);
+            dateToPartitionsMap.put(datedPartitions, catalogPartitions);
+        }
+
+        // delete each entry within dateToPartitions Map
+        for (Entry<Map<String, String>, List<CatalogPartition>> entry : dateToPartitionsMap.entrySet()) {
+            dropPartitionInstances(storage, entry.getValue(), entry.getKey(), isTableExternal);
         }
     }
 
-    private boolean dropPartition(CatalogStorage storage, CatalogPartition partitionToDrop,
-                                  boolean isTableExternal) throws FalconException, IOException {
+    private void dropPartitionInstances(CatalogStorage storage, List<CatalogPartition> partitionsToDrop,
+        Map<String, String> partSpec, boolean isTableExternal) throws FalconException, IOException {
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
+        boolean deleted = CatalogServiceFactory.getCatalogService().dropPartitions(
+                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partSpec);
 
-        Map<String, String> partitions = new HashMap<String, String>();
-        partitions.put(datedPartitionKey, partitionToDrop.getValues().get(0));
-
-        boolean dropped = CatalogServiceFactory.getCatalogService().dropPartitions(
-                storage.getCatalogUrl(), storage.getDatabase(), storage.getTable(), partitions);
-
-        boolean deleted = true;
-        if (isTableExternal) { // nuke the dirs if an external table
-            final String location = partitionToDrop.getLocation();
-            final Path path = new Path(location);
-            deleted = path.getFileSystem(new Configuration()).delete(path, true);
+        if (!deleted) {
+            return;
         }
 
-        return dropped && deleted;
+        for (CatalogPartition partitionToDrop : partitionsToDrop) {
+            if (isTableExternal) { // nuke the dirs if an external table
+                final String location = partitionToDrop.getLocation();
+                final Path path = new Path(location);
+                deleted = path.getFileSystem(new Configuration()).delete(path, true);
+            }
+            if (!isTableExternal || deleted) {
+                // replace ',' with ';' since message producer splits instancePaths string by ','
+                String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
+                LOG.info("Deleted partition: " + partitionInfo);
+                buffer.append(partSpec).append(',');
+                instancePaths.append(partitionInfo).append(",");
+            }
+        }
     }
 
     private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {

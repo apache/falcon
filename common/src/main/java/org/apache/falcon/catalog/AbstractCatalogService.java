@@ -107,4 +107,14 @@ public abstract class AbstractCatalogService {
      */
     public abstract CatalogPartition getPartition(String catalogUrl, String database, String tableName,
                                                   Map<String, String> partitionSpec) throws FalconException;
+
+    /**
+     * @param catalogUrl url for the catalog service
+     * @param database database the table belongs to
+     * @param tableName table name
+     * @return list of partition column names of the table
+     * @throws FalconException
+     */
+    public abstract List<String> getTablePartitionCols(String catalogUrl, String database,
+                                                     String tableName) throws FalconException;
 }

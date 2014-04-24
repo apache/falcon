@@ -37,6 +37,7 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,5 +334,23 @@ public class HiveCatalogServiceIT {
         final long reInstatedCreateTime = reInstatedPartition.getCreateTime();
 
         Assert.assertTrue(reInstatedCreateTime > originalCreateTime);
+    }
+
+    @DataProvider (name = "tableName")
+    public Object[][] createTableName() {
+        return new Object[][] {
+            {TABLE_NAME},
+            {EXTERNAL_TABLE_NAME},
+        };
+    }
+
+    @Test  (dataProvider = "tableName")
+    public void testGetTablePartitionCols(String tableName) throws Exception {
+        List<String> partCols = CatalogServiceFactory.getCatalogService().getTablePartitionCols(
+                METASTORE_URL, DATABASE_NAME, tableName);
+        Assert.assertEquals(partCols.size(), 2);
+        Collections.sort(partCols);
+        Assert.assertEquals(partCols.get(0), "ds");
+        Assert.assertEquals(partCols.get(1), "region");
     }
 }
