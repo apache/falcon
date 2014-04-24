@@ -214,6 +214,9 @@ Trunk (Unreleased)
     FALCON-377 Unit test fails consistently - EntityManagerJerseyIT.testProcessInputUpdate.
     (Shwetha GS via Venkatesh Seetharam)
 
+    FALCON-418 FALCON-395 introduces a regression with hadoop-1
+    (Jean-Baptiste Onofré via Venkatesh Seetharam)
+
 Release Version: 0.4-incubating
 
    NEW FEATURES

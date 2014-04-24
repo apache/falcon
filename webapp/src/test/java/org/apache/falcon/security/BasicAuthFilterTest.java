@@ -20,7 +20,6 @@ package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.mockito.Mock;
@@ -185,8 +184,7 @@ public class BasicAuthFilterTest {
         String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName() + "@Example.com";
         try {
             Configuration conf = new Configuration(false);
-            conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
-                    UserGroupInformation.AuthenticationMethod.KERBEROS.name());
+            conf.set("hadoop.security.authentication", "kerberos");
             UserGroupInformation.setConfiguration(conf);
             Assert.assertTrue(UserGroupInformation.isSecurityEnabled());
 
@@ -205,8 +203,7 @@ public class BasicAuthFilterTest {
     public void testGetKerberosPrincipalWithSubstitutedHostNonSecure() throws Exception {
         String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
         Configuration conf = new Configuration(false);
-        conf.set(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION,
-                UserGroupInformation.AuthenticationMethod.SIMPLE.name());
+        conf.set("hadoop.security.authentication", "simple");
         UserGroupInformation.setConfiguration(conf);
         Assert.assertFalse(UserGroupInformation.isSecurityEnabled());
 
