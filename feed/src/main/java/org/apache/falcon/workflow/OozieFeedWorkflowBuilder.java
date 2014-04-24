@@ -248,6 +248,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
     private class ReplicationOozieWorkflowMapper {
         private static final String MR_MAX_MAPS = "maxMaps";
+        private static final String MR_MAP_BANDWIDTH = "mapBandwidthKB";
 
         private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
@@ -435,55 +436,57 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         }
 
         private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path wfPath,
-            String wfName, Storage sourceStorage,
-            Storage targetStorage) throws FalconException {
+            String wfName, Storage sourceStorage, Storage targetStorage) throws FalconException {
             ACTION replicationAction = new ACTION();
             WORKFLOW replicationWF = new WORKFLOW();
-            try {
-                replicationWF.setAppPath(getStoragePath(wfPath.toString()));
-                Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
-                props.put("srcClusterName", srcCluster.getName());
-                props.put("srcClusterColo", srcCluster.getColo());
-                if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden
-                    props.put(MR_MAX_MAPS, getDefaultMaxMaps());
-                }
 
-                // the storage type is uniform across source and target feeds for replication
-                props.put("falconFeedStorageType", sourceStorage.getType().name());
-
-                String instancePaths = null;
-                if (sourceStorage.getType() == Storage.TYPE.FILESYSTEM) {
-                    String pathsWithPartitions = getPathsWithPartitions(srcCluster, trgCluster, entity);
-                    instancePaths = pathsWithPartitions;
-
-                    propagateFileSystemCopyProperties(pathsWithPartitions, props);
-                } else if (sourceStorage.getType() == Storage.TYPE.TABLE) {
-                    instancePaths = "${coord:dataIn('input')}";
-
-                    final CatalogStorage sourceTableStorage = (CatalogStorage) sourceStorage;
-                    propagateTableStorageProperties(srcCluster, sourceTableStorage, props, "falconSource");
-                    final CatalogStorage targetTableStorage = (CatalogStorage) targetStorage;
-                    propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
-                    propagateTableCopyProperties(srcCluster, sourceTableStorage,
-                        trgCluster, targetTableStorage, props);
-                    setupHiveConfiguration(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, wfPath);
-                }
-
-                propagateLateDataProperties(entity, instancePaths, sourceStorage.getType().name(), props);
-                propagateUserWorkflowProperties(props, "replication");
-
-                replicationWF.setConfiguration(getCoordConfig(props));
-                replicationAction.setWorkflow(replicationWF);
-
-            } catch (Exception e) {
-                throw new FalconException("Unable to create replication workflow", e);
+            replicationWF.setAppPath(getStoragePath(wfPath.toString()));
+            Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
+            props.put("srcClusterName", srcCluster.getName());
+            props.put("srcClusterColo", srcCluster.getColo());
+            if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden
+                props.put(MR_MAX_MAPS, getDefaultMaxMaps());
             }
+            if (props.get(MR_MAP_BANDWIDTH) == null) { // set default if user has not overridden
+                props.put(MR_MAP_BANDWIDTH, getDefaultMapBandwidth());
+            }
+
+            // the storage type is uniform across source and target feeds for replication
+            props.put("falconFeedStorageType", sourceStorage.getType().name());
+
+            String instancePaths = null;
+            if (sourceStorage.getType() == Storage.TYPE.FILESYSTEM) {
+                String pathsWithPartitions = getPathsWithPartitions(srcCluster, trgCluster, entity);
+                instancePaths = pathsWithPartitions;
+
+                propagateFileSystemCopyProperties(pathsWithPartitions, props);
+            } else if (sourceStorage.getType() == Storage.TYPE.TABLE) {
+                instancePaths = "${coord:dataIn('input')}";
+
+                final CatalogStorage sourceTableStorage = (CatalogStorage) sourceStorage;
+                propagateTableStorageProperties(srcCluster, sourceTableStorage, props, "falconSource");
+                final CatalogStorage targetTableStorage = (CatalogStorage) targetStorage;
+                propagateTableStorageProperties(trgCluster, targetTableStorage, props, "falconTarget");
+                propagateTableCopyProperties(srcCluster, sourceTableStorage,
+                    trgCluster, targetTableStorage, props);
+                setupHiveConfiguration(srcCluster, sourceTableStorage, trgCluster, targetTableStorage, wfPath);
+            }
+
+            propagateLateDataProperties(entity, instancePaths, sourceStorage.getType().name(), props);
+            propagateUserWorkflowProperties(props, "replication");
+
+            replicationWF.setConfiguration(getCoordConfig(props));
+            replicationAction.setWorkflow(replicationWF);
 
             return replicationAction;
         }
 
         private String getDefaultMaxMaps() {
             return RuntimeProperties.get().getProperty("falcon.replication.workflow.maxmaps", "5");
+        }
+
+        private String getDefaultMapBandwidth() {
+            return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidthKB", "102400");
         }
 
         private String getPathsWithPartitions(Cluster srcCluster, Cluster trgCluster,
@@ -525,20 +528,23 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         }
 
         private void setupHiveConfiguration(Cluster srcCluster, CatalogStorage sourceStorage,
-            Cluster trgCluster, CatalogStorage targetStorage, Path wfPath)
-            throws IOException, FalconException {
+            Cluster trgCluster, CatalogStorage targetStorage, Path wfPath) throws FalconException {
             Configuration conf = ClusterHelper.getConfiguration(trgCluster);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
-            // copy import export scripts to stagingDir
-            Path scriptPath = new Path(wfPath, "scripts");
-            copyHiveScript(fs, scriptPath, "/config/workflow/", "falcon-table-export.hql");
-            copyHiveScript(fs, scriptPath, "/config/workflow/", "falcon-table-import.hql");
+            try {
+                // copy import export scripts to stagingDir
+                Path scriptPath = new Path(wfPath, "scripts");
+                copyHiveScript(fs, scriptPath, "/config/workflow/", "falcon-table-export.hql");
+                copyHiveScript(fs, scriptPath, "/config/workflow/", "falcon-table-import.hql");
 
-            // create hive conf to stagingDir
-            Path confPath = new Path(wfPath + "/conf");
-            createHiveConf(fs, confPath, sourceStorage.getCatalogUrl(), srcCluster, "falcon-source-");
-            createHiveConf(fs, confPath, targetStorage.getCatalogUrl(), trgCluster, "falcon-target-");
+                // create hive conf to stagingDir
+                Path confPath = new Path(wfPath + "/conf");
+                createHiveConf(fs, confPath, sourceStorage.getCatalogUrl(), srcCluster, "falcon-source-");
+                createHiveConf(fs, confPath, targetStorage.getCatalogUrl(), trgCluster, "falcon-target-");
+            } catch(IOException e) {
+                throw new FalconException(e);
+            }
         }
 
         private void copyHiveScript(FileSystem fs, Path scriptPath,

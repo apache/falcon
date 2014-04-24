@@ -36,13 +36,16 @@ public class FeedReplicatorTest {
     public void testArguments() throws Exception {
         /*
          * <arg>-update</arg>
-         * <arg>-blocking</arg><arg>true</arg> <arg>-maxMaps</arg><arg>20</arg>
+         * <arg>-blocking</arg><arg>true</arg>
+         * <arg>-maxMaps</arg><arg>3</arg>
+         * <arg>-mapBandwidthKB</arg><arg>4</arg>
          * <arg>-sourcePaths</arg><arg>${distcpSourcePaths}</arg>
          * <arg>-targetPath</arg><arg>${distcpTargetPaths}</arg>
          */
         final String[] args = {
             "true",
             "-maxMaps", "3",
+            "-mapBandwidthKB", "4096",
             "-sourcePaths", "hdfs://localhost:8020/tmp/",
             "-targetPath", "hdfs://localhost1:8020/tmp/",
             "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
@@ -54,6 +57,8 @@ public class FeedReplicatorTest {
 
         List<Path> srcPaths = new ArrayList<Path>();
         srcPaths.add(new Path("hdfs://localhost:8020/tmp/"));
+        Assert.assertEquals(options.getMaxMaps(), 3);
+        Assert.assertEquals(options.getMapBandwidth(), 4096);
         Assert.assertEquals(options.getSourcePaths(), srcPaths);
         Assert.assertEquals(options.getTargetPath(), new Path("hdfs://localhost1:8020/tmp/"));
     }

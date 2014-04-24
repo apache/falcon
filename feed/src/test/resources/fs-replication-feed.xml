@@ -63,5 +63,6 @@
     <schema provider="protobuf" location="/databus/streams_local/click_rr/schema/"/>
     <properties>
         <property name="maxMaps" value="33" />
+        <property name="mapBandwidthKB" value="2048" />
     </properties>
 </feed>

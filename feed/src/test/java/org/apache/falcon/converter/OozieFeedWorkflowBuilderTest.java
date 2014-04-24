@@ -214,6 +214,7 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("queueName"), "default");
         Assert.assertEquals(props.get("jobPriority"), "NORMAL");
         Assert.assertEquals(props.get("maxMaps"), "5");
+        Assert.assertEquals(props.get("mapBandwidthKB"), "102400");
 
         assertLibExtensions(coord, "replication");
         assertWorkflowRetries(coord);
@@ -325,7 +326,7 @@ public class OozieFeedWorkflowBuilderTest {
 
         JAVA replication = replicationActionNode.getJava();
         List<String> args = replication.getArg();
-        Assert.assertEquals(args.size(), 11);
+        Assert.assertEquals(args.size(), 13);
 
         HashMap<String, String> props = new HashMap<String, String>();
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
@@ -338,6 +339,7 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
         Assert.assertEquals(props.get("maxMaps"), "33");
+        Assert.assertEquals(props.get("mapBandwidthKB"), "2048");
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP parentWorkflow) {

@@ -25,6 +25,8 @@ Trunk (Unreleased)
     (Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-391 Add ability to set mapBandwidth. (Michael Miklavcic via Shwetha GS)
+
     FALCON-380 The dependency option doesn't mention input or output for a feed.
     (Suhas Vasu via Shwetha GS)
 
