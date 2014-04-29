@@ -90,6 +90,7 @@ case $VERSION in
     ;;
 4.0.1 )
     sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
+    ;;
 esac
 
 rm `find . -name 'pom.xml.bak'`
