@@ -59,6 +59,7 @@
                         <argument>${oozie.version}</argument>
                         <argument>${oozie.buildversion}</argument>
                         <argument>${oozie.forcebuild}</argument>
+                        <argument>hadoop-2</argument>
                     </arguments>
                 </configuration>
             </plugin>

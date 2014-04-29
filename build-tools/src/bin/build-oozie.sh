@@ -22,6 +22,7 @@ set -x
 VERSION=$1
 BUILD_VERSION=$2
 FORCE_BUILD=$3
+HADOOP_VERSION=$4
 
 echo "oozie version $OOZIE_VERSION"
 
@@ -39,10 +40,10 @@ then
     exit 0;
 fi
 
-PKG_URL="http://www.apache.org/dist/oozie/$VERSION/oozie-$VERSION.tar.gz"
+PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION.tar.gz"
 if [ $VERSION == '3.1.3-incubating' ]
 then
-    PKG_URL="http://www.apache.org/dist/oozie/$VERSION/oozie-$VERSION-src.tar.gz"
+    PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION-src.tar.gz"
 fi
 
 PKG=oozie-$VERSION
@@ -82,15 +83,18 @@ case $VERSION in
     patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1465-3.3.2.patch
     ;;
-4* )
+4.0.0* )
     sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
     patch -p0 < ../../build-tools/src/patches/oozie-site.patch
     patch -p1 --verbose < ../../build-tools/src/patches/OOZIE-1551-4.0.patch
     ;;
+4.0.1 )
+    sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom.xml */*/pom.xml
 esac
 
 rm `find . -name 'pom.xml.bak'`
 
-$MVN_CMD clean install -DskipTests
+JAVA_VERSION=$(java -version 2>&1 | head -1 | sed -n 's|^java version "\(1\.[678]\).*$|\1|p')
+$MVN_CMD clean install -DskipTests -DjavaVersion=$JAVA_VERSION -DtargetJavaVersion=1.6 -P $HADOOP_VERSION
 
 popd
