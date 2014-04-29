@@ -66,6 +66,12 @@ Request may also be sent from prism but directed to a specific server using the 
 When a cluster is submitted it is by default sent to all the servers configured in the prism.
 When is feed is SUBMIT / SCHEDULED request is only sent to the servers specified in the feed / process definitions. Servers are mentioned in the feed / process via CLUSTER tags in xml definition.
 
+Communication between prism and falcon server (for submit/update entity function) is secured over https:// using a client-certificate based auth. Prism server needs to present a valid client certificate for the falcon server to accept the action.
+
+Startup property file in both falcon & prism server need to be configured with the following configuration if TLS is enabled.
+* keystore.file
+* keystore.password
+
 ---++++ Prism Setup
 <img src="PrismSetup.png" height="400" width="600" />
  
@@ -697,7 +703,7 @@ Falcon currently support following ELs:
    * 6.	*currentYear(month,day,hour,minute)*: The month,day,hour, minutes in the pareamter are added with reference to the start of year of instance start time. For our exmple start time 2010-01-02:00:30 reference will go back to 2010-01-01:T00:00Z. Also similar to days, months are added to the 1st month that Jan. So currentYear(0,2,2,20) will mean 2010-01-03T02:20Z while currentYear(11,2,2,20) will mean 2010-12-03T02:20Z
 
 
-   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similary to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.
+   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similarly to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.
    
    * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest available instance of the feed given as parameter. For example: latest(0) will consider the last available instance of feed, where as latest latest(-1) will consider second last available feed and latest(-3) will consider 4th last available feed.
    

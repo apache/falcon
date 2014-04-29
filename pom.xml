@@ -632,6 +632,12 @@
             </dependency>
 
             <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>3.1</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>6.1.1</version>
@@ -1037,6 +1043,13 @@
                     <include>startup.properties</include>
                     <include>runtime.properties</include>
                     <include>log4j.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>client.properties</include>
                 </includes>
             </resource>
             <resource>

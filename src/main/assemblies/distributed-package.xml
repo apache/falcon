@@ -95,6 +95,12 @@
         </file>
 
         <file>
+            <source>prism/target/prism.keystore</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>prism.keystore</destName>
+        </file>
+
+        <file>
             <source>webapp/target/falcon-webapp-${project.version}.war</source>
             <outputDirectory>server/webapp</outputDirectory>
             <destName>falcon.war</destName>

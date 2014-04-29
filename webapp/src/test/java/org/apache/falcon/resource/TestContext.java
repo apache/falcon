@@ -23,8 +23,11 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
@@ -43,6 +46,10 @@ import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.testng.Assert;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
 import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -61,6 +68,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +88,7 @@ public class TestContext {
     public static final String PROCESS_TEMPLATE = "/process-template.xml";
     public static final String PIG_PROCESS_TEMPLATE = "/pig-process-template.xml";
 
-    public static final String BASE_URL = "http://localhost:41000/falcon-webapp";
+    public static final String BASE_URL = "https://localhost:41443/falcon-webapp";
     public static final String REMOTE_USER = FalconClient.USER;
 
     private static final String AUTH_COOKIE_EQ = AuthenticatedURL.AUTH_COOKIE + "=";
@@ -111,12 +119,31 @@ public class TestContext {
     }
 
     public void configure() throws Exception {
-        StartupProperties.get().setProperty(
-                "application.services",
-                StartupProperties.get().getProperty("application.services")
-                        .replace("org.apache.falcon.service.ProcessSubscriberService", ""));
-        String store = StartupProperties.get().getProperty("config.store.uri");
-        StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
+        try {
+            StartupProperties.get().setProperty(
+                    "application.services",
+                    StartupProperties.get().getProperty("application.services")
+                            .replace("org.apache.falcon.service.ProcessSubscriberService", ""));
+            String store = StartupProperties.get().getProperty("config.store.uri");
+            StartupProperties.get().setProperty("config.store.uri", store + System.currentTimeMillis());
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(
+                    null,
+                    new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},
+                    new SecureRandom());
+            DefaultClientConfig config = new DefaultClientConfig();
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                    new HTTPSProperties(new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession sslSession) {
+                            return true;
+                        }
+                    }, sslContext));
+            Client client = Client.create(config);
+            this.service = client.resource(UriBuilder.fromUri(BASE_URL).build());
+        } catch (Exception e) {
+            throw new FalconRuntimException(e);
+        }
 
         try {
             String baseUrl = BASE_URL;

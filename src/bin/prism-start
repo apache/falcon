@@ -30,7 +30,7 @@ BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
 if [[ $* != *-port* ]]; then
-  ARGS="-port 16000"
+  ARGS="-port 16443"
 fi
 
 export FALCON_PROPERTIES="-Dfalcon.embeddedmq=false"

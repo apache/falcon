@@ -87,7 +87,7 @@ public class HTTPChannel extends AbstractChannel {
             String accept = MediaType.WILDCARD;
             String user = CurrentUser.getUser();
 
-            ClientResponse response = Client.create(new DefaultClientConfig())
+            ClientResponse response = getClient()
                     .resource(UriBuilder.fromUri(url).build())
                     .queryParam("user.name", user)
                     .accept(accept).type(mimeType)
@@ -110,6 +110,10 @@ public class HTTPChannel extends AbstractChannel {
             LOG.error("Request failed", e);
             throw new FalconException(e);
         }
+    }
+
+    protected Client getClient() throws Exception {
+        return Client.create(new DefaultClientConfig());
     }
 
     private boolean isPost(String httpMethod) {

@@ -156,6 +156,11 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -170,6 +175,35 @@
 			            </resource>
                     </webResources>
                     <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>keytool-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <id>clean-server</id>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <id>server</id>
+                        <goals>
+                            <goal>generateKeyPair</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <dname>cn=falcon.incubator.apache.org</dname>
+                    <keystore>${project.build.directory}/prism.keystore</keystore>
+                    <keypass>falcon-prism-passwd</keypass>
+                    <storepass>falcon-prism-passwd</storepass>
+                    <alias>prism</alias>
+                    <keyalg>RSA</keyalg>
+                    <validity>100000</validity>
                 </configuration>
             </plugin>
             <plugin>

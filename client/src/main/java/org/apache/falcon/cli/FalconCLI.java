@@ -102,6 +102,12 @@ public class FalconCLI {
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
 
+    private final Properties clientProperties;
+
+    public FalconCLI() throws Exception {
+        clientProperties = getClientProperties();
+    }
+
     /**
      * Entry point for the Falcon CLI when invoked from the command line. Upon
      * completion this method exits the JVM with '0' (success) or '-1'
@@ -109,7 +115,7 @@ public class FalconCLI {
      *
      * @param args options and arguments for the Falcon CLI.
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
         System.exit(new FalconCLI().run(args));
     }
 
@@ -155,7 +161,7 @@ public class FalconCLI {
             } else {
                 CommandLine commandLine = command.getCommandLine();
                 String falconUrl = getFalconEndpoint(commandLine);
-                FalconClient client = new FalconClient(falconUrl);
+                FalconClient client = new FalconClient(falconUrl, clientProperties);
 
                 if (command.getName().equals(ADMIN_CMD)) {
                     exitValue = adminCommand(commandLine, client, falconUrl);
@@ -686,9 +692,8 @@ public class FalconCLI {
             url = System.getenv(FALCON_URL);
         }
         if (url == null) {
-            Properties prop = getClientProperties();
-            if (prop.containsKey("falcon.url")) {
-                url = prop.getProperty("falcon.url");
+            if (clientProperties.containsKey("falcon.url")) {
+                url = clientProperties.getProperty("falcon.url");
             }
         }
         if (url == null) {

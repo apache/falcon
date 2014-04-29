@@ -405,6 +405,13 @@
                 <version>${jetty.version}</version>
                 <configuration>
                     <connectors>
+                        <connector implementation="org.mortbay.jetty.security.SslSocketConnector">
+                            <port>41443</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                            <keystore>${project.build.directory}/../../prism/target/prism.keystore</keystore>
+                            <keyPassword>falcon-prism-passwd</keyPassword>
+                            <password>falcon-prism-passwd</password>
+                        </connector>
                         <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
                             <port>41000</port>
                             <maxIdleTime>60000</maxIdleTime>
@@ -454,6 +461,14 @@
                         <systemProperty>
                             <name>falcon.libext</name>
                             <value>${project.build.directory}/../../hadoop-dependencies/target/falcon-hadoop-dependencies-${project.version}.jar</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>keystore.file</name>
+                            <value>${project.build.directory}/../../prism/target/prism.keystore</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <name>truststore.file</name>
+                            <value>${project.build.directory}/../../prism/target/prism.keystore</value>
                         </systemProperty>
                     </systemProperties>
                     <stopKey>falcon-stop</stopKey>

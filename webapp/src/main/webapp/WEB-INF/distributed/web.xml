@@ -30,6 +30,11 @@
         <filter-class>org.apache.falcon.security.BasicAuthFilter</filter-class>
     </filter>
 
+    <filter>
+        <filter-name>client-cert-auth</filter-name>
+        <filter-class>org.apache.falcon.security.ClientCertificateFilter</filter-class>
+    </filter>
+
     <filter-mapping>
         <filter-name>auth</filter-name>
         <servlet-name>FalconRESTApi</servlet-name>
@@ -37,6 +42,11 @@
 
     <filter-mapping>
         <filter-name>auth</filter-name>
+        <servlet-name>SecureApi</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>client-cert-auth</filter-name>
         <servlet-name>SecureApi</servlet-name>
     </filter-mapping>
 

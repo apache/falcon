@@ -99,6 +99,12 @@
         </file>
 
         <file>
+            <source>prism/target/prism.keystore</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>prism.keystore</destName>
+        </file>
+
+        <file>
             <source>oozie-el-extensions/target/falcon-oozie-el-extension-${project.version}.jar</source>
             <outputDirectory>oozie/libext</outputDirectory>
         </file>

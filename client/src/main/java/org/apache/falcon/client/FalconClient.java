@@ -22,16 +22,23 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.InstancesResult;
+import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
-import org.apache.falcon.resource.InstancesSummaryResult;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -69,55 +77,70 @@ public class FalconClient {
     private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
     private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
 
+    public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
+        @Override
+        public boolean verify(String hostname, SSLSession sslSession) {
+            return true;
+        }
+    };
+
     private final WebResource service;
     private final AuthenticatedURL.Token authenticationToken;
+
+    private final Properties clientProperties;
 
     /**
      * Create a Falcon client instance.
      *
      * @param falconUrl of the server to which client interacts
-     * @throws FalconCLIException
+     * @throws FalconCLIException - If unable to initialize SSL Props
      */
     public FalconClient(String falconUrl) throws FalconCLIException {
-        String baseUrl = notEmpty(falconUrl, "FalconUrl");
-        if (!baseUrl.endsWith("/")) {
-            baseUrl += "/";
-        }
-
-        Client client = Client.create(new DefaultClientConfig());
-        setFalconTimeOut(client);
-        service = client.resource(UriBuilder.fromUri(baseUrl).build());
-
-        authenticationToken = getToken(baseUrl);
+        this(falconUrl, new Properties());
     }
 
-    private void setFalconTimeOut(Client client) throws FalconCLIException {
+    /**
+     * Create a Falcon client instance.
+     *
+     * @param falconUrl of the server to which client interacts
+     * @param properties client properties
+     * @throws FalconCLIException - If unable to initialize SSL Props
+     */
+    public FalconClient(String falconUrl, Properties properties) throws FalconCLIException {
         try {
-            Properties prop = new Properties();
-            int readTimeout;
-            int connectTimeout;
-            InputStream inputStream = null;
-            try {
-                inputStream = FalconClient.class.getResourceAsStream("/client.properties");
-                if (inputStream != null) {
-                    prop.load(inputStream);
-                    readTimeout = prop.containsKey("falcon.read.timeout") ? Integer
-                            .parseInt(prop.getProperty("falcon.read.timeout")) : 180000;
-                    connectTimeout = prop.containsKey("falcon.connect.timeout") ? Integer
-                            .parseInt(prop.getProperty("falcon.connect.timeout"))
-                            : 180000;
-                } else {
-                    readTimeout = 180000;
-                    connectTimeout = 180000;
-                }
-            } finally {
-                IOUtils.closeQuietly(inputStream);
+            String baseUrl = notEmpty(falconUrl, "FalconUrl");
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
             }
-            client.setConnectTimeout(connectTimeout);
-            client.setReadTimeout(readTimeout);
-        } catch (IOException e) {
-            throw new FalconCLIException("An error occurred while reading client.properties file.", e);
+            this.clientProperties = properties;
+            SSLContext sslContext = getSslContext();
+            DefaultClientConfig config = new DefaultClientConfig();
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                    new HTTPSProperties(ALL_TRUSTING_HOSTNAME_VERIFIER, sslContext)
+            );
+            Client client = Client.create(config);
+            client.setConnectTimeout(Integer.parseInt(clientProperties.getProperty("falcon.connect.timeout",
+                    "180000")));
+            client.setReadTimeout(Integer.parseInt(clientProperties.getProperty("falcon.read.timeout", "180000")));
+            service = client.resource(UriBuilder.fromUri(baseUrl).build());
+            client.resource(UriBuilder.fromUri(baseUrl).build());
+            authenticationToken = getToken(baseUrl);
+        } catch (Exception e) {
+            throw new FalconCLIException("Unable to initialize Falcon Client object", e);
         }
+    }
+
+    private static SSLContext getSslContext() throws Exception {
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(
+                null,
+                new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},
+                new SecureRandom());
+        return sslContext;
+    }
+
+    public Properties getClientProperties() {
+        return clientProperties;
     }
 
     public static AuthenticatedURL.Token getToken(String baseUrl) throws FalconCLIException {
@@ -126,6 +149,8 @@ public class FalconClient {
             URL url = new URL(baseUrl + AUTH_URL);
             // using KerberosAuthenticator which falls back to PsuedoAuthenticator
             // instead of passing authentication type from the command line - bad factory
+            HttpsURLConnection.setDefaultSSLSocketFactory(getSslContext().getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(ALL_TRUSTING_HOSTNAME_VERIFIER);
             new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
         } catch (Exception ex) {
             throw new FalconCLIException("Could not authenticate, " + ex.getMessage(), ex);
@@ -803,8 +828,9 @@ public class FalconClient {
     private void checkIfSuccessful(ClientResponse clientResponse)
         throws FalconCLIException {
 
-        if (clientResponse.getStatus() == Response.Status.BAD_REQUEST
-                .getStatusCode()) {
+        Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
+        if (statusFamily != Response.Status.Family.SUCCESSFUL
+                && statusFamily != Response.Status.Family.INFORMATIONAL) {
             throw FalconCLIException.fromReponse(clientResponse);
         }
     }

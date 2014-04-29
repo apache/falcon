@@ -54,7 +54,7 @@ public final class ChannelFactory {
         if (mode.equals(EMBEDDED)) {
             channel = new IPCChannel();
         } else {
-            channel = new HTTPChannel();
+            channel = new SecureHTTPChannel();
         }
 
         return channel;

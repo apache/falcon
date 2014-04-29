@@ -62,7 +62,7 @@
 
     <property>
         <name>oozie.base.url</name>
-        <value>http://localhost:41000/oozie</value>
+        <value>https://localhost:41443/oozie</value>
         <description>
             The Oozie system ID.
         </description>

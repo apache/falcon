@@ -23,6 +23,9 @@ Trunk (Unreleased)
 
     FALCON-289 Provide REST APIs for discovering lineage metadata over the store.
     (Venkatesh Seetharam)
+
+    FALCON-229 Enable SSL for Falcon REST API (Srikanth Sundarrajan via
+    Venkatesh Seetharam)
    
   IMPROVEMENTS
     FALCON-391 Add ability to set mapBandwidth. (Michael Miklavcic via Shwetha GS)

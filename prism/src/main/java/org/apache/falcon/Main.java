@@ -26,6 +26,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.log4j.Logger;
 
 /**
@@ -61,7 +62,7 @@ public final class Main {
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
-        int appPort = 15000;
+        int appPort = 15443;
 
         if (cmd.hasOption(APP_PATH)) {
             appPath = cmd.getOptionValue(APP_PATH);
@@ -86,7 +87,13 @@ public final class Main {
             broker.start();
         }
 
-        EmbeddedServer server = new EmbeddedServer(appPort, appPath);
+        boolean enableTLS = Boolean.valueOf(StartupProperties.get().getProperty("falcon.enableTLS",
+                System.getProperty("falcon.enableTLS", (appPort % 1000) == 443 ? "true" : "false")));
+        LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        LOG.info("Server started with TLS ?" + enableTLS);
+        LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        StartupProperties.get().setProperty("falcon.enableTLS", String.valueOf(enableTLS));
+        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
         server.start();
     }
 }
