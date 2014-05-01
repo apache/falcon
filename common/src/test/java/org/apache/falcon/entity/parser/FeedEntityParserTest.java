@@ -20,12 +20,15 @@ package org.apache.falcon.entity.parser;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.AbstractTestBase;
+import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.testng.Assert;
@@ -479,5 +482,45 @@ public class FeedEntityParserTest extends AbstractTestBase {
 
         parser.validate(feed);
         Assert.fail("An exception should have been thrown:Partitions are not supported for feeds with table storage");
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateClusterHasRegistryWithNoRegistryInterfaceEndPoint() throws Exception {
+        final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
+        Feed feedWithTable = parser.parse(inputStream);
+
+        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER,
+                feedWithTable.getClusters().getClusters().get(0).getName());
+        ClusterHelper.getInterface(clusterEntity, Interfacetype.REGISTRY).setEndpoint(null);
+
+        parser.validate(feedWithTable);
+        Assert.fail("An exception should have been thrown: Cluster should have registry interface defined with table "
+                + "storage");
+    }
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateClusterHasRegistryWithNoRegistryInterface() throws Exception {
+        Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
+        Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
+                .getResourceAsStream(("/config/cluster/cluster-no-registry.xml")));
+        cluster.setName("badTestCluster");
+        ConfigurationStore.get().publish(EntityType.CLUSTER, cluster);
+
+
+        final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
+        Feed feedWithTable = parser.parse(inputStream);
+        Validity validity = modifiableFeed.getClusters().getClusters().get(0)
+                .getValidity();
+        feedWithTable.getClusters().getClusters().clear();
+
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                new org.apache.falcon.entity.v0.feed.Cluster();
+        feedCluster.setName(cluster.getName());
+        feedCluster.setValidity(validity);
+        feedWithTable.getClusters().getClusters().add(feedCluster);
+
+        parser.validate(feedWithTable);
+        Assert.fail("An exception should have been thrown: Cluster should have registry interface defined with table"
+                + " storage");
     }
 }

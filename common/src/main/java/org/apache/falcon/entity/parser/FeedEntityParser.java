@@ -73,6 +73,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
                     cluster.getName());
+            validateClusterHasRegistry(feed, cluster);
             validateFeedCutOffPeriod(feed, cluster);
         }
 
@@ -335,6 +336,20 @@ public class FeedEntityParser extends EntityParser<Feed> {
             if (feedStorageType != feedClusterStorageType) {
                 throw new ValidationException("The storage type is not uniform for cluster: " + cluster.getName());
             }
+        }
+    }
+
+    private void validateClusterHasRegistry(Feed feed, Cluster cluster) throws FalconException {
+        Storage.TYPE feedClusterStorageType = FeedHelper.getStorageType(feed, cluster);
+
+        if (feedClusterStorageType != Storage.TYPE.TABLE) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity = EntityUtil.getEntity(EntityType.CLUSTER,
+                cluster.getName());
+        if (ClusterHelper.getRegistryEndPoint(clusterEntity) == null) {
+            throw new ValidationException("Cluster should have registry interface defined: " + clusterEntity.getName());
         }
     }
 
