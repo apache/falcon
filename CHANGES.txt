@@ -28,6 +28,8 @@ Trunk (Unreleased)
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-421 Upgrade Hadoop to 2.4.0 (Sowmya Ramesh via Venkatesh Seetharam)
+
     FALCON-386 Upgrade to oozie 4.0.1. (Sowmya Ramesh via Venkatesh Seetharam)
 
     FALCON-392 HCat Example Recipes. (Shwetha GS via Venkatesh Seetharam)
