@@ -54,7 +54,7 @@ As the name suggests Falcon Prism splits the request it gets to the Falcon Serve
 Stand alone mode is useful when the hadoop jobs and relevant data processing involves only one hadoop cluster. In this mode there is single Falcon server that contacts with oozie to schedule jobs on Hadoop. All the process / feed request like submit, schedule, suspend, kill are sent to this server only. For running in this mode one should use the falcon which has been built for standalone mode, or build using standalone option if using source code.
 
 ---+++ Distributed Mode
-Distributed mode is the mode which you might me using most of the time. This is for orgs which have multiple instances of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config locations. 
+Distributed mode is the mode which you might me using most of the time. This is for organisations which have multiple instances of hadoop clusters, and multiple workflow schedulers to handle them. Here we have 2 components: Prism and Server. Both Prism and server have there own setup (runtime and startup properties) and there config locations.
 In this mode Prism acts as a contact point for Falcon servers. Below are the requests that can be sent to prism and server in this mode:
 
  Prism: submit, schedule, submitAndSchedule, Suspend, Resume, Kill, instance management
@@ -197,7 +197,7 @@ performed in Oozie to realize an update:
    * Resume the suspended coordinators
    * Schedule as per the new process/feed definition with the start time as "now"
 
-Update optionally takes effective time as a parameter which is used as the endtime of previously scheduled coordinator.
+Update optionally takes effective time as a parameter which is used as the end time of previously scheduled coordinator.
 So, the updated configuration will be effective since the given timestamp.
 
 
@@ -474,12 +474,12 @@ feed="raaw-logs16" name="inputData"/>
 
 *Feed xml:*
 <verbatim>
-<feed description="clicks log" name="raaw-logs16"....
+<feed description="clicks log" name="raw-logs16"....
 </verbatim>
 
    
     * The time interpretation for corresponding tags indicating the start and end instances for a
-particular input feed in the process xml should lie well within the timespan of the period specified in
+particular input feed in the process xml should lie well within the time span of the period specified in
 <validity> tag of the particular feed.
 
 *Example:*
@@ -489,7 +489,7 @@ particular input feed in the process xml should lie well within the timespan of 
 *Process XML:*
 <verbatim>
 <input end-instance="now(0,20)" start-instance="now(0,-60)"
-   feed="raaw-logs16" name="inputData"/>
+   feed="raw-logs16" name="inputData"/>
 </verbatim>
 *Feed XML:*
 <verbatim>
@@ -597,7 +597,7 @@ The metric logged for an event has the following properties:
    1. Action - Name of the event.
    2. Dimensions - A list of name/value pairs of various attributes for a given action.
    3. Status- Status of an action FAILED/SUCCEEDED.
-   4. Time-taken - Time taken in nano seconds for a given action.
+   4. Time-taken - Time taken in nanoseconds for a given action.
 
 An example for an event logged for a submit of a new process definition:   
 
@@ -696,11 +696,12 @@ Falcon currently support following ELs:
 
    * 3.	*yesterday(hours,minutes)*: As the name suggest EL yesterday picks up feed instances with respect to start of day yesterday. Hours and minutes are added to the 00 hours starting yesterday, Example: yesterday(24,30) will actually correspond to 00:30 am of today, for 2010-01-02T01:30Z this would mean 2010-01-02:00:30 feed. 
 
+   * 7.	*lastYear(month,day,hour,minute)*: This is exactly similarly to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will correspond to feed instance created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will correspond to feed at 2010-01-03T02:20Z.
    * 4.	*currentMonth(day,hour,minute)*: Current month takes the reference to start of the month with respect to instance start time. One thing to keep in mind is that day is added to the first day of the month. So the value of day is the number of days you want to add to the first day of the month. For example: for instance start time 2010-01-12T01:30Z and El as currentMonth(3,2,40) will correspond to feed created at 2010-01-04T02:40Z and currentMonth(0,0,0) will mean 2010-01-01T00:00Z.
 
    * 5.	*lastMonth(day,hour,minute)*: Parameters for lastMonth is same as currentMonth, only difference being the reference is shifted to one month back. For instance start 2010-01-12T01:30Z lastMonth(2,3,30) will correspond to feed instance at 2009-12-03:T03:30Z 
 
-   * 6.	*currentYear(month,day,hour,minute)*: The month,day,hour, minutes in the pareamter are added with reference to the start of year of instance start time. For our exmple start time 2010-01-02:00:30 reference will go back to 2010-01-01:T00:00Z. Also similar to days, months are added to the 1st month that Jan. So currentYear(0,2,2,20) will mean 2010-01-03T02:20Z while currentYear(11,2,2,20) will mean 2010-12-03T02:20Z
+   * 6.	*currentYear(month,day,hour,minute)*: The month,day,hour, minutes in the parameter are added with reference to the start of year of instance start time. For our example start time 2010-01-02:00:30 reference will go back to 2010-01-01:T00:00Z. Also similar to days, months are added to the 1st month that Jan. So currentYear(0,2,2,20) will mean 2010-01-03T02:20Z while currentYear(11,2,2,20) will mean 2010-12-03T02:20Z
 
 
    * 7.	*lastYear(month,day,hour,minute)*: This is exactly similarly to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will corrospond to feed insatnce created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will corrospond to feed at 2010-01-03T02:20Z.

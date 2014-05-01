@@ -25,7 +25,7 @@ $FALCON_HOME/bin/falcon entity  -type process -name sampleProcess -schedule
 
 ---+++Suspend
 
-Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedulable entities(process/feed) can be suspended.
+Suspend on an entity results in suspension of the oozie bundle that was scheduled earlier through the schedule function. No further instances are executed on a suspended entity. Only schedule-able entities(process/feed) can be suspended.
 
 Usage:
 $FALCON_HOME/bin/falcon entity  -type [feed|process] -name <<name>> -suspend
@@ -170,10 +170,16 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs -st
 ---+++Help
 
 Usage:
-$FALCON_HOME/bin/falcon admin -version
+$FALCON_HOME/bin/falcon admin -help
 
 ---+++Version
 
-Version returns the current verion of Falcon installed.
+Version returns the current version of Falcon installed.
 Usage:
-$FALCON_HOME/bin/falcon admin -help
+$FALCON_HOME/bin/falcon admin -version
+
+---+++Status
+
+Status returns the current state of Falcon (running or stopped).
+Usage:
+$FALCON_HOME/bin/falcon admin -status

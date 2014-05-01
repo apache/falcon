@@ -116,7 +116,10 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
-    FALCON-398 Null pointer Exception on submitting HCat Feed. (Sowmya Ramesh
+    FALCON-364 Process specification contains a mistake in the parallel section
+    (Jean-Baptiste Onofré via Venkatesh Seetharam)
+
+    FALCON-398 Null pointer Exception on submitting HCat Feed (Sowmya Ramesh
     via Venkatesh Seetharam)
 
     FALCON-390 falcon HCatProcess tests are failing in secure clusters

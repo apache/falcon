@@ -128,7 +128,7 @@ Location specifies where the feed is available on this cluster. This is an optio
 A location tag specifies the type of location like data, meta, stats and the corresponding paths for them.
 A feed should at least define the location for type data, which specifies the HDFS path pattern where the feed is generated
 periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
-The granularity of date pattern in the path should be atleast that of a frequency of a feed.
+The granularity of date pattern in the path should be at least that of a frequency of a feed.
 Other location type which are supported are stats and meta paths, if a process references a feed then the meta and stats
 paths are available as a property in a process.
 
@@ -177,7 +177,7 @@ Examples:
 A feed can define multiple partitions, if a referenced cluster defines partitions then the number of partitions in feed has to be equal to or more than the cluster partitions.
 
 *Note:* This will only apply for !FileSystem storage but not Table storage as partitions are defined and maintained in
-Hive (Hcatalog) registry.
+Hive (HCatalog) registry.
 
 ---+++ Groups
 
@@ -232,7 +232,7 @@ upto 8 hours then late-arrival's cut-off="hours(8)"
     </properties>
 </verbatim>
 A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties
-available to user to specify the hadoop job queue and priority, the same value is used by Falcons launcher job.
+available to user to specify the Hadoop job queue and priority, the same value is used by Falcons launcher job.
 "timeout" and "parallel" are other special properties which decides replication instance's timeout value while
 waiting for the feed instance and parallel decides the concurrent replication instances that can run at any given time. "maxMaps" represents the maximum number of maps used during replication. "mapBandwidthKB" represents the bandwidth in KB/s used by each mapper during replication.
  
@@ -271,12 +271,13 @@ Syntax:
 </verbatim>
 
 ---++++ Parallel
-Parallel defines how many instances of the workflow can run concurrently. It should be a positive interger > 0. For example, concurrency of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
+Parallel defines how many instances of the workflow can run concurrently. It should be a positive integer > 0.
+For example, parallel of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
 Syntax:
 <verbatim>
 <process name="[process name]">
 ...
-   <concurrency>[concurrency]</concurrency>
+   <parallel>[parallel]</parallel>
 ...
 </process>
 </verbatim>
@@ -563,19 +564,19 @@ Example workflow configuration:
 ---++++ Properties
 The properties are key value pairs that are passed to the workflow. These properties are optional and can be used
 in workflow to parameterize the workflow.
-Synatx:
+Syntax:
 <verbatim>
 <process name="[process name]">
 ...
     <properties>
-        <propery name=[key] value=[value]/>
+        <property name=[key] value=[value]/>
         ...
     </properties>
 ...
 </process>
 </verbatim>
 
-queueName and jobPriority are special properites, which when present are used by the Falcon's launcher job, the same property is also availalble in workflow which can be used to propogate to pig or M/R job.
+queueName and jobPriority are special properties, which when present are used by the Falcon's launcher job, the same property is also available in workflow which can be used to propagate to pig or M/R job.
 <verbatim>
         <property name="queueName" value="hadoopQueue"/>
         <property name="jobPriority" value="VERY_HIGH"/>
