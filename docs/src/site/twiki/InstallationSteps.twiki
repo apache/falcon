@@ -234,14 +234,14 @@ src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 <verbatim>
 bin/falcon-start
 </verbatim>
-Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/standalone-cluster.xml
+Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/filesystem/standalone-cluster.xml
 <verbatim>
-bin/falcon entity -submit -type cluster -file examples/entity/standalone-cluster.xml
+bin/falcon entity -submit -type cluster -file examples/entity/filesystem/standalone-cluster.xml
 </verbatim>
 Submit input and output feeds:
 <verbatim>
-bin/falcon entity -submit -type feed -file examples/entity/in-feed.xml
-bin/falcon entity -submit -type feed -file examples/entity/out-feed.xml
+bin/falcon entity -submit -type feed -file examples/entity/filesystem/in-feed.xml
+bin/falcon entity -submit -type feed -file examples/entity/filesystem/out-feed.xml
 </verbatim>
 Set-up workflow for the process:
 <verbatim>
@@ -249,8 +249,8 @@ hadoop fs -put examples/app /
 </verbatim>
 Submit and schedule the process:
 <verbatim>
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/oozie-mr-process.xml
-bin/falcon entity -submitAndSchedule -type process -file examples/entity/pig-process.xml
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/oozie-mr-process.xml
+bin/falcon entity -submitAndSchedule -type process -file examples/entity/filesystem/pig-process.xml
 </verbatim>
 Generate input data:
 <verbatim>
@@ -261,5 +261,6 @@ Get status of instances:
 bin/falcon instance -status -type process -name oozie-mr-process -start 2013-11-15T00:05Z -end 2013-11-15T01:00Z
 </verbatim>
 
+HCat based example entities are in examples/entity/hcat.
 
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<feed description="output" name="out" xmlns="uri:falcon:feed:0.1">
+    <groups>output</groups>
+
+    <frequency>minutes(5)</frequency>
+    <timezone>UTC</timezone>
+    <late-arrival cut-off="hours(1)"/>
+
+    <clusters>
+        <cluster name="local">
+            <validity start="2013-01-01T00:00Z" end="2030-01-01T00:00Z"/>
+            <retention limit="hours(2)" action="delete"/>
+        </cluster>
+    </clusters>
+
+    <table uri="catalog:default:out_table#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}" />
+
+    <ACL owner="testuser" group="group" permission="0x644"/>
+    <schema location="/schema/out/out.format.csv" provider="csv"/>
+</feed>

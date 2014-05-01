@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -31,23 +31,13 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR};pwd`
 
-rm -rf generated-data
-YEAR=`date +%Y`
-MONTH=`date +m`
-DAY=`date +%d`
-HOUR=`date +%H`
+${BASEDIR}/generate.sh
 
-DELIM='\t'
-input=(first second third fourth fifth)
+hcat -e "DROP TABLE IF EXISTS in_table"
+hcat -e "DROP TABLE IF EXISTS out_table"
+hcat -e "CREATE TABLE in_table (word STRING, cnt INT) PARTITIONED BY (ds STRING);"
+hcat -e "CREATE TABLE out_table (word STRING, cnt INT) PARTITIONED BY (ds STRING);"
 for MINUTE in `seq -w 00 59`
 do
-    mkdir -p generated-data/00/$MINUTE/
-    word=${input[$RANDOM % 5]}
-    cnt=`expr $RANDOM % 10`
-    echo -e "$word$DELIM$cnt" > generated-data/00/$MINUTE/data
+    hcat -e "ALTER TABLE in_table ADD PARTITION (ds='2013-11-15-00-$MINUTE') LOCATION '/data/in/2013/11/15/00/$MINUTE';"
 done
-
-hadoop fs -rmr /data/in/2013/11/15/
-hadoop fs -mkdir /data/in/2013/11/15/
-hadoop fs -put generated-data/00 /data/in/2013/11/15/ 
-rm -rf generated-data
