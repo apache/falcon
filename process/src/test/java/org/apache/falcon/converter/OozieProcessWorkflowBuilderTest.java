@@ -25,6 +25,7 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -49,9 +50,11 @@ import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.OozieProcessWorkflowBuilder;
+import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -59,6 +62,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBContext;
@@ -88,13 +92,13 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     private String hdfsUrl;
     private FileSystem fs;
+    private Cluster cluster;
 
     @BeforeClass
     public void setUpDFS() throws Exception {
         CurrentUser.authenticate("falcon");
 
-        EmbeddedCluster cluster = EmbeddedCluster.newCluster("testCluster");
-        Configuration conf = cluster.getConf();
+        Configuration conf = EmbeddedCluster.newCluster("testCluster").getConf();
         hdfsUrl = conf.get("fs.default.name");
     }
 
@@ -103,7 +107,13 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         super.setup();
 
         ConfigurationStore store = ConfigurationStore.get();
-        Cluster cluster = store.get(EntityType.CLUSTER, "corp");
+        cluster = store.get(EntityType.CLUSTER, "corp");
+        org.apache.falcon.entity.v0.cluster.Property property =
+                new org.apache.falcon.entity.v0.cluster.Property();
+        property.setName(OozieWorkflowBuilder.METASTORE_KERBEROS_PRINCIPAL);
+        property.setValue("hive/_HOST");
+        cluster.getProperties().getProperties().add(property);
+
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
         ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).setEndpoint("thrift://localhost:49083");
         fs = new Path(hdfsUrl).getFileSystem(EmbeddedCluster.newConfiguration());
@@ -230,8 +240,18 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
     }
 
-    @Test
-    public void testHiveProcessMapper() throws Exception {
+    @DataProvider(name = "secureOptions")
+    private Object[][] createOptions() {
+        return new Object[][] {
+            {"simple"},
+            {"kerberos"},
+        };
+    }
+
+    @Test (dataProvider = "secureOptions")
+    public void testHiveProcessMapper(String secureOption) throws Exception {
+        StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
+
         URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
         Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.FEED, inFeed);
@@ -244,7 +264,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
 
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         prepare(process);
         OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
@@ -265,7 +284,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify table props
-        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
         for (Map.Entry<String, String> entry : props.entrySet()) {
             if (expected.containsKey(entry.getKey())) {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
@@ -286,10 +305,47 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         Assert.assertEquals(hiveAction.getScript(),
                 "${nameNode}/falcon/staging/workflows/hive-process/user/script.hql");
+        Assert.assertEquals(hiveAction.getJobXml(), "${wf:appPath()}/conf/hive-site.xml");
         Assert.assertNull(hiveAction.getPrepare());
         Assert.assertEquals(Collections.EMPTY_LIST, hiveAction.getArchive());
         Assert.assertFalse(hiveAction.getParam().isEmpty());
         Assert.assertEquals(11, hiveAction.getParam().size());
+
+        Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
+        assertHCatCredentials(parentWorkflow, wfPath);
+
+        ConfigurationStore.get().remove(EntityType.PROCESS, process.getName());
+    }
+
+    private void assertHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
+        Path hiveConfPath = new Path(wfPath, "conf/hive-site.xml");
+        Assert.assertTrue(fs.exists(hiveConfPath));
+
+        if (SecurityUtil.isSecurityEnabled()) {
+            Assert.assertNotNull(wf.getCredentials());
+            Assert.assertEquals(1, wf.getCredentials().getCredential().size());
+        }
+
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+
+            ACTION action = (ACTION) obj;
+
+            if (!SecurityUtil.isSecurityEnabled()) {
+                Assert.assertNull(action.getCred());
+                return;
+            }
+
+            String actionName = action.getName();
+            if ("user-hive-job".equals(actionName) || "user-pig-job".equals(actionName)
+                    || "user-oozie-workflow".equals(actionName) || "recordsize".equals(actionName)) {
+                Assert.assertNotNull(action.getCred());
+                Assert.assertEquals(action.getCred(), "falconHiveAuth");
+            }
+        }
     }
 
     private void prepare(Process process) throws IOException {
@@ -298,8 +354,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         fs.create(wf).close();
     }
 
-    @Test
-    public void testProcessMapperForTableStorage() throws Exception {
+    @Test (dataProvider = "secureOptions")
+    public void testProcessMapperForTableStorage(String secureOption) throws Exception {
+        StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
+
         URL resource = this.getClass().getResource("/config/feed/hive-table-feed.xml");
         Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.FEED, inFeed);
@@ -312,7 +370,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
 
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         builder.map(cluster, bundlePath);
@@ -332,7 +389,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         }
 
         // verify table props
-        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process, cluster);
+        Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
         for (Map.Entry<String, String> entry : props.entrySet()) {
             if (expected.containsKey(entry.getKey())) {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
@@ -347,10 +404,16 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getFeed());
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
+
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+
+        Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
+        assertHCatCredentials(parentWorkflow, wfPath);
     }
 
-    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed, Process process,
-                                                      Cluster cluster) throws FalconException {
+    private Map<String, String> getExpectedProperties(Feed inFeed, Feed outFeed,
+                                                      Process process) throws FalconException {
         Map<String, String> expected = new HashMap<String, String>();
         for (Input input : process.getInputs().getInputs()) {
             CatalogStorage storage = (CatalogStorage) FeedHelper.createStorage(cluster, inFeed);
@@ -419,7 +482,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
         throws Exception {
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         OozieProcessWorkflowBuilder builder = new OozieProcessWorkflowBuilder(process);
         Path bundlePath = new Path("/falcon/staging/workflows", process.getName());
         builder.map(cluster, bundlePath);
@@ -517,7 +579,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
     @Test
     public void testProcessWithNoInputsAndOutputs() throws Exception {
-        Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, "corp");
         ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(hdfsUrl);
 
         URL resource = this.getClass().getResource("/config/process/dumb-process.xml");

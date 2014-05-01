@@ -18,9 +18,13 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.*;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -30,6 +34,12 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {
+    }
+
+    public static FileSystem getFileSystem(String cluster) throws FalconException {
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
+        return HadoopClientFactory.get().createProxiedFileSystem(conf);
     }
 
     public static Configuration getConfiguration(Cluster cluster) {
@@ -65,6 +75,11 @@ public final class ClusterHelper {
 
     public static String getMREndPoint(Cluster cluster) {
         return getInterface(cluster, Interfacetype.EXECUTE).getEndpoint();
+    }
+
+    public static String getRegistryEndPoint(Cluster cluster) {
+        final Interface catalogInterface = getInterface(cluster, Interfacetype.REGISTRY);
+        return catalogInterface == null ? null : catalogInterface.getEndpoint();
     }
 
     public static String getMessageBrokerUrl(Cluster cluster) {

@@ -32,10 +32,6 @@
                 </property>
                 <!-- HCatalog jars -->
                 <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
-                </property>
-                <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>hcatalog</value>
                 </property>
@@ -59,7 +55,6 @@
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>
-
     <action name='succeeded-post-processing'>
         <java>
             <job-tracker>${jobTracker}</job-tracker>

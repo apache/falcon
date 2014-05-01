@@ -40,10 +40,6 @@
                 </property>
                 <!-- HCatalog jars -->
                 <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
-                </property>
-                <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>hcatalog</value>
                 </property>
@@ -62,7 +58,6 @@
         <ok to="user-workflow"/>
         <error to="failed-post-processing"/>
     </action>
-
     <decision name='user-workflow'>
         <switch>
             <case to="user-oozie-workflow">
@@ -91,10 +86,6 @@
                     <value>${jobPriority}</value>
                 </property>
                 <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
-                </property>
-                <property>
                     <name>oozie.action.sharelib.for.pig</name>
                     <value>pig,hcatalog</value>
                 </property>
@@ -108,7 +99,7 @@
         <hive xmlns="uri:oozie:hive-action:0.2">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <job-xml>${wf:appPath()}/conf/falcon-hive-site.xml</job-xml>
+            <job-xml>${wf:appPath()}/conf/hive-site.xml</job-xml>
             <configuration>
                 <property>
                     <name>mapred.job.queue.name</name>

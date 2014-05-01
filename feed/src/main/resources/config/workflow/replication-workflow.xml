@@ -40,10 +40,6 @@
                 </property>
                 <!-- HCatalog jars -->
                 <property>
-                    <name>oozie.use.system.libpath</name>
-                    <value>true</value>
-                </property>
-                <property>
                     <name>oozie.action.sharelib.for.java</name>
                     <value>hcatalog</value>
                 </property>

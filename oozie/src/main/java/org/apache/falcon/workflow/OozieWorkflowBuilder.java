@@ -26,11 +26,16 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ExternalId;
+import org.apache.falcon.entity.FeedHelper;
+import org.apache.falcon.entity.ProcessHelper;
+import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -38,6 +43,8 @@ import org.apache.falcon.oozie.bundle.COORDINATOR;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.ObjectFactory;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CREDENTIAL;
+import org.apache.falcon.oozie.workflow.CREDENTIALS;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.service.FalconPathFilter;
@@ -52,8 +59,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 
@@ -93,6 +98,14 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     protected static final String MR_QUEUE_NAME = "queueName";
     protected static final String MR_JOB_PRIORITY = "jobPriority";
 
+    protected static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+
+    public static final String METASTOREURIS = "hive.metastore.uris";
+    public static final String METASTORE_KERBEROS_PRINCIPAL = "hive.metastore.kerberos.principal";
+    public static final String METASTORE_USE_THRIFT_SASL = "hive.metastore.sasl.enabled";
+
+    protected static final String IGNORE = "IGNORE";
+
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(
         Arrays.asList(new String[]{"recordsize", "succeeded-post-processing", "failed-post-processing", }));
 
@@ -112,8 +125,11 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     };
 
+    protected final boolean isSecurityEnabled;
+
     protected OozieWorkflowBuilder(T entity) {
         super(entity);
+        isSecurityEnabled = SecurityUtil.isSecurityEnabled();
     }
 
     protected Path getCoordPath(Path bundlePath, String coordName) {
@@ -189,7 +205,8 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, EntityType type, String lifecycle)
         throws IOException, FalconException {
         String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(
+                ClusterHelper.getConfiguration(cluster));
         addExtensionJars(fs, new Path(libext), wf);
         addExtensionJars(fs, new Path(libext, type.name()), wf);
         if (StringUtils.isNotEmpty(lifecycle)) {
@@ -387,18 +404,32 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    protected void createHiveConf(FileSystem fs, Path confPath, String metastoreUrl,
-        Cluster cluster, String prefix) throws IOException {
-        Configuration hiveConf = new Configuration(false);
-        hiveConf.set(HiveConf.ConfVars.METASTOREURIS.varname, metastoreUrl);
-        hiveConf.set("hive.metastore.local", "false");
+    // creates hive-site.xml configuration in conf dir for the given cluster on the same cluster.
+    protected void createHiveConfiguration(Cluster cluster, Path workflowPath,
+                                           String prefix) throws FalconException {
+        Configuration hiveConf = getHiveCredentialsAsConf(cluster);
 
-        if (UserGroupInformation.isSecurityEnabled()) {
-            hiveConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
-                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL));
-            hiveConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
+        try {
+            Configuration conf = ClusterHelper.getConfiguration(cluster);
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+
+            // create hive conf to stagingDir
+            Path confPath = new Path(workflowPath + "/conf");
+
+            persistHiveConfiguration(fs, confPath, hiveConf, prefix);
+        } catch (IOException e) {
+            throw new FalconException("Unable to create create hive site", e);
         }
+    }
 
+    protected void persistHiveConfiguration(FileSystem fs, Path confPath,
+                                            Cluster cluster, String prefix) throws IOException {
+        Configuration hiveConf = getHiveCredentialsAsConf(cluster);
+        persistHiveConfiguration(fs, confPath, hiveConf, prefix);
+    }
+
+    private void persistHiveConfiguration(FileSystem fs, Path confPath, Configuration hiveConf,
+                                          String prefix) throws IOException {
         OutputStream out = null;
         try {
             out = fs.create(new Path(confPath, prefix + "hive-site.xml"));
@@ -406,6 +437,129 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         } finally {
             IOUtils.closeQuietly(out);
         }
+    }
+
+    private Configuration getHiveCredentialsAsConf(Cluster cluster) {
+        Map<String, String> hiveCredentials = getHiveCredentials(cluster);
+
+        Configuration hiveConf = new Configuration(false);
+        for (Entry<String, String> entry : hiveCredentials.entrySet()) {
+            hiveConf.set(entry.getKey(), entry.getValue());
+        }
+
+        return hiveConf;
+    }
+
+    private Map<String, String> getHiveCredentials(Cluster cluster) {
+        Map<String, String> hiveCredentials = new HashMap<String, String>();
+
+        String metaStoreUrl = ClusterHelper.getRegistryEndPoint(cluster);
+        if (metaStoreUrl == null) {
+            throw new IllegalStateException(
+                    "Registry interface is not defined in cluster: " + cluster.getName());
+        }
+
+        hiveCredentials.put(METASTOREURIS, metaStoreUrl);
+        hiveCredentials.put("hive.metastore.execute.setugi", "true");
+        hiveCredentials.put("hcatNode", metaStoreUrl.replace("thrift", "hcat"));
+        hiveCredentials.put("hcat.metastore.uri", metaStoreUrl);
+
+        if (isSecurityEnabled) {
+            String principal = ClusterHelper
+                    .getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL);
+            hiveCredentials.put(METASTORE_KERBEROS_PRINCIPAL, principal);
+            hiveCredentials.put(METASTORE_USE_THRIFT_SASL, "true");
+            hiveCredentials.put("hcat.metastore.principal", principal);
+        }
+
+        return hiveCredentials;
+    }
+
+    /**
+     * This is only necessary if table is involved and is secure mode.
+     *
+     * @param cluster        cluster entity
+     * @param credentialName credential name
+     * @return CREDENTIALS object
+     */
+    protected CREDENTIAL createHCatalogCredential(Cluster cluster, String credentialName) {
+        final String metaStoreUrl = ClusterHelper.getRegistryEndPoint(cluster);
+
+        CREDENTIAL credential = new CREDENTIAL();
+        credential.setName(credentialName);
+        credential.setType("hcat");
+
+        credential.getProperty().add(createProperty("hcat.metastore.uri", metaStoreUrl));
+        credential.getProperty().add(createProperty("hcat.metastore.principal",
+                ClusterHelper.getPropertyValue(cluster, SecurityUtil.HIVE_METASTORE_PRINCIPAL)));
+
+        return credential;
+    }
+
+    private CREDENTIAL.Property createProperty(String name, String value) {
+        CREDENTIAL.Property property = new CREDENTIAL.Property();
+        property.setName(name);
+        property.setValue(value);
+        return property;
+    }
+
+    /**
+     * This is only necessary if table is involved and is secure mode.
+     *
+     * @param workflowApp workflow xml
+     * @param cluster     cluster entity
+     */
+    protected void addHCatalogCredentials(WORKFLOWAPP workflowApp, Cluster cluster,
+                                          String credentialName) {
+        CREDENTIALS credentials = workflowApp.getCredentials();
+        if (credentials == null) {
+            credentials = new CREDENTIALS();
+        }
+
+        credentials.getCredential().add(createHCatalogCredential(cluster, credentialName));
+
+        // add credential for workflow
+        workflowApp.setCredentials(credentials);
+    }
+
+    /**
+     * This is only necessary if table is involved and is secure mode.
+     *
+     * @param workflowApp workflow xml
+     * @param cluster     cluster entity
+     */
+    protected void addHCatalogCredentials(WORKFLOWAPP workflowApp, Cluster cluster,
+                                          String credentialName, Set<String> actions) {
+        addHCatalogCredentials(workflowApp, cluster, credentialName);
+
+        // add credential to each action
+        for (Object object : workflowApp.getDecisionOrForkOrJoin()) {
+            if (!(object instanceof ACTION)) {
+                continue;
+            }
+
+            ACTION action = (ACTION) object;
+            String actionName = action.getName();
+            if (actions.contains(actionName)) {
+                action.setCred(credentialName);
+            }
+        }
+    }
+
+    private boolean isTableStorageType(Cluster cluster, T entity) throws FalconException {
+        return entity.getEntityType() == EntityType.PROCESS
+                ? isTableStorageType(cluster, (Process) entity)
+                : isTableStorageType(cluster, (Feed) entity);
+    }
+
+    protected boolean isTableStorageType(Cluster cluster, Feed feed) throws FalconException {
+        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
+        return Storage.TYPE.TABLE == storageType;
+    }
+
+    protected boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
+        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
+        return Storage.TYPE.TABLE == storageType;
     }
 
     protected void decorateWithOozieRetries(ACTION action) {
@@ -429,6 +583,11 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         properties.setProperty(OozieClient.USER_NAME, user);
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
+
+        if (isTableStorageType(cluster, entity)) {
+            propagateHiveCredentials(cluster, properties);
+        }
+
         LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
         return properties;
     }
@@ -436,6 +595,20 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
     private void addClusterProperties(Properties properties, List<Property> clusterProperties) {
         for (Property prop : clusterProperties) {
             properties.setProperty(prop.getName(), prop.getValue());
+        }
+    }
+
+    /**
+     * This method propagates hive credentials for coordinator to authenticate against hive
+     * for data availability triggers.
+     *
+     * @param cluster cluster entity
+     * @param properties property object
+     */
+    private void propagateHiveCredentials(Cluster cluster, Properties properties) {
+        Map<String, String> hiveCredentials = getHiveCredentials(cluster);
+        for (Entry<String, String> entry : hiveCredentials.entrySet()) {
+            properties.setProperty(entry.getKey(), entry.getValue());
         }
     }
 

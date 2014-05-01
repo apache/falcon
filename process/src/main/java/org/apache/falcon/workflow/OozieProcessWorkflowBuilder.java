@@ -32,7 +32,6 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.EngineType;
@@ -73,18 +72,24 @@ import org.apache.oozie.client.OozieClient;
 import javax.xml.bind.JAXBElement;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Oozie workflow builder for falcon entities.
  */
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     private static final Logger LOG = Logger.getLogger(OozieProcessWorkflowBuilder.class);
+
+    private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
+            Arrays.asList(new String[]{"recordsize", "user-oozie-workflow", "user-pig-job", "user-hive-job", }));
 
     public OozieProcessWorkflowBuilder(Process entity) {
         super(entity);
@@ -253,7 +258,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     /**
      * Creates default oozie coordinator.
      *
-     * @param cluster    - Cluster for which the coordiantor app need to be created
+     * @param cluster    - Cluster for which the coordinator app need to be created
      * @param bundlePath - bundle path
      * @return COORDINATORAPP
      * @throws FalconException on Error
@@ -338,7 +343,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         Map<String, String> props) throws FalconException {
         if (process.getInputs() == null) {
             props.put("falconInputFeeds", "NONE");
-            props.put("falconInPaths", "IGNORE");
+            props.put("falconInPaths", IGNORE);
             return;
         }
 
@@ -382,7 +387,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void propagateLateDataProperties(List<String> inputFeeds, List<String> inputPaths,
-        List<String> inputFeedStorageTypes, Map<String, String> props) {
+                                             List<String> inputFeedStorageTypes, Map<String, String> props) {
         // populate late data handler - should-record action
         props.put("falconInputFeeds", join(inputFeeds.iterator(), '#'));
         props.put("falconInPaths", join(inputPaths.iterator(), '#'));
@@ -393,10 +398,10 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void initializeOutputPaths(Cluster cluster, Process process, COORDINATORAPP coord,
-        Map<String, String> props) throws FalconException {
+                                       Map<String, String> props) throws FalconException {
         if (process.getOutputs() == null) {
             props.put(ARG.feedNames.getPropName(), "NONE");
-            props.put(ARG.feedInstancePaths.getPropName(), "IGNORE");
+            props.put(ARG.feedInstancePaths.getPropName(), IGNORE);
             return;
         }
 
@@ -542,7 +547,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage,
-        Map<String, String> props) {
+                                                 Map<String, String> props) {
         String prefix = "falcon_" + output.getName();
 
         propagateCommonCatalogTableProperties(tableStorage, props, prefix);
@@ -588,13 +593,18 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     protected void createWorkflow(Cluster cluster, Process process, Workflow processWorkflow,
-        String wfName, Path parentWfPath) throws FalconException {
+                                  String wfName, Path parentWfPath) throws FalconException {
         WORKFLOWAPP wfApp = getWorkflowTemplate(DEFAULT_WF_TEMPLATE);
         wfApp.setName(wfName);
         try {
             addLibExtensionsToWorkflow(cluster, wfApp, EntityType.PROCESS, null);
         } catch (IOException e) {
             throw new FalconException("Failed to add library extensions for the workflow", e);
+        }
+
+        final boolean isTableStorageType = isTableStorageType(cluster, process);
+        if (isTableStorageType) {
+            setupHiveCredentials(cluster, parentWfPath, wfApp);
         }
 
         String userWfPath = getUserWorkflowPath(cluster, parentWfPath.getParent()).toString();
@@ -609,11 +619,15 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             if (engineType == EngineType.OOZIE && actionName.equals("user-oozie-workflow")) {
                 action.getSubWorkflow().setAppPath("${nameNode}" + userWfPath);
             } else if (engineType == EngineType.PIG && actionName.equals("user-pig-job")) {
-                decoratePIGAction(cluster, process, action.getPig(), parentWfPath);
+                decoratePIGAction(cluster, process, action.getPig(), parentWfPath, isTableStorageType);
             } else if (engineType == EngineType.HIVE && actionName.equals("user-hive-job")) {
                 decorateHiveAction(cluster, process, action, parentWfPath);
             } else if (FALCON_ACTIONS.contains(actionName)) {
                 decorateWithOozieRetries(action);
+                if (isTableStorageType && actionName.equals("recordsize")) {
+                    // adds hive-site.xml in actions classpath
+                    action.getJava().setJobXml("${wf:appPath()}/conf/hive-site.xml");
+                }
             }
         }
 
@@ -621,8 +635,19 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         marshal(cluster, wfApp, parentWfPath);
     }
 
-    private void decoratePIGAction(Cluster cluster, Process process,
-        PIG pigAction, Path parentWfPath) throws FalconException {
+    private void setupHiveCredentials(Cluster cluster, Path parentWfPath,
+                                      WORKFLOWAPP wfApp) throws FalconException {
+        // create hive-site.xml file so actions can use it in the classpath
+        createHiveConfiguration(cluster, parentWfPath, ""); // DO NOT ADD PREFIX!!!
+
+        if (isSecurityEnabled) {
+            // add hcatalog credentials for secure mode and add a reference to each action
+            addHCatalogCredentials(wfApp, cluster, HIVE_CREDENTIAL_NAME, FALCON_PROCESS_HIVE_ACTIONS);
+        }
+    }
+
+    private void decoratePIGAction(Cluster cluster, Process process, PIG pigAction,
+                                   Path parentWfPath, boolean isTableStorageType) throws FalconException {
         Path userWfPath = getUserWorkflowPath(cluster, parentWfPath.getParent());
         pigAction.setScript("${nameNode}" + userWfPath.toString());
 
@@ -634,10 +659,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         propagateProcessProperties(pigAction, process);
 
-        Storage.TYPE storageType = getStorageType(cluster, process);
-        if (Storage.TYPE.TABLE == storageType) {
-            // adds hive-site.xml in pig classpath
-            setupHiveConfiguration(cluster, parentWfPath, ""); // DO NOT ADD PREFIX!!!
+        if (isTableStorageType) { // adds hive-site.xml in pig classpath
             pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
         }
 
@@ -646,7 +668,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void decorateHiveAction(Cluster cluster, Process process, ACTION wfAction,
-        Path parentWfPath) throws FalconException {
+                                    Path parentWfPath) throws FalconException {
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(wfAction);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -662,7 +684,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         propagateProcessProperties(hiveAction, process);
 
-        setupHiveConfiguration(cluster, parentWfPath, "falcon-");
+        // adds hive-site.xml in hive classpath
+        hiveAction.setJobXml("${wf:appPath()}/conf/hive-site.xml");
 
         addArchiveForCustomJars(cluster, hiveAction.getArchive(),
             getUserLibPath(cluster, parentWfPath.getParent()));
@@ -671,7 +694,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void addPrepareDeleteOutputPath(Process process,
-        PIG pigAction) throws FalconException {
+                                            PIG pigAction) throws FalconException {
         List<String> deleteOutputPathList = getPrepareDeleteOutputPathList(process);
         if (deleteOutputPathList.isEmpty()) {
             return;
@@ -691,8 +714,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         }
     }
 
-    private void addPrepareDeleteOutputPath(Process process,
-        org.apache.falcon.oozie.hive.ACTION hiveAction)
+    private void addPrepareDeleteOutputPath(Process process, org.apache.falcon.oozie.hive.ACTION hiveAction)
         throws FalconException {
 
         List<String> deleteOutputPathList = getPrepareDeleteOutputPathList(process);
@@ -734,7 +756,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void addInputFeedsAsParams(List<String> paramList, Process process, Cluster cluster,
-        String engineType) throws FalconException {
+                                       String engineType) throws FalconException {
         if (process.getInputs() == null) {
             return;
         }
@@ -761,7 +783,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void addOutputFeedsAsParams(List<String> paramList, Process process,
-        Cluster cluster) throws FalconException {
+                                        Cluster cluster) throws FalconException {
         if (process.getOutputs() == null) {
             return;
         }
@@ -830,36 +852,6 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             configuration.add(configProperty);
 
             paramList.add(property.getName() + "=" + property.getValue());
-        }
-    }
-
-    private Storage.TYPE getStorageType(Cluster cluster, Process process) throws FalconException {
-        Storage.TYPE storageType = Storage.TYPE.FILESYSTEM;
-        if (process.getInputs() == null) {
-            return storageType;
-        }
-
-        for (Input input : process.getInputs().getInputs()) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
-            storageType = FeedHelper.getStorageType(feed, cluster);
-            if (Storage.TYPE.TABLE == storageType) {
-                break;
-            }
-        }
-
-        return storageType;
-    }
-
-    // creates hive-site.xml configuration in conf dir.
-    private void setupHiveConfiguration(Cluster cluster, Path wfPath,
-        String prefix) throws FalconException {
-        String catalogUrl = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint();
-        try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
-            Path confPath = new Path(wfPath, "conf");
-            createHiveConf(fs, confPath, catalogUrl, cluster, prefix);
-        } catch (IOException e) {
-            throw new FalconException(e);
         }
     }
 
