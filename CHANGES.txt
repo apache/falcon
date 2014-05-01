@@ -118,6 +118,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-401 replicate hcat table to two targets can fail with export dir
+    exists on source (Sowmya Ramesh via Venkatesh Seetharam)
+
     FALCON-364 Process specification contains a mistake in the parallel section
     (Jean-Baptiste Onofré via Venkatesh Seetharam)
 

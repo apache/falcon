@@ -81,7 +81,8 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
 
         final CatalogStorage tableStorage = (CatalogStorage) storage;
         String stagingDir = FeedHelper.getStagingDir(cluster, feed, tableStorage, Tag.REPLICATION);
-        Path stagingPath = new Path(stagingDir + "/*/*/*");  // stagingDir/dataOutPartitionValue/nominal-time/data
+        //stagingDir/dataOutPartitionValue/nominal-time/clusterName/data
+        Path stagingPath = new Path(stagingDir + "/*/*/*/*");
         FileSystem fs = getFileSystem(cluster);
         try {
             FileStatus[] paths = fs.globStatus(stagingPath);

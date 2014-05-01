@@ -662,20 +662,16 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             Cluster trgCluster, CatalogStorage targetStorage,
             Map<String, String> props) {
             // create staging dirs for export at source & set it as distcpSourcePaths
-            String sourceDatedPartitionKey = sourceStorage.getDatedPartitionKey();
-            String sourceStagingDir =
-                FeedHelper.getStagingDir(srcCluster, entity, sourceStorage, Tag.REPLICATION)
-                    + "/" + sourceDatedPartitionKey
-                    + "=${coord:dataOutPartitionValue('output', '" + sourceDatedPartitionKey + "')}";
-            props.put("distcpSourcePaths", sourceStagingDir + "/" + NOMINAL_TIME_EL + "/data");
+            String sourceStagingPath =
+                FeedHelper.getStagingPath(srcCluster, entity, sourceStorage, Tag.REPLICATION,
+                        NOMINAL_TIME_EL + "/" + trgCluster.getName());
+            props.put("distcpSourcePaths", sourceStagingPath);
 
             // create staging dirs for import at target & set it as distcpTargetPaths
-            String targetDatedPartitionKey = targetStorage.getDatedPartitionKey();
-            String targetStagingDir =
-                FeedHelper.getStagingDir(trgCluster, entity, targetStorage, Tag.REPLICATION)
-                    + "/" + targetDatedPartitionKey
-                    + "=${coord:dataOutPartitionValue('output', '" + targetDatedPartitionKey + "')}";
-            props.put("distcpTargetPaths", targetStagingDir + "/" + NOMINAL_TIME_EL + "/data");
+            String targetStagingPath =
+                FeedHelper.getStagingPath(trgCluster, entity, targetStorage, Tag.REPLICATION,
+                        NOMINAL_TIME_EL + "/" + trgCluster.getName());
+            props.put("distcpTargetPaths", targetStagingPath);
 
             props.put("sourceRelativePaths", IGNORE); // this will bot be used for Table storage.
         }

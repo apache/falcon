@@ -454,15 +454,13 @@ public class OozieFeedWorkflowBuilderTest {
 
         Assert.assertTrue(props.containsKey("distcpSourcePaths"));
         Assert.assertEquals(props.get("distcpSourcePaths"),
-                FeedHelper.getStagingDir(srcCluster, tableFeed, srcStorage, Tag.REPLICATION)
-                        + "/ds=${coord:dataOutPartitionValue('output', 'ds')}/"
-                        + "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}/data");
+                FeedHelper.getStagingPath(srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+                        "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
 
         Assert.assertTrue(props.containsKey("distcpTargetPaths"));
         Assert.assertEquals(props.get("distcpTargetPaths"),
-                FeedHelper.getStagingDir(trgCluster, tableFeed, trgStorage, Tag.REPLICATION)
-                        + "/ds=${coord:dataOutPartitionValue('output', 'ds')}/"
-                        + "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}/data");
+                FeedHelper.getStagingPath(trgCluster, tableFeed, trgStorage, Tag.REPLICATION,
+                        "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
 
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.TABLE.name());
 

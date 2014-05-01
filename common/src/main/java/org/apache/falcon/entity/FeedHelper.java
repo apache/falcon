@@ -248,13 +248,28 @@ public final class FeedHelper {
         return expHelp.evaluateFullExpression(exp, String.class);
     }
 
+    public static String getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+                                       Feed feed, CatalogStorage storage, Tag tag, String suffix) {
+        String stagingDirPath = getStagingDir(clusterEntity, feed, storage, tag);
+
+        String datedPartitionKey = storage.getDatedPartitionKey();
+        String datedPartitionKeySuffix = datedPartitionKey + "=${coord:dataOutPartitionValue('output',"
+                + "'" + datedPartitionKey + "')}";
+        return stagingDirPath + "/"
+                + datedPartitionKeySuffix + "/"
+                + suffix + "/"
+                + "data";
+    }
+
     public static String getStagingDir(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
                                        Feed feed, CatalogStorage storage, Tag tag) {
         String workflowName = EntityUtil.getWorkflowName(
                 tag, Arrays.asList(clusterEntity.getName()), feed).toString();
+
         return ClusterHelper.getCompleteLocation(clusterEntity, "staging") + "/"
-                + workflowName  + "/"
+                + workflowName + "/"
                 + storage.getDatabase() + "/"
                 + storage.getTable();
     }
+
 }
