@@ -88,7 +88,7 @@ public class HTTPChannel extends AbstractChannel {
             String user = CurrentUser.getUser();
 
             ClientResponse response = getClient()
-                    .resource(UriBuilder.fromUri(url).build())
+                    .resource(UriBuilder.fromUri(url).build().normalize())
                     .queryParam("user.name", user)
                     .accept(accept).type(mimeType)
                     .method(httpMethod, ClientResponse.class,

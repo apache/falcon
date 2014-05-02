@@ -122,6 +122,9 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-426 Prism unable to connect to falcon server if falcon endpoint URL ends with 
+    '/' character. (Satish Mittal via Shwetha GS)
+
     FALCON-401 replicate hcat table to two targets can fail with export dir
     exists on source (Sowmya Ramesh via Venkatesh Seetharam)
 
