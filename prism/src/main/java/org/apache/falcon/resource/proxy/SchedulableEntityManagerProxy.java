@@ -112,7 +112,13 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
 
         final String entity = getEntity(bufferedRequest, type).getName();
         Map<String, APIResult> results = new HashMap<String, APIResult>();
+        final Set<String> colos = getApplicableColos(type, getEntity(bufferedRequest, type));
         results.put(FALCON_TAG, new EntityProxy(type, entity) {
+            @Override
+            protected Set<String> getColosToApply() {
+                return colos;
+            }
+
             @Override
             protected APIResult doExecute(String colo) throws FalconException {
                 return getConfigSyncChannel(colo).invoke("submit", bufferedRequest, type, colo);
