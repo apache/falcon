@@ -28,9 +28,6 @@ Trunk (Unreleased)
     Venkatesh Seetharam)
    
   IMPROVEMENTS
-    FALCON-425 src/bin/package.sh is broken for hadoop 2.* versions
-    (Sowmya Ramesh via Venkatesh Seetharam)
-
     FALCON-421 Upgrade Hadoop to 2.4.0 (Sowmya Ramesh via Venkatesh Seetharam)
 
     FALCON-386 Upgrade to oozie 4.0.1. (Sowmya Ramesh via Venkatesh Seetharam)
@@ -125,7 +122,13 @@ Trunk (Unreleased)
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
-    FALCON-426 Prism unable to connect to falcon server if falcon endpoint URL ends with 
+    FALCON-427 Update default falcon endpoint URL in runtime.properties for
+    prism setup to work out of box (Satish Mittal via Venkatesh Seetharam)
+
+    FALCON-425 src/bin/package.sh is broken for hadoop 2.* versions
+    (Sowmya Ramesh via Venkatesh Seetharam)
+
+    FALCON-426 Prism unable to connect to falcon server if falcon endpoint URL ends with
     '/' character. (Satish Mittal via Shwetha GS)
 
     FALCON-401 replicate hcat table to two targets can fail with export dir
