@@ -1,6 +1,6 @@
 Apache Falcon (incubating) Change log
 
-Trunk (Unreleased)
+Release Version: 0.5-incubating
 
   INCOMPATIBLE CHANGES
     FALCON-11 Add support for security in Falcon (Venkatesh Seetharam)
