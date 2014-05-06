@@ -9,9 +9,12 @@ Get a list of adjacent vertices or edges with a direction.
 
 ---++ Parameters
    * :id is the id of the vertex.
-   * :direction is the direction associated with the edges. To get the adjacent out vertices of vertex pass direction
-     as out, in to get adjacent in vertices and both to get both in and out adjacent vertices. Similarly to get the
-     out edges of vertex pass outE, inE to get in edges and bothE to get the both in and out edges of vertex.
+   * :direction is the direction associated with the edges.
+
+   To get the adjacent out vertices of vertex pass direction as out, in to get adjacent in vertices
+   and both to get both in and out adjacent vertices. Similarly to get the out edges of vertex
+   pass outE, inE to get in edges and bothE to get the both in and out edges of vertex.
+
       * out  : get the adjacent out vertices of vertex
       * in   : get the adjacent in vertices of vertex
       * both : get the both adjacent in and out vertices of vertex
