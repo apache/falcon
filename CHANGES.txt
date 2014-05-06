@@ -134,6 +134,9 @@ Release Version: 0.5-incubating
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-429 Falcon CLI entity list command throws NPE stack trace in case
+    of no entities (Satish Mittal via Venkatesh Seetharam)
+
     FALCON-427 Update default falcon endpoint URL in runtime.properties for
     prism setup to work out of box (Satish Mittal via Venkatesh Seetharam)
 

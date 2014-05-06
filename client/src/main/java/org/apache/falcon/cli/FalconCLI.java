@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.resource.EntityList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -347,7 +348,8 @@ public class FalconCLI {
             result = client.getDependency(entityType, entityName).toString();
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
-            result = client.getEntityList(entityType).toString();
+            EntityList entityList = client.getEntityList(entityType);
+            result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
