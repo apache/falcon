@@ -100,7 +100,12 @@ public class JailedFileSystem extends FileSystem {
 
     @Override
     public boolean delete(Path f, boolean recursive) throws IOException {
-        return localFS.delete(toLocalPath(f), recursive);
+        Path localPath = toLocalPath(f);
+        if (localPath.toUri().getPath().trim().equals("/")) {
+            throw new AssertionError("Attempting to delete root " + localPath);
+        }
+
+        return localFS.delete(localPath, recursive);
     }
 
     @Override
