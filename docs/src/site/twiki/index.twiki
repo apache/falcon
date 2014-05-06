@@ -19,6 +19,8 @@ management on hadoop clusters.
 
    * Enables use cases for local processing in colo and global aggregations
 
+   * Captures Lineage information for feeds and processes
+
 ---+ Getting Started
 
 Start with these simple steps to install an falcon instance [[InstallationSteps][Simple setup]]. Also refer

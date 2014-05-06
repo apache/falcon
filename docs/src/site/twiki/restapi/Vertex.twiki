@@ -1,0 +1,35 @@
+---++  GET api/graphs/lineage/vertices/:id
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Gets the vertex with specified id.
+
+---++ Parameters
+   * :id is the unique id of the vertex.
+
+---++ Results
+Vertex with the specified id.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/graphs/lineage/vertices/4
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results": [
+        {
+            "timestamp":"2014-04-21T20:55Z",
+            "name":"sampleIngestProcess",
+            "type":"process-instance",
+            "version":"2.0.0",
+            "_id":4,
+            "_type":"vertex"
+        }
+    ]
+}
+</verbatim>

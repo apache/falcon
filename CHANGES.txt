@@ -40,6 +40,8 @@ Release Version: 0.5-incubating
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-324 Document lineage feature (Sowmya Ramesh via Venkatesh Seetharam)
+
     FALCON-312 Falcon LogCleanupServiceTest seems to clean up root "/"
     (Venkatesh Seetharam)
 

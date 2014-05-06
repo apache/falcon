@@ -1,0 +1,67 @@
+---++  GET api/graphs/lineage/vertices/:id/:direction
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get a list of adjacent vertices or edges with a direction.
+
+---++ Parameters
+   * :id is the id of the vertex.
+   * :direction is the direction associated with the edges. To get the adjacent out vertices of vertex pass direction
+     as out, in to get adjacent in vertices and both to get both in and out adjacent vertices. Similarly to get the
+     out edges of vertex pass outE, inE to get in edges and bothE to get the both in and out edges of vertex.
+      * out  : get the adjacent out vertices of vertex
+      * in   : get the adjacent in vertices of vertex
+      * both : get the both adjacent in and out vertices of vertex
+      * outCount  : get the number of out vertices of vertex
+      * inCount   : get the number of in vertices of vertex
+      * bothCount : get the number of adjacent in and out vertices of vertex
+      * outIds  : get the identifiers of out vertices of vertex
+      * inIds   : get the identifiers of in vertices of vertex
+      * bothIds : get the identifiers of adjacent in and out vertices of vertex
+
+---++ Results
+Adjacent vertices of the vertex for the specified direction.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/graphs/lineage/vertices/4/out
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results": [
+        {
+            "timestamp":"2014-04-21T20:55Z",
+            "name":"sampleFeed",
+            "type":"feed-instance",
+            "_id":8,
+            "_type":"vertex"
+        }
+    ],
+    "totalSize":1}
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/graphs/lineage/vertices/4/bothE
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results":[
+        {
+            "_id":"Q5V-4-5g",
+            "_type":"edge",
+            "_outV":4,
+            "_inV":8,
+            "_label":"output"
+        }
+    ],
+    "totalSize":1
+}
+</verbatim>

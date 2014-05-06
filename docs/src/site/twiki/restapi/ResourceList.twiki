@@ -4,6 +4,7 @@
    * <a href="#REST_Call_on_Entity_Resource">REST Call on Entity Resource</a>
    * <a href="#REST_Call_on_Feed_and_Process_Instances">REST Call on Feed/Process Instances</a>
    * <a href="#REST_Call_on_Admin_Resource">REST Call on Admin Resource</a>
+   * <a href="#REST_Call_on_Lineage_Graph">REST Call on Lineage Graph Resource</a>
 
 ---++ Authentication
 
@@ -52,12 +53,23 @@ See also: [[../Security.twiki][Security in Falcon]]
 
 ---++ REST Call on Feed and Process Instances
 
-| *Call Type* | *Resource*                                                           | *Description*                |
-| GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name]]  | List of running instances.   |
-| GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name]]]   | Status of a given instance   |
-| POST        | [[InstanceKill][api/instance/kill/:entity-type/:entity-name]]]       | Kill a given instance        |
-| POST        | [[InstanceSuspend][api/instance/suspend/:entity-type/:entity-name]]] | Suspend a running instance   |
-| POST        | [[InstanceResume][api/instance/resume/:entity-type/:entity-name]]]   | Resume a given instance      |
-| POST        | [[InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]]     | Rerun a given instance       |
-| GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]]       | Get logs of a given instance |
+| *Call Type* | *Resource*                                                          | *Description*                |
+| GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name]] | List of running instances.   |
+| GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name]]   | Status of a given instance   |
+| POST        | [[InstanceKill][api/instance/kill/:entity-type/:entity-name]]       | Kill a given instance        |
+| POST        | [[InstanceSuspend][api/instance/suspend/:entity-type/:entity-name]] | Suspend a running instance   |
+| POST        | [[InstanceResume][api/instance/resume/:entity-type/:entity-name]]   | Resume a given instance      |
+| POST        | [[InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]     | Rerun a given instance       |
+| GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]       | Get logs of a given instance |
 
+---++ REST Call on Lineage Graph
+
+| *Call Type* | *Resource*                                                                           | *Description*                                       |
+| GET         | [[Graph][api/graphs/lineage/serialize]]                                              | dump the graph                                      |
+| GET         | [[AllVertices][api/graphs/lineage/vertices/all]]                                     | get all vertices                                    |
+| GET         | [[Vertices][api/graphs/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                    |
+| GET         | [[Vertex][api/graphs/lineage/vertices/:id]]                                          | get vertex with id <id>                             |
+| GET         | [[VertexProperties][api/graphs/lineage/vertices/properties/:id?relationships=:true]] | get vertex properties with id                       |
+| GET         | [[AdjacentVertices][api/graphs/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges with a direction |
+| GET         | [[AllEdges][api/graphs/lineage//edges/all]]                                          | get all edges                                       |
+| GET         | [[Edge][api/graphs/lineage/edges/:id]]                                               | get edge with id <id>                               |

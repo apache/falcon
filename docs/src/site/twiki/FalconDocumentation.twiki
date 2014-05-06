@@ -12,6 +12,7 @@
    * <a href="#Idempotency">Idempotency</a>
    * <a href="#Alerting_and_Monitoring">Alerting and Monitoring</a>
    * <a href="#Falcon_EL_Expressions">Falcon EL Expressions</a>
+   * <a href="#Lineage">Lineage</a>
 
 ---++ Architecture
 ---+++ Introduction
@@ -709,3 +710,31 @@ Falcon currently support following ELs:
    * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest available instance of the feed given as parameter. For example: latest(0) will consider the last available instance of feed, where as latest latest(-1) will consider second last available feed and latest(-3) will consider 4th last available feed.
    
 
+---++ Lineage
+
+Falcon adds the ability to capture lineage for both entities and its associated instances. It
+also captures the metadata tags associated with each of the entities as relationships. The
+following relationships are captured:
+
+   * owner of entities - User
+   * data classification tags
+   * groups defined in feeds
+   * Relationships between entities
+      * Clusters associated with Feed and Process entity
+      * Input and Output feeds for a Process
+   * Instances refer to corresponding entities
+
+Lineage is exposed in 3 ways:
+
+   * REST API
+   * CLI
+   * Dashboard - Interactive lineage for Process instances
+
+This feature is enabled by default but could be disabled by removing the following from:
+<verbatim>
+config name: *.application.services
+config value: org.apache.falcon.metadata.MetadataMappingService
+<verbatim>
+
+Lineage is only captured for Process executions. A future release will capture lineage for
+lifecycle policies such as replication and retention.
