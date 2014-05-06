@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.falcon.designer</groupId>
         <artifactId>designer-main</artifactId>
-        <version>0.5-incubating-SNAPSHOT</version>
+        <version>0.6-incubating-SNAPSHOT</version>
     </parent>
     <artifactId>designer-core</artifactId>
     <description>Apache Falcon Pipeline Designer - Core Module</description>

@@ -23,6 +23,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.falcon.designer</groupId>
     <artifactId>checkstyle</artifactId>
-    <version>0.5-incubating-SNAPSHOT</version>
+    <version>0.6-incubating-SNAPSHOT</version>
     <name>Apache Falcon Pipeline Designer Checkstyle</name>
 </project>
