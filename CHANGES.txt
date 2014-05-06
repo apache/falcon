@@ -40,6 +40,8 @@ Release Version: 0.5-incubating
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-379 Document limitations of Hive support in Falcon (Venkatesh Seetharam)
+
     FALCON-421 Upgrade Hadoop to 2.4.0 (Sowmya Ramesh via Venkatesh Seetharam)
 
     FALCON-386 Upgrade to oozie 4.0.1. (Sowmya Ramesh via Venkatesh Seetharam)
