@@ -1,0 +1,37 @@
+---++  GET api/graphs/lineage/vertices?key=:key&value=:value
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get all vertices for a key index given the specified value.
+
+---++ Parameters
+   * :key is the key to be matched.
+   * :value is the associated value of the key.
+
+---++ Results
+All vertices matching given property key and a value.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/graphs/lineage/vertices?key=name&value=sampleIngestProcess
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results": [
+        {
+            "timestamp":"2014-04-21T20:55Z",
+            "name":"sampleIngestProcess",
+            "type":"process-instance",
+            "version":"2.0.0",
+            "_id":4,
+            "_type":"vertex"
+        }
+    ],
+    "totalSize": 1
+}
+</verbatim>

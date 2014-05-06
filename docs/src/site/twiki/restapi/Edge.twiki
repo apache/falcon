@@ -1,0 +1,33 @@
+---++  GET api/graphs/lineage/edges/:id
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Gets the edge with specified id.
+
+---++ Parameters
+   * :id is the unique id of the edge.
+
+---++ Results
+Edge with the specified id.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/graphs/lineage/edges/Q6t-c-5g
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results":
+        {
+            "_id":"Q6t-c-5g",
+            "_type":"edge",
+            "_outV":12,
+            "_inV":16,
+            "_label":"output"
+        }
+}
+</verbatim>
