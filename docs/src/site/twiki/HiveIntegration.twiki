@@ -113,8 +113,38 @@ accessing the data in tables
 <verbatim>
 bin/hadoop dfs -copyFromLocal $LFS/share/lib/hcatalog/hcatalog-pig-adapter-0.5.0-incubating.jar share/lib/hcatalog
 </verbatim>
+   * Oozie 4.x with Hadoop-2.x
+Replication jobs are submitted to oozie on the destination cluster. Oozie runs a table export job
+on RM on source cluster. Oozie server on the target cluster must be configured with source hadoop
+configs else jobs fail with errors on secure and non-secure clusters as below:
+<verbatim>
+org.apache.hadoop.security.token.SecretManager$InvalidToken: Password not found for ApplicationAttempt appattempt_1395965672651_0010_000002
+</verbatim>
+
+Make sure all oozie servers that falcon talks to has the hadoop configs configured in oozie-site.xml
+<verbatim>
+<property>
+      <name>oozie.service.HadoopAccessorService.hadoop.configurations</name>
+      <value>*=/etc/hadoop/conf,arpit-new-falcon-1.cs1cloud.internal:8020=/etc/hadoop-1,arpit-new-falcon-1.cs1cloud.internal:8032=/etc/hadoop-1,arpit-new-falcon-2.cs1cloud.internal:8020=/etc/hadoop-2,arpit-new-falcon-2.cs1cloud.internal:8032=/etc/hadoop-2,arpit-new-falcon-5.cs1cloud.internal:8020=/etc/hadoop-3,arpit-new-falcon-5.cs1cloud.internal:8032=/etc/hadoop-3</value>
+      <description>
+          Comma separated AUTHORITY=HADOOP_CONF_DIR, where AUTHORITY is the HOST:PORT of
+          the Hadoop service (JobTracker, HDFS). The wildcard '*' configuration is
+          used when there is no exact match for an authority. The HADOOP_CONF_DIR contains
+          the relevant Hadoop *-site.xml files. If the path is relative is looked within
+          the Oozie configuration directory; though the path can be absolute (i.e. to point
+          to Hadoop client conf/ directories in the local filesystem.
+      </description>
+    </property>
+</verbatim>
 
 ---+++ Hive
+
+   * Dated Partitions
+Falcon does not work well when table partition contains multiple dated columns. Falcon only works
+with a single dated partition. This is being tracked in FALCON-357 which is a limitation in Oozie.
+<verbatim>
+catalog:default:table4#year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}
+</verbatim>
 
    * [[https://issues.apache.org/jira/browse/HIVE-5550][Hive table import fails for tables created with default text and sequence file formats using HCatalog API]]
 For some arcane reason, hive substitutes the output format for text and sequence to be prefixed with Hive.
@@ -140,7 +170,7 @@ org.apache.hadoop.hive.ql.parse.ImportSemanticAnalyzer#checkTable
                 .getMsg(" Table inputformat/outputformats do not match"));
       }
 </verbatim>
-
+The above is not an issue with Hive 0.13.
 
 ---++ Hive Examples
 Following is an example entity configuration for lifecycle management functions for tables in Hive.
