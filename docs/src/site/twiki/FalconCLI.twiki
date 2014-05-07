@@ -165,6 +165,50 @@ Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs -start "yyyy-MM-dd'T'HH:mm'Z'" [-end "yyyy-MM-dd'T'HH:mm'Z'"] [-runid <<runid>>]
 
 
+---++ Graphs Options
+
+---+++ Vertex
+
+Get the vertex with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -vertex -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -vertex -id 4
+
+---+++ Vertices
+
+Get all vertices for a key index given the specified value.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -vertices -key <<key>> -value <<value>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -vertices -key type -value feed-instance
+
+---+++ Vertex Edges
+
+Get the adjacent vertices or edges of the vertex with the specified direction.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -edges -id <<vertex-id>> -direction <<direction>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -edges -id 4 -direction both
+$FALCON_HOME/bin/falcon graph -edges -id 4 -direction inE
+
+---+++ Edge
+
+Get the edge with the specified id.
+
+Usage:
+$FALCON_HOME/bin/falcon graph -edge -id <<id>>
+
+Example:
+$FALCON_HOME/bin/falcon graph -edge -id Q9n-Q-5g
+
+
 ---++Admin Options
 
 ---+++Help
