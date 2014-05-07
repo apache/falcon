@@ -64,12 +64,12 @@ See also: [[../Security.twiki][Security in Falcon]]
 
 ---++ REST Call on Lineage Graph
 
-| *Call Type* | *Resource*                                                                           | *Description*                                       |
-| GET         | [[Graph][api/graphs/lineage/serialize]]                                              | dump the graph                                      |
-| GET         | [[AllVertices][api/graphs/lineage/vertices/all]]                                     | get all vertices                                    |
-| GET         | [[Vertices][api/graphs/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                    |
-| GET         | [[Vertex][api/graphs/lineage/vertices/:id]]                                          | get vertex with id <id>                             |
-| GET         | [[VertexProperties][api/graphs/lineage/vertices/properties/:id?relationships=:true]] | get vertex properties with id                       |
-| GET         | [[AdjacentVertices][api/graphs/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges with a direction |
-| GET         | [[AllEdges][api/graphs/lineage//edges/all]]                                          | get all edges                                       |
-| GET         | [[Edge][api/graphs/lineage/edges/:id]]                                               | get edge with id <id>                               |
+| *Call Type* | *Resource*                                                                           | *Description*                                                                 |
+| GET         | [[Graph][api/graphs/lineage/serialize]]                                              | dump the graph                                                                |
+| GET         | [[AllVertices][api/graphs/lineage/vertices/all]]                                     | get all vertices                                                              |
+| GET         | [[Vertices][api/graphs/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                                              |
+| GET         | [[Vertex][api/graphs/lineage/vertices/:id]]                                          | get the vertex with the specified id                                          |
+| GET         | [[VertexProperties][api/graphs/lineage/vertices/properties/:id?relationships=:true]] | get the properties of the vertex with the specified id                        |
+| GET         | [[AdjacentVertices][api/graphs/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges of the vertex with the specified direction |
+| GET         | [[AllEdges][api/graphs/lineage//edges/all]]                                          | get all edges                                                                 |
+| GET         | [[Edge][api/graphs/lineage/edges/:id]]                                               | get the edge with the specified id                                            |
