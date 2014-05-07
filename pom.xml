@@ -107,8 +107,7 @@
         <oozie.buildversion>${oozie.version}-falcon</oozie.buildversion>
         <oozie.forcebuild>false</oozie.forcebuild>
         <activemq.version>5.4.3</activemq.version>
-        <hive.version>0.11.0</hive.version>
-        <hcatalog.version>0.11.0</hcatalog.version>
+        <hive.version>0.13.0</hive.version>
         <hadoop-distcp.version>0.11</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
@@ -941,10 +940,14 @@
 
             <!--  this is needed for embedded oozie -->
             <dependency>
-                <groupId>org.apache.hcatalog</groupId>
-                <artifactId>webhcat-java-client</artifactId>
-                <version>${hcatalog.version}</version>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-webhcat-java-client</artifactId>
+                <version>${hive.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-hdfs</artifactId>
+                    </exclusion>
                     <exclusion>
                         <!-- This implies you cannot use orc files -->
                         <groupId>com.google.protobuf</groupId>
