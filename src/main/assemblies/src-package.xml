@@ -33,6 +33,10 @@
                 <exclude>**/activemq-data/**</exclude>
                 <exclude>**/.git*/**</exclude>
                 <exclude>backlog</exclude>
+                <exclude>**/.idea/**</exclude>
+                <exclude>**/*.iml</exclude>
+                <exclude>**/*.patch</exclude>
+                <exclude>**/*.log</exclude>
             </excludes>
         </fileSet>
     </fileSets>

@@ -143,6 +143,9 @@ Release Version: 0.5-incubating
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-440 Exclude IDEA IntelliJ and other unnecessary files from source
+    distribution (Venkatesh Seetharam)
+
     FALCON-437 Feed Replication workflows are failing (Venkatesh Seetharam)
 
     FALCON-429 Falcon CLI entity list command throws NPE stack trace in case
