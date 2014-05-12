@@ -148,20 +148,24 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         if (coordinators.size() == 0) {
             return false;
         }
+
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
             String coordXmlName = marshal(cluster, coordinatorapp, coordPath,
                 EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
-            createLogsDir(cluster, coordPath);
+
+            createLogsDir(cluster, coordPath); //create logs dir
+            // copy falcon libs to the workflow dir
+            copySharedLibs(cluster, coordinatorapp);
+
+            // add the coordinator to the bundle
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
             bundleCoord.setAppPath(getStoragePath(coordPath) + "/" + coordXmlName);
             bundleApp.getCoordinator().add(bundleCoord);
-
-            copySharedLibs(cluster, coordPath);
         }
 
-        marshal(cluster, bundleApp, bundlePath);
+        marshal(cluster, bundleApp, bundlePath); // write the bundle
         return true;
     }
 
@@ -214,8 +218,9 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    private void copySharedLibs(Cluster cluster, Path coordPath) throws FalconException {
+    private void copySharedLibs(Cluster cluster, COORDINATORAPP coordinatorapp) throws FalconException {
         try {
+            String coordPath = coordinatorapp.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
             Path libPath = new Path(coordPath, "lib");
             SharedLibraryHostingService.pushLibsToHDFS(StartupProperties.get().getProperty("system.lib.location"),
                 libPath, cluster, FALCON_JAR_FILTER);
@@ -336,13 +341,11 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath, String name) throws FalconException {
-        if (StringUtils.isEmpty(name)) {
-            name = "coordinator";
-        }
-        name = name + ".xml";
-        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord), OozieUtils.COORD_JAXB_CONTEXT,
-            new Path(outPath, name));
+    protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath,
+                             String name) throws FalconException {
+        name = (StringUtils.isEmpty(name) ? "coordinator" : name) + ".xml";
+        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
+                OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, name));
         return name;
     }
 
