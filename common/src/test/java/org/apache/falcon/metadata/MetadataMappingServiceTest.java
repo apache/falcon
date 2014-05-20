@@ -76,7 +76,8 @@ public class MetadataMappingServiceTest {
 
     public static final String INPUT_FEED_NAMES = "impression-feed#clicks-feed";
     public static final String INPUT_INSTANCE_PATHS =
-        "jail://global:00/falcon/impression-feed/20140101#jail://global:00/falcon/clicks-feed/20140101";
+        "jail://global:00/falcon/impression-feed/2014/01/01,jail://global:00/falcon/impression-feed/2014/01/02"
+                + "#jail://global:00/falcon/clicks-feed/2014-01-01";
 
     public static final String OUTPUT_FEED_NAMES = "imp-click-join1,imp-click-join2";
     public static final String OUTPUT_INSTANCE_PATHS =
@@ -148,7 +149,7 @@ public class MetadataMappingServiceTest {
     @Test (dependsOnMethods = "testOnAddClusterEntity")
     public void testOnAddFeedEntity() throws Exception {
         Feed impressionsFeed = buildFeed("impression-feed", clusterEntity, "classified-as=Secure", "analytics",
-                Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}${MONTH}${DAY}");
+                Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
         configStore.publish(EntityType.FEED, impressionsFeed);
         inputFeeds.add(impressionsFeed);
         verifyEntityWasAddedToGraph(impressionsFeed.getName(), RelationshipType.FEED_ENTITY);
@@ -157,7 +158,7 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(getEdgesCount(service.getGraph()), 6); // +4 = cluster, tag, group, user
 
         Feed clicksFeed = buildFeed("clicks-feed", clusterEntity, "classified-as=Secure,classified-as=Financial",
-                "analytics", Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}${MONTH}${DAY}");
+                "analytics", Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}-${MONTH}-${DAY}");
         configStore.publish(EntityType.FEED, clicksFeed);
         inputFeeds.add(clicksFeed);
         verifyEntityWasAddedToGraph(clicksFeed.getName(), RelationshipType.FEED_ENTITY);
@@ -227,10 +228,10 @@ public class MetadataMappingServiceTest {
         GraphUtils.dump(service.getGraph());
         verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
 
-        // +6 = 1 process, 2 inputs,2 outputs
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 20);
-        //+32 = +26 for feed instances + 6 for process instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 61);
+        // +6 = 1 process, 2 inputs = 3 instances,2 outputs
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 21);
+        //+32 = +26 for feed instances + 6 for process instance + 6 for second feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 67);
     }
 
     @Test (dependsOnMethods = "testMapLineage")
@@ -244,9 +245,9 @@ public class MetadataMappingServiceTest {
         configStore.publish(EntityType.CLUSTER, bcpCluster);
         verifyEntityWasAddedToGraph("bcp-cluster", RelationshipType.CLUSTER_ENTITY);
 
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 23); // +3 = cluster, colo, tag
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 24); // +3 = cluster, colo, tag
         // +2 edges to above, no user but only to colo and new tag
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 63);
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 69);
     }
 
     @Test(dependsOnMethods = "testOnChange")
@@ -271,8 +272,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newFeed);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 25); //+2 = 2 new tags
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 65); // +2 = 1 new cluster, 1 new tag
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); //+2 = 2 new tags
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 71); // +2 = 1 new cluster, 1 new tag
     }
 
     private void verifyUpdatedEdges(Feed newFeed) {
@@ -312,8 +313,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newProcess);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 25); // +0, no net new
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 61); // -4 = -2 outputs, -1 tag, -1 cluster
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); // +0, no net new
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 67); // -4 = -2 outputs, -1 tag, -1 cluster
     }
 
     private void verifyUpdatedEdges(Process newProcess) {
