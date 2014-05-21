@@ -603,8 +603,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             throw new FalconException("Failed to add library extensions for the workflow", e);
         }
 
-        final boolean isTableStorageType = isTableStorageType(cluster, process);
-        if (isTableStorageType) {
+        final boolean shouldConfigureHive = shouldSetupHiveConfiguration(cluster, process);
+        if (shouldConfigureHive) {
             setupHiveCredentials(cluster, parentWfPath, wfApp);
         }
 
@@ -620,12 +620,12 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             if (engineType == EngineType.OOZIE && actionName.equals("user-oozie-workflow")) {
                 action.getSubWorkflow().setAppPath("${nameNode}" + userWfPath);
             } else if (engineType == EngineType.PIG && actionName.equals("user-pig-job")) {
-                decoratePIGAction(cluster, process, action.getPig(), parentWfPath, isTableStorageType);
+                decoratePIGAction(cluster, process, action.getPig(), parentWfPath, shouldConfigureHive);
             } else if (engineType == EngineType.HIVE && actionName.equals("user-hive-job")) {
                 decorateHiveAction(cluster, process, action, parentWfPath);
             } else if (FALCON_ACTIONS.contains(actionName)) {
                 decorateWithOozieRetries(action);
-                if (isTableStorageType && actionName.equals("recordsize")) {
+                if (shouldConfigureHive && actionName.equals("recordsize")) {
                     // adds hive-site.xml in actions classpath
                     action.getJava().setJobXml("${wf:appPath()}/conf/hive-site.xml");
                 }
@@ -634,6 +634,17 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         //Create parent workflow
         marshal(cluster, wfApp, parentWfPath);
+    }
+
+    protected boolean shouldSetupHiveConfiguration(Cluster cluster,
+                                                   Process process) throws FalconException {
+        return isTableStorageType(cluster, entity)
+                || EngineType.HIVE == process.getWorkflow().getEngine();
+    }
+
+    protected boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
+        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
+        return Storage.TYPE.TABLE == storageType;
     }
 
     private void setupHiveCredentials(Cluster cluster, Path parentWfPath,
@@ -648,7 +659,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
     }
 
     private void decoratePIGAction(Cluster cluster, Process process, PIG pigAction,
-                                   Path parentWfPath, boolean isTableStorageType) throws FalconException {
+                                   Path parentWfPath, boolean shouldConfigureHive) throws FalconException {
         Path userWfPath = getUserWorkflowPath(cluster, parentWfPath.getParent());
         pigAction.setScript("${nameNode}" + userWfPath.toString());
 
@@ -660,7 +671,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
 
         propagateProcessProperties(pigAction, process);
 
-        if (isTableStorageType) { // adds hive-site.xml in pig classpath
+        if (shouldConfigureHive) { // adds hive-site.xml in pig classpath
             pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
         }
 

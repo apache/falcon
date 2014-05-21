@@ -24,6 +24,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 
 /**
@@ -49,7 +50,7 @@ public final class ProcessHelper {
     public static Storage.TYPE getStorageType(org.apache.falcon.entity.v0.cluster.Cluster cluster,
                                               Process process) throws FalconException {
         Storage.TYPE storageType = Storage.TYPE.FILESYSTEM;
-        if (process.getInputs() == null) {
+        if (process.getInputs() == null && process.getOutputs() == null) {
             return storageType;
         }
 
@@ -58,6 +59,17 @@ public final class ProcessHelper {
             storageType = FeedHelper.getStorageType(feed, cluster);
             if (Storage.TYPE.TABLE == storageType) {
                 break;
+            }
+        }
+
+        // If input feeds storage type is file system check storage type of output feeds
+        if (Storage.TYPE.FILESYSTEM == storageType) {
+            for (Output output : process.getOutputs().getOutputs()) {
+                Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
+                storageType = FeedHelper.getStorageType(feed, cluster);
+                if (Storage.TYPE.TABLE == storageType) {
+                    break;
+                }
             }
         }
 

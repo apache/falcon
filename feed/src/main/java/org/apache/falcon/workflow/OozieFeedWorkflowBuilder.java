@@ -246,7 +246,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
                 addLibExtensionsToWorkflow(cluster, retWfApp, EntityType.FEED, "retention");
                 addOozieRetries(retWfApp);
 
-                if (isTableStorageType(cluster, entity)) {
+                if (shouldSetupHiveConfiguration(cluster, entity)) {
                     setupHiveCredentials(cluster, wfPath, retWfApp);
                 }
 
@@ -325,7 +325,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             addOozieRetries(repWFapp);
 
-            if (isTableStorageType(targetCluster, entity)) {
+            if (shouldSetupHiveConfiguration(targetCluster, entity)) {
                 setupHiveCredentials(targetCluster, sourceCluster, repWFapp);
             }
 
@@ -718,5 +718,11 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             version = "0.5";
         }
         props.put("userWorkflowVersion", version);
+    }
+
+    protected boolean shouldSetupHiveConfiguration(Cluster cluster,
+                                                   Feed feed) throws FalconException {
+        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
+        return Storage.TYPE.TABLE == storageType;
     }
 }

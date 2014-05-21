@@ -26,16 +26,11 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ExternalId;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.ProcessHelper;
-import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
-import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -550,21 +545,8 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    private boolean isTableStorageType(Cluster cluster, T entity) throws FalconException {
-        return entity.getEntityType() == EntityType.PROCESS
-                ? isTableStorageType(cluster, (Process) entity)
-                : isTableStorageType(cluster, (Feed) entity);
-    }
-
-    protected boolean isTableStorageType(Cluster cluster, Feed feed) throws FalconException {
-        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
-        return Storage.TYPE.TABLE == storageType;
-    }
-
-    protected boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
-        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
-        return Storage.TYPE.TABLE == storageType;
-    }
+    protected abstract boolean shouldSetupHiveConfiguration(Cluster cluster,
+                                                            T entity) throws FalconException;
 
     protected void decorateWithOozieRetries(ACTION action) {
         Properties props = RuntimeProperties.get();
@@ -588,7 +570,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
 
-        if (isTableStorageType(cluster, entity)) {
+        if (shouldSetupHiveConfiguration(cluster, entity)) {
             propagateHiveCredentials(cluster, properties);
         }
 

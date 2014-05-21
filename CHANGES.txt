@@ -13,10 +13,16 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-443 Process with Hive workflow engine and filesystem input feeds,
+   table output feed fails (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-382 Error While building Latest trunk code with Hadoop 2.2.0. (Suhas Vasu)
 
    FALCON-240 Instance status from CLI on a feed doesn't give the retention details. 
    (pavan kumar kolamuri via Shwetha GS)
+
+   FALCON-441 Lineage capture fails for feeds with multiple instances
+   (Venkatesh Seetharam)
 
 Release Version: 0.5-incubating
   INCOMPATIBLE CHANGES
@@ -148,9 +154,6 @@ Release Version: 0.5-incubating
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
-    FALCON-441 Lineage capture fails for feeds with multiple instances
-    (Venkatesh Seetharam)
-
     FALCON-440 Exclude IDEA IntelliJ and other unnecessary files from source
     distribution (Venkatesh Seetharam)
 
