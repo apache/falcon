@@ -24,7 +24,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -33,7 +34,7 @@ import java.io.IOException;
  */
 public class DefaultTaskLogRetriever extends Configured implements TaskLogURLRetriever {
 
-    private static final Logger LOG = Logger.getLogger(DefaultTaskLogRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultTaskLogRetriever.class);
 
     @Override
     public String retrieveTaskLogURL(String jobId) throws IOException {
@@ -42,7 +43,7 @@ public class DefaultTaskLogRetriever extends Configured implements TaskLogURLRet
 
         RunningJob job = jobClient.getJob(JobID.forName(jobId));
         if (job == null) {
-            LOG.warn("No running job for job id: " + jobId);
+            LOG.warn("No running job for job id: {}", jobId);
             return getFromHistory(jobId);
         }
         TaskCompletionEvent[] tasks = job.getTaskCompletionEvents(0);
@@ -51,7 +52,7 @@ public class DefaultTaskLogRetriever extends Configured implements TaskLogURLRet
             return tasks[1].getTaskTrackerHttp() + "/tasklog?attemptid="
                     + tasks[1].getTaskAttemptId() + "&all=true";
         } else {
-            LOG.warn("No running task for job: " + jobId);
+            LOG.warn("No running task for job: {}", jobId);
             return getFromHistory(jobId);
         }
     }

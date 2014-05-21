@@ -19,7 +19,8 @@
 package org.apache.falcon.util;
 
 import org.apache.falcon.entity.ColoClusterRelation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +29,7 @@ import java.util.Set;
  * Helper methods to deployment properties.
  */
 public final class DeploymentUtil {
-    private static final Logger LOG = Logger.getLogger(DeploymentUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeploymentUtil.class);
 
     protected static final String DEFAULT_COLO = "default";
     protected static final String EMBEDDED = "embedded";
@@ -49,8 +50,8 @@ public final class DeploymentUtil {
             CURRENT_COLO = StartupProperties.get().
                     getProperty("current.colo", DEFAULT_COLO);
         }
-        LOG.info("Running in embedded mode? " + EMBEDDED_MODE);
-        LOG.info("Current colo: " + CURRENT_COLO);
+        LOG.info("Running in embedded mode? {}", EMBEDDED_MODE);
+        LOG.info("Current colo: {}", CURRENT_COLO);
     }
 
     private DeploymentUtil() {}

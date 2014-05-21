@@ -29,7 +29,8 @@ import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import java.util.regex.Pattern;
  */
 public class FeedReplicator extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(FeedReplicator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeedReplicator.class);
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new FeedReplicator(), args);
@@ -57,8 +58,7 @@ public class FeedReplicator extends Configured implements Tool {
         Path confPath = new Path("file:///"
                 + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found conf ? "
-                + confPath.getFileSystem(conf).exists(confPath));
+        LOG.info("{} found conf ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
         String falconFeedStorageType = cmd.getOptionValue("falconFeedStorageType").trim();
@@ -146,11 +146,10 @@ public class FeedReplicator extends Configured implements Tool {
         if (files != null) {
             for (FileStatus file : files) {
                 fs.create(new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME)).close();
-                LOG.info("Created " + new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME));
+                LOG.info("Created {}", new Path(file.getPath(), EntityUtil.SUCCEEDED_FILE_NAME));
             }
         } else {
-            LOG.info("No files present in path: "
-                    + new Path(targetPath.toString() + "/" + fixedPath).toString());
+            LOG.info("No files present in path: {}", new Path(targetPath, fixedPath));
         }
     }
 

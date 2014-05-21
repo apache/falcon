@@ -26,18 +26,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.DefaultJobHistoryParser;
 import org.apache.hadoop.mapred.JobHistory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 
 /**
  * Hadoop v1 task log retriever based on job history
  */
 public final class TaskLogRetrieverV1 extends DefaultTaskLogRetriever {
-    private static final Logger LOG = Logger.getLogger(TaskLogRetrieverV1.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TaskLogRetrieverV1.class);
 
     @Override
     public String getFromHistory(String jobId) throws IOException {
@@ -46,8 +46,8 @@ public final class TaskLogRetrieverV1 extends DefaultTaskLogRetriever {
         if (file == null) return null;
         JobHistory.JobInfo jobInfo = new JobHistory.JobInfo(jobId);
         DefaultJobHistoryParser.parseJobTasks(file, jobInfo, new Path(file).getFileSystem(conf));
-        LOG.info("History file:" + file);
-        LOG.debug("Number of tasks in the history file: " + jobInfo.getAllTasks().size());
+        LOG.info("History file: {}", file);
+        LOG.debug("Number of tasks in the history file: {}", jobInfo.getAllTasks().size());
         for (JobHistory.Task task : jobInfo.getAllTasks().values()) {
             if (task.get(JobHistory.Keys.TASK_TYPE).equals(JobHistory.Values.MAP.name()) &&
                     task.get(JobHistory.Keys.TASK_STATUS).equals(JobHistory.Values.SUCCESS.name())) {
@@ -80,7 +80,7 @@ public final class TaskLogRetrieverV1 extends DefaultTaskLogRetriever {
                 file = file.substring(file.lastIndexOf('=') + 1);
                 file = JobHistory.JobInfo.decodeJobHistoryFileName(file);
             } else {
-                LOG.warn("JobURL " + jobUrl + " for id: " + jobId + " returned " + status);
+                LOG.warn("JobURL {} for id: {} returned {}", jobUrl, jobId, status);
             }
             return file;
         } catch (URISyntaxException e) {

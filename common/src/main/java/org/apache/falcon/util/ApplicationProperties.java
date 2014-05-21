@@ -21,7 +21,8 @@ package org.apache.falcon.util;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.expression.ExpressionHelper;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,7 +39,7 @@ import java.util.Set;
  */
 public abstract class ApplicationProperties extends Properties {
 
-    private static final Logger LOG = Logger.getLogger(ApplicationProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationProperties.class);
 
     protected abstract String getPropertyFile();
 
@@ -103,7 +104,7 @@ public abstract class ApplicationProperties extends Properties {
         if (confDir != null) {
             File fileToLoad = new File(confDir, propertyFileName);
             if (fileToLoad.exists() && fileToLoad.isFile() && fileToLoad.canRead()) {
-                LOG.info("config.location is set, using: " + confDir + "/" + propertyFileName);
+                LOG.info("config.location is set, using: {}/{}", confDir, propertyFileName);
                 resourceAsStream = new FileInputStream(fileToLoad);
             }
         }
@@ -116,12 +117,12 @@ public abstract class ApplicationProperties extends Properties {
         Class clazz = ApplicationProperties.class;
         URL resource = clazz.getResource("/" + propertyFileName);
         if (resource != null) {
-            LOG.info("Fallback to classpath for: " + resource);
+            LOG.info("Fallback to classpath for: {}", resource);
             resourceAsStream = clazz.getResourceAsStream("/" + propertyFileName);
         } else {
             resource = clazz.getResource(propertyFileName);
             if (resource != null) {
-                LOG.info("Fallback to classpath for: " + resource);
+                LOG.info("Fallback to classpath for: {}", resource);
                 resourceAsStream = clazz.getResourceAsStream(propertyFileName);
             }
         }
@@ -140,13 +141,13 @@ public abstract class ApplicationProperties extends Properties {
             }
         }
 
-        LOG.info("Initializing " + this.getClass().getName() + " properties with domain " + domain);
+        LOG.info("Initializing {} properties with domain {}", this.getClass().getName(), domain);
         Set<String> keys = getKeys(origProps.keySet());
         for (String key : keys) {
             String value = origProps.getProperty(domain + "." + key, origProps.getProperty("*." + key));
             if (value != null) {
                 value = ExpressionHelper.substitute(value);
-                LOG.debug(key + "=" + value);
+                LOG.debug("{}={}", key, value);
                 put(key, value);
             }
         }

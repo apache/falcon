@@ -30,7 +30,8 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +45,7 @@ import java.util.Set;
  * A base class for managing Entity's Instance operations.
  */
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
-    private static final Logger LOG = Logger.getLogger(AbstractInstanceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractInstanceManager.class);
 
     protected void checkType(String type) {
         if (StringUtils.isEmpty(type)) {

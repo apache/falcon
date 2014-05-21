@@ -32,14 +32,15 @@ import org.apache.falcon.cleanup.FeedCleanupHandler;
 import org.apache.falcon.cleanup.ProcessCleanupHandler;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Log cleanup service.
  */
 public class LogCleanupService implements FalconService {
 
-    private static final Logger LOG = Logger.getLogger(LogCleanupService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LogCleanupService.class);
     private final ExpressionEvaluator evaluator = new ExpressionEvaluatorImpl();
     private final ExpressionHelper resolver = ExpressionHelper.get();
 
@@ -64,7 +65,7 @@ public class LogCleanupService implements FalconService {
         @Override
         public void run() {
             try {
-                LOG.info("Cleaning up logs at: " + new Date());
+                LOG.info("Cleaning up logs at: {}", new Date());
                 processCleanupHandler.cleanup();
                 feedCleanupHandler.cleanup();
             } catch (Throwable t) {

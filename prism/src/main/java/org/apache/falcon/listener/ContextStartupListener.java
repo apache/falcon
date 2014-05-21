@@ -24,7 +24,8 @@ import org.apache.falcon.service.ServiceInitializer;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -36,7 +37,7 @@ import java.util.Properties;
  */
 public class ContextStartupListener implements ServletContextListener {
 
-    private static final Logger LOG = Logger.getLogger(ContextStartupListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ContextStartupListener.class);
 
     private final ServiceInitializer startupServices = new ServiceInitializer();
 
@@ -76,7 +77,7 @@ public class ContextStartupListener implements ServletContextListener {
         }
         buffer.append("\n############################################");
         buffer.append("############################################");
-        LOG.info(buffer);
+        LOG.info(buffer.toString());
     }
 
     @Override
@@ -90,6 +91,6 @@ public class ContextStartupListener implements ServletContextListener {
         buffer.append("\n############################################");
         buffer.append("\n         Falcon Server (SHUTDOWN)            ");
         buffer.append("\n############################################");
-        LOG.info(buffer);
+        LOG.info(buffer.toString());
     }
 }

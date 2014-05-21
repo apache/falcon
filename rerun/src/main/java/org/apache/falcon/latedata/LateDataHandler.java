@@ -35,7 +35,8 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -47,15 +48,14 @@ import java.util.Map;
  */
 public class LateDataHandler extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(LateDataHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LateDataHandler.class);
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Path confPath = new Path("file:///"
                 + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found ? "
-                + confPath.getFileSystem(conf).exists(confPath));
+        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
         ToolRunner.run(conf, new LateDataHandler(), args);
     }
@@ -99,7 +99,7 @@ public class LateDataHandler extends Configured implements Tool {
         String[] inputFeedStorageTypes = getOptionValue(command, "falconInputFeedStorageTypes").split("#");
 
         Map<String, Long> metrics = computeMetrics(inputFeeds, pathGroups, inputFeedStorageTypes);
-        LOG.info("MAP data: " + metrics);
+        LOG.info("MAP data: {}", metrics);
 
         Path file = new Path(command.getOptionValue("out"));
         persistMetrics(metrics, file);
@@ -276,12 +276,12 @@ public class LateDataHandler extends Configured implements Tool {
 
             for (Map.Entry<String, Long> entry : metrics.entrySet()) {
                 if (recordedMetrics.get(entry.getKey()) == null) {
-                    LOG.info("No matching key " + entry.getKey());
+                    LOG.info("No matching key {}", entry.getKey());
                     continue;
                 }
                 if (!recordedMetrics.get(entry.getKey()).equals(entry.getValue())) {
-                    LOG.info("Recorded size:" + recordedMetrics.get(entry.getKey())
-                            + " is different from new size" + entry.getValue());
+                    LOG.info("Recorded size: {} is different from new size {}",
+                            recordedMetrics.get(entry.getKey()), entry.getValue());
                     buffer.append(entry.getKey()).append(',');
                 }
             }

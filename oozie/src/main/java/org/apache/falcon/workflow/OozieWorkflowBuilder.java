@@ -59,8 +59,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -88,7 +89,7 @@ import java.util.Set;
  */
 public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBuilder<T> {
 
-    private static final Logger LOG = Logger.getLogger(OozieWorkflowBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieWorkflowBuilder.class);
     protected static final ConfigurationStore CONFIG_STORE = ConfigurationStore.get();
 
     protected static final String NOMINAL_TIME_EL = "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}";
@@ -272,7 +273,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                 props.put("shouldRecord", "true");
             }
         } catch (FalconException e) {
-            LOG.error("Unable to get Late Process for entity:" + entity, e);
+            LOG.error("Unable to get Late Process for entity: {}", entity, e);
             throw new FalconRuntimException(e);
         }
         props.put("entityName", entity.getName());
@@ -316,11 +317,11 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
             if (LOG.isDebugEnabled()) {
                 StringWriter writer = new StringWriter();
                 marshaller.marshal(jaxbElement, writer);
-                LOG.debug("Writing definition to " + outPath + " on cluster " + cluster.getName());
-                LOG.debug(writer.getBuffer());
+                LOG.debug("Writing definition to {} on cluster {}", outPath, cluster.getName());
+                LOG.debug(writer.getBuffer().toString());
             }
 
-            LOG.info("Marshalled " + jaxbElement.getDeclaredType() + " to " + outPath);
+            LOG.info("Marshalled {} to {}", jaxbElement.getDeclaredType(), outPath);
         } catch (Exception e) {
             throw new FalconException("Unable to marshall app object", e);
         }
@@ -591,7 +592,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
             propagateHiveCredentials(cluster, properties);
         }
 
-        LOG.info("Cluster: " + cluster.getName() + ", PROPS: " + properties);
+        LOG.info("Cluster: {}, PROPS: {}", cluster.getName(), properties);
         return properties;
     }
 

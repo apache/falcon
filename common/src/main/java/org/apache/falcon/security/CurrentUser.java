@@ -18,7 +18,8 @@
 
 package org.apache.falcon.security;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 
@@ -27,7 +28,7 @@ import javax.security.auth.Subject;
  */
 public final class CurrentUser {
 
-    private static final Logger LOG = Logger.getLogger(CurrentUser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CurrentUser.class);
 
     private static final CurrentUser INSTANCE = new CurrentUser();
 
@@ -49,7 +50,7 @@ public final class CurrentUser {
 
         Subject subject = new Subject();
         subject.getPrincipals().add(new FalconPrincipal(user));
-        LOG.info("Logging in " + user);
+        LOG.info("Logging in {}", user);
         INSTANCE.currentSubject.set(subject);
     }
 

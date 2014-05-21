@@ -32,7 +32,8 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
@@ -44,7 +45,7 @@ import java.io.IOException;
  */
 public abstract class AbstractCleanupHandler {
 
-    protected static final Logger LOG = Logger.getLogger(AbstractCleanupHandler.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractCleanupHandler.class);
 
     protected static final ConfigurationStore STORE = ConfigurationStore.get();
     public static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
@@ -99,7 +100,7 @@ public abstract class AbstractCleanupHandler {
     protected void delete(Cluster cluster, Entity entity, long retention, FileStatus[] logs)
         throws FalconException {
         if (logs == null || logs.length == 0) {
-            LOG.info("Nothing to delete for cluster: " + cluster.getName() + ", entity: " + entity.getName());
+            LOG.info("Nothing to delete for cluster: {}, entity: {}", cluster.getName(), entity.getName());
             return;
         }
 
@@ -110,9 +111,9 @@ public abstract class AbstractCleanupHandler {
                 try {
                     boolean isDeleted = getFileSystem(cluster).delete(log.getPath(), true);
                     if (!isDeleted) {
-                        LOG.error("Unable to delete path: " + log.getPath());
+                        LOG.error("Unable to delete path: {}", log.getPath());
                     } else {
-                        LOG.info("Deleted path: " + log.getPath());
+                        LOG.info("Deleted path: {}", log.getPath());
                     }
                     deleteParentIfEmpty(getFileSystem(cluster), log.getPath().getParent());
                 } catch (IOException e) {
@@ -121,10 +122,8 @@ public abstract class AbstractCleanupHandler {
                             + " for cluster: " + cluster.getName(), e);
                 }
             } else {
-                LOG.info("Retention limit: " + retention
-                        + " is less than modification"
-                        + (now - log.getModificationTime()) + " for path: "
-                        + log.getPath());
+                LOG.info("Retention limit: {} is less than modification {} for path: {}", retention,
+                        (now - log.getModificationTime()), log.getPath());
             }
         }
     }
@@ -132,7 +131,7 @@ public abstract class AbstractCleanupHandler {
     private void deleteParentIfEmpty(FileSystem fs, Path parent) throws IOException {
         FileStatus[] files = fs.listStatus(parent);
         if (files != null && files.length == 0) {
-            LOG.info("Parent path: " + parent + " is empty, deleting path");
+            LOG.info("Parent path: {} is empty, deleting path", parent);
             fs.delete(parent, true);
             deleteParentIfEmpty(fs, parent.getParent());
         }

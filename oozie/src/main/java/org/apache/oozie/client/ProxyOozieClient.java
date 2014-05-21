@@ -24,10 +24,11 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.hdfs.web.KerberosUgiAuthenticator;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.Authenticator;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.rest.RestConstants;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,7 +48,7 @@ import java.util.concurrent.Callable;
  */
 public class ProxyOozieClient extends AuthOozieClient {
 
-    private static final Logger LOG = Logger.getLogger(ProxyOozieClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyOozieClient.class);
     private static final Map<String, String> NONE = new HashMap<String, String>();
 
     private final Authenticator authenticator = new KerberosUgiAuthenticator();
@@ -78,9 +79,7 @@ public class ProxyOozieClient extends AuthOozieClient {
         throws IOException, OozieClientException {
 
         final URL decoratedUrl = decorateUrlWithUser(url);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("ProxyOozieClient.createConnection: u=" + url + ", m=" + method);
-        }
+        LOG.debug("ProxyOozieClient.createConnection: u={}, m={}", url, method);
 
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
         try {
@@ -115,9 +114,7 @@ public class ProxyOozieClient extends AuthOozieClient {
             // strUrl += "&" + RestConstants.DO_AS_PARAM + "=" + CurrentUser.getUser();
 
             url = new URL(strUrl);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Decorated url with user info: " + url);
-            }
+            LOG.debug("Decorated url with user info: {}", url);
         }
 
         return url;

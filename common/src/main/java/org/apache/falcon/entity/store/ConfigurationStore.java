@@ -31,7 +31,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -52,8 +53,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ConfigurationStore implements FalconService {
 
-    private static final Logger LOG = Logger.getLogger(ConfigurationStore.class);
-    private static final Logger AUDIT = Logger.getLogger("AUDIT");
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
+    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = "UTF-8";
 
     private static final ConfigurationStore STORE = new ConfigurationStore();
@@ -98,7 +99,7 @@ public final class ConfigurationStore implements FalconService {
         try {
             FileSystem fileSystem = HadoopClientFactory.get().createFileSystem(storePath.toUri());
             if (!fileSystem.exists(storePath)) {
-                LOG.info("Creating configuration store directory: " + storePath);
+                LOG.info("Creating configuration store directory: {}", storePath);
                 fileSystem.mkdirs(storePath);
                 // set permissions so config store dir is owned by falcon alone
                 FsPermission permission = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
@@ -311,9 +312,9 @@ public final class ConfigurationStore implements FalconService {
                         type + Path.SEPARATOR + URLEncoder.encode(entity.getName(), UTF_8) + ".xml"));
         try {
             type.getMarshaller().marshal(entity, out);
-            LOG.info("Persisted configuration " + type + "/" + entity.getName());
+            LOG.info("Persisted configuration {}/{}", type, entity.getName());
         } catch (JAXBException e) {
-            LOG.error(e);
+            LOG.error("Unable to serialize the entity object {}/{}", type, entity.getName(), e);
             throw new StoreAccessException("Unable to serialize the entity object " + type + "/" + entity.getName(), e);
         } finally {
             out.close();
@@ -332,7 +333,7 @@ public final class ConfigurationStore implements FalconService {
         fs.mkdirs(archivePath);
         fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
                 new Path(archivePath, URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
-        LOG.info("Archived configuration " + type + "/" + name);
+        LOG.info("Archived configuration {}/{}", type, name);
     }
 
     /**
@@ -354,7 +355,7 @@ public final class ConfigurationStore implements FalconService {
             throw new StoreAccessException("Unable to un-marshall xml definition for " + type + "/" + name, e);
         } finally {
             in.close();
-            LOG.info("Restored configuration " + type + "/" + name);
+            LOG.info("Restored configuration {}/{}", type, name);
         }
     }
 

@@ -23,7 +23,8 @@ import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.resource.AbstractEntityManager;
 import org.apache.falcon.util.ReflectionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
@@ -31,7 +32,7 @@ import java.lang.reflect.Method;
  * Inter-process implementation of a Channel.
  */
 public class IPCChannel extends AbstractChannel {
-    private static final Logger LOG = Logger.getLogger(IPCChannel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IPCChannel.class);
     private AbstractEntityManager service;
 
     public void init(String ignoreColo, String serviceName) throws FalconException {
@@ -41,7 +42,7 @@ public class IPCChannel extends AbstractChannel {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T invoke(String methodName, Object... args) throws FalconException {
-        LOG.debug("Invoking method " + methodName + " on service " + service.getClass().getName());
+        LOG.debug("Invoking method {} on service {}", methodName, service.getClass().getName());
         Method method = getMethod(service.getClass(), methodName, args);
 
         try {

@@ -51,9 +51,8 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
         try {
             if (jobStatus.equals("RUNNING") || jobStatus.equals("PREP")
                     || jobStatus.equals("SUSPENDED")) {
-                LOG.debug(
-                        "Re-enqueing message in LateRerunHandler for workflow with same delay as job status is running:"
-                                + message.getWfId());
+                LOG.debug("Re-enqueing message in LateRerunHandler for workflow with same delay as "
+                    + "job status is running: {}", message.getWfId());
                 message.setMsgInsertTime(System.currentTimeMillis());
                 handler.offerToQueue(message);
                 return;
@@ -62,26 +61,22 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
             String detectLate = detectLate(message);
 
             if (detectLate.equals("")) {
-                LOG.debug("No Late Data Detected, scheduling next late rerun for wf-id: "
-                        + message.getWfId()
-                        + " at "
-                        + SchemaHelper.formatDateUTC(new Date()));
+                LOG.debug("No Late Data Detected, scheduling next late rerun for wf-id: {} at {}",
+                        message.getWfId(), SchemaHelper.formatDateUTC(new Date()));
                 handler.handleRerun(clusterName, message.getEntityType(), message.getEntityName(),
                         message.getInstance(), Integer.toString(message.getRunId()),
                         message.getWfId(), message.getWorkflowUser(), System.currentTimeMillis());
                 return;
             }
 
-            LOG.info("Late changes detected in the following feeds: " + detectLate);
+            LOG.info("Late changes detected in the following feeds: {}", detectLate);
 
             handler.getWfEngine().reRun(message.getClusterName(), message.getWfId(), null);
-            LOG.info("Scheduled late rerun for wf-id: " + message.getWfId()
-                    + " on cluster: " + message.getClusterName());
+            LOG.info("Scheduled late rerun for wf-id: {} on cluster: {}",
+                    message.getWfId(), message.getClusterName());
         } catch (Exception e) {
-            LOG.warn("Late Re-run failed for instance "
-                            + message.getEntityName() + ":"
-                            + message.getInstance() + " after "
-                            + message.getDelayInMilliSec() + " with message:", e);
+            LOG.warn("Late Re-run failed for instance {}:{} after {}",
+                    message.getEntityName(), message.getInstance(), message.getDelayInMilliSec(), e);
             GenericAlert.alertLateRerunFailed(message.getEntityType(), message.getEntityName(),
                     message.getInstance(), message.getWfId(), message.getWorkflowUser(),
                     Integer.toString(message.getRunId()), e.getMessage());
@@ -104,7 +99,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
         Configuration conf = LateRerunHandler.getConfiguration(storageEndpoint);
         FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
         if (!fs.exists(lateLogPath)) {
-            LOG.warn("Late log file:" + lateLogPath + " not found:");
+            LOG.warn("Late log file: {} not found", lateLogPath);
             return "";
         }
 
@@ -128,8 +123,8 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
                 }
             }
         } else {
-            LOG.warn("Late process is not configured for entity: "
-                    + message.getEntityType() + "(" + message.getEntityName() + ")");
+            LOG.warn("Late process is not configured for entity: {} ({})",
+                    message.getEntityType(), message.getEntityName());
         }
 
         return late.detectChanges(lateLogPath, computedMetrics, conf);

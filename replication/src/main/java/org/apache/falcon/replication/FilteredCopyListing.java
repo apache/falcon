@@ -24,7 +24,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.SimpleCopyListing;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
  * depending on data availability will work correctly.
  */
 public class FilteredCopyListing extends SimpleCopyListing {
-    private static final Logger LOG = Logger.getLogger(FilteredCopyListing.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FilteredCopyListing.class);
 
     /**
      * Default pattern character: Escape any special meaning.
@@ -56,8 +57,8 @@ public class FilteredCopyListing extends SimpleCopyListing {
         super(configuration, credentials);
         try {
             regex = getRegEx(configuration.get("falcon.include.path", "").trim());
-            LOG.info("Inclusion pattern = " + configuration.get("falcon.include.path"));
-            LOG.info("Regex pattern = " + regex);
+            LOG.info("Inclusion pattern = {}", configuration.get("falcon.include.path"));
+            LOG.info("Regex pattern = {}", regex);
         } catch (IOException e) {
             throw new IllegalArgumentException("Unable to build regex for "
                     + configuration.get("falcon.include.path", ""));

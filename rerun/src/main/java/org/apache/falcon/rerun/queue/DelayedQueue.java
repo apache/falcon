@@ -19,7 +19,8 @@ package org.apache.falcon.rerun.queue;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.rerun.event.RerunEvent;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ import java.util.List;
  * @param <T>
  */
 public abstract class DelayedQueue<T extends RerunEvent> {
-    public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
+    public static final Logger LOG = LoggerFactory.getLogger(DelayedQueue.class);
 
     public abstract boolean offer(T event) throws FalconException;
 

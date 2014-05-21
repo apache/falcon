@@ -31,11 +31,12 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -53,7 +54,7 @@ import java.util.Set;
  */
 public class LogMover extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(LogMover.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LogMover.class);
     public static final Set<String> FALCON_ACTIONS =
         new HashSet<String>(Arrays.asList(new String[]{"eviction", "replication", }));
 
@@ -84,7 +85,7 @@ public class LogMover extends Configured implements Tool {
             try {
                 jobInfo = client.getJobInfo(args.subflowId);
             } catch (OozieClientException e) {
-                LOG.error("Error getting jobinfo for: " + args.subflowId, e);
+                LOG.error("Error getting jobinfo for: {}", args.subflowId, e);
                 return 0;
             }
 
@@ -115,14 +116,13 @@ public class LogMover extends Configured implements Tool {
                             || action.getType().equals("java")) {
                         copyTTlogs(fs, path, action);
                     } else {
-                        LOG.info("Ignoring hadoop TT log for non-pig and non-java action:"
-                                + action.getName());
+                        LOG.info("Ignoring hadoop TT log for non-pig and non-java action: {}", action.getName());
                     }
                 }
             }
 
         } catch (Exception e) {
-            LOG.error("Exception in log mover:", e);
+            LOG.error("Exception in log mover", e);
         }
         return 0;
     }
@@ -137,20 +137,19 @@ public class LogMover extends Configured implements Tool {
         InputStream in = new ByteArrayInputStream(client.getJobLog(id).getBytes());
         OutputStream out = fs.create(new Path(path, "oozie.log"));
         IOUtils.copyBytes(in, out, 4096, true);
-        LOG.info("Copied oozie log to " + path);
+        LOG.info("Copied oozie log to {}", path);
     }
 
     private void copyTTlogs(FileSystem fs, Path path,
                             WorkflowAction action) throws Exception {
         String ttLogURL = getTTlogURL(action.getExternalId());
         if (ttLogURL != null) {
-            LOG.info("Fetching log for action: " + action.getExternalId()
-                    + " from url: " + ttLogURL);
+            LOG.info("Fetching log for action: {} from url: {}", action.getExternalId(), ttLogURL);
             InputStream in = getURLinputStream(new URL(ttLogURL));
             OutputStream out = fs.create(new Path(path, action.getName() + "_"
                     + getMappedStatus(action.getStatus()) + ".log"));
             IOUtils.copyBytes(in, out, 4096, true);
-            LOG.info("Copied log to " + path);
+            LOG.info("Copied log to {}", path);
         }
     }
 

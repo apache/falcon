@@ -32,9 +32,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.OozieClientException;
 import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -42,7 +43,7 @@ import java.io.IOException;
  * Get oozie action execution logs corresponding to a run as saved by the log mover.
  */
 public final class LogProvider {
-    private static final Logger LOG = Logger.getLogger(LogProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LogProvider.class);
 
     public Instance populateLogUrls(Entity entity, Instance instance,
                                     String runId) throws FalconException {
@@ -86,7 +87,7 @@ public final class LogProvider {
                 // order of runs
                 return runs[runs.length - 1].getPath().getName();
             } else {
-                LOG.warn("No run dirs are available in logs dir:" + jobPath);
+                LOG.warn("No run dirs are available in logs dir: {}", jobPath);
                 return "-";
             }
         } else {

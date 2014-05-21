@@ -22,7 +22,8 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
@@ -30,7 +31,7 @@ import java.io.File;
  * A standalone cluster.
  */
 public final class StandAloneCluster extends EmbeddedCluster {
-    private static final Logger LOG = Logger.getLogger(StandAloneCluster.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StandAloneCluster.class);
 
     private StandAloneCluster() {
     }
@@ -47,7 +48,7 @@ public final class StandAloneCluster extends EmbeddedCluster {
             }
         }
 
-        LOG.info("Cluster Namenode = " + cluster.getConf().get("fs.default.name"));
+        LOG.info("Cluster Namenode = {}", cluster.getConf().get("fs.default.name"));
         return cluster;
     }
 

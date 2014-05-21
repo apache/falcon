@@ -25,7 +25,8 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.monitors.Dimension;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.PathParam;
@@ -38,7 +39,7 @@ import javax.ws.rs.core.Response;
  */
 public abstract class AbstractSchedulableEntityManager extends AbstractEntityManager {
 
-    private static final Logger LOG = Logger.getLogger(AbstractSchedulableEntityManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSchedulableEntityManager.class);
 
     /**
      * Schedules an submitted entity immediately.

@@ -25,7 +25,8 @@ import org.apache.falcon.rerun.handler.RerunHandlerFactory;
 import org.apache.falcon.rerun.queue.ActiveMQueue;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
@@ -34,7 +35,7 @@ import java.io.File;
  */
 public class LateRunService implements FalconService {
 
-    private static final Logger LOG = Logger.getLogger(LateRunService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LateRunService.class);
 
     @Override
     public String getName() {

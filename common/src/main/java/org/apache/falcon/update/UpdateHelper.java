@@ -36,7 +36,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,7 +49,7 @@ import java.util.Map;
  * Helper methods to facilitate entity updates.
  */
 public final class UpdateHelper {
-    private static final Logger LOG = Logger.getLogger(UpdateHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UpdateHelper.class);
 
     private static final String[] FEED_FIELDS = new String[]{"partitions", "groups", "lateArrival.cutOff",
                                                              "schema.location", "schema.provider",
@@ -153,7 +154,7 @@ public final class UpdateHelper {
                 if (dest != null) {
                     Path target = new Path(dest, src.getName());
                     FileUtil.copy(fs, src, fs, target, false, conf);
-                    LOG.debug("Copied " + src + " to " + target);
+                    LOG.debug("Copied {} to {}", src, target);
                 }
             } else {
                 FileStatus[] files = fs.listStatus(src);
@@ -184,17 +185,17 @@ public final class UpdateHelper {
 
             //check if affectedProcess is defined for this cluster
             if (ProcessHelper.getCluster(affectedProcess, cluster) == null) {
-                LOG.debug("Process " + affectedProcess.getName() + " is not defined for cluster " + cluster);
+                LOG.debug("Process {} is not defined for cluster {}", affectedProcess.getName(), cluster);
                 return false;
             }
 
             if (!oldFeed.getFrequency().equals(newFeed.getFrequency())) {
-                LOG.debug(oldFeed.toShortString() + ": Frequency has changed. Updating...");
+                LOG.debug("{}: Frequency has changed. Updating...", oldFeed.toShortString());
                 return true;
             }
 
             if (!StringUtils.equals(oldFeed.getAvailabilityFlag(), newFeed.getAvailabilityFlag())) {
-                LOG.debug(oldFeed.toShortString() + ": Availability flag has changed. Updating...");
+                LOG.debug("{}: Availability flag has changed. Updating...", oldFeed.toShortString());
                 return true;
             }
 
@@ -202,7 +203,7 @@ public final class UpdateHelper {
             Storage newFeedStorage = FeedHelper.createStorage(cluster, newFeed);
 
             if (!oldFeedStorage.isIdentical(newFeedStorage)) {
-                LOG.debug(oldFeed.toShortString() + ": Storage has changed. Updating...");
+                LOG.debug("{}: Storage has changed. Updating...", oldFeed.toShortString());
                 return true;
             }
             return false;

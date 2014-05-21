@@ -28,7 +28,8 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.List;
  * Utility called by oozie workflow engine post workflow execution in parent workflow.
  */
 public class FalconPostProcessing extends Configured implements Tool {
-    private static final Logger LOG = Logger.getLogger(FalconPostProcessing.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FalconPostProcessing.class);
 
     /**
      * Args that the utility understands.
@@ -101,19 +102,19 @@ public class FalconPostProcessing extends Configured implements Tool {
 
         CommandLine cmd = getCommand(args);
 
-        LOG.info("Sending user message " + cmd);
+        LOG.info("Sending user message {}", cmd);
         invokeUserMessageProducer(cmd);
 
         if ("SUCCEEDED".equals(Arg.STATUS.getOptionValue(cmd))) {
-            LOG.info("Recording lineage for " + cmd);
+            LOG.info("Recording lineage for {}", cmd);
             recordLineageMetadata(cmd);
         }
 
         //LogMover doesn't throw exception, a failed log mover will not fail the user workflow
-        LOG.info("Moving logs " + cmd);
+        LOG.info("Moving logs {}", cmd);
         invokeLogProducer(cmd);
 
-        LOG.info("Sending falcon message " + cmd);
+        LOG.info("Sending falcon message {}", cmd);
         invokeFalconMessageProducer(cmd);
 
         return 0;

@@ -51,13 +51,13 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
                 Cluster currentCluster = STORE.get(EntityType.CLUSTER,
                         cluster.getName());
                 if (currentCluster.getColo().equals(getCurrentColo())) {
-                    LOG.info("Cleaning up logs & staged data for feed:" + feedName
-                            + " in  cluster: " + cluster.getName() + " with retention: " + retention);
+                    LOG.info("Cleaning up logs & staged data for feed: {} in cluster: {} with retention: {}", feedName,
+                            cluster.getName(), retention);
                     delete(currentCluster, feed, retention);
                     deleteStagedData(currentCluster, feed, retention);
                 } else {
-                    LOG.info("Ignoring cleanup for feed:" + feedName
-                            + " in  cluster: " + cluster.getName() + " as this does not belong to current colo");
+                    LOG.info("Ignoring cleanup for feed: {} in cluster: {} as this does not belong to current colo",
+                            feedName, cluster.getName());
                 }
             }
 

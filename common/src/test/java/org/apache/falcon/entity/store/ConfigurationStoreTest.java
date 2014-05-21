@@ -27,7 +27,8 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
@@ -40,7 +41,7 @@ import java.io.IOException;
  */
 public class ConfigurationStoreTest {
 
-    private static final Logger LOG = Logger.getLogger(ConfigurationStoreTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStoreTest.class);
 
     private ConfigurationStore store = ConfigurationStore.get();
     private TestListener listener = new TestListener();
@@ -121,6 +122,6 @@ public class ConfigurationStoreTest {
                 getProperty("config.store.uri"));
         FileSystem fs = FileSystem.get(path.toUri(), new Configuration());
         fs.delete(path, true);
-        LOG.info("Cleaned up " + path);
+        LOG.info("Cleaned up {}", path);
     }
 }

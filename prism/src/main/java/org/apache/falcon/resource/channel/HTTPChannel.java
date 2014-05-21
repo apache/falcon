@@ -26,7 +26,8 @@ import org.apache.falcon.resource.proxy.BufferedRequest;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.RuntimeProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -49,7 +50,7 @@ import java.util.Properties;
  * A Channel implementation for HTTP.
  */
 public class HTTPChannel extends AbstractChannel {
-    private static final Logger LOG = Logger.getLogger(HTTPChannel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HTTPChannel.class);
 
     private static final HttpServletRequest DEFAULT_NULL_REQUEST = new NullServletRequest();
 
@@ -66,7 +67,7 @@ public class HTTPChannel extends AbstractChannel {
         try {
             String proxyClassName = DEPLOYMENT_PROPERTIES.getProperty(serviceName + ".proxy");
             service = Class.forName(proxyClassName);
-            LOG.info("Service: " + serviceName + ", url = " + urlPrefix);
+            LOG.info("Service: {}, url = {}", serviceName, urlPrefix);
         } catch (Exception e) {
             throw new FalconException("Unable to initialize channel for " + serviceName, e);
         }
@@ -78,7 +79,7 @@ public class HTTPChannel extends AbstractChannel {
         try {
             Method method = getMethod(service, methodName, args);
             String url = urlPrefix + "/" + pathValue(method, args);
-            LOG.debug("Executing " + url);
+            LOG.debug("Executing {}", url);
 
             HttpServletRequest incomingRequest = getIncomingRequest(args);
             incomingRequest.getInputStream().reset();
@@ -100,10 +101,10 @@ public class HTTPChannel extends AbstractChannel {
                 return (T) response.getEntity(method.getReturnType());
             } else if (response.getClientResponseStatus().getStatusCode()
                     == Response.Status.BAD_REQUEST.getStatusCode()) {
-                LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
+                LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
                 return (T) response.getEntity(method.getReturnType());
             } else {
-                LOG.error("Request failed: " + response.getClientResponseStatus().getStatusCode());
+                LOG.error("Request failed: {}", response.getClientResponseStatus().getStatusCode());
                 throw new FalconException(response.getEntity(String.class));
             }
         } catch (Throwable e) {

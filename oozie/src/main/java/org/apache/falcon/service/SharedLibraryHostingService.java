@@ -32,7 +32,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,7 @@ import java.util.Properties;
  * Host shared libraries in oozie shared lib dir upon creation or modification of cluster.
  */
 public class SharedLibraryHostingService implements ConfigurationChangeListener {
-    private static final Logger LOG = Logger.getLogger(SharedLibraryHostingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SharedLibraryHostingService.class);
 
     private static final String[] LIBS = StartupProperties.get().getProperty("shared.libs").split(",");
 
@@ -84,7 +85,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             pushLibsToHDFS(properties.getProperty("libext.process.paths"),
                     new Path(libext, EntityType.PROCESS.name()) , cluster, null);
         } catch (IOException e) {
-            LOG.error("Failed to copy shared libs to cluster " + cluster.getName(), e);
+            LOG.error("Failed to copy shared libs to cluster {}", cluster.getName(), e);
         }
     }
 
@@ -94,7 +95,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             return;
         }
 
-        LOG.debug("Copying libs from " + src);
+        LOG.debug("Copying libs from {}", src);
         FileSystem fs;
         try {
             fs = getFileSystem(cluster);
@@ -132,7 +133,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                     }
                 }
                 fs.copyFromLocalFile(false, true, new Path(file.getAbsolutePath()), targetFile);
-                LOG.info("Copied " + file.getAbsolutePath() + " to " + targetFile.toString() + " in " + fs.getUri());
+                LOG.info("Copied {} to {} in {}", file.getAbsolutePath(), targetFile.toString(), fs.getUri());
             }
         }
     }

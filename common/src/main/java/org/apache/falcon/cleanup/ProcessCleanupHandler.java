@@ -44,12 +44,12 @@ public class ProcessCleanupHandler extends AbstractCleanupHandler {
                 Cluster currentCluster = STORE.get(EntityType.CLUSTER,
                         cluster.getName());
                 if (currentCluster.getColo().equals(getCurrentColo())) {
-                    LOG.info("Cleaning up logs for process:" + processName
-                            + " in  cluster: " + cluster.getName() + " with retention: " + retention);
+                    LOG.info("Cleaning up logs for process: {} in cluster: {} with retention: {}",
+                            processName, cluster.getName(), retention);
                     delete(currentCluster, process, retention);
                 } else {
-                    LOG.info("Ignoring cleanup for process:" + processName
-                            + " in  cluster: " + cluster.getName() + " as this does not belong to current colo");
+                    LOG.info("Ignoring cleanup for process: {} in cluster: {} as this does not belong to current colo",
+                            processName, cluster.getName());
                 }
             }
 

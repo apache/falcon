@@ -65,9 +65,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.OozieClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBElement;
 import java.io.IOException;
@@ -86,7 +87,7 @@ import java.util.Set;
  * Oozie workflow builder for falcon entities.
  */
 public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
-    private static final Logger LOG = Logger.getLogger(OozieProcessWorkflowBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieProcessWorkflowBuilder.class);
 
     private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
             Arrays.asList(new String[]{"recordsize", "user-oozie-workflow", "user-pig-job", "user-hive-job", }));
@@ -102,7 +103,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         for (String clusterName : clusters) {
             org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(entity, clusterName);
             if (processCluster.getValidity().getStart().compareTo(processCluster.getValidity().getEnd()) >= 0) {
-                LOG.info("process validity start <= end for cluster " + clusterName + ". Skipping schedule");
+                LOG.info("process validity start <= end for cluster {}. Skipping schedule", clusterName);
                 break;
             }
 

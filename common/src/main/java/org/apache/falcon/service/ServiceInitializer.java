@@ -21,14 +21,15 @@ package org.apache.falcon.service;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Initializer that Falcon uses at startup to bring up all the falcon startup services.
  */
 public class ServiceInitializer {
 
-    private static final Logger LOG = Logger.getLogger(ServiceInitializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceInitializer.class);
     private final Services services = Services.get();
 
     public void initialize() throws FalconException {
@@ -41,27 +42,27 @@ public class ServiceInitializer {
             }
             FalconService service = ReflectionUtils.getInstanceByClassName(serviceClassName);
             services.register(service);
-            LOG.info("Initializing service : " + serviceClassName);
+            LOG.info("Initializing service: {}", serviceClassName);
             try {
                 service.init();
             } catch (Throwable t) {
-                LOG.fatal("Failed to initialize service " + serviceClassName, t);
+                LOG.error("Failed to initialize service {}", serviceClassName, t);
                 throw new FalconException(t);
             }
-            LOG.info("Service initialized : " + serviceClassName);
+            LOG.info("Service initialized: {}", serviceClassName);
         }
     }
 
     public void destroy() throws FalconException {
         for (FalconService service : services) {
-            LOG.info("Destroying service : " + service.getClass().getName());
+            LOG.info("Destroying service: {}", service.getClass().getName());
             try {
                 service.destroy();
             } catch (Throwable t) {
-                LOG.fatal("Failed to destroy service " + service.getClass().getName(), t);
+                LOG.error("Failed to destroy service {}", service.getClass().getName(), t);
                 throw new FalconException(t);
             }
-            LOG.info("Service destroyed : " + service.getClass().getName());
+            LOG.info("Service destroyed: {}", service.getClass().getName());
         }
     }
 }

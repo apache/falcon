@@ -31,7 +31,8 @@ import org.apache.hcatalog.api.HCatTable;
 import org.apache.hcatalog.cli.SemanticAnalysis.HCatSemanticAnalyzer;
 import org.apache.hcatalog.common.HCatException;
 import org.apache.hcatalog.data.schema.HCatFieldSchema;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -46,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HiveCatalogService extends AbstractCatalogService {
 
-    private static final Logger LOG = Logger.getLogger(HiveCatalogService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveCatalogService.class);
 
     private static final ConcurrentHashMap<String, HCatClient> CACHE = new ConcurrentHashMap<String, HCatClient>();
 
@@ -61,7 +62,7 @@ public class HiveCatalogService extends AbstractCatalogService {
 
         if (!CACHE.containsKey(metastoreUrl)) {
             HCatClient hCatClient = getHCatClient(metastoreUrl);
-            LOG.info("Caching HCatalog client object for " + metastoreUrl);
+            LOG.info("Caching HCatalog client object for {}", metastoreUrl);
             CACHE.putIfAbsent(metastoreUrl, hCatClient);
         }
 
@@ -101,7 +102,7 @@ public class HiveCatalogService extends AbstractCatalogService {
                     hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
                 }
 
-                LOG.info("Creating and caching HCatalog client object for " + catalogUrl);
+                LOG.info("Creating and caching HCatalog client object for {}", catalogUrl);
                 UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
                 HCatClient hcatClient = currentUser.doAs(new PrivilegedExceptionAction<HCatClient>() {
                     public HCatClient run() throws Exception {
@@ -122,7 +123,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     @Override
     public boolean isAlive(final String catalogUrl,
                            final String metaStorePrincipal) throws FalconException {
-        LOG.info("Checking if the service is alive for: " + catalogUrl);
+        LOG.info("Checking if the service is alive for: {}", catalogUrl);
 
         try {
             HCatClient client = getProxiedClient(catalogUrl, metaStorePrincipal);
@@ -136,7 +137,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     @Override
     public boolean tableExists(final String catalogUrl, final String database, final String tableName,
                                final String metaStorePrincipal) throws FalconException {
-        LOG.info("Checking if the table exists: " + tableName);
+        LOG.info("Checking if the table exists: {}", tableName);
 
         try {
             HCatClient client = getProxiedClient(catalogUrl, metaStorePrincipal);
@@ -150,7 +151,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     @Override
     public boolean isTableExternal(String catalogUrl, String database, String tableName)
         throws FalconException {
-        LOG.info("Checking if the table is external:" + tableName);
+        LOG.info("Checking if the table is external: {}", tableName);
 
         try {
             HCatClient client = get(catalogUrl);
@@ -165,7 +166,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     public List<CatalogPartition> listPartitionsByFilter(String catalogUrl, String database,
                                                          String tableName, String filter)
         throws FalconException {
-        LOG.info("List partitions for : " + tableName + ", partition filter: " + filter);
+        LOG.info("List partitions for: {}, partition filter: {}", tableName, filter);
 
         try {
             List<CatalogPartition> catalogPartitionList = new ArrayList<CatalogPartition>();
@@ -209,7 +210,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     public boolean dropPartitions(String catalogUrl, String database,
                                   String tableName, Map<String, String> partitions)
         throws FalconException {
-        LOG.info("Dropping partitions for : " + tableName + ", partitions: " + partitions);
+        LOG.info("Dropping partitions for: {}, partitions: {}", tableName, partitions);
 
         try {
             HCatClient client = get(catalogUrl);
@@ -224,7 +225,7 @@ public class HiveCatalogService extends AbstractCatalogService {
     @Override
     public CatalogPartition getPartition(String catalogUrl, String database, String tableName,
                                          Map<String, String> partitionSpec) throws FalconException {
-        LOG.info("Fetch partition for : " + tableName + ", partition spec: " + partitionSpec);
+        LOG.info("Fetch partition for: {}, partition spec: {}", tableName, partitionSpec);
 
         try {
             HCatClient client = get(catalogUrl);

@@ -26,7 +26,8 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class EntityGraph implements ConfigurationChangeListener {
 
-    private static final Logger LOG = Logger.getLogger(EntityGraph.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityGraph.class);
 
     private static EntityGraph instance = new EntityGraph();
 
@@ -83,7 +84,7 @@ public final class EntityGraph implements ConfigurationChangeListener {
         if (nodeEdges == null) {
             return;
         }
-        LOG.trace("Adding edges for " + entity.getName() + ": " + nodeEdges);
+        LOG.trace("Adding edges for {}: {}", entity.getName(), nodeEdges);
 
         for (Map.Entry<Node, Set<Node>> entry : nodeEdges.entrySet()) {
             if (graph.containsKey(entry.getKey())) {
@@ -92,7 +93,7 @@ public final class EntityGraph implements ConfigurationChangeListener {
                 graph.put(entry.getKey(), entry.getValue());
             }
         }
-        LOG.trace("Merged edges to graph " + entity.getName());
+        LOG.trace("Merged edges to graph {}", entity.getName());
     }
 
     @Override

@@ -23,7 +23,8 @@ import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.lang.reflect.InvocationTargetException;
@@ -34,7 +35,7 @@ import java.lang.reflect.InvocationTargetException;
 public class MessageProducer extends Configured implements Tool {
 
     private Connection connection;
-    private static final Logger LOG = Logger.getLogger(MessageProducer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageProducer.class);
     private static final long DEFAULT_TTL = 3 * 24 * 60 * 60 * 1000;
 
     /**
@@ -59,8 +60,7 @@ public class MessageProducer extends Configured implements Tool {
                     .getBrokerTTL());
             messageTTL = messageTTLinMins * 60 * 1000;
         } catch (NumberFormatException e) {
-            LOG.error("Error in parsing broker.ttl, setting TTL to:"
-                    + DEFAULT_TTL + " milli-seconds");
+            LOG.error("Error in parsing broker.ttl, setting TTL to: {} milli-seconds", DEFAULT_TTL);
         }
         producer.setTimeToLive(messageTTL);
         producer.send(new EntityInstanceMessageCreator(entityInstanceMessage)
@@ -159,20 +159,20 @@ public class MessageProducer extends Configured implements Tool {
             createAndStartConnection(cmd.getOptionValue(ARG.brokerImplClass.name()), "",
                     "", cmd.getOptionValue(ARG.brokerUrl.name()));
             for (EntityInstanceMessage message : entityInstanceMessage) {
-                LOG.info("Sending message:" + message.getKeyValueMap());
+                LOG.info("Sending message: {}", message.getKeyValueMap());
                 sendMessage(message);
             }
         } catch (JMSException e) {
-            LOG.error("Error in getConnection:", e);
+            LOG.error("Error in getConnection", e);
         } catch (Exception e) {
-            LOG.error("Error in getConnection:", e);
+            LOG.error("Error in getConnection", e);
         } finally {
             try {
                 if (connection != null) {
                     connection.close();
                 }
             } catch (JMSException e) {
-                LOG.error("Error in closing connection:", e);
+                LOG.error("Error in closing connection", e);
             }
         }
         return 0;

@@ -40,11 +40,12 @@ import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.falcon.workflow.WorkflowBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.*;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
 import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.rest.RestConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -55,7 +56,7 @@ import java.util.Map.Entry;
  */
 public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
-    private static final Logger LOG = Logger.getLogger(OozieWorkflowEngine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieWorkflowEngine.class);
 
     public static final String ENGINE = "oozie";
     private static final BundleJob MISSING = new NullBundleJob();
@@ -110,7 +111,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             if (bundleJob == MISSING) {
                 schedClusters.add(cluster);
             } else {
-                LOG.debug("The entity " + entity.getName() + " is already scheduled on cluster " + cluster);
+                LOG.debug("The entity {} is already scheduled on cluster {}", entity.getName(), cluster);
             }
         }
 
@@ -120,7 +121,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 String[schedClusters.size()]));
             for (Map.Entry<String, Properties> entry : newFlows.entrySet()) {
                 String cluster = entry.getKey();
-                LOG.info("Scheduling " + entity.toShortString() + " on cluster " + cluster);
+                LOG.info("Scheduling {} on cluster {}", entity.toShortString(), cluster);
                 scheduleEntity(cluster, entry.getValue(), entity);
                 commitStagingPath(cluster, entry.getValue().getProperty(OozieClient.BUNDLE_APP_PATH));
             }
@@ -196,7 +197,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     //Filtering bundles that correspond to deleted entities(endtime is set when an entity is deleted)
                     if (job.getEndTime() == null) {
                         filteredJobs.add(job);
-                        LOG.debug("Found bundle " + job.getId());
+                        LOG.debug("Found bundle {}", job.getId());
                     }
                 }
                 return filteredJobs;
@@ -278,7 +279,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         List<BundleJob> jobs = findBundles(entity, cluster);
         if (jobs.isEmpty()) {
-            LOG.warn("No active job found for " + entity.getName());
+            LOG.warn("No active job found for {}", entity.getName());
             return "FAILED";
         }
 
@@ -320,16 +321,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             //kill all coords
             for (CoordinatorJob coord : job.getCoordinators()) {
                 client.kill(coord.getId());
-                LOG.debug("Killed coord " + coord.getId() + " on cluster " + clusterName);
+                LOG.debug("Killed coord {} on cluster {}", coord.getId(), clusterName);
             }
 
             //set end time of bundle
             client.change(job.getId(), OozieClient.CHANGE_VALUE_ENDTIME + "=" + SchemaHelper.formatDateUTC(new Date()));
-            LOG.debug("Changed end time of bundle " + job.getId() + " on cluster " + clusterName);
+            LOG.debug("Changed end time of bundle {} on cluster {}", job.getId(), clusterName);
 
             //kill bundle
             client.kill(job.getId());
-            LOG.debug("Killed bundle " + job.getId() + " on cluster " + clusterName);
+            LOG.debug("Killed bundle {} on cluster {}", job.getId(), clusterName);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -494,7 +495,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 try {
                     status = performAction(cluster, action, coordinatorAction, props);
                 } catch (FalconException e) {
-                    LOG.warn("Unable to perform action " + action + " on cluster ", e);
+                    LOG.warn("Unable to perform action {} on cluster", action, e);
                     status = WorkflowStatus.ERROR.name();
                     overallStatus = APIResult.Status.PARTIAL;
                 }
@@ -571,7 +572,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     coordJob = client.getCoordJobInfo(coord.getId(), null, startActionNumber,
                         (lastMaterializedActionNumber - startActionNumber));
                 } catch (OozieClientException e) {
-                    LOG.debug("Unable to get details for coordinator " + coord.getId() + " " + e.getMessage());
+                    LOG.debug("Unable to get details for coordinator {}", coord.getId(), e);
                     throw new FalconException(e);
                 }
 
@@ -675,7 +676,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 org.apache.oozie.client.CoordinatorAction.Status.RUNNING,
                 org.apache.oozie.client.CoordinatorAction.Status.WAITING,
                 org.apache.oozie.client.CoordinatorAction.Status.READY);
-            LOG.info("Rerun job " + coordinatorAction.getId() + " on cluster " + cluster);
+            LOG.info("Rerun job {} on cluster {}", coordinatorAction.getId(), cluster);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
@@ -773,7 +774,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                             actions.add(coordActionInfo);
                         }
                     } catch (OozieClientException e) {
-                        LOG.debug("Unable to get action for " + actionId + " " + e.getMessage());
+                        LOG.debug("Unable to get action for {}", actionId, e);
                     }
 
                     Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
@@ -860,7 +861,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         boolean wfUpdated = UpdateHelper.isWorkflowUpdated(cluster, newEntity);
 
         if (!entityUpdated && !wfUpdated) {
-            LOG.debug("Nothing to update for cluster " + cluster);
+            LOG.debug("Nothing to update for cluster {}", cluster);
             return null;
         }
 
@@ -869,27 +870,28 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         if (stagingPath != null) {  //update if entity is scheduled
             BundleJob bundle = findBundleForStagingPath(cluster, oldEntity, stagingPath);
             bundle = getBundleInfo(cluster, bundle.getId());
-            LOG.info("Updating entity through Workflow Engine" + newEntity.toShortString());
+            LOG.info("Updating entity through Workflow Engine {}", newEntity.toShortString());
             Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
             if (newEndTime.before(now())) {
                 throw new FalconException("New end time for " + newEntity.getName() + " is past current time. Entity "
                     + "can't be updated. Use remove and add");
             }
 
-            LOG.debug("Updating for cluster : " + cluster + ", bundle: " + bundle.getId());
+            LOG.debug("Updating for cluster: {}, bundle: {}", cluster, bundle.getId());
 
             if (canUpdateBundle(oldEntity, newEntity, wfUpdated)) {
                 // only concurrency and endtime are changed. So, change coords
-                LOG.info("Change operation is adequate! : " + cluster + ", bundle: " + bundle.getId());
+                LOG.info("Change operation is adequate! : {}, bundle: {}", cluster, bundle.getId());
                 updateCoords(cluster, bundle, EntityUtil.getParallel(newEntity),
                     EntityUtil.getEndTime(newEntity, cluster));
                 return newEndTime;
             }
 
-            LOG.debug("Going to update ! : " + newEntity.toShortString() + "for cluster " + cluster + ", "
-                + "bundle: " + bundle.getId());
+            LOG.debug("Going to update! : {} for cluster {}, bundle: {}",
+                    newEntity.toShortString(), cluster, bundle.getId());
             effectiveTime = updateInternal(oldEntity, newEntity, cluster, bundle, false, effectiveTime);
-            LOG.info("Entity update complete : " + newEntity.toShortString() + cluster + ", bundle: " + bundle.getId());
+            LOG.info("Entity update complete: {} for cluster {}, bundle: {}",
+                    newEntity.toShortString(), cluster, bundle.getId());
         }
 
         //Update affected entities
@@ -899,7 +901,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 continue;
             }
 
-            LOG.info("Dependent entities need to be updated " + affectedEntity.toShortString());
+            LOG.info("Dependent entities need to be updated {}", affectedEntity.toShortString());
             if (!UpdateHelper.shouldUpdate(oldEntity, newEntity, affectedEntity, cluster)) {
                 continue;
             }
@@ -909,17 +911,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 continue;
             }
 
-            LOG.info("Triggering update for " + cluster + ", " + affectedProcBundle.getId());
+            LOG.info("Triggering update for {}, {}", cluster, affectedProcBundle.getId());
 
             Date depEndTime =
                 updateInternal(affectedEntity, affectedEntity, cluster, affectedProcBundle, false, effectiveTime);
             if (effectiveTime == null || effectiveTime.after(depEndTime)) {
                 effectiveTime = depEndTime;
             }
-            LOG.info("Entity update complete : " + affectedEntity.toShortString() + cluster + ", "+ "bundle: "
-                + affectedProcBundle.getId());
+            LOG.info("Entity update complete: {} for cluster {}, bundle: {}",
+                    affectedEntity.toShortString(), cluster, affectedProcBundle.getId());
         }
-        LOG.info("Entity update and all dependent entities updated: " + oldEntity.toShortString());
+        LOG.info("Entity update and all dependent entities updated: {}", oldEntity.toShortString());
         return effectiveTime;
     }
 
@@ -964,26 +966,26 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         // change coords
         for (CoordinatorJob coord : bundle.getCoordinators()) {
-            LOG.debug("Updating endtime of coord " + coord.getId() + " to " + SchemaHelper.formatDateUTC(endTime)
-                + " on cluster " + cluster);
+            LOG.debug("Updating endtime of coord {} to {} on cluster {}",
+                    coord.getId(), SchemaHelper.formatDateUTC(endTime), cluster);
             Date lastActionTime = getCoordLastActionTime(coord);
             if (lastActionTime == null) { // nothing is materialized
-                LOG.info("Nothing is materialized for this coord: " + coord.getId());
+                LOG.info("Nothing is materialized for this coord: {}", coord.getId());
                 if (endTime.compareTo(coord.getStartTime()) <= 0) {
-                    LOG.info("Setting end time to START TIME " + SchemaHelper.formatDateUTC(coord.getStartTime()));
+                    LOG.info("Setting end time to START TIME {}", SchemaHelper.formatDateUTC(coord.getStartTime()));
                     change(cluster, coord.getId(), concurrency, coord.getStartTime(), null);
                 } else {
-                    LOG.info("Setting end time to START TIME " + SchemaHelper.formatDateUTC(endTime));
+                    LOG.info("Setting end time to START TIME {}", SchemaHelper.formatDateUTC(endTime));
                     change(cluster, coord.getId(), concurrency, endTime, null);
                 }
             } else {
-                LOG.info("Actions have materialized for this coord: " + coord.getId() + ", last action "
-                    + SchemaHelper.formatDateUTC(lastActionTime));
+                LOG.info("Actions have materialized for this coord: {}, last action {}",
+                        coord.getId(), SchemaHelper.formatDateUTC(lastActionTime));
                 if (!endTime.after(lastActionTime)) {
                     Date pauseTime = offsetTime(endTime, -1);
                     // set pause time which deletes future actions
-                    LOG.info("Setting pause time on coord : " + coord.getId() + " to " + SchemaHelper.formatDateUTC(
-                        pauseTime));
+                    LOG.info("Setting pause time on coord: {} to {}",
+                            coord.getId(), SchemaHelper.formatDateUTC(pauseTime));
                     change(cluster, coord.getId(), concurrency, null, SchemaHelper.formatDateUTC(pauseTime));
                 }
                 change(cluster, coord.getId(), concurrency, endTime, "");
@@ -1037,16 +1039,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             //newBundleId and latestBundle will be null if effectiveTime = process end time
             if (newBundleId != null) {
                 latestBundle = getBundleInfo(cluster, newBundleId);
-                LOG.info("New bundle " + newBundleId + " scheduled successfully with start time "
-                    + SchemaHelper.formatDateUTC(effectiveTime));
+                LOG.info("New bundle {} scheduled successfully with start time {}",
+                        newBundleId, SchemaHelper.formatDateUTC(effectiveTime));
             }
         } else {
-            LOG.info("New bundle has already been created. Bundle Id: " + latestBundle.getId() + ", Start: "
-                + SchemaHelper.formatDateUTC(latestBundle.getStartTime()) + ", End: " + latestBundle.getEndTime());
+            LOG.info("New bundle has already been created. Bundle Id: {}, Start: {}, End: {}", latestBundle.getId(),
+                SchemaHelper.formatDateUTC(latestBundle.getStartTime()), latestBundle.getEndTime());
 
             //pick effectiveTime from already created bundle
             effectiveTime = getMinStartTime(latestBundle);
-            LOG.info("Will set old coord end time to " + SchemaHelper.formatDateUTC(effectiveTime));
+            LOG.info("Will set old coord end time to {}", SchemaHelper.formatDateUTC(effectiveTime));
         }
         if (effectiveTime != null) {
             //set endtime for old coords
@@ -1072,11 +1074,11 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         EntityUtil.setStartDate(entity, cluster, startDate);
         WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, clone);
         Map<String, Properties> bundleProps = builder.newWorkflowSchedule(cluster);
-        LOG.info("Scheduling " + entity.toShortString() + " on cluster " + cluster + " with props " + bundleProps);
+        LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster, bundleProps);
         if (bundleProps != null && bundleProps.size() > 0) {
             return scheduleEntity(cluster, bundleProps.get(cluster), entity);
         } else {
-            LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
+            LOG.info("No new workflow to be scheduled for this {}", entity.toShortString());
             return null;
         }
     }
@@ -1133,7 +1135,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
             client.reRun(jobId, jobprops);
             assertStatus(cluster, jobId, Job.Status.RUNNING);
-            LOG.info("Rerun job " + jobId + " on cluster " + cluster);
+            LOG.info("Rerun job {} on cluster {}", jobId, cluster);
         } catch (Exception e) {
             LOG.error("Unable to rerun workflows", e);
             throw new FalconException(e);
@@ -1204,7 +1206,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private String run(String cluster, Properties props) throws FalconException {
         try {
             String jobId = OozieClientFactory.get(cluster).run(props);
-            LOG.info("Submitted " + jobId + " on cluster " + cluster + " with properties : " + props);
+            LOG.info("Submitted {} on cluster {} with properties: {}", jobId, cluster, props);
             return jobId;
         } catch (OozieClientException e) {
             LOG.error("Unable to schedule workflows", e);
@@ -1217,7 +1219,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             OozieClientFactory.get(cluster).suspend(jobId);
             assertStatus(cluster, jobId, Status.PREPSUSPENDED, Status.SUSPENDED, Status.SUCCEEDED, Status.FAILED,
                 Status.KILLED);
-            LOG.info("Suspended job " + jobId + " on cluster " + cluster);
+            LOG.info("Suspended job {} on cluster {}", jobId, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -1227,7 +1229,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         try {
             OozieClientFactory.get(cluster).resume(jobId);
             assertStatus(cluster, jobId, Status.PREP, Status.RUNNING, Status.SUCCEEDED, Status.FAILED, Status.KILLED);
-            LOG.info("Resumed job " + jobId + " on cluster " + cluster);
+            LOG.info("Resumed job {} on cluster {}", jobId, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -1237,7 +1239,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         try {
             OozieClientFactory.get(cluster).kill(jobId);
             assertStatus(cluster, jobId, Status.KILLED, Status.SUCCEEDED, Status.FAILED);
-            LOG.info("Killed job " + jobId + " on cluster " + cluster);
+            LOG.info("Killed job {} on cluster {}", jobId, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -1246,7 +1248,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     private void change(String cluster, String jobId, String changeValue) throws FalconException {
         try {
             OozieClientFactory.get(cluster).change(jobId, changeValue);
-            LOG.info("Changed bundle/coord " + jobId + ": " + changeValue + " on cluster " + cluster);
+            LOG.info("Changed bundle/coord {}: {} on cluster {}", jobId, changeValue, cluster);
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
@@ -1289,9 +1291,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 }
                 coord = client.getCoordJobInfo(id);
             }
-            LOG.error("Failed to change coordinator. Current value " + coord.getConcurrency() + ", "
-                + SchemaHelper.formatDateUTC(coord.getEndTime()) + ", " + SchemaHelper.formatDateUTC(
-                    coord.getPauseTime()));
+            LOG.error("Failed to change coordinator. Current value {}, {}, {}",
+                    coord.getConcurrency(), SchemaHelper.formatDateUTC(coord.getEndTime()),
+                    SchemaHelper.formatDateUTC(coord.getPauseTime()));
             throw new FalconException("Failed to change coordinator " + id + " with change value " + changeValueStr);
         } catch (OozieClientException e) {
             throw new FalconException(e);

@@ -28,7 +28,8 @@ import org.apache.falcon.hadoop.JailedFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -38,7 +39,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public class EmbeddedCluster {
 
-    private static final Logger LOG = Logger.getLogger(EmbeddedCluster.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedCluster.class);
 
     protected EmbeddedCluster() {
     }
@@ -82,7 +83,7 @@ public class EmbeddedCluster {
         cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
 
         String hdfsUrl = cluster.conf.get("fs.default.name");
-        LOG.info("Cluster Namenode = " + hdfsUrl);
+        LOG.info("Cluster Namenode = {}", hdfsUrl);
         cluster.buildClusterObject(name);
         return cluster;
     }
@@ -95,7 +96,7 @@ public class EmbeddedCluster {
         clusterEntity = new Cluster();
         clusterEntity.setName(name);
         clusterEntity.setColo("local");
-        clusterEntity.setDescription("Embeded cluster: " + name);
+        clusterEntity.setDescription("Embedded cluster: " + name);
 
         Interfaces interfaces = new Interfaces();
         interfaces.getInterfaces().add(newInterface(Interfacetype.WORKFLOW,

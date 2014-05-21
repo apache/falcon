@@ -31,7 +31,8 @@ import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.lang.reflect.InvocationTargetException;
@@ -41,7 +42,7 @@ import java.util.Date;
  * Subscribes to the falcon topic for handling retries and alerts.
  */
 public class FalconTopicSubscriber implements MessageListener, ExceptionListener {
-    private static final Logger LOG = Logger.getLogger(FalconTopicSubscriber.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FalconTopicSubscriber.class);
 
     private final String implementation;
     private final String userName;
@@ -75,7 +76,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
             connection.setExceptionListener(this);
             connection.start();
         } catch (Exception e) {
-            LOG.error("Error starting subscriber of topic: " + this.toString(), e);
+            LOG.error("Error starting subscriber of topic: {}", this, e);
             throw new FalconException(e);
         }
     }
@@ -119,8 +120,8 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                         nominalTime, runId, workflowId, workflowUser,
                         System.currentTimeMillis());
                 } else {
-                    LOG.info("Late data handling not applicable for entityType: " + entityType + ", entityName: "
-                        + entityName + " operation: " + operation);
+                    LOG.info("Late data handling not applicable for entityType: {}, entityName: {} operation: {}",
+                            entityType, entityName, operation);
                 }
                 GenericAlert.instrumentSucceededInstance(cluster, entityType,
                     entityName, nominalTime, workflowId, workflowUser, runId, operation,
@@ -129,11 +130,11 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                 notifyMetadataMappingService(entityName, operation, mapMessage.getString(ARG.logDir.getArgName()));
             }
         } catch (JMSException e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+            LOG.info("Error in onMessage for subscriber of topic: {}", this, e);
         } catch (FalconException e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+            LOG.info("Error in onMessage for subscriber of topic: {}", this, e);
         } catch (Exception e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+            LOG.info("Error in onMessage for subscriber of topic: {}", this, e);
         }
     }
 
@@ -153,17 +154,17 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                 .append(mapMessage.getString(arg.getArgName())).append(", ");
         }
         buff.append("}");
-        LOG.debug(buff);
+        LOG.debug(buff.toString());
     }
 
     @Override
     public void onException(JMSException ignore) {
-        LOG.info("Error in onException for subscriber of topic: " + this.toString(), ignore);
+        LOG.info("Error in onException for subscriber of topic: {}", this.toString(), ignore);
     }
 
     public void closeSubscriber() throws FalconException {
         try {
-            LOG.info("Closing subscriber on topic : " + this.topicName);
+            LOG.info("Closing subscriber on topic: {}", this.topicName);
             if (subscriber != null) {
                 subscriber.close();
             }
@@ -171,7 +172,7 @@ public class FalconTopicSubscriber implements MessageListener, ExceptionListener
                 connection.close();
             }
         } catch (JMSException e) {
-            LOG.error("Error closing subscriber of topic: " + this.toString(), e);
+            LOG.error("Error closing subscriber of topic: {}", this.toString(), e);
             throw new FalconException(e);
         }
     }

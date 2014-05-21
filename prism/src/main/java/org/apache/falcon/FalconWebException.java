@@ -22,7 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -33,7 +34,7 @@ import javax.ws.rs.core.Response;
  */
 public class FalconWebException extends WebApplicationException {
 
-    private static final Logger LOG = Logger.getLogger(FalconWebException.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FalconWebException.class);
 
     public static FalconWebException newException(Throwable e,
                                                   Response.Status status) {
@@ -49,28 +50,28 @@ public class FalconWebException extends WebApplicationException {
     public static FalconWebException newInstanceSummaryException(Throwable e, Response.Status status) {
         LOG.error("Failure reason", e);
         String message = e.getMessage() + "\n" + getAddnInfo(e);
-        LOG.error("Action failed: " + status + "\nError:" + message);
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstancesSummaryResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newException(APIResult result,
                                                   Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + result.getMessage());
+        LOG.error("Action failed: {}\nError: {}", status, result.getMessage());
         return new FalconWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newException(String message,
                                                   Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + message);
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new APIResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).
                 entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }
 
     public static FalconWebException newInstanceException(String message, Response.Status status) {
-        LOG.error("Action failed: " + status + "\nError:" + message);
+        LOG.error("Action failed: {}\nError: {}", status, message);
         APIResult result = new InstancesResult(APIResult.Status.FAILED, message);
         return new FalconWebException(Response.status(status).entity(result).type(MediaType.TEXT_XML_TYPE).build());
     }

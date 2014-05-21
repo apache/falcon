@@ -23,8 +23,9 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.log4j.Logger;
 import org.apache.oozie.client.ProxyOozieClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class OozieClientFactory {
 
-    private static final Logger LOG = Logger.getLogger(OozieClientFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieClientFactory.class);
     private static final String LOCAL_OOZIE = "local";
 
     private static final ConcurrentHashMap<String, ProxyOozieClient> CACHE =
@@ -49,7 +50,7 @@ public final class OozieClientFactory {
         String oozieUrl = ClusterHelper.getOozieUrl(cluster);
         if (!CACHE.containsKey(oozieUrl)) {
             ProxyOozieClient ref = getClientRef(oozieUrl);
-            LOG.info("Caching Oozie client object for " + oozieUrl);
+            LOG.info("Caching Oozie client object for {}", oozieUrl);
             CACHE.putIfAbsent(oozieUrl, ref);
         }
 

@@ -26,7 +26,8 @@ import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.rerun.queue.InMemoryQueue;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
@@ -35,7 +36,7 @@ import java.io.File;
  */
 public class RetryService implements FalconService {
 
-    private static final Logger LOG = Logger.getLogger(RetryService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RetryService.class);
 
     @Override
     public String getName() {

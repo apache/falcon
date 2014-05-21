@@ -32,7 +32,8 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -42,7 +43,7 @@ import java.util.Map;
  */
 public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
-    private static final Logger LOG = Logger.getLogger(InstanceRelationshipGraphBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InstanceRelationshipGraphBuilder.class);
 
     private static final String PROCESS_INSTANCE_FORMAT = "yyyy-MM-dd-HH-mm"; // nominal time
     private static final String FEED_INSTANCE_FORMAT = "yyyyMMddHHmm"; // computed
@@ -67,7 +68,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         String entityName = lineageMetadata.get(LineageArgs.ENTITY_NAME.getOptionName());
         String processInstanceName = getProcessInstanceName(entityName,
                 lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
-        LOG.info("Adding process instance: " + processInstanceName);
+        LOG.info("Adding process instance: {}", processInstanceName);
 
         String timestamp = getTimestamp(lineageMetadata);
         Vertex processInstance = addVertex(processInstanceName, RelationshipType.PROCESS_INSTANCE, timestamp);
@@ -111,10 +112,10 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,
                                     RelationshipType entityType, RelationshipLabel edgeLabel) {
         Vertex entityVertex = findVertex(entityName, entityType);
-        LOG.info("Vertex exists? name=" + entityName + ", type=" + entityType + ", v=" + entityVertex);
+        LOG.info("Vertex exists? name={}, type={}, v={}", entityName, entityType, entityVertex);
         if (entityVertex == null) {
             // todo - throw new IllegalStateException(entityType + " entity vertex must exist " + entityName);
-            LOG.error("Illegal State: " + entityType + " vertex must exist for " + entityName);
+            LOG.error("Illegal State: {} vertex must exist for {}", entityType, entityName);
             return;
         }
 
@@ -161,10 +162,10 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             String feedName = feedNames[index];
             String feedInstancePath = feedInstancePaths[index];
 
-            LOG.info("Computing feed instance for : name=" + feedName + ", path= "
-                    + feedInstancePath + ", in cluster: " + clusterName);
+            LOG.info("Computing feed instance for : name={}, path={}, in cluster: {}",
+                    feedName, feedInstancePath, clusterName);
             String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstancePath);
-            LOG.info("Adding feed instance: " + feedInstanceName);
+            LOG.info("Adding feed instance: {}", feedInstanceName);
             Vertex feedInstance = addVertex(feedInstanceName, RelationshipType.FEED_INSTANCE,
                     getTimestamp(lineageMetadata));
 

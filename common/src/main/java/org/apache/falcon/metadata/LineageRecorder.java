@@ -32,8 +32,9 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 import org.json.simple.JSONValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,7 +48,7 @@ import java.util.Map;
  */
 public class LineageRecorder  extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(LineageRecorder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LineageRecorder.class);
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new LineageRecorder(), args);
@@ -57,15 +58,15 @@ public class LineageRecorder  extends Configured implements Tool {
     public int run(String[] arguments) throws Exception {
         CommandLine command = getCommand(arguments);
 
-        LOG.info("Parsing lineage metadata from: " + command);
+        LOG.info("Parsing lineage metadata from: {}", command);
         Map<String, String> lineageMetadata = getLineageMetadata(command);
-        LOG.info("Lineage Metadata: " + lineageMetadata);
+        LOG.info("Lineage Metadata: {}", lineageMetadata);
 
         String lineageFile = getFilePath(command.getOptionValue(LineageArgs.LOG_DIR.getOptionName()),
                 command.getOptionValue(LineageArgs.ENTITY_NAME.getOptionName())
         );
 
-        LOG.info("Persisting lineage metadata to: " + lineageFile);
+        LOG.info("Persisting lineage metadata to: {}", lineageFile);
         persistLineageMetadata(lineageMetadata, lineageFile);
 
         return 0;

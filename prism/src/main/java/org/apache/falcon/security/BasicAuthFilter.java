@@ -23,8 +23,9 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
-import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -49,7 +50,7 @@ import java.util.UUID;
  */
 public class BasicAuthFilter extends AuthenticationFilter {
 
-    private static final Logger LOG = Logger.getLogger(BasicAuthFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicAuthFilter.class);
 
     /**
      * Constant for the configuration property that indicates the prefix.
@@ -178,7 +179,7 @@ public class BasicAuthFilter extends AuthenticationFilter {
                             NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
                             NDC.push(requestId);
                             CurrentUser.authenticate(user);
-                            LOG.info("Request from user: " + user + ", URL=" + getRequestUrl(httpRequest));
+                            LOG.info("Request from user: {}, URL={}", user, getRequestUrl(httpRequest));
 
                             filterChain.doFilter(servletRequest, servletResponse);
                         } finally {

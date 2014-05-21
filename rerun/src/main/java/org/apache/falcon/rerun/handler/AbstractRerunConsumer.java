@@ -25,7 +25,8 @@ import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.ExpBackoffPolicy;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.security.CurrentUser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for a rerun consumer.
@@ -36,8 +37,7 @@ import org.apache.log4j.Logger;
 public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends AbstractRerunHandler<T, DelayedQueue<T>>>
         implements Runnable {
 
-    protected static final Logger LOG = Logger
-            .getLogger(AbstractRerunConsumer.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractRerunConsumer.class);
 
     protected M handler;
 
@@ -57,7 +57,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                     message = handler.takeFromQueue();
                     attempt = 1;
                 } catch (FalconException e) {
-                    LOG.error("Error while reading message from the queue: ", e);
+                    LOG.error("Error while reading message from the queue", e);
                     GenericAlert.alertRerunConsumerFailed(
                             "Error while reading message from the queue: ", e);
                     Thread.sleep(policy.getDelay(frequency, attempt));
@@ -72,7 +72,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                 handleRerun(message.getClusterName(), jobStatus, message);
 
             } catch (Throwable e) {
-                LOG.error("Error in rerun consumer:", e);
+                LOG.error("Error in rerun consumer", e);
             }
         }
     }

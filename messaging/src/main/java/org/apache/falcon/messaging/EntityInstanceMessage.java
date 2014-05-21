@@ -23,7 +23,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,7 +42,7 @@ import java.util.Map;
 public class EntityInstanceMessage {
 
     private final Map<ARG, String> keyValueMap = new LinkedHashMap<ARG, String>();
-    private static final Logger LOG = Logger.getLogger(EntityInstanceMessage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityInstanceMessage.class);
     private static final String FALCON_ENTITY_TOPIC_NAME = "FALCON.ENTITY.TOPIC";
 
     /**
@@ -150,7 +151,7 @@ public class EntityInstanceMessage {
         try {
             feedPaths = getFeedPaths(cmd);
         } catch (IOException e) {
-            LOG.error("Error getting instance paths: ", e);
+            LOG.error("Error getting instance paths", e);
             throw new RuntimeException(e);
         }
 
@@ -197,13 +198,13 @@ public class EntityInstanceMessage {
         String operation = cmd.getOptionValue(ARG.operation.getArgName());
 
         if (topicName.equals(FALCON_ENTITY_TOPIC_NAME)) {
-            LOG.debug("Returning instance paths for Falcon Topic: "
-                    + cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
+            LOG.debug("Returning instance paths for Falcon Topic: {}",
+                    cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
             return new String[]{cmd.getOptionValue(ARG.feedInstancePaths.getArgName()), };
         }
 
         if (operation.equals(EntityOps.GENERATE.name()) || operation.equals(EntityOps.REPLICATE.name())) {
-            LOG.debug("Returning instance paths: " + cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
+            LOG.debug("Returning instance paths: {}", cmd.getOptionValue(ARG.feedInstancePaths.getArgName()));
             return cmd.getOptionValue(ARG.feedInstancePaths.getArgName()).split(",");
         }
         //else case of feed retention
@@ -220,12 +221,12 @@ public class EntityInstanceMessage {
         IOUtils.copyBytes(instance, writer, 4096, true);
         String[] instancePaths = writer.toString().split("=");
         fs.delete(logFile, true);
-        LOG.info("Deleted feed instance paths file:" + logFile);
+        LOG.info("Deleted feed instance paths file: {}", logFile);
         if (instancePaths.length == 1) {
             LOG.debug("Returning 0 instance paths for feed ");
             return new String[0];
         } else {
-            LOG.debug("Returning instance paths for feed " + instancePaths[1]);
+            LOG.debug("Returning instance paths for feed {}", instancePaths[1]);
             return instancePaths[1].split(",");
         }
     }

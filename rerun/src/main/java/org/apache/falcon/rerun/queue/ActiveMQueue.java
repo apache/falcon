@@ -57,12 +57,12 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
                     event.getDelay(TimeUnit.MILLISECONDS));
             msg.setStringProperty("TYPE", event.getType().name());
             producer.send(msg);
-            LOG.debug("Enqueued Message:" + event.toString() + "with delay "
-                    + event.getDelay(TimeUnit.MILLISECONDS) + " milli sec");
+            LOG.debug("Enqueued Message: {} with delay {} milli sec",
+                    event.toString(), event.getDelay(TimeUnit.MILLISECONDS));
             return true;
         } catch (Exception e) {
-            LOG.error("Unable to offer event:" + event + " to activeMqueue", e);
-            throw new FalconException("Unable to offer event:" + event + " to activeMqueue", e);
+            LOG.error("Unable to offer event: {} to ActiveMQ", event, e);
+            throw new FalconException("Unable to offer event:" + event + " to ActiveMQ", e);
         }
     }
 
@@ -82,11 +82,11 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
             T event = new RerunEventFactory<T>().getRerunEvent(
                     textMessage.getStringProperty("TYPE"),
                     textMessage.getText());
-            LOG.debug("Dequeued Message:" + event.toString());
+            LOG.debug("Dequeued Message: {}", event.toString());
             return event;
         } catch (Exception e) {
-            LOG.error("Error getting the messge from ActiveMqueue: ", e);
-            throw new FalconException("Error getting the messge from ActiveMqueue: ", e);
+            LOG.error("Error getting the message from ActiveMQ", e);
+            throw new FalconException("Error getting the message from ActiveMQ: ", e);
         }
     }
 
@@ -103,14 +103,10 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
             destination = session.createQueue(destinationName);
             producer = session.createProducer(destination);
             consumer = session.createConsumer(destination);
-            LOG.info("Initialized Queue on activeMQ: " + destinationName);
+            LOG.info("Initialized Queue on ActiveMQ: {}", destinationName);
         } catch (Exception e) {
-            LOG.error(
-                    "Error starting ActiveMQueue connection for dealyed queue",
-                    e);
-            throw new RuntimeException(
-                    "Error starting ActiveMQueue connection for delayed queue",
-                    e);
+            LOG.error("Error starting ActiveMQ connection for delayed queue", e);
+            throw new RuntimeException("Error starting ActiveMQ connection for delayed queue", e);
         }
     }
 
@@ -120,7 +116,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
                 userName, password, url);
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
-        LOG.info("Connected successfully to " + url);
+        LOG.info("Connected successfully to {}", url);
     }
 
     @Override

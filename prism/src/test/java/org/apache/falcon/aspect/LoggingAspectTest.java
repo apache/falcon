@@ -49,7 +49,7 @@ public class LoggingAspectTest {
         } catch (Exception e) {
             return;
         }
-        Assert.fail("Exepected excpetion");
+        Assert.fail("Expected exception");
     }
 
     @Test(expectedExceptions = FalconWebException.class)

@@ -21,7 +21,8 @@ package org.apache.falcon.listener;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.JobTrackerService;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -30,7 +31,7 @@ import javax.servlet.ServletContextListener;
  * Listener for bootstrapping embedded hadoop cluster for integration tests.
  */
 public class HadoopStartupListener implements ServletContextListener {
-    private static final Logger LOG = Logger.getLogger(HadoopStartupListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HadoopStartupListener.class);
     private BrokerService broker;
 
     @Override
@@ -109,7 +110,7 @@ public class HadoopStartupListener implements ServletContextListener {
             @Override
             public void run() {
                 try {
-                    LOG.info("Starting service " + service.getClass().getName());
+                    LOG.info("Starting service {}", service.getClass().getName());
                     invoke(service, method, null, null);
                 } catch(Exception e) {
                     throw new RuntimeException(e);

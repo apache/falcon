@@ -33,10 +33,11 @@ import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -59,7 +60,7 @@ import java.util.Set;
 @Path("graphs/lineage")
 public class LineageMetadataResource {
 
-    private static final Logger LOG = Logger.getLogger(LineageMetadataResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LineageMetadataResource.class);
 
     public static final String RESULTS = "results";
     public static final String TOTAL_SIZE = "totalSize";
@@ -99,7 +100,7 @@ public class LineageMetadataResource {
         checkIfMetadataMappingServiceIsEnabled();
         String file = StartupProperties.get().getProperty("falcon.graph.serialize.path")
                 + "/lineage-graph-" + System.currentTimeMillis() + ".json";
-        LOG.info("Serialize Graph to: " + file);
+        LOG.info("Serialize Graph to: {}", file);
         try {
             GraphUtils.dump(getGraph(), file);
             return Response.ok().build();
@@ -141,7 +142,7 @@ public class LineageMetadataResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVertex(@PathParam("id") final String vertexId) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertex for vertexId= " + vertexId);
+        LOG.info("Get vertex for vertexId= {}", vertexId);
         try {
             Vertex vertex = findVertex(vertexId);
 
@@ -180,7 +181,7 @@ public class LineageMetadataResource {
                                         @DefaultValue("false") @QueryParam("relationships")
                                         final String relationships) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertex for vertexId= " + vertexId);
+        LOG.info("Get vertex for vertexId= {}", vertexId);
         try {
             Vertex vertex = findVertex(vertexId);
 
@@ -279,7 +280,7 @@ public class LineageMetadataResource {
     public Response getVertices(@QueryParam("key") final String key,
                                 @QueryParam("value") final String value) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertices for property key= " + key + ", value= " + value);
+        LOG.info("Get vertices for property key= {}, value= {}", key, value);
         try {
             JSONObject response = buildJSONResponse(getGraph().getVertices(key, value));
             return Response.ok(response).build();
@@ -303,7 +304,7 @@ public class LineageMetadataResource {
     public Response getVertexEdges(@PathParam("id") String vertexId,
                                    @PathParam("direction") String direction) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertex edges for vertexId= " + vertexId + ", direction= " + direction);
+        LOG.info("Get vertex edges for vertexId= {}, direction= {}", vertexId, direction);
         try {
             Vertex vertex = findVertex(vertexId);
 
@@ -392,7 +393,7 @@ public class LineageMetadataResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getEdge(@PathParam("id") final String edgeId) {
         checkIfMetadataMappingServiceIsEnabled();
-        LOG.info("Get vertex for edgeId= " + edgeId);
+        LOG.info("Get vertex for edgeId= {}", edgeId);
         try {
             Edge edge = getGraph().getEdge(edgeId);
             if (edge == null) {

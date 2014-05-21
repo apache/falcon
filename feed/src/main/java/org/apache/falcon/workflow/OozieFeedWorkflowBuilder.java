@@ -52,7 +52,8 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,7 +70,7 @@ import java.util.Properties;
  * Workflow definition builder for feed replication & retention.
  */
 public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
-    private static final Logger LOG = Logger.getLogger(OozieFeedWorkflowBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieFeedWorkflowBuilder.class);
 
     public OozieFeedWorkflowBuilder(Feed entity) {
         super(entity);
@@ -82,7 +83,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         for (String clusterName : clusters) {
             org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, clusterName);
             if (!feedCluster.getValidity().getStart().before(feedCluster.getValidity().getEnd())) {
-                LOG.info("feed validity start <= end for cluster " + clusterName + ". Skipping schedule");
+                LOG.info("feed validity start <= end for cluster {}. Skipping schedule", clusterName);
                 break;
             }
 
@@ -130,8 +131,8 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
 
         if (feedCluster.getValidity().getEnd().before(new Date())) {
-            LOG.warn("Feed Retention is not applicable as Feed's end time for cluster " + cluster.getName()
-                + " is not in the future");
+            LOG.warn("Feed Retention is not applicable as Feed's end time for cluster {} is not in the future",
+                    cluster.getName());
             return null;
         }
 
@@ -380,8 +381,8 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             if (noOverlapExists(sourceStartDate, sourceEndDate,
                 targetStartDate, targetEndDate)) {
-                LOG.warn("Not creating replication coordinator, as the source cluster:" + srcCluster.getName()
-                    + "and target cluster: " + trgCluster.getName() + " do not have overlapping dates");
+                LOG.warn("Not creating replication coordinator, as the source cluster: {} and target cluster: {} do "
+                    + "not have overlapping dates", srcCluster.getName(), trgCluster.getName());
                 return null;
             }
 

@@ -24,7 +24,8 @@ import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
@@ -39,7 +40,7 @@ import java.util.List;
  */
 public abstract class EntityParser<T extends Entity> {
 
-    private static final Logger LOG = Logger.getLogger(EntityParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityParser.class);
 
     private final EntityType entityType;
 
@@ -80,7 +81,7 @@ public abstract class EntityParser<T extends Entity> {
             // parse against schema
             Unmarshaller unmarshaller = entityType.getUnmarshaller();
             T entity = (T) unmarshaller.unmarshal(xmlStream);
-            LOG.info("Parsed Entity: " + entity.getName());
+            LOG.info("Parsed Entity: {}", entity.getName());
             return entity;
         } catch (Exception e) {
             throw new FalconException(e);

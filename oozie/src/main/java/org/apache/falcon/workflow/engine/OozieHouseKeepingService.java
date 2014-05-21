@@ -28,14 +28,15 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service that cleans up artifacts that falcon dropped on hdfs for oozie's use.
  */
 public class OozieHouseKeepingService implements WorkflowEngineActionListener {
 
-    private static final Logger LOG = Logger.getLogger(OozieHouseKeepingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OozieHouseKeepingService.class);
 
     @Override
     public void beforeSchedule(Entity entity, String cluster) throws FalconException {
@@ -54,7 +55,7 @@ public class OozieHouseKeepingService implements WorkflowEngineActionListener {
         try {
             Cluster cluster = EntityUtil.getEntity(EntityType.CLUSTER, clusterName);
             Path entityPath = EntityUtil.getBaseStagingPath(cluster, entity);
-            LOG.info("Deleting entity path " + entityPath + " on cluster " + clusterName);
+            LOG.info("Deleting entity path {} on cluster {}", entityPath, clusterName);
 
             Configuration conf = ClusterHelper.getConfiguration(cluster);
             FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);

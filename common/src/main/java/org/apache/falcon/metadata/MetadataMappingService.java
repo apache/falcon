@@ -37,7 +37,8 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.service.ConfigurationChangeListener;
 import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Properties;
@@ -48,7 +49,7 @@ import java.util.Set;
  */
 public class MetadataMappingService implements FalconService, ConfigurationChangeListener {
 
-    private static final Logger LOG = Logger.getLogger(MetadataMappingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetadataMappingService.class);
 
     /**
      * Constance for the service name.
@@ -77,13 +78,13 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
         graph = initializeGraphDB();
         createIndicesForVertexKeys();
         // todo - create Edge Cardinality Constraints
-        LOG.info("Initialized graph db: " + graph);
+        LOG.info("Initialized graph db: {}", graph);
 
         vertexIndexedKeys = getIndexableGraph().getIndexedKeys(Vertex.class);
-        LOG.info("Init vertex property keys: " + vertexIndexedKeys);
+        LOG.info("Init vertex property keys: {}", vertexIndexedKeys);
 
         edgeIndexedKeys = getIndexableGraph().getIndexedKeys(Edge.class);
-        LOG.info("Init edge property keys: " + edgeIndexedKeys);
+        LOG.info("Init edge property keys: {}", edgeIndexedKeys);
 
         boolean preserveHistory = Boolean.valueOf(StartupProperties.get().getProperty(
                 "falcon.graph.preserve.history", "false"));
@@ -185,7 +186,7 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
     @Override
     public void onAdd(Entity entity) throws FalconException {
         EntityType entityType = entity.getEntityType();
-        LOG.info("Adding lineage for entity: " + entity.getName() + ", type: " + entityType);
+        LOG.info("Adding lineage for entity: {}, type: {}", entity.getName(), entityType);
 
         switch (entityType) {
         case CLUSTER:
@@ -216,7 +217,7 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
     @Override
     public void onChange(Entity oldEntity, Entity newEntity) throws FalconException {
         EntityType entityType = newEntity.getEntityType();
-        LOG.info("Updating lineage for entity: " + newEntity.getName() + ", type: " + entityType);
+        LOG.info("Updating lineage for entity: {}, type: {}", newEntity.getName(), entityType);
 
         switch (entityType) {
         case CLUSTER:
@@ -254,12 +255,12 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
                                                String logDir) throws FalconException {
         String lineageFile = LineageRecorder.getFilePath(logDir, entityName);
 
-        LOG.info("Parsing lineage metadata from: " + lineageFile);
+        LOG.info("Parsing lineage metadata from: {}", lineageFile);
         Map<String, String> lineageMetadata = LineageRecorder.parseLineageMetadata(lineageFile);
 
         EntityOperations entityOperation = EntityOperations.valueOf(operation);
 
-        LOG.info("Adding lineage for entity: " + entityName + ", operation: " + operation);
+        LOG.info("Adding lineage for entity: {}, operation: {}", entityName, operation);
         switch (entityOperation) {
         case GENERATE:
             onProcessInstanceAdded(lineageMetadata);
@@ -285,12 +286,12 @@ public class MetadataMappingService implements FalconService, ConfigurationChang
     }
 
     private void onFeedInstanceReplicated(Map<String, String> lineageMetadata) {
-        LOG.info("Adding replicated feed instance: " + lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
+        LOG.info("Adding replicated feed instance: {}", lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
         // todo - tbd
     }
 
     private void onFeedInstanceEvicted(Map<String, String> lineageMetadata) {
-        LOG.info("Adding evicted feed instance: " + lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
+        LOG.info("Adding evicted feed instance: {}", lineageMetadata.get(LineageArgs.NOMINAL_TIME.getOptionName()));
         // todo - tbd
     }
 }

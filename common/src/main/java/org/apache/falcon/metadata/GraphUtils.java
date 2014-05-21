@@ -23,7 +23,8 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONWriter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,18 +34,18 @@ import java.io.OutputStream;
  */
 public final class GraphUtils {
 
-    private static final Logger LOG = Logger.getLogger(GraphUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphUtils.class);
 
     private GraphUtils() {
     }
 
     public static void dumpToLog(final Graph graph) {
-        LOG.debug("Vertices of " + graph);
+        LOG.debug("Vertices of {}", graph);
         for (Vertex vertex : graph.getVertices()) {
             LOG.debug(vertexString(vertex));
         }
 
-        LOG.debug("Edges of " + graph);
+        LOG.debug("Edges of {}", graph);
         for (Edge edge : graph.getEdges()) {
             LOG.debug(edgeString(edge));
         }

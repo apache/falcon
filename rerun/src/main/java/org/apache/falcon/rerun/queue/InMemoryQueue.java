@@ -22,7 +22,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.event.RerunEventFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import java.util.concurrent.DelayQueue;
  * @param <T>
  */
 public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
-    public static final Logger LOG = Logger.getLogger(DelayedQueue.class);
+    public static final Logger LOG = LoggerFactory.getLogger(DelayedQueue.class);
 
     protected DelayQueue<T> delayQueue = new DelayQueue<T>();
     private final File serializeFilePath;
@@ -47,7 +48,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
     public boolean offer(T event) {
         boolean flag = delayQueue.offer(event);
         beforeRetry(event);
-        LOG.debug("Enqueued Message:" + event.toString());
+        LOG.debug("Enqueued Message: {}", event.toString());
         return flag;
     }
 
@@ -56,7 +57,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
         T event;
         try {
             event = delayQueue.take();
-            LOG.debug("Dequeued Message:" + event.toString());
+            LOG.debug("Dequeued Message: {}", event.toString());
             afterRetry(event);
         } catch (InterruptedException e) {
             throw new FalconException(e);
@@ -90,9 +91,8 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
             out.newLine();
             out.close();
         } catch (IOException e) {
-            LOG.warn("Unable to write entry for process-instance: "
-                            + event.getEntityName() + ":"
-                            + event.getInstance(), e);
+            LOG.warn("Unable to write entry for process-instance: {}:{}",
+                            event.getEntityName(), event.getInstance(), e);
         } finally {
             IOUtils.closeQuietly(out);
         }
@@ -107,14 +107,14 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
     private void afterRetry(T event) {
         File retryFile = getRetryFile(serializeFilePath, event);
         if (!retryFile.exists()) {
-            LOG.warn("Rerun file deleted or renamed for process-instance: "
-                    + event.getEntityName() + ":" + event.getInstance());
+            LOG.warn("Rerun file deleted or renamed for process-instance: {}:{}",
+                    event.getEntityName(), event.getInstance());
             GenericAlert.alertRetryFailed(event.getEntityType(), event.getEntityName(), event.getInstance(),
                     event.getWfId(), event.getWorkflowUser(), Integer.toString(event.getRunId()),
                     "Rerun file deleted or renamed for process-instance:");
         } else {
             if (!retryFile.delete()) {
-                LOG.warn("Unable to remove rerun file " + event.getWfId());
+                LOG.warn("Unable to remove rerun file {}", event.getWfId());
                 retryFile.deleteOnExit();
             }
         }
@@ -135,7 +135,7 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
                         rerunEvents.add(event);
                     }
                 } catch (Exception e) {
-                    LOG.warn("Not able to read rerun entry " + rerunFile.getAbsolutePath(), e);
+                    LOG.warn("Not able to read rerun entry {}", rerunFile.getAbsolutePath(), e);
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }

@@ -25,7 +25,8 @@ import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for handling reruns.
@@ -35,8 +36,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractRerunHandler<T extends RerunEvent, M extends DelayedQueue<T>> {
 
-    protected static final Logger LOG = Logger
-            .getLogger(LateRerunHandler.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(LateRerunHandler.class);
     protected M delayQueue;
     private AbstractWorkflowEngine wfEngine;
 

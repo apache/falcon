@@ -26,14 +26,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.log4j.Logger;
 
 /**
  * Driver for running Falcon as a standalone server with embedded jetty server.
  */
 public final class Main {
-    private static final Logger LOG = Logger.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
     private static final String APP_PATH = "app";
     private static final String APP_PORT = "port";
 
@@ -76,7 +77,7 @@ public final class Main {
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
             int mqport = Integer.valueOf(System.getProperty("falcon.embeddedmq.port", "61616"));
-            LOG.info("Starting activemq at port " + mqport + " with data dir " + dataDir);
+            LOG.info("Starting ActiveMQ at port {} with data dir {}", mqport, dataDir);
 
             BrokerService broker = new BrokerService();
             broker.setUseJmx(false);

@@ -19,10 +19,11 @@
 package org.apache.falcon.aspect;
 
 import org.apache.falcon.util.ResourcesReflectionUtil;
-import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ import java.util.Map;
 @Aspect
 public abstract class AbstractFalconAspect {
 
-    private static final Logger LOG = Logger.getLogger(AbstractFalconAspect.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractFalconAspect.class);
 
     @Around("@annotation(org.apache.falcon.monitors.Monitored)")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -74,8 +75,7 @@ public abstract class AbstractFalconAspect {
         Map<String, String> dimensions = new HashMap<String, String>();
 
         if (ResourcesReflectionUtil.getResourceDimensionsName(methodName) == null) {
-            LOG.warn("Class for method name: " + methodName
-                    + " is not added to ResourcesReflectionUtil");
+            LOG.warn("Class for method name: {} is not added to ResourcesReflectionUtil", methodName);
         } else {
             for (Map.Entry<Integer, String> param : ResourcesReflectionUtil
                     .getResourceDimensionsName(methodName).entrySet()) {

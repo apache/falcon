@@ -18,31 +18,6 @@
 
 package org.apache.falcon.retention;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TimeZone;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
@@ -68,7 +43,32 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.jsp.el.ELException;
+import javax.servlet.jsp.el.ExpressionEvaluator;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Feed Evictor is called only if the retention policy that applies
@@ -76,7 +76,7 @@ import org.apache.log4j.Logger;
  */
 public class FeedEvictor extends Configured implements Tool {
 
-    private static final Logger LOG = Logger.getLogger(FeedEvictor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeedEvictor.class);
 
     private static final ExpressionEvaluator EVALUATOR = new ExpressionEvaluatorImpl();
     private static final ExpressionHelper RESOLVER = ExpressionHelper.get();
@@ -98,7 +98,7 @@ public class FeedEvictor extends Configured implements Tool {
         Configuration conf = new Configuration();
         Path confPath = new Path("file:///" + System.getProperty("oozie.action.conf.xml"));
 
-        LOG.info(confPath + " found ? " + confPath.getFileSystem(conf).exists(confPath));
+        LOG.info("{} found ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
         int ret = ToolRunner.run(conf, new FeedEvictor(), args);
         if (ret != 0) {
@@ -123,9 +123,8 @@ public class FeedEvictor extends Configured implements Tool {
         String logFile = cmd.getOptionValue("logFile");
         String feedStorageType = cmd.getOptionValue("falconFeedStorageType");
 
-        LOG.info("Applying retention on " + feedPattern + " type: " + retentionType
-                + ", Limit: " + retentionLimit + ", timezone: " + timeZone
-                + ", frequency: " + frequency + ", storage" + feedStorageType);
+        LOG.info("Applying retention on {} type: {}, Limit: {}, timezone: {}, frequency: {}, storage: {}",
+                feedPattern, retentionType, retentionLimit, timeZone, frequency, feedStorageType);
 
         Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
         evict(storage, retentionLimit, timeZone);
@@ -166,7 +165,7 @@ public class FeedEvictor extends Configured implements Tool {
         Path normalizedPath = new Path(feedPath);
         FileSystem fs = normalizedPath.getFileSystem(getConf());
         feedPath = normalizedPath.toUri().getPath();
-        LOG.info("Normalized path : " + feedPath);
+        LOG.info("Normalized path: {}", feedPath);
 
         Pair<Date, Date> range = getDateRange(retentionLimit);
         String dateMask = getDateFormatInPath(feedPath);
@@ -199,14 +198,12 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private void logInstancePaths(Path path) throws IOException {
-        LOG.info("Writing deleted instances to path " + path);
+        LOG.info("Writing deleted instances to path {}", path);
         FileSystem logfs = path.getFileSystem(getConf());
         OutputStream out = logfs.create(path);
         out.write(instancePaths.toString().getBytes());
         out.close();
-        if (LOG.isDebugEnabled()) {
-            debug(logfs, path);
-        }
+        debug(logfs, path);
     }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
@@ -229,8 +226,8 @@ public class FeedEvictor extends Configured implements Tool {
         for (FileStatus file : files) {
             Date date = getDate(new Path(file.getPath().toUri().getPath()),
                     inPath, dateMask, timeZone);
-            LOG.debug("Considering " + file.getPath().toUri().getPath());
-            LOG.debug("Date : " + date);
+            LOG.debug("Considering {}", file.getPath().toUri().getPath());
+            LOG.debug("Date: {}", date);
             if (date != null && !isDateInRange(date, start)) {
                 toBeDeleted.add(new Path(file.getPath().toUri().getPath()));
             }
@@ -256,7 +253,7 @@ public class FeedEvictor extends Configured implements Tool {
             feedBasePath = feedBasePath.replaceAll(Pattern.quote(var), "*");
             matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
         }
-        LOG.info("Searching for " + feedBasePath);
+        LOG.info("Searching for {}", feedBasePath);
         return fs.globStatus(new Path(feedBasePath));
     }
 
@@ -278,17 +275,17 @@ public class FeedEvictor extends Configured implements Tool {
 
         String errArg = file + "(" + inMask + ")";
         if (map.isEmpty()) {
-            LOG.warn("No date present in " + errArg);
+            LOG.warn("No date present in {}", errArg);
             return null;
         }
 
-        String date = "";
+        StringBuilder date = new StringBuilder();
         int ordinal = 0;
         for (VARS var : map.keySet()) {
             if (ordinal++ == var.ordinal()) {
-                date += map.get(var);
+                date.append(map.get(var));
             } else {
-                LOG.warn("Prior element to " + var + " is missing " + errArg);
+                LOG.warn("Prior element to {} is missing {}", var, errArg);
                 return null;
             }
         }
@@ -297,9 +294,9 @@ public class FeedEvictor extends Configured implements Tool {
             DateFormat dateFormat = new SimpleDateFormat(FORMAT.
                     substring(0, date.length()));
             dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
-            return dateFormat.parse(date);
+            return dateFormat.parse(date.toString());
         } catch (ParseException e) {
-            LOG.warn("Unable to parse date : " + date + ", " + errArg);
+            LOG.warn("Unable to parse date: {}, {}", date, errArg);
             return null;
         }
     }
@@ -326,7 +323,7 @@ public class FeedEvictor extends Configured implements Tool {
 
     private void deleteInstance(FileSystem fs, Path path, Path feedBasePath) throws IOException {
         if (fs.delete(path, true)) {
-            LOG.info("Deleted instance :" + path);
+            LOG.info("Deleted instance: {}", path);
         }else{
             throw new IOException("Unable to delete instance: " + path);
         }
@@ -337,8 +334,8 @@ public class FeedEvictor extends Configured implements Tool {
         ByteArrayOutputStream writer = new ByteArrayOutputStream();
         InputStream instance = fs.open(outPath);
         IOUtils.copyBytes(instance, writer, 4096, true);
-        LOG.debug("Instance Paths copied to " + outPath);
-        LOG.debug("Written " + writer);
+        LOG.debug("Instance Paths copied to {}", outPath);
+        LOG.debug("Written {}", writer);
     }
 
     private CommandLine getCommand(String[] args) throws org.apache.commons.cli.ParseException {
@@ -382,8 +379,8 @@ public class FeedEvictor extends Configured implements Tool {
     private void evictTable(CatalogStorage storage, String retentionLimit, String timeZone)
         throws Exception {
 
-        LOG.info("Applying retention on " + storage.getTable()
-                + ", Limit: " + retentionLimit + ", timezone: " + timeZone);
+        LOG.info("Applying retention on {}, Limit: {}, timezone: {}",
+                storage.getTable(), retentionLimit, timeZone);
 
         // get sorted date partition keys and values
         List<String> datedPartKeys = new ArrayList<String>();
@@ -562,13 +559,13 @@ public class FeedEvictor extends Configured implements Tool {
 
     private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {
         if (feedBasePath.equals(parent)) {
-            LOG.info("Not deleting feed base path:" + parent);
+            LOG.info("Not deleting feed base path: {}", parent);
         } else {
             FileStatus[] files = fs.listStatus(parent);
             if (files != null && files.length == 0) {
-                LOG.info("Parent path: " + parent + " is empty, deleting path");
+                LOG.info("Parent path: {} is empty, deleting path", parent);
                 if (fs.delete(parent, true)) {
-                    LOG.info("Deleted empty dir: " + parent);
+                    LOG.info("Deleted empty dir: {}", parent);
                 } else {
                     throw new IOException("Unable to delete parent path:" + parent);
                 }

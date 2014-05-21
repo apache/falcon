@@ -25,7 +25,8 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Properties;
@@ -37,7 +38,7 @@ import java.util.Properties;
  */
 public class AuthenticationInitializationService implements FalconService {
 
-    private static final Logger LOG = Logger.getLogger(AuthenticationInitializationService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuthenticationInitializationService.class);
 
     /**
      * Constant for the configuration property that indicates the prefix.
@@ -93,8 +94,7 @@ public class AuthenticationInitializationService implements FalconService {
             UserGroupInformation.setConfiguration(conf);
             UserGroupInformation.loginUserFromKeytab(principal, keytabFilePath);
 
-            LOG.info("Got Kerberos ticket, keytab: " + keytabFilePath
-                    + ", Falcon principal principal: " + principal);
+            LOG.info("Got Kerberos ticket, keytab: {}, Falcon principal: {}", keytabFilePath, principal);
         } catch (Exception ex) {
             throw new FalconException("Could not initialize " + getName()
                     + ": " + ex.getMessage(), ex);

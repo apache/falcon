@@ -19,7 +19,8 @@
 package org.apache.falcon.util;
 
 import org.apache.falcon.FalconException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class RuntimeProperties extends ApplicationProperties {
 
-    private static final Logger LOG = Logger.getLogger(RuntimeProperties.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RuntimeProperties.class);
 
     private static final String PROPERTY_FILE = "runtime.properties";
 

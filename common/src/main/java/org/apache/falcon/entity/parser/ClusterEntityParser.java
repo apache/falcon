@@ -39,14 +39,15 @@ import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parser that parses cluster entity definition.
  */
 public class ClusterEntityParser extends EntityParser<Cluster> {
 
-    private static final Logger LOG = Logger.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessEntityParser.class);
 
     public ClusterEntityParser() {
         super(EntityType.CLUSTER);
@@ -87,14 +88,14 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
     private void validateReadInterface(Cluster cluster) throws ValidationException {
         final String readOnlyStorageUrl = ClusterHelper.getReadOnlyStorageUrl(cluster);
-        LOG.info("Validating read interface: " + readOnlyStorageUrl);
+        LOG.info("Validating read interface: {}", readOnlyStorageUrl);
 
         validateFileSystem(cluster, readOnlyStorageUrl);
     }
 
     private void validateWriteInterface(Cluster cluster) throws ValidationException {
         final String writeStorageUrl = ClusterHelper.getStorageUrl(cluster);
-        LOG.info("Validating write interface: " + writeStorageUrl);
+        LOG.info("Validating write interface: {}", writeStorageUrl);
 
         validateFileSystem(cluster, writeStorageUrl);
     }
@@ -123,7 +124,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
     private void validateExecuteInterface(Cluster cluster) throws ValidationException {
         String executeUrl = ClusterHelper.getMREndPoint(cluster);
-        LOG.info("Validating execute interface: " + executeUrl);
+        LOG.info("Validating execute interface: {}", executeUrl);
 
         try {
             HadoopClientFactory.validateJobClient(executeUrl);
@@ -134,7 +135,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
     private void validateWorkflowInterface(Cluster cluster) throws ValidationException {
         final String workflowUrl = ClusterHelper.getOozieUrl(cluster);
-        LOG.info("Validating workflow interface: " + workflowUrl);
+        LOG.info("Validating workflow interface: {}", workflowUrl);
 
         try {
             if (!WorkflowEngineFactory.getWorkflowEngine().isAlive(cluster)) {
@@ -149,7 +150,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         final String messagingUrl = ClusterHelper.getMessageBrokerUrl(cluster);
         final String implementation = StartupProperties.get().getProperty(
                 "broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory");
-        LOG.info("Validating messaging interface: " + messagingUrl + ", implementation: " + implementation);
+        LOG.info("Validating messaging interface: {}, implementation: {}", messagingUrl, implementation);
 
         try {
             @SuppressWarnings("unchecked")
@@ -173,12 +174,12 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         // continue validation only if a catalog service is provided
         final Interface catalogInterface = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY);
         if (catalogInterface == null) {
-            LOG.info("Catalog service is not enabled for cluster: " + cluster.getName());
+            LOG.info("Catalog service is not enabled for cluster: {}", cluster.getName());
             return;
         }
 
         final String catalogUrl = catalogInterface.getEndpoint();
-        LOG.info("Validating catalog registry interface: " + catalogUrl);
+        LOG.info("Validating catalog registry interface: {}", catalogUrl);
 
         try {
             String metaStorePrincipal = null;

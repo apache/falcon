@@ -23,7 +23,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.tools.DistCp;
 import org.apache.hadoop.tools.DistCpOptions;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -34,7 +35,7 @@ import java.io.IOException;
  */
 public class CustomReplicator extends DistCp {
 
-    private static final Logger LOG = Logger.getLogger(CustomReplicator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CustomReplicator.class);
 
     /**
      * Public Constructor. Creates DistCp object with specified input-parameters.
@@ -54,10 +55,9 @@ public class CustomReplicator extends DistCp {
         FilteredCopyListing copyListing = new FilteredCopyListing(job.getConfiguration(),
                 job.getCredentials());
         copyListing.buildListing(fileListingPath, inputOptions);
-        LOG.info("Number of paths considered for copy: " + copyListing.getNumberOfPaths());
-        LOG.info("Number of bytes considered for copy: " + copyListing.getBytesToCopy()
-                + " (Actual number of bytes copied depends on whether any files are "
-                + "skipped or overwritten.)");
+        LOG.info("Number of paths considered for copy: {}", copyListing.getNumberOfPaths());
+        LOG.info("Number of bytes considered for copy: {} (Actual number of bytes copied depends on whether "
+            + "any files are skipped or overwritten)", copyListing.getBytesToCopy());
         return fileListingPath;
     }
 }
