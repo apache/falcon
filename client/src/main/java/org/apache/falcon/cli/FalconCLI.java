@@ -25,6 +25,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -37,6 +38,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -89,6 +92,7 @@ public class FalconCLI {
     public static final String SOURCECLUSTER_OPT = "sourceClusters";
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
+    public static final String LIFECYCLE_OPT = "lifecycle";
 
     // Graph Commands
     public static final String GRAPH_CMD = "graph";
@@ -126,7 +130,6 @@ public class FalconCLI {
                                                           + "' option",
                                                   "custom headers for Falcon web services can be specified using '-D"
                                                           + FalconClient.WS_HEADER_PREFIX + "NAME=VALUE'", };
-
     /**
      * Run a CLI programmatically.
      * <p/>
@@ -213,29 +216,31 @@ public class FalconCLI {
         String colo = commandLine.getOptionValue(COLO_OPT);
         String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
         String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
+        List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
 
         colo = getColo(colo);
 
         validateInstanceCommands(optionsList, entity, type, start, colo);
 
         if (optionsList.contains(RUNNING_OPT)) {
-            result = client.getRunningInstances(type, entity, colo);
+            result = client.getRunningInstances(type, entity, colo, lifeCycles);
         } else if (optionsList.contains(STATUS_OPT)) {
-            result = client.getStatusOfInstances(type, entity, start, end, colo);
+            result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(SUMMARY_OPT)) {
-            result = client.getSummaryOfInstances(type, entity, start, end, colo);
+            result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
-            result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(SUSPEND_OPT)) {
-            result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RESUME_OPT)) {
-            result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RERUN_OPT)) {
-            result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters);
+            result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters,
+                    lifeCycles);
         } else if (optionsList.contains(CONTINUE_OPT)) {
-            result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters);
+            result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(LOG_OPT)) {
-            result = client.getLogsOfInstances(type, entity, start, end, colo, runid);
+            result = client.getLogsOfInstances(type, entity, start, end, colo, runid, lifeCycles);
         } else {
             throw new FalconCLIException("Invalid command");
         }
@@ -579,9 +584,14 @@ public class FalconCLI {
         Option entityType = new Option(ENTITY_TYPE_OPT, true,
                 "Entity type, can be feed or process xml");
         Option entityName = new Option(ENTITY_NAME_OPT, true,
-                "Entity type, can be feed or process xml");
+                "Entity name, can be feed or process name");
         Option colo = new Option(COLO_OPT, true,
                 "Colo on which the cmd has to be executed");
+        Option lifecycle = new Option(LIFECYCLE_OPT,
+                true,
+                "describes life cycle of entity , for feed it can be replication/retention "
+                       + "and for process it can be execution");
+
 
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
@@ -594,6 +604,7 @@ public class FalconCLI {
         instanceOptions.addOption(clusters);
         instanceOptions.addOption(sourceClusters);
         instanceOptions.addOption(colo);
+        instanceOptions.addOption(lifecycle);
 
         return instanceOptions;
     }
@@ -754,5 +765,22 @@ public class FalconCLI {
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
+    }
+
+    public static List<LifeCycle> getLifeCycle(String lifeCycleValue) throws FalconCLIException {
+
+        if (lifeCycleValue != null) {
+            String[] lifeCycleValues = lifeCycleValue.split(",");
+            List<LifeCycle> lifeCycles = new ArrayList<LifeCycle>();
+            try {
+                for (String lifeCycle : lifeCycleValues) {
+                    lifeCycles.add(LifeCycle.valueOf(lifeCycle.toUpperCase().trim()));
+                }
+            } catch (IllegalArgumentException e) {
+                throw new FalconCLIException("Invalid life cycle values: " + lifeCycles, e);
+            }
+            return lifeCycles;
+        }
+        return null;
     }
 }

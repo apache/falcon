@@ -20,12 +20,16 @@ package org.apache.falcon.workflow.engine;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Tag;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.*;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityGraph;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.resource.APIResult;
@@ -36,20 +40,39 @@ import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.OozieUtils;
+import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.falcon.workflow.WorkflowBuilder;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.oozie.client.*;
+import org.apache.oozie.client.BundleJob;
+import org.apache.oozie.client.CoordinatorAction;
+import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
+import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.OozieClientException;
+import org.apache.oozie.client.ProxyOozieClient;
+import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.rest.RestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Workflow engine which uses oozies APIs.
@@ -63,7 +86,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
     private static final List<WorkflowJob.Status> WF_KILL_PRECOND =
         Arrays.asList(WorkflowJob.Status.PREP, WorkflowJob.Status.RUNNING, WorkflowJob.Status.SUSPENDED,
-            WorkflowJob.Status.FAILED);
+                WorkflowJob.Status.FAILED);
     private static final List<WorkflowJob.Status> WF_SUSPEND_PRECOND = Arrays.asList(WorkflowJob.Status.RUNNING);
     private static final List<WorkflowJob.Status> WF_RESUME_PRECOND = Arrays.asList(WorkflowJob.Status.SUSPENDED);
     private static final List<WorkflowJob.Status> WF_RERUN_PRECOND =
@@ -377,7 +400,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public InstancesResult getRunningInstances(Entity entity) throws FalconException {
+    public InstancesResult getRunningInstances(Entity entity, List<LifeCycle> lifeCycles) throws FalconException {
         try {
             WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
@@ -385,7 +408,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             String[] wfNames = builder.getWorkflowNames();
             List<String> coordNames = new ArrayList<String>();
             for (String wfName : wfNames) {
-                if (EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString().equals(wfName)) {
+                if (!isCoordApplicable(wfName, lifeCycles)) {
                     continue;
                 }
                 coordNames.add(wfName);
@@ -420,38 +443,41 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     @Override
-    public InstancesResult killInstances(Entity entity, Date start, Date end, Properties props) throws FalconException {
-        return doJobAction(JobAction.KILL, entity, start, end, props);
+    public InstancesResult killInstances(Entity entity, Date start, Date end,
+                                         Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.KILL, entity, start, end, props, lifeCycles);
     }
 
     @Override
-    public InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException {
-        return doJobAction(JobAction.RERUN, entity, start, end, props);
+    public InstancesResult reRunInstances(Entity entity, Date start, Date end,
+                                          Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.RERUN, entity, start, end, props, lifeCycles);
     }
 
     @Override
-    public InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException {
-        return doJobAction(JobAction.SUSPEND, entity, start, end, props);
+    public InstancesResult suspendInstances(Entity entity, Date start, Date end,
+                                            Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.SUSPEND, entity, start, end, props, lifeCycles);
     }
 
     @Override
-    public InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException {
-        return doJobAction(JobAction.RESUME, entity, start, end, props);
+    public InstancesResult resumeInstances(Entity entity, Date start, Date end,
+                                           Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.RESUME, entity, start, end, props, lifeCycles);
     }
 
     @Override
-    public InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException {
+    public InstancesResult getStatus(Entity entity, Date start, Date end,
+                                     List<LifeCycle> lifeCycles) throws FalconException {
 
-        return doJobAction(JobAction.STATUS, entity, start, end, null);
+        return doJobAction(JobAction.STATUS, entity, start, end, null, lifeCycles);
     }
 
     @Override
-    public InstancesSummaryResult getSummary(Entity entity, Date start, Date end) throws FalconException {
+    public InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
+                                             List<LifeCycle> lifeCycles) throws FalconException {
 
-        return doSummaryJobAction(entity, start, end, null);
+        return doSummaryJobAction(entity, start, end, null, lifeCycles);
     }
 
     private static enum JobAction {
@@ -466,9 +492,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end, Properties props)
-        throws FalconException {
-        Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end);
+    private InstancesResult doJobAction(JobAction action, Entity entity, Date start, Date end,
+                                        Properties props, List<LifeCycle> lifeCycles) throws FalconException {
+        Map<String, List<CoordinatorAction>> actionsMap = getCoordActions(entity, start, end, lifeCycles);
         List<String> clusterList = getIncludedClusters(props, FALCON_INSTANCE_ACTION_CLUSTERS);
         List<String> sourceClusterList = getIncludedClusters(props, FALCON_INSTANCE_SOURCE_CLUSTERS);
         APIResult.Status overallStatus = APIResult.Status.SUCCEEDED;
@@ -522,8 +548,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return instancesResult;
     }
 
-    private InstancesSummaryResult doSummaryJobAction(Entity entity, Date start, Date end, Properties props)
-        throws FalconException {
+    private InstancesSummaryResult doSummaryJobAction(Entity entity, Date start,
+                                                      Date end, Properties props,
+                                                      List<LifeCycle> lifeCycles) throws FalconException {
 
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
         List<InstanceSummary> instances = new ArrayList<InstanceSummary>();
@@ -538,7 +565,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             List<BundleJob> bundles = entry.getValue();
             ProxyOozieClient client = OozieClientFactory.get(cluster);
-            List<CoordinatorJob> applicableCoords = getApplicableCoords(entity, client, start, end, bundles);
+            List<CoordinatorJob> applicableCoords = getApplicableCoords(entity, client, start, end,
+                    bundles, lifeCycles);
             long unscheduledInstances = 0;
             boolean isLastCoord = false;
 
@@ -550,7 +578,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 Date iterEnd = (coord.getLastActionTime() != null && coord.getLastActionTime().before(end)
                     ? coord.getLastActionTime() : end);
 
-                if (i == (applicableCoords.size() - 1)) {
+                if (i == 0) {
                     isLastCoord = true;
                 }
 
@@ -741,8 +769,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    protected Map<String, List<CoordinatorAction>> getCoordActions(Entity entity, Date start, Date end)
-        throws FalconException {
+    protected Map<String, List<CoordinatorAction>> getCoordActions(Entity entity, Date start, Date end,
+                                                                   List<LifeCycle> lifeCycles) throws FalconException {
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
         Map<String, List<CoordinatorAction>> actionsMap = new HashMap<String, List<CoordinatorAction>>();
 
@@ -750,8 +778,12 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             String cluster = entry.getKey();
             List<BundleJob> bundles = entry.getValue();
             ProxyOozieClient client = OozieClientFactory.get(cluster);
-            List<CoordinatorJob> applicableCoords = getApplicableCoords(entity, client, start, end, bundles);
+            List<CoordinatorJob> applicableCoords =
+                getApplicableCoords(entity, client, start, end, bundles, lifeCycles);
             List<CoordinatorAction> actions = new ArrayList<CoordinatorAction>();
+            int maxRetentionInstancesCount =
+                Integer.valueOf(RuntimeProperties.get().getProperty("retention.instances.displaycount", "2"));
+            int retentionInstancesCount = 0;
 
             for (CoordinatorJob coord : applicableCoords) {
                 Date nextMaterializedTime = coord.getNextMaterializedTime();
@@ -759,33 +791,51 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     continue;
                 }
 
+                boolean retentionCoord  = isRetentionCoord(coord);
                 Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
                 Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
-                Date iterEnd = (nextMaterializedTime.before(end) ? nextMaterializedTime : end);
+                Date iterEnd = ((nextMaterializedTime.before(end) || retentionCoord) ? nextMaterializedTime : end);
 
-                while (!iterStart.after(iterEnd)) {
-                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterStart);
-                    String actionId = coord.getId() + "@" + sequence;
-
-                    try {
-                        CoordinatorAction coordActionInfo = client.getCoordActionInfo(actionId);
-                        if (coordActionInfo != null) {
-                            actions.add(coordActionInfo);
+                while (iterStart.before(iterEnd)) {
+                    if (retentionCoord) {
+                        if (retentionInstancesCount >= maxRetentionInstancesCount) {
+                            break;
                         }
-                    } catch (OozieClientException e) {
-                        LOG.debug("Unable to get action for {}", actionId, e);
+                        retentionInstancesCount++;
                     }
 
-                    Calendar startCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
-                    startCal.setTime(iterStart);
-                    startCal.add(freq.getTimeUnit().getCalendarUnit(), Integer.valueOf((coord.getFrequency())));
-                    iterStart = startCal.getTime();
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterEnd);
+                    String actionId = coord.getId() + "@" + sequence;
+                    addCoordAction(client, actions, actionId);
+                    Calendar endCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
+                    endCal.setTime(iterEnd);
+                    endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+                    iterEnd = endCal.getTime();
                 }
             }
             actionsMap.put(cluster, actions);
         }
         return actionsMap;
+    }
+
+    private boolean isRetentionCoord(CoordinatorJob coord){
+        if (coord.getAppName().contains(LifeCycle.EVICTION.getTag().name())) {
+            return true;
+        }
+        return false;
+    }
+
+    private void addCoordAction(ProxyOozieClient client, List<CoordinatorAction> actions, String actionId) {
+        CoordinatorAction coordActionInfo = null;
+        try {
+            coordActionInfo = client.getCoordActionInfo(actionId);
+        } catch (OozieClientException e) {
+            LOG.debug("Unable to get action for " + actionId + " " + e.getMessage());
+        }
+        if (coordActionInfo != null) {
+            actions.add(coordActionInfo);
+        }
     }
 
     private Frequency createFrequency(String frequency, Timeunit timeUnit) {
@@ -814,15 +864,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     }
 
     private List<CoordinatorJob> getApplicableCoords(Entity entity, ProxyOozieClient client, Date start,
-                                                     Date end, List<BundleJob> bundles) throws FalconException {
-        String retentionCoordName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
+                                                     Date end, List<BundleJob> bundles,
+                                                     List<LifeCycle> lifeCycles) throws FalconException {
         List<CoordinatorJob> applicableCoords = new ArrayList<CoordinatorJob>();
         try {
             for (BundleJob bundle : bundles) {
                 List<CoordinatorJob> coords = client.getBundleJobInfo(bundle.getId()).getCoordinators();
                 for (CoordinatorJob coord : coords) {
                     // ignore coords in PREP state, not yet running and retention coord
-                    if (coord.getStatus() == Status.PREP || retentionCoordName.equals(coord.getAppName())) {
+
+                    if (coord.getStatus() == Status.PREP
+                            || !isCoordApplicable(coord.getAppName(), lifeCycles)) {
                         continue;
                     }
 
@@ -833,23 +885,33 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     }
                 }
             }
-            sortCoordsByStartTime(applicableCoords);
+            sortDescByStartTime(applicableCoords);
             return applicableCoords;
         } catch (OozieClientException e) {
             throw new FalconException(e);
         }
     }
 
-    protected void sortCoordsByStartTime(List<CoordinatorJob> consideredCoords) {
+    private boolean isCoordApplicable(String appName, List<LifeCycle> lifeCycles) {
+        for (LifeCycle lifeCycle : lifeCycles) {
+            if (appName.contains(lifeCycle.getTag().name())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void sortDescByStartTime(List<CoordinatorJob> consideredCoords) {
         Collections.sort(consideredCoords, new Comparator<CoordinatorJob>() {
             @Override
             public int compare(CoordinatorJob left, CoordinatorJob right) {
                 Date leftStart = left.getStartTime();
                 Date rightStart = right.getStartTime();
-                return leftStart.compareTo(rightStart);
+                return rightStart.compareTo(leftStart);
             }
         });
     }
+
 
     private boolean canUpdateBundle(Entity oldEntity, Entity newEntity, boolean wfUpdated) throws FalconException {
         return !wfUpdated && EntityUtil.equals(oldEntity, newEntity, BUNDLE_UPDATEABLE_PROPS);
@@ -1330,4 +1392,5 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             throw new FalconException(e);
         }
     }
+
 }

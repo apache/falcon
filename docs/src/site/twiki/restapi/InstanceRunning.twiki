@@ -10,7 +10,7 @@ Get a list of instances currently running for a given entity.
 ---++ Parameters
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
-
+   * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
 ---++ Results
 List of instances currently running.
 

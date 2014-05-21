@@ -18,6 +18,7 @@
 
 package org.apache.falcon.resource;
 
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 
@@ -25,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * This class provides RESTful API for the lifecycle management of the entity instances.
@@ -37,10 +39,12 @@ public class InstanceManager extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "running")
     @Override
-    public InstancesResult getRunningInstances(@PathParam("type") String type,
-                                               @PathParam("entity") String entity,
-                                               @QueryParam("colo") String colo) {
-        return super.getRunningInstances(type, entity, colo);
+    public InstancesResult getRunningInstances(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("entity") @PathParam("entity") String entity,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.getRunningInstances(type, entity, colo, lifeCycles);
     }
 
     @GET
@@ -52,8 +56,9 @@ public class InstanceManager extends AbstractInstanceManager {
                                      @Dimension("entity") @PathParam("entity") String entity,
                                      @Dimension("start-time") @QueryParam("start") String startStr,
                                      @Dimension("end-time") @QueryParam("end") String endStr,
-                                     @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.getStatus(type, entity, startStr, endStr, colo);
+                                     @Dimension("colo") @QueryParam("colo") String colo,
+                                     @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles);
     }
 
     @GET
@@ -64,8 +69,9 @@ public class InstanceManager extends AbstractInstanceManager {
                                      @Dimension("entity") @PathParam("entity") String entity,
                                      @Dimension("start-time") @QueryParam("start") String startStr,
                                      @Dimension("end-time") @QueryParam("end") String endStr,
-                                     @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.getSummary(type, entity, startStr, endStr, colo);
+                                     @Dimension("colo") @QueryParam("colo") String colo,
+                                     @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.getSummary(type, entity, startStr, endStr, colo, lifeCycles);
     }
 
     @GET
@@ -79,8 +85,9 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") String startStr,
             @Dimension("end-time") @QueryParam("end") String endStr,
             @Dimension("colo") @QueryParam("colo") String colo,
-            @Dimension("run-id") @QueryParam("runid") String runId) {
-        return super.getLogs(type, entity, startStr, endStr, colo, runId);
+            @Dimension("run-id") @QueryParam("runid") String runId,
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles);
     }
 
 
@@ -94,8 +101,9 @@ public class InstanceManager extends AbstractInstanceManager {
                                         @Dimension("entity") @PathParam("entity") String entity,
                                         @Dimension("start-time") @QueryParam("start") String startStr,
                                         @Dimension("end-time") @QueryParam("end") String endStr,
-                                        @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.killInstance(request, type, entity, startStr, endStr, colo);
+                                        @Dimension("colo") @QueryParam("colo") String colo,
+                                        @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.killInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
     }
 
     @POST
@@ -103,13 +111,15 @@ public class InstanceManager extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "suspend-instance")
     @Override
-    public InstancesResult suspendInstance(@Context HttpServletRequest request,
-                                           @Dimension("type") @PathParam("type") String type,
-                                           @Dimension("entity") @PathParam("entity") String entity,
-                                           @Dimension("start-time") @QueryParam("start") String startStr,
-                                           @Dimension("end-time") @QueryParam("end") String endStr,
-                                           @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.suspendInstance(request, type, entity, startStr, endStr, colo);
+    public InstancesResult suspendInstance(
+            @Context HttpServletRequest request,
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("entity") @PathParam("entity") String entity,
+            @Dimension("start-time") @QueryParam("start") String startStr,
+            @Dimension("end-time") @QueryParam("end") String endStr,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.suspendInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
     }
 
     @POST
@@ -122,8 +132,9 @@ public class InstanceManager extends AbstractInstanceManager {
                                           @Dimension("entity") @PathParam("entity") String entity,
                                           @Dimension("start-time") @QueryParam("start") String startStr,
                                           @Dimension("end-time") @QueryParam("end") String endStr,
-                                          @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.resumeInstance(request, type, entity, startStr, endStr, colo);
+                                          @Dimension("colo") @QueryParam("colo") String colo,
+                                          @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.resumeInstance(request, type, entity, startStr, endStr, colo, lifeCycles);
     }
 
     @POST
@@ -136,7 +147,8 @@ public class InstanceManager extends AbstractInstanceManager {
                                          @Dimension("start-time") @QueryParam("start") String startStr,
                                          @Dimension("end-time") @QueryParam("end") String endStr,
                                          @Context HttpServletRequest request,
-                                         @Dimension("colo") @QueryParam("colo") String colo) {
-        return super.reRunInstance(type, entity, startStr, endStr, request, colo);
+                                         @Dimension("colo") @QueryParam("colo") String colo,
+                                         @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.reRunInstance(type, entity, startStr, endStr, request, colo, lifeCycles);
     }
 }

@@ -11,6 +11,7 @@ Kill a currently running instance.
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
    * start start time of the entity.
+   * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
 
 ---++ Results
 Result of the kill operation.

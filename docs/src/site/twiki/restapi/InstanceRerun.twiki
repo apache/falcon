@@ -11,6 +11,7 @@ Rerun a specific instance of an entity.
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
    * start is the start time of the instance that you want to refer to
+   * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
 
 ---++ Results
 Results of the rerun command.

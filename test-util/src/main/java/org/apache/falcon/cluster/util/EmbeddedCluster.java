@@ -78,8 +78,6 @@ public class EmbeddedCluster {
 
     private static EmbeddedCluster createClusterAsUser(String name, boolean global) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
-        cluster.conf.set("jail.base", System.getProperty("hadoop.tmp.dir",
-                cluster.conf.get("hadoop.tmp.dir", "/tmp")));
         cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
 
         String hdfsUrl = cluster.conf.get("fs.default.name");

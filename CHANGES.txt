@@ -7,12 +7,14 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-   FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré via Shwetha GS)
+   FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré 
+   via Shwetha GS)
 
   OPTIMIZATIONS
 
   BUG FIXES
-
+   FALCON-240 Instance status from CLI on a feed doesn't give the retention details. 
+   (pavan kumar kolamuri via Shwetha GS)
 
 Release Version: 0.5-incubating
   INCOMPATIBLE CHANGES

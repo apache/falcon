@@ -21,6 +21,7 @@ package org.apache.falcon.resource.proxy;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.FalconRuntimException;
 import org.apache.falcon.FalconWebException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
@@ -75,14 +76,16 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "running")
     @Override
-    public InstancesResult getRunningInstances(@Dimension("entityType") @PathParam("type") final String type,
-                                               @Dimension("entityName") @PathParam("entity") final String entity,
-                                               @Dimension("colo") @QueryParam("colo") String colo) {
+    public InstancesResult getRunningInstances(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).
-                        invoke("getRunningInstances", type, entity, colo);
+                        invoke("getRunningInstances", type, entity, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -92,16 +95,18 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "instance-status")
     @Override
-    public InstancesResult getStatus(@Dimension("entityType") @PathParam("type") final String type,
-                                     @Dimension("entityName") @PathParam("entity") final String entity,
-                                     @Dimension("start-time") @QueryParam("start") final String startStr,
-                                     @Dimension("end-time") @QueryParam("end") final String endStr,
-                                     @Dimension("colo") @QueryParam("colo") final String colo) {
+    public InstancesResult getStatus(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Dimension("colo") @QueryParam("colo") final String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
-                        type, entity, startStr, endStr, colo);
+                        type, entity, startStr, endStr, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -111,16 +116,18 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "instance-summary")
     @Override
-    public InstancesSummaryResult getSummary(@Dimension("entityType") @PathParam("type") final String type,
-                                             @Dimension("entityName") @PathParam("entity") final String entity,
-                                             @Dimension("start-time") @QueryParam("start") final String startStr,
-                                             @Dimension("end-time") @QueryParam("end") final String endStr,
-                                             @Dimension("colo") @QueryParam("colo") final String colo) {
+    public InstancesSummaryResult getSummary(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Dimension("colo") @QueryParam("colo") final String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         return new InstanceSummaryProxy() {
             @Override
             protected InstancesSummaryResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getSummary",
-                        type, entity, startStr, endStr, colo);
+                        type, entity, startStr, endStr, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -136,12 +143,13 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") final String startStr,
             @Dimension("end-time") @QueryParam("end") final String endStr,
             @Dimension("colo") @QueryParam("colo") final String colo,
-            @Dimension("run-id") @QueryParam("runid") final String runId) {
+            @Dimension("run-id") @QueryParam("runid") final String runId,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getLogs",
-                        type, entity, startStr, endStr, colo, runId);
+                        type, entity, startStr, endStr, colo, runId, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -151,19 +159,21 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "kill-instance")
     @Override
-    public InstancesResult killInstance(@Context HttpServletRequest request,
-                                        @Dimension("entityType") @PathParam("type") final String type,
-                                        @Dimension("entityName") @PathParam("entity") final String entity,
-                                        @Dimension("start-time") @QueryParam("start") final String startStr,
-                                        @Dimension("end-time") @QueryParam("end") final String endStr,
-                                        @Dimension("colo") @QueryParam("colo") final String colo) {
+    public InstancesResult killInstance(
+            @Context HttpServletRequest request,
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Dimension("colo") @QueryParam("colo") final String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("killInstance",
-                        bufferedRequest, type, entity, startStr, endStr, colo);
+                        bufferedRequest, type, entity, startStr, endStr, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -173,18 +183,20 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "suspend-instance")
     @Override
-    public InstancesResult suspendInstance(@Context HttpServletRequest request,
-                                           @Dimension("entityType") @PathParam("type") final String type,
-                                           @Dimension("entityName") @PathParam("entity") final String entity,
-                                           @Dimension("start-time") @QueryParam("start") final String startStr,
-                                           @Dimension("end-time") @QueryParam("end") final String endStr,
-                                           @Dimension("colo") @QueryParam("colo") String colo) {
+    public InstancesResult suspendInstance(
+            @Context HttpServletRequest request,
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("suspendInstance",
-                        bufferedRequest, type, entity, startStr, endStr, colo);
+                        bufferedRequest, type, entity, startStr, endStr, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -194,19 +206,21 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "resume-instance")
     @Override
-    public InstancesResult resumeInstance(@Context HttpServletRequest request,
-                                          @Dimension("entityType") @PathParam("type") final String type,
-                                          @Dimension("entityName") @PathParam("entity") final String entity,
-                                          @Dimension("start-time") @QueryParam("start") final String startStr,
-                                          @Dimension("end-time") @QueryParam("end") final String endStr,
-                                          @Dimension("colo") @QueryParam("colo") String colo) {
+    public InstancesResult resumeInstance(
+            @Context HttpServletRequest request,
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("resumeInstance",
-                        bufferedRequest, type, entity, startStr, endStr, colo);
+                        bufferedRequest, type, entity, startStr, endStr, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }
@@ -216,19 +230,21 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "re-run-instance")
     @Override
-    public InstancesResult reRunInstance(@Dimension("entityType") @PathParam("type") final String type,
-                                         @Dimension("entityName") @PathParam("entity") final String entity,
-                                         @Dimension("start-time") @QueryParam("start") final String startStr,
-                                         @Dimension("end-time") @QueryParam("end") final String endStr,
-                                         @Context HttpServletRequest request,
-                                         @Dimension("colo") @QueryParam("colo") String colo) {
+    public InstancesResult reRunInstance(
+            @Dimension("entityType") @PathParam("type") final String type,
+            @Dimension("entityName") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String startStr,
+            @Dimension("end-time") @QueryParam("end") final String endStr,
+            @Context HttpServletRequest request,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("reRunInstance",
-                        type, entity, startStr, endStr, bufferedRequest, colo);
+                        type, entity, startStr, endStr, bufferedRequest, colo, lifeCycles);
             }
         }.execute(colo, type, entity);
     }

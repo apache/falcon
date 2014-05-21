@@ -58,7 +58,8 @@ public class JailedFileSystem extends FileSystem {
             throw new IOException("Incomplete Jail URI, no jail base: "+ name);
         }
         basePath = new Path(conf.get("jail.base", System.getProperty("hadoop.tmp.dir",
-                        conf.get("hadoop.tmp.dir", "/tmp"))) + "/jail-fs/" + base).toUri().getPath();
+                        System.getProperty("user.dir") + "/webapp/target/tmp-hadoop-"
+                                + System.getProperty("user.name"))) + "/jail-fs/" + base).toUri().getPath();
         this.uri = URI.create(name.getScheme()+"://"+name.getAuthority());
     }
 

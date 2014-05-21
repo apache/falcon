@@ -25,6 +25,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
+import org.apache.falcon.LifeCycle;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
@@ -54,6 +56,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -329,60 +332,59 @@ public class FalconClient {
         return sendListRequest(Entities.LIST, entityType);
     }
 
-    public String getRunningInstances(String type, String entity, String colo)
+    public String getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles)
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.RUNNING, type, entity, null, null,
-                null, null, colo);
+                null, null, colo, lifeCycles);
     }
 
     public String getStatusOfInstances(String type, String entity,
                                        String start, String end,
-                                       String colo) throws FalconCLIException {
+                                       String colo, List<LifeCycle> lifeCycles) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
-                null, null, colo);
+                null, null, colo, lifeCycles);
     }
 
     public String getSummaryOfInstances(String type, String entity,
-                                       String start, String end,
-                                       String colo) throws FalconCLIException {
+                                        String start, String end,
+                                        String colo, List<LifeCycle> lifeCycles) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end,
-                null, null, colo);
+                null, null, colo, lifeCycles);
     }
-
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public String killInstances(String type, String entity, String start,
                                 String end, String colo, String clusters,
-                                String sourceClusters)
+                                String sourceClusters, List<LifeCycle> lifeCycles)
         throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.KILL, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, null), null, colo);
+                getServletInputStream(clusters, sourceClusters, null), null, colo, lifeCycles);
     }
 
     public String suspendInstances(String type, String entity, String start,
                                    String end, String colo, String clusters,
-                                   String sourceClusters)
+                                   String sourceClusters, List<LifeCycle> lifeCycles)
         throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.SUSPEND, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, null), null, colo);
+                getServletInputStream(clusters, sourceClusters, null), null, colo, lifeCycles);
     }
 
     public String resumeInstances(String type, String entity, String start,
                                   String end, String colo, String clusters,
-                                  String sourceClusters)
+                                  String sourceClusters, List<LifeCycle> lifeCycles)
         throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.RESUME, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, null), null, colo);
+                getServletInputStream(clusters, sourceClusters, null), null, colo, lifeCycles);
     }
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public String rerunInstances(String type, String entity, String start,
                                  String end, String filePath, String colo,
-                                 String clusters, String sourceClusters)
+                                 String clusters, String sourceClusters, List<LifeCycle> lifeCycles)
         throws FalconCLIException, IOException {
 
         StringBuilder buffer = new StringBuilder();
@@ -401,25 +403,28 @@ public class FalconClient {
         }
         String temp = (buffer.length() == 0) ? null : buffer.toString();
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, temp), null, colo);
+                getServletInputStream(clusters, sourceClusters, temp), null, colo, lifeCycles);
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String rerunInstances(String type, String entity, String start,
-                                 String end, String colo, String clusters, String sourceClusters)
+                                 String end, String colo, String clusters, String sourceClusters,
+                                 List<LifeCycle> lifeCycles)
         throws FalconCLIException, UnsupportedEncodingException {
 
         return sendInstanceRequest(Instances.RERUN, type, entity, start, end,
-                getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo);
+                getServletInputStream(clusters, sourceClusters, "oozie.wf.rerun.failnodes=true\n"), null, colo,
+                lifeCycles);
     }
 
     public String getLogsOfInstances(String type, String entity, String start,
-                                     String end, String colo, String runId)
+                                     String end, String colo, String runId,
+                                     List<LifeCycle> lifeCycles)
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.LOG, type, entity, start, end,
-                null, runId, colo);
+                null, runId, colo, lifeCycles);
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String getThreadDump() throws FalconCLIException {
         return sendAdminRequest(AdminOperations.STACK);
@@ -558,7 +563,9 @@ public class FalconClient {
     //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
     private String sendInstanceRequest(Instances instances, String type,
                                        String entity, String start, String end, InputStream props,
-                                       String runid, String colo) throws FalconCLIException {
+                                       String runid, String colo,
+                                       List<LifeCycle> lifeCycles) throws FalconCLIException {
+        checkType(type);
         WebResource resource = service.path(instances.path).path(type)
                 .path(entity);
         if (start != null) {
@@ -572,6 +579,13 @@ public class FalconClient {
         }
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
+        }
+
+        if (lifeCycles != null) {
+            checkLifeCycleOption(lifeCycles, type);
+            for (LifeCycle lifeCycle : lifeCycles) {
+                resource = resource.queryParam("lifecycle", lifeCycle.toString());
+            }
         }
 
         ClientResponse clientResponse;
@@ -598,6 +612,30 @@ public class FalconClient {
 
     }
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
+
+    private void checkLifeCycleOption(List<LifeCycle> lifeCycles, String type) throws FalconCLIException {
+        if (lifeCycles != null && !lifeCycles.isEmpty()) {
+            EntityType entityType = EntityType.valueOf(type.toUpperCase().trim());
+            for (LifeCycle lifeCycle : lifeCycles) {
+                if (entityType != lifeCycle.getTag().getType()) {
+                    throw new FalconCLIException("Incorrect lifecycle: " + lifeCycle + "for given type: " + type);
+                }
+            }
+        }
+    }
+
+    protected void checkType(String type) throws FalconCLIException {
+        if (type == null || type.isEmpty()) {
+            throw new FalconCLIException("entity type is empty");
+        } else {
+            EntityType entityType = EntityType.valueOf(type.toUpperCase().trim());
+            if (entityType == EntityType.CLUSTER) {
+                throw new FalconCLIException(
+                        "Instance management functions don't apply to Cluster entities");
+            }
+        }
+    }
+
 
     private String sendAdminRequest(AdminOperations job)
         throws FalconCLIException {

@@ -37,7 +37,7 @@ public final class SchemaHelper {
         return tz.getID();
     }
 
-    private static DateFormat getDateFormat() {
+    public static DateFormat getDateFormat() {
         DateFormat dateFormat = new SimpleDateFormat(ISO8601_FORMAT);
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat;

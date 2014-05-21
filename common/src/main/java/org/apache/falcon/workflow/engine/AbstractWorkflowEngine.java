@@ -19,15 +19,18 @@
 package org.apache.falcon.workflow.engine;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 
-import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Date;
+
 
 /**
  * Workflow engine should minimally support the
@@ -62,23 +65,26 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract boolean isSuspended(Entity entity) throws FalconException;
 
-    public abstract InstancesResult getRunningInstances(Entity entity) throws FalconException;
+    public abstract InstancesResult getRunningInstances(Entity entity,
+                                                        List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException;
+    public abstract InstancesResult killInstances(Entity entity, Date start, Date end, Properties props,
+                                                  List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException;
+    public abstract InstancesResult reRunInstances(Entity entity, Date start, Date end, Properties props,
+                                                   List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException;
+    public abstract InstancesResult suspendInstances(Entity entity, Date start, Date end, Properties props,
+                                                     List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props)
-        throws FalconException;
+    public abstract InstancesResult resumeInstances(Entity entity, Date start, Date end, Properties props,
+                                                    List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesResult getStatus(Entity entity, Date start, Date end) throws FalconException;
+    public abstract InstancesResult getStatus(Entity entity, Date start, Date end,
+                                              List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end) throws FalconException;
+    public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
+                                                      List<LifeCycle> lifeCycles) throws FalconException;
 
     public abstract Date update(Entity oldEntity, Entity newEntity, String cluster, Date effectiveTime)
         throws FalconException;
