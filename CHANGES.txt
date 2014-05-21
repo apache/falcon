@@ -13,6 +13,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-382 Error While building Latest trunk code with Hadoop 2.2.0. (Suhas Vasu)
+
    FALCON-240 Instance status from CLI on a feed doesn't give the retention details. 
    (pavan kumar kolamuri via Shwetha GS)
 

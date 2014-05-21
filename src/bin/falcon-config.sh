@@ -84,8 +84,8 @@ case $type in
       echo "Hadoop is installed, adding hadoop classpath to falcon classpath"
       FALCONCPPATH="${FALCONCPPATH}:`hadoop classpath`"
     elif [ "$HADOOP_HOME" != "" ]; then
-      echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into falcon classpath"
-      FALCONCPPATH="${FALCONCPPATH}:${HADOOP_HOME}/lib/*"
+      echo "Hadoop home is set, adding libraries from '${HADOOP_HOME}/bin/hadoop classpath' into falcon classpath"
+      FALCONCPPATH="${FALCONCPPATH}:`${HADOOP_HOME}/bin/hadoop classpath`"
     else
       echo "Could not find installed hadoop and HADOOP_HOME is not set."
       echo "Using the default jars bundled in ${BASEDIR}/hadooplibs/"
