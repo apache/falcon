@@ -27,6 +27,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Helper to get end points relating to the cluster.
  */
@@ -131,6 +135,22 @@ public final class ClusterHelper {
                 if (prop.getName().equals(propName)) {
                     return prop.getValue();
                 }
+            }
+        }
+        return null;
+    }
+
+    public static Map<String, String> geHiveProperties(Cluster cluster) {
+        if (cluster.getProperties() != null) {
+            List<Property> properties = cluster.getProperties().getProperties();
+            if (properties != null && !properties.isEmpty()) {
+                Map<String, String> hiveProperties = new HashMap<String, String>();
+                for (Property prop : properties) {
+                    if (prop.getName().startsWith("hive.")) {
+                        hiveProperties.put(prop.getName(), prop.getValue());
+                    }
+                }
+                return hiveProperties;
             }
         }
         return null;

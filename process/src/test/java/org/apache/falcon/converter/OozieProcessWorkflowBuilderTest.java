@@ -289,8 +289,9 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
             props.put(prop.getName(), prop.getValue());
         }
 
-        // verify table props
+        // verify table and hive props
         Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
+        expected.putAll(ClusterHelper.geHiveProperties(cluster));
         for (Map.Entry<String, String> entry : props.entrySet()) {
             if (expected.containsKey(entry.getKey())) {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));

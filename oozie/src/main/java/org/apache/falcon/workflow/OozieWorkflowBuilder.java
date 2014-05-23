@@ -483,6 +483,12 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
                     "Registry interface is not defined in cluster: " + cluster.getName());
         }
 
+        // Propagate the hive properties from cluster entity
+        Map<String, String> hiveProperties = ClusterHelper.geHiveProperties(cluster);
+        if (hiveProperties != null && !hiveProperties.isEmpty()) {
+            hiveCredentials.putAll(hiveProperties);
+        }
+
         hiveCredentials.put(METASTOREURIS, metaStoreUrl);
         hiveCredentials.put("hive.metastore.execute.setugi", "true");
         hiveCredentials.put("hcatNode", metaStoreUrl.replace("thrift", "hcat"));

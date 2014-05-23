@@ -7,7 +7,10 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-   FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré 
+   FALCON-445 Propagate hive credentials defined in cluster entity to
+   hive-site.xml (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré
    via Shwetha GS)
 
   OPTIMIZATIONS
