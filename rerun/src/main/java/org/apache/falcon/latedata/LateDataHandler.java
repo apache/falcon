@@ -99,9 +99,9 @@ public class LateDataHandler extends Configured implements Tool {
         String[] inputFeedStorageTypes = getOptionValue(command, "falconInputFeedStorageTypes").split("#");
 
         Map<String, Long> metrics = computeMetrics(inputFeeds, pathGroups, inputFeedStorageTypes);
-        LOG.info("MAP data: {}", metrics);
 
         Path file = new Path(command.getOptionValue("out"));
+        LOG.info("Persisting late data metrics: {} to file: {}", metrics, file);
         persistMetrics(metrics, file);
 
         return 0;

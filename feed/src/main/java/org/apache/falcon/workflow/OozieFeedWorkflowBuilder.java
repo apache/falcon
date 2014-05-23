@@ -146,11 +146,11 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : entity.getClusters().getClusters()) {
                 if (feedCluster.getType() == ClusterType.SOURCE) {
                     String coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString();
-                    Path basePath = getCoordPath(bundlePath, coordName);
+                    Path coordPath = getCoordPath(bundlePath, coordName);
                     Cluster srcCluster = ConfigurationStore.get().get(EntityType.CLUSTER, feedCluster.getName());
 
                     // workflow is serialized to a specific dir
-                    Path sourceSpecificWfPath = new Path(basePath, srcCluster.getName());
+                    Path sourceSpecificWfPath = new Path(coordPath, srcCluster.getName());
 
                     // Different workflow for each source since hive credentials vary for each cluster
                     replicationMapper.createReplicationWorkflow(
@@ -211,7 +211,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             createRetentionWorkflow(cluster, wfPath, wfName);
             retentionWorkflow.setAppPath(getStoragePath(wfPath.toString()));
 
-            Map<String, String> props = createCoordDefaultConfiguration(cluster, wfPath, wfName);
+            Map<String, String> props = createCoordDefaultConfiguration(cluster, wfName);
             props.put("timeZone", entity.getTimezone().getID());
             props.put("frequency", entity.getFrequency().getTimeUnit().name());
 
@@ -539,7 +539,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
             WORKFLOW replicationWF = new WORKFLOW();
 
             replicationWF.setAppPath(getStoragePath(wfPath.toString()));
-            Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfPath, wfName);
+            Map<String, String> props = createCoordDefaultConfiguration(trgCluster, wfName);
             props.put("srcClusterName", srcCluster.getName());
             props.put("srcClusterColo", srcCluster.getColo());
             if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden

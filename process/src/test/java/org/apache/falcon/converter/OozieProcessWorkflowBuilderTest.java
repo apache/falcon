@@ -186,8 +186,14 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
             props.put(prop.getName(), prop.getValue());
         }
         assertEquals(props.get("mapred.job.priority"), "LOW");
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         assertLibExtensions(coord);
+    }
+
+    private String getLogPath(Process process) {
+        Path logPath = EntityUtil.getLogPath(cluster, process);
+        return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
     }
 
     @Test
@@ -290,6 +296,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
@@ -321,10 +328,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     public void testHiveProcessMapperWithFSInputFeedAndTableOutputFeed(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
 
-        URL resource = this.getClass().getResource("/config/feed/feed-0.1.xml");
-        Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
-
-        resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
+        URL resource = this.getClass().getResource("/config/feed/hive-table-feed-out.xml");
         Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.FEED, outFeed);
 
@@ -350,6 +354,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             props.put(prop.getName(), prop.getValue());
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
@@ -385,9 +390,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Feed inFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.FEED, inFeed);
 
-        resource = this.getClass().getResource("/config/feed/feed-0.1.xml");
-        Feed outFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(resource);
-
         resource = this.getClass().getResource("/config/process/hive-process-FSOutputFeed.xml");
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(resource);
         ConfigurationStore.get().publish(EntityType.PROCESS, process);
@@ -410,6 +412,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             props.put(prop.getName(), prop.getValue());
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
@@ -463,6 +466,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             props.put(prop.getName(), prop.getValue());
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
@@ -566,6 +570,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         // verify the late data params
         Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getFeed());
@@ -773,6 +778,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
             props.put(prop.getName(), prop.getValue());
         }
+        Assert.assertEquals(props.get("logDir"), getLogPath(processEntity));
 
         String[] expected = {
             EntityInstanceMessage.ARG.feedNames.getPropName(),

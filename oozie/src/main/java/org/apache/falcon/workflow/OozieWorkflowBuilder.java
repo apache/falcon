@@ -147,19 +147,20 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-            String coordXmlName = marshal(cluster, coordinatorapp, coordPath,
-                EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
+            marshal(cluster, coordinatorapp, coordPath);
 
-            createLogsDir(cluster, coordPath); //create logs dir
             // copy falcon libs to the workflow dir
             copySharedLibs(cluster, coordinatorapp);
 
             // add the coordinator to the bundle
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getStoragePath(coordPath) + "/" + coordXmlName);
+            bundleCoord.setAppPath(getStoragePath(coordPath) + "/coordinator.xml");
             bundleApp.getCoordinator().add(bundleCoord);
         }
+
+        // create logs dir once since its at the root of the bundle path
+        createLogsDir(cluster);
 
         marshal(cluster, bundleApp, bundlePath); // write the bundle
         return true;
@@ -237,28 +238,54 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         return conf;
     }
 
-    protected Map<String, String> createCoordDefaultConfiguration(Cluster cluster, Path coordPath, String coordName) {
+    protected Map<String, String> createCoordDefaultConfiguration(Cluster cluster, String coordName) {
         Map<String, String> props = new HashMap<String, String>();
         props.put(ARG.entityName.getPropName(), entity.getName());
+        props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
         props.put(ARG.nominalTime.getPropName(), NOMINAL_TIME_EL);
         props.put(ARG.timeStamp.getPropName(), ACTUAL_TIME_EL);
-        props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
-        props.put("userBrokerImplClass", ClusterHelper.getMessageBrokerImplClass(cluster));
-        String falconBrokerUrl = StartupProperties.get().getProperty(ARG.brokerUrl.getPropName(),
-            "tcp://localhost:61616?daemon=true");
-        props.put(ARG.brokerUrl.getPropName(), falconBrokerUrl);
-        String falconBrokerImplClass = StartupProperties.get().getProperty(ARG.brokerImplClass.getPropName(),
-            ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
-        props.put(ARG.brokerImplClass.getPropName(), falconBrokerImplClass);
-        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
-            DEFAULT_BROKER_MSG_TTL.toString());
-        props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
-        props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
-        props.put("logDir", getStoragePath(new Path(coordPath, "../../logs")));
+
+        addBrokerProperties(cluster, props);
+
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
         props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
+
+        addLateDataProperties(props);
+
+        addClusterProperties(cluster, props);
+
+        props.put(MR_QUEUE_NAME, "default");
+        props.put(MR_JOB_PRIORITY, "NORMAL");
+
+        //props in entity override the set props.
+        props.putAll(getEntityProperties());
+
+        // this cannot be overridden
+        props.put("logDir", getStoragePath(EntityUtil.getLogPath(cluster, entity)));
+
+        return props;
+    }
+
+    private void addBrokerProperties(Cluster cluster, Map<String, String> props) {
+        props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
+        props.put("userBrokerImplClass", ClusterHelper.getMessageBrokerImplClass(cluster));
+
+        String falconBrokerUrl = StartupProperties.get().getProperty(
+                ARG.brokerUrl.getPropName(), "tcp://localhost:61616?daemon=true");
+        props.put(ARG.brokerUrl.getPropName(), falconBrokerUrl);
+
+        String falconBrokerImplClass = StartupProperties.get().getProperty(
+                ARG.brokerImplClass.getPropName(), ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
+        props.put(ARG.brokerImplClass.getPropName(), falconBrokerImplClass);
+
+        String jmsMessageTTL = StartupProperties.get().getProperty(
+                "broker.ttlInMins", DEFAULT_BROKER_MSG_TTL.toString());
+        props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
+    }
+
+    private void addLateDataProperties(Map<String, String> props) {
         try {
             if (EntityUtil.getLateProcess(entity) == null
                 || EntityUtil.getLateProcess(entity).getLateInputs() == null
@@ -271,20 +298,16 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
             LOG.error("Unable to get Late Process for entity: {}", entity, e);
             throw new FalconRuntimException(e);
         }
-        props.put("entityName", entity.getName());
-        props.put("entityType", entity.getEntityType().name().toLowerCase());
+    }
+
+    private void addClusterProperties(Cluster cluster, Map<String, String> props) {
         props.put(ARG.cluster.getPropName(), cluster.getName());
+
         if (cluster.getProperties() != null) {
             for (Property prop : cluster.getProperties().getProperties()) {
                 props.put(prop.getName(), prop.getValue());
             }
         }
-
-        props.put(MR_QUEUE_NAME, "default");
-        props.put(MR_JOB_PRIORITY, "NORMAL");
-        //props in entity override the set props.
-        props.putAll(getEntityProperties());
-        return props;
     }
 
     protected org.apache.falcon.oozie.coordinator.CONFIGURATION.Property createCoordProperty(String name,
@@ -322,27 +345,29 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    private void createLogsDir(Cluster cluster, Path coordPath) throws FalconException {
+    private void createLogsDir(Cluster cluster) throws FalconException {
+        Path logsDir = EntityUtil.getLogPath(cluster, entity);
         try {
             FileSystem fs = HadoopClientFactory.get().createFileSystem(
-                coordPath.toUri(), ClusterHelper.getConfiguration(cluster));
-            Path logsDir = new Path(coordPath, "../../logs");
+                    ClusterHelper.getConfiguration(cluster));
+            if (fs.exists(logsDir)) {
+                return;
+            }
+
             fs.mkdirs(logsDir);
 
             // logs are copied with in oozie as the user in Post Processing and hence 777 permissions
             FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
             fs.setPermission(logsDir, permission);
         } catch (Exception e) {
-            throw new FalconException("Unable to create temp dir in " + coordPath, e);
+            throw new FalconException("Unable to create logs dir at: " + logsDir, e);
         }
     }
 
-    protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath,
-                             String name) throws FalconException {
-        name = (StringUtils.isEmpty(name) ? "coordinator" : name) + ".xml";
+    protected void marshal(Cluster cluster, COORDINATORAPP coord,
+                           Path outPath) throws FalconException {
         marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
-                OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, name));
-        return name;
+                OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, "coordinator.xml"));
     }
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {

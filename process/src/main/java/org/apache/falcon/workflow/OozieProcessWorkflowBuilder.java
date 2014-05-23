@@ -280,7 +280,7 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
         coord.setControls(controls);
 
         // Configuration
-        Map<String, String> props = createCoordDefaultConfiguration(cluster, coordPath, coordName);
+        Map<String, String> props = createCoordDefaultConfiguration(cluster, coordName);
 
         initializeInputPaths(cluster, entity, coord, props); // inputs
         initializeOutputPaths(cluster, entity, coord, props);  // outputs

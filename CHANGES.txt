@@ -13,6 +13,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-444 Logs dir for replication workflow is incorrect and jobs fail
+   with permission issues (Venkatesh Seetharam)
+
    FALCON-443 Process with Hive workflow engine and filesystem input feeds,
    table output feed fails (Sowmya Ramesh via Venkatesh Seetharam)
 

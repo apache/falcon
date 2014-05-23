@@ -211,6 +211,7 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInPaths"), pathsWithPartitions);
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.FILESYSTEM.name());
+        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, feed));
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
@@ -359,6 +360,7 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
         Assert.assertEquals(props.get("maxMaps"), "33");
         Assert.assertEquals(props.get("mapBandwidthKB"), "2048");
+        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, aFeed));
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP parentWorkflow) {
@@ -472,6 +474,7 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals(props.get("falconInputFeeds"), tableFeed.getName());
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
+        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, tableFeed));
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
@@ -575,6 +578,7 @@ public class OozieFeedWorkflowBuilderTest {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(props.get("logDir"), getLogPath(srcCluster, feed));
 
         assertWorkflowRetries(coord);
     }
@@ -620,6 +624,7 @@ public class OozieFeedWorkflowBuilderTest {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
+        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, tableFeed));
 
         assertWorkflowRetries(coord);
 
@@ -654,5 +659,10 @@ public class OozieFeedWorkflowBuilderTest {
                 }
             }
         }
+    }
+
+    private String getLogPath(Cluster aCluster, Feed aFeed) {
+        Path logPath = EntityUtil.getLogPath(aCluster, aFeed);
+        return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
     }
 }
