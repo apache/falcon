@@ -169,6 +169,8 @@ Release Version: 0.5-incubating
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-447 Remove the jar file form the source distribution (Venkatesh Seetharam)
+
     FALCON-440 Exclude IDEA IntelliJ and other unnecessary files from source
     distribution (Venkatesh Seetharam)
 
