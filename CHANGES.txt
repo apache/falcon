@@ -63,6 +63,9 @@ Release Version: 0.5-incubating
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-448 File names in the release should have apache as the prefix
+    (Venkatesh Seetharam)
+
     FALCON-439 Update the copyright in Notice and License files (Venkatesh Seetharam)
 
     FALCON-324 Document lineage feature (Sowmya Ramesh via Venkatesh Seetharam)
