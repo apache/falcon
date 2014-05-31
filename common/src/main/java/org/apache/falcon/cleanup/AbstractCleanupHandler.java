@@ -20,6 +20,7 @@ package org.apache.falcon.cleanup;
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.Frequency;
@@ -69,19 +70,23 @@ public abstract class AbstractCleanupHandler {
                 "log.cleanup.frequency." + timeunit + ".retention", "days(1)");
     }
 
-    protected FileStatus[] getAllLogs(org.apache.falcon.entity.v0.cluster.Cluster cluster, Entity entity)
-        throws FalconException {
-
-        String stagingPath = ClusterHelper.getLocation(cluster, "staging");
-        Path logPath = getLogPath(entity, stagingPath);
+    protected FileStatus[] getAllLogs(org.apache.falcon.entity.v0.cluster.Cluster cluster,
+                                      Entity entity) throws FalconException {
         FileSystem fs = getFileSystem(cluster);
         FileStatus[] paths;
         try {
+            Path logPath = getLogPath(cluster, entity);
             paths = fs.globStatus(logPath);
         } catch (IOException e) {
             throw new FalconException(e);
         }
+
         return paths;
+    }
+
+    private Path getLogPath(Cluster cluster, Entity entity) {
+        // logsPath = base log path + relative path
+        return new Path(EntityUtil.getLogPath(cluster, entity), getRelativeLogPath());
     }
 
     protected FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
@@ -139,7 +144,7 @@ public abstract class AbstractCleanupHandler {
 
     public abstract void cleanup() throws FalconException;
 
-    protected abstract Path getLogPath(Entity entity, String stagingPath);
+    protected abstract String getRelativeLogPath();
 
     protected String getCurrentColo() {
         return StartupProperties.get().getProperty("current.colo", "default");

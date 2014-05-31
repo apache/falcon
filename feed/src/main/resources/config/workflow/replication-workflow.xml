@@ -158,6 +158,14 @@
             <param>falconTargetPartition=${falconTargetPartition}</param>
             <param>falconTargetStagingDir=${distcpTargetPaths}</param>
         </hive>
+        <ok to="cleanup-table-staging-dir"/>
+        <error to="failed-post-processing"/>
+    </action>
+    <action name="cleanup-table-staging-dir">
+        <fs>
+            <delete path="${distcpSourcePaths}"/>
+            <delete path="${distcpTargetPaths}"/>
+        </fs>
         <ok to="succeeded-post-processing"/>
         <error to="failed-post-processing"/>
     </action>

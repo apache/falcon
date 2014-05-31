@@ -374,8 +374,9 @@ public class OozieFeedWorkflowBuilderTest {
         Assert.assertEquals("replication", ((ACTION) decisionOrForkOrJoin.get(4)).getName());
         Assert.assertEquals("post-replication-decision", ((DECISION) decisionOrForkOrJoin.get(5)).getName());
         Assert.assertEquals("table-import", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
-        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(7)).getName());
-        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(8)).getName());
+        Assert.assertEquals("cleanup-table-staging-dir", ((ACTION) decisionOrForkOrJoin.get(7)).getName());
+        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(8)).getName());
+        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(9)).getName());
     }
 
     @DataProvider(name = "secureOptions")

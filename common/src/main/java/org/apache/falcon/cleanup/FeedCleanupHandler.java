@@ -18,19 +18,10 @@
 package org.apache.falcon.cleanup;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Tag;
-import org.apache.falcon.entity.CatalogStorage;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -42,19 +33,15 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
     public void cleanup() throws FalconException {
         Collection<String> feeds = STORE.getEntities(EntityType.FEED);
         for (String feedName : feeds) {
-            Feed feed;
-            feed = STORE.get(EntityType.FEED, feedName);
-            long retention = getRetention(feed, feed.getFrequency()
-                    .getTimeUnit());
-            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed
-                    .getClusters().getClusters()) {
-                Cluster currentCluster = STORE.get(EntityType.CLUSTER,
-                        cluster.getName());
+            Feed feed = STORE.get(EntityType.FEED, feedName);
+            long retention = getRetention(feed, feed.getFrequency().getTimeUnit());
+
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
+                Cluster currentCluster = STORE.get(EntityType.CLUSTER, cluster.getName());
                 if (currentCluster.getColo().equals(getCurrentColo())) {
-                    LOG.info("Cleaning up logs & staged data for feed: {} in cluster: {} with retention: {}", feedName,
-                            cluster.getName(), retention);
+                    LOG.info("Cleaning up logs & staged data for feed: {} in cluster: {} with retention: {}",
+                            feedName, cluster.getName(), retention);
                     delete(currentCluster, feed, retention);
-                    deleteStagedData(currentCluster, feed, retention);
                 } else {
                     LOG.info("Ignoring cleanup for feed: {} in cluster: {} as this does not belong to current colo",
                             feedName, cluster.getName());
@@ -64,37 +51,8 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
         }
     }
 
-    /**
-     * Delete the staging area used for replicating tables.
-     *
-     * @param cluster cluster hosting the staged data
-     * @param feed feed entity
-     * @param retention retention limit
-     * @throws FalconException
-     */
-    private void deleteStagedData(Cluster cluster, Feed feed, long retention)
-        throws FalconException {
-        Storage storage = FeedHelper.createStorage(cluster, feed);
-        if (storage.getType() == Storage.TYPE.FILESYSTEM) {  // FS does NOT use staging dirs
-            return;
-        }
-
-        final CatalogStorage tableStorage = (CatalogStorage) storage;
-        String stagingDir = FeedHelper.getStagingDir(cluster, feed, tableStorage, Tag.REPLICATION);
-        //stagingDir/dataOutPartitionValue/nominal-time/clusterName/data
-        Path stagingPath = new Path(stagingDir + "/*/*/*/*");
-        FileSystem fs = getFileSystem(cluster);
-        try {
-            FileStatus[] paths = fs.globStatus(stagingPath);
-            delete(cluster, feed, retention, paths);
-        } catch (IOException e) {
-            throw new FalconException(e);
-        }
-    }
-
     @Override
-    protected Path getLogPath(Entity entity, String stagingPath) {
-        return new Path(stagingPath, "falcon/workflows/feed/"
-                + entity.getName() + "/logs/job-*/*/*");
+    protected String getRelativeLogPath() {
+        return "job-*/*/*";
     }
 }
