@@ -100,6 +100,14 @@
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
             <configuration>
+                <property> <!-- hadoop 2 parameter -->
+                    <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
+                    <value>true</value>
+                </property>
+                <property> <!-- hadoop 1 parameter -->
+                    <name>oozie.launcher.mapreduce.user.classpath.first</name>
+                    <value>true</value>
+                </property>
                 <property>
                     <name>mapred.job.queue.name</name>
                     <value>${queueName}</value>

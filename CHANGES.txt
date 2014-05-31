@@ -16,6 +16,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-456 Custom DistCp conflict with core DistCp in container classpath
+   fails falcon workflows (Venkatesh Seetharam)
+
    FALCON-446 Hive Replications fail because of permissions issue
    (Venkatesh Seetharam)
 
