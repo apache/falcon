@@ -28,6 +28,9 @@ Release Version: 0.5-incubating
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-448 File names in the release should have apache as the prefix
+    (Venkatesh Seetharam)
+
     FALCON-439 Update the copyright in Notice and License files (Venkatesh Seetharam)
 
     FALCON-417 Upgrade Hive to 0.13.0 (Sowmya Ramesh via Venkatesh Seetharam)

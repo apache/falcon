@@ -302,7 +302,7 @@
                             <descriptors>
                                 <descriptor>src/main/assemblies/distributed-package.xml</descriptor>
                             </descriptors>
-                            <finalName>falcon-distributed-${project.version}</finalName>
+                            <finalName>apache-falcon-distributed-${project.version}</finalName>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -1246,7 +1246,7 @@
                         <descriptor>src/main/assemblies/standalone-package.xml</descriptor>
                         <descriptor>src/main/assemblies/src-package.xml</descriptor>
                     </descriptors>
-                    <finalName>falcon-${project.version}</finalName>
+                    <finalName>apache-falcon-${project.version}</finalName>
                 </configuration>
             </plugin>
 
