@@ -17,15 +17,41 @@
 A. Building & Installing Falcon
 ===============================
 
+0. Prerequisites
+------------------
+
+You would need the following installed:
+
+* JDK 1.6
+* Maven 3.x
+
+
 1. Building Falcon
 ------------------
+
+a. Building falcon from the source release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* tar -xzvf falcon-${project.version}-source.tar.gz
+* cd falcon-sources-${project.version}
+
+* export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
+
+[optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+
+
+b. Building falcon from the source repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
 * cd falcon
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
-[Falcon has currently not been tested with secure Hadoop / Hadoop 2.0]
+
+
+2. Deploying Falcon
+-------------------
 
 Once the build successfully completes, artifacts can be packaged for deployment.
 By default the falcon is built for embedded mode.
@@ -62,7 +88,8 @@ Tar is structured as follows
 |- DISCLAIMER.txt
 |- CHANGES.txt
 
-2. Installing & running Falcon
+
+3. Installing & running Falcon
 ------------------------------
 
 a. Installing falcon
@@ -90,7 +117,7 @@ d. Stopping Falcon Server
 
 * bin/falcon-stop
 
-3. Preparing oozie bundle for use with Falcon
+4. Preparing oozie bundle for use with Falcon
 ---------------------------------------------
 
 * cd <<project home>>
