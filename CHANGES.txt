@@ -63,6 +63,8 @@ Release Version: 0.5-incubating
     Venkatesh Seetharam)
    
   IMPROVEMENTS
+    FALCON-450 Add jdk 1.6 requirement in release notes (Venkatesh Seetharam)
+
     FALCON-449 Twik documentation files may need ALv2 headers (Venkatesh Seetharam)
 
     FALCON-448 File names in the release should have apache as the prefix
