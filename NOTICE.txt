@@ -1,8 +1,3 @@
-=========================================================================
-==  NOTICE file corresponding to the section 4 d of                    ==
-==  the Apache License, Version 2.0,                                   ==
-==  in this case for the Apache Falcon distribution.                   ==
-=========================================================================
 Apache Falcon (incubating)
 
 Copyright 2011-2014 The Apache Software Foundation
@@ -11,72 +6,8 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 
-This product includes ASM (http://asm.ow2.org/),
-Copyright (c) 2000-2005 INRIA, France Telecom.
-
-This product includes SLF4J (http://www.slf4j.org/),
-Copyright (c) 2004-2008 QOS.ch
-
-This product includes javax.(jms,servlet,servlet.jsp,xml.bind)
-libraries and junit under
-(https://glassfish.java.net/public/CDDLv1.0.html),
-COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 1.
-
-This product includes JDOM,
-Copyright (C) 2000-2011 Jason Hunter & Brett McLaughlin.
-
-This product include aspectj runtime & weaver libraries under
-(http://www.eclipse.org/legal/epl-v10.html)
-Eclipse Public License - Version 1.0
-
-This product includes MXP1: Xml Pull Parser 3rd Edition (XPP3) &
-AOP alliance (http://aopalliance.sourceforge.net) under
-(http://creativecommons.org/licenses/publicdomain/)
-Creative Commons - Public Domain
-
-This product includes HSQLDB (http://hsqldb.org/)
-HSQLDB License
-
-This product includes/uses org.json (http://www.json.org/java/index.html),
-Copyright (c) 2002 JSON.org
-
-This product includes/uses JLine (http://jline.sourceforge.net/),
-Copyright (c) 2002-2006, Marc Prud'hommeaux <mwp1@cornell.edu>.
-
-This product includes DataNucleus (http://www.datanucleus.org/)
-Copyright 2008-2008 DataNucleus
-
-This product includes Guava (http://code.google.com/p/guava-libraries/)
-Copyright (C) 2006 Google Inc.
-
-This product includes JavaEWAH (http://code.google.com/p/javaewah/)
-Copyright (C) 2011 Google Inc.
-
-This product includes/uses ANTLR (http://www.antlr.org/),
-Copyright (c) 2003-2008, Terrence Parr.
-
-This product includes/uses Bootstrap (http://twitter.github.com/bootstrap/),
+This product includes Bootstrap (http://getbootstrap.com/),
 Copyright (c) 2012 Twitter, Inc.
 
-This product includes/uses Glyphicons (http://glyphicons.com/),
-Copyright (c) 2010 - 2012 Jan Kovarík
-
-This product includes/uses concurrent libraries from DOUG LEA
-(http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/sun-u.c.license.pdf)
-
-This product includes/uses packages cern.colt* , cern.jet*, cern.clhep
-Copyright (c) 1999 CERN - European Organization for Nuclear Research.
-(http://acs.lbl.gov/software/colt/license.html)
-
-This product includes/uses TinkerPop blueprints API
-Copyright (c) 2009-Infinity, TinkerPop [http://tinkerpop.com]
-(https://github.com/tinkerpop/blueprints/blob/master/LICENSE.txt)
-
-This product includes/uses Thinkaurelius Titan
-Open source with the liberal Apache 2 license
-(https://github.com/thinkaurelius/titan/blob/master/LICENSE.txt)
-
-This product includes/uses Oracle Berkeley DB Java Edition
-Open Source License for Oracle Berkeley DB Java Edition
-Copyright (c) 2002, 2012 Oracle and/or its affiliates.
-(http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/jeoslicense-086837.html)
+This product includes Glyphicons Halflings (http://glyphicons.com/)
+as part of Bootstrap from Twitter
