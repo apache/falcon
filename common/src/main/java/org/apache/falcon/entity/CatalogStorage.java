@@ -338,6 +338,12 @@ public class CatalogStorage implements Storage {
     }
 
     @Override
+    public void validateACL(String owner, String group, String permissions) throws FalconException {
+        // This is not supported in Hive today as authorization is not enforced on table and
+        // partition listing
+    }
+
+    @Override
     public String toString() {
         return "CatalogStorage{"
                 + "catalogUrl='" + catalogUrl + '\''

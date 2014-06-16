@@ -314,6 +314,9 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * Does not matter for FileSystem storage.
      */
     private void validateFeedStorage(Feed feed) throws FalconException {
+        validateUser(feed);
+        validateACL(feed);
+
         final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
         validateMultipleSourcesExist(feed, baseFeedStorageType);
         validateUniformStorageType(feed, baseFeedStorageType);
@@ -403,6 +406,20 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
         if (buffer.length() > 0) {
             throw new ValidationException(buffer.toString());
+        }
+    }
+
+    private void validateACL(Feed feed) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                    EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());
+            if (!EntityUtil.responsibleFor(clusterEntity.getColo())) {
+                continue;
+            }
+
+            final Storage storage = FeedHelper.createStorage(cluster, feed);
+            storage.validateACL(feed.getACL().getOwner(), feed.getACL().getGroup(),
+                    feed.getACL().getPermission());
         }
     }
 }

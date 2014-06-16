@@ -23,8 +23,14 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,6 +41,8 @@ import java.util.List;
  * A file system implementation of a feed storage.
  */
 public class FileSystemStorage implements Storage {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FileSystemStorage.class);
 
     public static final String FEED_PATH_SEP = "#";
     public static final String LOCATION_TYPE_SEP = "=";
@@ -224,6 +232,45 @@ public class FileSystemStorage implements Storage {
         loc.setPath("/tmp");
         loc.setType(type);
         return loc;
+    }
+
+    @Override
+    public void validateACL(String owner, String group, String permissions) throws FalconException {
+        try {
+            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
+            for (Location location : getLocations()) {
+                String pathString = getRelativePath(location);
+                Path path = new Path(pathString);
+                if (fileSystem.exists(path)) {
+                    FileStatus fileStatus = fileSystem.getFileStatus(path);
+                    if (!fileStatus.getOwner().equals(owner)) {
+                        LOG.error("Feed ACL owner {} doesn't match the actual file owner {}",
+                                owner, fileStatus.getOwner());
+                        throw new FalconException("Feed ACL owner " + owner + " doesn't match the actual file owner "
+                                + fileStatus.getOwner());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Can't validate ACL on storage {}", getStorageUrl(), e);
+            throw new FalconException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
+        }
+    }
+
+    private Configuration getConf() {
+        Configuration conf = new Configuration();
+        conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
+        return conf;
+    }
+
+    private String getRelativePath(Location location) {
+        // if the path contains variables, locate on the "parent" path (just before first variable usage)
+        int index = location.getPath().indexOf(DOLLAR_EXPR_START_REGEX);
+        String pathString = location.getPath();
+        if (index != -1) {
+            pathString = pathString.substring(index);
+        }
+        return pathString;
     }
 
     @Override

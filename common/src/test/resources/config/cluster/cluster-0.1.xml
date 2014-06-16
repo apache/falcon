@@ -22,7 +22,7 @@
     <interfaces>
         <interface type="readonly" endpoint="hftp://localhost:50010"
                    version="0.20.2"/>
-        <interface type="write" endpoint="hdfs://localhost:8020"
+        <interface type="write" endpoint="jail://testCluster:00"
                    version="0.20.2"/>
         <interface type="execute" endpoint="localhost:8021" version="0.20.2"/>
         <interface type="workflow" endpoint="http://localhost:11000/oozie/"

@@ -148,6 +148,30 @@ public class FileSystemStorageTest {
         Assert.assertEquals(storage.getUriTemplate(LocationType.DATA), absoluteUrl);
     }
 
+    @Test
+    public void testValidateACL() throws Exception {
+        final Location location = new Location();
+        location.setPath("/foo/bar");
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
+        storage.validateACL(USER, USER, "rrr");
+    }
+
+    @Test
+    public void testValidateACLWithTimeVariables() throws Exception {
+        final Location location = new Location();
+        location.setPath("/foo/bar/${YEAR}/${MONTH}/${DAY}");
+        location.setType(LocationType.DATA);
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(location);
+
+        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
+        storage.validateACL(USER, USER, "rrr");
+    }
+
     @DataProvider(name = "locationTestWithRelativePathDataProvider")
     private Object[][] createLocationTestDataWithRelativePath() {
         return new Object[][] {

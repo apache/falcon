@@ -72,4 +72,14 @@ public interface Storage {
      * @throws FalconException an exception
      */
     boolean isIdentical(Storage toCompareAgainst) throws FalconException;
+
+    /**
+     * Check the permission on the storage, regarding owner/group/permission coming from ACL.
+     *
+     * @param owner the owner defined in the ACL.
+     * @param group the group defined in the ACL.
+     * @param permissions the permissions defined in the ACL.
+     * @throws FalconException if the permissions are not valid.
+     */
+    void validateACL(String owner, String group, String permissions) throws FalconException;
 }

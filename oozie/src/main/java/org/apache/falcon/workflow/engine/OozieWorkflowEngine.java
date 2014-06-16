@@ -1123,8 +1123,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             updateCoords(cluster, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
         }
 
-        if (oldBundleStatus != Job.Status.SUSPENDED &&
-                oldBundleStatus != Job.Status.PREPSUSPENDED) {
+        if (oldBundleStatus != Job.Status.SUSPENDED
+                && oldBundleStatus != Job.Status.PREPSUSPENDED) {
             //resume coords
             resumeCoords(cluster, oldBundle);
         }

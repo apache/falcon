@@ -7,6 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-280 Validate the ACL in Feed entity with the user submitting the entity
+   (Jean-Baptiste Onofré via Venkatesh Seetharam)
+
    FALCON-445 Propagate hive credentials defined in cluster entity to
    hive-site.xml (Sowmya Ramesh via Venkatesh Seetharam)
 
