@@ -16,6 +16,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-459 Lineage resource API fails with NPE for bad query params
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-456 Custom DistCp conflict with core DistCp in container classpath
    fails falcon workflows (Venkatesh Seetharam)
 

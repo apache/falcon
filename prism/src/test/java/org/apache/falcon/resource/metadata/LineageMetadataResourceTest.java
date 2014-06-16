@@ -215,6 +215,18 @@ public class LineageMetadataResourceTest {
     }
 
     @Test
+    public void testGetVerticesWithInvalidKeyValue() throws Exception {
+        LineageMetadataResource resource = new LineageMetadataResource();
+        try {
+            resource.getVertices(null, null);
+        } catch(WebApplicationException e) {
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+            Assert.assertEquals(e.getResponse().getEntity().toString(),
+                    "Invalid argument: key or value passed is null or empty.");
+        }
+    }
+
+    @Test
     public void testVertexEdgesForIdAndDirectionOut() throws Exception {
         String processInstance = PROCESS_ENTITY_NAME + "/2014-01-01T01:00Z";
         Vertex vertex = service.getGraph().getVertices(
@@ -263,6 +275,15 @@ public class LineageMetadataResourceTest {
         verifyVertexEdgesCount(vertexId, LineageMetadataResource.BOTH_COUNT, expectedSize);
         verifyVertexEdgesCount(vertexId, LineageMetadataResource.BOTH_E, expectedSize);
         verifyVertexEdgesCount(vertexId, LineageMetadataResource.BOTH_IDS, expectedSize);
+    }
+
+
+
+    @Test (expectedExceptions = WebApplicationException.class)
+    public void testVertexEdgesForIdAndInvalidDirection() throws Exception {
+        LineageMetadataResource resource = new LineageMetadataResource();
+        resource.getVertexEdges("0", "blah");
+        Assert.fail("The API call should have thrown an exception");
     }
 
     private void verifyVertexEdges(String vertexId, String direction,
