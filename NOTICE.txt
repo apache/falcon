@@ -4,10 +4,3 @@ Copyright 2011-2014 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
-
-
-This product includes Bootstrap (http://getbootstrap.com/),
-Copyright (c) 2012 Twitter, Inc.
-
-This product includes Glyphicons Halflings (http://glyphicons.com/)
-as part of Bootstrap from Twitter
