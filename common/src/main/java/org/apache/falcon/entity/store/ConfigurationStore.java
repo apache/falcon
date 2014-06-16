@@ -275,7 +275,7 @@ public final class ConfigurationStore implements FalconService {
      *         exist
      * @throws FalconException
      */
-    public boolean remove(EntityType type, String name) throws FalconException {
+    public synchronized boolean remove(EntityType type, String name) throws FalconException {
         Map<String, Entity> entityMap = dictionary.get(type);
         if (entityMap.containsKey(name)) {
             try {

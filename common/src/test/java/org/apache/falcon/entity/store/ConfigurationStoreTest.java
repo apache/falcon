@@ -98,6 +98,7 @@ public class ConfigurationStoreTest {
         Process process = new Process();
         process.setName("remove");
         store.publish(EntityType.PROCESS, process);
+
         Process p = store.get(EntityType.PROCESS, "remove");
         Assert.assertEquals(p, process);
         store.remove(EntityType.PROCESS, "remove");
@@ -113,6 +114,23 @@ public class ConfigurationStoreTest {
             //expected
         }
         store.unregisterListener(listener);
+    }
+
+
+    @Test(threadPoolSize = 3, invocationCount = 6)
+    public void testConcurrentRemoves() throws Exception {
+        Process process = new Process();
+        process.setName("remove");
+        try {
+            store.publish(EntityType.PROCESS, process);
+        } catch(EntityAlreadyExistsException e) {
+            // Ignore this
+        }
+        Process p = store.get(EntityType.PROCESS, "remove");
+        Assert.assertEquals(p, process);
+        store.remove(EntityType.PROCESS, "remove");
+        p = store.get(EntityType.PROCESS, "remove");
+        Assert.assertNull(p);
     }
 
     @BeforeSuite

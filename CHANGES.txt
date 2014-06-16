@@ -16,6 +16,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-460 Concurrent deletion of same entity results in NPE (Sowmya Ramesh
+   via Venkatesh Seetharam)
+
    FALCON-459 Lineage resource API fails with NPE for bad query params
    (Sowmya Ramesh via Venkatesh Seetharam)
 
