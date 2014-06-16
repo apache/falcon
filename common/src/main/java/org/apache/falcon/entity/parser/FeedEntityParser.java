@@ -40,6 +40,7 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedStorage(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
+        validateUser(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -101,6 +103,14 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         ensureValidityFor(feed, processes);
+    }
+
+    protected void validateUser(Feed feed) throws ValidationException {
+        String owner = feed.getACL().getOwner();
+        if (!owner.equals(CurrentUser.getUser())) {
+            throw new ValidationException("Entity's owner " + owner + " is not same as current user "
+                + CurrentUser.getUser());
+        }
     }
 
     private Set<Process> findProcesses(Set<Entity> referenced) {

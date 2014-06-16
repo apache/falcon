@@ -346,6 +346,7 @@ public class TestContext {
         processName = "p" + time;
         overlay.put("processName", processName);
         outputFeedName = "out" + time;
+        overlay.put("user", System.getProperty("user.name"));
         return overlay;
     }
 

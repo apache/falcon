@@ -16,6 +16,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-430 Process update with user (Shwetha GS via Venkatesh Seetharam)
+
    FALCON-460 Concurrent deletion of same entity results in NPE (Sowmya Ramesh
    via Venkatesh Seetharam)
 

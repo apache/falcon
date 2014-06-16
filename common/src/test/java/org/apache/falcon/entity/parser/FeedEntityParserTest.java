@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.group.FeedGroupMapTest;
+import org.apache.falcon.security.CurrentUser;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -78,6 +79,17 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void testValidations() throws Exception {
         ConfigurationStore.get().remove(EntityType.CLUSTER, "backupCluster");
         parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
+    }
+
+
+    @Test(expectedExceptions = ValidationException.class)
+    public void testValidateUser() throws Exception {
+        CurrentUser.authenticate("unknown");
+        try {
+            parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
+        } finally {
+            CurrentUser.authenticate("testuser");
+        }
     }
 
     @Test

@@ -72,7 +72,7 @@ public class AbstractTestBase {
         store = ConfigurationStore.get();
         store.init();
 
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate("testuser");
     }
 
     protected void cleanupStore() throws FalconException {

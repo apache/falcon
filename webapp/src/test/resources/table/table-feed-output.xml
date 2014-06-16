@@ -32,6 +32,6 @@
 
     <table uri="catalog:falcon_db:output_table#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}" />
 
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="##user##" group="group" permission="0x755"/>
     <schema location="hcat" provider="hcat"/>
 </feed>

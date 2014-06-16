@@ -299,6 +299,7 @@ public class EntityManagerJerseyIT {
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("inputFeedName", feed3);
         overlay.put("cluster", context.clusterName);
+        overlay.put("user", System.getProperty("user.name"));
         ClientResponse response = context.submitToFalcon(TestContext.FEED_TEMPLATE1, overlay, EntityType.FEED);
         context.assertSuccessful(response);
 

@@ -32,6 +32,6 @@
 
     <table uri="##tableUri##" />
 
-    <ACL owner="testuser" group="group" permission="0x755"/>
+    <ACL owner="##user##" group="group" permission="0x755"/>
     <schema location="/schema/clicks" provider="protobuf"/>
 </feed>
