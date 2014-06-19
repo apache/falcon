@@ -19,8 +19,10 @@
 package org.apache.falcon.resource;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Pojo for JAXB marshalling / unmarshalling.
@@ -99,6 +101,9 @@ public class InstancesResult extends APIResult {
         @XmlElement
         public InstanceAction[] actions;
 
+        @XmlElementWrapper(name="params")
+        public Map<String, String> wfParams;
+
         public Instance() {
         }
 
@@ -143,6 +148,8 @@ public class InstancesResult extends APIResult {
         public String getDetails() {
             return details;
         }
+
+        public Map<String, String> getWfParams() { return wfParams; }
 
 
         @Override

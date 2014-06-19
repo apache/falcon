@@ -93,6 +93,7 @@ public class FalconCLI {
     public static final String CURRENT_COLO = "current.colo";
     public static final String CLIENT_PROPERTIES = "/client.properties";
     public static final String LIFECYCLE_OPT = "lifecycle";
+    public static final String PARARMS_OPT = "params";
 
     // Graph Commands
     public static final String GRAPH_CMD = "graph";
@@ -241,6 +242,9 @@ public class FalconCLI {
             result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(LOG_OPT)) {
             result = client.getLogsOfInstances(type, entity, start, end, colo, runid, lifeCycles);
+        } else if (optionsList.contains(PARARMS_OPT)) {
+            // start time is the nominal time of instance
+            result = client.getParamsOfInstance(type, entity, start, colo, clusters, sourceClusters, lifeCycles);
         } else {
             throw new FalconCLIException("Invalid command");
         }
@@ -548,6 +552,12 @@ public class FalconCLI {
                 "Logs print the logs for process instances for a given process in "
                         + "the range start time and optional end time");
 
+        Option params = new Option(
+                PARARMS_OPT,
+                false,
+                "Displays the workflow parameters for a given instance of specified nominal time");
+
+
         OptionGroup group = new OptionGroup();
         group.addOption(running);
         group.addOption(status);
@@ -559,10 +569,12 @@ public class FalconCLI {
         group.addOption(rerun);
         group.addOption(logs);
         group.addOption(continues);
+        group.addOption(params);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option start = new Option(START_OPT, true,
-                "Start time is required for commands, status, kill, suspend, resume and re-run");
+                "Start time is required for commands, status, kill, suspend, resume and re-run"
+                        + "and it is nominal time while displaying workflow params");
         Option end = new Option(
                 END_OPT,
                 true,
@@ -591,7 +603,6 @@ public class FalconCLI {
                 true,
                 "describes life cycle of entity , for feed it can be replication/retention "
                        + "and for process it can be execution");
-
 
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);

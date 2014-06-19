@@ -133,6 +133,27 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     }
 
     @GET
+    @Path("params/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-params")
+    @Override
+    public InstancesResult getInstanceParams(
+            @Dimension("type") @PathParam("type") final String type,
+            @Dimension("entity") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String start,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
+        return new InstanceProxy() {
+            @Override
+            protected InstancesResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("getInstanceParams",
+                        type, entity, start, colo, lifeCycles);
+            }
+        }.execute(colo, type, entity);
+    }
+
+
+    @GET
     @Path("logs/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "instance-logs")

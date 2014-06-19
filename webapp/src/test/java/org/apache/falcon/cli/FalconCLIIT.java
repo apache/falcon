@@ -383,6 +383,11 @@ public class FalconCLIIT {
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
 
+        Assert.assertEquals(0,
+                executeWithURL("instance -params -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE));
+
     }
 
     public void testInstanceRunningAndSummaryCommands() throws Exception {
@@ -418,6 +423,11 @@ public class FalconCLIIT {
                 executeWithURL("instance -summary -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -params -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE));
     }
 
 

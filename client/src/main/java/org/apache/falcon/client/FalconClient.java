@@ -201,7 +201,8 @@ public class FalconClient {
         RESUME("api/instance/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RERUN("api/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -424,6 +425,16 @@ public class FalconClient {
         return sendInstanceRequest(Instances.LOG, type, entity, start, end,
                 null, runId, colo, lifeCycles);
     }
+
+    public String getParamsOfInstance(String type, String entity,
+                                      String start, String colo,
+                                      String clusters, String sourceClusters,
+                                      List<LifeCycle> lifeCycles)
+        throws FalconCLIException, UnsupportedEncodingException {
+
+        return sendInstanceRequest(Instances.PARAMS, type, entity,
+                start, null, null, null, colo, lifeCycles);
+    }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String getThreadDump() throws FalconCLIException {
@@ -611,6 +622,7 @@ public class FalconClient {
         }
 
     }
+
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     private void checkLifeCycleOption(List<LifeCycle> lifeCycles, String type) throws FalconCLIException {
@@ -741,6 +753,15 @@ public class FalconClient {
 
                 toAppend = instance.getLogFile() != null ? instance.getLogFile() : "-";
                 sb.append(toAppend).append("\n");
+
+                if (instance.getWfParams() != null) {
+                    Map<String, String> props = instance.getWfParams();
+                    sb.append("Workflow params").append("\n");
+                    for (Map.Entry<String, String> entry : props.entrySet()) {
+                        sb.append(entry.getKey()).append("=").append(entry.getValue()).append("\n");
+                    }
+                    sb.append("\n");
+                }
 
             }
         }

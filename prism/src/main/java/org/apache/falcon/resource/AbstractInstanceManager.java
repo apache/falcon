@@ -157,6 +157,30 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
+    public InstancesResult getInstanceParams(String type,
+                                          String entity, String startTime,
+                                          String colo, List<LifeCycle> lifeCycles) {
+        checkColo(colo);
+        checkType(type);
+        try {
+            lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
+            if (lifeCycles.size() != 1) {
+                throw new FalconException("For displaying wf-params there can't be more than one lifecycle "
+                        + lifeCycles);
+            }
+            validateParams(type, entity, startTime, null);
+
+            Entity entityObject = EntityUtil.getEntity(type, entity);
+            Date start = EntityUtil.parseDateUTC(startTime);
+            Date end = getEndDate(start, null);
+            AbstractWorkflowEngine wfEngine = getWorkflowEngine();
+            return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
+        } catch (Throwable e) {
+            LOG.error("Failed to display params of an instance", e);
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
     public InstancesResult killInstance(HttpServletRequest request,
                                         String type, String entity, String startStr,
                                         String endStr, String colo,

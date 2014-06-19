@@ -90,6 +90,20 @@ public class InstanceManager extends AbstractInstanceManager {
         return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles);
     }
 
+    @GET
+    @Path("params/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-params")
+    @Override
+    public InstancesResult getInstanceParams(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("entity") @PathParam("entity") String entity,
+            @Dimension("start-time") @QueryParam("start") String start,
+            @Dimension("colo") @QueryParam("colo") String colo,
+            @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
+        return super.getInstanceParams(type, entity, start, colo, lifeCycles);
+    }
+
 
     @POST
     @Path("kill/{type}/{entity}")

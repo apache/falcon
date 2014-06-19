@@ -44,6 +44,7 @@ import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.OozieWorkflowBuilder;
 import org.apache.falcon.workflow.WorkflowBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
@@ -60,6 +61,7 @@ import org.apache.oozie.client.rest.RestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -481,8 +483,14 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return doSummaryJobAction(entity, start, end, null, lifeCycles);
     }
 
+    @Override
+    public InstancesResult getInstanceParams(Entity entity, Date start, Date end,
+                                             List<LifeCycle> lifeCycles) throws FalconException {
+        return doJobAction(JobAction.PARAMS, entity, start, end, null, lifeCycles);
+    }
+
     private static enum JobAction {
-        KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY
+        KILL, SUSPEND, RESUME, RERUN, STATUS, SUMMARY, PARAMS
     }
 
     private WorkflowJob getWorkflowInfo(String cluster, String wfId) throws FalconException {
@@ -536,6 +544,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     instance.endTime = jobInfo.getEndTime();
                     instance.logFile = jobInfo.getConsoleUrl();
                     instance.sourceCluster = sourceCluster;
+                    if (action == JobAction.PARAMS) {
+                        instance.wfParams = getWFParams(jobInfo);
+                    }
                 }
                 instance.details = coordinatorAction.getMissingDependencies();
                 instances.add(instance);
@@ -624,6 +635,16 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return instancesSummaryResult;
     }
 
+    private Map<String, String> getWFParams(WorkflowJob jobInfo) {
+        Map<String, String> wfParams = new HashMap<String, String>();
+        Configuration conf = new Configuration(false);
+        conf.addResource(new ByteArrayInputStream(jobInfo.getConf().getBytes()));
+        for (Map.Entry<String, String> entry : conf) {
+            wfParams.put(entry.getKey(), entry.getValue());
+        }
+        return wfParams;
+    }
+
     private void updateInstanceSummary(CoordinatorJob coordJob, Map<String, Long> instancesSummary) {
         List<CoordinatorAction> actions = coordJob.getActions();
 
@@ -687,6 +708,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 
         case STATUS:
+            break;
+
+        case PARAMS:
             break;
 
         default:
@@ -795,10 +819,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 boolean retentionCoord  = isRetentionCoord(coord);
                 Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
-                Date iterStart = EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, start);
-                Date iterEnd = ((nextMaterializedTime.before(end) || retentionCoord) ? nextMaterializedTime : end);
 
-                while (iterStart.before(iterEnd)) {
+                Date iterEnd = ((nextMaterializedTime.before(end) || retentionCoord) ? nextMaterializedTime : end);
+                Calendar endCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
+                endCal.setTime(EntityUtil.getNextStartTime(coord.getStartTime(), freq, tz, iterEnd));
+                endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
+
+                while (start.compareTo(endCal.getTime()) <= 0) {
                     if (retentionCoord) {
                         if (retentionInstancesCount >= maxRetentionInstancesCount) {
                             break;
@@ -806,13 +833,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                         retentionInstancesCount++;
                     }
 
-                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, iterEnd);
+                    int sequence = EntityUtil.getInstanceSequence(coord.getStartTime(), freq, tz, endCal.getTime());
                     String actionId = coord.getId() + "@" + sequence;
                     addCoordAction(client, actions, actionId);
-                    Calendar endCal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));
-                    endCal.setTime(iterEnd);
                     endCal.add(freq.getTimeUnit().getCalendarUnit(), -(Integer.valueOf((coord.getFrequency()))));
-                    iterEnd = endCal.getTime();
                 }
             }
             actionsMap.put(cluster, actions);
