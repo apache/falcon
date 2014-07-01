@@ -20,6 +20,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-483 Fix the failing test ConfigurationStoreTest.testConcurrentRemoves 
+   on jenkins. (Sowmya Ramesh via Shwetha GS)
+
    FALCON-430 Process update with user (Shwetha GS via Venkatesh Seetharam)
 
    FALCON-460 Concurrent deletion of same entity results in NPE (Sowmya Ramesh
