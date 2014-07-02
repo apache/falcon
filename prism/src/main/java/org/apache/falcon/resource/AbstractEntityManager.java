@@ -452,13 +452,24 @@ public abstract class AbstractEntityManager {
      *
      * @param type entity type
      * @param fieldStr fields that the query is interested in, separated by comma
-     *
-     * @param type entity type
      * @return String
      */
     public EntityList getEntityList(String type, String fieldStr) {
-        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.split(",")));
+        return this.getEntityList(type, fieldStr, "", 0, -1);
+    }
 
+    /**
+     * Returns the list of entities registered of a given type.
+     *
+     * @param type entity type
+     * @param fieldStr fields that the query is interested in, separated by comma
+     * @param offset Pagination offset
+     * @param count Number of results that should be returned starting at the offset
+     * @return EntityList
+     */
+    public EntityList getEntityList(String type, String fieldStr, String orderBy, int offset, int count) {
+
+        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.split(",")));
         // Currently only the status of the entity is supported
         boolean requireStatus = fields.contains("status");
 
@@ -470,10 +481,7 @@ public abstract class AbstractEntityManager {
                 return new EntityList(new Entity[]{});
             }
 
-            int len = entityNames.size();
-            EntityList.EntityElement[] elements = new EntityList.EntityElement[len];
-
-            int i = 0;
+            ArrayList<EntityList.EntityElement> elements = new ArrayList<EntityList.EntityElement>();
             for (String entityName : entityNames) {
                 Entity e = configStore.get(entityType, entityName);
                 EntityList.EntityElement elem = new EntityList.EntityElement();
@@ -484,19 +492,74 @@ public abstract class AbstractEntityManager {
                     try {
                         EntityStatus status = getStatus(e, entityType);
                         statusString = status.name();
+                        if (statusString == null) {
+                            statusString = "UNKNOWN";
+                        }
                     } catch (FalconException e1) {
+                        // Unable to fetch statusString, setting it to unknown for backwards compatibility
                         statusString = "UNKNOWN";
                     }
+
                     elem.status = statusString;
                 }
-                elements[i++] = elem;
+                elements.add(elem);
             }
-            return new EntityList(elements);
+
+            // Sort the ArrayList using entityComparator
+            if (orderBy.equals("status")) {
+                Collections.sort(elements, new Comparator<EntityList.EntityElement>() {
+                    @Override
+                    public int compare(EntityList.EntityElement e1, EntityList.EntityElement e2) {
+                        return e1.status.compareTo(e2.status);
+                    }
+                });
+            } else if (orderBy.equals("type")) {
+                Collections.sort(elements, new Comparator<EntityList.EntityElement>() {
+                    @Override
+                    public int compare(EntityList.EntityElement e1, EntityList.EntityElement e2) {
+                        return e1.type.compareTo(e2.type);
+                    }
+                });
+            } else if (orderBy.equals("name")){
+                Collections.sort(elements, new Comparator<EntityList.EntityElement>() {
+                    @Override
+                    public int compare(EntityList.EntityElement e1, EntityList.EntityElement e2) {
+                        return e1.name.compareTo(e2.name);
+                    }
+                });
+            } //else, no sort
+
+            /* Get a subset of elements based on offset and count. When returning subset of elements,
+               elements[offset] is included. Size 10, offset 10, return empty list.
+               Size 10, offset 5, count 3, return elements[5,6,7].
+               Size 10, offset 5, count >= 5, return elements[5,6,7,8,9]
+               When count is -1, return elements starting from elements[offset] until the end */
+
+            if (offset >= elements.size() || elements.size() == 0) {
+                // No elements to return
+                return new EntityList(new Entity[]{});
+            }
+            int retLen = elements.size() -  offset;
+            if (retLen > count && count != -1) {
+                retLen = count;
+            }
+            EntityList.EntityElement[] retElements = new EntityList.EntityElement[retLen];
+
+            for (int localIndex=0; localIndex<retLen; localIndex++) {
+                /* if offset is 5, begin returning from 6th element at index 5.
+                   Code above ensures retLen+offset will always be <= elements.size()
+                   Hence the line below will not throw index out of bounds exception */
+                retElements[localIndex] = elements.get(localIndex+offset);
+            }
+            return new EntityList(retElements);
+
         } catch (Exception e) {
             LOG.error("Unable to get list for entities for ({})", type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+
     }
+
 
     /**
      * Returns the entity definition as an XML based on name.
