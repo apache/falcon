@@ -20,6 +20,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-496 Feed Replication with Empty Directories giving error. 
+   (pavan kumar kolamuri via Shwetha GS)
+
    FALCON-483 Fix the failing test ConfigurationStoreTest.testConcurrentRemoves 
    on jenkins. (Sowmya Ramesh via Shwetha GS)
 
