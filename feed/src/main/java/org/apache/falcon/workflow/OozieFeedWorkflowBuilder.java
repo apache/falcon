@@ -622,7 +622,7 @@ public class OozieFeedWorkflowBuilder extends OozieWorkflowBuilder<Feed> {
 
             props.put(prefix + "Database", tableStorage.getDatabase());
             props.put(prefix + "Table", tableStorage.getTable());
-            props.put(prefix + "Partition", "${coord:dataInPartitionFilter('input', 'hive')}");
+            props.put(prefix + "Partition", "(${coord:dataInPartitions('input', 'hive-export')})");
         }
 
         private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,

@@ -617,6 +617,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
             props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
             props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
             props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
+            props.put(prefix + "_datain_partitions_hive", "${coord:dataInPartitions('input', 'hive-export')}");
         } else if (prefix.equals("falcon_output")) {
             props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
         }

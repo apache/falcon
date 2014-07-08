@@ -20,6 +20,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-357 HCatalog Feed replication: Hive export job fails when table partition 
+   contains multiple dated columns. (Satish Mittal via Shwetha GS)
+
    FALCON-495 multi source single target feed replication failing in regression.
    (Satish Mittal via Shwetha GS)
 

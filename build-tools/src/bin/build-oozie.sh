@@ -79,6 +79,10 @@ case $VERSION in
     ;;
 4.0.0 )
     patch -p1 --verbose < ../../build-tools/src/patches/OOZIE-1551-4.0.patch
+    patch -p0 < ../../build-tools/src/patches/OOZIE-1741.patch
+    ;;
+4.0.1 )
+    patch -p0 < ../../build-tools/src/patches/OOZIE-1741.patch
     ;;
 esac
 

@@ -545,6 +545,8 @@ public class OozieProcessWorkflowBuilder extends OozieWorkflowBuilder<Process> {
             "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
         props.put(prefix + "_partition_filter_java",
             "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
+        props.put(prefix + "_datain_partitions_hive",
+            "${coord:dataInPartitions('" + input.getName() + "', 'hive-export')}");
     }
 
     private void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage,

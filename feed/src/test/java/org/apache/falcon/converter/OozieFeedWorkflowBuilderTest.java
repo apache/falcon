@@ -537,7 +537,7 @@ public class OozieFeedWorkflowBuilderTest {
 
         Assert.assertEquals(props.get(prefix + "Database"), tableStorage.getDatabase());
         Assert.assertEquals(props.get(prefix + "Table"), tableStorage.getTable());
-        Assert.assertEquals(props.get(prefix + "Partition"), "${coord:dataInPartitionFilter('input', 'hive')}");
+        Assert.assertEquals(props.get(prefix + "Partition"), "(${coord:dataInPartitions('input', 'hive-export')})");
     }
 
     @Test
