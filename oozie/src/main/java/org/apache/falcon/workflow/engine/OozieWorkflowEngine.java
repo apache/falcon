@@ -1168,7 +1168,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         String currentUser = CurrentUser.getUser();
         switchUser(user);
         try {
-            EntityUtil.setStartDate(entity, cluster, startDate);
+            EntityUtil.setStartDate(clone, cluster, startDate);
             WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, clone);
             Map<String, Properties> bundleProps = builder.newWorkflowSchedule(cluster);
             LOG.info("Scheduling {} on cluster {} with props {}",

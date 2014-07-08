@@ -20,6 +20,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-494 update feature broken (Shwetha GS via Suhas Vasu)
+
    FALCON-496 Feed Replication with Empty Directories giving error. 
    (pavan kumar kolamuri via Shwetha GS)
 

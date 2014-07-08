@@ -291,7 +291,8 @@ public class EntityManagerJerseyIT {
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 1);
         ProxyOozieClient ozClient = OozieTestUtils.getOozieClient(context.getCluster().getCluster());
-        String coordId = ozClient.getBundleJobInfo(bundles.get(0).getId()).getCoordinators().get(0).getId();
+        String bundle = bundles.get(0).getId();
+        String coordId = ozClient.getBundleJobInfo(bundle).getCoordinators().get(0).getId();
 
         Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
 
@@ -320,6 +321,20 @@ public class EntityManagerJerseyIT {
         CoordinatorJob coord = ozClient.getCoordJobInfo(coordId);
         Assert.assertEquals(coord.getStatus(), Status.RUNNING);
         Assert.assertEquals(coord.getEndTime(), endTime);
+
+        //Assert on new bundle/coord
+        String newBundle = null;
+        for (BundleJob myBundle : bundles) {
+            if (!myBundle.getId().equals(bundle)) {
+                newBundle = myBundle.getId();
+                break;
+            }
+        }
+
+        assert newBundle != null;
+        coord = ozClient.getCoordJobInfo(ozClient.getBundleJobInfo(newBundle).getCoordinators().get(0).getId());
+        Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.PREP);
+        Assert.assertEquals(coord.getStartTime(), endTime);
     }
 
     public void testProcessEndtimeUpdate() throws Exception {
