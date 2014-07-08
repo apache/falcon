@@ -147,7 +147,8 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
 
         for (COORDINATORAPP coordinatorapp : coordinators) {
             Path coordPath = getCoordPath(bundlePath, coordinatorapp.getName());
-            marshal(cluster, coordinatorapp, coordPath);
+            String coordXmlName = marshal(cluster, coordinatorapp, coordPath,
+                EntityUtil.getWorkflowNameSuffix(coordinatorapp.getName(), entity));
 
             // copy falcon libs to the workflow dir
             copySharedLibs(cluster, coordinatorapp);
@@ -155,7 +156,7 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
             // add the coordinator to the bundle
             COORDINATOR bundleCoord = new COORDINATOR();
             bundleCoord.setName(coordinatorapp.getName());
-            bundleCoord.setAppPath(getStoragePath(coordPath) + "/coordinator.xml");
+            bundleCoord.setAppPath(getStoragePath(coordPath) + "/" + coordXmlName);
             bundleApp.getCoordinator().add(bundleCoord);
         }
 
@@ -364,10 +365,12 @@ public abstract class OozieWorkflowBuilder<T extends Entity> extends WorkflowBui
         }
     }
 
-    protected void marshal(Cluster cluster, COORDINATORAPP coord,
-                           Path outPath) throws FalconException {
+    protected String marshal(Cluster cluster, COORDINATORAPP coord, Path outPath,
+                           String name) throws FalconException {
+        name = (StringUtils.isEmpty(name) ? "coordinator" : name) + ".xml";
         marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
-                OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, "coordinator.xml"));
+                OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, name));
+        return name;
     }
 
     protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
