@@ -20,6 +20,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-497 Able to submit feed even though owner of storage specified (location type=data) 
+   is different from the ACL owner. (Shwetha GS)
+
    FALCON-357 HCatalog Feed replication: Hive export job fails when table partition 
    contains multiple dated columns. (Satish Mittal via Shwetha GS)
 

@@ -180,22 +180,22 @@ public class FalconCLI {
             }
 
             return exitValue;
-        } catch (FalconCLIException ex) {
-            ERR.get().println("Error: " + ex.getMessage());
-            return -1;
         } catch (ParseException ex) {
             ERR.get().println("Invalid sub-command: " + ex.getMessage());
             ERR.get().println();
             ERR.get().println(parser.shortHelp());
+            ERR.get().println("Stacktrace:");
+            ex.printStackTrace();
             return -1;
         } catch (ClientHandlerException ex) {
             ERR.get().print("Unable to connect to Falcon server, "
                     + "please check if the URL is correct and Falcon server is up and running\n");
-            ERR.get().println(ex.getMessage());
+            ERR.get().println("Stacktrace:");
+            ex.printStackTrace();
             return -1;
         } catch (Exception ex) {
+            ERR.get().println("Stacktrace:");
             ex.printStackTrace();
-            ERR.get().println(ex.getMessage());
             return -1;
         }
     }

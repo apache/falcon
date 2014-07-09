@@ -418,8 +418,11 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
 
             final Storage storage = FeedHelper.createStorage(cluster, feed);
-            storage.validateACL(feed.getACL().getOwner(), feed.getACL().getGroup(),
-                    feed.getACL().getPermission());
+            try {
+                storage.validateACL(feed.getACL().getOwner(), feed.getACL().getGroup(), feed.getACL().getPermission());
+            } catch(FalconException e) {
+                throw new ValidationException(e);
+            }
         }
     }
 }

@@ -18,9 +18,13 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -69,7 +73,7 @@ public class FileSystemStorageTest {
 
         Assert.assertEquals("hdfs://localhost:8020", storage.getStorageUrl());
         Assert.assertEquals("hdfs://localhost:8020/data/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
-                storage.getUriTemplate(LocationType.DATA));
+            storage.getUriTemplate(LocationType.DATA));
         Assert.assertEquals("hdfs://localhost:8020/stats/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
                 storage.getUriTemplate(LocationType.STATS));
         Assert.assertEquals("hdfs://localhost:8020/meta/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
@@ -151,25 +155,39 @@ public class FileSystemStorageTest {
     @Test
     public void testValidateACL() throws Exception {
         final Location location = new Location();
-        location.setPath("/foo/bar");
+        Path path = new Path("/foo/bar");
+        location.setPath(path.toString());
         location.setType(LocationType.DATA);
         List<Location> locations = new ArrayList<Location>();
         locations.add(location);
 
-        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
-        storage.validateACL(USER, USER, "rrr");
-    }
+        String user = System.getProperty("user.name");
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster(user);
+        FileSystem fs = cluster.getFileSystem();
+        fs.mkdirs(path);
 
-    @Test
-    public void testValidateACLWithTimeVariables() throws Exception {
-        final Location location = new Location();
+        FileSystemStorage storage = new FileSystemStorage(cluster.getConf().get("fs.default.name"), locations);
+        storage.validateACL(user, user, "rrr");
+
+        //-ve case
+        try {
+            storage.validateACL("random", user, "rrr");
+            Assert.fail("Validation should have failed");
+        } catch(FalconException e) {
+            //expected exception
+        }
+
+        //Timed path
         location.setPath("/foo/bar/${YEAR}/${MONTH}/${DAY}");
-        location.setType(LocationType.DATA);
-        List<Location> locations = new ArrayList<Location>();
-        locations.add(location);
+        storage.validateACL(user, user, "rrr");
 
-        FileSystemStorage storage = new FileSystemStorage("jail://global:00", locations);
-        storage.validateACL(USER, USER, "rrr");
+        //-ve case
+        try {
+            storage.validateACL("random", user, "rrr");
+            Assert.fail("Validation should have failed");
+        } catch(FalconException e) {
+            //expected exception
+        }
     }
 
     @DataProvider(name = "locationTestWithRelativePathDataProvider")

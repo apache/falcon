@@ -19,6 +19,7 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -32,10 +33,12 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * A file system implementation of a feed storage.
@@ -251,9 +254,9 @@ public class FileSystemStorage implements Storage {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOG.error("Can't validate ACL on storage {}", getStorageUrl(), e);
-            throw new FalconException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
+            throw new RuntimeException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
         }
     }
 
@@ -265,12 +268,12 @@ public class FileSystemStorage implements Storage {
 
     private String getRelativePath(Location location) {
         // if the path contains variables, locate on the "parent" path (just before first variable usage)
-        int index = location.getPath().indexOf(DOLLAR_EXPR_START_REGEX);
-        String pathString = location.getPath();
-        if (index != -1) {
-            pathString = pathString.substring(index);
+        Matcher matcher = FeedDataPath.PATTERN.matcher(location.getPath());
+        boolean timedPath = matcher.find();
+        if (timedPath) {
+            return location.getPath().substring(0, matcher.start());
         }
-        return pathString;
+        return location.getPath();
     }
 
     @Override
