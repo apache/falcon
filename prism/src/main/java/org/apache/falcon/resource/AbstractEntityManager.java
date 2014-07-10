@@ -452,22 +452,13 @@ public abstract class AbstractEntityManager {
      *
      * @param type entity type
      * @param fieldStr fields that the query is interested in, separated by comma
-     * @return String
-     */
-    public EntityList getEntityList(String type, String fieldStr) {
-        return this.getEntityList(type, fieldStr, "", 0, -1);
-    }
-
-    /**
-     * Returns the list of entities registered of a given type.
-     *
-     * @param type entity type
-     * @param fieldStr fields that the query is interested in, separated by comma
+     * @param statusFilter filter by a status. Ex: only running entities or successful entities etc
      * @param offset Pagination offset
-     * @param count Number of results that should be returned starting at the offset
+     * @param resultsPerPage Number of results that should be returned starting at the offset
      * @return EntityList
      */
-    public EntityList getEntityList(String type, String fieldStr, String orderBy, int offset, int count) {
+    public EntityList getEntityList(String type, String fieldStr, String statusFilter,
+                                    String orderBy, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.split(",")));
         // Currently only the status of the entity is supported
@@ -490,8 +481,7 @@ public abstract class AbstractEntityManager {
                 if (requireStatus) {
                     String statusString;
                     try {
-                        EntityStatus status = getStatus(e, entityType);
-                        statusString = status.name();
+                        statusString = getStatus(e, entityType).name();
                         if (statusString == null) {
                             statusString = "UNKNOWN";
                         }
@@ -499,13 +489,15 @@ public abstract class AbstractEntityManager {
                         // Unable to fetch statusString, setting it to unknown for backwards compatibility
                         statusString = "UNKNOWN";
                     }
-
                     elem.status = statusString;
                 }
-                elements.add(elem);
+                // Add elements, filtered by status. If status is "", add all elements
+                if (statusFilter.equals("") || statusFilter.equalsIgnoreCase(elem.status)) {
+                    elements.add(elem);
+                }
             }
 
-            // Sort the ArrayList using entityComparator
+            // Sort the ArrayList using orderBy param
             if (orderBy.equals("status")) {
                 Collections.sort(elements, new Comparator<EntityList.EntityElement>() {
                     @Override
@@ -540,17 +532,11 @@ public abstract class AbstractEntityManager {
                 return new EntityList(new Entity[]{});
             }
             int retLen = elements.size() -  offset;
-            if (retLen > count && count != -1) {
-                retLen = count;
+            if (retLen > resultsPerPage && resultsPerPage != -1) {
+                retLen = resultsPerPage;
             }
-            EntityList.EntityElement[] retElements = new EntityList.EntityElement[retLen];
-
-            for (int localIndex=0; localIndex<retLen; localIndex++) {
-                /* if offset is 5, begin returning from 6th element at index 5.
-                   Code above ensures retLen+offset will always be <= elements.size()
-                   Hence the line below will not throw index out of bounds exception */
-                retElements[localIndex] = elements.get(localIndex+offset);
-            }
+            EntityList.EntityElement[] retElements = elements.subList(offset, (offset+retLen)).toArray(
+                    new EntityList.EntityElement[retLen]);
             return new EntityList(retElements);
 
         } catch (Exception e) {

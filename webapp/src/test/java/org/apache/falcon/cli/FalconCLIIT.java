@@ -25,11 +25,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.Date;
 import java.util.Map;
 
@@ -388,6 +384,55 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
 
+        // test statusFilter, orderBy, offset, numResults
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -orderBy INVALID -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -statusFilter INVALID -offset 0 -numResults 1"));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -status -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter SUCCEEDED -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -list -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter SUCCEEDED -orderBy startTime -offset 0 -numResults 1"));
+
+        Assert.assertEquals(-1,
+                executeWithURL("instance -status -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter INVALID -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -list -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter SUCCEEDED -orderBy INVALID -offset 0 -numResults 1"));
+
+        Assert.assertEquals(0,
+                executeWithURL("instance -status -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter SUCCEEDED -orderBy startTime -offset 1 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -list -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -statusFilter SUCCEEDED -offset 0 -numResults 1"));
     }
 
     public void testInstanceRunningAndSummaryCommands() throws Exception {
@@ -429,7 +474,6 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
     }
-
 
     public void testInstanceSuspendAndResume() throws Exception {
         TestContext context = new TestContext();
@@ -627,6 +671,28 @@ public class FalconCLIIT {
                 executeWithURL("instance -logs -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+
+        // test statusFilter, orderBy, offset, numResults
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -statusFilter SUCCEEDED -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -statusFilter SUCCEEDED -offset 1 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -statusFilter INVALIDFILTER -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -statusFilter SUCCEEDED -orderBy wrongOrder -offset 0 -numResults 1"));
 
     }
 

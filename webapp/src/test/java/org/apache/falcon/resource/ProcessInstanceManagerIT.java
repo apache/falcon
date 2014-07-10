@@ -43,10 +43,18 @@ public class ProcessInstanceManagerIT {
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
 
     protected void schedule(TestContext context) throws Exception {
-        context.scheduleProcess();
+        schedule(context, 1);
+    }
+
+    protected void schedule(TestContext context, int count) throws Exception {
+        for (int i=0; i<count; i++) {
+            context.scheduleProcess();
+            Thread.sleep(500);
+        }
         OozieTestUtils.waitForProcessWFtoStart(context);
     }
 
+    //@Test
     public void testGetRunningInstances() throws Exception {
         TestContext context = new TestContext();
         schedule(context);
@@ -60,6 +68,31 @@ public class ProcessInstanceManagerIT {
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
     }
 
+    //@Test
+    public void testGetRunningInstancesPagination()  throws Exception {
+        TestContext context = new TestContext();
+        schedule(context, 4);
+        InstancesResult response = context.service.path("api/instance/running/process/" + context.processName)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertNotNull(response.getInstances());
+        Assert.assertEquals(4, response.getInstances().length);
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+
+        response = context.service.path("api/instance/running/process/" + context.processName)
+                .queryParam("orderBy", "startTime").queryParam("offset", "2")
+                .queryParam("numResults", "2")
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertNotNull(response.getInstances());
+        Assert.assertEquals(2, response.getInstances().length);
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+    }
+
     private void assertInstance(Instance processInstance, String instance, WorkflowStatus status) {
         Assert.assertNotNull(processInstance);
         Assert.assertNotNull(processInstance.getInstance());
@@ -67,6 +100,7 @@ public class ProcessInstanceManagerIT {
         Assert.assertEquals(processInstance.getStatus(), status);
     }
 
+    //@Test
     public void testGetInstanceStatus() throws Exception {
         TestContext context = new TestContext();
         schedule(context);
@@ -79,6 +113,37 @@ public class ProcessInstanceManagerIT {
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
         assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+    }
+
+    //@Test
+    public void testGetInstanceStatusPagination() throws Exception {
+        TestContext context = new TestContext();
+        schedule(context, 4);
+
+        InstancesResult response = context.service.path("api/instance/status/process/" + context.processName)
+                .queryParam("orderBy", "startTime").queryParam("offset", "2")
+                .queryParam("numResults", "2").queryParam("statusFilter", "RUNNING")
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertNotNull(response.getInstances());
+        Assert.assertEquals(2, response.getInstances().length);
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.RUNNING);
+
+        response = context.service.path("api/instance/status/process/" + context.processName)
+                .queryParam("orderBy", "startTime").queryParam("offset", "50")
+                .queryParam("numResults", "2").queryParam("statusFilter", "RUNNING")
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertNotNull(response.getInstances());
+        Assert.assertEquals(0, response.getInstances().length);
+
+
     }
 
     public void testReRunInstances() throws Exception {
@@ -98,6 +163,7 @@ public class ProcessInstanceManagerIT {
         waitForWorkflow(START_INSTANCE, WorkflowJob.Status.RUNNING);
     }
 
+    //@Test
     public void testKillInstances() throws Exception {
         TestContext context = new TestContext();
         schedule(context);
@@ -106,6 +172,17 @@ public class ProcessInstanceManagerIT {
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .post(InstancesResult.class);
+        Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
+        Assert.assertNotNull(response.getInstances());
+        Assert.assertEquals(1, response.getInstances().length);
+        assertInstance(response.getInstances()[0], START_INSTANCE, WorkflowStatus.KILLED);
+
+        response = context.service.path("api/instance/status/process/" + context.processName)
+                .queryParam("orderBy", "startTime").queryParam("statusFilter", "KILLED")
+                .queryParam("start", START_INSTANCE)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
         Assert.assertNotNull(response.getInstances());
         Assert.assertEquals(1, response.getInstances().length);
