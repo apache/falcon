@@ -48,6 +48,7 @@ public class EmbeddedServer {
     public void start() throws Exception {
         Services.get().reset();
         server.start();
+        server.join();
     }
 
     public void stop() throws Exception {

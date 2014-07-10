@@ -16,7 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="input" name="in" xmlns="uri:falcon:feed:0.1">
+<feed description="input" name="hcat-in" xmlns="uri:falcon:feed:0.1">
     <groups>input</groups>
 
     <frequency>minutes(1)</frequency>
@@ -24,7 +24,7 @@
     <late-arrival cut-off="hours(1)"/>
 
     <clusters>
-        <cluster name="local">
+        <cluster name="hcat-local">
             <validity start="2013-01-01T00:00Z" end="2030-01-01T00:00Z"/>
             <retention limit="hours(2)" action="delete"/>
         </cluster>

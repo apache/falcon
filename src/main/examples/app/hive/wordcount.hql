@@ -16,4 +16,4 @@
 -- limitations under the License.
 --
 
-FROM ${falcon_input_table} INSERT OVERWRITE TABLE ${falcon_output_table} PARTITION(${falcon_output_partitions}) SELECT word, SUM(cnt) as cnt WHERE ${falcon_input_filter} GROUP BY word;
+FROM ${falcon_inparts_table} INSERT OVERWRITE TABLE ${falcon_outpart_table} PARTITION(${falcon_outpart_partitions}) SELECT word, SUM(cnt) as cnt WHERE ${falcon_inparts_filter} GROUP BY word;

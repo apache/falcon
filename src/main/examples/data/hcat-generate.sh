@@ -34,8 +34,10 @@ BASEDIR=`cd ${BASEDIR};pwd`
 ${BASEDIR}/generate.sh
 
 hcat -e "DROP TABLE IF EXISTS in_table"
+hcat -e "DROP TABLE IF EXISTS repl_in_table"
 hcat -e "DROP TABLE IF EXISTS out_table"
 hcat -e "CREATE TABLE in_table (word STRING, cnt INT) PARTITIONED BY (ds STRING);"
+hcat -e "CREATE TABLE repl_in_table (word STRING, cnt INT) PARTITIONED BY (ds STRING);"
 hcat -e "CREATE TABLE out_table (word STRING, cnt INT) PARTITIONED BY (ds STRING);"
 for MINUTE in `seq -w 00 59`
 do

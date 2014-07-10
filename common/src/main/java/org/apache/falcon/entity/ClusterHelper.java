@@ -140,7 +140,7 @@ public final class ClusterHelper {
         return null;
     }
 
-    public static Map<String, String> geHiveProperties(Cluster cluster) {
+    public static Map<String, String> getHiveProperties(Cluster cluster) {
         if (cluster.getProperties() != null) {
             List<Property> properties = cluster.getProperties().getProperties();
             if (properties != null && !properties.isEmpty()) {

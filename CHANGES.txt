@@ -8,6 +8,8 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-369 Refactor workflow builder. (Shwetha GS)
+
    FALCON-280 Validate the ACL in Feed entity with the user submitting the entity
    (Jean-Baptiste Onofré via Venkatesh Seetharam)
 

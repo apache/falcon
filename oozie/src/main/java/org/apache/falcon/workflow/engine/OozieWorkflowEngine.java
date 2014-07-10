@@ -32,6 +32,7 @@ import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesResult.Instance;
@@ -42,8 +43,6 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.update.UpdateHelper;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
-import org.apache.falcon.workflow.OozieWorkflowBuilder;
-import org.apache.falcon.workflow.WorkflowBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -142,22 +141,20 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
 
         if (!schedClusters.isEmpty()) {
-            WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
-            Map<String, Properties> newFlows =
-                builder.newWorkflowSchedule(schedClusters.toArray(new String[schedClusters.size()]));
-            for (Map.Entry<String, Properties> entry : newFlows.entrySet()) {
-                String cluster = entry.getKey();
-                LOG.info("Scheduling {} on cluster {}", entity.toShortString(), cluster);
-                scheduleEntity(cluster, entry.getValue(), entity);
-                commitStagingPath(cluster, entry.getValue().getProperty(OozieClient.BUNDLE_APP_PATH));
+            OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
+            for (String clusterName: schedClusters) {
+                Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
+                LOG.info("Scheduling {} on cluster {}", entity.toShortString(), clusterName);
+                Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
+                Properties properties = builder.build(cluster, buildPath);
+                scheduleEntity(clusterName, properties, entity);
+                commitStagingPath(cluster, buildPath);
             }
         }
     }
 
-    private void commitStagingPath(String cluster, String path) throws FalconException {
-        path = StringUtils.removeStart(path, "${nameNode}");
-        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(clusterEntity));
+    private void commitStagingPath(Cluster cluster, Path path) throws FalconException {
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
         try {
             fs.create(new Path(path, EntityUtil.SUCCEEDED_FILE_NAME)).close();
         } catch (IOException e) {
@@ -405,21 +402,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
     @Override
     public InstancesResult getRunningInstances(Entity entity, List<LifeCycle> lifeCycles) throws FalconException {
         try {
-            WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, entity);
             Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
             List<Instance> runInstances = new ArrayList<Instance>();
-            String[] wfNames = builder.getWorkflowNames();
-            List<String> coordNames = new ArrayList<String>();
-            for (String wfName : wfNames) {
-                if (!isCoordApplicable(wfName, lifeCycles)) {
-                    continue;
-                }
-                coordNames.add(wfName);
-            }
 
             for (String cluster : clusters) {
                 ProxyOozieClient client = OozieClientFactory.get(cluster);
-                List<WorkflowJob> wfs = getRunningWorkflows(cluster, coordNames);
+                List<String> wfNames = EntityUtil.getWorkflowNames(entity, cluster);
+                List<WorkflowJob> wfs = getRunningWorkflows(cluster, wfNames);
                 if (wfs != null) {
                     for (WorkflowJob job : wfs) {
                         WorkflowJob wf = client.getJobInfo(job.getId());
@@ -958,8 +947,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             LOG.info("Updating entity through Workflow Engine {}", newEntity.toShortString());
             Date newEndTime = EntityUtil.getEndTime(newEntity, cluster);
             if (newEndTime.before(now())) {
-                throw new FalconException("New end time for " + newEntity.getName() + " is past current time. Entity "
-                    + "can't be updated. Use remove and add");
+                throw new FalconException("Entity's end time " + SchemaHelper.formatDateUTC(newEndTime)
+                    + " is before current time. Entity can't be updated. Use remove and add");
             }
 
             LOG.debug("Updating for cluster: {}, bundle: {}", cluster, bundle.getId());
@@ -974,8 +963,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             LOG.debug("Going to update! : {} for cluster {}, bundle: {}",
                     newEntity.toShortString(), cluster, bundle.getId());
-            effectiveTime = updateInternal(oldEntity, newEntity, cluster, bundle,
-                    false, effectiveTime, CurrentUser.getUser());
+            effectiveTime = updateInternal(oldEntity, newEntity, clusterEntity, bundle, false, effectiveTime,
+                CurrentUser.getUser());
             LOG.info("Entity update complete: {} for cluster {}, bundle: {}",
                     newEntity.toShortString(), cluster, bundle.getId());
         }
@@ -999,8 +988,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             LOG.info("Triggering update for {}, {}", cluster, affectedProcBundle.getId());
 
-            Date depEndTime = updateInternal(affectedEntity, affectedEntity, cluster,
-                    affectedProcBundle, false, effectiveTime, affectedProcBundle.getUser());
+            Date depEndTime = updateInternal(affectedEntity, affectedEntity, clusterEntity, affectedProcBundle,
+                false, effectiveTime, affectedProcBundle.getUser());
             if (effectiveTime == null || effectiveTime.after(depEndTime)) {
                 effectiveTime = depEndTime;
             }
@@ -1091,20 +1080,17 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private Date updateInternal(Entity oldEntity, Entity newEntity, String cluster,
-                                BundleJob oldBundle, boolean alreadyCreated, Date inEffectiveTime,
-                                String user) throws FalconException {
-        OozieWorkflowBuilder<Entity> builder =
-                (OozieWorkflowBuilder<Entity>) WorkflowBuilder.getBuilder(ENGINE, oldEntity);
-
+    private Date updateInternal(Entity oldEntity, Entity newEntity, Cluster cluster, BundleJob oldBundle,
+        boolean alreadyCreated, Date inEffectiveTime, String user) throws FalconException {
         Job.Status oldBundleStatus = oldBundle.getStatus();
-        //Suspend coords as bundle suspend doesn't suspend coords synchronously
-        suspendCoords(cluster, oldBundle);
+        String clusterName = cluster.getName();
 
-        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
-        Path stagingPath = EntityUtil.getLatestStagingPath(clusterEntity, oldEntity);
+        //Suspend coords as bundle suspend doesn't suspend coords synchronously
+        suspendCoords(clusterName, oldBundle);
+
+        Path stagingPath = EntityUtil.getLatestStagingPath(cluster, oldEntity);
         //find last scheduled bundle
-        BundleJob latestBundle = findBundleForStagingPath(cluster, oldEntity, stagingPath);
+        BundleJob latestBundle = findBundleForStagingPath(clusterName, oldEntity, stagingPath);
         Date effectiveTime;
         if (oldBundle.getAppPath().endsWith(stagingPath.toUri().getPath())
                 || latestBundle == null || !alreadyCreated) {
@@ -1121,13 +1107,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             }
 
             //pick start time for new bundle which is after effectiveTime
-            effectiveTime = builder.getNextStartTime(newEntity, cluster, effectiveTime);
+            effectiveTime = EntityUtil.getNextStartTime(newEntity, cluster, effectiveTime);
 
             //schedule new bundle
             String newBundleId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
             //newBundleId and latestBundle will be null if effectiveTime = process end time
             if (newBundleId != null) {
-                latestBundle = getBundleInfo(cluster, newBundleId);
+                latestBundle = getBundleInfo(clusterName, newBundleId);
                 LOG.info("New bundle {} scheduled successfully with start time {}",
                         newBundleId, SchemaHelper.formatDateUTC(effectiveTime));
             }
@@ -1144,37 +1130,37 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
         if (effectiveTime != null) {
             //set endtime for old coords
-            updateCoords(cluster, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
+            updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
         }
 
         if (oldBundleStatus != Job.Status.SUSPENDED
                 && oldBundleStatus != Job.Status.PREPSUSPENDED) {
             //resume coords
-            resumeCoords(cluster, oldBundle);
+            resumeCoords(clusterName, oldBundle);
         }
 
         //latestBundle will be null if effectiveTime = process end time
         if (latestBundle != null) {
             //create _SUCCESS in staging path to mark update is complete(to handle roll-forward for updates)
-            commitStagingPath(cluster, latestBundle.getAppPath());
+            commitStagingPath(cluster, new Path(latestBundle.getAppPath()));
         }
         return effectiveTime;
     }
 
-    private String scheduleForUpdate(Entity entity, String cluster, Date startDate, String user)
+    private String scheduleForUpdate(Entity entity, Cluster cluster, Date startDate, String user)
         throws FalconException {
         Entity clone = entity.copy();
 
         String currentUser = CurrentUser.getUser();
         switchUser(user);
         try {
-            EntityUtil.setStartDate(clone, cluster, startDate);
-            WorkflowBuilder<Entity> builder = WorkflowBuilder.getBuilder(ENGINE, clone);
-            Map<String, Properties> bundleProps = builder.newWorkflowSchedule(cluster);
-            LOG.info("Scheduling {} on cluster {} with props {}",
-                    entity.toShortString(), cluster, bundleProps);
-            if (bundleProps != null && bundleProps.size() > 0) {
-                return scheduleEntity(cluster, bundleProps.get(cluster), entity);
+            EntityUtil.setStartDate(clone, cluster.getName(), startDate);
+            Path buildPath = EntityUtil.getNewStagingPath(cluster, clone);
+            OozieEntityBuilder builder = OozieEntityBuilder.get(clone);
+            Properties properties = builder.build(cluster, buildPath);
+            if (properties != null) {
+                LOG.info("Scheduling {} on cluster {} with props {}", entity.toShortString(), cluster, properties);
+                return scheduleEntity(cluster.getName(), properties, entity);
             } else {
                 LOG.info("No new workflow to be scheduled for this " + entity.toShortString());
                 return null;
@@ -1210,7 +1196,8 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private List<WorkflowJob> getRunningWorkflows(String cluster, List<String> wfNames) throws FalconException {
+    private List<WorkflowJob> getRunningWorkflows(String cluster, List<String> wfNames) throws
+        FalconException {
         StringBuilder filter = new StringBuilder();
         filter.append(OozieClient.FILTER_STATUS).append('=').append(Job.Status.RUNNING.name());
         for (String wfName : wfNames) {

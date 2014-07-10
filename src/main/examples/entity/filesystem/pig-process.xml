@@ -31,12 +31,12 @@
 
     <inputs>
         <!-- In the pig script, the input paths will be available in a variable 'inpaths' -->
-        <input name="input" feed="in" start="now(0,-5)" end="now(0,-1)"/>
+        <input name="inpaths" feed="in" start="now(0,-5)" end="now(0,-1)"/>
     </inputs>
 
     <outputs>
         <!-- In the pig script, the output path will be available in a variable 'outpath' -->
-        <output name="output" feed="out" instance="now(0,0)"/>
+        <output name="outpath" feed="out" instance="now(0,0)"/>
     </outputs>
 
     <workflow engine="pig" path="/app/pig/wordcount.pig"/>

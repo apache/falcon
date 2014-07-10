@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.util.BuildProperties;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -252,7 +253,7 @@ public final class FeedHelper {
                                        Feed feed, CatalogStorage storage, Tag tag, String suffix) {
         String stagingDirPath = getStagingDir(clusterEntity, feed, storage, tag);
 
-        String datedPartitionKey = storage.getDatedPartitionKey();
+        String datedPartitionKey = storage.getDatedPartitionKeys().get(0);
         String datedPartitionKeySuffix = datedPartitionKey + "=${coord:dataOutPartitionValue('output',"
                 + "'" + datedPartitionKey + "')}";
         return stagingDirPath + "/"
@@ -272,5 +273,20 @@ public final class FeedHelper {
                 + workflowName + "/"
                 + storage.getDatabase() + "/"
                 + storage.getTable();
+    }
+
+    public static Properties getUserWorkflowProperties(String policy) {
+        Properties props = new Properties();
+        props.put("userWorkflowName", policy + "-policy");
+        props.put("userWorkflowEngine", "falcon");
+
+        String version;
+        try {
+            version = BuildProperties.get().getProperty("build.version");
+        } catch (Exception e) {  // unfortunate that this is only available in prism/webapp
+            version = "0.5";
+        }
+        props.put("userWorkflowVersion", version);
+        return props;
     }
 }

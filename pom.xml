@@ -425,9 +425,7 @@
         <module>test-util</module>
         <module>hadoop-dependencies</module>
         <module>hadoop-webapp</module>
-        <module>feed</module>
         <module>messaging</module>
-        <module>process</module>
         <module>oozie-el-extensions</module>
         <module>oozie</module>
         <module>acquisition</module>

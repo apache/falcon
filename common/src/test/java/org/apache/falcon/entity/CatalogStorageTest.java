@@ -51,7 +51,7 @@ public class CatalogStorageTest {
         Assert.assertTrue(storage.hasPartition("region"));
         Assert.assertNull(storage.getPartitionValue("unknown"));
         Assert.assertFalse(storage.hasPartition("unknown"));
-        Assert.assertEquals(storage.getDatedPartitionKey(), "ds");
+        Assert.assertEquals(storage.getDatedPartitionKeys().get(0), "ds");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class CatalogStorageTest {
         Assert.assertTrue(storage.hasPartition("region"));
         Assert.assertNull(storage.getPartitionValue("unknown"));
         Assert.assertFalse(storage.hasPartition("unknown"));
-        Assert.assertEquals(storage.getDatedPartitionKey(), "ds");
+        Assert.assertEquals(storage.getDatedPartitionKeys().get(0), "ds");
     }
 
     @Test

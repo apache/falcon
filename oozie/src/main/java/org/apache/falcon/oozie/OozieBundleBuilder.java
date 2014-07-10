@@ -1,0 +1,143 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.falcon.oozie;
+
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.bundle.COORDINATOR;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.OozieUtils;
+import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.oozie.client.OozieClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+
+/**
+ * Base class for building oozie bundle - bundle is the entity that falcon tracks in oozie.
+ * @param <T>
+ */
+public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBuilder<T> {
+    public static final Logger LOG = LoggerFactory.getLogger(OozieBundleBuilder.class);
+
+    public OozieBundleBuilder(T entity) {
+        super(entity);
+    }
+
+    @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
+        String clusterName = cluster.getName();
+        if (EntityUtil.getStartTime(entity, clusterName).compareTo(EntityUtil.getEndTime(entity, clusterName)) >= 0) {
+            LOG.info("process validity start <= end for cluster {}. Skipping schedule", clusterName);
+            return null;
+        }
+
+        List<Properties> coords = doBuild(cluster, buildPath);
+        if (coords == null || coords.isEmpty()) {
+            return null;
+        }
+
+        BUNDLEAPP bundle = new BUNDLEAPP();
+        bundle.setName(EntityUtil.getWorkflowName(entity).toString());
+        // all the properties are set prior to bundle and coordinators creation
+
+        createLogsDir(cluster, buildPath); //create logs dir
+
+        for (Properties coordProps : coords) {
+            // add the coordinator to the bundle
+            COORDINATOR coord = new COORDINATOR();
+            String coordPath = coordProps.getProperty(OozieEntityBuilder.ENTITY_PATH);
+            coord.setName(coordProps.getProperty(OozieEntityBuilder.ENTITY_NAME));
+            coord.setAppPath(getStoragePath(coordPath));
+            bundle.getCoordinator().add(coord);
+        }
+
+        marshal(cluster, bundle, buildPath); // write the bundle
+        Properties properties = createAppProperties(cluster, buildPath);
+
+        //Add libpath
+        Path libPath = getLibPath(cluster, buildPath);
+        if (libPath != null) {
+            properties.put(OozieClient.LIBPATH, getStoragePath(libPath));
+        }
+
+        properties.putAll(getAdditionalProperties(cluster));
+        return properties;
+    }
+
+    protected Properties getAdditionalProperties(Cluster cluster) throws FalconException {
+        return new Properties();
+    }
+
+    protected abstract Path getLibPath(Cluster cluster, Path buildPath) throws FalconException;
+
+    protected Properties createAppProperties(Cluster cluster, Path buildPath) throws FalconException {
+        Properties properties = getEntityProperties(cluster);
+        properties.setProperty(OozieWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
+        properties.setProperty(OozieWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
+        properties.setProperty(OozieClient.BUNDLE_APP_PATH, getStoragePath(buildPath));
+        properties.setProperty("colo.name", cluster.getColo());
+
+        properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
+        properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
+        properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
+
+        if (isTableStorageType(cluster)) {
+            properties.putAll(getHiveCredentials(cluster));
+        }
+
+        LOG.info("Cluster: {}, PROPS: {}", cluster.getName(), properties);
+        return properties;
+    }
+
+    private void createLogsDir(Cluster cluster, Path buildPath) throws FalconException {
+        try {
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(buildPath.toUri(),
+                ClusterHelper.getConfiguration(cluster));
+            Path logsDir = new Path(buildPath.getParent(), "logs");
+            if (!fs.mkdirs(logsDir)) {
+                throw new FalconException("Failed to create " + logsDir);
+            }
+
+            // logs are copied with in oozie as the user in Post Processing and hence 777 permissions
+            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+            fs.setPermission(logsDir, permission);
+        } catch (IOException e) {
+            throw new FalconException(e);
+        }
+    }
+
+    protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
+        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
+            OozieUtils.BUNDLE_JAXB_CONTEXT, new Path(outPath, "bundle.xml"));
+    }
+
+    protected abstract List<Properties> doBuild(Cluster cluster, Path bundlePath) throws FalconException;
+}

@@ -29,7 +29,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
-import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.*;
@@ -435,6 +435,20 @@ public final class EntityUtil {
         return builder.getWorkflowTag(workflowName);
     }
 
+    public static List<String> getWorkflowNames(Entity entity, String cluster) {
+        switch(entity.getEntityType()) {
+        case FEED:
+            return Arrays.asList(getWorkflowName(Tag.RETENTION, entity).toString(),
+                getWorkflowName(Tag.REPLICATION, entity).toString());
+
+        case PROCESS:
+            return Arrays.asList(getWorkflowName(Tag.DEFAULT, entity).toString());
+
+        default:
+        }
+        throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+    }
+
     public static <T extends Entity> T getClusterView(T entity, String clusterName) {
         switch (entity.getEntityType()) {
         case CLUSTER:
@@ -442,10 +456,10 @@ public final class EntityUtil {
 
         case FEED:
             Feed feed = (Feed) entity.copy();
-            Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
-            Iterator<Cluster> itr = feed.getClusters().getClusters().iterator();
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, clusterName);
+            Iterator<org.apache.falcon.entity.v0.feed.Cluster> itr = feed.getClusters().getClusters().iterator();
             while (itr.hasNext()) {
-                Cluster cluster = itr.next();
+                org.apache.falcon.entity.v0.feed.Cluster cluster = itr.next();
                 //In addition to retaining the required clster, retain the sources clusters if this is the target
                 // cluster
                 //1. Retain cluster if cluster n
@@ -482,7 +496,7 @@ public final class EntityUtil {
 
         case FEED:
             Feed feed = (Feed) entity;
-            for (Cluster cluster : feed.getClusters().getClusters()) {
+            for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
                 clusters.add(cluster.getName());
             }
             break;
@@ -642,4 +656,27 @@ public final class EntityUtil {
         return DeploymentUtil.isEmbeddedMode() || (!DeploymentUtil.isPrism()
                 && colo.equals(DeploymentUtil.getCurrentColo()));
     }
+
+    public static Date getNextStartTime(Entity entity, Cluster cluster, Date effectiveTime) {
+        switch(entity.getEntityType()) {
+        case FEED:
+            Feed feed = (Feed) entity;
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster.getName());
+            return getNextStartTime(feedCluster.getValidity().getStart(), feed.getFrequency(), feed.getTimezone(),
+                effectiveTime);
+
+        case PROCESS:
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.process.Cluster processCluster = ProcessHelper.getCluster(process,
+                cluster.getName());
+            return getNextStartTime(processCluster.getValidity().getStart(), process.getFrequency(),
+                process.getTimezone(), effectiveTime);
+
+        default:
+        }
+
+        throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
+    }
+
+
 }

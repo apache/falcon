@@ -21,9 +21,9 @@
    Example cluster definition that can be used with falcon and standalone 
    hadoop and oozie instances
 -->
-<cluster colo="local" description="Standalone cluster" name="local" xmlns="uri:falcon:cluster:0.1">
+<cluster colo="hcat-local-target" description="Standalone cluster with hacatalog" name="hcat-local-target" xmlns="uri:falcon:cluster:0.1">
     <interfaces>
-        <interface type="readonly" endpoint="hdfs://localhost:8020" version="1.1.2"/>
+        <interface type="readonly" endpoint="hftp://localhost:50010" version="1.1.2"/>
 
         <interface type="write" endpoint="hdfs://localhost:8020" version="1.1.2"/>
 
@@ -32,11 +32,13 @@
         <interface type="workflow" endpoint="http://localhost:11000/oozie/" version="4.0.0"/>
 
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"  version="5.4.3"/>
+
+        <interface type="registry" endpoint="thrift://localhost:12000" version="0.11.0"/>
     </interfaces>
     <locations>
-        <location name="staging" path="/projects/falcon/staging"/>
-        <location name="temp" path="/projects/falcon/tmp"/>
-        <location name="working" path="/projects/falcon/working"/>
+        <location name="staging" path="/projects/falcon/hcat-staging-target"/>
+        <location name="temp" path="/projects/falcon/hcat-tmp-target"/>
+        <location name="working" path="/projects/falcon/hcat-working-target"/>
     </locations>
     <properties>
     </properties>

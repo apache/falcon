@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-indata = LOAD '$falcon_input_table' USING org.apache.hive.hcatalog.pig.HCatLoader();
-filterdata = FILTER indata BY $falcon_input_filter;
+indata = LOAD '$falcon_inparts_table' USING org.apache.hive.hcatalog.pig.HCatLoader();
+filterdata = FILTER indata BY $falcon_inparts_filter;
 grpdata = GROUP filterdata BY (word);
 finaldata = FOREACH grpdata GENERATE FLATTEN(group) as word, (int)SUM(filterdata.cnt) as cnt;
-STORE finaldata INTO '$falcon_output_table' USING org.apache.hive.hcatalog.pig.HCatStorer('$falcon_output_dataout_partitions');
+STORE finaldata INTO '$falcon_outpart_table' USING org.apache.hive.hcatalog.pig.HCatStorer('$falcon_outpart_partitions');

@@ -16,22 +16,31 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<feed description="output" name="hcat-out" xmlns="uri:falcon:feed:0.1">
-    <groups>output</groups>
+<feed description="replication feed" name="repl-feed" xmlns="uri:falcon:feed:0.1">
+    <groups>input</groups>
 
-    <frequency>minutes(5)</frequency>
+    <frequency>minutes(1)</frequency>
     <timezone>UTC</timezone>
     <late-arrival cut-off="hours(1)"/>
 
     <clusters>
-        <cluster name="hcat-local">
+        <cluster name="local" type="source">
             <validity start="2013-01-01T00:00Z" end="2030-01-01T00:00Z"/>
             <retention limit="hours(2)" action="delete"/>
         </cluster>
+        <cluster name="local-target" type="target">
+            <validity start="2013-11-15T00:00Z" end="2030-01-01T00:00Z"/>
+            <retention limit="hours(2)" action="delete"/>
+                <locations>
+                    <location type="data" path="/data/repl-in/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+                </locations>
+        </cluster>
     </clusters>
 
-    <table uri="catalog:default:out_table#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}" />
+    <locations>
+        <location type="data" path="/data/in/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
+    </locations>
 
     <ACL owner="testuser" group="group" permission="0x644"/>
-    <schema location="/schema/out/out.format.csv" provider="csv"/>
+    <schema location="/schema/log/log.format.csv" provider="csv"/>
 </feed>

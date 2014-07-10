@@ -19,7 +19,7 @@
 
 <process name="hive-process" xmlns="uri:falcon:process:0.1">
     <clusters>
-        <cluster name="local">
+        <cluster name="hcat-local">
             <validity start="2013-11-15T00:05Z" end="2013-11-15T01:05Z"/>
         </cluster>
     </clusters>
@@ -30,13 +30,13 @@
     <timezone>UTC</timezone>
 
     <inputs>
-        <!-- In the pig script, the input paths will be available in a variable 'inpaths' -->
-        <input name="input" feed="in" start="now(0,-5)" end="now(0,-1)"/>
+        <!-- In the pig script, the input paths will be available in a variable 'inparts' -->
+        <input name="inparts" feed="hcat-in" start="now(0,-5)" end="now(0,-1)"/>
     </inputs>
 
     <outputs>
-        <!-- In the pig script, the output path will be available in a variable 'outpath' -->
-        <output name="output" feed="out" instance="now(0,0)"/>
+        <!-- In the pig script, the output path will be available in a variable 'outpart' -->
+        <output name="outpart" feed="hcat-out" instance="now(0,0)"/>
     </outputs>
 
     <workflow engine="hive" path="/app/hive/wordcount.hql"/>

@@ -404,6 +404,7 @@
                 <artifactId>maven-jetty-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <configuration>
+                    <skip>${skipTests}</skip>
                     <connectors>
                         <connector implementation="org.mortbay.jetty.security.SslSocketConnector">
                             <port>41443</port>
