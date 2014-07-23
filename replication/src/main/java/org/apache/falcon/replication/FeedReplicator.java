@@ -143,6 +143,7 @@ public class FeedReplicator extends Configured implements Tool {
         String relativePath = includePath.toString().substring(sourcePath.toString().length());
         String fixedPath = getFixedPath(relativePath);
 
+        fixedPath = StringUtils.stripStart(fixedPath, "/");
         Path finalOutputPath;
         if (StringUtils.isNotEmpty(fixedPath)) {
             finalOutputPath = new Path(targetPath, fixedPath);

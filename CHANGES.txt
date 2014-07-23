@@ -25,6 +25,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-556 Feed Replication _SUCCESS is not getting created on target directory.
+   (pavan kumar kolamuri via Suhas Vasu)
+
    FALCON-497 Able to submit feed even though owner of storage specified (location type=data) 
    is different from the ACL owner. (Shwetha GS)
 
