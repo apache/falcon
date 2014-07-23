@@ -23,7 +23,6 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.util.OozieTestUtils;
 import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -65,19 +64,18 @@ public class EntityManagerJerseySmokeIT {
 
     @Test (dependsOnMethods = "testFeedSchedule")
     public void testProcessDeleteAndSchedule() throws Exception {
-        //Submit process with invalid property so that coord submit fails and bundle goes to failed state
+        //Schedule process, delete and then submitAndSchedule again should create new bundle
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         Property prop = new Property();
         prop.setName("newProp");
-        prop.setValue("${formatTim()}");
+        prop.setValue("${instanceTime()}");
         process.getProperties().getProperties().add(prop);
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        OozieTestUtils.waitForBundleStart(context, Status.FAILED);
 
         //Delete and re-submit the process with correct workflow
         ClientResponse clientResponse = context.service

@@ -57,10 +57,9 @@ import java.io.InputStream;
  * Test for Update helper methods.
  */
 public class UpdateHelperTest extends AbstractTestBase {
-    private final FeedEntityParser parser = (FeedEntityParser)
-            EntityParserFactory.getParser(EntityType.FEED);
-    private final ProcessEntityParser processParser = (ProcessEntityParser)
-            EntityParserFactory.getParser(EntityType.PROCESS);
+    private final FeedEntityParser parser = (FeedEntityParser)EntityParserFactory.getParser(EntityType.FEED);
+    private final ProcessEntityParser processParser =
+        (ProcessEntityParser)EntityParserFactory.getParser(EntityType.PROCESS);
 
     @BeforeClass
     public void init() throws Exception {
@@ -115,7 +114,7 @@ public class UpdateHelperTest extends AbstractTestBase {
     }
 
     @Test
-    public void testWorkflowUpdate() throws IOException, FalconException {
+    public void testIsWorkflowUpdated() throws IOException, FalconException {
         FileSystem fs = dfsCluster.getFileSystem();
         Process process = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
         String cluster = "testCluster";
@@ -123,14 +122,13 @@ public class UpdateHelperTest extends AbstractTestBase {
         Path staging = EntityUtil.getNewStagingPath(clusterEntity, process);
         fs.mkdirs(staging);
         fs.create(new Path(staging, "workflow.xml")).close();
-        fs.create(new Path(staging, EntityUtil.SUCCEEDED_FILE_NAME)).close();
 
         //Update if there is no checksum file
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 
         //No update if there is no new file
         fs.create(new Path(staging, "checksums")).close();
-        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 
         //Update if there is new lib
         Path libpath = new Path("/falcon/test/lib");
@@ -138,7 +136,7 @@ public class UpdateHelperTest extends AbstractTestBase {
         fs.mkdirs(libpath);
         Path lib = new Path(libpath, "new.jar");
         fs.create(lib).close();
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 
         //Don't Update if the lib is not updated
         fs.delete(new Path(staging, "checksums"), true);
@@ -146,52 +144,68 @@ public class UpdateHelperTest extends AbstractTestBase {
         stream.write((dfsCluster.getConf().get("fs.default.name") + lib.toString() + "="
                 + fs.getFileChecksum(lib).toString() + "\n").getBytes());
         stream.close();
-        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 
         //Update if the lib is updated
         fs.delete(lib, true);
         stream = fs.create(lib);
         stream.writeChars("some new jar");
         stream.close();
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 
         //Update if the lib is deleted
         fs.delete(lib, true);
-        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process));
+        Assert.assertTrue(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
     }
 
     @Test
-    public void testShouldUpdateProcess() throws Exception {
-        Feed oldFeed = parser.parseAndValidate(this.getClass()
-                .getResourceAsStream(FEED_XML));
+    public void testIsEntityUpdated() throws Exception {
+        Feed oldFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
         String cluster = "testCluster";
         Feed newFeed = (Feed) oldFeed.copy();
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster));
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+
+        Path feedPath = EntityUtil.getNewStagingPath(clusterEntity, oldFeed);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
 
         newFeed.setGroups("newgroups");
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
         newFeed.getLateArrival().setCutOff(Frequency.fromString("hours(8)"));
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
         newFeed.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster));
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
 
-        Process oldProcess = processParser.parseAndValidate(this.getClass().
-                getResourceAsStream(PROCESS_XML));
+        Process oldProcess = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
         prepare(oldProcess);
         Process newProcess = (Process) oldProcess.copy();
+        Path procPath = EntityUtil.getNewStagingPath(clusterEntity, oldProcess);
 
         newProcess.getRetry().setPolicy(PolicyType.FINAL);
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
         newProcess.getLateProcess().getLateInputs().remove(1);
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
         newProcess.getLateProcess().setPolicy(PolicyType.PERIODIC);
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
         newProcess.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+
+        //Adding new cluster shouldn't cause update in the old cluster
+        newProcess = (Process) oldProcess.copy();
+        org.apache.falcon.entity.v0.process.Cluster procCluster = new org.apache.falcon.entity.v0.process.Cluster();
+        procCluster.setName("newcluster");
+        procCluster.setValidity(newProcess.getClusters().getClusters().get(0).getValidity());
+        newProcess.getClusters().getClusters().add(procCluster);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+
+        //In the case of incomplete update, where new entity is scheduled but still not updated in config store,
+        //another update call shouldn't cause update in workflow engine
+        newProcess.setFrequency(Frequency.fromString("days(1)"));
+        procPath = EntityUtil.getNewStagingPath(clusterEntity, newProcess);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
     }
 
     @Test
-    public void testShouldUpdateFeed() throws Exception {
+    public void testShouldUpdateAffectedEntities() throws Exception {
         Feed oldFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
 
         Feed newFeed = (Feed) oldFeed.copy();
@@ -229,9 +243,10 @@ public class UpdateHelperTest extends AbstractTestBase {
         newFeed.getProperties().getProperties().remove(0);
         Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
+        //Change in start time should trigger process update as instance time changes
         FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().setStart(
                 SchemaHelper.parseDateUTC("2012-11-01T00:00Z"));
-        Assert.assertFalse(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
+        Assert.assertTrue(UpdateHelper.shouldUpdate(oldFeed, newFeed, process, cluster));
 
         FeedHelper.getCluster(newFeed, process.getClusters().getClusters().get(0).getName()).getValidity().
                 setStart(FeedHelper.getCluster(oldFeed,
@@ -246,39 +261,41 @@ public class UpdateHelperTest extends AbstractTestBase {
     }
 
     @Test
-    public void testShouldUpdateTable() throws Exception {
+    public void testIsEntityUpdatedTable() throws Exception {
         InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
         Feed oldTableFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(inputStream);
         getStore().publish(EntityType.FEED, oldTableFeed);
 
         String cluster = "testCluster";
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+        Path feedPath = EntityUtil.getNewStagingPath(clusterEntity, oldTableFeed);
         Feed newTableFeed = (Feed) oldTableFeed.copy();
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster, feedPath));
 
         newTableFeed.setGroups("newgroups");
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster, feedPath));
         newTableFeed.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster));
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster, feedPath));
 
         final CatalogTable table = new CatalogTable();
         table.setUri("catalog:default:clicks-blah#ds=${YEAR}-${MONTH}-${DAY}-${HOUR}");
         newTableFeed.setTable(table);
-        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster));
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldTableFeed, newTableFeed, cluster, feedPath));
 
         inputStream = getClass().getResourceAsStream("/config/process/process-table.xml");
         Process oldProcess = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(inputStream);
         FileSystem fs = dfsCluster.getFileSystem();
-        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, "testCluster");
         Path staging = EntityUtil.getNewStagingPath(clusterEntity, oldProcess);
         fs.mkdirs(staging);
         fs.create(new Path(staging, "workflow.xml")).close();
         fs.create(new Path(staging, "checksums")).close();
         Process newProcess = (Process) oldProcess.copy();
+        Path procPath = EntityUtil.getNewStagingPath(clusterEntity, oldProcess);
 
         newProcess.getRetry().setPolicy(PolicyType.FINAL);
-        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
         newProcess.setFrequency(Frequency.fromString("days(1)"));
-        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster));
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
     }
 
     private static Location getLocation(Feed feed, LocationType type, String cluster) {

@@ -110,12 +110,12 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle " + lifecycle);
     }
 
-    protected void marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
-        marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
+    protected Path marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
+        return marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
             OozieUtils.WORKFLOW_JAXB_CONTEXT, new Path(outPath, "workflow.xml"));
     }
 
-    protected WORKFLOWAPP getWorkflow(String template) throws FalconException {
+    protected WORKFLOWAPP unmarshal(String template) throws FalconException {
         InputStream resourceAsStream = null;
         try {
             resourceAsStream = OozieOrchestrationWorkflowBuilder.class.getResourceAsStream(template);

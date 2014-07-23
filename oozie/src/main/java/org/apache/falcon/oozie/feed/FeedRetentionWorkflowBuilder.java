@@ -40,7 +40,7 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
-        WORKFLOWAPP workflow = getWorkflow(RETENTION_WF_TEMPLATE);
+        WORKFLOWAPP workflow = unmarshal(RETENTION_WF_TEMPLATE);
         String wfName = EntityUtil.getWorkflowName(Tag.RETENTION, entity).toString();
         workflow.setName(wfName);
         addLibExtensionsToWorkflow(cluster, workflow, Tag.RETENTION);
@@ -50,8 +50,8 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
             setupHiveCredentials(cluster, buildPath, workflow);
         }
 
-        marshal(cluster, workflow, buildPath);
-        return getProperties(buildPath, wfName);
+        Path marshalPath = marshal(cluster, workflow, buildPath);
+        return getProperties(marshalPath, wfName);
     }
 
     private void setupHiveCredentials(Cluster cluster, Path wfPath,

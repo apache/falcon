@@ -28,6 +28,8 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
+import org.apache.falcon.oozie.coordinator.CONFIGURATION;
+import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.ObjectFactory;
 import org.apache.falcon.oozie.feed.FeedReplicationCoordinatorBuilder;
@@ -97,8 +99,8 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         return EntityUtil.getWorkflowName(lifecycle, entity).toString();
     }
 
-    protected void marshal(Cluster cluster, COORDINATORAPP coord, Path outPath) throws FalconException {
-        marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
+    protected Path marshal(Cluster cluster, COORDINATORAPP coord, Path outPath) throws FalconException {
+        return marshal(cluster, new ObjectFactory().createCoordinatorApp(coord),
             OozieUtils.COORD_JAXB_CONTEXT, new Path(outPath, "coordinator.xml"));
     }
 
@@ -144,12 +146,10 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         return props;
     }
 
-    protected org.apache.falcon.oozie.coordinator.CONFIGURATION getConfig(Properties props) {
-        org.apache.falcon.oozie.coordinator.CONFIGURATION conf
-            = new org.apache.falcon.oozie.coordinator.CONFIGURATION();
+    protected CONFIGURATION getConfig(Properties props) {
+        CONFIGURATION conf = new CONFIGURATION();
         for (Entry<Object, Object> prop : props.entrySet()) {
-            org.apache.falcon.oozie.coordinator.CONFIGURATION.Property confProp
-                = new org.apache.falcon.oozie.coordinator.CONFIGURATION.Property();
+            Property confProp = new Property();
             confProp.setName((String) prop.getKey());
             confProp.setValue((String) prop.getValue());
             conf.getProperty().add(confProp);
@@ -163,7 +163,7 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
 
     public abstract List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException;
 
-    protected COORDINATORAPP getCoordinatorTemplate(String template) throws FalconException {
+    protected COORDINATORAPP unmarshal(String template) throws FalconException {
         InputStream resourceAsStream = null;
         try {
             resourceAsStream = OozieCoordinatorBuilder.class.getResourceAsStream(template);

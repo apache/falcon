@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -25,10 +26,12 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.bundle.CONFIGURATION;
+import org.apache.falcon.oozie.bundle.CONFIGURATION.Property;
 import org.apache.falcon.oozie.bundle.COORDINATOR;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.OozieUtils;
-import org.apache.falcon.workflow.engine.OozieWorkflowEngine;
+import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -37,8 +40,14 @@ import org.apache.oozie.client.OozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
@@ -59,7 +68,7 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             return null;
         }
 
-        List<Properties> coords = doBuild(cluster, buildPath);
+        List<Properties> coords = buildCoords(cluster, buildPath);
         if (coords == null || coords.isEmpty()) {
             return null;
         }
@@ -76,33 +85,37 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             String coordPath = coordProps.getProperty(OozieEntityBuilder.ENTITY_PATH);
             coord.setName(coordProps.getProperty(OozieEntityBuilder.ENTITY_NAME));
             coord.setAppPath(getStoragePath(coordPath));
+            Properties appProps = createAppProperties(cluster, buildPath);
+            appProps.putAll(coordProps);
+            coord.setConfiguration(getConfig(appProps));
             bundle.getCoordinator().add(coord);
         }
 
-        marshal(cluster, bundle, buildPath); // write the bundle
-        Properties properties = createAppProperties(cluster, buildPath);
+        Path marshalPath = marshal(cluster, bundle, buildPath); // write the bundle
+        Properties properties = getProperties(marshalPath, entity.getName());
+        properties.setProperty(OozieClient.BUNDLE_APP_PATH, getStoragePath(buildPath));
+        properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
 
-        //Add libpath
-        Path libPath = getLibPath(cluster, buildPath);
-        if (libPath != null) {
-            properties.put(OozieClient.LIBPATH, getStoragePath(libPath));
-        }
-
-        properties.putAll(getAdditionalProperties(cluster));
         return properties;
-    }
-
-    protected Properties getAdditionalProperties(Cluster cluster) throws FalconException {
-        return new Properties();
     }
 
     protected abstract Path getLibPath(Cluster cluster, Path buildPath) throws FalconException;
 
+    protected CONFIGURATION getConfig(Properties props) {
+        CONFIGURATION conf = new CONFIGURATION();
+        for (Entry<Object, Object> prop : props.entrySet()) {
+            Property confProp = new Property();
+            confProp.setName((String) prop.getKey());
+            confProp.setValue((String) prop.getValue());
+            conf.getProperty().add(confProp);
+        }
+        return conf;
+    }
+
     protected Properties createAppProperties(Cluster cluster, Path buildPath) throws FalconException {
         Properties properties = getEntityProperties(cluster);
-        properties.setProperty(OozieWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
-        properties.setProperty(OozieWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
-        properties.setProperty(OozieClient.BUNDLE_APP_PATH, getStoragePath(buildPath));
+        properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
+        properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
         properties.setProperty("colo.name", cluster.getColo());
 
         properties.setProperty(OozieClient.USER_NAME, CurrentUser.getUser());
@@ -113,7 +126,12 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             properties.putAll(getHiveCredentials(cluster));
         }
 
-        LOG.info("Cluster: {}, PROPS: {}", cluster.getName(), properties);
+        //Add libpath
+        Path libPath = getLibPath(cluster, buildPath);
+        if (libPath != null) {
+            properties.put(OozieClient.LIBPATH, getStoragePath(libPath));
+        }
+
         return properties;
     }
 
@@ -134,10 +152,30 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         }
     }
 
-    protected void marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
-        marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
+    protected Path marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
+        return marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
             OozieUtils.BUNDLE_JAXB_CONTEXT, new Path(outPath, "bundle.xml"));
     }
 
-    protected abstract List<Properties> doBuild(Cluster cluster, Path bundlePath) throws FalconException;
+    //Used by coordinator builders to return multiple coords
+    //TODO Can avoid separate interface that returns list by building at lifecycle level
+    protected abstract List<Properties> buildCoords(Cluster cluster, Path bundlePath) throws FalconException;
+
+    public static BUNDLEAPP unmarshal(Cluster cluster, Path path) throws FalconException {
+        InputStream resourceAsStream = null;
+        try {
+            FileSystem fs =
+                HadoopClientFactory.get().createFileSystem(path.toUri(), ClusterHelper.getConfiguration(cluster));
+            Unmarshaller unmarshaller = OozieUtils.BUNDLE_JAXB_CONTEXT.createUnmarshaller();
+            @SuppressWarnings("unchecked") JAXBElement<BUNDLEAPP> jaxbElement = (JAXBElement<BUNDLEAPP>)
+                unmarshaller.unmarshal(new StreamSource(fs.open(path)), BUNDLEAPP.class);
+            return jaxbElement.getValue();
+        } catch (JAXBException e) {
+            throw new FalconException(e);
+        } catch (IOException e) {
+            throw new FalconException(e);
+        } finally {
+            IOUtils.closeQuietly(resourceAsStream);
+        }
+    }
 }

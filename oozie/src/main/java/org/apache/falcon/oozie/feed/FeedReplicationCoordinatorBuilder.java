@@ -78,16 +78,12 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         if (feedCluster.getType() == ClusterType.TARGET) {
             List<Properties> props = new ArrayList<Properties>();
-            OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, Tag.REPLICATION);
             for (org.apache.falcon.entity.v0.feed.Cluster srcFeedCluster : entity.getClusters().getClusters()) {
 
                 if (srcFeedCluster.getType() == ClusterType.SOURCE) {
                     Cluster srcCluster = ConfigurationStore.get().get(EntityType.CLUSTER, srcFeedCluster.getName());
                     // workflow is serialized to a specific dir
                     Path coordPath = new Path(buildPath, Tag.REPLICATION.name() + "/" + srcCluster.getName());
-
-                    // Different workflow for each source since hive credentials vary for each cluster
-                    builder.build(cluster, coordPath);
 
                     props.add(doBuild(srcCluster, cluster, coordPath));
                 }
@@ -98,6 +94,11 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     }
 
     private Properties doBuild(Cluster srcCluster, Cluster trgCluster, Path buildPath) throws FalconException {
+
+        // Different workflow for each source since hive credentials vary for each cluster
+        OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, Tag.REPLICATION);
+        builder.build(trgCluster, buildPath);
+
         long replicationDelayInMillis = getReplicationDelayInMillis(srcCluster);
         Date sourceStartDate = getStartDate(srcCluster, replicationDelayInMillis);
         Date sourceEndDate = getEndDate(srcCluster);
@@ -112,7 +113,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             return null;
         }
 
-        COORDINATORAPP coord = getCoordinatorTemplate(REPLICATION_COORD_TEMPLATE);
+        COORDINATORAPP coord = unmarshal(REPLICATION_COORD_TEMPLATE);
 
         String coordName = EntityUtil.getWorkflowName(Tag.REPLICATION, Arrays.asList(srcCluster.getName()),
             entity).toString();
@@ -134,8 +135,8 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             srcCluster, trgCluster, buildPath, coordName, sourceStorage, targetStorage);
         coord.setAction(replicationWorkflowAction);
 
-        marshal(trgCluster, coord, buildPath);
-        return getProperties(buildPath, coordName);
+        Path marshalPath = marshal(trgCluster, coord, buildPath);
+        return getProperties(marshalPath, coordName);
     }
 
     private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path buildPath,
@@ -143,7 +144,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         ACTION action = new ACTION();
         WORKFLOW workflow = new WORKFLOW();
 
-        workflow.setAppPath(getStoragePath(buildPath.toString()));
+        workflow.setAppPath(getStoragePath(new Path(buildPath, "workflow.xml")));
         Properties props = createCoordDefaultConfiguration(trgCluster, wfName);
         props.put("srcClusterName", srcCluster.getName());
         props.put("srcClusterColo", srcCluster.getColo());

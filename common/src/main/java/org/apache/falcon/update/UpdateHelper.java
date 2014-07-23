@@ -29,6 +29,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,9 +63,17 @@ public final class UpdateHelper {
 
     private UpdateHelper() {}
 
-    public static boolean isEntityUpdated(Entity oldEntity, Entity newEntity, String cluster) throws FalconException {
+    public static boolean isEntityUpdated(Entity oldEntity, Entity newEntity, String cluster,
+        Path oldStagingPath) throws FalconException {
         Entity oldView = EntityUtil.getClusterView(oldEntity, cluster);
         Entity newView = EntityUtil.getClusterView(newEntity, cluster);
+
+        //staging path contains md5 of the cluster view of entity
+        String[] parts = oldStagingPath.getName().split("_");
+        if (parts[0].equals(EntityUtil.md5(newView))) {
+            return false;
+        }
+
         switch (oldEntity.getEntityType()) {
         case FEED:
             return !EntityUtil.equals(oldView, newView, FEED_FIELDS);
@@ -77,10 +87,10 @@ public final class UpdateHelper {
     }
 
     //Read checksum file
-    private static Map<String, String> readChecksums(FileSystem fs, Path path) throws FalconException {
+    private static Map<String, String> readChecksums(FileSystem fs, Path oldStagingPath) throws FalconException {
         try {
             Map<String, String> checksums = new HashMap<String, String>();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(oldStagingPath)));
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -97,25 +107,24 @@ public final class UpdateHelper {
     }
 
     //Checks if the user workflow or lib is updated
-    public static boolean isWorkflowUpdated(String cluster, Entity entity) throws FalconException {
+    public static boolean isWorkflowUpdated(String cluster, Entity entity, Path bundleAppPath) throws FalconException {
         if (entity.getEntityType() != EntityType.PROCESS) {
             return false;
         }
 
         try {
-            Process process = (Process) entity;
-            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
-                    ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
-            Path bundlePath = EntityUtil.getLastCommittedStagingPath(clusterEntity, process);
-            if (bundlePath == null) {
+            if (bundleAppPath == null) {
                 return true;
             }
 
-            Path checksum = new Path(bundlePath, EntityUtil.PROCESS_CHECKSUM_FILE);
+            Process process = (Process) entity;
+            org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
+                ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+            Path checksum = new Path(bundleAppPath, EntityUtil.PROCESS_CHECKSUM_FILE);
             Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
             if (!fs.exists(checksum)) {
-                //Update if there is no checksum file(for migration)
+                //Update if there is no checksum file(for backward compatibility)
                 return true;
             }
             Map<String, String> checksums = readChecksums(fs, checksum);
@@ -184,8 +193,15 @@ public final class UpdateHelper {
             Process affectedProcess = (Process) affectedEntity;
 
             //check if affectedProcess is defined for this cluster
-            if (ProcessHelper.getCluster(affectedProcess, cluster) == null) {
-                LOG.debug("Process {} is not defined for cluster {}", affectedProcess.getName(), cluster);
+            Cluster processCluster = ProcessHelper.getCluster(affectedProcess, cluster);
+            if (processCluster == null) {
+                LOG.debug("Process {} is not defined for cluster {}. Skipping", affectedProcess.getName(), cluster);
+                return false;
+            }
+
+            if (processCluster.getValidity().getEnd().before(new Date())) {
+                LOG.debug("Process {} validity {} is in the past. Skipping...", affectedProcess.getName(),
+                    processCluster.getValidity().getEnd());
                 return false;
             }
 
@@ -196,6 +212,13 @@ public final class UpdateHelper {
 
             if (!StringUtils.equals(oldFeed.getAvailabilityFlag(), newFeed.getAvailabilityFlag())) {
                 LOG.debug("{}: Availability flag has changed. Updating...", oldFeed.toShortString());
+                return true;
+            }
+
+            org.apache.falcon.entity.v0.feed.Cluster oldFeedCluster = FeedHelper.getCluster(oldFeed, cluster);
+            org.apache.falcon.entity.v0.feed.Cluster newFeedCluster = FeedHelper.getCluster(newFeed, cluster);
+            if (!oldFeedCluster.getValidity().getStart().equals(newFeedCluster.getValidity().getStart())) {
+                LOG.debug("{}: Start time for cluster {} has changed. Updating...", oldFeed.toShortString(), cluster);
                 return true;
             }
 

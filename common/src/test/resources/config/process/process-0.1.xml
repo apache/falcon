@@ -19,7 +19,7 @@
 <process name="sample" xmlns="uri:falcon:process:0.1">
     <clusters>
         <cluster name="testCluster">
-            <validity start="2011-11-02T00:00Z" end="2011-12-30T00:00Z"/>
+            <validity start="2011-11-02T00:00Z" end="2091-12-30T00:00Z"/>
         </cluster>
     </clusters>
     <parallel>1</parallel>

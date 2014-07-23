@@ -18,15 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
@@ -43,6 +34,14 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tests for validating process entity parser.
@@ -109,7 +108,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
         Cluster processCluster = process.getClusters().getClusters().get(0);
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getStart()), "2011-11-02T00:00Z");
-        Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2011-12-30T00:00Z");
+        Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2091-12-30T00:00Z");
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
 
         Assert.assertEquals(process.getWorkflow().getEngine().name().toLowerCase(), "oozie");

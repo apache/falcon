@@ -192,6 +192,10 @@ public class TestContext {
     }
 
     public void scheduleProcess(String processTemplate, Map<String, String> overlay) throws Exception {
+        scheduleProcess(processTemplate, overlay, true);
+    }
+
+    public void scheduleProcess(String processTemplate, Map<String, String> overlay, boolean succeed) throws Exception {
         ClientResponse response = submitToFalcon(CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         assertSuccessful(response);
 
@@ -201,15 +205,12 @@ public class TestContext {
         response = submitToFalcon(FEED_TEMPLATE2, overlay, EntityType.FEED);
         assertSuccessful(response);
 
-        response = submitToFalcon(processTemplate, overlay, EntityType.PROCESS);
-        assertSuccessful(response);
-
-        ClientResponse clientRepsonse = this.service
-                .path("api/entities/schedule/process/" + processName)
-                .header("Cookie", getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
-        assertSuccessful(clientRepsonse);
+        response = submitAndSchedule(processTemplate, overlay, EntityType.PROCESS);
+        if (succeed) {
+            assertSuccessful(response);
+        } else {
+            assertFailure(response);
+        }
     }
 
     public void scheduleProcess() throws Exception {
@@ -247,6 +248,18 @@ public class TestContext {
                 .accept(MediaType.TEXT_XML)
                 .type(MediaType.TEXT_XML)
                 .post(ClientResponse.class, rawlogStream);
+    }
+
+    public ClientResponse validate(String template, Map<String, String> overlay, EntityType entityType)
+        throws Exception {
+        String tmpFile = overlayParametersOverTemplate(template, overlay);
+        ServletInputStream rawlogStream = getServletInputStream(tmpFile);
+
+        return this.service.path("api/entities/validate/" + entityType.name().toLowerCase())
+            .header("Cookie", getAuthenticationToken())
+            .accept(MediaType.TEXT_XML)
+            .type(MediaType.TEXT_XML)
+            .post(ClientResponse.class, rawlogStream);
     }
 
     public ClientResponse submitToFalcon(String template, Map<String, String> overlay, EntityType entityType)

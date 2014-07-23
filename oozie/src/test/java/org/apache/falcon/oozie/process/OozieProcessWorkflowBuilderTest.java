@@ -65,11 +65,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -197,7 +193,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(props.get("mapred.job.priority"), "LOW");
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
-        assertLibExtensions(coord);
+        assertLibExtensions(fs, coord, EntityType.PROCESS, null);
     }
 
     private String getLogPath(Process process) {
@@ -309,7 +305,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
         testParentWorkflow(process, parentWorkflow);
 
         List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
@@ -367,7 +363,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
         testParentWorkflow(process, parentWorkflow);
 
         List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
@@ -425,7 +421,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
         testParentWorkflow(process, parentWorkflow);
 
         List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
@@ -479,7 +475,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
         testParentWorkflow(process, parentWorkflow);
 
         List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
@@ -501,7 +497,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private void assertHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
-        Path hiveConfPath = new Path(wfPath, "conf/hive-site.xml");
+        Path hiveConfPath = new Path(new Path(wfPath).getParent(), "conf/hive-site.xml");
         Assert.assertTrue(fs.exists(hiveConfPath));
 
         if (SecurityUtil.isSecurityEnabled()) {
@@ -590,7 +586,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getParentWorkflow(new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
 
         Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
         assertHCatCredentials(parentWorkflow, wfPath);
@@ -638,33 +634,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("1.0.0", processWorkflow.getVersion());
     }
 
-    @SuppressWarnings("unchecked")
-    private void assertLibExtensions(COORDINATORAPP coord) throws Exception {
-        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-        WORKFLOWAPP wf = ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
-                fs.open(new Path(wfPath, "workflow.xml")))).getValue();
-        List<Object> actions = wf.getDecisionOrForkOrJoin();
-        for (Object obj : actions) {
-            if (!(obj instanceof ACTION)) {
-                continue;
-            }
-            ACTION action = (ACTION) obj;
-            List<String> files = null;
-            if (action.getJava() != null) {
-                files = action.getJava().getFile();
-            } else if (action.getPig() != null) {
-                files = action.getPig().getFile();
-            } else if (action.getMapReduce() != null) {
-                files = action.getMapReduce().getFile();
-            }
-            if (files != null) {
-                Assert.assertTrue(files.get(files.size() - 1)
-                        .endsWith("/projects/falcon/working/libext/PROCESS/ext.jar"));
-            }
-        }
-    }
-
     private WORKFLOWAPP initializeProcessMapper(Process process, String throttle, String timeout)
         throws Exception {
         OozieEntityBuilder builder = OozieEntityBuilder.get(process);
@@ -685,7 +654,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(coord.getControls().getTimeout(), timeout);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        return getParentWorkflow(new Path(wfPath));
+        return getWorkflowapp(fs, new Path(wfPath));
     }
 
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow) {
@@ -706,16 +675,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("1", ((ACTION) decisionOrForkOrJoin.get(6)).getRetryInterval());
         Assert.assertEquals("3", ((ACTION) decisionOrForkOrJoin.get(7)).getRetryMax());
         Assert.assertEquals("1", ((ACTION) decisionOrForkOrJoin.get(7)).getRetryInterval());
-    }
-
-    @SuppressWarnings("unchecked")
-    private WORKFLOWAPP getParentWorkflow(Path path) throws Exception {
-        String workflow = readFile(fs, new Path(path, "workflow.xml"));
-
-        JAXBContext wfAppContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-        Unmarshaller unmarshaller = wfAppContext.createUnmarshaller();
-        return ((JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(
-                new StreamSource(new ByteArrayInputStream(workflow.trim().getBytes())))).getValue();
     }
 
     @AfterMethod

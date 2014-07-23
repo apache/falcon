@@ -100,8 +100,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         action.setWorkflow(wf);
         coord.setAction(action);
 
-        marshal(cluster, coord, coordPath);
-        return Arrays.asList(getProperties(coordPath, coordName));
+        Path marshalPath = marshal(cluster, coord, coordPath);
+        return Arrays.asList(getProperties(marshalPath, coordName));
     }
 
     private void initializeCoordAttributes(Cluster cluster, COORDINATORAPP coord, String coordName) {

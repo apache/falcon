@@ -42,7 +42,7 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
         return new Path(buildPath, "lib");
     }
 
-    @Override protected List<Properties> doBuild(Cluster cluster, Path buildPath) throws FalconException {
+    @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         List<Properties> props = new ArrayList<Properties>();
         List<Properties> evictionProps =
             OozieCoordinatorBuilder.get(entity, Tag.RETENTION).buildCoords(cluster, buildPath);

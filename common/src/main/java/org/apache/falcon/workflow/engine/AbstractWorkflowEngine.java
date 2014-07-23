@@ -61,6 +61,8 @@ public abstract class AbstractWorkflowEngine {
 
     public abstract void reRun(String cluster, String wfId, Properties props) throws FalconException;
 
+    public abstract void dryRun(Entity entity, String clusterName) throws FalconException;
+
     public abstract boolean isActive(Entity entity) throws FalconException;
 
     public abstract boolean isSuspended(Entity entity) throws FalconException;
@@ -86,7 +88,7 @@ public abstract class AbstractWorkflowEngine {
     public abstract InstancesSummaryResult getSummary(Entity entity, Date start, Date end,
                                                       List<LifeCycle> lifeCycles) throws FalconException;
 
-    public abstract Date update(Entity oldEntity, Entity newEntity, String cluster, Date effectiveTime)
+    public abstract String update(Entity oldEntity, Entity newEntity, String cluster, Date effectiveTime)
         throws FalconException;
 
     public abstract String getWorkflowStatus(String cluster, String jobId) throws FalconException;

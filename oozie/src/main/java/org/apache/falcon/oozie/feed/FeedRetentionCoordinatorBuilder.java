@@ -103,8 +103,7 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
 
         coord.setAction(action);
 
-        marshal(cluster, coord, coordPath);
-
-        return Arrays.asList(getProperties(coordPath, coordName));
+        Path marshalPath = marshal(cluster, coord, coordPath);
+        return Arrays.asList(getProperties(marshalPath, coordName));
     }
 }

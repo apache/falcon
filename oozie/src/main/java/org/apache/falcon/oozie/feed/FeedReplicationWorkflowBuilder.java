@@ -44,7 +44,7 @@ public class FeedReplicationWorkflowBuilder extends OozieOrchestrationWorkflowBu
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
-        WORKFLOWAPP workflow = getWorkflow(REPLICATION_WF_TEMPLATE);
+        WORKFLOWAPP workflow = unmarshal(REPLICATION_WF_TEMPLATE);
         Cluster srcCluster = ConfigurationStore.get().get(EntityType.CLUSTER, buildPath.getName());
         String wfName = EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString();
         workflow.setName(wfName);
@@ -57,9 +57,8 @@ public class FeedReplicationWorkflowBuilder extends OozieOrchestrationWorkflowBu
             setupHiveCredentials(cluster, srcCluster, workflow);
         }
 
-        marshal(cluster, workflow, buildPath);
-
-        return getProperties(buildPath, wfName);
+        Path marshalPath = marshal(cluster, workflow, buildPath);
+        return getProperties(marshalPath, wfName);
     }
 
     private void setupHiveCredentials(Cluster targetCluster, Cluster sourceCluster, WORKFLOWAPP workflowApp) {

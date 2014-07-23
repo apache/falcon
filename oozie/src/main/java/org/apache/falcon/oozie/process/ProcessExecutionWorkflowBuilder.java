@@ -62,7 +62,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
-        WORKFLOWAPP wfApp = getWorkflow(DEFAULT_WF_TEMPLATE);
+        WORKFLOWAPP wfApp = unmarshal(DEFAULT_WF_TEMPLATE);
         String wfName = EntityUtil.getWorkflowName(Tag.DEFAULT, entity).toString();
         wfApp.setName(wfName);
 
@@ -92,8 +92,8 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         }
 
         //Create parent workflow
-        marshal(cluster, wfApp, buildPath);
-        return getProperties(buildPath, wfName);
+        Path marshalPath = marshal(cluster, wfApp, buildPath);
+        return getProperties(marshalPath, wfName);
     }
 
     protected abstract void decorateAction(ACTION action, Cluster cluster, Path buildPath) throws FalconException;

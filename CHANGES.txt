@@ -19,6 +19,9 @@ Trunk (Unreleased)
    FALCON-133 Upgrade to slf4j 1.7.5 and use SLF4J logger. (Jean-Baptiste Onofré
    via Shwetha GS)
 
+   FALCON-353 enable dry run feature of oozie for schedule 
+   and update (Shwetha GS via Suhas Vasu)
+
   OPTIMIZATIONS
 
   BUG FIXES

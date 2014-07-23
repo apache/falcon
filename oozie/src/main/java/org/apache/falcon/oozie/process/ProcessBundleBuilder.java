@@ -55,36 +55,35 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
         super(entity);
     }
 
-    @Override protected Properties getAdditionalProperties(Cluster cluster) throws FalconException {
+    private Properties getAdditionalProperties(Cluster cluster) throws FalconException {
         Properties properties = new Properties();
+
+        //Properties for optional inputs
         if (entity.getInputs() != null) {
             for (Input in : entity.getInputs().getInputs()) {
                 if (in.isOptional()) {
-                    properties.putAll(getOptionalInputProperties(in, cluster.getName()));
+                    Feed feed = EntityUtil.getEntity(EntityType.FEED, in.getFeed());
+                    org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                        FeedHelper.getCluster(feed, cluster.getName());
+                    String inName = in.getName();
+                    properties.put(inName + ".frequency", String.valueOf(feed.getFrequency().getFrequency()));
+                    properties.put(inName + ".freq_timeunit",
+                        mapToCoordTimeUnit(feed.getFrequency().getTimeUnit()).name());
+                    properties.put(inName + ".timezone", feed.getTimezone().getID());
+                    properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
+                    properties.put(inName + ".initial-instance",
+                        SchemaHelper.formatDateUTC(feedCluster.getValidity().getStart()));
+                    properties.put(inName + ".done-flag", "notused");
+
+                    String locPath = FeedHelper.createStorage(cluster.getName(), feed)
+                        .getUriTemplate(LocationType.DATA).replace('$', '%');
+                    properties.put(inName + ".uri-template", locPath);
+
+                    properties.put(inName + ".start-instance", in.getStart());
+                    properties.put(inName + ".end-instance", in.getEnd());
                 }
             }
         }
-        return  properties;
-    }
-
-    private Properties getOptionalInputProperties(Input in, String clusterName) throws FalconException {
-        Properties properties = new Properties();
-        Feed feed = EntityUtil.getEntity(EntityType.FEED, in.getFeed());
-        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, clusterName);
-        String inName = in.getName();
-        properties.put(inName + ".frequency", String.valueOf(feed.getFrequency().getFrequency()));
-        properties.put(inName + ".freq_timeunit", mapToCoordTimeUnit(feed.getFrequency().getTimeUnit()).name());
-        properties.put(inName + ".timezone", feed.getTimezone().getID());
-        properties.put(inName + ".end_of_duration", Timeunit.NONE.name());
-        properties.put(inName + ".initial-instance", SchemaHelper.formatDateUTC(cluster.getValidity().getStart()));
-        properties.put(inName + ".done-flag", "notused");
-
-        String locPath = FeedHelper.createStorage(clusterName, feed)
-            .getUriTemplate(LocationType.DATA).replace('$', '%');
-        properties.put(inName + ".uri-template", locPath);
-
-        properties.put(inName + ".start-instance", in.getStart());
-        properties.put(inName + ".end-instance", in.getEnd());
         return  properties;
     }
 
@@ -111,10 +110,16 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
         return ProcessHelper.getUserLibPath(entity, cluster, buildPath);
     }
 
-    @Override protected List<Properties> doBuild(Cluster cluster, Path buildPath) throws FalconException {
+    @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         copyUserWorkflow(cluster, buildPath);
 
-        return OozieCoordinatorBuilder.get(entity, Tag.DEFAULT).buildCoords(cluster, buildPath);
+        List<Properties> props = OozieCoordinatorBuilder.get(entity, Tag.DEFAULT).buildCoords(cluster, buildPath);
+        if (props != null) {
+            assert props.size() == 1 : "Process should have only 1 coord";
+            props.get(0).putAll(getAdditionalProperties(cluster));
+        }
+
+        return props;
     }
 
     private void copyUserWorkflow(Cluster cluster, Path buildPath) throws FalconException {

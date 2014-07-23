@@ -30,19 +30,25 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
+import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.testng.Assert;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Base for falcon unit tests involving configuration store.
@@ -96,7 +102,7 @@ public class AbstractTestBase {
     }
 
     protected COORDINATORAPP getCoordinator(FileSystem fs, Path path) throws Exception {
-        String coordStr = readFile(fs, new Path(path, "coordinator.xml"));
+        String coordStr = readFile(fs, path);
 
         Unmarshaller unmarshaller = JAXBContext.newInstance(COORDINATORAPP.class).createUnmarshaller();
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -137,5 +143,42 @@ public class AbstractTestBase {
                 store.remove(type, entity);
             }
         }
+    }
+
+    protected void assertLibExtensions(FileSystem fs, COORDINATORAPP coord, EntityType type,
+        String lifecycle) throws Exception {
+        WORKFLOWAPP wf = getWorkflowapp(fs, coord);
+        List<Object> actions = wf.getDecisionOrForkOrJoin();
+        String lifeCyclePath = lifecycle == null ? "" : "/" + lifecycle;
+        for (Object obj : actions) {
+            if (!(obj instanceof ACTION)) {
+                continue;
+            }
+            ACTION action = (ACTION) obj;
+            List<String> files = null;
+            if (action.getJava() != null) {
+                files = action.getJava().getFile();
+            } else if (action.getPig() != null) {
+                files = action.getPig().getFile();
+            } else if (action.getMapReduce() != null) {
+                files = action.getMapReduce().getFile();
+            }
+            if (files != null) {
+                Assert.assertTrue(files.get(files.size() - 1).endsWith(
+                    "/projects/falcon/working/libext/" + type.name() + lifeCyclePath + "/ext.jar"));
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected WORKFLOWAPP getWorkflowapp(FileSystem fs, COORDINATORAPP coord) throws JAXBException, IOException {
+        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        return getWorkflowapp(fs, new Path(wfPath));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected WORKFLOWAPP getWorkflowapp(FileSystem fs, Path path) throws JAXBException, IOException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
+        return ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(fs.open(path))).getValue();
     }
 }

@@ -19,7 +19,6 @@ package org.apache.falcon.resource;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -32,7 +31,6 @@ import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Property;
 import org.apache.falcon.entity.v0.process.Validity;
-import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.OozieTestUtils;
@@ -64,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -128,11 +127,7 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
-    private void update(TestContext context, Entity entity) throws Exception {
-        update(context, entity, null);
-    }
-
-    private void update(TestContext context, Entity entity, Date endTime) throws Exception {
+    private ClientResponse update(TestContext context, Entity entity, Date endTime) throws Exception {
         File tmpFile = TestContext.getTempFile();
         entity.getEntityType().getMarshaller().marshal(entity, tmpFile);
         WebResource resource = context.service.path("api/entities/update/"
@@ -140,11 +135,9 @@ public class EntityManagerJerseyIT {
         if (endTime != null) {
             resource = resource.queryParam("effective", SchemaHelper.formatDateUTC(endTime));
         }
-        ClientResponse response = resource
-                .header("Cookie", context.getAuthenticationToken())
+        return resource.header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.TEXT_XML)
                 .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(response);
     }
 
     @Test
@@ -167,7 +160,8 @@ public class EntityManagerJerseyIT {
 
         //change output feed path and update feed as another user
         feed.getLocations().getLocations().get(0).setPath("/falcon/test/output2/${YEAR}/${MONTH}/${DAY}");
-        update(context, feed);
+        ClientResponse response = update(context, feed, null);
+        context.assertSuccessful(response);
 
         bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 2);
@@ -211,55 +205,45 @@ public class EntityManagerJerseyIT {
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
         context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        OozieTestUtils.waitForWorkflowStart(context, context.processName);
     }
 
-    public void testProcessDeleteAndSchedule() throws Exception {
-        //Submit process with invalid property so that coord submit fails and bundle goes to failed state
+    public void testDryRun() throws Exception {
+        //Schedule of invalid process should fail because of dryRun
         TestContext context = newContext();
         Map<String, String> overlay = context.getUniqueOverlay();
         String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
         Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
         Property prop = new Property();
         prop.setName("newProp");
-        prop.setValue("${formatTim()}");
+        prop.setValue("${instanceTim()}");  //invalid property
         process.getProperties().getProperties().add(prop);
         File tmpFile = TestContext.getTempFile();
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
-        OozieTestUtils.waitForBundleStart(context, Status.FAILED, Status.KILLED);
 
-        FalconClient client = new FalconClient(TestContext.BASE_URL);
-        EntityList deps = client.getDependency(EntityType.PROCESS.name(), process.getName());
-        for (EntityElement dep : deps.getElements()) {
-            if (dep.name.equals(process.getInputs().getInputs().get(0).getName())) {
-                Assert.assertEquals("Input", dep.tag);
-            } else if (dep.name.equals(process.getOutputs().getOutputs().get(0).getName())) {
-                Assert.assertEquals("Output", dep.tag);
+        ClientResponse response = context.validate(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
+        context.assertFailure(response);
+
+        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay, false);
+
+        //Fix the process and then submitAndSchedule should succeed
+        Iterator<Property> itr = process.getProperties().getProperties().iterator();
+        while (itr.hasNext()) {
+            Property myProp = itr.next();
+            if (myProp.getName().equals("newProp")) {
+                itr.remove();
             }
         }
-
-        //Delete and re-submit the process with correct workflow
-        ClientResponse clientResponse = context.service
-                .path("api/entities/delete/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .delete(ClientResponse.class);
-        context.assertSuccessful(clientResponse);
-
-        process.getWorkflow().setPath("/falcon/test/workflow");
         tmpFile = TestContext.getTempFile();
+        process.setName("process" + System.currentTimeMillis());
         EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
-        clientResponse = context.service.path("api/entities/submitAndSchedule/process")
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .type(MediaType.TEXT_XML)
-                .post(ClientResponse.class, context.getServletInputStream(tmpFile.getAbsolutePath()));
-        context.assertSuccessful(clientResponse);
+        response = context.submitAndSchedule(tmpFile.getAbsolutePath(), overlay, EntityType.PROCESS);
+        context.assertSuccessful(response);
 
-        //Assert that new schedule creates new bundle
-        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
-        Assert.assertEquals(bundles.size(), 2);
+        //Update with invalid property should fail again
+        process.getProperties().getProperties().add(prop);
+        updateEndtime(process);
+        response = update(context, process, null);
+        context.assertFailure(response);
     }
 
     @Test
@@ -278,7 +262,8 @@ public class EntityManagerJerseyIT {
         //update process should create new bundle
         Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
         updateEndtime(process);
-        update(context, process);
+        ClientResponse response = update(context, process, null);
+        context.assertSuccessful(response);
         bundles = OozieTestUtils.getBundles(context);
         Assert.assertEquals(bundles.size(), 2);
     }
@@ -313,7 +298,8 @@ public class EntityManagerJerseyIT {
 
         updateEndtime(process);
         Date endTime = getEndTime();
-        update(context, process, endTime);
+        response = update(context, process, endTime);
+        context.assertSuccessful(response);
 
         //Assert that update creates new bundle and old coord is running
         bundles = OozieTestUtils.getBundles(context);
@@ -345,7 +331,8 @@ public class EntityManagerJerseyIT {
         Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
 
         updateEndtime(process);
-        update(context, process);
+        ClientResponse response = update(context, process, null);
+        context.assertSuccessful(response);
 
         //Assert that update does not create new bundle
         List<BundleJob> bundles = OozieTestUtils.getBundles(context);

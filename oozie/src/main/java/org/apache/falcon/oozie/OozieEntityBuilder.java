@@ -125,7 +125,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
     }
 
-    protected void marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
+    protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
         throws FalconException {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
@@ -146,6 +146,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             }
 
             LOG.info("Marshalled {} to {}", jaxbElement.getDeclaredType(), outPath);
+            return outPath;
         } catch (Exception e) {
             throw new FalconException("Unable to marshall app object", e);
         }
@@ -299,7 +300,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
 
         Properties prop = new Properties();
-        prop.setProperty(OozieEntityBuilder.ENTITY_PATH, getStoragePath(path));
+        prop.setProperty(OozieEntityBuilder.ENTITY_PATH, path.toString());
         prop.setProperty(OozieEntityBuilder.ENTITY_NAME, name);
         return prop;
     }

@@ -57,8 +57,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.Calendar;
@@ -228,10 +226,14 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("mapBandwidthKB"), "102400");
 
         assertLibExtensions(coord, "replication");
-        WORKFLOWAPP wf = getWorkflowapp(coord);
+        WORKFLOWAPP wf = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
         assertWorkflowRetries(wf);
 
         Assert.assertFalse(Storage.TYPE.TABLE == FeedHelper.getStorageType(feed, trgCluster));
+    }
+
+    private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
+        assertLibExtensions(trgMiniDFS.getFileSystem(), coord, EntityType.FEED, lifecycle);
     }
 
     private COORDINATORAPP getCoordinator(EmbeddedCluster cluster, String appPath) throws Exception {
@@ -239,11 +241,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private String getWorkflowAppPath() {
-        return "${nameNode}/projects/falcon/REPLICATION/" + srcCluster.getName();
+        return "${nameNode}/projects/falcon/REPLICATION/" + srcCluster.getName() + "/workflow.xml";
     }
 
     private void assertWorkflowRetries(COORDINATORAPP coord) throws JAXBException, IOException {
-        assertWorkflowRetries(getWorkflowapp(coord));
+        assertWorkflowRetries(getWorkflowapp(trgMiniDFS.getFileSystem(), coord));
     }
 
     private void assertWorkflowRetries(WORKFLOWAPP wf) throws JAXBException, IOException {
@@ -259,37 +261,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 Assert.assertEquals(action.getRetryInterval(), "1");
             }
         }
-    }
-
-    private void assertLibExtensions(COORDINATORAPP coord, String lifecycle) throws Exception {
-        WORKFLOWAPP wf = getWorkflowapp(coord);
-        List<Object> actions = wf.getDecisionOrForkOrJoin();
-        for (Object obj : actions) {
-            if (!(obj instanceof ACTION)) {
-                continue;
-            }
-            ACTION action = (ACTION) obj;
-            List<String> files = null;
-            if (action.getJava() != null) {
-                files = action.getJava().getFile();
-            } else if (action.getPig() != null) {
-                files = action.getPig().getFile();
-            } else if (action.getMapReduce() != null) {
-                files = action.getMapReduce().getFile();
-            }
-            if (files != null) {
-                Assert.assertTrue(files.get(files.size() - 1).endsWith("/projects/falcon/working/libext/FEED/"
-                        + lifecycle + "/ext.jar"));
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private WORKFLOWAPP getWorkflowapp(COORDINATORAPP coord) throws JAXBException, IOException {
-        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
-        return ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(
-                trgMiniDFS.getFileSystem().open(new Path(wfPath, "workflow.xml")))).getValue();
     }
 
     @Test
@@ -340,7 +311,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Date endDate = feedCluster.getValidity().getEnd();
         Assert.assertEquals(coord.getEnd(), SchemaHelper.formatDateUTC(endDate));
 
-        WORKFLOWAPP workflow = getWorkflowapp(coord);
+        WORKFLOWAPP workflow = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
         assertWorkflowDefinition(fsReplFeed, workflow);
 
         List<Object> actions = workflow.getDecisionOrForkOrJoin();
@@ -438,7 +409,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals("${now(0,-40)}", outEventInstance);
 
         // assert FS staging area
-        String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        Path wfPath = new Path(coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "")).getParent();
         final FileSystem fs = trgMiniDFS.getFileSystem();
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts")));
         Assert.assertTrue(fs.exists(new Path(wfPath + "/scripts/falcon-table-export.hql")));
@@ -486,8 +457,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
-        assertReplicationHCatCredentials(getWorkflowapp(coord),
-                coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", ""));
+        assertReplicationHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord), wfPath.toString());
     }
 
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
@@ -555,7 +525,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         List<Properties> coords = builder.buildCoords(srcCluster, new Path("/projects/falcon/"));
         COORDINATORAPP coord = getCoordinator(srcMiniDFS, coords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
 
-        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(), "${nameNode}/projects/falcon/RETENTION");
+        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(),
+            "${nameNode}/projects/falcon/RETENTION/workflow.xml");
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
@@ -601,7 +572,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         List<Properties> coords = builder.buildCoords(trgCluster, new Path("/projects/falcon/"));
         COORDINATORAPP coord = getCoordinator(trgMiniDFS, coords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
 
-        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(), "${nameNode}/projects/falcon/RETENTION");
+        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(),
+            "${nameNode}/projects/falcon/RETENTION/workflow.xml");
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + tableFeed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
@@ -634,8 +606,9 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         assertWorkflowRetries(coord);
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
-        assertHCatCredentials(getWorkflowapp(coord),
-                coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", ""));
+        assertHCatCredentials(
+            getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
+            new Path(coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "")).getParent().toString());
     }
 
     private void assertHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {

@@ -171,6 +171,18 @@ public abstract class AbstractEntityManager {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity entity = deserializeEntity(request, entityType);
             validate(entity);
+
+            //Validate that the entity can be scheduled in the cluster
+            if (entity.getEntityType().isSchedulable()) {
+                Set<String> clusters = EntityUtil.getClustersDefinedInColos(entity);
+                for (String cluster : clusters) {
+                    try {
+                        getWorkflowEngine().dryRun(entity, cluster);
+                    } catch (FalconException e) {
+                        throw new FalconException("dryRun failed on cluster " + cluster, e);
+                    }
+                }
+            }
             return new APIResult(APIResult.Status.SUCCEEDED,
                     "Validated successfully (" + entityType + ") " + entity.getName());
         } catch (Throwable e) {
@@ -231,9 +243,9 @@ public abstract class AbstractEntityManager {
             validateUpdate(oldEntity, newEntity);
             configStore.initiateUpdate(newEntity);
 
-            List<String> effectiveTimes = new ArrayList<String>();
             Date effectiveTime =
                 StringUtils.isEmpty(effectiveTimeStr) ? null : EntityUtil.parseDateUTC(effectiveTimeStr);
+            StringBuilder result = new StringBuilder("Updated successfully");
             //Update in workflow engine
             if (!DeploymentUtil.isPrism()) {
                 Set<String> oldClusters = EntityUtil.getClustersDefinedInColos(oldEntity);
@@ -243,10 +255,7 @@ public abstract class AbstractEntityManager {
 
                 for (String cluster : newClusters) {
                     Date myEffectiveTime = validateEffectiveTime(newEntity, cluster, effectiveTime);
-                    Date effectiveEndTime = getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime);
-                    if (effectiveEndTime != null) {
-                        effectiveTimes.add("(" + cluster + ", " + SchemaHelper.formatDateUTC(effectiveEndTime) + ")");
-                    }
+                    result.append(getWorkflowEngine().update(oldEntity, newEntity, cluster, myEffectiveTime));
                 }
                 for (String cluster : oldClusters) {
                     getWorkflowEngine().delete(oldEntity, cluster);
@@ -255,8 +264,7 @@ public abstract class AbstractEntityManager {
 
             configStore.update(entityType, newEntity);
 
-            return new APIResult(APIResult.Status.SUCCEEDED, entityName + " updated successfully"
-                    + (effectiveTimes.isEmpty() ? "" : " with effect from " + effectiveTimes));
+            return new APIResult(APIResult.Status.SUCCEEDED, result.toString());
         } catch (Throwable e) {
             LOG.error("Update failed", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
