@@ -18,12 +18,6 @@
 
 package org.apache.oozie.extensions;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.oozie.command.coord.CoordCommandUtils;
@@ -38,6 +32,12 @@ import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.Text;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 /**
  * Oozie EL Extensions for falcon.
  */
@@ -50,6 +50,10 @@ public final class OozieELExtensions {
 
     private enum TruncateBoundary {
         NONE, DAY, MONTH, QUARTER, YEAR
+    }
+
+    private enum DayOfWeek {
+        SUN, MON, TUE, WED, THU, FRI, SAT
     }
 
     public static final String COORD_CURRENT = "coord:current";
@@ -149,6 +153,18 @@ public final class OozieELExtensions {
         return "yesterday(" + hr + ", " + min + ")"; // Unresolved
     }
 
+    public static String ph1_currentWeek_echo(String weekDayName, int hr, int min) {
+        ELEvaluator eval = ELEvaluator.getCurrent();
+        eval.setVariable(".wrap", "true");
+        return "currentWeek('" + weekDayName + "', " + hr + ", " + min + ")"; // Unresolved
+    }
+
+    public static String ph1_lastWeek_echo(String weekDayName, int hr, int min) {
+        ELEvaluator eval = ELEvaluator.getCurrent();
+        eval.setVariable(".wrap", "true");
+        return "lastWeek('" + weekDayName + "', " + hr + ", " + min + ")"; // Unresolved
+    }
+
     public static String ph1_currentMonth_echo(int day, int hr, int min) {
         ELEvaluator eval = ELEvaluator.getCurrent();
         eval.setVariable(".wrap", "true");
@@ -183,6 +199,16 @@ public final class OozieELExtensions {
 
     public static String ph2_yesterday_inst(int hr, int min) {
         return mapToCurrentInstance(TruncateBoundary.DAY, 0, 0, -1, hr, min);
+    }
+
+    public static String ph2_currentWeek_inst(String weekDayName, int hr, int min) {
+        int day = getDayOffset(weekDayName);
+        return mapToCurrentInstance(TruncateBoundary.DAY, 0, 0, day, hr, min);
+    }
+
+    public static String ph2_lastWeek_inst(String weekDayName, int hr, int min) {
+        int day = getDayOffset(weekDayName) - 7;
+        return mapToCurrentInstance(TruncateBoundary.DAY, 0, 0, day, hr, min);
     }
 
     public static String ph2_currentMonth_inst(int day, int hr, int min) {
@@ -334,6 +360,38 @@ public final class OozieELExtensions {
             return evaluateCurrent(inst);
         } else {
             return getEffectiveTimeStr(TruncateBoundary.MONTH, 0, -1, day, hr, min);
+        }
+    }
+
+    private static int getDayOffset(String weekDayName) {
+        int day;
+        Calendar nominalTime = CoordELFunctions.getEffectiveNominalTime();
+        int currentWeekDay = nominalTime.get(Calendar.DAY_OF_WEEK);
+        int weekDay = DayOfWeek.valueOf(weekDayName).ordinal() + 1; //to map to Calendar.SUNDAY ...
+        day = weekDay - currentWeekDay;
+        if (weekDay > currentWeekDay) {
+            day = day - 7;
+        }
+        return day;
+    }
+
+    public static String ph2_currentWeek(String weekDayName, int hr, int min) throws Exception {
+        int day = getDayOffset(weekDayName);
+        if (isDatasetContext()) {
+            String inst = ph2_currentMonth_inst(day, hr, min);
+            return evaluateCurrent(inst);
+        } else {
+            return getEffectiveTimeStr(TruncateBoundary.DAY, 0, 0, day, hr, min);
+        }
+    }
+
+    public static String ph2_lastWeek(String weekDayName, int hr, int min) throws Exception {
+        int day = getDayOffset(weekDayName) - 7;
+        if (isDatasetContext()) {
+            String inst = ph2_lastMonth_inst(day, hr, min);
+            return evaluateCurrent(inst);
+        } else {
+            return getEffectiveTimeStr(TruncateBoundary.DAY, 0, 0, day, hr, min);
         }
     }
 

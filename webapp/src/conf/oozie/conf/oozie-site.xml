@@ -22,34 +22,26 @@
         Refer to the oozie-default.xml file for the complete list of
         Oozie configuration properties and their default values.
     -->
+
     <property>
         <name>oozie.service.ActionService.executor.ext.classes</name>
         <value>
             org.apache.oozie.action.email.EmailActionExecutor,
             org.apache.oozie.action.hadoop.HiveActionExecutor,
             org.apache.oozie.action.hadoop.ShellActionExecutor,
-            org.apache.oozie.action.hadoop.SqoopActionExecutor
+            org.apache.oozie.action.hadoop.SqoopActionExecutor,
+            org.apache.oozie.action.hadoop.DistcpActionExecutor
         </value>
     </property>
 
     <property>
         <name>oozie.service.SchemaService.wf.ext.schemas</name>
-        <value>shell-action-0.1.xsd,hive-action-0.2.xsd,sqoop-action-0.2.xsd</value>
-    </property>
-
-   <property>
-        <name>oozie.service.HadoopAccessorService.action.configurations</name>
-        <value>*=${oozie.action.conf}</value>
-        <description>
-            Comma separated AUTHORITY=ACTION_CONF_DIR, where AUTHORITY is the HOST:PORT of
-            the Hadoop MapReduce service (JobTracker, YARN). The wildcard '*' configuration is
-            used when there is no exact match for an authority. The ACTION_CONF_DIR may contain
-            ACTION.xml files where ACTION is the action type ('java', 'map-reduce', 'pig',
-            'hive', 'sqoop', etc.). If the ACTION.xml file exists, its properties will be used
-            as defaults properties for the action. If the path is relative is looked within
-            the Oozie configuration directory; though the path can be absolute (i.e. to point
-            to Hadoop client conf/ directories in the local filesystem.
-        </description>
+        <value>
+            shell-action-0.1.xsd,shell-action-0.2.xsd,shell-action-0.3.xsd,email-action-0.1.xsd,hive-action-0.2.xsd,
+            hive-action-0.3.xsd,hive-action-0.4.xsd,hive-action-0.5.xsd,sqoop-action-0.2.xsd,sqoop-action-0.3.xsd,
+            sqoop-action-0.4.xsd,ssh-action-0.1.xsd,ssh-action-0.2.xsd,distcp-action-0.1.xsd,distcp-action-0.2.xsd,
+            oozie-sla-0.1.xsd,oozie-sla-0.2.xsd
+        </value>
     </property>
 
     <property>
@@ -61,18 +53,10 @@
     </property>
 
     <property>
-        <name>oozie.base.url</name>
-        <value>https://localhost:41443/oozie</value>
-        <description>
-            The Oozie system ID.
-        </description>
-    </property>
-
-    <property>
         <name>oozie.systemmode</name>
         <value>NORMAL</value>
         <description>
-            System mode for Oozie at startup.
+            System mode for  Oozie at startup.
         </description>
     </property>
 
@@ -126,13 +110,12 @@
     </property>
 
     <property>
-        <name>oozie.service.coord.normal.default.timeout
-        </name>
-        <value>120</value>
-        <description>Default timeout for a coordinator action input check (in minutes) for normal job.
-            -1 means infinite timeout
-        </description>
-    </property>
+		<name>oozie.service.coord.normal.default.timeout
+		</name>
+		<value>120</value>
+		<description>Default timeout for a coordinator action input check (in minutes) for normal job.
+            -1 means infinite timeout</description>
+	</property>
 
     <property>
         <name>oozie.db.schema.name</name>
@@ -184,7 +167,7 @@
             DB user password.
 
             IMPORTANT: if password is emtpy leave a 1 space string, the service trims the value,
-            if empty Configuration assumes it is NULL.
+                       if empty Configuration assumes it is NULL.
         </description>
     </property>
 
@@ -192,7 +175,7 @@
         <name>oozie.service.JPAService.pool.max.active.conn</name>
         <value>10</value>
         <description>
-            Max number of connections.
+             Max number of connections.
         </description>
     </property>
 
@@ -238,7 +221,7 @@
 
     <property>
         <name>oozie.service.HadoopAccessorService.nameNode.whitelist</name>
-        <value></value>
+        <value> </value>
         <description>
             Whitelisted job tracker for Oozie service.
         </description>
@@ -308,18 +291,18 @@
     </property>
 
     <property>
-        <name>oozie.authentication.cookie.domain</name>
-        <value></value>
-        <description>
-            The domain to use for the HTTP cookie that stores the authentication token.
-            In order to authentiation to work correctly across multiple hosts
-            the domain must be correctly set.
-        </description>
+      <name>oozie.authentication.cookie.domain</name>
+      <value></value>
+      <description>
+        The domain to use for the HTTP cookie that stores the authentication token.
+        In order to authentiation to work correctly across multiple hosts
+        the domain must be correctly set.
+      </description>
     </property>
 
     <property>
         <name>oozie.authentication.simple.anonymous.allowed</name>
-        <value>false</value>
+        <value>true</value>
         <description>
             Indicates if anonymous requests are allowed.
             This setting is meaningful only when using 'simple' authentication.
@@ -353,12 +336,62 @@
         </description>
     </property>
 
+    <!-- Proxyuser Configuration -->
+
+    <!--
+
+    <property>
+        <name>oozie.service.ProxyUserService.proxyuser.#USER#.hosts</name>
+        <value>*</value>
+        <description>
+            List of hosts the '#USER#' user is allowed to perform 'doAs'
+            operations.
+
+            The '#USER#' must be replaced with the username o the user who is
+            allowed to perform 'doAs' operations.
+
+            The value can be the '*' wildcard or a list of hostnames.
+
+            For multiple users copy this property and replace the user name
+            in the property name.
+        </description>
+    </property>
+
+    <property>
+        <name>oozie.service.ProxyUserService.proxyuser.#USER#.groups</name>
+        <value>*</value>
+        <description>
+            List of groups the '#USER#' user is allowed to impersonate users
+            from to perform 'doAs' operations.
+
+            The '#USER#' must be replaced with the username o the user who is
+            allowed to perform 'doAs' operations.
+
+            The value can be the '*' wildcard or a list of groups.
+
+            For multiple users copy this property and replace the user name
+            in the property name.
+        </description>
+    </property>
+
+    -->
+
+    <property>
+        <name>oozie.base.url</name>
+        <value>https://localhost:41443/oozie</value>
+        <description>
+            The Oozie base url.
+        </description>
+    </property>
+
     <property>
         <name>oozie.service.ELService.ext.functions.coord-job-submit-instances</name>
         <value>
             now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
             today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
             yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
+            currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_currentWeek_echo,
+            lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_lastWeek_echo,
             currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
             lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
             currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
@@ -373,13 +406,14 @@
             include all the built in ones.
         </description>
     </property>
-
     <property>
         <name>oozie.service.ELService.ext.functions.coord-action-create-inst</name>
         <value>
             now=org.apache.oozie.extensions.OozieELExtensions#ph2_now_inst,
             today=org.apache.oozie.extensions.OozieELExtensions#ph2_today_inst,
             yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday_inst,
+            currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek_inst,
+            lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek_inst,
             currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth_inst,
             lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth_inst,
             currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear_inst,
@@ -395,13 +429,14 @@
             include all the built in ones.
         </description>
     </property>
-
     <property>
         <name>oozie.service.ELService.ext.functions.coord-action-create</name>
         <value>
             now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
             today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
             yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
+            currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek,
+            lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek,
             currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
             lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
             currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
@@ -417,13 +452,14 @@
             include all the built in ones.
         </description>
     </property>
-
     <property>
         <name>oozie.service.ELService.ext.functions.coord-job-submit-data</name>
         <value>
             now=org.apache.oozie.extensions.OozieELExtensions#ph1_now_echo,
             today=org.apache.oozie.extensions.OozieELExtensions#ph1_today_echo,
             yesterday=org.apache.oozie.extensions.OozieELExtensions#ph1_yesterday_echo,
+            currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_currentWeek_echo,
+            lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph1_lastWeek_echo,
             currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_currentMonth_echo,
             lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph1_lastMonth_echo,
             currentYear=org.apache.oozie.extensions.OozieELExtensions#ph1_currentYear_echo,
@@ -440,13 +476,14 @@
             include all the built in ones.
         </description>
     </property>
-
     <property>
         <name>oozie.service.ELService.ext.functions.coord-action-start</name>
         <value>
             now=org.apache.oozie.extensions.OozieELExtensions#ph2_now,
             today=org.apache.oozie.extensions.OozieELExtensions#ph2_today,
             yesterday=org.apache.oozie.extensions.OozieELExtensions#ph2_yesterday,
+            currentWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_currentWeek,
+            lastWeek=org.apache.oozie.extensions.OozieELExtensions#ph2_lastWeek,
             currentMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_currentMonth,
             lastMonth=org.apache.oozie.extensions.OozieELExtensions#ph2_lastMonth,
             currentYear=org.apache.oozie.extensions.OozieELExtensions#ph2_currentYear,
@@ -489,22 +526,12 @@
     </property>
 
     <property>
-   		<name>oozie.service.HadoopAccessorService.supported.filesystems</name>
-   		<value>hdfs,hftp,webhdfs,jail</value>
-   		<description>
-   			Enlist the different filesystems supported for federation. If wildcard "*" is specified,
-   			then ALL file schemes will be allowed.
-   		</description>
-   	</property>
-
-    <!-- Proxyuser Configuration -->
-    <property>
-        <name>oozie.service.ProxyUserService.proxyuser.${user.name}.hosts</name>
-        <value>*</value>
-    </property>
-    <property>
-        <name>oozie.service.ProxyUserService.proxyuser.${user.name}.groups</name>
-        <value>*</value>
+        <name>oozie.service.HadoopAccessorService.supported.filesystems</name>
+        <value>hdfs,hftp,webhdfs,jail</value>
+        <description>
+            Enlist the different filesystems supported for federation. If wildcard "*" is specified,
+            then ALL file schemes will be allowed.
+        </description>
     </property>
 
 </configuration>

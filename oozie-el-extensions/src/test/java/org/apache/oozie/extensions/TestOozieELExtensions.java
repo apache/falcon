@@ -154,6 +154,27 @@ public class TestOozieELExtensions {
         Assert.assertEquals("2009-09-02T23:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
     }
 
+    @Test
+    public void testCurrentWeek() throws Exception {
+        initForCurrentThread();
+
+        String expr = "${currentWeek('SUN',0,0)}";
+        String instResult = CoordELFunctions.evalAndWrap(instEval, expr);
+        Assert.assertEquals("2009-08-30T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
+
+        expr = "${currentWeek('FRI',1,0)}";
+        instResult = CoordELFunctions.evalAndWrap(instEval, expr);
+        Assert.assertEquals("2009-08-28T01:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
+
+        expr = "${lastWeek('SUN',0,0)}";
+        instResult = CoordELFunctions.evalAndWrap(instEval, expr);
+        Assert.assertEquals("2009-08-23T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
+
+        expr = "${lastWeek('MON',0,0)}";
+        instResult = CoordELFunctions.evalAndWrap(instEval, expr);
+        Assert.assertEquals("2009-08-24T00:00Z", CoordELFunctions.evalAndWrap(createEval, getELExpression(instResult)));
+    }
+
     private String getELExpression(String expr) {
         if (expr != null) {
             return "${" + expr + "}";

@@ -698,6 +698,7 @@ Falcon currently support following ELs:
    * 3.	*yesterday(hours,minutes)*: As the name suggest EL yesterday picks up feed instances with respect to start of day yesterday. Hours and minutes are added to the 00 hours starting yesterday, Example: yesterday(24,30) will actually correspond to 00:30 am of today, for 2010-01-02T01:30Z this would mean 2010-01-02:00:30 feed. 
 
    * 7.	*lastYear(month,day,hour,minute)*: This is exactly similarly to currentYear in usage> only difference being start reference is taken to start of previous year. For example: lastYear(4,2,2,20) will correspond to feed instance created at 2009-05-03T02:20Z and lastYear(12,2,2,20) will correspond to feed at 2010-01-03T02:20Z.
+
    * 4.	*currentMonth(day,hour,minute)*: Current month takes the reference to start of the month with respect to instance start time. One thing to keep in mind is that day is added to the first day of the month. So the value of day is the number of days you want to add to the first day of the month. For example: for instance start time 2010-01-12T01:30Z and El as currentMonth(3,2,40) will correspond to feed created at 2010-01-04T02:40Z and currentMonth(0,0,0) will mean 2010-01-01T00:00Z.
 
    * 5.	*lastMonth(day,hour,minute)*: Parameters for lastMonth is same as currentMonth, only difference being the reference is shifted to one month back. For instance start 2010-01-12T01:30Z lastMonth(2,3,30) will correspond to feed instance at 2009-12-03:T03:30Z 
@@ -709,6 +710,10 @@ Falcon currently support following ELs:
    
    * 8. *latest(number of latest instance)*: This will simply make you input consider the number of latest available instance of the feed given as parameter. For example: latest(0) will consider the last available instance of feed, where as latest latest(-1) will consider second last available feed and latest(-3) will consider 4th last available feed.
    
+   * 9.	*currentWeek(weekDayName,hour,minute)*: This is similar to currentMonth in the sense that it returns a relative time with respect to the instance start time, considering the day name provided as input as the start of the week. The day names can be one of SUN, MON, TUE, WED, THU, FRI, SAT.
+
+   * 10. *lastWeek(weekDayName,hour,minute)*: This is typically 7 days less than what the currentWeek returns for similar parameters.
+
 
 ---++ Lineage
 
