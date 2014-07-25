@@ -78,7 +78,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     public InstancesResult getRunningInstances(String type, String entity,
-                                               String colo, List<LifeCycle> lifeCycles) {
+                                               String colo, List<LifeCycle> lifeCycles,
+                                               String orderBy, Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
         try {
@@ -86,18 +87,95 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             validateNotEmpty("entityName", entity);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            return wfEngine.getRunningInstances(entityObject, lifeCycles);
+            return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
+                    "", orderBy, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
         }
     }
 
+    private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String statusFilter, String orderBy,
+                                                    Integer offset, Integer numResults) {
+
+        ArrayList<Instance> instanceSet = new ArrayList<Instance>();
+        if (resultSet.getInstances() == null) {
+            // return the empty resultSet
+            return resultSet;
+        }
+
+
+        for (Instance instance : resultSet.getInstances()) {
+            // If statusFilter is empty, return all instances. Else return instances with matching status.
+            if (statusFilter.equals("")
+                    || instance.getStatus().toString().equalsIgnoreCase(statusFilter)) {
+                instanceSet.add(instance);
+            }
+        }
+
+        if (offset >= instanceSet.size() || instanceSet.size() == 0) {
+            // No instances to return when size 10, offset 10, return empty list.
+            return new InstancesResult(resultSet.getMessage(), new Instance[0]);
+        }
+
+        // orderBy supports status, cluster, startTime, endTime
+        // Sort the ArrayList using orderBy
+        if (orderBy.equals("status")) {
+            Collections.sort(instanceSet, new Comparator<Instance>() {
+                @Override
+                public int compare(Instance i1, Instance i2) {
+                    return i1.getStatus().toString().compareTo(i2.getStatus().toString());
+                }
+            });
+        } else if (orderBy.equals("cluster")) {
+            Collections.sort(instanceSet, new Comparator<Instance>() {
+                @Override
+                public int compare(Instance i1, Instance i2) {
+                    return i1.getCluster().compareTo(i2.getCluster());
+                }
+            });
+        } else if (orderBy.equals("startTime")){
+            Collections.sort(instanceSet, new Comparator<Instance>() {
+                @Override
+                public int compare(Instance i1, Instance i2) {
+                    return i1.getStartTime().compareTo(i2.getStartTime());
+                }
+            });
+        } else if (orderBy.equals("endTime")) {
+            Collections.sort(instanceSet, new Comparator<Instance>() {
+                @Override
+                public int compare(Instance i1, Instance i2) {
+                    return i1.getEndTime().compareTo(i2.getEndTime());
+                }
+            });
+        }//Default : no sort
+
+        /* Get a subset of instances based on offset and count. When returning subset of instances,
+               instances[offset] is included. Size 10, offset 5, count 3, return instances[5,6,7].
+               Size 10, offset 5, count >= 5, return instances[5,6,7,8,9]
+               When count is -1, return instances starting from instances[offset] until the end */
+        int retLen = instanceSet.size() -  offset;
+        if (retLen > numResults && numResults != -1) {
+            retLen = numResults;
+        }
+        return new InstancesResult(resultSet.getMessage(),
+                instanceSet.subList(offset, (offset+retLen)).toArray(new Instance[retLen]));
+    }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public InstancesResult getInstances(String type, String entity, String startStr, String endStr,
+                                        String colo, List<LifeCycle> lifeCycles,
+                                        String statusFilter, String orderBy, Integer offset, Integer numResults) {
+        return getStatus(type, entity, startStr, endStr, colo, lifeCycles,
+                statusFilter, orderBy, offset, numResults);
+    }
 
     public InstancesResult getStatus(String type, String entity, String startStr, String endStr,
-                                     String colo, List<LifeCycle> lifeCycles) {
+                                     String colo, List<LifeCycle> lifeCycles,
+                                     String statusFilter, String orderBy, Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
+
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity, startStr, endStr);
@@ -106,8 +184,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Entity entityObject = EntityUtil.getEntity(type, entity);
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getStatus(
-                    entityObject, start, end, lifeCycles);
+            return getInstanceResultSubset(wfEngine.getStatus(entityObject, start, end, lifeCycles),
+                    statusFilter, orderBy, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException
@@ -137,13 +215,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     public InstancesResult getLogs(String type, String entity, String startStr,
                                    String endStr, String colo, String runId,
-                                   List<LifeCycle> lifeCycles) {
+                                   List<LifeCycle> lifeCycles,
+                                   String statusFilter, String orderBy, Integer offset, Integer numResults) {
 
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            // TODO getStatus does all validations and filters clusters
+            // getStatus does all validations and filters clusters
             InstancesResult result = getStatus(type, entity, startStr, endStr,
-                    colo, lifeCycles);
+                    colo, lifeCycles, statusFilter, orderBy, offset, numResults);
             LogProvider logProvider = new LogProvider();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             for (Instance instance : result.getInstances()) {
@@ -156,6 +235,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     Response.Status.BAD_REQUEST);
         }
     }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public InstancesResult getInstanceParams(String type,
                                           String entity, String startTime,

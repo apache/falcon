@@ -90,10 +90,22 @@ public class FalconCLISmokeIT {
         Assert.assertEquals(0,
                 executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")));
 
+        // test entity List cli
+        Assert.assertEquals(0,
+                executeWithURL("entity -list -type cluster"
+                        + " -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("entity -list -type process -fields status "
+                        + " -statusFilter SUCCEEDED -orderBy status -offset 1 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("entity -list -type process -fields status "
+                        + " -statusFilter SUCCEEDED -orderBy INVALID -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("entity -list -type process -fields INVALID "
+                        + " -statusFilter SUCCEEDED -orderBy status -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type feed -name "
                         + overlay.get("outputFeedName") + " -start " + START_INSTANCE));
-
         Assert.assertEquals(0,
                 executeWithURL("instance -running -type process -name " + overlay.get("processName")));
     }

@@ -59,8 +59,12 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     @Monitored(event = "dependencies")
     @Override
     public EntityList getEntityList(@Dimension("type") @PathParam("type") String type,
-                                    @DefaultValue("") @QueryParam("fields") String fields) {
-        return super.getEntityList(type, fields);
+                                    @DefaultValue("") @QueryParam("fields") String fields,
+                                    @DefaultValue("") @QueryParam("statusFilter") String statusFilter,
+                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                    @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+        return super.getEntityList(type, fields, statusFilter, orderBy, offset, resultsPerPage);
     }
 
     @GET

@@ -9,8 +9,14 @@ Get list of the entities.
 
 ---++ Parameters
    * :entity-type can be cluster, feed or process.
-   * :fields (optional) additional fields that the client are interested in, separated by commas.
-     Currently falcon only support status as a valid field.
+   * :fields <optional param> additional fields that the client are interested in, separated by commas.
+      * Currently falcon only support status as a valid field.
+   * :statusFilter <optional param> show entities with the specified status.
+   * :orderBy <optional param> is the field by which results should be ordered.
+      * Supports ordering by "status","name","type"
+   * :offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
+   * :numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+
 
 ---++ Results
 List of the entities.
@@ -51,6 +57,28 @@ GET http://localhost:15000/api/entities/list/feed?fields=status
         },
         {
             "name": "SampleInput",
+            "type": "feed",
+            "status": "RUNNING"
+        }
+    ]
+}
+</verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/feed?statusFilter=RUNNING&fields=status&orderBy=name&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "entity": [
+        {
+            "name"  : "SampleInput2",
+            "type"  : "feed",
+            "status": "RUNNING"
+        },
+        {
+            "name": "SampleInput3",
             "type": "feed",
             "status": "RUNNING"
         }
