@@ -122,7 +122,7 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         properties.setProperty(OozieClient.USE_SYSTEM_LIBPATH, "true");
         properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
 
-        if (isTableStorageType(cluster)) {
+        if (EntityUtil.isTableStorageType(cluster, entity)) {
             properties.putAll(getHiveCredentials(cluster));
         }
 

@@ -29,15 +29,16 @@ import org.apache.hadoop.fs.Path;
  * Builds oozie workflow for process where the engine is oozie.
  */
 public class OozieProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
+    private static final String ACTION_TEMPLATE = "/action/process/oozie-action.xml";
+
     public OozieProcessWorkflowBuilder(Process entity) {
         super(entity);
     }
 
-    @Override protected void decorateAction(ACTION action, Cluster cluster, Path buildPath) throws FalconException {
-        if (!action.getName().equals("user-oozie-workflow")) {
-            return;
-        }
+    @Override protected ACTION getUserAction(Cluster cluster, Path buildPath) throws FalconException {
+        ACTION action = unmarshalAction(ACTION_TEMPLATE);
         action.getSubWorkflow().setAppPath(getStoragePath(ProcessHelper.getUserWorkflowPath(entity, cluster,
             buildPath)));
+        return action;
     }
 }

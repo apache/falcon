@@ -48,7 +48,6 @@ import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.workflow.ACTION;
-import org.apache.falcon.oozie.workflow.DECISION;
 import org.apache.falcon.oozie.workflow.PIG;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
@@ -211,6 +210,9 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "12", "360");
         testParentWorkflow(process, parentWorkflow);
+
+        ACTION oozieAction = getAction(parentWorkflow, "user-action");
+        Assert.assertNotNull(oozieAction.getSubWorkflow());
     }
 
     @Test
@@ -232,10 +234,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         WORKFLOWAPP parentWorkflow = initializeProcessMapper(process, "12", "360");
         testParentWorkflow(process, parentWorkflow);
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-
-        ACTION pigActionNode = (ACTION) decisionOrForkOrJoin.get(3);
-        Assert.assertEquals("user-pig-job", pigActionNode.getName());
+        ACTION pigActionNode = getAction(parentWorkflow, "user-action");
 
         final PIG pigAction = pigActionNode.getPig();
         Assert.assertEquals(pigAction.getScript(), "${nameNode}/falcon/staging/workflows/pig-process/user/id.pig");
@@ -245,10 +244,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(5, pigAction.getParam().size());
         Assert.assertEquals(Collections.EMPTY_LIST, pigAction.getArchive());
         Assert.assertTrue(pigAction.getFile().size() > 0);
-
-        ACTION oozieAction = (ACTION) decisionOrForkOrJoin.get(5);
-        Assert.assertEquals("user-oozie-workflow", oozieAction.getName());
-        Assert.assertEquals("#USER_WF_PATH#", oozieAction.getSubWorkflow().getAppPath());
     }
 
     @DataProvider(name = "secureOptions")
@@ -305,13 +300,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-
-        ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
-        Assert.assertEquals("user-hive-job", hiveNode.getName());
+        ACTION hiveNode = getAction(parentWorkflow, "user-action");
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -363,13 +355,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-
-        ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
-        Assert.assertEquals("user-hive-job", hiveNode.getName());
+        ACTION hiveNode = getAction(parentWorkflow, "user-action");
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -421,13 +410,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-
-        ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
-        Assert.assertEquals("user-hive-job", hiveNode.getName());
+        ACTION hiveNode = getAction(parentWorkflow, "user-action");
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -475,13 +461,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
         testParentWorkflow(process, parentWorkflow);
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-
-        ACTION hiveNode = (ACTION) decisionOrForkOrJoin.get(4);
-        Assert.assertEquals("user-hive-job", hiveNode.getName());
+        ACTION hiveNode = getAction(parentWorkflow, "user-action");
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(hiveNode);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -497,7 +480,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private void assertHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
-        Path hiveConfPath = new Path(new Path(wfPath).getParent(), "conf/hive-site.xml");
+        Path hiveConfPath = new Path(new Path(wfPath), "conf/hive-site.xml");
         Assert.assertTrue(fs.exists(hiveConfPath));
 
         if (SecurityUtil.isSecurityEnabled()) {
@@ -586,7 +569,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath));
+        WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
 
         Assert.assertTrue(Storage.TYPE.TABLE == ProcessHelper.getStorageType(cluster, process));
         assertHCatCredentials(parentWorkflow, wfPath);
@@ -620,7 +603,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
             props.put(prefix + "_partition_filter_pig", "${coord:dataInPartitionFilter('input', 'pig')}");
             props.put(prefix + "_partition_filter_hive", "${coord:dataInPartitionFilter('input', 'hive')}");
             props.put(prefix + "_partition_filter_java", "${coord:dataInPartitionFilter('input', 'java')}");
-            props.put(prefix + "_datain_partitions_hive", "${coord:dataInPartitions('input', 'hive-export')}");
         } else if (prefix.equals("falcon_output")) {
             props.put(prefix + "_dataout_partitions", "${coord:dataOutPartitions('output')}");
         }
@@ -654,27 +636,18 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(coord.getControls().getTimeout(), timeout);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        return getWorkflowapp(fs, new Path(wfPath));
+        return getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
     }
 
     public void testParentWorkflow(Process process, WORKFLOWAPP parentWorkflow) {
         Assert.assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(), parentWorkflow.getName());
 
-        List<Object> decisionOrForkOrJoin = parentWorkflow.getDecisionOrForkOrJoin();
-        Assert.assertEquals("should-record", ((DECISION) decisionOrForkOrJoin.get(0)).getName());
-        Assert.assertEquals("recordsize", ((ACTION) decisionOrForkOrJoin.get(1)).getName());
-        Assert.assertEquals("user-workflow", ((DECISION) decisionOrForkOrJoin.get(2)).getName());
-        Assert.assertEquals("user-pig-job", ((ACTION) decisionOrForkOrJoin.get(3)).getName());
-        Assert.assertEquals("user-hive-job", ((ACTION) decisionOrForkOrJoin.get(4)).getName());
-        Assert.assertEquals("user-oozie-workflow", ((ACTION) decisionOrForkOrJoin.get(5)).getName());
-        Assert.assertEquals("succeeded-post-processing", ((ACTION) decisionOrForkOrJoin.get(6)).getName());
-        Assert.assertEquals("failed-post-processing", ((ACTION) decisionOrForkOrJoin.get(7)).getName());
-        Assert.assertEquals("3", ((ACTION) decisionOrForkOrJoin.get(1)).getRetryMax());
-        Assert.assertEquals("1", ((ACTION) decisionOrForkOrJoin.get(1)).getRetryInterval());
-        Assert.assertEquals("3", ((ACTION) decisionOrForkOrJoin.get(6)).getRetryMax());
-        Assert.assertEquals("1", ((ACTION) decisionOrForkOrJoin.get(6)).getRetryInterval());
-        Assert.assertEquals("3", ((ACTION) decisionOrForkOrJoin.get(7)).getRetryMax());
-        Assert.assertEquals("1", ((ACTION) decisionOrForkOrJoin.get(7)).getRetryInterval());
+        if (process.getLateProcess() != null) {
+            assertAction(parentWorkflow, "pre-processing", true);
+        }
+        assertAction(parentWorkflow, "succeeded-post-processing", true);
+        assertAction(parentWorkflow, "failed-post-processing", true);
+        assertAction(parentWorkflow, "user-action", false);
     }
 
     @AfterMethod

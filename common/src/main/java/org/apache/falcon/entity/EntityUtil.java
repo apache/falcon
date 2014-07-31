@@ -672,5 +672,19 @@ public final class EntityUtil {
         throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
     }
 
+    public static boolean isTableStorageType(Cluster cluster, Entity entity) throws FalconException {
+        return entity.getEntityType() == EntityType.PROCESS
+            ? isTableStorageType(cluster, (Process) entity) : isTableStorageType(cluster, (Feed) entity);
+    }
+
+    public static boolean isTableStorageType(Cluster cluster, Feed feed) throws FalconException {
+        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
+        return Storage.TYPE.TABLE == storageType;
+    }
+
+    public static boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
+        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
+        return Storage.TYPE.TABLE == storageType;
+    }
 
 }

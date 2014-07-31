@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
@@ -34,15 +35,14 @@ import java.util.List;
  * Builds orchestration workflow for process where engine is pig.
  */
 public class PigProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
+    private static final String ACTION_TEMPLATE = "/action/process/pig-action.xml";
 
     public PigProcessWorkflowBuilder(Process entity) {
         super(entity);
     }
 
-    @Override protected void decorateAction(ACTION action, Cluster cluster, Path buildPath) throws FalconException {
-        if (!action.getName().equals("user-pig-job")) {
-            return;
-        }
+    @Override protected ACTION getUserAction(Cluster cluster, Path buildPath) throws FalconException {
+        ACTION action = unmarshalAction(ACTION_TEMPLATE);
 
         PIG pigAction = action.getPig();
         Path userWfPath = ProcessHelper.getUserWorkflowPath(entity, cluster, buildPath);
@@ -56,12 +56,14 @@ public class PigProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
 
         propagateEntityProperties(pigAction.getConfiguration(), pigAction.getParam());
 
-        if (isTableStorageType(cluster)) { // adds hive-site.xml in pig classpath
+        if (EntityUtil.isTableStorageType(cluster, entity)) { // adds hive-site.xml in pig classpath
             pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
         }
 
         addArchiveForCustomJars(cluster, pigAction.getArchive(), ProcessHelper.getUserLibPath(entity, cluster,
             buildPath));
+
+        return action;
     }
 
     private void addPrepareDeleteOutputPath(PIG pigAction) throws FalconException {

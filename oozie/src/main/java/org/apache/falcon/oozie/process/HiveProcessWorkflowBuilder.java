@@ -35,14 +35,14 @@ import java.util.List;
  * Builds orchestration workflow for process where engine is hive.
  */
 public class HiveProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
+    private static final String ACTION_TEMPLATE = "/action/process/hive-action.xml";
+
     public HiveProcessWorkflowBuilder(Process entity) {
         super(entity);
     }
 
-    @Override protected void decorateAction(ACTION action, Cluster cluster, Path buildPath) throws FalconException {
-        if (!action.getName().equals("user-hive-job")) {
-            return;
-        }
+    @Override protected ACTION getUserAction(Cluster cluster, Path buildPath) throws FalconException {
+        ACTION action = unmarshalAction(ACTION_TEMPLATE);
 
         JAXBElement<org.apache.falcon.oozie.hive.ACTION> actionJaxbElement = OozieUtils.unMarshalHiveAction(action);
         org.apache.falcon.oozie.hive.ACTION hiveAction = actionJaxbElement.getValue();
@@ -65,6 +65,7 @@ public class HiveProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder 
             buildPath));
 
         OozieUtils.marshalHiveAction(action, actionJaxbElement);
+        return action;
     }
 
     private void propagateEntityProperties(org.apache.falcon.oozie.hive.ACTION hiveAction) {

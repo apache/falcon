@@ -53,50 +53,66 @@ import java.util.Set;
  * Base class for building orchestration workflow for process.
  */
 public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Process> {
-    private static final String DEFAULT_WF_TEMPLATE = "/workflow/process-parent-workflow.xml";
+
     private static final Set<String> FALCON_PROCESS_HIVE_ACTIONS = new HashSet<String>(
-        Arrays.asList(new String[]{"recordsize", "user-oozie-workflow", "user-pig-job", "user-hive-job", }));
+        Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, USER_ACTION_NAME, }));
 
     protected ProcessExecutionWorkflowBuilder(Process entity) {
         super(entity, Tag.DEFAULT);
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
-        WORKFLOWAPP wfApp = unmarshal(DEFAULT_WF_TEMPLATE);
+        WORKFLOWAPP wfApp = new WORKFLOWAPP();
         String wfName = EntityUtil.getWorkflowName(Tag.DEFAULT, entity).toString();
-        wfApp.setName(wfName);
+
+        String startAction = USER_ACTION_NAME;
+        final boolean isTableStorageType = EntityUtil.isTableStorageType(cluster, entity);
+
+        //Add pre-processing action
+        if (shouldPreProcess()) {
+            ACTION preProcessAction = getPreProcessingAction(isTableStorageType, Tag.DEFAULT);
+            addTransition(preProcessAction, USER_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+            wfApp.getDecisionOrForkOrJoin().add(preProcessAction);
+            startAction = PREPROCESS_ACTION_NAME;
+        }
+
+        //Add user action
+        ACTION userAction = getUserAction(cluster, buildPath);
+        addTransition(userAction, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME);
+        wfApp.getDecisionOrForkOrJoin().add(userAction);
+
+        //Add post-processing
+        ACTION success = getSuccessPostProcessAction();
+        addTransition(success, OK_ACTION_NAME, FAIL_ACTION_NAME);
+        wfApp.getDecisionOrForkOrJoin().add(success);
+
+        ACTION fail = getFailPostProcessAction();
+        addTransition(fail, FAIL_ACTION_NAME, FAIL_ACTION_NAME);
+        wfApp.getDecisionOrForkOrJoin().add(fail);
+
+        decorateWorkflow(wfApp, wfName, startAction);
 
         addLibExtensionsToWorkflow(cluster, wfApp, null);
 
-        final boolean isTableStorageType = isTableStorageType(cluster);
         if (isTableStorageType) {
             setupHiveCredentials(cluster, buildPath, wfApp);
         }
 
-        for (Object object : wfApp.getDecisionOrForkOrJoin()) {
-            if (!(object instanceof ACTION)) {
-                continue;
-            }
+        marshal(cluster, wfApp, buildPath);
+        Properties props = getProperties(buildPath, wfName);
+        props.putAll(getWorkflowProperties(cluster));
 
-            ACTION action = (ACTION) object;
-            String actionName = action.getName();
-            if (FALCON_ACTIONS.contains(actionName)) {
-                decorateWithOozieRetries(action);
-                if (isTableStorageType && actionName.equals("recordsize")) {
-                    // adds hive-site.xml in actions classpath
-                    action.getJava().setJobXml("${wf:appPath()}/conf/hive-site.xml");
-                }
-            }
-
-            decorateAction(action, cluster, buildPath);
-        }
-
-        //Create parent workflow
-        Path marshalPath = marshal(cluster, wfApp, buildPath);
-        return getProperties(marshalPath, wfName);
+        return props;
     }
 
-    protected abstract void decorateAction(ACTION action, Cluster cluster, Path buildPath) throws FalconException;
+    private Properties getWorkflowProperties(Cluster cluster) {
+        Properties props = new Properties();
+        props.setProperty("falconDataOperation", "GENERATE");
+        props.setProperty("srcClusterName", "NA");
+        return props;
+    }
+
+    protected abstract ACTION getUserAction(Cluster cluster, Path buildPath) throws FalconException;
 
     private void setupHiveCredentials(Cluster cluster, Path buildPath, WORKFLOWAPP wfApp) throws FalconException {
         // create hive-site.xml file so actions can use it in the classpath

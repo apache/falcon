@@ -63,6 +63,9 @@ import java.util.Properties;
  */
 public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> {
     private static final String REPLICATION_COORD_TEMPLATE = "/coordinator/replication-coordinator.xml";
+    private static final String IMPORT_HQL = "/action/feed/falcon-table-import.hql";
+    private static final String EXPORT_HQL = "/action/feed/falcon-table-export.hql";
+
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     private static final String PARALLEL = "parallel";
@@ -96,8 +99,9 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     private Properties doBuild(Cluster srcCluster, Cluster trgCluster, Path buildPath) throws FalconException {
 
         // Different workflow for each source since hive credentials vary for each cluster
-        OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, Tag.REPLICATION);
-        builder.build(trgCluster, buildPath);
+        OozieOrchestrationWorkflowBuilder builder = OozieOrchestrationWorkflowBuilder.get(entity, trgCluster,
+            Tag.REPLICATION);
+        Properties wfProps = builder.build(trgCluster, buildPath);
 
         long replicationDelayInMillis = getReplicationDelayInMillis(srcCluster);
         Date sourceStartDate = getStartDate(srcCluster, replicationDelayInMillis);
@@ -136,7 +140,8 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         coord.setAction(replicationWorkflowAction);
 
         Path marshalPath = marshal(trgCluster, coord, buildPath);
-        return getProperties(marshalPath, coordName);
+        wfProps.putAll(getProperties(marshalPath, coordName));
+        return wfProps;
     }
 
     private ACTION getReplicationWorkflowAction(Cluster srcCluster, Cluster trgCluster, Path buildPath,
@@ -144,7 +149,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         ACTION action = new ACTION();
         WORKFLOW workflow = new WORKFLOW();
 
-        workflow.setAppPath(getStoragePath(new Path(buildPath, "workflow.xml")));
+        workflow.setAppPath(getStoragePath(buildPath));
         Properties props = createCoordDefaultConfiguration(trgCluster, wfName);
         props.put("srcClusterName", srcCluster.getName());
         props.put("srcClusterColo", srcCluster.getColo());
@@ -266,8 +271,8 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         try {
             // copy import export scripts to stagingDir
             Path scriptPath = new Path(buildPath, "scripts");
-            copyHiveScript(fs, scriptPath, "/workflow/", "falcon-table-export.hql");
-            copyHiveScript(fs, scriptPath, "/workflow/", "falcon-table-import.hql");
+            copyHiveScript(fs, scriptPath, IMPORT_HQL);
+            copyHiveScript(fs, scriptPath, EXPORT_HQL);
 
             // create hive conf to stagingDir
             Path confPath = new Path(buildPath + "/conf");
@@ -278,13 +283,12 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         }
     }
 
-    private void copyHiveScript(FileSystem fs, Path scriptPath, String localScriptPath,
-        String scriptName) throws IOException {
+    private void copyHiveScript(FileSystem fs, Path scriptPath, String resource) throws IOException {
         OutputStream out = null;
         InputStream in = null;
         try {
-            out = fs.create(new Path(scriptPath, scriptName));
-            in = FeedReplicationCoordinatorBuilder.class.getResourceAsStream(localScriptPath + scriptName);
+            out = fs.create(new Path(scriptPath, new Path(resource).getName()));
+            in = FeedReplicationCoordinatorBuilder.class.getResourceAsStream(resource);
             IOUtils.copy(in, out);
         } finally {
             IOUtils.closeQuietly(in);

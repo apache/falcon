@@ -95,8 +95,10 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
         props.putAll(FeedHelper.getUserWorkflowProperties("eviction"));
 
         WORKFLOW workflow = new WORKFLOW();
-        Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, Tag.RETENTION).build(cluster, coordPath);
+        Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.RETENTION).build(cluster,
+            coordPath);
         workflow.setAppPath(getStoragePath(wfProp.getProperty(OozieEntityBuilder.ENTITY_PATH)));
+        props.putAll(wfProp);
         workflow.setConfiguration(getConfig(props));
         ACTION action = new ACTION();
         action.setWorkflow(workflow);

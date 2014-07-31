@@ -173,12 +173,30 @@ public class AbstractTestBase {
     @SuppressWarnings("unchecked")
     protected WORKFLOWAPP getWorkflowapp(FileSystem fs, COORDINATORAPP coord) throws JAXBException, IOException {
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
-        return getWorkflowapp(fs, new Path(wfPath));
+        return getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
     }
 
     @SuppressWarnings("unchecked")
     protected WORKFLOWAPP getWorkflowapp(FileSystem fs, Path path) throws JAXBException, IOException {
         JAXBContext jaxbContext = JAXBContext.newInstance(WORKFLOWAPP.class);
         return ((JAXBElement<WORKFLOWAPP>) jaxbContext.createUnmarshaller().unmarshal(fs.open(path))).getValue();
+    }
+
+    protected ACTION getAction(WORKFLOWAPP wf, String name) {
+        for (Object action : wf.getDecisionOrForkOrJoin()) {
+            if (action instanceof ACTION && ((ACTION) action).getName().equals(name)) {
+                return (ACTION) action;
+            }
+        }
+        throw new IllegalArgumentException("Invalid action name " + name);
+    }
+
+    protected void assertAction(WORKFLOWAPP wf, String name, boolean assertRetry) {
+        ACTION action = getAction(wf, name);
+        Assert.assertNotNull(action);
+        if (assertRetry) {
+            Assert.assertEquals(action.getRetryMax(), "3");
+            Assert.assertEquals(action.getRetryInterval(), "1");
+        }
     }
 }

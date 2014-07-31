@@ -18,19 +18,16 @@
 
 package org.apache.falcon.oozie;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.ProcessHelper;
-import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
-import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -48,8 +45,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -130,6 +131,14 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+            if (LOG.isDebugEnabled()) {
+                StringWriter writer = new StringWriter();
+                marshaller.marshal(jaxbElement, writer);
+                LOG.debug("Writing definition to {} on cluster {}", outPath, cluster.getName());
+                LOG.debug(writer.getBuffer().toString());
+            }
+
             FileSystem fs = HadoopClientFactory.get().createFileSystem(
                 outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
@@ -138,33 +147,12 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             } finally {
                 out.close();
             }
-            if (LOG.isDebugEnabled()) {
-                StringWriter writer = new StringWriter();
-                marshaller.marshal(jaxbElement, writer);
-                LOG.debug("Writing definition to {} on cluster {}", outPath, cluster.getName());
-                LOG.debug(writer.getBuffer().toString());
-            }
 
             LOG.info("Marshalled {} to {}", jaxbElement.getDeclaredType(), outPath);
             return outPath;
         } catch (Exception e) {
             throw new FalconException("Unable to marshall app object", e);
         }
-    }
-
-    protected boolean isTableStorageType(Cluster cluster) throws FalconException {
-        return entity.getEntityType() == EntityType.PROCESS
-            ? isTableStorageType(cluster, (Process) entity) : isTableStorageType(cluster, (Feed) entity);
-    }
-
-    protected boolean isTableStorageType(Cluster cluster, Feed feed) throws FalconException {
-        Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
-        return Storage.TYPE.TABLE == storageType;
-    }
-
-    protected boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
-        Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
-        return Storage.TYPE.TABLE == storageType;
     }
 
     protected Properties getHiveCredentials(Cluster cluster) {
@@ -238,21 +226,6 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         return properties;
     }
 
-    protected void propagateCatalogTableProperties(Input input, CatalogStorage tableStorage, Properties props) {
-        String prefix = "falcon_" + input.getName();
-
-        propagateCommonCatalogTableProperties(tableStorage, props, prefix);
-
-        props.put(prefix + "_partition_filter_pig",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'pig')}");
-        props.put(prefix + "_partition_filter_hive",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
-        props.put(prefix + "_partition_filter_java",
-            "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
-        props.put(prefix + "_datain_partitions_hive",
-            "${coord:dataInPartitions('" + input.getName() + "', 'hive-export')}");
-    }
-
     protected void propagateCatalogTableProperties(Output output, CatalogStorage tableStorage, Properties props) {
         String prefix = "falcon_" + output.getName();
 
@@ -303,5 +276,24 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         prop.setProperty(OozieEntityBuilder.ENTITY_PATH, path.toString());
         prop.setProperty(OozieEntityBuilder.ENTITY_NAME, name);
         return prop;
+    }
+
+    protected String getLogDirectory(Cluster cluster) {
+        return getStoragePath(new Path(EntityUtil.getBaseStagingPath(cluster, entity), "logs"));
+    }
+
+    protected <T> T unmarshal(String template, JAXBContext context, Class<T> cls) throws FalconException {
+        InputStream resourceAsStream = null;
+        try {
+            resourceAsStream = OozieEntityBuilder.class.getResourceAsStream(template);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            @SuppressWarnings("unchecked")
+            JAXBElement<T> jaxbElement = unmarshaller.unmarshal(new StreamSource(resourceAsStream), cls);
+            return jaxbElement.getValue();
+        } catch (JAXBException e) {
+            throw new FalconException("Failed to unmarshal " + template, e);
+        } finally {
+            IOUtils.closeQuietly(resourceAsStream);
+        }
     }
 }

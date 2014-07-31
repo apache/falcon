@@ -18,7 +18,6 @@
 
 package org.apache.falcon.oozie;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
@@ -40,10 +39,6 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClient;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -121,7 +116,7 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
             DEFAULT_BROKER_MSG_TTL.toString());
         props.put(ARG.brokerTTL.getPropName(), jmsMessageTTL);
         props.put(ARG.entityType.getPropName(), entity.getEntityType().name());
-        props.put("logDir", getStoragePath(new Path(EntityUtil.getBaseStagingPath(cluster, entity), "logs")));
+        props.put("logDir", getLogDirectory(cluster));
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
@@ -164,18 +159,7 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     public abstract List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException;
 
     protected COORDINATORAPP unmarshal(String template) throws FalconException {
-        InputStream resourceAsStream = null;
-        try {
-            resourceAsStream = OozieCoordinatorBuilder.class.getResourceAsStream(template);
-            Unmarshaller unmarshaller = OozieUtils.COORD_JAXB_CONTEXT.createUnmarshaller();
-            @SuppressWarnings("unchecked") JAXBElement<COORDINATORAPP> jaxbElement = (JAXBElement<COORDINATORAPP>)
-                unmarshaller.unmarshal(resourceAsStream);
-            return jaxbElement.getValue();
-        } catch (JAXBException e) {
-            throw new FalconException(e);
-        } finally {
-            IOUtils.closeQuietly(resourceAsStream);
-        }
+        return unmarshal(template, OozieUtils.COORD_JAXB_CONTEXT, COORDINATORAPP.class);
     }
 
 }

@@ -31,12 +31,12 @@
 
     <inputs>
         <!-- In the pig script, the input paths will be available in a variable 'inparts' -->
-        <input name="inparts" feed="in" start="now(0,-5)" end="now(0,-1)"/>
+        <input name="inparts" feed="hcat-in" start="now(0,-5)" end="now(0,-1)"/>
     </inputs>
 
     <outputs>
         <!-- In the pig script, the output path will be available in a variable 'outparts' -->
-        <output name="outpart" feed="out" instance="now(0,0)"/>
+        <output name="outpart" feed="hcat-out" instance="now(0,0)"/>
     </outputs>
 
     <workflow engine="pig" path="/app/pig/hcat-wordcount.pig"/>

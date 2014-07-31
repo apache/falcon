@@ -22,19 +22,24 @@ import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.oozie.feed.FeedReplicationWorkflowBuilder;
+import org.apache.falcon.oozie.feed.FSReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.feed.FeedRetentionWorkflowBuilder;
+import org.apache.falcon.oozie.feed.HCatReplicationWorkflowBuilder;
 import org.apache.falcon.oozie.process.HiveProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.OozieProcessWorkflowBuilder;
 import org.apache.falcon.oozie.process.PigProcessWorkflowBuilder;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.CREDENTIAL;
 import org.apache.falcon.oozie.workflow.CREDENTIALS;
+import org.apache.falcon.oozie.workflow.END;
+import org.apache.falcon.oozie.workflow.KILL;
+import org.apache.falcon.oozie.workflow.START;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
@@ -44,12 +49,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -63,8 +64,22 @@ import java.util.Set;
  */
 public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extends OozieEntityBuilder<T> {
     protected static final String HIVE_CREDENTIAL_NAME = "falconHiveAuth";
+
+    protected static final String USER_ACTION_NAME = "user-action";
+    protected static final String PREPROCESS_ACTION_NAME = "pre-processing";
+    protected static final String SUCCESS_POSTPROCESS_ACTION_NAME = "succeeded-post-processing";
+    protected static final String FAIL_POSTPROCESS_ACTION_NAME = "failed-post-processing";
+    protected static final String OK_ACTION_NAME = "end";
+    protected static final String FAIL_ACTION_NAME = "fail";
+
+
+    private static final String POSTPROCESS_TEMPLATE = "/action/post-process.xml";
+    private static final String PREPROCESS_TEMPLATE = "/action/pre-process.xml";
+
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(
-        Arrays.asList(new String[]{"recordsize", "succeeded-post-processing", "failed-post-processing", }));
+        Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME,
+            FAIL_POSTPROCESS_ACTION_NAME, }));
+
     private final Tag lifecycle;
 
     public OozieOrchestrationWorkflowBuilder(T entity, Tag lifecycle) {
@@ -72,7 +87,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         this.lifecycle = lifecycle;
     }
 
-    public static final OozieOrchestrationWorkflowBuilder get(Entity entity, Tag lifecycle) {
+    public static final OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
+        throws FalconException {
         switch(entity.getEntityType()) {
         case FEED:
             Feed feed = (Feed) entity;
@@ -81,7 +97,12 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 return new FeedRetentionWorkflowBuilder(feed);
 
             case REPLICATION:
-                return new FeedReplicationWorkflowBuilder(feed);
+                boolean isTable = EntityUtil.isTableStorageType(cluster, feed);
+                if (isTable) {
+                    return new HCatReplicationWorkflowBuilder(feed);
+                } else {
+                    return new FSReplicationWorkflowBuilder(feed);
+                }
 
             default:
                 throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle "
@@ -110,24 +131,76 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle " + lifecycle);
     }
 
+    protected void addTransition(ACTION action, String ok, String fail) {
+        action.getOk().setTo(ok);
+        action.getError().setTo(fail);
+    }
+
+    protected void decorateWorkflow(WORKFLOWAPP wf, String name, String startAction) {
+        wf.setName(name);
+        wf.setStart(new START());
+        wf.getStart().setTo(startAction);
+
+        wf.setEnd(new END());
+        wf.getEnd().setName(OK_ACTION_NAME);
+
+        KILL kill = new KILL();
+        kill.setName(FAIL_ACTION_NAME);
+        kill.setMessage("Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]");
+        wf.getDecisionOrForkOrJoin().add(kill);
+    }
+
+    protected ACTION getSuccessPostProcessAction() throws FalconException {
+        ACTION action = unmarshalAction(POSTPROCESS_TEMPLATE);
+        decorateWithOozieRetries(action);
+        return action;
+    }
+
+    protected ACTION getFailPostProcessAction() throws FalconException {
+        ACTION action = unmarshalAction(POSTPROCESS_TEMPLATE);
+        decorateWithOozieRetries(action);
+        action.setName(FAIL_POSTPROCESS_ACTION_NAME);
+        return action;
+    }
+
+    protected ACTION getPreProcessingAction(boolean isTableStorageType, Tag tag) throws FalconException {
+        ACTION action = unmarshalAction(PREPROCESS_TEMPLATE);
+        decorateWithOozieRetries(action);
+        if (isTableStorageType) {
+            // adds hive-site.xml in actions classpath
+            action.getJava().setJobXml("${wf:appPath()}/conf/hive-site.xml");
+        }
+
+        List<String> args = action.getJava().getArg();
+        args.add("-out");
+        if (tag == Tag.REPLICATION) {
+            args.add("${logDir}/latedata/${nominalTime}/${srcClusterName}");
+        } else {
+            args.add("${logDir}/latedata/${nominalTime}");
+        }
+        return action;
+    }
+
     protected Path marshal(Cluster cluster, WORKFLOWAPP workflow, Path outPath) throws FalconException {
         return marshal(cluster, new org.apache.falcon.oozie.workflow.ObjectFactory().createWorkflowApp(workflow),
             OozieUtils.WORKFLOW_JAXB_CONTEXT, new Path(outPath, "workflow.xml"));
     }
 
     protected WORKFLOWAPP unmarshal(String template) throws FalconException {
-        InputStream resourceAsStream = null;
-        try {
-            resourceAsStream = OozieOrchestrationWorkflowBuilder.class.getResourceAsStream(template);
-            Unmarshaller unmarshaller = OozieUtils.WORKFLOW_JAXB_CONTEXT.createUnmarshaller();
-            @SuppressWarnings("unchecked")
-            JAXBElement<WORKFLOWAPP> jaxbElement = (JAXBElement<WORKFLOWAPP>) unmarshaller.unmarshal(resourceAsStream);
-            return jaxbElement.getValue();
-        } catch (JAXBException e) {
-            throw new FalconException(e);
-        } finally {
-            IOUtils.closeQuietly(resourceAsStream);
+        return unmarshal(template, OozieUtils.WORKFLOW_JAXB_CONTEXT, WORKFLOWAPP.class);
+    }
+
+    protected ACTION unmarshalAction(String template) throws FalconException {
+        return unmarshal(template, OozieUtils.ACTION_JAXB_CONTEXT, ACTION.class);
+    }
+
+    protected boolean shouldPreProcess() throws FalconException {
+        if (EntityUtil.getLateProcess(entity) == null
+            || EntityUtil.getLateProcess(entity).getLateInputs() == null
+            || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
+            return false;
         }
+        return true;
     }
 
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag)
@@ -279,19 +352,6 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         property.setName(name);
         property.setValue(value);
         return property;
-    }
-
-    protected void addOozieRetries(WORKFLOWAPP workflow) {
-        for (Object object : workflow.getDecisionOrForkOrJoin()) {
-            if (!(object instanceof org.apache.falcon.oozie.workflow.ACTION)) {
-                continue;
-            }
-            org.apache.falcon.oozie.workflow.ACTION action = (org.apache.falcon.oozie.workflow.ACTION) object;
-            String actionName = action.getName();
-            if (FALCON_ACTIONS.contains(actionName)) {
-                decorateWithOozieRetries(action);
-            }
-        }
     }
 
     protected void decorateWithOozieRetries(ACTION action) {

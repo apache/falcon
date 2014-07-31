@@ -34,67 +34,34 @@ import java.util.Properties;
 /**
  * Builds feed replication workflow, one per source-target cluster combination.
  */
-public class FeedReplicationWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
-    private static final String REPLICATION_WF_TEMPLATE = "/workflow/replication-workflow.xml";
-    private static final String SOURCE_HIVE_CREDENTIAL_NAME = "falconSourceHiveAuth";
-    private static final String TARGET_HIVE_CREDENTIAL_NAME = "falconTargetHiveAuth";
+public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationWorkflowBuilder<Feed> {
+    protected static final String REPLICATION_ACTION_TEMPLATE = "/action/feed/replication-action.xml";
+    protected static final String REPLICATION_ACTION_NAME = "replication";
 
     public FeedReplicationWorkflowBuilder(Feed entity) {
         super(entity, Tag.REPLICATION);
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
-        WORKFLOWAPP workflow = unmarshal(REPLICATION_WF_TEMPLATE);
         Cluster srcCluster = ConfigurationStore.get().get(EntityType.CLUSTER, buildPath.getName());
+
+        WORKFLOWAPP workflow = getWorkflow(srcCluster, cluster);
         String wfName = EntityUtil.getWorkflowName(Tag.REPLICATION, entity).toString();
         workflow.setName(wfName);
 
         addLibExtensionsToWorkflow(cluster, workflow, Tag.REPLICATION);
 
-        addOozieRetries(workflow);
-
-        if (isTableStorageType(cluster)) {
-            setupHiveCredentials(cluster, srcCluster, workflow);
-        }
-
-        Path marshalPath = marshal(cluster, workflow, buildPath);
-        return getProperties(marshalPath, wfName);
+        marshal(cluster, workflow, buildPath);
+        Properties props = getProperties(buildPath, wfName);
+        props.putAll(getWorkflowProperties());
+        return props;
     }
 
-    private void setupHiveCredentials(Cluster targetCluster, Cluster sourceCluster, WORKFLOWAPP workflowApp) {
-        if (isSecurityEnabled) {
-            // add hcatalog credentials for secure mode and add a reference to each action
-            addHCatalogCredentials(workflowApp, sourceCluster, SOURCE_HIVE_CREDENTIAL_NAME);
-            addHCatalogCredentials(workflowApp, targetCluster, TARGET_HIVE_CREDENTIAL_NAME);
-        }
-
-        // hive-site.xml file is created later in coordinator initialization but
-        // actions are set to point to that here
-
-        for (Object object : workflowApp.getDecisionOrForkOrJoin()) {
-            if (!(object instanceof org.apache.falcon.oozie.workflow.ACTION)) {
-                continue;
-            }
-
-            org.apache.falcon.oozie.workflow.ACTION action =
-                (org.apache.falcon.oozie.workflow.ACTION) object;
-            String actionName = action.getName();
-            if ("recordsize".equals(actionName)) {
-                // add reference to hive-site conf to each action
-                action.getJava().setJobXml("${wf:appPath()}/conf/falcon-source-hive-site.xml");
-
-                if (isSecurityEnabled) { // add a reference to credential in the action
-                    action.setCred(SOURCE_HIVE_CREDENTIAL_NAME);
-                }
-            } else if ("table-export".equals(actionName)) {
-                if (isSecurityEnabled) { // add a reference to credential in the action
-                    action.setCred(SOURCE_HIVE_CREDENTIAL_NAME);
-                }
-            } else if ("table-import".equals(actionName)) {
-                if (isSecurityEnabled) { // add a reference to credential in the action
-                    action.setCred(TARGET_HIVE_CREDENTIAL_NAME);
-                }
-            }
-        }
+    private Properties getWorkflowProperties() {
+        Properties props = new Properties();
+        props.setProperty("falconDataOperation", "REPLICATE");
+        return props;
     }
+
+    protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;
 }

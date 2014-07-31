@@ -89,10 +89,12 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         propagateUserWorkflowProperties(processWorkflow, props);
 
         // create parent wf
-        Properties wfProps = OozieOrchestrationWorkflowBuilder.get(entity, Tag.DEFAULT).build(cluster, coordPath);
+        Properties wfProps = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.DEFAULT).build(cluster,
+            coordPath);
 
         WORKFLOW wf = new WORKFLOW();
         wf.setAppPath(getStoragePath(wfProps.getProperty(OozieEntityBuilder.ENTITY_PATH)));
+        props.putAll(wfProps);
         wf.setConfiguration(getConfig(props));
 
         // set coord action to parent wf
@@ -333,4 +335,16 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         props.put("userWorkflowEngine", processWorkflow.getEngine().value());
     }
 
+    protected void propagateCatalogTableProperties(Input input, CatalogStorage tableStorage, Properties props) {
+        String prefix = "falcon_" + input.getName();
+
+        propagateCommonCatalogTableProperties(tableStorage, props, prefix);
+
+        props.put(prefix + "_partition_filter_pig",
+            "${coord:dataInPartitionFilter('" + input.getName() + "', 'pig')}");
+        props.put(prefix + "_partition_filter_hive",
+            "${coord:dataInPartitionFilter('" + input.getName() + "', 'hive')}");
+        props.put(prefix + "_partition_filter_java",
+            "${coord:dataInPartitionFilter('" + input.getName() + "', 'java')}");
+    }
 }
