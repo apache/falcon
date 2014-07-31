@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.Job;
+import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.ProxyOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 
@@ -106,18 +107,24 @@ public final class OozieTestUtils {
     }
 
     public static void waitForBundleStart(TestContext context, Job.Status... status) throws Exception {
-        ProxyOozieClient ozClient = getOozieClient(context);
         List<BundleJob> bundles = getBundles(context);
         if (bundles.isEmpty()) {
             return;
         }
 
+        waitForBundleStart(context, bundles.get(0).getId(), status);
+    }
+
+    public static void waitForBundleStart(TestContext context, String bundleId, Job.Status... status) throws Exception {
+        ProxyOozieClient ozClient = getOozieClient(context);
         Set<Job.Status> statuses = new HashSet<Job.Status>(Arrays.asList(status));
-        String bundleId = bundles.get(0).getId();
+
+        Status bundleStatus = null;
         for (int i = 0; i < 15; i++) {
             Thread.sleep(i * 1000);
             BundleJob bundle = ozClient.getBundleJobInfo(bundleId);
-            if (statuses.contains(bundle.getStatus())) {
+            bundleStatus = bundle.getStatus();
+            if (statuses.contains(bundleStatus)) {
                 if (statuses.contains(Job.Status.FAILED) || statuses.contains(Job.Status.KILLED)) {
                     return;
                 }
@@ -134,7 +141,7 @@ public final class OozieTestUtils {
             }
             System.out.println("Waiting for bundle " + bundleId + " in " + statuses + " state");
         }
-        throw new Exception("Bundle " + bundleId + " is not " + statuses + " in oozie");
+        throw new Exception("Bundle " + bundleId + " is not " + statuses + ". Last seen status " + bundleStatus);
     }
 
     public static WorkflowJob getWorkflowJob(Cluster cluster, String filter) throws Exception {

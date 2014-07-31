@@ -318,6 +318,7 @@ public class EntityManagerJerseyIT {
         }
 
         assert newBundle != null;
+        OozieTestUtils.waitForBundleStart(context, newBundle, Job.Status.RUNNING, Status.PREP);
         coord = ozClient.getCoordJobInfo(ozClient.getBundleJobInfo(newBundle).getCoordinators().get(0).getId());
         Assert.assertTrue(coord.getStatus() == Status.RUNNING || coord.getStatus() == Status.PREP);
         Assert.assertEquals(coord.getStartTime(), endTime);
