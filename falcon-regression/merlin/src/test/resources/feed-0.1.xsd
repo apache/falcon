@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified"
+           targetNamespace="uri:falcon:feed:0.1" xmlns="uri:falcon:feed:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+
+    <xs:annotation>
+        <xs:documentation>
+            Licensed to the Apache Software Foundation (ASF) under one or more
+            contributor license agreements. See the NOTICE file distributed with
+            this work for
+            additional information regarding copyright ownership.
+            The ASF licenses this file to You under the Apache License, Version
+            2.0
+            (the "License"); you may not use this file
+            except in compliance with
+            the License. You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+            Unless required by applicable law or agreed to in
+            writing, software
+            distributed under the License is distributed on an "AS IS" BASIS,
+            WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+            implied.
+            See the License
+            for the specific language governing permissions and
+            limitations under the License.
+        </xs:documentation>
+        <xs:appinfo>
+            <jaxb:schemaBindings>
+                <jaxb:package name="org.apache.falcon.entity.v0.feed"/>
+            </jaxb:schemaBindings>
+        </xs:appinfo>
+    </xs:annotation>
+
+    <xs:element name="feed" type="feed">
+    </xs:element>
+    <xs:complexType name="feed">
+        <xs:annotation>
+            <xs:documentation>
+                name: A feed should have a unique name and this name is referenced
+                by processes as input or output feed.
+                tags: a feed specifies an optional list of comma separated tags
+                which is used for classification of data sets.
+                groups: a feed specifies a list of comma separated groups,
+                a group is a logical grouping of feeds and a group is said to be
+                available if all the feeds belonging to a group are available.
+                The frequency of all
+                the feed which belong to the same group
+                must be same.
+                availabilityFlag: specifies the name of a file which when
+                present/created
+                in a feeds data directory, the feed is
+                termed as available. ex: _SUCCESS, if
+                this element is ignored then Falcon would consider the presence of feed's
+                data directory as feed availability.
+                A feed has a
+                frequency and a periodicity which specifies the frequency by which
+                this feed is generated. ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
+                valid frequency type for a feed are minutes, hours, days, months.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="KEY_VALUE_PAIR" name="tags" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        tags: a feed specifies an optional list of comma separated tags,
+                        Key Value Pairs, separated by comma,
+                        which is used for classification of processes.
+                        Example: consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element type="partitions" name="partitions" minOccurs="0"/>
+            <xs:element type="group-type" name="groups" minOccurs="0"/>
+            <xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
+            <xs:element type="frequency-type" name="frequency"/>
+            <xs:element name="timezone" minOccurs="0" default="UTC">
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:javaType name="java.util.TimeZone" parseMethod="java.util.TimeZone.getTimeZone"
+                                           printMethod="org.apache.falcon.entity.v0.SchemaHelper.getTimeZoneId"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string"/>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element type="late-arrival" name="late-arrival" minOccurs="0"/>
+            <xs:element type="clusters" name="clusters"/>
+            <xs:choice minOccurs="1" maxOccurs="1">
+                <xs:element type="locations" name="locations"/>
+                <xs:element type="catalog-table" name="table"/>
+            </xs:choice>
+            <xs:element type="ACL" name="ACL"/>
+            <xs:element type="schema" name="schema"/>
+            <xs:element type="properties" name="properties" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="description"/>
+    </xs:complexType>
+
+    <xs:complexType name="cluster">
+        <xs:annotation>
+            <xs:documentation>
+                Feed references a cluster by it's name, before submitting a feed all the
+                referenced cluster should be submitted to Falcon.
+                type: specifies whether the
+                referenced cluster should be treated as a
+                source or target for a feed.
+                Validity of a feed on cluster specifies duration for which this feed is
+                valid on this cluster.
+                Retention specifies how long the feed is retained on this cluster and the
+                action to be taken on the feed after the expiry of retention period.
+                The retention limit is
+                specified by expression frequency(times), ex: if
+                feed should be retained for at least 6 hours then retention's limit="hours(6)".
+                The field partitionExp contains
+                partition tags. Number of partition tags has to be equal to number of partitions specified in feed
+                schema.
+                A partition tag can be a wildcard(*), a static string or
+                an expression. Atleast one of the strings has to be an expression.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="validity" name="validity"/>
+            <xs:element type="retention" name="retention"/>
+            <xs:choice minOccurs="0" maxOccurs="1">
+                <xs:element type="locations" name="locations" minOccurs="0"/>
+                <xs:element type="catalog-table" name="table"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+        <xs:attribute type="cluster-type" name="type" use="optional"/>
+        <xs:attribute type="xs:string" name="partition" use="optional"/>
+        <xs:attribute type="frequency-type" name="delay" use="optional" /> 
+    </xs:complexType>
+    <xs:complexType name="partitions">
+        <xs:annotation>
+            <xs:documentation>
+                A list of partition, which is the logical partition of a feed and this
+                is maintained in Hcatalog registry.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="partition" name="partition" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="schema">
+        <xs:annotation>
+            <xs:documentation>A schema specifies the location of a schema file
+                for a feed and the provider of schema like protobuf, thrift etc.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="location" use="required"/>
+        <xs:attribute type="xs:string" name="provider" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="properties">
+        <xs:annotation>
+            <xs:documentation>
+                A list of name-value pair of property.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="validity">
+        <xs:annotation>
+            <xs:documentation>
+                A validity has a start, which is the validity start date and end the
+                validity
+                end date. ex: start="2011-11-01T00:00Z" in TZ format.
+                timezone can be UTC,
+                GMT.
+                Processes referring this feed would consider the validity period for
+                validation.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="date-time-type" name="start" use="required"/>
+        <xs:attribute type="date-time-type" name="end" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="locations">
+        <xs:annotation>
+            <xs:documentation>
+                A list of locations on the file system.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element type="location" name="location"/>
+        </xs:choice>
+    </xs:complexType>
+    <xs:complexType name="late-arrival">
+        <xs:annotation>
+            <xs:documentation>
+                late-arrival specifies the cut-off period till which the feed is
+                expected to arrive late and should be honored be processes referring
+                to it as input
+                feed by rerunning the instances in case
+                the data arrives late with in a cut-off period.
+                The cut-off period is specified by expression
+                frequency(times), ex: if the feed
+                can arrive late
+                upto 8 hours then late-arrival's cut-off="hours(8)"
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="frequency-type" name="cut-off" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="property">
+        <xs:annotation>
+            <xs:documentation>
+                A key-value pair, which are propagated to the
+                workflow engine.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="clusters">
+        <xs:annotation>
+            <xs:documentation>
+                A list of clusters.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="cluster" name="cluster" maxOccurs="unbounded" minOccurs="1">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="retention">
+        <xs:attribute type="retention-type" name="type" default="instance"/>
+        <xs:attribute type="frequency-type" name="limit" use="required"/>
+        <xs:attribute type="action-type" name="action" use="required"/>
+    </xs:complexType>
+    <xs:simpleType name="retention-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="instance"/>
+            <!-- <xs:enumeration value="age" /> -->
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="location">
+        <xs:annotation>
+            <xs:documentation>
+                location specifies the type of location like data, meta, stats
+                and the corresponding paths for them.
+                A feed should at least define the location for type
+                data, which
+                specifies the HDFS path pattern where the feed is generated
+                periodically. ex: type="data" path="/projects/TrafficHourly/${YEAR}-${MONTH}-${DAY}/traffic"
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="location-type" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="path" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="partition">
+        <xs:attribute type="IDENTIFIER" name="name" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="ACL">
+        <xs:annotation>
+            <xs:documentation>
+                Access control list for this feed.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="owner"/>
+        <xs:attribute type="xs:string" name="group"/>
+        <xs:attribute type="xs:string" name="permission"/>
+    </xs:complexType>
+    <xs:simpleType name="action-type">
+        <xs:restriction base="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    action type specifies the action that should be taken on a feed
+                    when the retention period of a feed expires on a cluster,
+                    the valid
+                    actions are
+                    archive, delete, chown and chmod.
+                </xs:documentation>
+            </xs:annotation>
+            <xs:enumeration value="archive"/>
+            <xs:enumeration value="delete"/>
+            <xs:enumeration value="chown"/>
+            <xs:enumeration value="chmod"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="cluster-type">
+        <xs:annotation>
+            <xs:documentation>
+                The clusters on feed can be either defined as source or target,
+                a feed
+                should at least have one source cluster defined.
+                the target clusters
+                are used for
+                replication of feed.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="source"/>
+            <xs:enumeration value="target"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="location-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="data"/>
+            <xs:enumeration value="stats"/>
+            <xs:enumeration value="meta"/>
+            <xs:enumeration value="tmp"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="IDENTIFIER">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(([a-zA-Z]([\-a-zA-Z0-9])*){1,39})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="frequency-type">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:javaType name="org.apache.falcon.entity.v0.Frequency"
+                               parseMethod="org.apache.falcon.entity.v0.Frequency.fromString"
+                               printMethod="org.apache.falcon.entity.v0.Frequency.toString"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="date-time-type">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:javaType name="java.util.Date" parseMethod="org.apache.falcon.entity.v0.SchemaHelper.parseDateUTC"
+                               printMethod="org.apache.falcon.entity.v0.SchemaHelper.formatDateUTC"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern
+                    value="((19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])T([0-1][0-9]|2[0-3]):([0-5][0-9]))Z"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="group-type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\w+(,\w+)*)"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="KEY_VALUE_PAIR">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="catalog-table">
+        <xs:annotation>
+            <xs:documentation>
+                catalog specifies the uri of a Hive table along with the partition spec.
+                uri="catalog:$database:$table#(partition-key=partition-value);+"
+                Example: catalog:logs-db:clicks#ds=${YEAR}-${MONTH}-${DAY}
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="uri" use="required"/>
+    </xs:complexType>
+</xs:schema>

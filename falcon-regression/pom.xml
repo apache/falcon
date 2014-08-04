@@ -1,0 +1,708 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.apache.falcon.regression</groupId>
+    <artifactId>falcon-regression</artifactId>
+    <version>0.5.1-incubating-SNAPSHOT</version>
+    <description>Data Management and Processing Platform over Hadoop</description>
+    <name>Apache Falcon</name>
+    <packaging>pom</packaging>
+    <url>http://falcon.incubator.apache.org/</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/FALCON</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/job/falcon</url>
+    </ciManagement>
+
+    <inceptionYear>2013</inceptionYear>
+
+    <mailingLists>
+        <mailingList>
+            <name>falcon-user</name>
+            <subscribe>user-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>user@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>falcon-dev</name>
+            <subscribe>dev-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>dev@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>falcon-commits</name>
+            <subscribe>commits-subscribe@falcon.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@falcon.apache.org</unsubscribe>
+            <post>commits@falcon.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/falcon-commits/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git
+        </connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-falcon.git
+        </developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Internal Repository</name>
+            <url>${internal.maven.repo}</url>
+        </repository>
+    </distributionManagement>
+
+    <properties>
+        <!-- platform encoding override -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <hadoop.profile>1</hadoop.profile>
+        <slf4j.version>1.6.1</slf4j.version>
+        <oozie.version>3.2.2</oozie.version>
+        <!--<oozie.version>4.0.0.2.0.6.0-76</oozie.version>-->
+        <falcon.oozie.version>4.0.0-falcon</falcon.oozie.version>
+        <activemq.version>5.4.3</activemq.version>
+        <hadoop-distcp.version>0.9</hadoop-distcp.version>
+        <jetty.version>6.1.26</jetty.version>
+        <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
+        <hortonworks.repo.url>http://repo.hortonworks.com/content/repositories/releases</hortonworks.repo.url>
+        <skipCheck>false</skipCheck>
+        <hive.version>0.12.0</hive.version>
+        <redirectConsoleOutput>true</redirectConsoleOutput>
+    </properties>
+
+    <modules>
+        <module>checkstyle</module>
+        <module>merlin-core</module>
+        <module>merlin</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>hadoop-1</id>
+            <properties>
+                <hadoop1.version>0.20.2-cdh3u3</hadoop1.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-core</artifactId>
+                        <version>${hadoop1.version}</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.eclipse.jdt</groupId>
+                                <artifactId>core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>tomcat</groupId>
+                                <artifactId>jasper-runtime</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>tomcat</groupId>
+                                <artifactId>jasper-compiler</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hive.hcatalog</groupId>
+                        <artifactId>webhcat-java-client</artifactId>
+                        <version>${hive.version}</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+
+        <profile>
+            <id>hadoop-2</id>
+            <properties>
+                <hadoop2.version>2.2.0</hadoop2.version>
+                <hive.version>0.13.0</hive.version>
+                <oozie.version>4.0.0.2.1.2.0-402</oozie.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-client</artifactId>
+                        <version>${hadoop2.version}</version>
+                        <scope>runtime</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.glassfish</groupId>
+                                <artifactId>javax.servlet</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-hdfs</artifactId>
+                        <version>${hadoop2.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-common</artifactId>
+                        <version>${hadoop2.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                        <version>${hadoop2.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+                        <version>${hadoop2.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-yarn-server-nodemanager</artifactId>
+                        <version>${hadoop2.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hive</groupId>
+                        <artifactId>hive-common</artifactId>
+                        <version>${hive.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hive.hcatalog</groupId>
+                        <artifactId>hive-webhcat-java-client</artifactId>
+                        <version>${hive.version}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hive.hcatalog</groupId>
+                        <artifactId>hive-hcatalog-core</artifactId>
+                        <version>${hive.version}</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+    </profiles>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>dtrott</id>
+            <url>http://maven.davidtrott.com/repository</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>im</id>
+            <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>hortonworks.repo</id>
+            <url>${hortonworks.repo.url}</url>
+            <name>Hortonworks Repo</name>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>Codehaus repository</id>
+            <url>http://repository.codehaus.org/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>apache.snapshots.repo</id>
+            <url>https://repository.apache.org/content/groups/snapshots</url>
+            <name>Apache Snapshots Repository</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>default</id>
+            <url>https://repository.apache.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>java.net-Public</id>
+            <name>Maven Java Net Snapshots and Releases</name>
+            <url>https://maven.java.net/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>repository.jboss.org-public</id>
+            <name>JBoss repository</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public</url>
+        </repository>
+        <repository>
+            <id>cdh.repo</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <name>Cloudera Repository</name>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>2.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.15</version>
+                <scope>compile</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.jdmk</groupId>
+                        <artifactId>jmxtools</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jmx</groupId>
+                        <artifactId>jmxri</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.jms</groupId>
+                        <artifactId>jmx</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.jms</groupId>
+                        <artifactId>jms</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>2.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>6.8.8</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.googlecode.json-simple</groupId>
+                <artifactId>json-simple</artifactId>
+                <version>1.1</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-core</artifactId>
+                <version>${activemq.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.ibm.icu</groupId>
+                        <artifactId>icu4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.oozie</groupId>
+                <artifactId>oozie-client</artifactId>
+                <version>${oozie.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-auth</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.googlecode.json-simple</groupId>
+                        <artifactId>json-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-core-asl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-cli</groupId>
+                        <artifactId>commons-cli</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.falcon.regression</groupId>
+                <artifactId>falcon-merlin-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>annotations</artifactId>
+                <version>2.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.44-1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.1</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>1.4.01</version>
+            </dependency>
+
+            <dependency>
+                <groupId>xmlunit</groupId>
+                <artifactId>xmlunit</artifactId>
+                <version>1.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>1.7.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-jms_1.1_spec</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-firefox-driver</artifactId>
+                <version>2.41.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-support</artifactId>
+                <version>2.41.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <directory>target</directory>
+        <outputDirectory>target/classes</outputDirectory>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.17</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.7</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.9.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.5.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <failIfNoTests>false</failIfNoTests>
+                    <redirectTestOutputToFile>${redirectConsoleOutput}</redirectTestOutputToFile>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Denvironment=${config.file}</argLine>
+                    <parallel>methods</parallel>
+                    <threadCount>1</threadCount>
+                    <groups>${testng.groups}</groups>
+                    <excludedGroups>${testng.exclude.groups}</excludedGroups>
+                    <additionalClasspathElements>
+                        <!-- Hack to get the dir in CP through CLI and idea -->
+                        <additionalClasspathElement>${hadoop.conf.dir}</additionalClasspathElement>
+                        <additionalClasspathElement>${hive.conf.dir}</additionalClasspathElement>
+                        <additionalClasspathElement>merlin/src/test/resources/hadoop-conf
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>src/test/resources/hadoop-conf
+                        </additionalClasspathElement>
+                    </additionalClasspathElements>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.apache.falcon.regression.TestngListener</value>
+                        </property>
+                    </properties>
+                    <!--<skipTests>true</skipTests>-->
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+                    <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
+                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+                    <excludeSubProjects>true</excludeSubProjects>
+                    <excludes>
+                        <exclude>*.txt</exclude>
+                        <exclude>.git/**</exclude>
+                        <exclude>.idea/**</exclude>
+                        <exclude>**/*.twiki</exclude>
+                        <exclude>**/*.iml</exclude>
+                        <exclude>**/target/**</exclude>
+                        <exclude>**/activemq-data/**</exclude>
+                        <exclude>**/build/**</exclude>
+                        <exclude>*.patch</exclude>
+                        <exclude>derby.log</exclude>
+                        <exclude>**/logs/**</exclude>
+                        <exclude>**/.classpath</exclude>
+                        <exclude>**/.project</exclude>
+                        <exclude>**/.settings/**</exclude>
+                        <exclude>**/test-output/**</exclude>
+                        <exclude>**/data.txt</exclude>
+                        <exclude>**/maven-eclipse.xml</exclude>
+                        <exclude>**/.externalToolBuilders/**</exclude>
+                        <exclude>**/part-*</exclude>
+                        <exclude>**/resources/**</exclude>
+                    </excludes>
+                    <!--<argLine>-Dfalcon.log.dir=target/logs -Dfalcon.embeddedmq.data=target/data</argLine>-->
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>rat-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.falcon</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>checkstyle-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <consoleOutput>true</consoleOutput>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <configLocation>falcon/checkstyle.xml</configLocation>
+                            <headerLocation>falcon/checkstyle-java-header.txt</headerLocation>
+                            <failOnViolation>true</failOnViolation>
+                            <skip>${skipCheck}</skip>
+                            <excludes>**/entity/v0/*/**</excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <configuration>
+                    <!--debug>true</debug -->
+                    <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>
+                        ${project.basedir}/../checkstyle/src/main/resources/falcon/findbugs-exclude.xml
+                    </excludeFilterFile>
+                    <failOnError>true</failOnError>
+                    <skip>${skipCheck}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>findbugs-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

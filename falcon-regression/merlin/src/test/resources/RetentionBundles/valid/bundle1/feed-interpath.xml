@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<feed xmlns="uri:falcon:feed:0.1" name="interPath" description="clicks log">
+    <partitions/>
+<!--    <groups>online,bi</groups>-->
+    <frequency>days(1)</frequency>
+    <timezone>UTC</timezone>
+    <late-arrival cut-off="hours(6)"/>
+    <clusters>
+        <cluster name="corp" type="source">
+            <validity start="2012-01-30T00:00Z" end="2099-01-31T23:59Z"/>
+            <retention limit="months(6)" action="delete"/>
+        </cluster>
+    </clusters>
+    <locations>
+        <location type="meta" path="/projects/ivory/clicksMetaData"/>
+        <location type="stats" path="/projects/ivory/clicksStats"/>
+        <location type="data" path="/projects/bi/ioout/interactions/${YEAR}-${MONTH}-${DAY}"/>
+    </locations>
+    <ACL owner="testuser" group="group" permission="0x755"/>
+    <schema location="/schema/clicks" provider="protobuf"/>
+    <properties/>
+</feed>
