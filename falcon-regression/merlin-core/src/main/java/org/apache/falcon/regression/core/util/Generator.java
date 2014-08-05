@@ -18,10 +18,11 @@
 
 package org.apache.falcon.regression.core.util;
 
-public class Generator {
-    final String prefix;
-    final String postfix;
-    final String formatString;
+/** Generator class for generating predictable names and paths. */
+public final class Generator {
+    private final String prefix;
+    private final String postfix;
+    private final String formatString;
     private int count;
 
 

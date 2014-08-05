@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Class for representing a cluster xml. */
 public class ClusterMerlin extends Cluster {
 
     public ClusterMerlin(String clusterData) {
@@ -49,7 +50,7 @@ public class ClusterMerlin extends Cluster {
     }
 
     public static List<ClusterMerlin> fromString(List<String> clusterStrings) {
-        List <ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
+        List<ClusterMerlin> clusters = new ArrayList<ClusterMerlin>();
         for (String clusterString : clusterStrings) {
             clusters.add(new ClusterMerlin(clusterString));
         }
@@ -68,7 +69,7 @@ public class ClusterMerlin extends Cluster {
     }
 
     /**
-     * Sets unique names for the cluster
+     * Sets unique names for the cluster.
      * @return mapping of old name to new name
      */
     public Map<? extends String, ? extends String> setUniqueName() {

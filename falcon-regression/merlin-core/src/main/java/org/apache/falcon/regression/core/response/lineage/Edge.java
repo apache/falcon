@@ -20,8 +20,10 @@ package org.apache.falcon.regression.core.response.lineage;
 
 import com.google.gson.annotations.SerializedName;
 
+/** Class for representing an edge. */
 public class Edge extends GraphEntity {
 
+    /** Class for representing different labels of edge. */
     public static enum LEBEL_TYPE {
         @SerializedName("stored-in")STORED_IN,
         @SerializedName("runs-on")RUNS_ON,
@@ -38,10 +40,10 @@ public class Edge extends GraphEntity {
         @SerializedName("testname")TESTNAME,
     }
 
-    String _id;
-    int _outV;
-    int _inV;
-    LEBEL_TYPE _label;
+    private String _id;
+    private int _outV;
+    private int _inV;
+    private LEBEL_TYPE _label;
 
     public String get_id() {
         return _id;
@@ -61,12 +63,12 @@ public class Edge extends GraphEntity {
 
     @Override
     public String toString() {
-        return "Edge{" +
-            "_id='" + _id + '\'' +
-            ", _outV=" + _outV +
-            ", _inV=" + _inV +
-            ", _label=" + _label +
-            '}';
+        return "Edge{"
+                + "_id='" + _id + '\''
+                + ", _outV=" + _outV
+                + ", _inV=" + _inV
+                + ", _label=" + _label
+                + '}';
     }
 
 }

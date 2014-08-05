@@ -18,8 +18,9 @@
 
 package org.apache.falcon.regression.core.response.lineage;
 
+/** Class for Lineage API result having one vertex. */
 public class VertexResult {
-    Vertex results;
+    private Vertex results;
 
     public Vertex getResults() {
         return results;

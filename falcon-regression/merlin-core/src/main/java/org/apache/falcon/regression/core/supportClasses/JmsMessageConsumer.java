@@ -31,6 +31,7 @@ import javax.jms.Session;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Collects JMS messages in a separate thread. */
 public class JmsMessageConsumer extends Thread {
     /*URL of the JMS server
     brokerURL = "tcp://host:61616?daemon=true";
@@ -38,12 +39,12 @@ public class JmsMessageConsumer extends Thread {
     Name of the queue we will receive messages from
     String subject = "IVORY.TOPIC";*/
 
-    private static final Logger logger = Logger.getLogger(JmsMessageConsumer.class);
+    private static final Logger LOGGER = Logger.getLogger(JmsMessageConsumer.class);
     private static final int MAX_MESSAGE_COUNT = 1000;
 
-    final String brokerURL;
-    final String topicName;
-    final List<MapMessage> receivedMessages;
+    private final String brokerURL;
+    private final String topicName;
+    private final List<MapMessage> receivedMessages;
 
     public List<MapMessage> getReceivedMessages() {
         return receivedMessages;
@@ -69,26 +70,26 @@ public class JmsMessageConsumer extends Thread {
             MessageConsumer consumer = session.createConsumer(destination);
 
             try {
-                logger.info("Starting to receive messages.");
+                LOGGER.info("Starting to receive messages.");
                 int count = 0;
-                for (; count < MAX_MESSAGE_COUNT; ++ count) {
+                for (; count < MAX_MESSAGE_COUNT; ++count) {
                     Message message = consumer.receive(); //blocking call
                     if (message == null) {
-                        logger.info("Received empty message, count = " + count);
+                        LOGGER.info("Received empty message, count = " + count);
                     } else {
-                        logger.info("Received message, id = " + message.getJMSMessageID());
+                        LOGGER.info("Received message, id = " + message.getJMSMessageID());
                         receivedMessages.add((MapMessage) message);
                     }
                 }
                 if (count >= MAX_MESSAGE_COUNT) {
-                    logger.warn("Not reading more messages, already read " + count + " messages.");
+                    LOGGER.warn("Not reading more messages, already read " + count + " messages.");
                 }
             } finally {
-                logger.info("Stopping to receive messages.");
+                LOGGER.info("Stopping to receive messages.");
                 connection.close();
             }
         } catch (Exception e) {
-            logger.info("caught exception: " + ExceptionUtils.getStackTrace(e));
+            LOGGER.info("caught exception: " + ExceptionUtils.getStackTrace(e));
         }
     }
 

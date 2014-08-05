@@ -26,11 +26,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/** Class to represent falcon's response to a rest request. */
 public class ServiceResponse {
-    private static final Logger logger = Logger.getLogger(ServiceResponse.class);
+    private static final Logger LOGGER = Logger.getLogger(ServiceResponse.class);
 
-    public String message;
-    int code;
+    private String message;
+    private int code;
     private HttpResponse response;
 
     public int getCode() {
@@ -67,17 +68,16 @@ public class ServiceResponse {
             new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
         String line;
-        StringBuilder string_response = new StringBuilder();
+        StringBuilder stringResponse = new StringBuilder();
 
         while ((line = reader.readLine()) != null) {
-            string_response.append(line);
+            stringResponse.append(line);
         }
-        this.message = string_response.toString();
+        this.message = stringResponse.toString();
         this.code = response.getStatusLine().getStatusCode();
         this.response = response;
 
-        logger.info("The web service response is:\n" +
-            Util.prettyPrintXmlOrJson(message));
+        LOGGER.info("The web service response is:\n" + Util.prettyPrintXmlOrJson(message));
     }
 
     public ServiceResponse() {

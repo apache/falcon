@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/** Class for api result of one entity. */
 @XmlRootElement(name = "entity")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EntityResult {
@@ -41,10 +42,7 @@ public class EntityResult {
 
     @Override
     public String toString() {
-        return "EntityResult{" +
-            "type='" + type + '\'' +
-            ", name='" + name + '\'' +
-            '}';
+        return String.format("EntityResult{type='%s', name='%s'}", type, name);
     }
 
 }

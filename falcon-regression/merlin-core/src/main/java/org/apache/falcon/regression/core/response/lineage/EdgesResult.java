@@ -21,8 +21,9 @@ package org.apache.falcon.regression.core.response.lineage;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Class for Lineage API result having edges. */
 public class EdgesResult extends GraphResult {
-    List<Edge> results;
+    private List<Edge> results;
 
     public List<Edge> getResults() {
         return results;
@@ -30,10 +31,7 @@ public class EdgesResult extends GraphResult {
 
     @Override
     public String toString() {
-        return "AllEdges{" +
-            "totalSize=" + totalSize +
-            ", results=" + results +
-            '}';
+        return String.format("EdgesResult{totalSize=%d, results=%s}", totalSize, results);
     }
 
     public List<Edge> filterByType(Edge.LEBEL_TYPE edgeLabel) {
@@ -43,7 +41,7 @@ public class EdgesResult extends GraphResult {
     public List<Edge> filterEdgesByType(List<Edge> edges, Edge.LEBEL_TYPE edgeLabel) {
         final List<Edge> result = new ArrayList<Edge>();
         for (Edge edge : edges) {
-            if(edge.get_label() == edgeLabel) {
+            if (edge.get_label() == edgeLabel) {
                 result.add(edge);
             }
         }

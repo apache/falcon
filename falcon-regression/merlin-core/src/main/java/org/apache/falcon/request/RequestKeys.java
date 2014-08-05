@@ -18,7 +18,12 @@
 
 package org.apache.falcon.request;
 
-public class RequestKeys {
+/** Class containing different request keys. */
+public final class RequestKeys {
+    private RequestKeys() {
+        throw new AssertionError("Instantiating utility class...");
+    }
+
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
     public static final String XML_CONTENT_TYPE = "text/xml";
 

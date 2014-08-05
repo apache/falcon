@@ -20,8 +20,9 @@ package org.apache.falcon.regression.core.response.lineage;
 
 import java.util.List;
 
+/** Class for Lineage API result having vertex ids. */
 public class VertexIdsResult extends GraphResult {
-    List<Integer> results;
+    private List<Integer> results;
 
     public List<Integer> getResults() {
         return results;
@@ -29,9 +30,6 @@ public class VertexIdsResult extends GraphResult {
 
     @Override
     public String toString() {
-        return "AllVertices{" +
-            "totalSize=" + totalSize +
-            ", results=" + results +
-            '}';
+        return String.format("VertexIdsResult{totalSize=%d, results=%s}", totalSize, results);
     }
 }

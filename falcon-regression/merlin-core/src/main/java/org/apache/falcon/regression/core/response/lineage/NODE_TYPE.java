@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.response.lineage;
 
 import com.google.gson.annotations.SerializedName;
 
+/** Enum for all the allowed node types. */
 public enum NODE_TYPE {
     @SerializedName("vertex")VERTEX,
     @SerializedName("edge")EDGE,

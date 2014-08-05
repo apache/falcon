@@ -33,11 +33,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Class for simulating editing and restoring of a file in hdfs. */
 public class HadoopFileEditor {
-    private static final Logger logger = Logger.getLogger(HadoopFileEditor.class);
-    FileSystem fs;
-    List<String> paths;
-    List<String> files;
+    private static final Logger LOGGER = Logger.getLogger(HadoopFileEditor.class);
+    private FileSystem fs;
+    private List<String> paths;
+    private List<String> files;
 
     public HadoopFileEditor(FileSystem fs) {
         this.fs = fs;
@@ -64,8 +65,7 @@ public class HadoopFileEditor {
         if (fs.exists(file)) {
             fs.copyToLocalFile(file, new Path(currentFile));
             FileUtils.copyFile(new File(currentFile), new File(currentFile + ".bck"));
-            BufferedWriter bufwriter = new BufferedWriter(new FileWriter
-                ("tmp"));
+            BufferedWriter bufwriter = new BufferedWriter(new FileWriter("tmp"));
             BufferedReader br = new BufferedReader(new FileReader(currentFile));
             String line;
             boolean isInserted = false;
@@ -85,11 +85,12 @@ public class HadoopFileEditor {
 
             fs.delete(file, false);
             File crcFile = new File("." + currentFile + ".crc");
-            if (crcFile.exists())
+            if (crcFile.exists()) {
                 crcFile.delete();
+            }
             fs.copyFromLocalFile(new Path(currentFile), file);
         } else {
-            logger.info("Nothing to do, " + currentFile + " does not exists");
+            LOGGER.info("Nothing to do, " + currentFile + " does not exists");
         }
     }
 

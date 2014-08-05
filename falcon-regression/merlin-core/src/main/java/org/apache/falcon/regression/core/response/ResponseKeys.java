@@ -18,7 +18,11 @@
 
 package org.apache.falcon.regression.core.response;
 
-public class ResponseKeys {
+/** Class containing response keys of rest requests. */
+public final class ResponseKeys {
+    private ResponseKeys() {
+        throw new AssertionError();
+    }
 
     public static final int PROCESS_NOT_FOUND = 777;
     public static final int UNPARSEABLE_DATE = 2;

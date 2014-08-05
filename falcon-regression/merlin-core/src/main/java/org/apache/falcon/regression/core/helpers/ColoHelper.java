@@ -21,10 +21,9 @@ package org.apache.falcon.regression.core.helpers;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.interfaces.EntityHelperFactory;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
-import org.apache.log4j.Logger;
 
+/** Helper class to work with a colo. */
 public class ColoHelper {
-    private static final Logger logger = Logger.getLogger(ColoHelper.class);
     private final IEntityManagerHelper clusterHelper;
     private final IEntityManagerHelper processHelper;
     private final IEntityManagerHelper feedHelper;

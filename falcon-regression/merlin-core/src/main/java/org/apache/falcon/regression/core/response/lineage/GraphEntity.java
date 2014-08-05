@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.core.response.lineage;
 
+/** Abstract class for graph entities. */
 public abstract class GraphEntity {
     NODE_TYPE _type;
 

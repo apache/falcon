@@ -21,8 +21,9 @@ package org.apache.falcon.regression.core.response.lineage;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Class for Lineage API result having vertices. */
 public class VerticesResult extends GraphResult {
-    List<Vertex> results;
+    private List<Vertex> results;
 
     public List<Vertex> getResults() {
         return results;
@@ -30,21 +31,18 @@ public class VerticesResult extends GraphResult {
 
     @Override
     public String toString() {
-        return "AllVertices{" +
-            "totalSize=" + totalSize +
-            ", results=" + results +
-            '}';
+        return String.format("VerticesResult{totalSize=%d, results=%s}", totalSize, results);
     }
 
-    public List<Vertex> filterByType(Vertex.VERTEX_TYPE vertex_type) {
-        return filterVerticesByType(vertex_type, results);
+    public List<Vertex> filterByType(Vertex.VERTEX_TYPE vertexType) {
+        return filterVerticesByType(vertexType, results);
     }
 
-    public List<Vertex> filterVerticesByType(Vertex.VERTEX_TYPE vertex_type,
+    public List<Vertex> filterVerticesByType(Vertex.VERTEX_TYPE vertexType,
                                              List<Vertex> vertexList) {
         List<Vertex> result = new ArrayList<Vertex>();
         for (Vertex vertex : vertexList) {
-            if(vertex.getType() == vertex_type) {
+            if (vertex.getType() == vertexType) {
                 result.add(vertex);
             }
         }
@@ -58,7 +56,7 @@ public class VerticesResult extends GraphResult {
     public List<Vertex> filterVerticesByName(String name, List<Vertex> vertexList) {
         List<Vertex> result = new ArrayList<Vertex>();
         for (Vertex vertex : vertexList) {
-            if(vertex.getName().equals(name)) {
+            if (vertex.getName().equals(name)) {
                 result.add(vertex);
             }
         }

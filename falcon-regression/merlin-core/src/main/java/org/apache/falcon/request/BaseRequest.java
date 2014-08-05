@@ -45,9 +45,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Class for making rest requests. */
 public class BaseRequest {
 
-    private static final Logger logger = Logger.getLogger(BaseRequest.class);
+    private static final Logger LOGGER = Logger.getLogger(BaseRequest.class);
 
     private String method;
     private String url;
@@ -115,17 +116,17 @@ public class BaseRequest {
         /*get the token and add it to the header.
         works in secure and un secure mode.*/
         AuthenticatedURL.Token token;
-        if(IEntityManagerHelper.AUTHENTICATE) {
+        if (IEntityManagerHelper.AUTHENTICATE) {
             token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
                     uri.getHost(), uri.getPort());
             request.addHeader(RequestKeys.COOKIE, RequestKeys.AUTH_COOKIE_EQ + token);
         }
         DefaultHttpClient client = new DefaultHttpClient();
-        logger.info("Request Url: " + request.getRequestLine().getUri());
-        logger.info("Request Method: " + request.getRequestLine().getMethod());
+        LOGGER.info("Request Url: " + request.getRequestLine().getUri());
+        LOGGER.info("Request Method: " + request.getRequestLine().getMethod());
 
         for (Header header : request.getAllHeaders()) {
-            logger.info(String.format("Request Header: Name=%s Value=%s", header.getName(),
+            LOGGER.info(String.format("Request Header: Name=%s Value=%s", header.getName(),
                 header.getValue()));
         }
         HttpResponse response = client.execute(target, request);
@@ -134,28 +135,26 @@ public class BaseRequest {
         and send the request*/
         if ((response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED)) {
             Header[] wwwAuthHeaders = response.getHeaders(RequestKeys.WWW_AUTHENTICATE);
-            if (wwwAuthHeaders != null && wwwAuthHeaders.length != 0 &&
-                wwwAuthHeaders[0].getValue().trim().startsWith(RequestKeys.NEGOTIATE)) {
-            	if(IEntityManagerHelper.AUTHENTICATE) {
-            		token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
-                            uri.getHost(), uri.getPort(), true);
+            if (wwwAuthHeaders != null && wwwAuthHeaders.length != 0
+                && wwwAuthHeaders[0].getValue().trim().startsWith(RequestKeys.NEGOTIATE)) {
+                if (IEntityManagerHelper.AUTHENTICATE) {
+                    token = FalconAuthorizationToken.getToken(user, uri.getScheme(),
+                        uri.getHost(), uri.getPort(), true);
                     request.removeHeaders(RequestKeys.COOKIE);
                     request.addHeader(RequestKeys.COOKIE, RequestKeys.AUTH_COOKIE_EQ + token);
-            	}
-                logger.info("Request Url: " + request.getRequestLine().getUri());
-                logger.info("Request Method: " + request.getRequestLine().getMethod());
+                }
+                LOGGER.info("Request Url: " + request.getRequestLine().getUri());
+                LOGGER.info("Request Method: " + request.getRequestLine().getMethod());
                 for (Header header : request.getAllHeaders()) {
-                    logger.info(
-                        String.format("Request Header: Name=%s Value=%s", header.getName(),
-                            header.getValue())
-                    );
+                    LOGGER.info(String.format("Request Header: Name=%s Value=%s", header.getName(),
+                        header.getValue()));
                 }
                 response = client.execute(target, request);
             }
         }
-        logger.info("Response Status: " + response.getStatusLine());
+        LOGGER.info("Response Status: " + response.getStatusLine());
         for (Header header : response.getAllHeaders()) {
-            logger.info(String.format("Response Header: Name=%s Value=%s", header.getName(),
+            LOGGER.info(String.format("Response Header: Name=%s Value=%s", header.getName(),
                 header.getValue()));
         }
         return response;

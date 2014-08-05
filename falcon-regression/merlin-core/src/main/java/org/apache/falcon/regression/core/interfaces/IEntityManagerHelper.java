@@ -45,15 +45,16 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+/** Abstract class for helper classes. */
 public abstract class IEntityManagerHelper {
 
-    public static boolean AUTHENTICATE = setAuthenticate();
+    public static final boolean AUTHENTICATE = setAuthenticate();
 
-    private static final Logger logger = Logger.getLogger(IEntityManagerHelper.class);
+    private static final Logger LOGGER = Logger.getLogger(IEntityManagerHelper.class);
 
-    protected String CLIENT_LOCATION = OSUtil.RESOURCES
+    protected static final String CLIENT_LOCATION = OSUtil.RESOURCES
         + OSUtil.getPath("IvoryClient", "IvoryCLI.jar");
-    protected String BASE_COMMAND = "java -jar " + CLIENT_LOCATION;
+    protected static final String BASE_COMMAND = "java -jar " + CLIENT_LOCATION;
 
     private static boolean setAuthenticate() {
         String value = Config.getProperty("isAuthenticationSet");
@@ -108,8 +109,8 @@ public abstract class IEntityManagerHelper {
             try {
                 this.hCatClient = HCatUtil.getHCatClient(hcatEndpoint, hiveMetaStorePrincipal);
             } catch (HCatException e) {
-                Assert.fail("Unable to create hCatClient because of exception:\n" +
-                    ExceptionUtils.getStackTrace(e));
+                Assert.fail("Unable to create hCatClient because of exception:\n"
+                    + ExceptionUtils.getStackTrace(e));
             }
         }
         return this.hCatClient;
@@ -220,9 +221,8 @@ public abstract class IEntityManagerHelper {
         this.oozieURL = Config.getProperty(prefix + "oozie_url");
         this.activeMQ = Config.getProperty(prefix + "activemq_url");
         this.storeLocation = Config.getProperty(prefix + "storeLocation");
-        this.hadoopGetCommand =
-            hadoopLocation + "  fs -cat hdfs://" + hadoopURL +
-                "/projects/ivory/staging/ivory/workflows/process";
+        this.hadoopGetCommand = hadoopLocation + "  fs -cat hdfs://" + hadoopURL
+                + "/projects/ivory/staging/ivory/workflows/process";
         this.allColo = "?colo=" + Config.getProperty(prefix + "colo", "*");
         this.colo = (!Config.getProperty(prefix + "colo", "").isEmpty()) ? "?colo=" + Config
             .getProperty(prefix + "colo") : "";
@@ -241,8 +241,8 @@ public abstract class IEntityManagerHelper {
         this.hadoopFS = null;
         this.oozieClient = null;
         this.namenodePrincipal = Config.getProperty(prefix + "namenode.kerberos.principal", "none");
-        this.hiveMetaStorePrincipal = Config.getProperty(prefix + "hive.metastore.kerberos" +
-            ".principal", "none");
+        this.hiveMetaStorePrincipal = Config.getProperty(
+                prefix + "hive.metastore.kerberos.principal", "none");
     }
 
     public abstract String getEntityType();
@@ -260,7 +260,7 @@ public abstract class IEntityManagerHelper {
 
     public ServiceResponse listEntities(Util.URLS url, String user)
         throws IOException, URISyntaxException, AuthenticationException {
-        logger.info("fetching " + getEntityType() + " list");
+        LOGGER.info("fetching " + getEntityType() + " list");
         return Util.sendRequest(createUrl(this.hostname + url.getValue(), getEntityType() + colo),
             "get", null, user);
     }
@@ -272,7 +272,7 @@ public abstract class IEntityManagerHelper {
 
     public ServiceResponse submitEntity(URLS url, String data, String user)
         throws IOException, URISyntaxException, AuthenticationException {
-        logger.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
+        LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
         return Util.sendRequest(createUrl(this.hostname + url.getValue(), getEntityType() + colo),
             "post", data, user);
     }
@@ -295,7 +295,7 @@ public abstract class IEntityManagerHelper {
 
     public ServiceResponse submitAndSchedule(URLS url, String data, String user)
         throws IOException, URISyntaxException, AuthenticationException {
-        logger.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
+        LOGGER.info("Submitting " + getEntityType() + ": \n" + Util.prettyPrintXml(data));
         return Util.sendRequest(createUrl(this.hostname + url.getValue(), getEntityType()), "post",
             data, user);
     }
@@ -425,8 +425,8 @@ public abstract class IEntityManagerHelper {
     public ServiceResponse update(String oldEntity, String newEntity, String updateTime,
                                   String user)
         throws IOException, URISyntaxException, AuthenticationException {
-        String url = this.hostname + URLS.UPDATE.getValue() + "/" + getEntityType() + "/" +
-            Util.readEntityName(oldEntity);
+        String url = this.hostname + URLS.UPDATE.getValue() + "/" + getEntityType() + "/"
+            + Util.readEntityName(oldEntity);
         String urlPart = colo == null || colo.isEmpty() ? "?" : colo + "&";
         return Util.sendRequest(url + urlPart + "effective=" + updateTime, "post",
             newEntity, user);
@@ -446,9 +446,9 @@ public abstract class IEntityManagerHelper {
             .createAndSendRequestProcessInstance(url, params, allColo, user);
     }
 
-    public InstancesResult getProcessInstanceRerun(String EntityName, String params)
+    public InstancesResult getProcessInstanceRerun(String entityName, String params)
         throws IOException, URISyntaxException, AuthenticationException {
-        return getProcessInstanceRerun(EntityName, params, null);
+        return getProcessInstanceRerun(entityName, params, null);
     }
 
     public InstancesResult getProcessInstanceRerun(String entityName, String params,
@@ -460,9 +460,9 @@ public abstract class IEntityManagerHelper {
             .createAndSendRequestProcessInstance(url, params, allColo, user);
     }
 
-    public InstancesResult getProcessInstanceResume(String EntityName, String params)
+    public InstancesResult getProcessInstanceResume(String entityName, String params)
         throws IOException, URISyntaxException, AuthenticationException {
-        return getProcessInstanceResume(EntityName, params, null);
+        return getProcessInstanceResume(entityName, params, null);
     }
 
     public InstancesResult getProcessInstanceResume(String entityName, String params,
@@ -490,8 +490,8 @@ public abstract class IEntityManagerHelper {
 
     public String getDependencies(String entityName) {
         return ExecUtil.executeCommandGetOutput(
-            BASE_COMMAND + " entity -dependency -url " + this.hostname + " -type " +
-                getEntityType() + " -name " + entityName);
+            BASE_COMMAND + " entity -dependency -url " + this.hostname + " -type "
+                + getEntityType() + " -name " + entityName);
     }
 
     public List<String> getArchiveInfo() throws IOException, JSchException {

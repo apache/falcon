@@ -20,11 +20,9 @@ package org.apache.falcon.regression.core.helpers;
 
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.log4j.Logger;
 
+/** Helper class to work with feed endpoints of a colo. */
 public class DataEntityHelperImpl extends IEntityManagerHelper {
-
-    private static final Logger logger = Logger.getLogger(DataEntityHelperImpl.class);
 
     public DataEntityHelperImpl(String prefix) {
         super(prefix);

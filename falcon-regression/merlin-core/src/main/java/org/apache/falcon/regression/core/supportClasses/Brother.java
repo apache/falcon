@@ -27,38 +27,39 @@ import org.apache.falcon.regression.core.util.Util.URLS;
 import org.testng.TestNGException;
 import org.apache.log4j.Logger;
 
+/** Class for running a rest request in a parallel thread. */
 public class Brother extends Thread {
-    String operation;
-    String data;
-    URLS url;
-    ServiceResponse output;
-    private static final Logger logger = Logger.getLogger(Brother.class);
+    private String operation;
+    private String data;
+    private URLS url;
+    private ServiceResponse output;
+    private static final Logger LOGGER = Logger.getLogger(Brother.class);
 
     public ServiceResponse getOutput() {
         return output;
     }
 
-    IEntityManagerHelper entityManagerHelper;
+    private IEntityManagerHelper entityManagerHelper;
 
     public Brother(String threadName, String operation, EntityType entityType, ThreadGroup tGroup,
                    Bundle b, ColoHelper p, URLS url) {
         super(tGroup, threadName);
         this.operation = operation;
         switch (entityType) {
-            case PROCESS:
-                this.data = b.getProcessData();
-                this.entityManagerHelper = p.getProcessHelper();
-                break;
-            case CLUSTER:
-                this.entityManagerHelper = p.getClusterHelper();
-                this.data = b.getClusters().get(0);
-                break;
-            case FEED:
-                this.entityManagerHelper = p.getFeedHelper();
-                this.data = b.getDataSets().get(0);
-                break;
-            default:
-                logger.error("Unexpected entityType=" + entityType);
+        case PROCESS:
+            this.data = b.getProcessData();
+            this.entityManagerHelper = p.getProcessHelper();
+            break;
+        case CLUSTER:
+            this.entityManagerHelper = p.getClusterHelper();
+            this.data = b.getClusters().get(0);
+            break;
+        case FEED:
+            this.entityManagerHelper = p.getFeedHelper();
+            this.data = b.getDataSets().get(0);
+            break;
+        default:
+            LOGGER.error("Unexpected entityType=" + entityType);
         }
         this.url = url;
         this.output = new ServiceResponse();
@@ -71,39 +72,39 @@ public class Brother extends Thread {
             e.printStackTrace();
             throw new TestNGException(e.getMessage());
         }
-        logger.info("Brother " + this.getName() + " will be executing " + operation);
+        LOGGER.info("Brother " + this.getName() + " will be executing " + operation);
         try {
             switch (url) {
-                case SUBMIT_URL:
-                    output = entityManagerHelper.submitEntity(url, data);
-                    break;
-                case GET_ENTITY_DEFINITION:
-                    output = entityManagerHelper.getEntityDefinition(url, data);
-                    break;
-                case DELETE_URL:
-                    output = entityManagerHelper.delete(url, data);
-                    break;
-                case SUSPEND_URL:
-                    output = entityManagerHelper.suspend(url, data);
-                    break;
-                case SCHEDULE_URL:
-                    output = entityManagerHelper.schedule(url, data);
-                    break;
-                case RESUME_URL:
-                    output = entityManagerHelper.resume(url, data);
-                    break;
-                case SUBMIT_AND_SCHEDULE_URL:
-                    output = entityManagerHelper.submitAndSchedule(url, data);
-                    break;
-                case STATUS_URL:
-                    output = entityManagerHelper.getStatus(url, data);
-                    break;
-                default:
-                    logger.error("Unexpected url: " + url);
-                    break;
+            case SUBMIT_URL:
+                output = entityManagerHelper.submitEntity(url, data);
+                break;
+            case GET_ENTITY_DEFINITION:
+                output = entityManagerHelper.getEntityDefinition(url, data);
+                break;
+            case DELETE_URL:
+                output = entityManagerHelper.delete(url, data);
+                break;
+            case SUSPEND_URL:
+                output = entityManagerHelper.suspend(url, data);
+                break;
+            case SCHEDULE_URL:
+                output = entityManagerHelper.schedule(url, data);
+                break;
+            case RESUME_URL:
+                output = entityManagerHelper.resume(url, data);
+                break;
+            case SUBMIT_AND_SCHEDULE_URL:
+                output = entityManagerHelper.submitAndSchedule(url, data);
+                break;
+            case STATUS_URL:
+                output = entityManagerHelper.getStatus(url, data);
+                break;
+            default:
+                LOGGER.error("Unexpected url: " + url);
+                break;
             }
-            logger.info("Brother " + getName() + "'s response to the " + operation + " is: " +
-                output);
+            LOGGER.info("Brother " + getName() + "'s response to the "
+                + operation + " is: " + output);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -28,11 +28,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class FalconAuthorizationToken {
+/** Class for obtaining authorization token. */
+public final class FalconAuthorizationToken {
     private static final String AUTH_URL = "api/options";
     private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
     private static final FalconAuthorizationToken INSTANCE = new FalconAuthorizationToken();
-    private static final Logger logger = Logger.getLogger(FalconAuthorizationToken.class);
+    private static final Logger LOGGER = Logger.getLogger(FalconAuthorizationToken.class);
 
     // Use a hashmap so that we can cache the tokens.
     private final ConcurrentHashMap<String, AuthenticatedURL.Token> tokens =
@@ -46,7 +47,7 @@ public class FalconAuthorizationToken {
         throws IOException, AuthenticationException {
         URL url = new URL(String.format("%s://%s:%d/%s", protocol, host, port,
             AUTH_URL + "?" + PseudoAuthenticator.USER_NAME + "=" + user));
-        logger.info("Authorize using url: " + url.toString());
+        LOGGER.info("Authorize using url: " + url.toString());
         AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
 
         /*using KerberosAuthenticator which falls back to PsuedoAuthenticator
@@ -55,7 +56,7 @@ public class FalconAuthorizationToken {
         String key = getKey(user, protocol, host, port);
 
         // initialize a hash map if its null.
-        logger.info("Authorization Token: " + currentToken.toString());
+        LOGGER.info("Authorization Token: " + currentToken.toString());
         INSTANCE.tokens.put(key, currentToken);
     }
 

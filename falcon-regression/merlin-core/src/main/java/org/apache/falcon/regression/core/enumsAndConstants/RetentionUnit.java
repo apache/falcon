@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.enumsAndConstants;
 
 import org.joda.time.DateTime;
 
+/** Enum to represent different Retention Units. */
 public enum RetentionUnit {
     MINUTES("minutes") {
         @Override

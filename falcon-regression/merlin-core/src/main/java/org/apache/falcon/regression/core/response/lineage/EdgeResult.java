@@ -18,8 +18,9 @@
 
 package org.apache.falcon.regression.core.response.lineage;
 
+/** Class for Lineage API result having an edge. */
 public class EdgeResult {
-    Edge results;
+    private Edge results;
 
     public Edge getResults() {
         return results;
@@ -27,9 +28,7 @@ public class EdgeResult {
 
     @Override
     public String toString() {
-        return "EdgeResult{" +
-            "results=" + results +
-            '}';
+        return "EdgeResult{" + "results=" + results + '}';
     }
 
 }

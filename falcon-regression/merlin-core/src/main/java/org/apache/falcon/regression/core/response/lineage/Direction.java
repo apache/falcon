@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.core.response.lineage;
 
+/** Enum for all the direction values associated with edges. */
 public enum Direction {
     outGoingEdges("outE"),
     inComingEdges("inE"),

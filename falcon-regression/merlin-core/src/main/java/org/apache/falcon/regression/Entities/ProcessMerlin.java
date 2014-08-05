@@ -46,7 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+/** Class for representing a process xml. */
 public class ProcessMerlin extends Process {
     public ProcessMerlin(String processData) {
         this((Process) fromString(EntityType.PROCESS, processData));
@@ -65,7 +65,7 @@ public class ProcessMerlin extends Process {
     }
 
     /**
-     * Method sets a number of clusters to process definition
+     * Method sets a number of clusters to process definition.
      *
      * @param newClusters list of definitions of clusters which are to be set to process
      *                    (clusters on which process should run)
@@ -173,7 +173,7 @@ public class ProcessMerlin extends Process {
     }
 
     /**
-     * Sets unique names for the process
+     * Sets unique names for the process.
      * @return mapping of old name to new name
      */
     public Map<? extends String, ? extends String> setUniqueName() {
@@ -215,8 +215,9 @@ public class ProcessMerlin extends Process {
                 if (isFirst) {
                     in.setName("inputData");
                     isFirst = false;
-                } else
+                } else {
                     in.setName("inputData" + i);
+                }
             }
             in.setFeed(new FeedMerlin(newDataSets.get(i)).getName());
             is.getInputs().add(in);

@@ -24,16 +24,15 @@ import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+/** Helper class to work with cluster endpoints of a colo. */
 public class ClusterEntityHelperImpl extends IEntityManagerHelper {
 
 
     private static final String INVALID_ERR = "Not Valid for Cluster Entity";
-    private static final Logger logger = Logger.getLogger(ClusterEntityHelperImpl.class);
 
     public ClusterEntityHelperImpl(String prefix) {
         super(prefix);
@@ -119,8 +118,7 @@ public class ClusterEntityHelperImpl extends IEntityManagerHelper {
                                                      String string
     ) throws
         IOException, URISyntaxException {
-        logger.info(INVALID_ERR);
-        return null;
+        throw new UnsupportedOperationException(INVALID_ERR);
     }
 
 }

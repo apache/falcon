@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Class for api result of list entities. */
 @XmlRootElement(name = "entities")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EntitiesResult {
@@ -37,8 +38,6 @@ public class EntitiesResult {
 
     @Override
     public String toString() {
-        return "EntitiesResult{" +
-            "entities=" + entities +
-            '}';
+        return String.format("EntitiesResult{entities=%s}", entities);
     }
 }

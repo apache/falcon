@@ -23,20 +23,21 @@ import org.apache.falcon.regression.core.helpers.ClusterEntityHelperImpl;
 import org.apache.falcon.regression.core.helpers.DataEntityHelperImpl;
 import org.apache.falcon.regression.core.helpers.ProcessEntityHelperImpl;
 
-public class EntityHelperFactory {
+/** Factory class to create helper objects. */
+public final class EntityHelperFactory {
     private EntityHelperFactory() {
     }
 
     public static IEntityManagerHelper getEntityHelper(EntityType type, String prefix) {
         switch (type) {
-            case FEED:
-                return new DataEntityHelperImpl(prefix);
-            case CLUSTER:
-                return new ClusterEntityHelperImpl(prefix);
-            case PROCESS:
-                return new ProcessEntityHelperImpl(prefix);
-            default:
-                return null;
+        case FEED:
+            return new DataEntityHelperImpl(prefix);
+        case CLUSTER:
+            return new ClusterEntityHelperImpl(prefix);
+        case PROCESS:
+            return new ProcessEntityHelperImpl(prefix);
+        default:
+            return null;
         }
     }
 }

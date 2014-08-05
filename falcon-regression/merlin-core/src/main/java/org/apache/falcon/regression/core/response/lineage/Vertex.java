@@ -20,14 +20,17 @@ package org.apache.falcon.regression.core.response.lineage;
 
 import com.google.gson.annotations.SerializedName;
 
+/** Class for representing a vertex. */
 public class Vertex extends GraphEntity {
 
+    /** Enum for all the allowed filter keys. */
     public static enum FilterKey {
         name, type, timestamp, version,
         userWorkflowEngine, userWorkflowName, userWorkflowVersion,
         workflowId, runId, status, workflowEngineUrl, subflowId,
     }
 
+    /** Enum for all the allowed vertex types. */
     public static enum VERTEX_TYPE {
         @SerializedName("cluster-entity")CLUSTER_ENTITY("cluster-entity"),
         @SerializedName("feed-entity")FEED_ENTITY("feed-entity"),
@@ -39,7 +42,7 @@ public class Vertex extends GraphEntity {
         @SerializedName("user")USER("user"),
         @SerializedName("data-center")COLO("data-center"),
         @SerializedName("classification")TAGS("classification"),
-        @SerializedName("group")GROUPS("group"),;
+        @SerializedName("group")GROUPS("group");
 
         private final String value;
         VERTEX_TYPE(String value) {
@@ -51,21 +54,21 @@ public class Vertex extends GraphEntity {
         }
     }
 
-    int _id;
-    String name;
-    VERTEX_TYPE type;
-    String timestamp;
-    String version;
+    private int _id;
+    private String name;
+    private VERTEX_TYPE type;
+    private String timestamp;
+    private String version;
 
-    String userWorkflowEngine;
-    String userWorkflowName;
-    String userWorkflowVersion;
+    private String userWorkflowEngine;
+    private String userWorkflowName;
+    private String userWorkflowVersion;
 
-    String workflowId;
-    String runId;
-    String status;
-    String workflowEngineUrl;
-    String subflowId;
+    private String workflowId;
+    private String runId;
+    private String status;
+    private String workflowEngineUrl;
+    private String subflowId;
 
     public int get_id() {
         return _id;
@@ -89,51 +92,58 @@ public class Vertex extends GraphEntity {
 
     @Override
     public String toString() {
-        return "Vertex{" +
-            "_id=" + _id +
-            ", _type=" + _type +
-            ", name='" + name + '\'' +
-            ", type=" + type +
-            ", timestamp='" + timestamp + '\'' +
-            ", version='" + version + '\'' +
-            ", userWorkflowEngine='" + userWorkflowEngine + '\'' +
-            ", userWorkflowName='" + userWorkflowName + '\'' +
-            ", userWorkflowVersion='" + userWorkflowVersion + '\'' +
-            ", workflowId='" + workflowId + '\'' +
-            ", runId='" + runId + '\'' +
-            ", status='" + status + '\'' +
-            ", workflowEngineUrl='" + workflowEngineUrl + '\'' +
-            ", subflowId='" + subflowId + '\'' +
-            '}';
+        return "Vertex{"
+                + "_id=" + _id
+                + ", _type=" + _type
+                + ", name='" + name + '\''
+                + ", type=" + type
+                + ", timestamp='" + timestamp + '\''
+                + ", version='" + version + '\''
+                + ", userWorkflowEngine='" + userWorkflowEngine + '\''
+                + ", userWorkflowName='" + userWorkflowName + '\''
+                + ", userWorkflowVersion='" + userWorkflowVersion + '\''
+                + ", workflowId='" + workflowId + '\''
+                + ", runId='" + runId + '\''
+                + ", status='" + status + '\''
+                + ", workflowEngineUrl='" + workflowEngineUrl + '\''
+                + ", subflowId='" + subflowId + '\''
+                + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Vertex)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Vertex)) {
+            return false;
+        }
 
         Vertex vertex = (Vertex) o;
 
-        if (_id != vertex._id) return false;
-        if (!name.equals(vertex.name)) return false;
-        if (runId != null ? !runId.equals(vertex.runId) : vertex.runId != null) return false;
-        if (status != null ? !status.equals(vertex.status) : vertex.status != null) return false;
-        if (subflowId != null ? !subflowId.equals(vertex.subflowId) : vertex.subflowId != null)
+        if (_id != vertex._id || !name.equals(vertex.name)
+                || (runId != null ? !runId.equals(vertex.runId) : vertex.runId != null)
+                || (status != null ? !status.equals(vertex.status) : vertex.status != null)
+                || (subflowId != null ? !subflowId.equals(vertex.subflowId)
+                        : vertex.subflowId != null)
+                || !timestamp.equals(vertex.timestamp)
+                || type != vertex.type
+                || (userWorkflowEngine != null
+                        ? !userWorkflowEngine.equals(vertex.userWorkflowEngine)
+                        : vertex.userWorkflowEngine != null)
+                || (userWorkflowName != null ? !userWorkflowName.equals(vertex.userWorkflowName)
+                        : vertex.userWorkflowName != null)
+                || (userWorkflowVersion != null
+                        ? !userWorkflowVersion.equals(vertex.userWorkflowVersion)
+                        : vertex.userWorkflowVersion != null)
+                || (version != null ? !version.equals(vertex.version) : vertex.version != null)
+                || (workflowEngineUrl != null
+                        ? !workflowEngineUrl.equals(vertex.workflowEngineUrl)
+                        : vertex.workflowEngineUrl != null)
+                || (workflowId != null ? !workflowId.equals(vertex.workflowId)
+                        : vertex.workflowId != null)) {
             return false;
-        if (!timestamp.equals(vertex.timestamp)) return false;
-        if (type != vertex.type) return false;
-        if (userWorkflowEngine != null ? !userWorkflowEngine.equals(vertex.userWorkflowEngine) :
-            vertex.userWorkflowEngine != null) return false;
-        if (userWorkflowName != null ? !userWorkflowName.equals(vertex.userWorkflowName) :
-            vertex.userWorkflowName != null) return false;
-        if (userWorkflowVersion != null ? !userWorkflowVersion.equals(vertex.userWorkflowVersion) :
-            vertex.userWorkflowVersion != null) return false;
-        if (version != null ? !version.equals(vertex.version) : vertex.version != null)
-            return false;
-        if (workflowEngineUrl != null ? !workflowEngineUrl.equals(vertex.workflowEngineUrl) :
-            vertex.workflowEngineUrl != null) return false;
-        if (workflowId != null ? !workflowId.equals(vertex.workflowId) : vertex.workflowId != null)
-            return false;
+        }
 
         return true;
     }

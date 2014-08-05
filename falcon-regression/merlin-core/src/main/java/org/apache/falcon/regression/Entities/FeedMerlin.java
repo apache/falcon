@@ -47,9 +47,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Class for representing a feed xml. */
 public class FeedMerlin extends Feed {
 
-    private static final Logger logger = Logger.getLogger(FeedMerlin.class);
+    private static final Logger LOGGER = Logger.getLogger(FeedMerlin.class);
 
     public FeedMerlin(String feedData) {
         this((Feed) fromString(EntityType.FEED, feedData));
@@ -68,7 +69,7 @@ public class FeedMerlin extends Feed {
     }
 
     public static List<FeedMerlin> fromString(List<String> feedStrings) {
-        List <FeedMerlin> feeds = new ArrayList<FeedMerlin>();
+        List<FeedMerlin> feeds = new ArrayList<FeedMerlin>();
         for (String feedString : feedStrings) {
             feeds.add(new FeedMerlin(feedString));
         }
@@ -76,7 +77,7 @@ public class FeedMerlin extends Feed {
     }
 
     /**
-     * Method sets a number of clusters to feed definition
+     * Method sets a number of clusters to feed definition.
      *
      * @param newClusters list of definitions of clusters which are to be set to feed
      * @param location location of data on every cluster
@@ -137,21 +138,21 @@ public class FeedMerlin extends Feed {
 
     public void setLocation(LocationType locationType, String feedInputPath) {
         for (Location location : getLocations().getLocations()) {
-            if(location.getType() == locationType) {
+            if (location.getType() == locationType) {
                 location.setPath(feedInputPath);
             }
         }
     }
 
     public void addProperty(String someProp, String someVal) {
-            Property property = new Property();
-            property.setName(someProp);
-            property.setValue(someVal);
-            this.getProperties().getProperties().add(property);
+        Property property = new Property();
+        property.setName(someProp);
+        property.setValue(someVal);
+        this.getProperties().getProperties().add(property);
     }
 
     /**
-     * Sets unique names for the feed
+     * Sets unique names for the feed.
      * @return mapping of old name to new name
      */
     public Map<? extends String, ? extends String> setUniqueName() {
@@ -167,7 +168,7 @@ public class FeedMerlin extends Feed {
         for (Cluster cluster : getClusters().getClusters()) {
             final String oldName = cluster.getName();
             final String newName = clusterNameMap.get(oldName);
-            if(!StringUtils.isEmpty(newName)) {
+            if (!StringUtils.isEmpty(newName)) {
                 cluster.setName(newName);
             }
         }

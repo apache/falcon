@@ -23,8 +23,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
-public class Config {
-    private static final Logger logger = Logger.getLogger(Config.class);
+/** Class for reading properties from Merlin.properties file. */
+public final class Config {
+    private static final Logger LOGGER = Logger.getLogger(Config.class);
 
     private static final String MERLIN_PROPERTIES = "Merlin.properties";
     private static final Config INSTANCE = new Config(MERLIN_PROPERTIES);
@@ -32,7 +33,7 @@ public class Config {
     private PropertiesConfiguration confObj;
     private Config(String propFileName) {
         try {
-            logger.info("Going to read properties from: " + propFileName);
+            LOGGER.info("Going to read properties from: " + propFileName);
             confObj = new PropertiesConfiguration(Config.class.getResource("/" + propFileName));
         } catch (ConfigurationException e) {
             Assert.fail("Could not read properties because of exception: " + e);
