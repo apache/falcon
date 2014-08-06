@@ -47,7 +47,8 @@ public class ProcessLibPathTest extends BaseTestClass {
 
     ColoHelper cluster = servers.get(0);
     FileSystem clusterFS = serverFS.get(0);
-    String testLibDir = baseHDFSDir + "/ProcessLibPath/TestLib";
+    String testDir = baseHDFSDir + "/ProcessLibPath";
+    String testLibDir = testDir + "/TestLib";
     private static final Logger logger = Logger.getLogger(ProcessLibPathTest.class);
 
     @BeforeClass(alwaysRun = true)
@@ -64,7 +65,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         String startDate = "2010-01-01T22:00Z";
         String endDate = "2010-01-02T03:00Z";
 
-        b.setInputFeedDataPath(baseHDFSDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        b.setInputFeedDataPath(testDir + "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
         String prefix = b.getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
 
@@ -105,6 +106,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         String workflowDir = testLibDir + "/aggregatorLib1/";
         HadoopUtil.uploadDir(clusterFS, workflowDir, OSUtil.RESOURCES_OOZIE);
         HadoopUtil.deleteDirIfExists(workflowDir + "/lib", clusterFS);
+        bundles[0].setProcessWorkflow(workflowDir);
         logger.info("processData: " + Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil
@@ -123,6 +125,7 @@ public class ProcessLibPathTest extends BaseTestClass {
         HadoopUtil.recreateDir(clusterFS, workflowDir + "/lib");
         HadoopUtil.copyDataToFolder(clusterFS, workflowDir + "/lib",
             OSUtil.RESOURCES + "ivory-oozie-lib-0.1.jar");
+        bundles[0].setProcessWorkflow(workflowDir);
         logger.info("processData: " + Util.prettyPrintXml(bundles[0].getProcessData()));
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil
