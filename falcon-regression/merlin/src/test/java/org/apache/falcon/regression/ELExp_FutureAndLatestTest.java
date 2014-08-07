@@ -64,8 +64,8 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
 
-        String startDate = TimeUtil.getTimeWrtSystemTime(-150);
-        String endDate = TimeUtil.getTimeWrtSystemTime(100);
+        String startDate = TimeUtil.getTimeWrtSystemTime(0);
+        String endDate = TimeUtil.getTimeWrtSystemTime(50);
 
         b.setInputFeedDataPath(
             baseTestDir + "/ELExp_latest/testData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
