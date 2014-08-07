@@ -22,22 +22,20 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.feed.Retention;
 import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -670,7 +668,7 @@ public final class InstanceUtil {
             Retention feedRetention, String clusterName,
             ClusterType clusterType, String partition,
             String tableUri, String... locations) {
-        Feed f = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin f = new FeedMerlin(feed);
         if (clusterName == null) {
             f.getClusters().getClusters().clear();
         } else {
@@ -770,7 +768,7 @@ public final class InstanceUtil {
      * Retrieves prefix (main sub-folders) of feed data path.
      */
     public static String getFeedPrefix(String feed) {
-        Feed feedElement = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin feedElement = new FeedMerlin(feed);
         String p = feedElement.getLocations().getLocations().get(0).getPath();
         p = p.substring(0, p.indexOf('$'));
         return p;
@@ -790,7 +788,7 @@ public final class InstanceUtil {
                 new org.apache.falcon.entity.v0.process.Cluster();
         c.setName(clusterName);
         c.setValidity(validity);
-        Process p = (Process) Entity.fromString(EntityType.PROCESS, process);
+        ProcessMerlin p = new ProcessMerlin(process);
 
         if (clusterName == null) {
             p.getClusters().getClusters().set(0, null);
@@ -808,7 +806,8 @@ public final class InstanceUtil {
      * @return - string representation of process definition
      */
     public static String addProcessInputFeed(String process, String feed, String feedName) {
-        Process processElement = (Process) Entity.fromString(EntityType.PROCESS, process);
+
+        ProcessMerlin processElement = new ProcessMerlin(process);
         Input in1 = processElement.getInputs().getInputs().get(0);
         Input in2 = new Input();
         in2.setEnd(in1.getEnd());
@@ -869,7 +868,8 @@ public final class InstanceUtil {
      * @return modified feed
      */
     public static String setFeedFilePath(String feed, String path) {
-        Feed feedElement = (Feed) Entity.fromString(EntityType.FEED, feed);
+
+        FeedMerlin feedElement = new FeedMerlin(feed);
         feedElement.getLocations().getLocations().get(0).setPath(path);
         return feedElement.toString();
     }
@@ -908,7 +908,7 @@ public final class InstanceUtil {
      */
     public static String setProcessFrequency(String process,
             Frequency frequency) {
-        Process p = (Process) Entity.fromString(EntityType.PROCESS, process);
+        ProcessMerlin p = new ProcessMerlin(process);
 
         p.setFrequency(frequency);
 
@@ -919,7 +919,7 @@ public final class InstanceUtil {
      * Sets new process name.
      */
     public static String setProcessName(String process, String newName) {
-        Process p = (Process) Entity.fromString(EntityType.PROCESS, process);
+        ProcessMerlin p = new ProcessMerlin(process);
 
         p.setName(newName);
 
@@ -936,7 +936,7 @@ public final class InstanceUtil {
      */
     public static String setProcessValidity(String process,
             String startTime, String endTime) {
-        Process processElement = (Process) Entity.fromString(EntityType.PROCESS, process);
+        ProcessMerlin processElement = new ProcessMerlin(process);
 
         for (int i = 0; i < processElement.getClusters().getClusters().size(); i++) {
             processElement.getClusters().getClusters().get(i).getValidity().setStart(
@@ -1226,7 +1226,7 @@ public final class InstanceUtil {
      * @return modified feed
      */
     public static String setFeedFrequency(String feed, Frequency f) {
-        Feed feedElement = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin feedElement = new FeedMerlin(feed);
         feedElement.setFrequency(f);
         return feedElement.toString();
     }

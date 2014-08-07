@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.feed.ActionType;
@@ -280,7 +281,7 @@ public class FeedReplicationTest extends BaseTestClass {
         //configure feed
         String availabilityFlagName = "README.md";
         String feedName = Util.readEntityName(bundles[0].getDataSets().get(0));
-        Feed feedElement = bundles[0].getFeedElement(feedName);
+        FeedMerlin feedElement = bundles[0].getFeedElement(feedName);
         feedElement.setAvailabilityFlag(availabilityFlagName);
         bundles[0].writeFeedElement(feedElement, feedName);
         String feed = bundles[0].getDataSets().get(0);

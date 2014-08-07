@@ -53,7 +53,7 @@ public class FeedMerlin extends Feed {
     private static final Logger LOGGER = Logger.getLogger(FeedMerlin.class);
 
     public FeedMerlin(String feedData) {
-        this((Feed) fromString(EntityType.FEED, feedData));
+        this((Feed) TestEntityUtil.fromString(EntityType.FEED, feedData));
     }
 
     public FeedMerlin(final Feed feed) {

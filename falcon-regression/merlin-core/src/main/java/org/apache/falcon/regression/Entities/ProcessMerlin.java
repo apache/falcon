@@ -49,7 +49,7 @@ import java.util.Map;
 /** Class for representing a process xml. */
 public class ProcessMerlin extends Process {
     public ProcessMerlin(String processData) {
-        this((Process) fromString(EntityType.PROCESS, processData));
+        this((Process) TestEntityUtil.fromString(EntityType.PROCESS, processData));
     }
 
     public ProcessMerlin(final Process process) {

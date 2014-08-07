@@ -37,7 +37,8 @@ import java.util.Map;
 public class ClusterMerlin extends Cluster {
 
     public ClusterMerlin(String clusterData) {
-        final Cluster cluster = (Cluster) fromString(EntityType.CLUSTER, clusterData);
+        final Cluster cluster = (Cluster) TestEntityUtil.fromString(EntityType.CLUSTER,
+                clusterData);
         try {
             PropertyUtils.copyProperties(this, cluster);
         } catch (IllegalAccessException e) {

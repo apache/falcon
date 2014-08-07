@@ -24,10 +24,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.jcraft.jsch.JSchException;
-import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.regression.Entities.ClusterMerlin;
+import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.Frequency;
@@ -35,7 +36,6 @@ import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.regression.core.response.APIResult;
@@ -110,7 +110,7 @@ public final class Util {
     }
 
     public static String getProcessName(String data) {
-        Process processElement = (Process) Entity.fromString(EntityType.PROCESS, data);
+        ProcessMerlin processElement = new ProcessMerlin(data);
         return processElement.getName();
     }
 
@@ -161,11 +161,11 @@ public final class Util {
 
     public static String readEntityName(String data) {
         if (data.contains("uri:falcon:feed")) {
-            return Entity.fromString(EntityType.FEED, data).getName();
+            return new FeedMerlin(data).getName();
         } else if (data.contains("uri:falcon:process")) {
-            return Entity.fromString(EntityType.PROCESS, data).getName();
+            return new ProcessMerlin(data).getName();
         } else {
-            return Entity.fromString(EntityType.CLUSTER, data).getName();
+            return new ClusterMerlin(data).getName();
         }
     }
 
@@ -195,9 +195,7 @@ public final class Util {
 
 
     public static String setFeedProperty(String feed, String propertyName, String propertyValue) {
-
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feed);
-
+        FeedMerlin feedObject = new FeedMerlin(feed);
         boolean found = false;
         for (Property prop : feedObject.getProperties().getProperties()) {
             //check if it is present
@@ -222,7 +220,7 @@ public final class Util {
 
 
     public static String getFeedPath(String feed) {
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin feedObject = new FeedMerlin(feed);
         for (Location location : feedObject.getLocations().getLocations()) {
             if (location.getType() == LocationType.DATA) {
                 return location.getPath();
@@ -233,14 +231,14 @@ public final class Util {
     }
 
     public static String insertLateFeedValue(String feed, Frequency frequency) {
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin feedObject = new FeedMerlin(feed);
         feedObject.getLateArrival().setCutOff(frequency);
         return feedObject.toString();
     }
 
 
     public static String setFeedPathValue(String feed, String pathValue) {
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feed);
+        FeedMerlin feedObject = new FeedMerlin(feed);
         for (Location location : feedObject.getLocations().getLocations()) {
             if (location.getType() == LocationType.DATA) {
                 location.setPath(pathValue);
@@ -265,20 +263,20 @@ public final class Util {
     }
 
     public static String setFeedName(String feedString, String newName) {
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feedString);
+        FeedMerlin feedObject = new FeedMerlin(feedString);
         feedObject.setName(newName);
         return feedObject.toString().trim();
     }
 
     public static String setClusterNameInFeed(String feedString, String clusterName,
                                               int clusterIndex) {
-        Feed feedObject = (Feed) Entity.fromString(EntityType.FEED, feedString);
+        FeedMerlin feedObject = new FeedMerlin(feedString);
         feedObject.getClusters().getClusters().get(clusterIndex).setName(clusterName);
         return feedObject.toString().trim();
     }
 
-    public static Cluster getClusterObject(String clusterXML) {
-        return (Cluster) Entity.fromString(EntityType.CLUSTER, clusterXML);
+    public static ClusterMerlin getClusterObject(String clusterXML) {
+        return new ClusterMerlin(clusterXML);
     }
 
     public static List<String> getInstanceFinishTimes(ColoHelper coloHelper, String workflowId)
@@ -357,7 +355,7 @@ public final class Util {
     }
 
     public static Process getProcessObject(String processData) {
-        return (Process) Entity.fromString(EntityType.PROCESS, processData);
+        return new ProcessMerlin(processData);
     }
 
     public static void printMessageData(JmsMessageConsumer messageConsumer) throws JMSException {
@@ -377,7 +375,7 @@ public final class Util {
 
     public static String getEnvClusterXML(String cluster, String prefix) {
 
-        Cluster clusterObject =
+        ClusterMerlin clusterObject =
             getClusterObject(cluster);
         if ((null == prefix) || prefix.isEmpty()) {
             prefix = "";
