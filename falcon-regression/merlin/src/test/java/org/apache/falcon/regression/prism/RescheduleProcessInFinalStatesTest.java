@@ -68,8 +68,8 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
         b = new Bundle(b, cluster);
         b.setProcessWorkflow(aggregateWorkflowDir);
 
-        String startDate = "2010-01-01T20:00Z";
-        String endDate = "2010-01-03T01:04Z";
+        String startDate = "2010-01-02T00:40Z";
+        String endDate = "2010-01-02T01:20Z";
 
         b.setInputFeedDataPath(inputPath);
         String prefix = b.getFeedDataPathPrefix();

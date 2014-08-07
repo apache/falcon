@@ -23,7 +23,6 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -31,7 +30,6 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -47,7 +45,6 @@ import java.util.Random;
 public class RescheduleKilledProcessTest extends BaseTestClass {
 
     ColoHelper cluster = servers.get(0);
-    FileSystem clusterFS = serverFS.get(0);
     String aggregateWorkflowDir = baseHDFSDir + "/RescheduleKilledProcessTest/aggregator";
     private static final Logger logger = Logger.getLogger(RescheduleKilledProcessTest.class);
 
@@ -116,10 +113,6 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
 
         bundles[0].setInputFeedDataPath(
             baseHDFSDir + "/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
-
-        String prefix = InstanceUtil.getFeedPrefix(bundles[0].getInputFeedFromBundle());
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
-        HadoopUtil.lateDataReplenish(clusterFS, 40, 1, prefix, null);
 
         logger.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
 
