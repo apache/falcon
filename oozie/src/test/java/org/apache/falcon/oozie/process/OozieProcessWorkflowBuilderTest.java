@@ -44,6 +44,7 @@ import org.apache.falcon.messaging.EntityInstanceMessage;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.bundle.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
@@ -629,6 +630,13 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(EntityUtil.getWorkflowName(Tag.DEFAULT, process).toString(),
             bundle.getCoordinator().get(0).getName());
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
+        List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
+        for (CONFIGURATION.Property prop : props) {
+            if(prop.getName().equals("oozie.libpath")) {
+                Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), new Path(bundlePath,
+                    "userlib").toString());
+            }
+        }
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
         testDefCoordMap(process, coord);

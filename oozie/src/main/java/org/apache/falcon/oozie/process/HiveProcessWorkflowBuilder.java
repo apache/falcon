@@ -61,8 +61,7 @@ public class HiveProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder 
         // adds hive-site.xml in hive classpath
         hiveAction.setJobXml("${wf:appPath()}/conf/hive-site.xml");
 
-        addArchiveForCustomJars(cluster, hiveAction.getArchive(), ProcessHelper.getUserLibPath(entity, cluster,
-            buildPath));
+        addArchiveForCustomJars(cluster, hiveAction.getArchive(), getLibPath(cluster, buildPath));
 
         OozieUtils.marshalHiveAction(action, actionJaxbElement);
         return action;

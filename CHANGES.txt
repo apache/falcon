@@ -28,6 +28,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-571 user libs not getting loaded during process execution 
+   (Shwetha GS via Suhas Vasu)
+
    FALCON-514 Falcon CLI giving error when using -file option with -rerun in 
    instance management. (pavan kumar kolamuri via Shwetha GS)
 

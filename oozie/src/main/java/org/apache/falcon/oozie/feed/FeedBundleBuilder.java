@@ -38,10 +38,6 @@ public class FeedBundleBuilder extends OozieBundleBuilder<Feed> {
         super(entity);
     }
 
-    @Override protected Path getLibPath(Cluster cluster, Path buildPath) {
-        return new Path(buildPath, "lib");
-    }
-
     @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         List<Properties> props = new ArrayList<Properties>();
         List<Properties> evictionProps =

@@ -76,9 +76,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     private static final String POSTPROCESS_TEMPLATE = "/action/post-process.xml";
     private static final String PREPROCESS_TEMPLATE = "/action/pre-process.xml";
 
-    public static final Set<String> FALCON_ACTIONS = new HashSet<String>(
-        Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME,
-            FAIL_POSTPROCESS_ACTION_NAME, }));
+    public static final Set<String> FALCON_ACTIONS = new HashSet<String>(Arrays.asList(
+        new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
 
     private final Tag lifecycle;
 
@@ -89,7 +88,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     public static final OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
         throws FalconException {
-        switch(entity.getEntityType()) {
+        switch (entity.getEntityType()) {
         case FEED:
             Feed feed = (Feed) entity;
             switch (lifecycle) {
@@ -105,13 +104,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
                 }
 
             default:
-                throw new IllegalArgumentException("Unhandled type " + entity.getEntityType() + ", lifecycle "
-                    + lifecycle);
+                throw new IllegalArgumentException("Unhandled type " + entity.getEntityType()
+                    + ", lifecycle " + lifecycle);
             }
 
         case PROCESS:
             Process process = (Process) entity;
-            switch(process.getWorkflow().getEngine()) {
+            switch (process.getWorkflow().getEngine()) {
             case PIG:
                 return new PigProcessWorkflowBuilder(process);
 
@@ -195,26 +194,24 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     protected boolean shouldPreProcess() throws FalconException {
-        if (EntityUtil.getLateProcess(entity) == null
-            || EntityUtil.getLateProcess(entity).getLateInputs() == null
+        if (EntityUtil.getLateProcess(entity) == null || EntityUtil.getLateProcess(entity).getLateInputs() == null
             || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
             return false;
         }
         return true;
     }
 
-    protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag)
-        throws FalconException {
+    protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag) throws FalconException {
         String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
         FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
         try {
             addExtensionJars(fs, new Path(libext), wf);
             addExtensionJars(fs, new Path(libext, entity.getEntityType().name()), wf);
             if (tag != null) {
-                addExtensionJars(fs,
-                    new Path(libext, entity.getEntityType().name() + "/" + tag.name().toLowerCase()), wf);
+                addExtensionJars(fs, new Path(libext, entity.getEntityType().name() + "/" + tag.name().toLowerCase()),
+                    wf);
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new FalconException(e);
         }
     }
@@ -223,7 +220,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         FileStatus[] libs = null;
         try {
             libs = fs.listStatus(path);
-        } catch(FileNotFoundException ignore) {
+        } catch (FileNotFoundException ignore) {
             //Ok if the libext is not configured
         }
 
@@ -231,12 +228,12 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
             return;
         }
 
-        for(FileStatus lib : libs) {
+        for (FileStatus lib : libs) {
             if (lib.isDir()) {
                 continue;
             }
 
-            for(Object obj: wf.getDecisionOrForkOrJoin()) {
+            for (Object obj : wf.getDecisionOrForkOrJoin()) {
                 if (!(obj instanceof ACTION)) {
                     continue;
                 }
@@ -273,8 +270,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         }
     }
 
-    private void persistHiveConfiguration(FileSystem fs, Path confPath, Configuration hiveConf,
-        String prefix) throws IOException {
+    private void persistHiveConfiguration(FileSystem fs, Path confPath, Configuration hiveConf, String prefix)
+        throws IOException {
         OutputStream out = null;
         try {
             out = fs.create(new Path(confPath, prefix + "hive-site.xml"));
@@ -308,8 +305,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
      * @param workflowApp workflow xml
      * @param cluster     cluster entity
      */
-    protected void addHCatalogCredentials(WORKFLOWAPP workflowApp, Cluster cluster,
-        String credentialName, Set<String> actions) {
+    protected void addHCatalogCredentials(WORKFLOWAPP workflowApp, Cluster cluster, String credentialName,
+        Set<String> actions) {
         addHCatalogCredentials(workflowApp, cluster, credentialName);
 
         // add credential to each action
@@ -358,5 +355,10 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         Properties props = RuntimeProperties.get();
         action.setRetryMax(props.getProperty("falcon.parentworkflow.retry.max", "3"));
         action.setRetryInterval(props.getProperty("falcon.parentworkflow.retry.interval.secs", "1"));
+    }
+
+    @Override
+    protected Path getLibPath(Cluster cluster, Path buildPath) throws FalconException {
+        return super.getLibPath(cluster, buildPath.getParent());
     }
 }

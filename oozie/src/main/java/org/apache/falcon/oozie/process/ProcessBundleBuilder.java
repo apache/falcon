@@ -23,7 +23,6 @@ import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -104,10 +103,6 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
         default:
             throw new IllegalArgumentException("Unhandled time unit " + tu);
         }
-    }
-
-    @Override protected Path getLibPath(Cluster cluster, Path buildPath) throws FalconException {
-        return ProcessHelper.getUserLibPath(entity, cluster, buildPath);
     }
 
     @Override protected List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {

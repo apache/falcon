@@ -162,4 +162,8 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         return unmarshal(template, OozieUtils.COORD_JAXB_CONTEXT, COORDINATORAPP.class);
     }
 
+    @Override
+    protected Path getLibPath(Cluster cluster, Path buildPath) throws FalconException {
+        return super.getLibPath(cluster, buildPath.getParent());
+    }
 }

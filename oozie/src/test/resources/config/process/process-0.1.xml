@@ -34,7 +34,7 @@
         <property name="mapred.job.priority" value="LOW"/>
     </properties>
 
-    <workflow name="test" version="1.0.0" engine="oozie" path="/user/guest/workflow"/>
+    <workflow name="test" version="1.0.0" engine="oozie" path="/user/guest/workflow" lib="/user/guest/workflowlib"/>
 
     <retry policy="periodic" delay="hours(10)" attempts="3"/>
 

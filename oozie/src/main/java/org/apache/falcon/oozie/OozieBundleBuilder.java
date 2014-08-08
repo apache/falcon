@@ -99,8 +99,6 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         return properties;
     }
 
-    protected abstract Path getLibPath(Cluster cluster, Path buildPath) throws FalconException;
-
     protected CONFIGURATION getConfig(Properties props) {
         CONFIGURATION conf = new CONFIGURATION();
         for (Entry<Object, Object> prop : props.entrySet()) {

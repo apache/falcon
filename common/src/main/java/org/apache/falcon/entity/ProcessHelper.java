@@ -106,9 +106,9 @@ public final class ProcessHelper {
 
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
             if (fs.isFile(libPath)) {
-                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USERLIB_DIR + "/" + libPath.getName());
+                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR + "/" + libPath.getName());
             } else {
-                return new Path(buildPath.getParent(), EntityUtil.PROCESS_USERLIB_DIR);
+                return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR);
             }
         } catch(IOException e) {
             throw new FalconException("Failed to get user lib path", e);

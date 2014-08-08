@@ -594,7 +594,7 @@ public final class EntityUtil {
             return filesArray;
 
         } catch (FileNotFoundException e) {
-            LOG.info("Staging path doesn't exist, entity is not scheduled", e);
+            LOG.info("Staging path " + basePath + " doesn't exist, entity is not scheduled");
             //Staging path doesn't exist if entity is not scheduled
         } catch (IOException e) {
             throw new FalconException(e);

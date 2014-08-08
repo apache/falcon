@@ -60,8 +60,7 @@ public class PigProcessWorkflowBuilder extends ProcessExecutionWorkflowBuilder {
             pigAction.getFile().add("${wf:appPath()}/conf/hive-site.xml");
         }
 
-        addArchiveForCustomJars(cluster, pigAction.getArchive(), ProcessHelper.getUserLibPath(entity, cluster,
-            buildPath));
+        addArchiveForCustomJars(cluster, pigAction.getArchive(), getLibPath(cluster, buildPath));
 
         return action;
     }
