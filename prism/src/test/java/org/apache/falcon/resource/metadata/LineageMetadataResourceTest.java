@@ -97,7 +97,7 @@ public class LineageMetadataResourceTest {
         configStore = ConfigurationStore.get();
 
         Services.get().register(new WorkflowJobEndNotificationService());
-        Assert.assertTrue(Services.get().isRegistered(WorkflowJobEndNotificationService.NAME));
+        Assert.assertTrue(Services.get().isRegistered(WorkflowJobEndNotificationService.SERVICE_NAME));
 
         StartupProperties.get().setProperty("falcon.graph.preserve.history", "true");
         service = new MetadataMappingService();

@@ -98,7 +98,7 @@ public class MetadataMappingService
 
         ConfigurationStore.get().registerListener(this);
         Services.get().<WorkflowJobEndNotificationService>getService(
-                WorkflowJobEndNotificationService.NAME).registerListener(this);
+                WorkflowJobEndNotificationService.SERVICE_NAME).registerListener(this);
     }
 
     protected Graph initializeGraphDB() {
@@ -187,7 +187,7 @@ public class MetadataMappingService
     @Override
     public void destroy() throws FalconException {
         Services.get().<WorkflowJobEndNotificationService>getService(
-                WorkflowJobEndNotificationService.NAME).unregisterListener(this);
+                WorkflowJobEndNotificationService.SERVICE_NAME).unregisterListener(this);
 
         LOG.info("Shutting down graph db");
         graph.shutdown();

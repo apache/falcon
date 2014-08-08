@@ -19,6 +19,14 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-327 - Simplify message passing framework (Venkatesh Seetharam)
+    FALCON-484 - Refactor workflow related code into context, listener and Notification
+    FALCON-485 - Simplify JMS Message Sender/Consumer and use Workflow Context
+    FALCON-486 - Introduce Workflow Context in Post Processing
+    FALCON-487 -Introduce Workflow Context in Rerun framework
+    FALCON-488 - Introduce Workflow Context in Lineage Service
+    FALCON-492 - Refactor workflow listener implementation init config driven
+
    FALCON-554 Extend time functions available in Falcon to support current & 
    last week (Contributed by Srikanth Sundarrajan)
 
