@@ -50,7 +50,7 @@ public class ProcessSubscriberService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.NAME)) {
+        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.SERVICE_NAME)) {
             throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
         }
 
@@ -59,7 +59,7 @@ public class ProcessSubscriberService implements FalconService {
         String falconEntityTopic = getPropertyValue(JMSProps.FalconEntityTopic);
 
         WorkflowJobEndNotificationService jobEndNotificationService =
-                Services.get().getService(WorkflowJobEndNotificationService.NAME);
+                Services.get().getService(WorkflowJobEndNotificationService.SERVICE_NAME);
         subscriber = new JMSMessageConsumer(falconBrokerImplClass, "", "", falconBrokerUrl,
                 falconEntityTopic, jobEndNotificationService);
         subscriber.startSubscriber();

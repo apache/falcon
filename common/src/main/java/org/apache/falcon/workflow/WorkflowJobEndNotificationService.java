@@ -24,6 +24,8 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.FalconService;
+import org.apache.falcon.util.ReflectionUtils;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 
 import java.util.Date;
@@ -35,18 +37,27 @@ import java.util.Set;
  */
 public class WorkflowJobEndNotificationService implements FalconService {
 
-    public static final String NAME = WorkflowJobEndNotificationService.class.getSimpleName();
+    public static final String SERVICE_NAME = WorkflowJobEndNotificationService.class.getSimpleName();
 
     private Set<WorkflowExecutionListener> listeners = new LinkedHashSet<WorkflowExecutionListener>();
 
     @Override
     public String getName() {
-        return NAME;
+        return SERVICE_NAME;
     }
 
     @Override
     public void init() throws FalconException {
-        // do nothing
+        String listenerClassNames = StartupProperties.get().getProperty(
+                "workflow.execution.listeners");
+        for (String listenerClassName : listenerClassNames.split(",")) {
+            listenerClassName = listenerClassName.trim();
+            if (listenerClassName.isEmpty()) {
+                continue;
+            }
+            WorkflowExecutionListener listener = ReflectionUtils.getInstanceByClassName(listenerClassName);
+            registerListener(listener);
+        }
     }
 
     @Override

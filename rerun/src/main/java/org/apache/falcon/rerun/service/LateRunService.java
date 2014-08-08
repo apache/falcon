@@ -44,7 +44,7 @@ public class LateRunService implements FalconService {
 
     @Override
     public void init() throws FalconException {
-        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.NAME)) {
+        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.SERVICE_NAME)) {
             throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
         }
 
@@ -57,7 +57,7 @@ public class LateRunService implements FalconService {
         rerunHandler.init(queue);
 
         Services.get().<WorkflowJobEndNotificationService>getService(
-                WorkflowJobEndNotificationService.NAME).registerListener(rerunHandler);
+                WorkflowJobEndNotificationService.SERVICE_NAME).registerListener(rerunHandler);
     }
 
     @Override
