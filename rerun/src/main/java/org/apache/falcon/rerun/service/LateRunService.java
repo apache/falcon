@@ -24,11 +24,11 @@ import org.apache.falcon.rerun.handler.AbstractRerunHandler;
 import org.apache.falcon.rerun.handler.RerunHandlerFactory;
 import org.apache.falcon.rerun.queue.ActiveMQueue;
 import org.apache.falcon.service.FalconService;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * A service implementation for Late Rerun initialized at startup.
@@ -44,6 +44,10 @@ public class LateRunService implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.NAME)) {
+            throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
+        }
+
         AbstractRerunHandler<LaterunEvent, ActiveMQueue<LaterunEvent>> rerunHandler =
             RerunHandlerFactory.getRerunHandler(RerunType.LATE);
         ActiveMQueue<LaterunEvent> queue = new ActiveMQueue<LaterunEvent>(
@@ -51,22 +55,13 @@ public class LateRunService implements FalconService {
                     .getProperty("broker.url", "failover:(tcp://localhost:61616)?initialReconnectDelay=5000"),
                 "falcon.late.queue");
         rerunHandler.init(queue);
+
+        Services.get().<WorkflowJobEndNotificationService>getService(
+                WorkflowJobEndNotificationService.NAME).registerListener(rerunHandler);
     }
 
     @Override
     public void destroy() throws FalconException {
         LOG.info("LateRun thread destroyed");
-    }
-
-    private File getBasePath() {
-        File basePath = new File(StartupProperties.get().getProperty(
-                "rerun.recorder.path", "/tmp/falcon/rerun"));
-        if ((!basePath.exists() && !basePath.mkdirs())
-                || (basePath.exists() && !basePath.canWrite())) {
-            throw new RuntimeException("Unable to initialize late recorder @"
-                    + basePath);
-        }
-
-        return basePath;
     }
 }

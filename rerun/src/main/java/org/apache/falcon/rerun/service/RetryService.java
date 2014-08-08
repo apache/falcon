@@ -25,7 +25,9 @@ import org.apache.falcon.rerun.handler.RerunHandlerFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
 import org.apache.falcon.rerun.queue.InMemoryQueue;
 import org.apache.falcon.service.FalconService;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +47,17 @@ public class RetryService implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.NAME)) {
+            throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
+        }
+
         AbstractRerunHandler<RetryEvent, DelayedQueue<RetryEvent>> rerunHandler =
             RerunHandlerFactory.getRerunHandler(RerunType.RETRY);
         InMemoryQueue<RetryEvent> queue = new InMemoryQueue<RetryEvent>(getBasePath());
         rerunHandler.init(queue);
+
+        Services.get().<WorkflowJobEndNotificationService>getService(
+                WorkflowJobEndNotificationService.NAME).registerListener(rerunHandler);
     }
 
     @Override

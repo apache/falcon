@@ -19,6 +19,7 @@ package org.apache.falcon.rerun.handler;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.process.PolicyType;
@@ -27,6 +28,7 @@ import org.apache.falcon.rerun.event.RetryEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 
 /**
  * An implementation of retry handler that kicks off retries until the
@@ -42,7 +44,7 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
     public void handleRerun(String clusterName, String entityType, String entityName, String nominalTime,
                             String runId, String wfId, String workflowUser, long msgReceivedTime) {
         try {
-            Entity entity = getEntity(entityType, entityName);
+            Entity entity = EntityUtil.getEntity(entityType, entityName);
             Retry retry = getRetry(entity);
 
             if (retry == null) {
@@ -88,5 +90,18 @@ public class RetryHandler<M extends DelayedQueue<RetryEvent>> extends
         daemon.setDaemon(true);
         daemon.start();
         LOG.info("RetryHandler thread started.");
+    }
+
+    @Override
+    public void onSuccess(WorkflowExecutionContext context) throws FalconException {
+        // do nothing since retry does not apply for failed workflows
+    }
+
+    @Override
+    public void onFailure(WorkflowExecutionContext context) throws FalconException {
+        handleRerun(context.getClusterName(), context.getEntityType(),
+                context.getEntityName(), context.getNominalTimeAsISO8601(),
+                context.getWorkflowRunIdString(), context.getWorkflowId(),
+                context.getWorkflowUser(), context.getExecutionCompletionTime());
     }
 }

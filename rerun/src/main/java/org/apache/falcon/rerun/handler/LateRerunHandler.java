@@ -26,7 +26,10 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
-import org.apache.falcon.entity.v0.process.*;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.LateInput;
+import org.apache.falcon.entity.v0.process.LateProcess;
+import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -34,12 +37,13 @@ import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.util.*;
+import java.util.Date;
 
 /**
  * An implementation of handler for late reruns.
@@ -202,5 +206,27 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
         Configuration conf = new Configuration();
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageEndpoint);
         return conf;
+    }
+
+    @Override
+    public void onSuccess(WorkflowExecutionContext context) throws FalconException {
+        Entity entity = EntityUtil.getEntity(context.getEntityType(), context.getEntityName());
+        //late data handling not applicable for feed retention action
+        if (context.getOperation() != WorkflowExecutionContext.EntityOperations.DELETE
+                && EntityUtil.getLateProcess(entity) != null) {
+            handleRerun(context.getClusterName(), context.getEntityType(),
+                    context.getEntityName(), context.getNominalTimeAsISO8601(),
+                    context.getWorkflowRunIdString(), context.getWorkflowId(),
+                    context.getWorkflowUser(), context.getExecutionCompletionTime());
+        } else {
+            LOG.info("Late date handling not applicable for entityType: " + context.getEntityType()
+                    + ", entityName: " + context.getEntityName()
+                    + " operation: " + context.getOperation());
+        }
+    }
+
+    @Override
+    public void onFailure(WorkflowExecutionContext context) throws FalconException {
+        // do nothing since late data does not apply for failed workflows
     }
 }
