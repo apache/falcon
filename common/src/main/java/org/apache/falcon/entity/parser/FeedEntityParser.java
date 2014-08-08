@@ -40,7 +40,6 @@ import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +67,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         if (feed.getClusters() == null) {
-            throw new ValidationException("Feed should have atleast one cluster");
+            throw new ValidationException("Feed should have at least one cluster");
         }
 
         for (Cluster cluster : feed.getClusters().getClusters()) {
@@ -82,7 +81,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedStorage(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
-        validateUser(feed);
+        validateACL(feed);
 
         // Seems like a good enough entity object for a new one
         // But is this an update ?
@@ -103,14 +102,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         ensureValidityFor(feed, processes);
-    }
-
-    protected void validateUser(Feed feed) throws ValidationException {
-        String owner = feed.getACL().getOwner();
-        if (!owner.equals(CurrentUser.getUser())) {
-            throw new ValidationException("Entity's owner " + owner + " is not same as current user "
-                + CurrentUser.getUser());
-        }
     }
 
     private Set<Process> findProcesses(Set<Entity> referenced) {
@@ -314,9 +305,6 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * Does not matter for FileSystem storage.
      */
     private void validateFeedStorage(Feed feed) throws FalconException {
-        validateUser(feed);
-        validateACL(feed);
-
         final Storage.TYPE baseFeedStorageType = FeedHelper.getStorageType(feed);
         validateMultipleSourcesExist(feed, baseFeedStorageType);
         validateUniformStorageType(feed, baseFeedStorageType);
@@ -409,7 +397,19 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
     }
 
+    /**
+     * Validate ACL if authorization is enabled.
+     *
+     * @param feed Feed entity
+     * @throws ValidationException
+     */
     private void validateACL(Feed feed) throws FalconException {
+        if (!isAuthorizationEnabled()) {
+            return;
+        }
+
+        validateOwner(feed.getACL().getOwner());
+
         for (Cluster cluster : feed.getClusters().getClusters()) {
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
                     EntityUtil.getEntity(EntityType.CLUSTER, cluster.getName());

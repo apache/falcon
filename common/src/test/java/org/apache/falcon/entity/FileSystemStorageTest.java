@@ -167,11 +167,11 @@ public class FileSystemStorageTest {
         fs.mkdirs(path);
 
         FileSystemStorage storage = new FileSystemStorage(cluster.getConf().get("fs.default.name"), locations);
-        storage.validateACL(user, user, "rrr");
+        storage.validateACL(user, user, "0x755");
 
         //-ve case
         try {
-            storage.validateACL("random", user, "rrr");
+            storage.validateACL("random", user, "0x755");
             Assert.fail("Validation should have failed");
         } catch(FalconException e) {
             //expected exception
@@ -183,7 +183,7 @@ public class FileSystemStorageTest {
 
         //-ve case
         try {
-            storage.validateACL("random", user, "rrr");
+            storage.validateACL("random", user, "0x755");
             Assert.fail("Validation should have failed");
         } catch(FalconException e) {
             //expected exception

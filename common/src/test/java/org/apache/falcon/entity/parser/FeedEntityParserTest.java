@@ -19,6 +19,7 @@
 package org.apache.falcon.entity.parser;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -32,6 +33,8 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.*;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -50,6 +53,8 @@ import static org.testng.AssertJUnit.assertEquals;
  */
 public class FeedEntityParserTest extends AbstractTestBase {
 
+    public static final String USER = System.getProperty("user.name");
+
     private final FeedEntityParser parser = (FeedEntityParser) EntityParserFactory
             .getParser(EntityType.FEED);
 
@@ -59,6 +64,9 @@ public class FeedEntityParserTest extends AbstractTestBase {
     public void setUp() throws Exception {
         cleanupStore();
         ConfigurationStore store = ConfigurationStore.get();
+
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
+        this.conf = dfsCluster.getConf();
 
         Unmarshaller unmarshaller = EntityType.CLUSTER.getUnmarshaller();
         Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass()
@@ -85,10 +93,14 @@ public class FeedEntityParserTest extends AbstractTestBase {
     @Test(expectedExceptions = ValidationException.class)
     public void testValidateUser() throws Exception {
         CurrentUser.authenticate("unknown");
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
         try {
             parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
         } finally {
             CurrentUser.authenticate("testuser");
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
     }
 
@@ -534,5 +546,172 @@ public class FeedEntityParserTest extends AbstractTestBase {
         parser.validate(feedWithTable);
         Assert.fail("An exception should have been thrown: Cluster should have registry interface defined with table"
                 + " storage");
+    }
+
+    @Test
+    public void testValidateACLWithACLAndAuthorizationDisabled() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+        Feed feed = parser.parse(stream);
+        Assert.assertNotNull(feed);
+        Assert.assertNotNull(feed.getACL());
+        Assert.assertNotNull(feed.getACL().getOwner());
+        Assert.assertNotNull(feed.getACL().getGroup());
+        Assert.assertNotNull(feed.getACL().getPermission());
+
+        parser.validate(feed);
+    }
+
+    @Test
+    public void testValidateACLAndOwner() throws Exception {
+        CurrentUser.authenticate("testuser");
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            Feed feed = parser.parseAndValidate(stream);
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            Assert.assertNotNull(feed.getACL().getOwner());
+            Assert.assertNotNull(feed.getACL().getGroup());
+            Assert.assertNotNull(feed.getACL().getPermission());
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateACLBadOwner() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate("blah");
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            // need a new parser since it caches authorization enabled flag
+            FeedEntityParser feedEntityParser =
+                    (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
+            Feed feed = feedEntityParser.parse(stream);
+
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            Assert.assertNotNull(feed.getACL().getOwner());
+            Assert.assertNotNull(feed.getACL().getGroup());
+            Assert.assertNotNull(feed.getACL().getPermission());
+
+            feedEntityParser.validate(feed);
+            Assert.fail("Validation exception should have been thrown for invalid owner");
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateACLBadOwnerAndGroup() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate("blah");
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            Feed feed = parser.parse(stream);
+
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            Assert.assertNotNull(feed.getACL().getOwner());
+            Assert.assertNotNull(feed.getACL().getGroup());
+            Assert.assertNotNull(feed.getACL().getPermission());
+
+            parser.validate(feed);
+            Assert.fail("Validation exception should have been thrown for invalid owner");
+        } finally {
+            CurrentUser.authenticate("testuser");
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateACLAndStorageBadOwner() throws Exception {
+        CurrentUser.authenticate("testuser");
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        Feed feed = null;
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            feed = parser.parse(stream);
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            Assert.assertNotNull(feed.getACL().getOwner());
+            Assert.assertNotNull(feed.getACL().getGroup());
+            Assert.assertNotNull(feed.getACL().getPermission());
+
+            // create locations
+            createLocations(feed);
+            parser.validate(feed);
+        } finally {
+            if (feed != null) {
+                deleteLocations(feed);
+            }
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test
+    public void testValidateACLAndStorage() throws Exception {
+        CurrentUser.authenticate(USER);
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        Feed feed = null;
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            feed = parser.parse(stream);
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            Assert.assertNotNull(feed.getACL().getOwner());
+            Assert.assertNotNull(feed.getACL().getGroup());
+            Assert.assertNotNull(feed.getACL().getPermission());
+
+            feed.getACL().setOwner(USER);
+
+            // create locations
+            createLocations(feed);
+            parser.validate(feed);
+        } finally {
+            if (feed != null) {
+                deleteLocations(feed);
+            }
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    private void createLocations(Feed feed) throws IOException {
+        for (Location location : feed.getLocations().getLocations()) {
+            if (location.getType() == LocationType.DATA) {
+                dfsCluster.getFileSystem().create(new Path(location.getPath()));
+                break;
+            }
+        }
+    }
+
+    private void deleteLocations(Feed feed) throws IOException {
+        for (Location location : feed.getLocations().getLocations()) {
+            if (location.getType() == LocationType.DATA) {
+                dfsCluster.getFileSystem().delete(new Path(location.getPath()), true);
+                break;
+            }
+        }
     }
 }
