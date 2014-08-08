@@ -18,14 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.net.ConnectException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -35,6 +27,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.LateInput;
@@ -45,6 +38,14 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Concrete Parser which has XML parsing and validation logic for Process XML.
@@ -96,6 +97,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
         validateLateInputs(process);
+        validateACL(process);
     }
 
     /**
@@ -106,8 +108,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
      * @throws FalconException
      */
     private void validateHDFSPaths(Process process, String clusterName) throws FalconException {
-        org.apache.falcon.entity.v0.cluster.Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER,
-                clusterName);
+        org.apache.falcon.entity.v0.cluster.Cluster cluster =
+                ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
 
         if (!EntityUtil.responsibleFor(cluster.getColo())) {
             return;
@@ -115,7 +117,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
 
         String workflowPath = process.getWorkflow().getPath();
         String libPath = process.getWorkflow().getLib();
-        String nameNode = getNameNode(cluster, clusterName);
+        String nameNode = getNameNode(cluster);
         try {
             Configuration configuration = ClusterHelper.getConfiguration(cluster);
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(configuration);
@@ -127,21 +129,16 @@ public class ProcessEntityParser extends EntityParser<Process> {
             if (libPath != null && !fs.exists(new Path(libPath))) {
                 throw new ValidationException("Lib path: " + libPath + " does not exists in HDFS: " + nameNode);
             }
-        } catch (ValidationException e) {
-            throw new ValidationException(e);
-        } catch (ConnectException e) {
-            throw new ValidationException(
-                    "Unable to connect to Namenode: " + nameNode + " referenced in cluster: " + clusterName);
-        } catch (Exception e) {
-            throw new FalconException(e);
+        } catch (IOException e) {
+            throw new FalconException("Error validating workflow path " + workflowPath, e);
         }
     }
 
-    private String getNameNode(Cluster cluster, String clusterName) throws ValidationException {
+    private String getNameNode(Cluster cluster) throws ValidationException {
         // cluster should never be null as it is validated while submitting feeds.
         if (new Path(ClusterHelper.getStorageUrl(cluster)).toUri().getScheme() == null) {
             throw new ValidationException(
-                    "Cannot get valid nameNode scheme from write interface of cluster: " + clusterName);
+                    "Cannot get valid nameNode scheme from write interface of cluster: " + cluster.getName());
         }
         return ClusterHelper.getStorageUrl(cluster);
     }
@@ -225,5 +222,25 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException("Optional Input is not supported for feeds with table storage! "
                     + input.getName());
         }
+    }
+
+    /**
+     * Validate ACL if authorization is enabled.
+     *
+     * @param process process entity
+     * @throws ValidationException
+     */
+    private void validateACL(Process process) throws FalconException {
+        if (!isAuthorizationEnabled()) {
+            return;
+        }
+
+        // Validate the entity owner is logged-in, authenticated user if authorization is enabled
+        ACL processACL = process.getACL();
+        if (processACL == null) {
+            throw new ValidationException("Process ACL cannot be empty for:  " + process.getName());
+        }
+
+        validateOwner(processACL.getOwner());
     }
 }

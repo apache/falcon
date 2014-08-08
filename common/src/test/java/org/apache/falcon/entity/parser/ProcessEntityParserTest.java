@@ -28,6 +28,8 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -39,6 +41,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -329,5 +332,97 @@ public class ProcessEntityParserTest extends AbstractTestBase {
 
         parser.validate(process);
         Assert.fail("An exception should have been thrown since Input partitions are not supported for table storage");
+    }
+
+    @Test
+    public void testValidateACLWithNoACLAndAuthorizationDisabled() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
+
+        Process process = parser.parse(stream);
+        Assert.assertNotNull(process);
+        Assert.assertNull(process.getACL());
+
+        parser.validate(process);
+    }
+
+    @Test
+    public void testValidateACLWithACLAndAuthorizationDisabled() throws Exception {
+        InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
+
+        Process process = parser.parse(stream);
+        Assert.assertNotNull(process);
+        Assert.assertNotNull(process.getACL());
+        Assert.assertNotNull(process.getACL().getOwner());
+        Assert.assertNotNull(process.getACL().getGroup());
+        Assert.assertNotNull(process.getACL().getPermission());
+
+        parser.validate(process);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateACLWithNoACLAndAuthorizationEnabled() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate("falcon");
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
+
+            Process process = parser.parse(stream);
+            Assert.assertNotNull(process);
+            Assert.assertNull(process.getACL());
+
+            parser.validate(process);
+            Assert.fail("Validation exception should have been thrown for empty ACL");
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test
+    public void testValidateACLAuthorizationEnabled() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate("falcon");
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
+
+            Process process = parser.parseAndValidate(stream);
+            Assert.assertNotNull(process);
+            Assert.assertNotNull(process.getACL());
+            Assert.assertNotNull(process.getACL().getOwner());
+            Assert.assertNotNull(process.getACL().getGroup());
+            Assert.assertNotNull(process.getACL().getPermission());
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateACLAuthorizationEnabledBadOwner() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate("blah");
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
+
+            Process process = parser.parse(stream);
+
+            Assert.assertNotNull(process);
+            Assert.assertNotNull(process.getACL());
+            Assert.assertNotNull(process.getACL().getOwner());
+            Assert.assertNotNull(process.getACL().getGroup());
+            Assert.assertNotNull(process.getACL().getPermission());
+
+            parser.validate(process);
+            Assert.fail("Validation exception should have been thrown for invalid owner");
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
     }
 }

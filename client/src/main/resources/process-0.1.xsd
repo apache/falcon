@@ -155,6 +155,7 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element type="ACL" name="ACL" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
     </xs:complexType>
@@ -352,4 +353,18 @@
             <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:complexType name="ACL">
+        <xs:annotation>
+            <xs:documentation>
+                Access control list for this process.
+                owner is the Owner of this entity.
+                group is the one which has access to read - not used at this time.
+                permission is not enforced at this time
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="owner"/>
+        <xs:attribute type="xs:string" name="group"/>
+        <xs:attribute type="xs:string" name="permission"/>
+    </xs:complexType>
 </xs:schema>
