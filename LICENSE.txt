@@ -210,3 +210,15 @@ licenses.
 
 
 ================================
+
+This product bundles d3 3.3.9, which is available under a
+"3-clause BSD" license. For details, see docs/license/d3-LICENSE.txt
+
+This product bundles dagre 0.4.5, which is available under a
+MIT license. For details, see docs/license/dagre-LICENSE.txt
+
+This product bundles dust 2.0.0, which is available under a
+MIT license. For details, see docs/license/dust-LICENSE.txt
+
+This product bundles dust-helpers 1.2.0, which is available under a
+MIT license. For details, see docs/license/dust-LICENSE.txt
