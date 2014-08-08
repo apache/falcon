@@ -77,7 +77,7 @@ public class Bundle {
     private List<String> dataSets;
     private String processData;
 
-    public void submitFeed() throws Exception {
+    public void submitFeed() throws URISyntaxException, IOException, AuthenticationException, JAXBException {
         submitClusters(prismHelper);
 
         AssertUtil.assertSucceeded(
@@ -110,11 +110,15 @@ public class Bundle {
 
     public ServiceResponse submitProcess(boolean shouldSucceed) throws JAXBException,
         IOException, URISyntaxException, AuthenticationException {
-        submitAndScheduleAllFeeds();
+        submitClusters(prismHelper);
+        submitFeeds(prismHelper);
         ServiceResponse r = prismHelper.getProcessHelper().submitEntity(URLS.SUBMIT_URL,
             processData);
         if (shouldSucceed) {
             AssertUtil.assertSucceeded(r);
+        }
+        else {
+            AssertUtil.assertFailed(r);
         }
         return r;
     }
