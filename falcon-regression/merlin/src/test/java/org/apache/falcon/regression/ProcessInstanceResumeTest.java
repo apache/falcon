@@ -65,7 +65,6 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         Bundle b = BundleUtil.readELBundle();
         b = new Bundle(b, cluster);
-        b = new Bundle(b, cluster);
         String startDate = "2010-01-01T23:20Z";
         String endDate = "2010-01-02T01:40Z";
         b.setInputFeedDataPath(feedInputPath);
@@ -169,7 +168,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         prism.getProcessHelper()
             .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:20Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         TimeUtil.sleepSeconds(15);
         InstancesResult result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
@@ -178,7 +177,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
 
         prism.getProcessHelper()
             .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:20Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
@@ -314,14 +313,14 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
                 "?start=2010-01-02T01:25Z");
         InstancesResult result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:25Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
         InstanceUtil.validateResponse(result, 6, 5, 1, 0, 0);
         prism.getProcessHelper()
             .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:25Z");
         result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:25Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
         InstanceUtil.validateResponse(result, 6, 6, 0, 0, 0);
     }
 
@@ -341,7 +340,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         TimeUtil.sleepSeconds(15);
         prism.getProcessHelper()
             .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:20Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         TimeUtil.sleepSeconds(15);
         InstancesResult result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
@@ -350,7 +349,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
 
         prism.getProcessHelper()
             .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:20Z");
+                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         result = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
