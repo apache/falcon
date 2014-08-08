@@ -28,6 +28,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-514 Falcon CLI giving error when using -file option with -rerun in 
+   instance management. (pavan kumar kolamuri via Shwetha GS)
+
    FALCON-566 update throwing null job id exception. (Shwetha GS)
 
    FALCON-561 Falcon jenkins failure in EntityManagerJerseyIT.

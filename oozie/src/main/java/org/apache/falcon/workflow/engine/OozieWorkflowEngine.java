@@ -1243,6 +1243,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 for (Entry<Object, Object> entry : props.entrySet()) {
                     jobprops.put(entry.getKey(), entry.getValue());
                 }
+                if (!jobprops.contains(OozieClient.RERUN_FAIL_NODES)
+                        && !jobprops.contains(OozieClient.RERUN_SKIP_NODES)) {
+                    jobprops.put(OozieClient.RERUN_FAIL_NODES, "false");
+                }
             }
             jobprops.remove(OozieClient.COORDINATOR_APP_PATH);
             jobprops.remove(OozieClient.BUNDLE_APP_PATH);
