@@ -5,6 +5,14 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-400 Add Authorization for Entities (Venkatesh Seetharam)
+      FALCON-279 Add ACL for Cluster Entity
+      FALCON-462 Add ACL for process entity
+      FALCON-463 Validate Feed ACL only if authorization is enabled
+      FALCON-464 Enforce Authorization for REST API
+      FALCON-468 Add User Documentation for authorization feature
+      FALCON-557 Add super-user who is authorized for all
+
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS

@@ -182,7 +182,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         if (isSuperUser(proxyUgi)) {
             return;
         }
-        
+
         checkUser(entityName, acl.getOwner(), acl.getGroup(), action, authenticatedUser, proxyUgi);
     }
 

@@ -632,7 +632,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
         List<CONFIGURATION.Property> props = bundle.getCoordinator().get(0).getConfiguration().getProperty();
         for (CONFIGURATION.Property prop : props) {
-            if(prop.getName().equals("oozie.libpath")) {
+            if (prop.getName().equals("oozie.libpath")) {
                 Assert.assertEquals(prop.getValue().replace("${nameNode}", ""), new Path(bundlePath,
                     "userlib").toString());
             }
