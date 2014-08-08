@@ -55,6 +55,19 @@ owner is the Owner of this entity.
 group is the one which has access to read.
 permission indicates the rwx is not enforced at this time.
 
+---+++ Super-User
+
+The super-user is the user with the same identity as falcon process itself. Loosely, if you
+started the falcon, then you are the super-user. The super-user can do anything in that
+permissions checks never fail for the super-user. There is no persistent notion of who was the
+super-user; when the falcon is started the process identity determines who is the super-user
+for now. The Falcon super-user does not have to be the super-user of the falcon host, nor is it
+necessary that all clusters have the same super-user. Also, an experimenter running Falcon on a
+personal workstation, conveniently becomes that installation's super-user without any configuration.
+
+Falcon also allows users to configure a super user group and allows users belonging to this
+group to be a super user.
+
 ---+++ Group Memberships
 
 Once a user has been authenticated and a username has been determined, the list of groups is
@@ -126,8 +139,8 @@ Only users belonging to admin users or groups have access to this resource. Admi
 determined by a static configuration parameter.
 
 | *Resource*                                             | *Description*                               | *Authorization*  |
+| [[restapi/AdminVersion][api/admin/version]]            | Get version of the server                   | No restriction   |
 | [[restapi/AdminStack][api/admin/stack]]                | Get stack of the server                     | Admin User/Group |
-| [[restapi/AdminVersion][api/admin/version]]            | Get version of the server                   | Admin User/Group |
 | [[restapi/AdminConfig][api/admin/config/:config-type]] | Get configuration information of the server | Admin User/Group |
 
 
@@ -230,7 +243,6 @@ startup configuration.
 *.falcon.security.authorization.enabled=true
 </verbatim>
 
-
 ---+++ Authorization Provider
 
 Falcon provides a basic implementation for Authorization bundled, org.apache.falcon.security .DefaultFalconAuthorizationProvider.
@@ -239,6 +251,15 @@ This can be overridden by custom implementations in the startup configuration.
 <verbatim>
 # Authorization Provider Fully Qualified Class Name
 *.falcon.security.authorization.provider=org.apache.falcon.security.DefaultAuthorizationProvider
+</verbatim>
+
+---+++ Super User Group
+
+Super user group is determined by the configuration:
+
+<verbatim>
+# The name of the group of super-users
+*.falcon.security.authorization.superusergroup=falcon
 </verbatim>
 
 ---+++ Admin Membership

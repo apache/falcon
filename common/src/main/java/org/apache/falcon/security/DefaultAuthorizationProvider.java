@@ -70,10 +70,26 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     private static final String ADMIN_USERS_KEY = FALCON_PREFIX + "admin.users";
     private static final String ADMIN_GROUPS_KEY = FALCON_PREFIX + "admin.groups";
 
+    /**
+     * The super-user is the user with the same identity as falcon process itself.
+     * Loosely, if you started falcon, then you are the super-user.
+     */
+    protected static final String SUPER_USER = System.getProperty("user.name");
+
+    /**
+     * Constant for the configuration property that indicates the super user group.
+     */
+    private static final String SUPER_USER_GROUP_KEY = FALCON_PREFIX + "superusergroup";
+
+    /**
+     * Super ser group.
+     */
+    private String superUserGroup;
     private Set<String> adminUsers;
     private Set<String> adminGroups;
 
     public DefaultAuthorizationProvider() {
+        superUserGroup = StartupProperties.get().getProperty(SUPER_USER_GROUP_KEY);
         adminUsers = getAdminNamesFromConfig(ADMIN_USERS_KEY);
         adminGroups = getAdminNamesFromConfig(ADMIN_GROUPS_KEY);
     }
@@ -104,25 +120,42 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                                   String entityType, String entityName,
                                   UserGroupInformation proxyUgi) throws AuthorizationException {
         Validate.notEmpty(resource, "Resource cannot be empty or null");
+        Validate.isTrue(RESOURCES.contains(resource), "Illegal resource: " + resource);
         Validate.notEmpty(action, "Action cannot be empty or null");
 
-        Set<String> groups = getGroupNames(proxyUgi);
-        String authenticatedUser = proxyUgi.getShortUserName();
-        LOG.info("Authorizing authenticatedUser={}, groups={} against resource={}, action={}, entity name={}, "
-                + "entity type={}", authenticatedUser, groups, resource, action, entityName, entityType);
+        LOG.info("Authorizing authenticatedUser={}, against resource={}, action={}, entity name={}, "
+                + "entity type={}", proxyUgi.getShortUserName(), resource, action, entityName, entityType);
+
+        if (isSuperUser(proxyUgi)) {
+            return;
+        }
 
         if ("admin".equals(resource)) {
-            authorizeAdminResource(authenticatedUser, groups, action);
+            if (!"version".equals(action)) {
+                authorizeAdminResource(proxyUgi, action);
+            }
         } else if ("entities".equals(resource) || "instance".equals(resource)) {
-            authorizeEntityResource(authenticatedUser, proxyUgi, entityName, entityType, action);
+            authorizeEntityResource(proxyUgi, entityName, entityType, action);
         } else if ("lineage".equals(resource)) {
-            authorizeLineageResource(authenticatedUser, action);
-        } else {
-            throw new AuthorizationException("Unknown resource: " + resource);
+            authorizeLineageResource(proxyUgi.getShortUserName(), action);
         }
     }
 
-    private Set<String> getGroupNames(UserGroupInformation proxyUgi) {
+    /**
+     * Determines if the authenticated user is the user who started this process
+     * or belongs to the super user group.
+     *
+     * @param authenticatedUGI UGI
+     * @return true if super user else false.
+     */
+    protected boolean isSuperUser(UserGroupInformation authenticatedUGI) {
+        final String authenticatedUser = authenticatedUGI.getShortUserName();
+        return SUPER_USER.equals(authenticatedUser)
+                || (!StringUtils.isEmpty(superUserGroup)
+                    && isUserInGroup(superUserGroup, authenticatedUGI));
+    }
+
+    protected Set<String> getGroupNames(UserGroupInformation proxyUgi) {
         HashSet<String> s = new HashSet<String>(Arrays.asList(proxyUgi.getGroupNames()));
         return Collections.unmodifiableSet(s);
     }
@@ -146,6 +179,10 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         LOG.info("Authorizing authenticatedUser={}, action={}, entity={}, type{}",
                 authenticatedUser, action, entityName, entityType);
 
+        if (isSuperUser(proxyUgi)) {
+            return;
+        }
+        
         checkUser(entityName, acl.getOwner(), acl.getGroup(), action, authenticatedUser, proxyUgi);
     }
 
@@ -164,7 +201,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                              String action, String authenticatedUser,
                              UserGroupInformation proxyUgi) throws AuthorizationException {
         if (isUserACLOwner(authenticatedUser, aclOwner)
-                || isUserInAclGroup(aclGroup, proxyUgi)) {
+                || isUserInGroup(aclGroup, proxyUgi)) {
             return;
         }
 
@@ -179,37 +216,52 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         throw new AuthorizationException(message.toString());
     }
 
+    /**
+     * Determines if the authenticated user is the entity ACL owner.
+     *
+     * @param authenticatedUser authenticated user
+     * @param aclOwner          entity ACL owner
+     * @return true if authenticated user is the entity acl owner, false otherwise.
+     */
     protected boolean isUserACLOwner(String authenticatedUser, String aclOwner) {
         return authenticatedUser.equals(aclOwner);
     }
 
-    protected boolean isUserInAclGroup(String aclGroup, UserGroupInformation proxyUgi) {
+    /**
+     * Checks if the user's group matches the entity ACL group.
+     *
+     * @param group    Entity ACL group.
+     * @param proxyUgi proxy ugi for the authenticated user.
+     * @return true if user groups contains entity acl group.
+     */
+    protected boolean isUserInGroup(String group, UserGroupInformation proxyUgi) {
         Set<String> groups = getGroupNames(proxyUgi);
-        return groups.contains(aclGroup);
+        return groups.contains(group);
     }
 
     /**
      * Check if the user has admin privileges.
      *
-     * @param user   user name.
-     * @param groups groups that the user belongs to.
-     * @param action admin action on the resource
+     * @param proxyUgi proxy ugi for the authenticated user.
+     * @param action   admin action on the resource.
      * @throws AuthorizationException if the user does not have admin privileges.
      */
-    protected void authorizeAdminResource(String user, Set<String> groups,
+    protected void authorizeAdminResource(UserGroupInformation proxyUgi,
                                           String action) throws AuthorizationException {
-        LOG.debug("Authorizing user={} for admin, action={}", user, action);
-        if (adminUsers.contains(user) || isUserInAdminGroups(groups)) {
+        final String authenticatedUser = proxyUgi.getShortUserName();
+        LOG.debug("Authorizing user={} for admin, action={}", authenticatedUser, action);
+        if (adminUsers.contains(authenticatedUser) || isUserInAdminGroups(proxyUgi)) {
             return;
         }
 
         LOG.error("Permission denied: user {} does not have admin privilege for action={}",
-                user, action);
-        throw new AuthorizationException("Permission denied: user=" + user
+                authenticatedUser, action);
+        throw new AuthorizationException("Permission denied: user=" + authenticatedUser
                 + " does not have admin privilege for action=" + action);
     }
 
-    protected boolean isUserInAdminGroups(Set<String> groups) {
+    protected boolean isUserInAdminGroups(UserGroupInformation proxyUgi) {
+        Set<String> groups = getGroupNames(proxyUgi);
         boolean isUserGroupInAdmin = false;
         for (String group : groups) {
             if (adminGroups.contains(group)) {
@@ -221,13 +273,13 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         return isUserGroupInAdmin;
     }
 
-    protected void authorizeEntityResource(String authenticatedUser, UserGroupInformation proxyUgi,
+    protected void authorizeEntityResource(UserGroupInformation proxyUgi,
                                            String entityName, String entityType,
                                            String action) throws AuthorizationException {
         Validate.notEmpty(entityType, "Entity type cannot be empty or null");
         LOG.debug("Authorizing authenticatedUser={} against entity/instance action={}, "
-                + "entity name={}, entity type={}", authenticatedUser, action, entityName,
-                entityType);
+                + "entity name={}, entity type={}",
+                proxyUgi.getShortUserName(), action, entityName, entityType);
 
         if (entityName != null) { // lifecycle actions
             Entity entity = getEntity(entityName, entityType);
@@ -260,8 +312,10 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
             return ((org.apache.falcon.entity.v0.process.Process) entity).getACL();
 
         default:
-            throw new AuthorizationException("Cannot get owner for entity: " + entity.getName());
+            break;
         }
+
+        throw new AuthorizationException("Cannot get owner for entity: " + entity.getName());
     }
 
     protected void authorizeLineageResource(String authenticatedUser, String action) {

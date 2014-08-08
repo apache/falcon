@@ -121,6 +121,35 @@ public class DefaultAuthorizationProviderTest {
         }
     }
 
+    @Test
+    public void testAuthorizeAdminResourceVersionAction() throws Exception {
+        UserGroupInformation proxyUgi = UserGroupInformation.createProxyUserForTesting(
+                "blah", realUser, new String[]{"blah-group", });
+
+        DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
+        provider.authorizeResource("admin", "version", null, null, proxyUgi);
+    }
+
+    @Test
+    public void testAuthorizeSuperUser() throws Exception {
+        UserGroupInformation proxyUgi = UserGroupInformation.createProxyUserForTesting(
+                EntityBuilderTestUtil.USER, realUser, new String[]{"group", });
+
+        DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
+        provider.authorizeResource("entities", "schedule", "feed", feedEntity.getName(), proxyUgi);
+        provider.authorizeResource("instance", "status", "feed", feedEntity.getName(), proxyUgi);
+    }
+
+    @Test
+    public void testAuthorizeSuperUserGroup() throws Exception {
+        UserGroupInformation proxyUgi = UserGroupInformation.createProxyUserForTesting(
+                "blah", realUser, new String[]{"falcon", });
+
+        DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
+        provider.authorizeResource("entities", "schedule", "feed", feedEntity.getName(), proxyUgi);
+        provider.authorizeResource("instance", "status", "feed", feedEntity.getName(), proxyUgi);
+    }
+
     @DataProvider(name = "adminResourceActions")
     private Object[][] createAdminResourceActions() {
         return new Object[][] {
@@ -175,7 +204,7 @@ public class DefaultAuthorizationProviderTest {
                 "admin-user", realUser, new String[]{"admin-group", });
 
         DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
-        provider.authorizeResource("admin", "version", null, null, proxyUgi);
+        provider.authorizeResource("admin", "stack", null, null, proxyUgi);
         Assert.fail("User does not belong to both admin-users not groups");
     }
 
@@ -236,7 +265,7 @@ public class DefaultAuthorizationProviderTest {
         provider.authorizeResource(resource, action, entityType, entityName, proxyUgi);
     }
 
-    @Test (expectedExceptions = AuthorizationException.class)
+    @Test (expectedExceptions = IllegalArgumentException.class)
     public void testAuthorizeBadResource() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.admin.users", "admin");
         StartupProperties.get().setProperty("falcon.security.authorization.admin.groups", "admin");
@@ -324,7 +353,7 @@ public class DefaultAuthorizationProviderTest {
                 "admin", realUser, new String[]{"admin", });
 
         DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
-        provider.authorizeResource("entities", "status", "feed", processEntity.getName(), proxyUgi);
+        provider.authorizeResource("entities", "status", "process", feedEntity.getName(), proxyUgi);
         Assert.fail("Bad entity");
     }
 
