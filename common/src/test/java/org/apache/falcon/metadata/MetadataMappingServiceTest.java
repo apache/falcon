@@ -36,7 +36,11 @@ import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.EngineType;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -75,6 +79,8 @@ public class MetadataMappingServiceTest {
     public static final String OUTPUT_INSTANCE_PATHS =
         "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join2/20140101";
 
+    public static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
+
     private ConfigurationStore configStore;
     private MetadataMappingService service;
 
@@ -91,6 +97,7 @@ public class MetadataMappingServiceTest {
 
         configStore = ConfigurationStore.get();
 
+        Services.get().register(new WorkflowJobEndNotificationService());
         StartupProperties.get().setProperty("falcon.graph.preserve.history", "true");
         service = new MetadataMappingService();
         service.init();
@@ -218,9 +225,9 @@ public class MetadataMappingServiceTest {
         service.destroy();
         service.init();
 
-        LineageRecorder.main(getTestMessageArgs());
-
-        service.onSuccessfulWorkflowCompletion(PROCESS_ENTITY_NAME, OPERATION, LOGS_DIR);
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
 
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
@@ -592,31 +599,39 @@ public class MetadataMappingServiceTest {
 
     private static String[] getTestMessageArgs() {
         return new String[]{
-            "-" + LineageArgs.NOMINAL_TIME.getOptionName(), NOMINAL_TIME,
-            "-" + LineageArgs.TIMESTAMP.getOptionName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), CLUSTER_ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), ("process"),
+            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), PROCESS_ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), NOMINAL_TIME,
+            "-" + WorkflowExecutionArgs.OPERATION.getName(), OPERATION,
 
-            "-" + LineageArgs.ENTITY_NAME.getOptionName(), PROCESS_ENTITY_NAME,
-            "-" + LineageArgs.ENTITY_TYPE.getOptionName(), ("process"),
-            "-" + LineageArgs.CLUSTER.getOptionName(), CLUSTER_ENTITY_NAME,
-            "-" + LineageArgs.OPERATION.getOptionName(), OPERATION,
+            "-" + WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), INPUT_FEED_NAMES,
+            "-" + WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), INPUT_INSTANCE_PATHS,
 
-            "-" + LineageArgs.INPUT_FEED_NAMES.getOptionName(), INPUT_FEED_NAMES,
-            "-" + LineageArgs.INPUT_FEED_PATHS.getOptionName(), INPUT_INSTANCE_PATHS,
+            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), OUTPUT_FEED_NAMES,
+            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), OUTPUT_INSTANCE_PATHS,
 
-            "-" + LineageArgs.FEED_NAMES.getOptionName(), OUTPUT_FEED_NAMES,
-            "-" + LineageArgs.FEED_INSTANCE_PATHS.getOptionName(), OUTPUT_INSTANCE_PATHS,
+            "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
+            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), FALCON_USER,
+            "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
+            "-" + WorkflowExecutionArgs.STATUS.getName(), "SUCCEEDED",
+            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), NOMINAL_TIME,
 
-            "-" + LineageArgs.WORKFLOW_ID.getOptionName(), "workflow-01-00",
-            "-" + LineageArgs.WORKFLOW_USER.getOptionName(), FALCON_USER,
-            "-" + LineageArgs.RUN_ID.getOptionName(), "1",
-            "-" + LineageArgs.STATUS.getOptionName(), "SUCCEEDED",
-            "-" + LineageArgs.WF_ENGINE_URL.getOptionName(), "http://localhost:11000/oozie",
-            "-" + LineageArgs.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id",
-            "-" + LineageArgs.USER_WORKFLOW_NAME.getOptionName(), WORKFLOW_NAME,
-            "-" + LineageArgs.USER_WORKFLOW_VERSION.getOptionName(), WORKFLOW_VERSION,
-            "-" + LineageArgs.USER_WORKFLOW_ENGINE.getOptionName(), EngineType.PIG.name(),
+            "-" + WorkflowExecutionArgs.WF_ENGINE_URL.getName(), "http://localhost:11000/oozie",
+            "-" + WorkflowExecutionArgs.USER_SUBFLOW_ID.getName(), "userflow@wf-id",
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(), WORKFLOW_NAME,
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName(), WORKFLOW_VERSION,
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(), EngineType.PIG.name(),
 
-            "-" + LineageArgs.LOG_DIR.getOptionName(), LOGS_DIR,
+
+            "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER,
+            "-" + WorkflowExecutionArgs.BRKR_URL.getName(), "tcp://localhost:61616?daemon=true",
+            "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER,
+            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), "tcp://localhost:61616?daemon=true",
+            "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "1000",
+
+            "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
+            "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
         };
     }
 

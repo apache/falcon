@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Base class for Metadata relationship mapping helper.
@@ -191,14 +190,5 @@ public abstract class RelationshipGraphBuilder {
 
     protected String getCurrentTimeStamp() {
         return SchemaHelper.formatDateUTC(new Date());
-    }
-
-    protected void addProperty(Vertex vertex, Map<String, String> lineageMetadata, String optionName) {
-        String value = lineageMetadata.get(optionName);
-        if (value == null || value.length() == 0) {
-            return;
-        }
-
-        vertex.setProperty(optionName, value);
     }
 }

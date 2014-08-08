@@ -29,6 +29,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Workflow;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,10 +167,11 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     public void addWorkflowProperties(Workflow workflow, Vertex processVertex, String processName) {
-        processVertex.setProperty(LineageArgs.USER_WORKFLOW_NAME.getOptionName(),
+        processVertex.setProperty(WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(),
                 ProcessHelper.getProcessWorkflowName(workflow.getName(), processName));
         processVertex.setProperty(RelationshipProperty.VERSION.getName(), workflow.getVersion());
-        processVertex.setProperty(LineageArgs.USER_WORKFLOW_ENGINE.getOptionName(), workflow.getEngine().value());
+        processVertex.setProperty(WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(),
+                workflow.getEngine().value());
     }
 
     public void updateWorkflowProperties(Workflow oldWorkflow, Workflow newWorkflow,
