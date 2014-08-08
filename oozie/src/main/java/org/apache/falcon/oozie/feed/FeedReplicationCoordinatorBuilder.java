@@ -37,7 +37,6 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
@@ -45,6 +44,7 @@ import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.util.RuntimeProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -249,7 +249,8 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         props.put("sourceRelativePaths", IGNORE); // this will bot be used for Table storage.
     }
 
-    private void propagateLateDataProperties(String instancePaths, String falconFeedStorageType, Properties props) {
+    private void propagateLateDataProperties(String instancePaths,
+                                             String falconFeedStorageType, Properties props) {
         // todo these pairs are the same but used in different context
         // late data handler - should-record action
         props.put("falconInputFeeds", entity.getName());
@@ -260,11 +261,12 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         props.put("falconInputFeedStorageTypes", falconFeedStorageType);
 
         // falcon post processing
-        props.put(ARG.feedNames.getPropName(), entity.getName());
-        props.put(ARG.feedInstancePaths.getPropName(), "${coord:dataOut('output')}");
+        props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), "${coord:dataOut('output')}");
     }
 
-    private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster, Path buildPath) throws FalconException {
+    private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,
+                                        Path buildPath) throws FalconException {
         Configuration conf = ClusterHelper.getConfiguration(trgCluster);
         FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
 

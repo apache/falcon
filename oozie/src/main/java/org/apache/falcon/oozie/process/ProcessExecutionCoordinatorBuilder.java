@@ -37,7 +37,6 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.expression.ExpressionHelper;
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
@@ -50,6 +49,7 @@ import org.apache.falcon.oozie.coordinator.INPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
@@ -243,8 +243,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeOutputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getOutputs() == null) {
-            props.put(ARG.feedNames.getPropName(), "NONE");
-            props.put(ARG.feedInstancePaths.getPropName(), IGNORE);
+            props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), "NONE");
+            props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), IGNORE);
             return;
         }
 
@@ -282,8 +282,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         }
 
         // Output feed name and path for parent workflow
-        props.put(ARG.feedNames.getPropName(), StringUtils.join(outputFeeds, ','));
-        props.put(ARG.feedInstancePaths.getPropName(), StringUtils.join(outputPaths, ','));
+        props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), StringUtils.join(outputFeeds, ','));
+        props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), StringUtils.join(outputPaths, ','));
     }
 
     private DATAOUT createDataOut(Output output) {

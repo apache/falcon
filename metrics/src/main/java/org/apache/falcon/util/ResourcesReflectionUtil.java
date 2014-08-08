@@ -43,7 +43,7 @@ public final class ResourcesReflectionUtil {
         buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.SchedulableEntityManagerProxy");
         buildAnnotationsMapForClass("org.apache.falcon.resource.proxy.InstanceManagerProxy");
         buildAnnotationsMapForClass("org.apache.falcon.resource.AbstractInstanceManager");
-        buildAnnotationsMapForClass("org.apache.falcon.service.FalconTopicSubscriber");
+        buildAnnotationsMapForClass("org.apache.falcon.messaging.JMSMessageConsumer");
         buildAnnotationsMapForClass("org.apache.falcon.aspect.GenericAlert");
     }
 

@@ -40,7 +40,6 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.entity.v0.process.Workflow;
-import org.apache.falcon.messaging.EntityInstanceMessage;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -55,6 +54,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -691,13 +691,13 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("logDir"), getLogPath(processEntity));
 
         String[] expected = {
-            EntityInstanceMessage.ARG.feedNames.getPropName(),
-            EntityInstanceMessage.ARG.feedInstancePaths.getPropName(),
-            "falconInputFeeds",
+            WorkflowExecutionArgs.FEED_NAMES.getName(),
+            WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+            WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(),
             "falconInPaths",
-            "userWorkflowName",
-            "userWorkflowVersion",
-            "userWorkflowEngine",
+            WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(),
+            WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName(),
+            WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(),
         };
 
         for (String property : expected) {

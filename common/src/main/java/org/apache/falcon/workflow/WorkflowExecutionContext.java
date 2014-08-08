@@ -73,6 +73,24 @@ public class WorkflowExecutionContext {
         GENERATE, DELETE, ARCHIVE, REPLICATE, CHMOD
     }
 
+    public static final WorkflowExecutionArgs[] USER_MESSAGE_ARGS = {
+        WorkflowExecutionArgs.CLUSTER_NAME,
+        WorkflowExecutionArgs.ENTITY_NAME,
+        WorkflowExecutionArgs.ENTITY_TYPE,
+        WorkflowExecutionArgs.NOMINAL_TIME,
+        WorkflowExecutionArgs.OPERATION,
+
+        WorkflowExecutionArgs.FEED_NAMES,
+        WorkflowExecutionArgs.FEED_INSTANCE_PATHS,
+
+        WorkflowExecutionArgs.WORKFLOW_ID,
+        WorkflowExecutionArgs.WORKFLOW_USER,
+        WorkflowExecutionArgs.RUN_ID,
+        WorkflowExecutionArgs.STATUS,
+        WorkflowExecutionArgs.TIMESTAMP,
+        WorkflowExecutionArgs.LOG_FILE,
+    };
+
     private final Map<WorkflowExecutionArgs, String> context;
     private final long creationTime;
 
@@ -287,10 +305,9 @@ public class WorkflowExecutionContext {
     }
 
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
-        try {
-            Map<WorkflowExecutionArgs, String> wfProperties = new HashMap<WorkflowExecutionArgs, String>();
-            wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
+        Map<WorkflowExecutionArgs, String> wfProperties = new HashMap<WorkflowExecutionArgs, String>();
 
+        try {
             CommandLine cmd = getCommand(args);
             for (WorkflowExecutionArgs arg : WorkflowExecutionArgs.values()) {
                 String optionValue = arg.getOptionValue(cmd);
@@ -298,14 +315,16 @@ public class WorkflowExecutionContext {
                     wfProperties.put(arg, optionValue);
                 }
             }
-
-            wfProperties.put(WorkflowExecutionArgs.CONTEXT_FILE,
-                    getFilePath(wfProperties.get(WorkflowExecutionArgs.LOG_DIR),
-                            wfProperties.get(WorkflowExecutionArgs.ENTITY_NAME)));
-            return new WorkflowExecutionContext(wfProperties);
         } catch (ParseException e) {
             throw new FalconException("Error parsing wf args", e);
         }
+
+        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
+        wfProperties.put(WorkflowExecutionArgs.CONTEXT_FILE,
+                getFilePath(wfProperties.get(WorkflowExecutionArgs.LOG_DIR),
+                        wfProperties.get(WorkflowExecutionArgs.ENTITY_NAME)));
+
+        return new WorkflowExecutionContext(wfProperties);
     }
 
     private static CommandLine getCommand(String[] arguments) throws ParseException {
@@ -322,5 +341,10 @@ public class WorkflowExecutionContext {
         Option option = arg.getOption();
         option.setRequired(isRequired);
         options.addOption(option);
+    }
+
+    public static WorkflowExecutionContext create(Map<WorkflowExecutionArgs, String> wfProperties) {
+        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, Type.POST_PROCESSING.name());
+        return new WorkflowExecutionContext(wfProperties);
     }
 }

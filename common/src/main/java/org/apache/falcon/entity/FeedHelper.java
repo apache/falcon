@@ -284,7 +284,7 @@ public final class FeedHelper {
         try {
             version = BuildProperties.get().getProperty("build.version");
         } catch (Exception e) {  // unfortunate that this is only available in prism/webapp
-            version = "0.5";
+            version = "0.6";
         }
         props.put("userWorkflowVersion", version);
         return props;

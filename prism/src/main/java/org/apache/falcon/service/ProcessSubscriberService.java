@@ -18,14 +18,16 @@
 package org.apache.falcon.service;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.messaging.JMSMessageConsumer;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
 
 /**
  * A Falcon Service that initializes and starts a topic subscriber.
  */
 public class ProcessSubscriberService implements FalconService {
 
-    private FalconTopicSubscriber subscriber;
+    private JMSMessageConsumer subscriber;
 
     private static enum JMSProps {
         FalconBrokerImplClass("broker.impl.class", "org.apache.activemq.ActiveMQConnectionFactory"),
@@ -48,11 +50,18 @@ public class ProcessSubscriberService implements FalconService {
 
     @Override
     public void init() throws FalconException {
+        if (!Services.get().isRegistered(WorkflowJobEndNotificationService.NAME)) {
+            throw new FalconException("WorkflowJobEndNotificationService must be configured ahead");
+        }
+
         String falconBrokerImplClass = getPropertyValue(JMSProps.FalconBrokerImplClass);
         String falconBrokerUrl = getPropertyValue(JMSProps.FalconBrokerUrl);
         String falconEntityTopic = getPropertyValue(JMSProps.FalconEntityTopic);
 
-        subscriber = new FalconTopicSubscriber(falconBrokerImplClass, "", "", falconBrokerUrl, falconEntityTopic);
+        WorkflowJobEndNotificationService jobEndNotificationService =
+                Services.get().getService(WorkflowJobEndNotificationService.NAME);
+        subscriber = new JMSMessageConsumer(falconBrokerImplClass, "", "", falconBrokerUrl,
+                falconEntityTopic, jobEndNotificationService);
         subscriber.startSubscriber();
     }
 

@@ -216,7 +216,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         // verify workflow params
         Assert.assertEquals(props.get("userWorkflowName"), "replication-policy");
-        Assert.assertEquals(props.get("userWorkflowVersion"), "0.5");
+        Assert.assertEquals(props.get("userWorkflowVersion"), "0.6");
         Assert.assertEquals(props.get("userWorkflowEngine"), "falcon");
 
         // verify default params

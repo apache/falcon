@@ -20,13 +20,20 @@ package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 /**
  * Test for process message producer.
@@ -36,31 +43,36 @@ public class ProcessProducerTest {
     private String[] args;
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-    private static final String TOPIC_NAME = "FALCON.PROCESS";
+    private static final String ENTITY_NAME = "process1";
     private BrokerService broker;
 
     private volatile AssertionError error;
 
     @BeforeClass
     public void setup() throws Exception {
-        args = new String[]{"-" + ARG.entityName.getArgName(), TOPIC_NAME,
-                            "-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
-                            "-" + ARG.feedInstancePaths.getArgName(),
-                            "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
-                            "-" + ARG.workflowId.getArgName(), "workflow-01-00",
-                            "-" + ARG.workflowUser.getArgName(), "falcon",
-                            "-" + ARG.runId.getArgName(), "1",
-                            "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
-                            "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
-                            "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
-                            "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
-                            "-" + ARG.entityType.getArgName(), ("process"),
-                            "-" + ARG.operation.getArgName(), ("GENERATE"),
-                            "-" + ARG.logFile.getArgName(), ("/logFile"),
-                            "-" + ARG.topicName.getArgName(), (TOPIC_NAME),
-                            "-" + ARG.status.getArgName(), ("SUCCEEDED"),
-                            "-" + ARG.brokerTTL.getArgName(), "10",
-                            "-" + ARG.cluster.getArgName(), "corp", };
+        args = new String[] {
+            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs,raw-logs",
+            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+            "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
+            "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
+            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
+            "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
+            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2011-01-01-01-00",
+            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",
+            "-" + WorkflowExecutionArgs.BRKR_URL.getName(), BROKER_URL,
+            "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
+            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), BROKER_URL,
+            "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
+            "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), "process",
+            "-" + WorkflowExecutionArgs.OPERATION.getName(), "GENERATE",
+            "-" + WorkflowExecutionArgs.LOG_FILE.getName(), "/logFile",
+            "-" + WorkflowExecutionArgs.LOG_DIR.getName(), "/falcon/feed/agg-logs/",
+            "-" + WorkflowExecutionArgs.STATUS.getName(), "SUCCEEDED",
+            "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "10",
+            "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), "corp",
+        };
+
         broker = new BrokerService();
         broker.addConnector(BROKER_URL);
         broker.setDataDirectory("target/activemq");
@@ -92,7 +104,13 @@ public class ProcessProducerTest {
         };
         t.start();
         Thread.sleep(100);
-        new MessageProducer().run(this.args);
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(
+                args, WorkflowExecutionContext.Type.POST_PROCESSING);
+        JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
+                .type(JMSMessageProducer.MessageType.USER).build();
+        jmsMessageProducer.sendMessage();
+
         t.join();
         if (error != null) {
             throw error;
@@ -100,26 +118,23 @@ public class ProcessProducerTest {
     }
 
     private void consumer() throws JMSException {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-                BROKER_URL);
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        Session session = connection.createSession(false,
-                Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createTopic(TOPIC_NAME);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createTopic(getTopicName());
         MessageConsumer consumer = session.createConsumer(destination);
 
-        // wait till you get atleast one message
+        // wait till you get at least one message
         MapMessage m;
         for (m = null; m == null;) {
             m = (MapMessage) consumer.receive();
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(ARG.feedNames.getArgName()),
-                "click-logs");
-        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()), "click-logs");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
                 "/click-logs/10/05/05/00/20");
 
         for (m = null; m == null;) {
@@ -127,24 +142,27 @@ public class ProcessProducerTest {
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(ARG.feedNames.getArgName()), "raw-logs");
-        Assert.assertEquals(m.getString(ARG.feedInstancePaths.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()), "raw-logs");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
                 "/raw-logs/10/05/05/00/20");
         connection.close();
     }
 
+    private String getTopicName() {
+        return JMSMessageProducer.FALCON_TOPIC_PREFIX + ENTITY_NAME;
+    }
+
     private void assertMessage(MapMessage m) throws JMSException {
-        Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
-                TOPIC_NAME);
-        Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.ENTITY_NAME.getName()), ENTITY_NAME);
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.WORKFLOW_ID.getName()),
                 "workflow-01-00");
-        Assert.assertEquals(m.getString(ARG.workflowUser.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.WORKFLOW_USER.getName()),
                 "falcon");
-        Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
-        Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.RUN_ID.getName()), "1");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.NOMINAL_TIME.getName()),
                 "2011-01-01T01:00Z");
-        Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.TIMESTAMP.getName()),
                 "2012-01-01T01:00Z");
-        Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.STATUS.getName()), "SUCCEEDED");
     }
 }

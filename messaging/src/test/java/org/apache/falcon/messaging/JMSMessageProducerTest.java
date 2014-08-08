@@ -15,26 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.falcon.messaging;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.falcon.messaging.EntityInstanceMessage.ARG;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Test for falcon topic message producer.
  */
-public class FalconTopicProducerTest {
+public class JMSMessageProducerTest {
 
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
@@ -64,21 +71,20 @@ public class FalconTopicProducerTest {
     public void testWithFeedOutputPaths() throws Exception {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
-                "-" + ARG.entityName.getArgName(), "agg-coord",
-                "-" + ARG.feedNames.getArgName(), "click-logs,raw-logs",
-                "-" + ARG.feedInstancePaths.getArgName(),
-                "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
-                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+                "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
+                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs,raw-logs",
+                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         List<String[]> messages = new ArrayList<String[]>();
         messages.add(args.toArray(new String[args.size()]));
         testProcessMessageCreator(messages, TOPIC_NAME);
         for (MapMessage m : mapMessages) {
             assertMessage(m);
-            Assert.assertTrue((m.getString(ARG.feedNames.getArgName())
+            Assert.assertTrue((m.getString(WorkflowExecutionArgs.FEED_NAMES.getName())
                     .equals("click-logs,raw-logs")));
             Assert.assertTrue(m
-                    .getString(ARG.feedInstancePaths.getArgName())
+                    .getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName())
                     .equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
         }
     }
@@ -87,10 +93,9 @@ public class FalconTopicProducerTest {
     public void testWithEmptyFeedOutputPaths() throws Exception {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
-                "-" + ARG.entityName.getArgName(), "agg-coord",
-                "-" + ARG.feedNames.getArgName(), "null",
-                "-" + ARG.feedInstancePaths.getArgName(), "null",
-                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+                "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
+                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "null",
+                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), "null"));
         args.addAll(newArgs);
         List<String[]> messages = new ArrayList<String[]>();
         messages.add(args.toArray(new String[args.size()]));
@@ -98,9 +103,9 @@ public class FalconTopicProducerTest {
         for (MapMessage m : mapMessages) {
             assertMessage(m);
             assertMessage(m);
-            Assert.assertTrue(m.getString(ARG.feedNames.getArgName()).equals(
+            Assert.assertTrue(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()).equals(
                     "null"));
-            Assert.assertTrue(m.getString(ARG.feedInstancePaths.getArgName())
+            Assert.assertTrue(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName())
                     .equals("null"));
         }
     }
@@ -110,21 +115,19 @@ public class FalconTopicProducerTest {
         List<String[]> messages = new ArrayList<String[]>();
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
-                "-" + ARG.entityName.getArgName(), "agg-coord",
-                "-" + ARG.feedNames.getArgName(), "raw-logs",
-                "-" + ARG.feedInstancePaths.getArgName(),
-                "/raw-logs/10/05/05/00/20",
-                "-" + ARG.topicName.getArgName(), TOPIC_NAME));
+                "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
+                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "raw-logs",
+                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "/raw-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         messages.add(args.toArray(new String[args.size()]));
 
         args = createCommonArgs();
         newArgs = new ArrayList<String>(Arrays.asList(
-                "-" + ARG.entityName.getArgName(), "agg-coord",
-                "-" + ARG.feedNames.getArgName(), "click-logs",
-                "-" + ARG.feedInstancePaths.getArgName(),
-                "/click-logs/10/05/05/00/20",
-                "-" + ARG.topicName.getArgName(), SECONDARY_TOPIC_NAME));
+                "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
+                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs",
+                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "/click-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         messages.add(args.toArray(new String[args.size()]));
 
@@ -137,24 +140,24 @@ public class FalconTopicProducerTest {
 
     private List<String> createCommonArgs() {
         return new ArrayList<String>(Arrays.asList(
-                "-" + ARG.workflowId.getArgName(), "workflow-01-00",
-                "-" + ARG.workflowUser.getArgName(), "falcon",
-                "-" + ARG.runId.getArgName(), "1",
-                "-" + ARG.nominalTime.getArgName(), "2011-01-01-01-00",
-                "-" + ARG.timeStamp.getArgName(), "2012-01-01-01-00",
-                "-" + ARG.brokerUrl.getArgName(), BROKER_URL,
-                "-" + ARG.brokerImplClass.getArgName(), (BROKER_IMPL_CLASS),
-                "-" + ARG.entityType.getArgName(), ("process"),
-                "-" + ARG.operation.getArgName(), ("GENERATE"),
-                "-" + ARG.logFile.getArgName(), ("/logFile"),
-                "-" + ARG.status.getArgName(), ("SUCCEEDED"),
-                "-" + ARG.brokerTTL.getArgName(), "10",
-                "-" + ARG.cluster.getArgName(), "corp"));
+                "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
+                "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
+                "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
+                "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2011-01-01-01-00",
+                "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",
+                "-" + WorkflowExecutionArgs.BRKR_URL.getName(), BROKER_URL,
+                "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), (BROKER_IMPL_CLASS),
+                "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), ("process"),
+                "-" + WorkflowExecutionArgs.OPERATION.getName(), ("GENERATE"),
+                "-" + WorkflowExecutionArgs.LOG_FILE.getName(), ("/logFile"),
+                "-" + WorkflowExecutionArgs.LOG_DIR.getName(), ("/tmp"),
+                "-" + WorkflowExecutionArgs.STATUS.getName(), ("SUCCEEDED"),
+                "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "10",
+                "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), "corp"));
     }
 
     private void testProcessMessageCreator(final List<String[]> messages,
-             final String topicsToListen) throws Exception {
-
+                                           final String topicsToListen) throws Exception {
         Thread t = new Thread() {
             @Override
             public void run() {
@@ -169,9 +172,15 @@ public class FalconTopicProducerTest {
         };
         t.start();
         Thread.sleep(100);
+
         for (String[] message : messages) {
-            new MessageProducer().run(message);
+            WorkflowExecutionContext context = WorkflowExecutionContext.create(
+                    message, WorkflowExecutionContext.Type.POST_PROCESSING);
+            JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
+                    .type(JMSMessageProducer.MessageType.FALCON).build();
+            jmsMessageProducer.sendMessage();
         }
+
         t.join();
         if (error != null) {
             throw error;
@@ -179,15 +188,14 @@ public class FalconTopicProducerTest {
     }
 
     private void consumer(int size, String topicsToListen) throws Exception {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-                BROKER_URL);
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        Session session = connection.createSession(false,
-                Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createTopic(topicsToListen);
         MessageConsumer consumer = session.createConsumer(destination);
+
         mapMessages = new ArrayList<MapMessage>();
         for (int i=0; i<size; i++) {
             MapMessage m = (MapMessage) consumer.receive();
@@ -198,18 +206,13 @@ public class FalconTopicProducerTest {
         connection.close();
     }
 
-    private void assertMessage(MapMessage m) throws JMSException {
-        Assert.assertEquals(m.getString(ARG.entityName.getArgName()),
+    private void assertMessage(MapMessage message) throws JMSException {
+        Assert.assertEquals(message.getString(WorkflowExecutionArgs.ENTITY_NAME.getName()),
                 "agg-coord");
-        Assert.assertEquals(m.getString(ARG.workflowId.getArgName()),
-                "workflow-01-00");
-        Assert.assertEquals(m.getString(ARG.workflowUser.getArgName()),
-                "falcon");
-        Assert.assertEquals(m.getString(ARG.runId.getArgName()), "1");
-        Assert.assertEquals(m.getString(ARG.nominalTime.getArgName()),
+        Assert.assertEquals(message.getString(WorkflowExecutionArgs.NOMINAL_TIME.getName()),
                 "2011-01-01T01:00Z");
-        Assert.assertEquals(m.getString(ARG.timeStamp.getArgName()),
+        Assert.assertEquals(message.getString(WorkflowExecutionArgs.TIMESTAMP.getName()),
                 "2012-01-01T01:00Z");
-        Assert.assertEquals(m.getString(ARG.status.getArgName()), "SUCCEEDED");
+        Assert.assertEquals(message.getString(WorkflowExecutionArgs.STATUS.getName()), "SUCCEEDED");
     }
 }
