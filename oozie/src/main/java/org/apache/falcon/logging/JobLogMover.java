@@ -15,22 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.falcon.logging;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.hadoop.conf.Configured;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowAction;
@@ -52,49 +47,34 @@ import java.util.Set;
 /**
  * Utility called in the post process of oozie workflow to move oozie action executor log.
  */
-public class LogMover extends Configured implements Tool {
+public class JobLogMover {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LogMover.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JobLogMover.class);
+
     public static final Set<String> FALCON_ACTIONS =
         new HashSet<String>(Arrays.asList(new String[]{"eviction", "replication", }));
 
-    /**
-     * Args to the command.
-     */
-    private static class ARGS {
-        private String oozieUrl;
-        private String subflowId;
-        private String runId;
-        private String logDir;
-        private String entityType;
-        private String userWorkflowEngine;
+    private Configuration getConf() {
+        return new Configuration();
     }
 
-    public static void main(String[] args) throws Exception {
-        ToolRunner.run(new LogMover(), args);
-    }
-
-    @Override
-    public int run(String[] arguments) throws Exception {
+    public int run(WorkflowExecutionContext context) {
         try {
-            ARGS args = new ARGS();
-            setupArgs(arguments, args);
-
-            OozieClient client = new OozieClient(args.oozieUrl);
+            OozieClient client = new OozieClient(context.getWorkflowEngineUrl());
             WorkflowJob jobInfo;
             try {
-                jobInfo = client.getJobInfo(args.subflowId);
+                jobInfo = client.getJobInfo(context.getUserSubflowId());
             } catch (OozieClientException e) {
-                LOG.error("Error getting jobinfo for: {}", args.subflowId, e);
+                LOG.error("Error getting jobinfo for: {}", context.getUserSubflowId(), e);
                 return 0;
             }
 
-            Path path = new Path(args.logDir + "/"
-                    + String.format("%03d", Integer.parseInt(args.runId)));
+            Path path = new Path(context.getLogDir() + "/"
+                    + String.format("%03d", context.getWorkflowRunId()));
             FileSystem fs = path.getFileSystem(getConf());
 
-            if (args.entityType.equalsIgnoreCase(EntityType.FEED.name())
-                    || notUserWorkflowEngineIsOozie(args.userWorkflowEngine)) {
+            if (EntityType.FEED.name().equalsIgnoreCase(context.getEntityType())
+                    || notUserWorkflowEngineIsOozie(context.getUserWorkflowEngine())) {
                 // if replication wf, retention wf or PIG Process
                 copyOozieLog(client, fs, path, jobInfo.getId());
 
@@ -122,7 +102,8 @@ public class LogMover extends Configured implements Tool {
             }
 
         } catch (Exception e) {
-            LOG.error("Exception in log mover", e);
+            // JobLogMover doesn't throw exception, a failed log mover will not fail the user workflow
+            LOG.error("Exception in log mover:", e);
         }
         return 0;
     }
@@ -163,49 +144,9 @@ public class LogMover extends Configured implements Tool {
         }
     }
 
-    private void setupArgs(String[] arguments, ARGS args) throws ParseException {
-        Options options = new Options();
-
-        Option opt = new Option("workflowEngineUrl", true, "url of workflow engine, ex:oozie");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("subflowId", true, "external id of userworkflow");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("userWorkflowEngine", true, "user workflow engine type");
-        opt.setRequired(false);  // replication will NOT have this arg sent
-        options.addOption(opt);
-
-        opt = new Option("runId", true, "current workflow's runid");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("logDir", true, "log dir where job logs are stored");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("status", true, "user workflow status");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        opt = new Option("entityType", true, "entity type feed or process");
-        opt.setRequired(true);
-        options.addOption(opt);
-
-        CommandLine cmd = new GnuParser().parse(options, arguments);
-
-        args.oozieUrl = cmd.getOptionValue("workflowEngineUrl");
-        args.subflowId = cmd.getOptionValue("subflowId");
-        args.userWorkflowEngine = cmd.getOptionValue("userWorkflowEngine");
-        args.runId = cmd.getOptionValue("runId");
-        args.logDir = cmd.getOptionValue("logDir");
-        args.entityType = cmd.getOptionValue("entityType");
-    }
-
     private String getTTlogURL(String jobId) throws Exception {
-        TaskLogURLRetriever logRetriever = ReflectionUtils.newInstance(getLogRetrieverClassName(), getConf());
+        TaskLogURLRetriever logRetriever = ReflectionUtils
+                .newInstance(getLogRetrieverClassName(), getConf());
         return logRetriever.retrieveTaskLogURL(jobId);
     }
 

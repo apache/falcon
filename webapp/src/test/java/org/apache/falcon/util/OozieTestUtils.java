@@ -22,8 +22,9 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.logging.LogMover;
+import org.apache.falcon.logging.JobLogMover;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.OozieClientFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
@@ -176,13 +177,17 @@ public final class OozieTestUtils {
     public static Path getOozieLogPath(Cluster cluster, WorkflowJob jobInfo) throws Exception {
         Path stagingPath = EntityUtil.getLogPath(cluster, cluster);
         final Path logPath = new Path(ClusterHelper.getStorageUrl(cluster), stagingPath);
-        LogMover.main(new String[] {
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(new String[] {
             "-workflowEngineUrl", ClusterHelper.getOozieUrl(cluster),
-            "-subflowId", jobInfo.getId(), "-runId", "1",
+            "-subflowId", jobInfo.getId(),
+            "-runId", "1",
             "-logDir", logPath.toString() + "/job-2012-04-21-00-00",
-            "-status", "SUCCEEDED", "-entityType", "process",
+            "-status", "SUCCEEDED",
+            "-entityType", "process",
             "-userWorkflowEngine", "pig",
-        });
+        }, WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        new JobLogMover().run(context);
 
         return new Path(logPath, "job-2012-04-21-00-00/001/oozie.log");
     }

@@ -46,6 +46,7 @@ import java.util.Map;
 /**
  * Utility called in the post process of oozie workflow to record lineage information.
  */
+@Deprecated // delete this class
 public class LineageRecorder  extends Configured implements Tool {
 
     private static final Logger LOG = LoggerFactory.getLogger(LineageRecorder.class);

@@ -117,7 +117,7 @@ public class PigProcessIT {
                 .get(InstancesResult.class);
         Assert.assertEquals(APIResult.Status.SUCCEEDED, response.getStatus());
 
-        // verify LogMover
+        // verify JobLogMover
         Path oozieLogPath = OozieTestUtils.getOozieLogPath(context.getCluster().getCluster(), jobInfo);
         Assert.assertTrue(context.getCluster().getFileSystem().exists(oozieLogPath));
 

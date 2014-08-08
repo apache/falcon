@@ -20,7 +20,7 @@ package org.apache.falcon.oozie.workflow;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.workflow.FalconPostProcessing;
-import org.apache.falcon.workflow.FalconPostProcessing.Arg;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,34 +45,34 @@ public class FalconPostProcessingTest {
     @BeforeClass
     public void setup() throws Exception {
         args = new String[]{
-            "-" + Arg.ENTITY_NAME.getOptionName(), ENTITY_NAME,
-            "-" + Arg.FEED_NAMES.getOptionName(), "out-click-logs,out-raw-logs",
-            "-" + Arg.FEED_INSTANCE_PATHS.getOptionName(),
+            "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
+            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "out-click-logs,out-raw-logs",
+            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
             "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20",
-            "-" + Arg.WORKFLOW_ID.getOptionName(), "workflow-01-00",
-            "-" + Arg.WORKFLOW_USER.getOptionName(), "falcon",
-            "-" + Arg.RUN_ID.getOptionName(), "1",
-            "-" + Arg.NOMINAL_TIME.getOptionName(), "2011-01-01-01-00",
-            "-" + Arg.TIMESTAMP.getOptionName(), "2012-01-01-01-00",
-            "-" + Arg.BRKR_URL.getOptionName(), BROKER_URL,
-            "-" + Arg.BRKR_IMPL_CLASS.getOptionName(), (BROKER_IMPL_CLASS),
-            "-" + Arg.USER_BRKR_URL.getOptionName(), BROKER_URL,
-            "-" + Arg.USER_BRKR_IMPL_CLASS.getOptionName(), (BROKER_IMPL_CLASS),
-            "-" + Arg.ENTITY_TYPE.getOptionName(), ("process"),
-            "-" + Arg.OPERATION.getOptionName(), ("GENERATE"),
-            "-" + Arg.LOG_FILE.getOptionName(), ("/logFile"),
-            "-" + Arg.STATUS.getOptionName(), ("SUCCEEDED"),
-            "-" + Arg.BRKR_TTL.getOptionName(), "10",
-            "-" + Arg.CLUSTER.getOptionName(), "corp",
-            "-" + Arg.WF_ENGINE_URL.getOptionName(), "http://localhost:11000/oozie/",
-            "-" + Arg.LOG_DIR.getOptionName(), "target/log",
-            "-" + Arg.USER_SUBFLOW_ID.getOptionName(), "userflow@wf-id" + "test",
-            "-" + Arg.USER_WORKFLOW_ENGINE.getOptionName(), "oozie",
-            "-" + Arg.INPUT_FEED_NAMES.getOptionName(), "in-click-logs,in-raw-logs",
-            "-" + Arg.INPUT_FEED_PATHS.getOptionName(),
+            "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
+            "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
+            "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
+            "-" + WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2011-01-01-01-00",
+            "-" + WorkflowExecutionArgs.TIMESTAMP.getName(), "2012-01-01-01-00",
+            "-" + WorkflowExecutionArgs.BRKR_URL.getName(), BROKER_URL,
+            "-" + WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
+            "-" + WorkflowExecutionArgs.USER_BRKR_URL.getName(), BROKER_URL,
+            "-" + WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(), BROKER_IMPL_CLASS,
+            "-" + WorkflowExecutionArgs.ENTITY_TYPE.getName(), "process",
+            "-" + WorkflowExecutionArgs.OPERATION.getName(), "GENERATE",
+            "-" + WorkflowExecutionArgs.LOG_FILE.getName(), "/logFile",
+            "-" + WorkflowExecutionArgs.STATUS.getName(), "SUCCEEDED",
+            "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "10",
+            "-" + WorkflowExecutionArgs.CLUSTER_NAME.getName(), "corp",
+            "-" + WorkflowExecutionArgs.WF_ENGINE_URL.getName(), "http://localhost:11000/oozie/",
+            "-" + WorkflowExecutionArgs.LOG_DIR.getName(), "target/log",
+            "-" + WorkflowExecutionArgs.USER_SUBFLOW_ID.getName(), "userflow@wf-id" + "test",
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(), "oozie",
+            "-" + WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), "in-click-logs,in-raw-logs",
+            "-" + WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(),
             "/in-click-logs/10/05/05/00/20,/in-raw-logs/10/05/05/00/20",
-            "-" + Arg.USER_WORKFLOW_NAME.getOptionName(), "test-workflow",
-            "-" + Arg.USER_WORKFLOW_VERSION.getOptionName(), "1.0.0",
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(), "test-workflow",
+            "-" + WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName(), "1.0.0",
         };
 
         broker = new BrokerService();
@@ -95,8 +95,8 @@ public class FalconPostProcessingTest {
             @Override
             public void run() {
                 try {
-                    consumer(BROKER_URL, "FALCON." + ENTITY_NAME);
-                    consumer(BROKER_URL, FALCON_TOPIC_NAME);
+                    consumer(BROKER_URL, "FALCON." + ENTITY_NAME);  // user message
+                    consumer(BROKER_URL, FALCON_TOPIC_NAME);  // falcon message
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
@@ -131,13 +131,13 @@ public class FalconPostProcessingTest {
 
         assertMessage(m);
         if (topic.equals(FALCON_TOPIC_NAME)) {
-            Assert.assertEquals(m.getString(Arg.FEED_NAMES.getOptionName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()),
                     "out-click-logs,out-raw-logs");
-            Assert.assertEquals(m.getString(Arg.FEED_INSTANCE_PATHS.getOptionName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
                     "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20");
         } else {
-            Assert.assertEquals(m.getString(Arg.FEED_NAMES.getOptionName()), "out-click-logs");
-            Assert.assertEquals(m.getString(Arg.FEED_INSTANCE_PATHS.getOptionName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()), "out-click-logs");
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
                     "/out-click-logs/10/05/05/00/20");
         }
 
@@ -145,15 +145,13 @@ public class FalconPostProcessingTest {
     }
 
     private void assertMessage(MapMessage m) throws JMSException {
-        Assert.assertEquals(m.getString(Arg.ENTITY_NAME.getOptionName()), "agg-coord");
-        Assert.assertEquals(m.getString(Arg.WORKFLOW_ID.getOptionName()), "workflow-01-00");
-        String workflowUser = m.getString(Arg.WORKFLOW_USER.getOptionName());
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.ENTITY_NAME.getName()), "agg-coord");
+        String workflowUser = m.getString(WorkflowExecutionArgs.WORKFLOW_USER.getName());
         if (workflowUser != null) { // in case of user message, its NULL
             Assert.assertEquals(workflowUser, "falcon");
         }
-        Assert.assertEquals(m.getString(Arg.RUN_ID.getOptionName()), "1");
-        Assert.assertEquals(m.getString(Arg.NOMINAL_TIME.getOptionName()), "2011-01-01T01:00Z");
-        Assert.assertEquals(m.getString(Arg.TIMESTAMP.getOptionName()), "2012-01-01T01:00Z");
-        Assert.assertEquals(m.getString(Arg.STATUS.getOptionName()), "SUCCEEDED");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.NOMINAL_TIME.getName()), "2011-01-01T01:00Z");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.TIMESTAMP.getName()), "2012-01-01T01:00Z");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.STATUS.getName()), "SUCCEEDED");
     }
 }

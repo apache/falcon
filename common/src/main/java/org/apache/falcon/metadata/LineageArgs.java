@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 /**
  * Args for data Lineage.
  */
+@Deprecated // delete this class
 public enum LineageArgs {
     // process instance
     NOMINAL_TIME("nominalTime", "instance time"),

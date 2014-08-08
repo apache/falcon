@@ -63,35 +63,6 @@ public class JMSMessageProducer {
 
     private static final long DEFAULT_TTL = 3 * 24 * 60 * 60 * 1000;
 
-    private static final WorkflowExecutionArgs[] FALCON_FILTER = {
-        WorkflowExecutionArgs.NOMINAL_TIME,
-        WorkflowExecutionArgs.ENTITY_NAME,
-        WorkflowExecutionArgs.OPERATION,
-        WorkflowExecutionArgs.LOG_DIR,
-        WorkflowExecutionArgs.STATUS,
-        WorkflowExecutionArgs.CONTEXT_FILE,
-        WorkflowExecutionArgs.TIMESTAMP,
-    };
-
-    private static final WorkflowExecutionArgs[] USER_FILTER = {
-        WorkflowExecutionArgs.CLUSTER_NAME,
-        WorkflowExecutionArgs.ENTITY_NAME,
-        WorkflowExecutionArgs.ENTITY_TYPE,
-        WorkflowExecutionArgs.NOMINAL_TIME,
-        WorkflowExecutionArgs.OPERATION,
-
-        WorkflowExecutionArgs.FEED_NAMES,
-        WorkflowExecutionArgs.FEED_INSTANCE_PATHS,
-
-        WorkflowExecutionArgs.WORKFLOW_ID,
-        WorkflowExecutionArgs.WORKFLOW_USER,
-        WorkflowExecutionArgs.RUN_ID,
-        WorkflowExecutionArgs.STATUS,
-        WorkflowExecutionArgs.TIMESTAMP,
-        WorkflowExecutionArgs.LOG_FILE,
-    };
-
-
     private final WorkflowExecutionContext context;
     private final MessageType messageType;
 
@@ -170,9 +141,26 @@ public class JMSMessageProducer {
      * Accepts a Message to be send to JMS topic, creates a new
      * Topic based on topic name if it does not exist or else
      * existing topic with the same name is used to send the message.
+     * Sends all arguments.
+     *
+     * @return error code
+     * @throws JMSException
      */
     public int sendMessage() throws JMSException {
-        List<Map<String, String>> messageList = buildMessageList();
+        return sendMessage(WorkflowExecutionArgs.values());
+    }
+
+    /**
+     * Accepts a Message to be send to JMS topic, creates a new
+     * Topic based on topic name if it does not exist or else
+     * existing topic with the same name is used to send the message.
+     *
+     * @param filteredArgs args sent in the message.
+     * @return error code
+     * @throws JMSException
+     */
+    public int sendMessage(WorkflowExecutionArgs[] filteredArgs) throws JMSException {
+        List<Map<String, String>> messageList = buildMessageList(filteredArgs);
 
         if (messageList.isEmpty()) {
             LOG.warn("No operation on output feed");
@@ -198,10 +186,7 @@ public class JMSMessageProducer {
         return 0;
     }
 
-    private List<Map<String, String>> buildMessageList() {
-        WorkflowExecutionArgs[] fileredArgs = messageType == MessageType.FALCON
-                ? FALCON_FILTER : USER_FILTER;
-
+    private List<Map<String, String>> buildMessageList(WorkflowExecutionArgs[] filteredArgs) {
         String[] feedNames = getFeedNames();
         if (feedNames == null) {
             return Collections.emptyList();
@@ -217,7 +202,7 @@ public class JMSMessageProducer {
 
         List<Map<String, String>> messages = new ArrayList<Map<String, String>>(feedPaths.length);
         for (int i = 0; i < feedPaths.length; i++) {
-            Map<String, String> message = buildMessage(fileredArgs);
+            Map<String, String> message = buildMessage(filteredArgs);
 
             // override default values
             if (context.getEntityType().equalsIgnoreCase("PROCESS")) {
@@ -347,7 +332,7 @@ public class JMSMessageProducer {
 
     @SuppressWarnings("unchecked")
     private Connection createAndStartConnection(String implementation, String userName,
-                                          String password, String url)
+                                                String password, String url)
         throws JMSException, ClassNotFoundException, InstantiationException,
                IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
