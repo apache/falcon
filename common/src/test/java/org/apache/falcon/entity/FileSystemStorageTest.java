@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.security.CurrentUser;
@@ -167,11 +168,11 @@ public class FileSystemStorageTest {
         fs.mkdirs(path);
 
         FileSystemStorage storage = new FileSystemStorage(cluster.getConf().get("fs.default.name"), locations);
-        storage.validateACL(user, user, "0x755");
+        storage.validateACL(new TestACL(user, user, "0x755"));
 
         //-ve case
         try {
-            storage.validateACL("random", user, "0x755");
+            storage.validateACL(new TestACL("random", user, "0x755"));
             Assert.fail("Validation should have failed");
         } catch(FalconException e) {
             //expected exception
@@ -179,11 +180,11 @@ public class FileSystemStorageTest {
 
         //Timed path
         location.setPath("/foo/bar/${YEAR}/${MONTH}/${DAY}");
-        storage.validateACL(user, user, "rrr");
+        storage.validateACL(new TestACL(user, user, "rrr"));
 
         //-ve case
         try {
-            storage.validateACL("random", user, "0x755");
+            storage.validateACL(new TestACL("random", user, "0x755"));
             Assert.fail("Validation should have failed");
         } catch(FalconException e) {
             //expected exception
@@ -346,5 +347,44 @@ public class FileSystemStorageTest {
         FileSystemStorage storage2 = new FileSystemStorage(storageUrl, locations2);
 
         Assert.assertFalse(storage1.isIdentical(storage2));
+    }
+
+    private class TestACL extends AccessControlList {
+
+        /**
+         * owner is the Owner of this entity.
+         */
+        private String owner;
+
+        /**
+         * group is the one which has access to read - not used at this time.
+         */
+        private String group;
+
+        /**
+         * permission is not enforced at this time.
+         */
+        private String permission;
+
+        TestACL(String owner, String group, String permission) {
+            this.owner = owner;
+            this.group = group;
+            this.permission = permission;
+        }
+
+        @Override
+        public String getOwner() {
+            return owner;
+        }
+
+        @Override
+        public String getGroup() {
+            return group;
+        }
+
+        @Override
+        public String getPermission() {
+            return permission;
+        }
     }
 }

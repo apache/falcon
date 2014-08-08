@@ -18,20 +18,17 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Security Util - bunch of security related helper methods.
- * Also doles out proxied UserGroupInformation. Caches proxied users.
  */
 public final class SecurityUtil {
 
@@ -57,9 +54,6 @@ public final class SecurityUtil {
     public static final String HIVE_METASTORE_PRINCIPAL = "hive.metastore.kerberos.principal";
 
 
-    private static ConcurrentMap<String, UserGroupInformation> userUgiMap =
-            new ConcurrentHashMap<String, UserGroupInformation>();
-
     private SecurityUtil() {
     }
 
@@ -68,6 +62,11 @@ public final class SecurityUtil {
                 AUTHENTICATION_TYPE, PseudoAuthenticationHandler.TYPE);
     }
 
+    /**
+     * Checks if kerberos authentication is enabled in the configuration.
+     *
+     * @return true if falcon.authentication.type is kerberos, false otherwise
+     */
     public static boolean isSecurityEnabled() {
         String authenticationType = StartupProperties.get().getProperty(
                 AUTHENTICATION_TYPE, PseudoAuthenticationHandler.TYPE);
@@ -85,18 +84,24 @@ public final class SecurityUtil {
         return useKerberos;
     }
 
-    public static UserGroupInformation getProxyUser(String proxyUser) throws IOException {
-        UserGroupInformation proxyUgi = userUgiMap.get(proxyUser);
-        if (proxyUgi == null) {
-            // taking care of a race condition, the latest UGI will be discarded
-            proxyUgi = UserGroupInformation.createProxyUser(proxyUser, UserGroupInformation.getLoginUser());
-            userUgiMap.putIfAbsent(proxyUser, proxyUgi);
-        }
-
-        return proxyUgi;
-    }
-
     public static String getLocalHostName() throws UnknownHostException {
         return InetAddress.getLocalHost().getCanonicalHostName();
+    }
+
+    /**
+     * Checks if authorization is enabled in the configuration.
+     *
+     * @return true if falcon.security.authorization.enabled is enabled, false otherwise
+     */
+    public static boolean isAuthorizationEnabled() {
+        return Boolean.valueOf(StartupProperties.get().getProperty(
+                "falcon.security.authorization.enabled", "false"));
+    }
+
+    public static AuthorizationProvider getAuthorizationProvider() throws FalconException {
+        String providerClassName = StartupProperties.get().getProperty(
+                "falcon.security.authorization.provider",
+                "org.apache.falcon.security.DefaultAuthorizationProvider");
+        return ReflectionUtils.getInstanceByClassName(providerClassName);
     }
 }

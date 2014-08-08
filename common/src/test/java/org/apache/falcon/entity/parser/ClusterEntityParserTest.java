@@ -157,7 +157,10 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         try {
             InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
 
-            Cluster cluster = parser.parse(stream);
+            // need a new parser since it caches authorization enabled flag
+            ClusterEntityParser clusterEntityParser =
+                    (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+            Cluster cluster = clusterEntityParser.parse(stream);
             Assert.assertNotNull(cluster);
             Assert.assertNull(cluster.getACL());
         } finally {
@@ -174,7 +177,10 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         try {
             InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-registry.xml");
 
-            Cluster cluster = parser.parse(stream);
+            // need a new parser since it caches authorization enabled flag
+            ClusterEntityParser clusterEntityParser =
+                    (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+            Cluster cluster = clusterEntityParser.parse(stream);
             Assert.assertNotNull(cluster);
             Assert.assertNotNull(cluster.getACL());
             Assert.assertNotNull(cluster.getACL().getOwner());

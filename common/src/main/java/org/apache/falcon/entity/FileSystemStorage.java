@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -38,6 +39,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
@@ -238,7 +240,7 @@ public class FileSystemStorage implements Storage {
     }
 
     @Override
-    public void validateACL(String owner, String group, String permissions) throws FalconException {
+    public void validateACL(AccessControlList acl) throws FalconException {
         try {
             FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
             for (Location location : getLocations()) {
@@ -246,12 +248,20 @@ public class FileSystemStorage implements Storage {
                 Path path = new Path(pathString);
                 if (fileSystem.exists(path)) {
                     FileStatus fileStatus = fileSystem.getFileStatus(path);
-                    if (!fileStatus.getOwner().equals(owner)) {
-                        LOG.error("Feed ACL owner {} doesn't match the actual owner {} for file {}",
-                                owner, fileStatus.getOwner(), path);
-                        throw new FalconException("Feed ACL owner " + owner
-                                + " doesn't match the actual file owner " + fileStatus.getOwner());
+                    Set<String> groups = CurrentUser.getGroupNames();
+
+                    if (fileStatus.getOwner().equals(acl.getOwner())
+                            || groups.contains(acl.getGroup())) {
+                        return;
                     }
+
+                    LOG.error("Permission denied: Either Feed ACL owner {} or group {} doesn't "
+                                    + "match the actual file owner {} or group {} for file {}",
+                            acl, acl.getGroup(), fileStatus.getOwner(), fileStatus.getGroup(), path);
+                    throw new FalconException("Permission denied: Either Feed ACL owner "
+                            + acl + " or group " + acl.getGroup() + " doesn't match the actual "
+                            + "file owner " + fileStatus.getOwner() + " or group "
+                            + fileStatus.getGroup() + "  for file " + path);
                 }
             }
         } catch (IOException e) {

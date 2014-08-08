@@ -460,8 +460,6 @@ public abstract class AbstractEntityManager {
      *
      * @param type entity type
      * @param fieldStr fields that the query is interested in, separated by comma
-     *
-     * @param type entity type
      * @return String
      */
     public EntityList getEntityList(String type, String fieldStr) {

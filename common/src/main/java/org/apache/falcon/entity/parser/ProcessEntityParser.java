@@ -38,6 +38,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 
 import java.io.IOException;
 import java.util.Date;
@@ -231,7 +232,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
      * @throws ValidationException
      */
     private void validateACL(Process process) throws FalconException {
-        if (!isAuthorizationEnabled()) {
+        if (isAuthorizationDisabled) {
             return;
         }
 
@@ -241,6 +242,10 @@ public class ProcessEntityParser extends EntityParser<Process> {
             throw new ValidationException("Process ACL cannot be empty for:  " + process.getName());
         }
 
-        validateOwner(processACL.getOwner());
+        try {
+            authorize(process.getName(), processACL);
+        } catch (AuthorizationException e) {
+            throw new ValidationException(e);
+        }
     }
 }

@@ -40,6 +40,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +213,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
      * @throws ValidationException
      */
     private void validateACL(Cluster cluster) throws ValidationException {
-        if (!isAuthorizationEnabled()) {
+        if (isAuthorizationDisabled) {
             return;
         }
 
@@ -222,7 +223,11 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             throw new ValidationException("Cluster ACL cannot be empty for:  " + cluster.getName());
         }
 
-        validateOwner(clusterACL.getOwner());
+        try {
+            authorize(cluster.getName(), clusterACL);
+        } catch (AuthorizationException e) {
+            throw new ValidationException(e);
+        }
     }
 
     /**

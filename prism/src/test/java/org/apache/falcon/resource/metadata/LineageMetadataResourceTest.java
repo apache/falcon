@@ -22,27 +22,18 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interface;
-import org.apache.falcon.entity.v0.cluster.Interfaces;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
-import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.EngineType;
-import org.apache.falcon.entity.v0.process.Input;
-import org.apache.falcon.entity.v0.process.Inputs;
-import org.apache.falcon.entity.v0.process.Output;
-import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.metadata.LineageArgs;
 import org.apache.falcon.metadata.LineageRecorder;
 import org.apache.falcon.metadata.MetadataMappingService;
@@ -463,71 +454,34 @@ public class LineageMetadataResourceTest {
     }
 
     public void addClusterEntity() throws Exception {
-        clusterEntity = buildCluster(CLUSTER_ENTITY_NAME, COLO_NAME, "classification=production");
+        clusterEntity = EntityBuilderTestUtil.buildCluster(CLUSTER_ENTITY_NAME,
+                COLO_NAME, "classification=production");
         configStore.publish(EntityType.CLUSTER, clusterEntity);
     }
 
     public void addFeedEntity() throws Exception {
-        Feed impressionsFeed = buildFeed("impression-feed", clusterEntity, "classified-as=Secure", "analytics",
-                        Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}${MONTH}${DAY}");
+        Feed impressionsFeed = EntityBuilderTestUtil.buildFeed("impression-feed", clusterEntity,
+                "classified-as=Secure", "analytics");
+        addStorage(impressionsFeed, Storage.TYPE.FILESYSTEM, "/falcon/impression-feed/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, impressionsFeed);
         inputFeeds.add(impressionsFeed);
 
-        Feed clicksFeed = buildFeed("clicks-feed", clusterEntity, null, null,
-                Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}${MONTH}${DAY}");
+        Feed clicksFeed = EntityBuilderTestUtil.buildFeed("clicks-feed", clusterEntity, null, null);
+        addStorage(clicksFeed, Storage.TYPE.FILESYSTEM, "/falcon/clicks-feed/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, clicksFeed);
         inputFeeds.add(clicksFeed);
 
-        Feed join1Feed = buildFeed("imp-click-join1", clusterEntity, "classified-as=Financial",
-                        "reporting,bi",
-                        Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
+        Feed join1Feed = EntityBuilderTestUtil.buildFeed("imp-click-join1", clusterEntity,
+                "classified-as=Financial", "reporting,bi");
+        addStorage(join1Feed, Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join1Feed);
         outputFeeds.add(join1Feed);
 
-        Feed join2Feed = buildFeed("imp-click-join2", clusterEntity,
-                "classified-as=Secure,classified-as=Financial",
-                "reporting,bi", Storage.TYPE.FILESYSTEM,
-                "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
+        Feed join2Feed = EntityBuilderTestUtil.buildFeed("imp-click-join2", clusterEntity,
+                "classified-as=Secure,classified-as=Financial", "reporting,bi");
+        addStorage(join2Feed, Storage.TYPE.FILESYSTEM, "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
         configStore.publish(EntityType.FEED, join2Feed);
         outputFeeds.add(join2Feed);
-    }
-
-    public static Cluster buildCluster(String name, String colo, String tags) {
-        Cluster cluster = new Cluster();
-        cluster.setName(name);
-        cluster.setColo(colo);
-        cluster.setTags(tags);
-
-        Interfaces interfaces = new Interfaces();
-        cluster.setInterfaces(interfaces);
-
-        Interface storage = new Interface();
-        storage.setEndpoint("jail://global:00");
-        storage.setType(Interfacetype.WRITE);
-        cluster.getInterfaces().getInterfaces().add(storage);
-
-        return cluster;
-    }
-
-    public static Feed buildFeed(String feedName, Cluster cluster, String tags, String groups,
-                                 Storage.TYPE storageType, String uriTemplate) {
-        Feed feed = new Feed();
-        feed.setName(feedName);
-        feed.setTags(tags);
-        feed.setGroups(groups);
-        feed.setFrequency(Frequency.fromString("hours(1)"));
-
-        org.apache.falcon.entity.v0.feed.Clusters
-                clusters = new org.apache.falcon.entity.v0.feed.Clusters();
-        feed.setClusters(clusters);
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
-                new org.apache.falcon.entity.v0.feed.Cluster();
-        feedCluster.setName(cluster.getName());
-        clusters.getClusters().add(feedCluster);
-
-        addStorage(feed, storageType, uriTemplate);
-
-        return feed;
     }
 
     public static void addStorage(Feed feed, Storage.TYPE storageType, String uriTemplate) {
@@ -546,63 +500,17 @@ public class LineageMetadataResourceTest {
         }
     }
 
-    public static Process buildProcess(String processName, Cluster cluster,
-                                       String tags) throws Exception {
-        Process processEntity = new Process();
-        processEntity.setName(processName);
-        processEntity.setTags(tags);
-
-        org.apache.falcon.entity.v0.process.Cluster processCluster =
-                new org.apache.falcon.entity.v0.process.Cluster();
-        processCluster.setName(cluster.getName());
-        processEntity.setClusters(new Clusters());
-        processEntity.getClusters().getClusters().add(processCluster);
-
-        return processEntity;
-    }
-
-    public static void addWorkflow(Process process, String workflowName, String version) {
-        Workflow workflow = new Workflow();
-        workflow.setName(workflowName);
-        workflow.setVersion(version);
-        workflow.setEngine(EngineType.PIG);
-        workflow.setPath("/falcon/test/workflow");
-
-        process.setWorkflow(workflow);
-    }
-
-    public static void addInput(Process process, Feed feed) {
-        if (process.getInputs() == null) {
-            process.setInputs(new Inputs());
-        }
-
-        Inputs inputs = process.getInputs();
-        Input input = new Input();
-        input.setFeed(feed.getName());
-        inputs.getInputs().add(input);
-    }
-
-    public static void addOutput(Process process, Feed feed) {
-        if (process.getOutputs() == null) {
-            process.setOutputs(new Outputs());
-        }
-
-        Outputs outputs = process.getOutputs();
-        Output output = new Output();
-        output.setFeed(feed.getName());
-        outputs.getOutputs().add(output);
-    }
-
     public void addProcessEntity() throws Exception {
-        Process processEntity = buildProcess(PROCESS_ENTITY_NAME, clusterEntity, "classified-as=Critical");
-        addWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
+        Process processEntity = EntityBuilderTestUtil.buildProcess(PROCESS_ENTITY_NAME,
+                clusterEntity, "classified-as=Critical");
+        EntityBuilderTestUtil.addProcessWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
 
         for (Feed inputFeed : inputFeeds) {
-            addInput(processEntity, inputFeed);
+            EntityBuilderTestUtil.addInput(processEntity, inputFeed);
         }
 
         for (Feed outputFeed : outputFeeds) {
-            addOutput(processEntity, outputFeed);
+            EntityBuilderTestUtil.addOutput(processEntity, outputFeed);
         }
 
         configStore.publish(EntityType.PROCESS, processEntity);

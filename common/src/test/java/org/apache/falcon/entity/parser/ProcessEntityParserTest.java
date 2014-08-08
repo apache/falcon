@@ -367,13 +367,16 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         CurrentUser.authenticate("falcon");
 
         try {
+            // need a new parser since it caches authorization enabled flag
+            ProcessEntityParser processEntityParser =
+                    (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
             InputStream stream = this.getClass().getResourceAsStream(PROCESS_XML);
 
-            Process process = parser.parse(stream);
+            Process process = processEntityParser.parse(stream);
             Assert.assertNotNull(process);
             Assert.assertNull(process.getACL());
 
-            parser.validate(process);
+            processEntityParser.validate(process);
             Assert.fail("Validation exception should have been thrown for empty ACL");
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
@@ -381,7 +384,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
     }
 
     @Test
-    public void testValidateACLAuthorizationEnabled() throws Exception {
+    public void testValidateACLAuthorizationEnabledValidOwnerBadGroup() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
@@ -390,7 +393,10 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         try {
             InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
 
-            Process process = parser.parseAndValidate(stream);
+            // need a new parser since it caches authorization enabled flag
+            ProcessEntityParser processEntityParser =
+                    (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+            Process process = processEntityParser.parseAndValidate(stream);
             Assert.assertNotNull(process);
             Assert.assertNotNull(process.getACL());
             Assert.assertNotNull(process.getACL().getOwner());
@@ -401,8 +407,37 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         }
     }
 
+    @Test
+    public void testValidateACLAuthorizationEnabledValidGroupBadOwner() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+        CurrentUser.authenticate(USER); // valid user but acl owner is falcon
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
+
+            // need a new parser since it caches authorization enabled flag
+            ProcessEntityParser processEntityParser =
+                    (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+            Process process = processEntityParser.parse(stream);
+            Assert.assertNotNull(process);
+            Assert.assertNotNull(process.getACL());
+            Assert.assertNotNull(process.getACL().getOwner());
+            Assert.assertNotNull(process.getACL().getGroup());
+            Assert.assertNotNull(process.getACL().getPermission());
+
+            process.getACL().setOwner(USER);
+            process.getACL().setGroup(getGroupName());
+
+            processEntityParser.validate(process);
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
     @Test (expectedExceptions = ValidationException.class)
-    public void testValidateACLAuthorizationEnabledBadOwner() throws Exception {
+    public void testValidateACLAuthorizationEnabledBadOwnerAndGroup() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
@@ -411,7 +446,10 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         try {
             InputStream stream = this.getClass().getResourceAsStream("/config/process/process-table.xml");
 
-            Process process = parser.parse(stream);
+            // need a new parser since it caches authorization enabled flag
+            ProcessEntityParser processEntityParser =
+                    (ProcessEntityParser) EntityParserFactory.getParser(EntityType.PROCESS);
+            Process process = processEntityParser.parse(stream);
 
             Assert.assertNotNull(process);
             Assert.assertNotNull(process.getACL());
@@ -419,7 +457,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             Assert.assertNotNull(process.getACL().getGroup());
             Assert.assertNotNull(process.getACL().getPermission());
 
-            parser.validate(process);
+            processEntityParser.validate(process);
             Assert.fail("Validation exception should have been thrown for invalid owner");
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");

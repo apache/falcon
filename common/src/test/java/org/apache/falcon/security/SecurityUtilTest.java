@@ -19,7 +19,6 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -61,9 +60,25 @@ public class SecurityUtilTest {
     }
 
     @Test
-    public void testGetProxyUser() throws Exception {
-        UserGroupInformation proxyUgi = SecurityUtil.getProxyUser("proxy");
-        Assert.assertNotNull(proxyUgi);
-        Assert.assertEquals(proxyUgi.getUserName(), "proxy");
+    public void testIsAuthorizationEnabledByDefault() throws Exception {
+        Assert.assertFalse(SecurityUtil.isAuthorizationEnabled());
+    }
+
+    @Test
+    public void testIsAuthorizationEnabled() throws Exception {
+        try {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+            Assert.assertTrue(SecurityUtil.isAuthorizationEnabled());
+        } finally {
+            // reset
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test
+    public void testGetAuthorizationProviderByDefault() throws Exception {
+        Assert.assertNotNull(SecurityUtil.getAuthorizationProvider());
+        Assert.assertEquals(SecurityUtil.getAuthorizationProvider().getClass(),
+                DefaultAuthorizationProvider.class);
     }
 }

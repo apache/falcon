@@ -26,12 +26,22 @@
     <description>Apache Falcon Prism</description>
 
     <filter>
-        <filter-name>auth</filter-name>
-        <filter-class>org.apache.falcon.security.BasicAuthFilter</filter-class>
+        <filter-name>authentication</filter-name>
+        <filter-class>org.apache.falcon.security.FalconAuthenticationFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>authorization</filter-name>
+        <filter-class>org.apache.falcon.security.FalconAuthorizationFilter</filter-class>
     </filter>
 
     <filter-mapping>
-        <filter-name>auth</filter-name>
+        <filter-name>authentication</filter-name>
+        <servlet-name>FalconProxyAPI</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>authorization</filter-name>
         <servlet-name>FalconProxyAPI</servlet-name>
     </filter-mapping>
 

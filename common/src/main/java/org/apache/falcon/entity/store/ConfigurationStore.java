@@ -108,7 +108,7 @@ public final class ConfigurationStore implements FalconService {
 
             return fileSystem;
         } catch (Exception e) {
-            throw new RuntimeException("Unable to bring up config store", e);
+            throw new RuntimeException("Unable to bring up config store for path: " + storePath, e);
         }
     }
 

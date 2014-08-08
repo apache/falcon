@@ -21,7 +21,6 @@ package org.apache.falcon.security;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -46,11 +45,12 @@ import java.util.UUID;
 
 /**
  * This enforces authentication as part of the filter before processing the request.
- * Subclass of {@link AuthenticationFilter}.
+ * Subclass of {@link org.apache.hadoop.security.authentication.server.AuthenticationFilter}.
  */
-public class BasicAuthFilter extends AuthenticationFilter {
+public class FalconAuthenticationFilter
+        extends org.apache.hadoop.security.authentication.server.AuthenticationFilter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BasicAuthFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FalconAuthenticationFilter.class);
 
     /**
      * Constant for the configuration property that indicates the prefix.
@@ -78,7 +78,7 @@ public class BasicAuthFilter extends AuthenticationFilter {
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        LOG.info("BasicAuthFilter initialization started");
+        LOG.info("FalconAuthenticationFilter initialization started");
         super.init(filterConfig);
 
         optionsServlet = new HttpServlet() {};
@@ -114,7 +114,8 @@ public class BasicAuthFilter extends AuthenticationFilter {
         Properties configProperties = StartupProperties.get();
 
         // setting the cookie path to root '/' so it is used for all resources.
-        authProperties.setProperty(AuthenticationFilter.COOKIE_PATH, "/");
+        authProperties.setProperty(
+                org.apache.hadoop.security.authentication.server.AuthenticationFilter.COOKIE_PATH, "/");
 
         for (Map.Entry entry : configProperties.entrySet()) {
             String name = (String) entry.getKey();

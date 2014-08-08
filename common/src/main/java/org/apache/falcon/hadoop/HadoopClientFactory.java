@@ -100,37 +100,27 @@ public final class HadoopClientFactory {
         }
     }
 
+    /**
+     * Return a FileSystem created with the authenticated proxy user for the specified conf.
+     *
+     * @param conf Configuration with all necessary information to create the FileSystem.
+     * @return FileSystem created with the provided proxyUser/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
     public FileSystem createProxiedFileSystem(final Configuration conf)
         throws FalconException {
         Validate.notNull(conf, "configuration cannot be null");
 
         String nameNode = conf.get(FS_DEFAULT_NAME_KEY);
         try {
-            return createProxiedFileSystem(CurrentUser.getUser(), new URI(nameNode), conf);
+            return createFileSystem(CurrentUser.getProxyUgi(), new URI(nameNode), conf);
         } catch (URISyntaxException e) {
-            throw new FalconException("Exception while getting FileSystem for: " + nameNode, e);
-        }
-    }
-
-    /**
-     * Return a FileSystem created with the provided proxyUser for the specified URI.
-     *
-     * @param proxyUser proxyUser
-     * @param uri  file system URI.
-     * @param conf Configuration with all necessary information to create the FileSystem.
-     * @return FileSystem created with the provided proxyUser/group.
-     * @throws org.apache.falcon.FalconException
-     *          if the filesystem could not be created.
-     */
-    public FileSystem createProxiedFileSystem(String proxyUser, final URI uri, final Configuration conf)
-        throws FalconException {
-        Validate.notEmpty(proxyUser, "proxyUser cannot be null");
-
-        try {
-            UserGroupInformation proxyUgi = SecurityUtil.getProxyUser(proxyUser);
-            return createFileSystem(proxyUgi, uri, conf);
-        } catch (IOException ex) {
-            throw new FalconException("Exception while getting FileSystem: " + ex.getMessage(), ex);
+            throw new FalconException("Exception while getting FileSystem for proxy: "
+                    + CurrentUser.getUser(), e);
+        } catch (IOException e) {
+            throw new FalconException("Exception while getting FileSystem for proxy: "
+                    + CurrentUser.getUser(), e);
         }
     }
 

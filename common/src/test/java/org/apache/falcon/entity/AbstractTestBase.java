@@ -39,14 +39,18 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
  * Base class for config store test.
  */
 public class AbstractTestBase {
+    protected static final String USER = System.getProperty("user.name");
+
     protected static final String PROCESS_XML = "/config/process/process-0.1.xml";
     protected static final String FEED_XML = "/config/feed/feed-0.1.xml";
     protected static final String CLUSTER_XML = "/config/cluster/cluster-0.1.xml";
@@ -137,5 +141,16 @@ public class AbstractTestBase {
         StringWriter stringWriter = new StringWriter();
         marshaller.marshal(entity, stringWriter);
         return stringWriter.toString();
+    }
+
+
+    protected String getGroupName() throws IOException {
+        return getGroupName(true);
+    }
+
+    protected String getGroupName(boolean first) throws IOException {
+        String[] groupNames = CurrentUser.getProxyUgi().getGroupNames();
+        System.out.println("groupNames = " + Arrays.asList(groupNames));
+        return groupNames.length > 1 ? groupNames[first ? 0 : groupNames.length - 1] : "admin";
     }
 }

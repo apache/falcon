@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
@@ -339,7 +340,7 @@ public class CatalogStorage implements Storage {
     }
 
     @Override
-    public void validateACL(String owner, String group, String permissions) throws FalconException {
+    public void validateACL(AccessControlList acl) throws FalconException {
         // This is not supported in Hive today as authorization is not enforced on table and
         // partition listing
     }

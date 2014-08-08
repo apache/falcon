@@ -30,6 +30,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
@@ -41,6 +42,7 @@ import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.group.FeedGroup;
 import org.apache.falcon.group.FeedGroupMap;
 import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -404,11 +406,16 @@ public class FeedEntityParser extends EntityParser<Feed> {
      * @throws ValidationException
      */
     private void validateACL(Feed feed) throws FalconException {
-        if (!isAuthorizationEnabled()) {
+        if (isAuthorizationDisabled) {
             return;
         }
 
-        validateOwner(feed.getACL().getOwner());
+        final ACL feedACL = feed.getACL();
+        try {
+            authorize(feed.getName(), feedACL);
+        } catch (AuthorizationException e) {
+            throw new ValidationException(e);
+        }
 
         for (Cluster cluster : feed.getClusters().getClusters()) {
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
@@ -419,7 +426,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
             final Storage storage = FeedHelper.createStorage(cluster, feed);
             try {
-                storage.validateACL(feed.getACL().getOwner(), feed.getACL().getGroup(), feed.getACL().getPermission());
+                storage.validateACL(feedACL);
             } catch(FalconException e) {
                 throw new ValidationException(e);
             }

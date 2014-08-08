@@ -41,9 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * Test for BasicAuthFilter using mock objects.
+ * Test for FalconAuthenticationFilter using mock objects.
  */
-public class BasicAuthFilterTest {
+public class FalconAuthenticationFilterTest {
 
     @Mock
     private HttpServletRequest mockRequest;
@@ -85,7 +85,7 @@ public class BasicAuthFilterTest {
 
     @Test
     public void testDoFilter() throws Exception {
-        Filter filter = new BasicAuthFilter();
+        Filter filter = new FalconAuthenticationFilter();
         synchronized (StartupProperties.get()) {
             filter.init(mockConfig);
         }
@@ -108,7 +108,7 @@ public class BasicAuthFilterTest {
 
     @Test
     public void testAnonymous() throws Exception {
-        Filter filter = new BasicAuthFilter();
+        Filter filter = new FalconAuthenticationFilter();
 
         synchronized (StartupProperties.get()) {
             filter.init(mockConfig);
@@ -125,7 +125,7 @@ public class BasicAuthFilterTest {
 
     @Test
     public void testEmptyUser() throws Exception {
-        Filter filter = new BasicAuthFilter();
+        Filter filter = new FalconAuthenticationFilter();
 
         synchronized (StartupProperties.get()) {
             filter.init(mockConfig);
@@ -148,7 +148,7 @@ public class BasicAuthFilterTest {
 
     @Test
     public void testDoFilterForClientBackwardsCompatibility() throws Exception {
-        Filter filter = new BasicAuthFilter();
+        Filter filter = new FalconAuthenticationFilter();
 
         final String userName = System.getProperty("user.name");
         final String httpAuthType =
@@ -179,7 +179,7 @@ public class BasicAuthFilterTest {
 
     @Test
     public void testGetKerberosPrincipalWithSubstitutedHostSecure() throws Exception {
-        String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
+        String principal = StartupProperties.get().getProperty(FalconAuthenticationFilter.KERBEROS_PRINCIPAL);
 
         String expectedPrincipal = "falcon/" + SecurityUtil.getLocalHostName() + "@Example.com";
         try {
@@ -189,26 +189,26 @@ public class BasicAuthFilterTest {
             Assert.assertTrue(UserGroupInformation.isSecurityEnabled());
 
             StartupProperties.get().setProperty(
-                    BasicAuthFilter.KERBEROS_PRINCIPAL, "falcon/_HOST@Example.com");
-            BasicAuthFilter filter = new BasicAuthFilter();
-            Properties properties = filter.getConfiguration(BasicAuthFilter.FALCON_PREFIX, null);
+                    FalconAuthenticationFilter.KERBEROS_PRINCIPAL, "falcon/_HOST@Example.com");
+            FalconAuthenticationFilter filter = new FalconAuthenticationFilter();
+            Properties properties = filter.getConfiguration(FalconAuthenticationFilter.FALCON_PREFIX, null);
             Assert.assertEquals(
                     properties.get(KerberosAuthenticationHandler.PRINCIPAL), expectedPrincipal);
         } finally {
-            StartupProperties.get().setProperty(BasicAuthFilter.KERBEROS_PRINCIPAL, principal);
+            StartupProperties.get().setProperty(FalconAuthenticationFilter.KERBEROS_PRINCIPAL, principal);
         }
     }
 
     @Test
     public void testGetKerberosPrincipalWithSubstitutedHostNonSecure() throws Exception {
-        String principal = StartupProperties.get().getProperty(BasicAuthFilter.KERBEROS_PRINCIPAL);
+        String principal = StartupProperties.get().getProperty(FalconAuthenticationFilter.KERBEROS_PRINCIPAL);
         Configuration conf = new Configuration(false);
         conf.set("hadoop.security.authentication", "simple");
         UserGroupInformation.setConfiguration(conf);
         Assert.assertFalse(UserGroupInformation.isSecurityEnabled());
 
-        BasicAuthFilter filter = new BasicAuthFilter();
-        Properties properties = filter.getConfiguration(BasicAuthFilter.FALCON_PREFIX, null);
+        FalconAuthenticationFilter filter = new FalconAuthenticationFilter();
+        Properties properties = filter.getConfiguration(FalconAuthenticationFilter.FALCON_PREFIX, null);
         Assert.assertEquals(properties.get(KerberosAuthenticationHandler.PRINCIPAL), principal);
     }
 }

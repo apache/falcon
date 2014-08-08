@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.UnschedulableEntityException;
 import org.apache.falcon.monitors.Dimension;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     /**
      * Schedules an submitted entity immediately.
      *
-     * @param type
-     * @param entity
+     * @param type   entity type
+     * @param entity entity name
      * @return APIResult
      */
     public APIResult schedule(
@@ -63,7 +64,9 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
         }
     }
 
-    private synchronized void scheduleInternal(String type, String entity) throws FalconException {
+    private synchronized void scheduleInternal(String type, String entity)
+        throws FalconException, AuthorizationException {
+
         checkSchedulableEntity(type);
         Entity entityObj = EntityUtil.getEntity(type, entity);
         getWorkflowEngine().schedule(entityObj);
@@ -72,8 +75,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     /**
      * Submits a new entity and schedules it immediately.
      *
-     * @param type
-     * @return
+     * @param type   entity type
+     * @return APIResult
      */
     public APIResult submitAndSchedule(
             @Context HttpServletRequest request, @Dimension("entityType") @PathParam("type") String type,
@@ -95,8 +98,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     /**
      * Suspends a running entity.
      *
-     * @param type
-     * @param entity
+     * @param type   entity type
+     * @param entity entity name
      * @return APIResult
      */
     public APIResult suspend(
@@ -123,8 +126,8 @@ public abstract class AbstractSchedulableEntityManager extends AbstractEntityMan
     /**
      * Resumes a suspended entity.
      *
-     * @param type
-     * @param entity
+     * @param type   entity type
+     * @param entity entity name
      * @return APIResult
      */
     public APIResult resume(

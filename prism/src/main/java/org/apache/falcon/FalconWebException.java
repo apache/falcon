@@ -21,6 +21,7 @@ package org.apache.falcon;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +38,13 @@ public class FalconWebException extends WebApplicationException {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconWebException.class);
 
-    public static FalconWebException newException(Throwable e, Response.Status status) {
-        return newException(getMessage(e), status);
+    public static FalconWebException newException(Throwable e,
+                                                  Response.Status status) {
+        if (e instanceof AuthorizationException) {
+            status = Response.Status.FORBIDDEN;
+        }
+
+        return newException(e.getMessage(), status);
     }
 
     public static FalconWebException newInstanceException(Throwable e, Response.Status status) {

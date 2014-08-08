@@ -18,6 +18,7 @@
 
 package org.apache.falcon.security;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -31,5 +32,13 @@ public class CurrentUserTest {
         String id = Long.toString(System.nanoTime());
         CurrentUser.authenticate(id);
         Assert.assertEquals(CurrentUser.getUser(), id);
+    }
+
+    @Test
+    public void testGetProxyUser() throws Exception {
+        CurrentUser.authenticate("proxy");
+        UserGroupInformation proxyUgi = CurrentUser.getProxyUgi();
+        Assert.assertNotNull(proxyUgi);
+        Assert.assertEquals(proxyUgi.getUserName(), "proxy");
     }
 }

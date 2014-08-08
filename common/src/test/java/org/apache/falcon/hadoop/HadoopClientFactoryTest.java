@@ -19,6 +19,7 @@
 package org.apache.falcon.hadoop;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.ipc.RemoteException;
@@ -58,11 +59,12 @@ public class HadoopClientFactoryTest {
     @Test (enabled = false) // todo: cheated the conf to impersonate as same user
     public void testCreateFileSystemWithSameUser() {
         String user = System.getProperty("user.name");
+        CurrentUser.authenticate(user);
         try {
             Configuration conf = embeddedCluster.getConf();
             URI uri = new URI(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
             Assert.assertNotNull(uri);
-            HadoopClientFactory.get().createProxiedFileSystem(user, uri, conf);
+            HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUgi(), uri, conf);
             Assert.fail("Impersonation should have failed.");
         } catch (Exception e) {
             Assert.assertEquals(e.getCause().getClass(), RemoteException.class);
@@ -80,7 +82,7 @@ public class HadoopClientFactoryTest {
 
         URI uri = new URI(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
         Assert.assertNotNull(uri);
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem("testuser", uri, conf);
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(realUser, uri, conf);
         Assert.assertNotNull(fs);
     }
 
@@ -95,7 +97,9 @@ public class HadoopClientFactoryTest {
 
         URI uri = new URI(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
         Assert.assertNotNull(uri);
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem("seetharam", uri, conf);
+
+        CurrentUser.authenticate(System.getProperty("user.name"));
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUgi(), uri, conf);
         Assert.assertNotNull(fs);
     }
 }
