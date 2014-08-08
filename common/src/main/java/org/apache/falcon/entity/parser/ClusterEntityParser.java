@@ -18,10 +18,6 @@
 
 package org.apache.falcon.entity.parser;
 
-import java.io.IOException;
-
-import javax.jms.ConnectionFactory;
-
 import org.apache.commons.lang.Validate;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
@@ -29,18 +25,26 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.StoreAccessException;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.ConnectionFactory;
+import java.io.IOException;
 
 /**
  * Parser that parses cluster entity definition.
@@ -75,6 +79,9 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateWorkflowInterface(cluster);
         validateMessagingInterface(cluster);
         validateRegistryInterface(cluster);
+
+        validateACL(cluster);
+        validateLocations(cluster);
     }
 
     private void validateScheme(Cluster cluster, Interfacetype interfacetype)
@@ -195,6 +202,79 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             }
         } catch (FalconException e) {
             throw new ValidationException("Invalid Catalog server or port: " + catalogUrl, e);
+        }
+    }
+
+    /**
+     * Validate ACL if authorization is enabled.
+     *
+     * @param cluster cluster entity
+     * @throws ValidationException
+     */
+    private void validateACL(Cluster cluster) throws ValidationException {
+        if (!isAuthorizationEnabled()) {
+            return;
+        }
+
+        // Validate the entity owner is logged-in, authenticated user if authorization is enabled
+        final ACL clusterACL = cluster.getACL();
+        if (clusterACL == null) {
+            throw new ValidationException("Cluster ACL cannot be empty for:  " + cluster.getName());
+        }
+
+        validateOwner(clusterACL.getOwner());
+    }
+
+    /**
+     * Validate the locations on the cluster is owned by falcon.
+     *
+     * @param cluster cluster entity
+     * @throws ValidationException
+     */
+    private void validateLocations(Cluster cluster) throws ValidationException {
+        try {
+            Configuration conf = ClusterHelper.getConfiguration(cluster);
+            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+            for (Location location : cluster.getLocations().getLocations()) {
+                if (location.getName().equals("temp")) {
+                    continue;
+                }
+
+                try {
+                    Path locationPath = new Path(location.getPath());
+                    if (fs.exists(locationPath)) {
+                        FileStatus fileStatus = fs.getFileStatus(locationPath);
+                        checkPathPermissions(locationPath, fileStatus);
+                        checkPathOwner(locationPath, fileStatus);
+                    }
+                } catch (IOException e) {
+                    throw new ValidationException("Unable to validate the location " + location
+                            + "for cluster.", e);
+                }
+            }
+        } catch (FalconException e) {
+            throw new ValidationException("Unable to validate the locations for cluster.", e);
+        }
+    }
+
+    private void checkPathPermissions(Path locationPath,
+                                      FileStatus fileStatus) throws ValidationException {
+        if (fileStatus.getPermission().getUserAction() != FsAction.ALL) {
+            LOG.error("Path {} doesn't have rwx permissions {}",
+                    locationPath, fileStatus.getPermission());
+            throw new ValidationException("Path " + locationPath
+                    + " doesn't have rwx permissions: " + fileStatus.getPermission());
+        }
+    }
+
+    private void checkPathOwner(Path locationPath,
+                                FileStatus fileStatus) throws IOException, ValidationException {
+        final String owner = UserGroupInformation.getLoginUser().getShortUserName();
+        if (!fileStatus.getOwner().equals(owner)) {
+            LOG.error("Path {} with owner {} doesn't match the actual path owner {}",
+                    locationPath, owner, fileStatus.getOwner());
+            throw new ValidationException("Path [" + locationPath + "] with owner [" + owner
+                    + "] doesn't match the actual path  owner " + fileStatus.getOwner());
         }
     }
 }

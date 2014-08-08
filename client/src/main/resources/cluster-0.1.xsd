@@ -69,6 +69,7 @@
             </xs:element>
             <xs:element type="interfaces" name="interfaces"/>
             <xs:element type="locations" name="locations"/>
+            <xs:element type="ACL" name="ACL" minOccurs="0" maxOccurs="1"/>
             <xs:element type="properties" name="properties" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="IDENTIFIER" name="name" use="required"/>
@@ -186,4 +187,17 @@
             <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:complexType name="ACL">
+        <xs:annotation>
+            <xs:documentation>
+                Access control list for this cluster.
+                owner is the Owner of this entity.
+                group is the one which has access to read - not used at this time.
+                permission is not enforced at this time
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="owner"/>
+        <xs:attribute type="xs:string" name="group"/>
+        <xs:attribute type="xs:string" name="permission" default="*"/>
+    </xs:complexType>
 </xs:schema>

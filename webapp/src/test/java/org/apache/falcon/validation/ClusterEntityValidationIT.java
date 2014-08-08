@@ -18,13 +18,10 @@
 
 package org.apache.falcon.validation;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Map;
-
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -34,7 +31,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.sun.jersey.api.client.ClientResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Tests cluster entity validation to verify if each of the specified
@@ -100,5 +100,27 @@ public class ClusterEntityValidationIT {
         EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertFailure(response);
+    }
+
+    @Test
+    public void testValidateACL() throws Exception {
+        overlay = context.getUniqueOverlay();
+        String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
+        InputStream stream = new FileInputStream(filePath);
+        Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
+        Assert.assertNotNull(cluster);
+
+        // Adding ACL with authorization disabled must not hurt
+        ACL clusterACL = new ACL();
+        clusterACL.setOwner(TestContext.REMOTE_USER);
+        clusterACL.setGroup(TestContext.REMOTE_USER);
+        cluster.setACL(clusterACL);
+
+        cluster.setColo("default");  // validations will be ignored if not default & tests fail
+
+        File tmpFile = TestContext.getTempFile();
+        EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
+        ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
+        context.assertSuccessful(response);
     }
 }

@@ -24,6 +24,8 @@ import org.apache.falcon.Pair;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.StartupProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,4 +111,27 @@ public abstract class EntityParser<T extends Entity> {
     }
 
     public abstract void validate(T entity) throws FalconException;
+
+    /**
+     * Validate if the entity owner is the logged-in authenticated user.
+     *
+     * @param owner entity owner in ACL
+     * @throws ValidationException
+     */
+    protected void validateOwner(String owner) throws ValidationException {
+        if (!CurrentUser.getUser().equals(owner)) {
+            throw new ValidationException("Entity's owner " + owner
+                    + " is not same as the logged in user " + CurrentUser.getUser());
+        }
+    }
+
+    /**
+     * Checks if the user has enabled authorization in the configuration.
+     *
+     * @return true if falcon.security.authorization.enabled is enabled, false otherwise
+     */
+    protected boolean isAuthorizationEnabled() {
+        return Boolean.valueOf(StartupProperties.get().getProperty(
+                "falcon.security.authorization.enabled", "false"));
+    }
 }

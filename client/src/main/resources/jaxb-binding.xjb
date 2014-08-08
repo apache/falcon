@@ -28,6 +28,10 @@
         <inheritance:extends>org.apache.falcon.entity.v0.Entity</inheritance:extends>
     </jaxb:bindings>
 
+    <jaxb:bindings schemaLocation="cluster-0.1.xsd" node="//xs:complexType[@name='ACL']">
+        <inheritance:extends>org.apache.falcon.entity.v0.AccessControlList</inheritance:extends>
+    </jaxb:bindings>
+
     <jaxb:bindings schemaLocation="feed-0.1.xsd" node="//xs:complexType[@name='feed']">
         <inheritance:extends>org.apache.falcon.entity.v0.Entity</inheritance:extends>
     </jaxb:bindings>

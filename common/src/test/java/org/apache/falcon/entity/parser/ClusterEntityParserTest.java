@@ -148,6 +148,42 @@ public class ClusterEntityParserTest extends AbstractTestBase {
         }
     }
 
+    @Test
+    public void testValidateACLWithNoACLAndAuthorizationEnabled() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(CLUSTER_XML);
+
+            Cluster cluster = parser.parse(stream);
+            Assert.assertNotNull(cluster);
+            Assert.assertNull(cluster.getACL());
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    @Test
+    public void testValidateACLAuthorizationEnabled() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+                StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/cluster/cluster-no-registry.xml");
+
+            Cluster cluster = parser.parse(stream);
+            Assert.assertNotNull(cluster);
+            Assert.assertNotNull(cluster.getACL());
+            Assert.assertNotNull(cluster.getACL().getOwner());
+            Assert.assertNotNull(cluster.getACL().getGroup());
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
     @BeforeClass
     public void init() throws Exception {
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
