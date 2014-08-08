@@ -17,7 +17,9 @@ The colo specifies the colo to which this cluster belongs to and name is the nam
 be unique.
 
 
-A cluster has varies interfaces as described below:
+---+++ Interfaces
+
+A cluster has various interfaces as described below:
 <verbatim>
     <interface type="readonly" endpoint="hftp://localhost:50010" version="0.20.2" />
 </verbatim>
@@ -56,14 +58,31 @@ Although Hive metastore supports both RPC and HTTP, Falcon comes with an impleme
 </verbatim>
 A messaging interface specifies the interface for sending feed availability messages, it's endpoint is broker url with tcp address.
 
+---+++ Locations
+
 A cluster has a list of locations defined:
 <verbatim>
 <location name="staging" path="/projects/falcon/staging" />
+<location name="working" path="/projects/falcon/working" />
 </verbatim>
 Location has the name and the path, name is the type of locations like staging, temp and working.
 and path is the hdfs path for each location.
 Falcon would use the location to do intermediate processing of entities in hdfs and hence Falcon
 should have read/write/execute permission on these locations.
+
+---+++ ACL
+
+A cluster has ACL (Access Control List) useful for implementing permission requirements
+and provide a way to set different permissions for specific users or named groups.
+<verbatim>
+    <ACL owner="test-user" group="test-group" permission="*"/>
+</verbatim>
+ACL indicates the Access control list for this cluster.
+owner is the Owner of this entity.
+group is the one which has access to read.
+permission indicates the permission.
+
+---+++ Custom Properties
 
 A cluster has a list of properties:
 A key-value pair, which are propagated to the workflow engine.
@@ -217,7 +236,19 @@ upto 8 hours then late-arrival's cut-off="hours(8)"
 
 *Note:* This will only apply for !FileSystem storage but not Table storage until a future time.
 
----++++ Custom Properties
+---+++ ACL
+
+A feed has ACL (Access Control List) useful for implementing permission requirements
+and provide a way to set different permissions for specific users or named groups.
+<verbatim>
+    <ACL owner="test-user" group="test-group" permission="*"/>
+</verbatim>
+ACL indicates the Access control list for this cluster.
+owner is the Owner of this entity.
+group is the one which has access to read.
+permission indicates the permission.
+
+---+++ Custom Properties
 
 <verbatim>
     <properties>
@@ -240,7 +271,7 @@ waiting for the feed instance and parallel decides the concurrent replication in
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  
 
 The different details of process are:
----++++ Name
+---+++ Name
 Each process is identified with a unique name.
 Syntax:
 <verbatim>
@@ -249,7 +280,7 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Cluster
+---+++ Cluster
 The cluster on which the workflow should run. A process should contain one or more clusters. Cluster definition for the cluster name gives the end points for workflow execution, name node, job tracker, messaging and so on. Each cluster inturn has validity mentioned, which tell the times between which the job should run on that specified cluster. 
 Syntax:
 <verbatim>
@@ -270,7 +301,7 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Parallel
+---+++ Parallel
 Parallel defines how many instances of the workflow can run concurrently. It should be a positive integer > 0.
 For example, parallel of 1 ensures that only one instance of the workflow can run at a time. The next instance will start only after the running instance completes.
 Syntax:
@@ -282,7 +313,7 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Order
+---+++ Order
 Order defines the order in which the ready instances are picked up. The possible values are FIFO(First In First Out), LIFO(Last In First Out), and ONLYLAST(Last Only).
 Syntax:
 <verbatim>
@@ -293,7 +324,7 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Timeout
+---+++ Timeout
 A optional Timeout specifies the maximum time an instance waits for a dataset before being killed by the workflow engine, a time out is specified like frequency.
 If timeout is not specified, falcon computes a default timeout for a process based on its frequency, which is six times of the frequency of process or 30 minutes if computed timeout is less than 30 minutes.
 <verbatim>
@@ -304,7 +335,7 @@ If timeout is not specified, falcon computes a default timeout for a process bas
 </process>
 </verbatim>
 
----++++ Frequency
+---+++ Frequency
 Frequency defines how frequently the workflow job should run. For example, hours(1) defines the frequency as hourly, days(7) defines weekly frequency. The values for timeunit can be minutes/hours/days/months and the frequency number should be a positive integer > 0. 
 Syntax:
 <verbatim>
@@ -315,7 +346,7 @@ Syntax:
 </process>
 </verbatim>
 
----++++ Validity
+---+++ Validity
 Validity defines how long the workflow should run. It has 3 components - start time, end time and timezone. Start time and end time are timestamps defined in yyyy-MM-dd'T'HH:mm'Z' format and should always be in UTC. Timezone is used to compute the next instances starting from start time. The workflow will start at start time and end before end time specified on a given cluster. So, there will not be a workflow instance at end time.
 Syntax:
 <verbatim>
@@ -347,7 +378,7 @@ The daily workflow will start on Jan 1st 2012 at 00:40 UTC, it will run at 40th 
 </verbatim>
 The hourly workflow will start on March 11th 2012 at 00:40 PST, the next instances will be at 01:40 PST, 03:40 PDT, 04:40 PDT and so on till 23:40 PDT. So, there will be just 23 instances of the workflow for March 11th 2012 because of DST switch.
 
----++++ Inputs
+---+++ Inputs
 Inputs define the input data for the workflow. The workflow job will start executing only after the schedule time and when all the inputs are available. There can be 0 or more inputs and each of the input maps to a feed. The path and frequency of input data is picked up from feed definition. Each input should also define start and end instances in terms of [[FalconDocumentation][EL expressions]] and can optionally specify specific partition of input that the workflow requires. The components in partition should be subset of partitions defined in the feed.
 
 For each input, Falcon will create a property with the input name that contains the comma separated list of input paths. This property can be used in workflow actions like pig scripts and so on.
@@ -447,7 +478,7 @@ Example workflow configuration:
 </verbatim>
 
 
----++++ Optional Inputs
+---+++ Optional Inputs
 User can mention one or more inputs as optional inputs. In such cases the job does not wait on those inputs which are
 mentioned as optional. If they are present it considers them otherwise continue with the compulsory ones.
 Example:
@@ -477,7 +508,7 @@ Example:
 *Note:* This is only supported for !FileSystem storage but not Table storage at this point.
 
 
----++++ Outputs
+---+++ Outputs
 Outputs define the output data that is generated by the workflow. A process can define 0 or more outputs. Each output is mapped to a feed and the output path is picked up from feed definition. The output instance that should be generated is specified in terms of [[FalconDocumentation][EL expression]].
 
 For each output, Falcon creates a property with output name that contains the path of output data. This can be used in workflows to store in the path.
@@ -561,7 +592,7 @@ Example workflow configuration:
 </configuration>
 </verbatim>
 
----++++ Properties
+---+++ Custom Properties
 The properties are key value pairs that are passed to the workflow. These properties are optional and can be used
 in workflow to parameterize the workflow.
 Syntax:
@@ -582,7 +613,7 @@ queueName and jobPriority are special properties, which when present are used by
         <property name="jobPriority" value="VERY_HIGH"/>
 </verbatim>
 
----++++ Workflow
+---+++ Workflow
 
 The workflow defines the workflow engine that should be used and the path to the workflow on hdfs.
 The workflow definition on hdfs contains the actual job that should run and it should confirm to
@@ -594,7 +625,7 @@ be available for the workflow.
 
 There are 2 engines supported today.
 
----+++++ Oozie
+---++++ Oozie
 
 As part of oozie workflow engine support, users can embed a oozie workflow.
 Refer to oozie [[http://oozie.apache.org/docs/4.0.0/DG_Overview.html][workflow overview]] and
@@ -621,7 +652,7 @@ Example:
 This defines the workflow engine to be oozie and the workflow xml is defined at
 /projects/bootcamp/workflow/workflow.xml. The libraries are at /projects/bootcamp/workflow/lib.
 
----+++++ Pig
+---++++ Pig
 
 Falcon also adds the Pig engine which enables users to embed a Pig script as a process.
 
@@ -640,7 +671,7 @@ This defines the workflow engine to be pig and the pig script is defined at
 Feeds with Hive table storage will send one more parameter apart from the general ones:
 <verbatim>$input_filter</verbatim>
 
----+++++ Hive
+---++++ Hive
 
 Falcon also adds the Hive engine as part of Hive Integration which enables users to embed a Hive script as a process.
 This would enable users to create materialized queries in a declarative way.
@@ -660,7 +691,7 @@ This defines the workflow engine to be hive and the hive script is defined at
 Feeds with Hive table storage will send one more parameter apart from the general ones:
 <verbatim>$input_filter</verbatim>
 
----++++ Retry
+---+++ Retry
 Retry policy defines how the workflow failures should be handled. Two retry policies are defined: backoff and exp-backoff(exponential backoff). Depending on the delay and number of attempts, the workflow is re-tried after specific intervals.
 Syntax:
 <verbatim>
@@ -681,7 +712,7 @@ Examples:
 </verbatim>
 The workflow is re-tried after 10 mins, 20 mins and 30 mins. With exponential backoff, the workflow will be re-tried after 10 mins, 20 mins and 40 mins.
 
----++++ Late data
+---+++ Late data
 Late data handling defines how the late data should be handled. Each feed is defined with a late cut-off value which specifies the time till which late data is valid. For example, late cut-off of hours(6) means that data for nth hour can get delayed by upto 6 hours. Late data specification in process defines how this late data is handled.
 
 Late data policy defines how frequently check is done to detect late data. The policies supported are: backoff, exp-backoff(exponention backoff) and final(at feed's late cut-off). The policy along with delay defines the interval at which late data check is done.
@@ -724,3 +755,16 @@ Example:
 This late handling specifies that late data detection should run at feed's late cut-off which is 6 hours in this case. If there is late data, Falcon should run the workflow specified at /projects/bootcamp/workflow/lateinput1/workflow.xml
 
 *Note:* This is only supported for !FileSystem storage but not Table storage at this point.
+
+---+++ ACL
+
+A process has ACL (Access Control List) useful for implementing permission requirements
+and provide a way to set different permissions for specific users or named groups.
+<verbatim>
+    <ACL owner="test-user" group="test-group" permission="*"/>
+</verbatim>
+ACL indicates the Access control list for this cluster.
+owner is the Owner of this entity.
+group is the one which has access to read.
+permission indicates the permission.
+

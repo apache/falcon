@@ -2,6 +2,12 @@
 
 ---++ Overview
 
+Apache Falcon enforces authentication and authorization which are detailed below. Falcon also
+provides transport level security ensuring data confidentiality and integrity.
+
+
+---++ Authentication (User Identity)
+
 Apache Falcon enforces authentication on protected resources. Once authentication has been established it sets a
 signed HTTP Cookie that contains an authentication token with the user name, user principal,
 authentication type and expiration time.
@@ -12,20 +18,127 @@ for HTTP. Hadoop Auth also supports additional authentication mechanisms on the 
 simple interfaces.
 
 
----++ Authentication Methods
+---+++ Authentication Methods
 
 It supports 2 authentication methods, simple and kerberos out of the box.
 
----+++ Pseudo/Simple Authentication
+---++++ Pseudo/Simple Authentication
 
 Falcon authenticates the user by simply trusting the value of the query string parameter 'user.name'. This is the
 default mode Falcon is configured with.
 
----+++ Kerberos Authentication
+---++++ Kerberos Authentication
 
 Falcon uses HTTP Kerberos SPNEGO to authenticate the user.
 
----++ Server Side Configuration Setup
+
+---++ Authorization
+
+Falcon also enforces authorization on Entities using ACLs (Access Control Lists). ACLs are useful
+for implementing permission requirements and provide a way to set different permissions for
+specific users or named groups.
+
+By default, support for authorization is disabled and can be enabled in startup.properties.
+
+---+++ ACLs in Entity
+
+All Entities now have ACL which needs to be present if authorization is enabled. Only owners who
+own or created the entity will be allowed to update or delete their entities.
+
+An entity has ACLs (Access Control Lists) that are useful for implementing permission requirements
+and provide a way to set different permissions for specific users or named groups.
+<verbatim>
+    <ACL owner="test-user" group="test-group" permission="*"/>
+</verbatim>
+ACL indicates the Access control list for this cluster.
+owner is the Owner of this entity.
+group is the one which has access to read.
+permission indicates the rwx is not enforced at this time.
+
+---+++ Group Memberships
+
+Once a user has been authenticated and a username has been determined, the list of groups is
+determined by a group mapping service, configured by the hadoop.security.group.mapping property
+in Hadoop. The default implementation, org.apache.hadoop.security.ShellBasedUnixGroupsMapping,
+will shell out to the Unix bash -c groups command to resolve a list of groups for a user.
+
+Note that Falcon stores the user and group of an Entity as strings; there is no
+conversion from user and group identity numbers as is conventional in Unix.
+
+---+++ Authorization Provider
+
+Falcon provides a plugin-able provider interface for Authorization. It also ships with a default
+implementation that enforces the following authorization policy.
+
+---++++ Entity and Instance Management Operations Policy
+
+* All Entity and Instance operations are authorized for users who created them, Owners and users
+with group memberships
+* Reference to entities with in a feed or process is allowed with out enforcing permissions
+Any Feed or Process can refer to a Cluster entity not owned by the Feed or Process owner
+Any Process can refer to a Feed entity not owned by the Process owner
+
+The authorization is enforced in the following way:
+
+if admin resource,
+     if authenticated user name matches the admin users configuration
+     Else if groups of the authenticated user matches the admin groups configuration
+     Else authorization exception is thrown
+Else if entities or instance resource
+     if the authenticated user matches the owner in ACL for the entity
+     Else if the groups of the authenticated user matches the group in ACL for the entity
+     Else authorization exception is thrown
+Else if lineage resource
+     All have read-only permissions, reason being folks should be able to examine the dependency
+     and allow reuse
+
+
+*operations on Entity Resource*
+
+| *Resource*                                                                          | *Description*                      | *Authorization* |
+| [[restapi/EntityValidate][api/entities/validate/:entity-type]]                      | Validate the entity                | Owner/Group     |
+| [[restapi/EntitySubmit][api/entities/submit/:entity-type]]                          | Submit the entity                  | Owner/Group     |
+| [[restapi/EntityUpdate][api/entities/update/:entity-type/:entity-name]]             | Update the entity                  | Owner/Group     |
+| [[restapi/EntitySubmitAndSchedule][api/entities/submitAndSchedule/:entity-type]]    | Submit & Schedule the entity       | Owner/Group     |
+| [[restapi/EntitySchedule][api/entities/schedule/:entity-type/:entity-name]]         | Schedule the entity                | Owner/Group     |
+| [[restapi/EntitySuspend][api/entities/suspend/:entity-type/:entity-name]]           | Suspend the entity                 | Owner/Group     |
+| [[restapi/EntityResume][api/entities/resume/:entity-type/:entity-name]]             | Resume the entity                  | Owner/Group     |
+| [[restapi/EntityDelete][api/entities/delete/:entity-type/:entity-name]]             | Delete the entity                  | Owner/Group     |
+| [[restapi/EntityStatus][api/entities/status/:entity-type/:entity-name]]             | Get the status of the entity       | Owner/Group     |
+| [[restapi/EntityDefinition][api/entities/definition/:entity-type/:entity-name]]     | Get the definition of the entity   | Owner/Group     |
+| [[restapi/EntityList][api/entities/list/:entity-type?fields=:fields]]               | Get the list of entities           | Owner/Group     |
+| [[restapi/EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity | Owner/Group     |
+
+*REST Call on Feed and Process Instances*
+
+| *Resource*                                                                  | *Description*                | *Authorization* |
+| [[restapi/InstanceRunning][api/instance/running/:entity-type/:entity-name]] | List of running instances.   | Owner/Group     |
+| [[restapi/InstanceStatus][api/instance/status/:entity-type/:entity-name]]   | Status of a given instance   | Owner/Group     |
+| [[restapi/InstanceKill][api/instance/kill/:entity-type/:entity-name]]       | Kill a given instance        | Owner/Group     |
+| [[restapi/InstanceSuspend][api/instance/suspend/:entity-type/:entity-name]] | Suspend a running instance   | Owner/Group     |
+| [[restapi/InstanceResume][api/instance/resume/:entity-type/:entity-name]]   | Resume a given instance      | Owner/Group     |
+| [[restapi/InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]     | Rerun a given instance       | Owner/Group     |
+| [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance | Owner/Group     |
+
+---++++ Admin Resources Policy
+
+Only users belonging to admin users or groups have access to this resource. Admin membership is
+determined by a static configuration parameter.
+
+| *Resource*                                             | *Description*                               | *Authorization*  |
+| [[restapi/AdminStack][api/admin/stack]]                | Get stack of the server                     | Admin User/Group |
+| [[restapi/AdminVersion][api/admin/version]]            | Get version of the server                   | Admin User/Group |
+| [[restapi/AdminConfig][api/admin/config/:config-type]] | Get configuration information of the server | Admin User/Group |
+
+
+---++++ Lineage Resource Policy
+
+Lineage is read-only and hence all users can look at lineage for their respective entities.
+
+
+---++ Authentication Configuration
+
+Following is the Server Side Configuration Setup for Authentication.
 
 ---+++ Common Configuration Parameters
 
@@ -104,6 +217,51 @@ Falcon uses HTTP Kerberos SPNEGO to authenticate the user.
 # Comma separated list of black listed users
 *.falcon.http.authentication.blacklisted.users=
 </verbatim>
+
+---++ Authorization Configuration
+
+---+++ Enabling Authorization
+By default, support for authorization is disabled and specifying ACLs in entities are optional.
+To enable support for authorization, set falcon.security.authorization.enabled to true in the
+startup configuration.
+
+<verbatim>
+# Authorization Enabled flag: false|true
+*.falcon.security.authorization.enabled=true
+</verbatim>
+
+
+---+++ Authorization Provider
+
+Falcon provides a basic implementation for Authorization bundled, org.apache.falcon.security .DefaultFalconAuthorizationProvider.
+This can be overridden by custom implementations in the startup configuration.
+
+<verbatim>
+# Authorization Provider Fully Qualified Class Name
+*.falcon.security.authorization.provider=org.apache.falcon.security.DefaultAuthorizationProvider
+</verbatim>
+
+---+++ Admin Membership
+
+Administrative users are determined by the configuration:
+
+<verbatim>
+# Admin Users, comma separated users
+*.falcon.security.authorization.admin.users=falcon,ambari-qa,seetharam
+</verbatim>
+
+Administrative groups are determined by the configuration:
+
+<verbatim>
+# Admin Group Membership, comma separated users
+*.falcon.security.authorization.admin.groups=falcon,testgroup,staff
+</verbatim>
+
+
+---++ SSL
+
+Falcon provides transport level security ensuring data confidentiality and integrity. This is
+enabled by default for communicating over HTTP between the client and the server.
 
 ---+++ SSL Configuration
 

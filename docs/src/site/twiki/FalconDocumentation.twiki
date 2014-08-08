@@ -13,6 +13,7 @@
    * <a href="#Alerting_and_Monitoring">Alerting and Monitoring</a>
    * <a href="#Falcon_EL_Expressions">Falcon EL Expressions</a>
    * <a href="#Lineage">Lineage</a>
+   * <a href="#Security">Security</a>
 
 ---++ Architecture
 ---+++ Introduction
@@ -743,3 +744,7 @@ config value: org.apache.falcon.metadata.MetadataMappingService
 
 Lineage is only captured for Process executions. A future release will capture lineage for
 lifecycle policies such as replication and retention.
+
+--++ Security
+
+Security is detailed in [[Security][Security]].
