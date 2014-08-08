@@ -1132,12 +1132,23 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         //Validate that new entity can be scheduled
         dryRunForUpdate(cluster, newEntity, effectiveTime);
 
+        boolean suspended = BUNDLE_SUSPENDED_STATUS.contains(oldBundle.getStatus());
+
         //Set end times for old coords
         updateCoords(clusterName, oldBundle, EntityUtil.getParallel(oldEntity), effectiveTime);
 
         //schedule new entity
         String newJobId = scheduleForUpdate(newEntity, cluster, effectiveTime, user);
-        BundleJob newBundle = getBundleInfo(clusterName, newJobId);
+        BundleJob newBundle = null;
+        if (newJobId != null) {
+            newBundle = getBundleInfo(clusterName, newJobId);
+        }
+
+        //Sometimes updateCoords() resumes the suspended coords. So, if already suspended, resume now
+        //Also suspend new bundle
+        if (suspended) {
+            doBundleAction(newEntity, BundleAction.SUSPEND, cluster.getName());
+        }
 
         return getUpdateString(newEntity, effectiveTime, oldBundle, newBundle);
     }

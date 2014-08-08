@@ -28,6 +28,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-566 update throwing null job id exception. (Shwetha GS)
+
    FALCON-561 Falcon jenkins failure in EntityManagerJerseyIT.
    (Shwetha GS via Suhas Vasu)
 

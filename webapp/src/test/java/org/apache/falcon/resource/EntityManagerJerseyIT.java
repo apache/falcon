@@ -269,6 +269,31 @@ public class EntityManagerJerseyIT {
     }
 
     @Test
+    public void testUpdateSuspendedEntity() throws Exception {
+        TestContext context = newContext();
+        context.scheduleProcess();
+        OozieTestUtils.waitForBundleStart(context, Job.Status.RUNNING);
+
+        //Suspend entity
+        Process process = (Process) getDefinition(context, EntityType.PROCESS, context.processName);
+        ClientResponse response = suspend(context, process);
+        context.assertSuccessful(response);
+
+        process.getProperties().getProperties().get(0).setName("newprop");
+        Date endTime = getEndTime();
+        process.getClusters().getClusters().get(0).getValidity().setEnd(endTime);
+        response = update(context, process, endTime);
+        context.assertSuccessful(response);
+
+        //Since the process endtime = update effective time, it shouldn't create new bundle
+        List<BundleJob> bundles = OozieTestUtils.getBundles(context);
+        Assert.assertEquals(bundles.size(), 1);
+
+        //Since the entity was suspended before update, it should still be suspended
+        Assert.assertEquals(bundles.get(0).getStatus(), Status.SUSPENDED);
+    }
+
+    @Test
     public void testProcessInputUpdate() throws Exception {
         TestContext context = newContext();
         context.scheduleProcess();
@@ -438,6 +463,18 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(clientResponse);
     }
 
+    ClientResponse suspend(TestContext context, Entity entity) {
+        return suspend(context, entity.getEntityType(), entity.getName());
+    }
+
+    private ClientResponse suspend(TestContext context, EntityType entityType, String name) {
+        return context.service
+            .path("api/entities/suspend/" + entityType.name().toLowerCase() + "/" + name)
+            .header("Cookie", context.getAuthenticationToken())
+            .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
+            .post(ClientResponse.class);
+    }
+
     public void testClusterSubmitScheduleSuspendResumeDelete() throws Exception {
         TestContext context = newContext();
         ClientResponse clientResponse;
@@ -454,11 +491,7 @@ public class EntityManagerJerseyIT {
                 .post(ClientResponse.class);
         context.assertFailure(clientResponse);
 
-        clientResponse = context.service
-                .path("api/entities/suspend/cluster/" + context.clusterName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML).type(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
+        clientResponse = suspend(context, EntityType.CLUSTER, context.clusterName);
         context.assertFailure(clientResponse);
 
         clientResponse = context.service
@@ -535,11 +568,7 @@ public class EntityManagerJerseyIT {
         TestContext context = newContext();
         context.scheduleProcess();
 
-        ClientResponse clientResponse = context.service
-                .path("api/entities/suspend/process/" + context.processName)
-                .header("Cookie", context.getAuthenticationToken())
-                .accept(MediaType.TEXT_XML)
-                .post(ClientResponse.class);
+        ClientResponse clientResponse = suspend(context, EntityType.PROCESS, context.processName);
         context.assertSuccessful(clientResponse);
 
         clientResponse = context.service
