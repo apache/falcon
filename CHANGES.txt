@@ -13,6 +13,9 @@ Trunk (Unreleased)
       FALCON-468 Add User Documentation for authorization feature
       FALCON-557 Add super-user who is authorized for all
 
+   FALCON-466 REST APIs must add the entity owner as an implicit filter (Balu Vellanki
+   via Venkatesh Seetharam)
+
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS

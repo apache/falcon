@@ -35,6 +35,7 @@ import org.apache.falcon.entity.v0.*;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.resource.APIResult.Status;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
@@ -482,6 +483,11 @@ public abstract class AbstractEntityManager {
             int i = 0;
             for (String entityName : entityNames) {
                 Entity e = configStore.get(entityType, entityName);
+                if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(e)) {
+                    // the user who requested list query has no permission to access this entity.
+                    continue; // Skip this entity
+                }
+
                 EntityList.EntityElement elem = new EntityList.EntityElement();
                 elem.name = e.getName();
                 elem.type = entityTypeString;
@@ -502,6 +508,19 @@ public abstract class AbstractEntityManager {
             LOG.error("Unable to get list for entities for ({})", type, e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
         }
+    }
+
+    protected boolean isEntityAuthorized(Entity entity) {
+        try {
+            SecurityUtil.getAuthorizationProvider().authorizeResource("entities", "list",
+                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUgi());
+        } catch (Exception e) {
+            LOG.error("Authorization failed for entity=" + entity.getName()
+                    + " for user=" + CurrentUser.getUser() , e);
+            return false;
+        }
+
+        return true;
     }
 
     /**
