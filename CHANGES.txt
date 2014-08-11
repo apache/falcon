@@ -47,6 +47,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-578 Table import & table export failing during hcat table replication
+   (Suhas Vasu)
+   
    FALCON-571 user libs not getting loaded during process execution 
    (Shwetha GS via Suhas Vasu)
 

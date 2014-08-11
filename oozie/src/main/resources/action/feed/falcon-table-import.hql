@@ -16,5 +16,5 @@
 -- limitations under the License.
 --
 use ${falconTargetDatabase};
-alter table ${falconTargetTable} drop if exists partition ${falconTargetPartition};
-import table ${falconTargetTable} partition ${falconTargetPartition} from '${falconTargetStagingDir}';
+alter table ${falconTargetTable} drop if exists partition (${falconTargetPartition});
+import table ${falconTargetTable} partition (${falconTargetPartition}) from '${falconTargetStagingDir}';

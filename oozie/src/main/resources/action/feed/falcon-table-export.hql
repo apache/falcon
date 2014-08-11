@@ -15,4 +15,4 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-export table ${falconSourceDatabase}.${falconSourceTable} partition ${falconSourcePartition} to '${falconSourceStagingDir}';
+export table ${falconSourceDatabase}.${falconSourceTable} partition (${falconSourcePartition}) to '${falconSourceStagingDir}';
