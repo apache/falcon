@@ -47,6 +47,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-577 Extend time functions added in Falcon 0.6 to support current & last week 
+   are giving UnsupportedOperationException. (Srikanth Sundarrajan via Shwetha GS)
+
    FALCON-578 Table import & table export failing during hcat table replication
    (Suhas Vasu)
    

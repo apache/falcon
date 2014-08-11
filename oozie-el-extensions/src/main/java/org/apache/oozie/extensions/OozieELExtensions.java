@@ -365,8 +365,13 @@ public final class OozieELExtensions {
 
     private static int getDayOffset(String weekDayName) {
         int day;
-        Calendar nominalTime = CoordELFunctions.getEffectiveNominalTime();
-        int currentWeekDay = nominalTime.get(Calendar.DAY_OF_WEEK);
+        Calendar effectiveTime;
+        if (isDatasetContext()) {
+            effectiveTime = CoordELFunctions.getEffectiveNominalTime();
+        } else {
+            effectiveTime = getEffectiveTime(TruncateBoundary.DAY, 0, 0, 0, 0, 0);
+        }
+        int currentWeekDay = effectiveTime.get(Calendar.DAY_OF_WEEK);
         int weekDay = DayOfWeek.valueOf(weekDayName).ordinal() + 1; //to map to Calendar.SUNDAY ...
         day = weekDay - currentWeekDay;
         if (weekDay > currentWeekDay) {

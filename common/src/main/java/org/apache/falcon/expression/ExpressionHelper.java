@@ -52,6 +52,10 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
         return INSTANCE;
     }
 
+    private enum DayOfWeek {
+        SUN, MON, TUE, WED, THU, FRI, SAT
+    }
+
     private ExpressionHelper() {
     }
 
@@ -91,6 +95,18 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     public static void setReferenceDate(Date date) {
         referenceDate.set(date);
+    }
+
+    private static int getDayOffset(String weekDayName) {
+        int day;
+        Calendar nominalTime = Calendar.getInstance();
+        int currentWeekDay = nominalTime.get(Calendar.DAY_OF_WEEK);
+        int weekDay = DayOfWeek.valueOf(weekDayName).ordinal() + 1; //to map to Calendar.SUNDAY ...
+        day = weekDay - currentWeekDay;
+        if (weekDay > currentWeekDay) {
+            day = day - 7;
+        }
+        return day;
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"SF_SWITCH_FALLTHROUGH"})
@@ -140,6 +156,16 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
     }
 
     public static Date lastMonth(int day, int hour, int minute) {
+        return getRelative(referenceDate.get(), Calendar.MONTH, -1, day, hour, minute);
+    }
+
+    public static Date currentWeek(String weekDay, int hour, int minute) {
+        int day = getDayOffset(weekDay);
+        return getRelative(referenceDate.get(), Calendar.MONTH, 0, day, hour, minute);
+    }
+
+    public static Date lastWeek(String weekDay, int hour, int minute) {
+        int day = getDayOffset(weekDay);
         return getRelative(referenceDate.get(), Calendar.MONTH, -1, day, hour, minute);
     }
 
