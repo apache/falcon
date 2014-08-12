@@ -1054,8 +1054,7 @@ public final class InstanceUtil {
         final String coordId;
         final Status bundleStatus = client.getBundleJobInfo(bundleId).getStatus();
         Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(bundleStatus),
-                String.format("Bundle job %s is should be prep/running but is %s", bundleId,
-                        bundleStatus));
+                String.format("Bundle job %s is should be prep/running but is %s", bundleId, bundleStatus));
         OozieUtil.waitForCoordinatorJobCreation(client, bundleId);
         List<CoordinatorJob> coords = client.getBundleJobInfo(bundleId).getCoordinators();
         List<String> cIds = new ArrayList<String>();
@@ -1081,9 +1080,10 @@ public final class InstanceUtil {
             LOGGER.info(String.format("Try %d of %d", (i + 1), maxTries));
             CoordinatorJob coordinatorJob = client.getCoordJobInfo(coordId);
             final Status coordinatorStatus = coordinatorJob.getStatus();
-            Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(coordinatorStatus),
-                    String.format("Coordinator %s should be running/prep but is %s.", coordId,
-                            coordinatorStatus));
+            if(expectedStatus != CoordinatorAction.Status.TIMEDOUT){
+                Assert.assertTrue(RUNNING_PREP_SUCCEEDED.contains(coordinatorStatus),
+                        String.format("Coordinator %s should be running/prep but is %s.", coordId, coordinatorStatus));
+            }
             List<CoordinatorAction> coordinatorActions = coordinatorJob.getActions();
             int instanceWithStatus = 0;
             for (CoordinatorAction coordinatorAction : coordinatorActions) {
@@ -1093,7 +1093,6 @@ public final class InstanceUtil {
                     instanceWithStatus++;
                 }
             }
-
             if (instanceWithStatus >= instancesNumber) {
                 return;
             } else {
