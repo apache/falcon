@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-588 Baselining designer code. (samar via Shwetha GS)
+
    FALCON-400 Add Authorization for Entities (Venkatesh Seetharam)
       FALCON-279 Add ACL for Cluster Entity
       FALCON-462 Add ACL for process entity

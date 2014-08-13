@@ -19,9 +19,11 @@
 package org.apache.falcon.designer.primitive;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.falcon.designer.configuration.ActionConfiguration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.net.URI;
 import java.util.Map;
 
@@ -39,17 +41,13 @@ import java.util.Map;
  * There are no restrictions imposed on an Action with respect to the input
  * or the output such as in a Transformation.
  */
-public abstract class Action extends Primitive {
+public abstract class Action<A extends Action, B extends ActionConfiguration> extends Primitive<A, B> {
 
-    protected final String type;
-
-    protected Action(@Nonnull String type) {
-        this.type = type;
-    }
+    protected  static final String TYPE="ACTION";
 
     @Nonnull
     public String getType() {
-        return type;
+        return TYPE;
     }
 
     /**

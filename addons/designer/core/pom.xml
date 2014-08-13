@@ -32,26 +32,50 @@
     <name>Apache Falcon Designer Core</name>
     <packaging>jar</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.falcon</groupId>
-            <artifactId>falcon-client</artifactId>
-        </dependency>
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.falcon</groupId>
+			<artifactId>falcon-client</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>net.sourceforge.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>net.sourceforge.findbugs</groupId>
+			<artifactId>jsr305</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-hdfs</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-hdfs</artifactId>
+			<scope>test</scope>
+			<classifier>tests</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<scope>test</scope>
+			<classifier>tests</classifier>
+		</dependency>
+	</dependencies>
 
 </project>

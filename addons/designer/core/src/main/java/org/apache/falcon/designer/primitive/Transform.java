@@ -18,9 +18,11 @@
 
 package org.apache.falcon.designer.primitive;
 
+import org.apache.falcon.designer.configuration.TransformConfiguration;
 import org.apache.falcon.designer.schema.RelationalData;
 
 import javax.annotation.Nonnull;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -32,7 +34,7 @@ import java.util.List;
  * to a schema and would produce one or more output typically with an uniform schema.
  *
  */
-public abstract class Transform extends Primitive<Transform> {
+public abstract class Transform extends Primitive<Transform , TransformConfiguration> {
 
     protected List<RelationalData> inputData;
     protected List<RelationalData> outputData;
