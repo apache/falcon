@@ -41,7 +41,7 @@ public class TestngListener implements ITestListener {
     public void onTestStart(ITestResult result) {
         logLine();
         logger.info(
-            String.format("Testing going to start for: %s.%s %s", result.getTestClass().getName(),
+            String.format("Testing going to start for: %s.%s(%s)", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters())));
         NDC.push(result.getName());
     }
