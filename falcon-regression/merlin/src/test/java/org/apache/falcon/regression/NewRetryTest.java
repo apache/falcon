@@ -31,6 +31,7 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -996,27 +997,20 @@ public class NewRetryTest extends BaseTestClass {
     public Object[][] getData() {
 
         String[] retryTypes = new String[]{"periodic", "exp-backoff"};//,"exp-backoff"
-        int[] delays = new int[]{2,
+        Integer[] delays = new Integer[]{2,
             0};//removing -1 since this should be checked at validation level while setting
         String[] delayUnits = new String[]{"minutes"};
         Integer[] retryAttempts = new Integer[]{2, 0, 3};//0,-1,2
 
-        Object[][] testData = new Object[retryTypes.length * delays.length * delayUnits.length *
-            retryAttempts.length][1];
-
-        int i = 0;
-
-        for (String retryType : retryTypes) {
-            for (int delay : delays) {
-                for (String delayUnit : delayUnits) {
-                    for (int retry : retryAttempts) {
-                        testData[i][0] = getRetry(delay, delayUnit, retryType, retry);
-                        i++;
-                    }
-                }
-            }
+        Object[][] crossProd = MathUtil.crossProduct(delays, delayUnits, retryTypes, retryAttempts);
+        Object[][] testData = new Object[crossProd.length][1];
+        for (int i = 0; i < crossProd.length; ++i) {
+            final Integer delay = (Integer) crossProd[i][0];
+            final String delayUnit = (String) crossProd[i][1];
+            final String retryType = (String) crossProd[i][2];
+            final Integer retry = (Integer) crossProd[i][3];
+            testData[i][0] = getRetry(delay, delayUnit, retryType, retry);
         }
-
         return testData;
     }
 

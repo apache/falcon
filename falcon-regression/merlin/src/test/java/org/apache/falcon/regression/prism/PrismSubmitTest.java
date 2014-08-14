@@ -33,7 +33,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
@@ -588,15 +587,6 @@ public class PrismSubmitTest extends BaseTestClass {
         AssertUtil.compareDataStoreStates(beforeSubmitPrism, afterSubmitPrism,
             Util.getProcessName(bundles[0].getProcessData()), 1);
         AssertUtil.compareDataStoreStates(beforeSubmitCluster2, afterSubmitCluster2, 0);
-    }
-
-    @DataProvider(name = "errorDP")
-    public Object[][] getTestData(Method m) {
-        Object[][] testData = new Object[2][1];
-        testData[0][0] = "EmptyInputTagProcess";
-        testData[1][0] = "EmptyOutputTagProcess";
-
-        return testData;
     }
 
 }

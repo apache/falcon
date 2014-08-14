@@ -27,6 +27,7 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
+import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
@@ -276,28 +277,14 @@ public class HCatRetentionTest extends BaseTestClass {
     public Object[][] getTestData(Method m) {
         RetentionUnit[] retentionUnits = new RetentionUnit[]{RetentionUnit.HOURS, RetentionUnit.DAYS,
             RetentionUnit.MONTHS};// "minutes","years",
-        int[] periods = new int[]{7, 824, 43}; // a negative value like -4 should be covered
+        Integer[] periods = new Integer[]{7, 824, 43}; // a negative value like -4 should be covered
         // in validation scenarios.
         FeedType[] dataTypes =
             new FeedType[]{
                 //disabling since falcon has support is for only for single hcat partition
                 //FeedType.DAILY, FeedType.MINUTELY, FeedType.HOURLY, FeedType.MONTHLY,
                 FeedType.YEARLY};
-        Object[][] testData = new Object[retentionUnits.length * periods.length * dataTypes.length][3];
-
-        int i = 0;
-
-        for (RetentionUnit retentionUnit : retentionUnits) {
-            for (int period : periods) {
-                for (FeedType dataType : dataTypes) {
-                    testData[i][0] = period;
-                    testData[i][1] = retentionUnit;
-                    testData[i][2] = dataType;
-                    i++;
-                }
-            }
-        }
-        return testData;
+        return MathUtil.crossProduct(periods, retentionUnits, dataTypes);
     }
 
 }

@@ -30,6 +30,7 @@ import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
@@ -226,32 +227,14 @@ public class RetentionTest extends BaseTestClass {
     @DataProvider(name = "betterDP")
     public Object[][] getTestData(Method m) {
         // a negative value like -4 should be covered in validation scenarios.
-        int[] retentionPeriods = new int[]{0, 10080, 60, 8, 24};
+        Integer[] retentionPeriods = new Integer[]{0, 10080, 60, 8, 24};
         RetentionUnit[] retentionUnits = new RetentionUnit[]{RetentionUnit.HOURS,
             RetentionUnit.DAYS};// "minutes","hours", "days",
-        boolean[] gaps = new boolean[]{false, true};
+        Boolean[] gaps = new Boolean[]{false, true};
         FeedType[] feedTypes = new FeedType[]{FeedType.DAILY, FeedType.YEARLY, FeedType.MONTHLY};
-        Object[][] testData = new Object[retentionPeriods.length * retentionUnits.length *
-            gaps.length * feedTypes.length][5];
+        final Boolean[] withData = new Boolean[]{true};
 
-        int i = 0;
-
-        for (RetentionUnit retentionUnit : retentionUnits) {
-            for (int period : retentionPeriods) {
-                for (boolean gap : gaps) {
-                    for (FeedType feedType : feedTypes) {
-                        testData[i][0] = period;
-                        testData[i][1] = retentionUnit;
-                        testData[i][2] = gap;
-                        testData[i][3] = feedType;
-                        testData[i][4] = true;
-                        i++;
-                    }
-                }
-            }
-        }
-
-        return testData;
+        return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, feedTypes, withData);
     }
 
 }

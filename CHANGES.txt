@@ -21,6 +21,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-581 merlin: Refactor code for cross product and make it a method 
+   (Raghav Kumar Gautam via Arpit Gupta) 
+   
    FALCON-597 String logged at the start and end of the merlin test are slightly 
    mismatched (Raghav Kumar Gautam via Arpit Gupta)
 
