@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-614 Add pipeline element to process entity
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-588 Baselining designer code. (samar via Shwetha GS)
 
    FALCON-400 Add Authorization for Entities (Venkatesh Seetharam)

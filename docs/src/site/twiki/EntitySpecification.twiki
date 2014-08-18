@@ -280,6 +280,23 @@ Syntax:
 </process>
 </verbatim>
 
+---+++ Tags
+An optional list of comma separated tags which are used for classification of processes.
+Syntax:
+<verbatim>
+...
+    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting</tags>
+</verbatim>
+
+---+++ Pipelines
+An optional list of comma separated word strings, specifies the data processing pipeline(s) to which this process belongs.
+Only letters, numbers and underscore are allowed for pipeline string.
+Syntax:
+<verbatim>
+...
+    <pipelines>test_Pipeline, dataReplication, clickStream_pipeline</pipelines>
+</verbatim>
+
 ---+++ Cluster
 The cluster on which the workflow should run. A process should contain one or more clusters. Cluster definition for the cluster name gives the end points for workflow execution, name node, job tracker, messaging and so on. Each cluster inturn has validity mentioned, which tell the times between which the job should run on that specified cluster. 
 Syntax:

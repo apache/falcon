@@ -64,6 +64,15 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element type="PIPELINE_LIST" name="pipelines" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        pipelines: a process specifies an optional list of comma separated pipelines,
+                        separated by comma, which is used for classification of processes.
+                        Example: dataReplicationPipeline, clickStreamPipeline
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element type="clusters" name="clusters">
                 <xs:annotation>
                     <xs:documentation>Defines the clusters where the workflow should run
@@ -351,6 +360,11 @@
     <xs:simpleType name="KEY_VALUE_PAIR">
         <xs:restriction base="xs:string">
             <xs:pattern value="(\w+=[^,]+)?([,]?[ ]*[\w]+=[^,]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="PIPELINE_LIST">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([\w+_]+)([,]?[ ]*([\w+_]+))*"/>
         </xs:restriction>
     </xs:simpleType>
 

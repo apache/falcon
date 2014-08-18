@@ -95,6 +95,10 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(process.getFrequency().toString(), "hours(1)");
         Assert.assertEquals(process.getEntityType(), EntityType.PROCESS);
 
+        Assert.assertEquals(process.getTags(),
+                "consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting");
+        Assert.assertEquals(process.getPipelines(), "testPipeline,dataReplication_Pipeline");
+
         Assert.assertEquals(process.getInputs().getInputs().get(0).getName(), "impression");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getFeed(), "impressionFeed");
         Assert.assertEquals(process.getInputs().getInputs().get(0).getStart(), "today(0,0)");
@@ -461,6 +465,22 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             Assert.fail("Validation exception should have been thrown for invalid owner");
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        }
+    }
+
+    /**
+     * A negative test for validating pipelines tag which is comma separated values.
+     * @throws FalconException
+     */
+    @Test
+    public void testPipelineTags() throws FalconException {
+        try {
+            InputStream stream = this.getClass().getResourceAsStream("/config/process/process-bad-pipeline.xml");
+
+            parser.parse(stream);
+            Assert.fail("org.xml.sax.SAXParseException should have been thrown.");
+        } catch (FalconException e) {
+            Assert.assertEquals(javax.xml.bind.UnmarshalException.class, e.getCause().getClass());
         }
     }
 }
