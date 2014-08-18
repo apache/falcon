@@ -36,9 +36,9 @@
 
 	</interfaces>
 	<locations>
-		<location name="staging" path="/projects/ivory/staging" />
+		<location name="staging" path="/staging" />
 		<location name="temp" path="/tmp" />
-		<location name="working" path="/projectsTest/ivory/working" />
+		<location name="working" path="/working" />
 	</locations>
 	<properties>
         <property name="hive.metastore.client.socket.timeout" value="120"/>

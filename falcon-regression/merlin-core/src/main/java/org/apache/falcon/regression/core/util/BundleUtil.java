@@ -60,12 +60,16 @@ public final class BundleUtil {
         return readBundleFromFolder("ELbundle");
     }
 
-    public static Bundle readHCatBundle() throws IOException {
-        return readBundleFromFolder("hcat");
+    public static Bundle readHCatBundle(String appPath, String testName) throws IOException {
+        final Bundle bundle = readBundleFromFolder("hcat");
+        bundle.updateTestPath(HadoopUtil.stitchPath(appPath, testName));
+        return bundle;
     }
 
-    public static Bundle readHCat2Bundle() throws IOException {
-        return readBundleFromFolder("hcat_2");
+    public static Bundle readHCat2Bundle(String appPath, String testName) throws IOException {
+        final Bundle bundle = readBundleFromFolder("hcat_2");
+        bundle.updateTestPath(HadoopUtil.stitchPath(appPath, testName));
+        return bundle;
     }
 
     public static Bundle readLocalDCBundle() throws IOException {

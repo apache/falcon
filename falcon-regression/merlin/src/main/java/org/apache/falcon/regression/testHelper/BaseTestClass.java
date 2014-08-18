@@ -45,11 +45,12 @@ public class BaseTestClass {
         }
     }
 
-    public ColoHelper prism;
-    public List<ColoHelper> servers;
-    public List<FileSystem> serverFS;
-    public List<OozieClient> serverOC;
-    public String baseHDFSDir = "/tmp/falcon-regression";
+    public final ColoHelper prism;
+    public final List<ColoHelper> servers;
+    public final List<FileSystem> serverFS;
+    public final List<OozieClient> serverOC;
+    public final String baseHDFSDir = Config.getProperty("falcon.regression.test.dir");
+    public final String baseAppHDFSDir = Config.getProperty("falcon.regression.app.dir");
     public static final String PRISM_PREFIX = "prism";
     protected Bundle[] bundles;
 
