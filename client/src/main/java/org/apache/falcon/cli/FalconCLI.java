@@ -25,11 +25,13 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.InstancesResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +42,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -77,6 +80,13 @@ public class FalconCLI {
     public static final String DEFINITION_OPT = "definition";
     public static final String DEPENDENCY_OPT = "dependency";
     public static final String LIST_OPT = "list";
+
+    public static final String FIELDS_OPT = "fields";
+    public static final String FILTER_BY_OPT = "filterBy";
+    public static final String TAGS_OPT = "tags";
+    public static final String ORDER_BY_OPT = "orderBy";
+    public static final String OFFSET_OPT = "offset";
+    public static final String NUM_RESULTS_OPT = "numResults";
 
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
@@ -148,12 +158,10 @@ public class FalconCLI {
         parser.addCommand(ADMIN_CMD, "", "admin operations", createAdminOptions(), true);
         parser.addCommand(HELP_CMD, "", "display usage", new Options(), false);
         parser.addCommand(VERSION_CMD, "", "show client version", new Options(), false);
-        parser.addCommand(ENTITY_CMD,
-                "",
+        parser.addCommand(ENTITY_CMD, "",
                 "Entity operations like submit, suspend, resume, delete, status, definition, submitAndSchedule",
                 entityOptions(), false);
-        parser.addCommand(INSTANCE_CMD,
-                "",
+        parser.addCommand(INSTANCE_CMD, "",
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceOptions(), false);
         parser.addCommand(GRAPH_CMD, "", "graph operations", createGraphOptions(), true);
@@ -178,7 +186,6 @@ public class FalconCLI {
                     graphCommand(commandLine, client);
                 }
             }
-
             return exitValue;
         } catch (ParseException ex) {
             ERR.get().println("Invalid sub-command: " + ex.getMessage());
@@ -213,20 +220,30 @@ public class FalconCLI {
         String start = commandLine.getOptionValue(START_OPT);
         String end = commandLine.getOptionValue(END_OPT);
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
-        String runid = commandLine.getOptionValue(RUNID_OPT);
+        String runId = commandLine.getOptionValue(RUNID_OPT);
         String colo = commandLine.getOptionValue(COLO_OPT);
         String clusters = commandLine.getOptionValue(CLUSTERS_OPT);
         String sourceClusters = commandLine.getOptionValue(SOURCECLUSTER_OPT);
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
+        String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
+        String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
+        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults = validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
 
         colo = getColo(colo);
-
+        String instanceAction = "instance";
         validateInstanceCommands(optionsList, entity, type, start, colo);
 
+
         if (optionsList.contains(RUNNING_OPT)) {
-            result = client.getRunningInstances(type, entity, colo, lifeCycles);
-        } else if (optionsList.contains(STATUS_OPT)) {
-            result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles);
+            validateOrderBy(orderBy, instanceAction);
+            validateFilterBy(filterBy, instanceAction);
+            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, offset, numResults);
+        } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
+            validateOrderBy(orderBy, instanceAction);
+            validateFilterBy(filterBy, instanceAction);
+            result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles,
+                    filterBy, orderBy, offset, numResults);
         } else if (optionsList.contains(SUMMARY_OPT)) {
             result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
@@ -241,7 +258,10 @@ public class FalconCLI {
         } else if (optionsList.contains(CONTINUE_OPT)) {
             result = client.rerunInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(LOG_OPT)) {
-            result = client.getLogsOfInstances(type, entity, start, end, colo, runid, lifeCycles);
+            validateOrderBy(orderBy, instanceAction);
+            validateFilterBy(filterBy, instanceAction);
+            result = client.getLogsOfInstances(type, entity, start, end, colo, runId, lifeCycles,
+                    filterBy, orderBy, offset, numResults);
         } else if (optionsList.contains(PARARMS_OPT)) {
             // start time is the nominal time of instance
             result = client.getParamsOfInstance(type, entity, start, colo, clusters, sourceClusters, lifeCycles);
@@ -252,24 +272,37 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
+    private Integer validateIntInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
+        Integer integer = defaultVal;
+        if (optionValue != null) {
+            try {
+                return Integer.parseInt(optionValue);
+            } catch (NumberFormatException e) {
+                throw new FalconCLIException("Input value provided for queryParam \""+ optionName
+                        +"\" is not a valid Integer");
+            }
+        }
+        return integer;
+    }
+
     private void validateInstanceCommands(Set<String> optionsList,
                                           String entity, String type,
                                           String start, String colo) throws FalconCLIException {
 
-        if (entity == null || entity.equals("")) {
+        if (StringUtils.isEmpty(entity)) {
             throw new FalconCLIException("Missing argument: name");
         }
 
-        if (type == null || type.equals("")) {
+        if (StringUtils.isEmpty(type)) {
             throw new FalconCLIException("Missing argument: type");
         }
 
-        if (colo == null || colo.equals("")) {
+        if (StringUtils.isEmpty(colo)) {
             throw new FalconCLIException("Missing argument: colo");
         }
 
         if (!optionsList.contains(RUNNING_OPT)) {
-            if (start == null || start.equals("")) {
+            if (StringUtils.isEmpty(start)) {
                 throw new FalconCLIException("Missing argument: start");
             }
         }
@@ -306,7 +339,12 @@ public class FalconCLI {
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
         String colo = commandLine.getOptionValue(COLO_OPT);
         String time = commandLine.getOptionValue(EFFECTIVE_OPT);
-
+        String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
+        String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
+        String filterTags = commandLine.getOptionValue(TAGS_OPT);
+        String fields = commandLine.getOptionValue(FIELDS_OPT);
+        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults =validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
         validateEntityType(entityType);
 
         if (optionsList.contains(SUBMIT_OPT)) {
@@ -317,7 +355,7 @@ public class FalconCLI {
             validateFilePath(filePath);
             validateColo(optionsList);
             validateEntityName(entityName);
-            Date effectiveTime = validateTime(time);
+            Date effectiveTime = parseDateString(time);
             result = client.update(entityType, entityName, filePath, effectiveTime);
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
             validateFilePath(filePath);
@@ -357,7 +395,11 @@ public class FalconCLI {
             result = client.getDependency(entityType, entityName).toString();
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
-            EntityList entityList = client.getEntityList(entityType);
+            validateEntityFields(fields);
+            validateOrderBy(orderBy, "entity");
+            validateFilterBy(filterBy, "entity");
+            EntityList entityList = client.getEntityList(entityType, fields, filterBy,
+                    filterTags, orderBy, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
@@ -378,7 +420,7 @@ public class FalconCLI {
     private void validateFilePath(String filePath)
         throws FalconCLIException {
 
-        if (filePath == null || filePath.equals("")) {
+        if (StringUtils.isEmpty(filePath)) {
             throw new FalconCLIException("Missing argument: file");
         }
     }
@@ -391,7 +433,60 @@ public class FalconCLI {
         }
     }
 
-    private Date validateTime(String time) throws FalconCLIException {
+    private void validateEntityFields(String fields) throws FalconCLIException {
+        if (StringUtils.isEmpty(fields)) {
+            return;
+        }
+        String[] fieldsList = fields.split(",");
+        for (String s : fieldsList) {
+            try {
+                EntityList.EntityFieldList.valueOf(s.toUpperCase());
+            } catch (IllegalArgumentException ie) {
+                throw new FalconCLIException("Invalid fields argument : " + FIELDS_OPT);
+            }
+        }
+    }
+
+    private void validateFilterBy(String filterBy, String filterType) throws FalconCLIException {
+        if (StringUtils.isEmpty(filterBy)) {
+            return;
+        }
+        String[] filterSplits = filterBy.split(",");
+        for (String s : filterSplits) {
+            String[] tempKeyVal = s.split(":", 2);
+            try {
+                if (filterType.equals("entity")) {
+                    EntityList.EntityFilterByFields.valueOf(tempKeyVal[0].toUpperCase());
+                } else if (filterType.equals("instance")) {
+                    InstancesResult.InstanceFilterFields.valueOf(tempKeyVal[0].toUpperCase());
+                } else {
+                    throw new IllegalArgumentException("Invalid API call");
+                }
+            } catch (IllegalArgumentException ie) {
+                throw new FalconCLIException("Invalid filterBy argument : " + FILTER_BY_OPT);
+            }
+        }
+    }
+
+    private void validateOrderBy(String orderBy, String action) throws FalconCLIException {
+        if (StringUtils.isEmpty(orderBy)) {
+            return;
+        }
+        if (action.equals("instance")) {
+            if (Arrays.asList(new String[]{"status", "cluster", "starttime", "endtime"})
+                .contains(orderBy.toLowerCase())) {
+                return;
+            }
+        } else if (action.equals("entity")) {
+            if (Arrays.asList(new String[] {"type", "name"}).contains(orderBy.toLowerCase())) {
+                return;
+            }
+        }
+        throw new FalconCLIException("Invalid orderBy argument : " + ORDER_BY_OPT);
+    }
+
+
+    private Date parseDateString(String time) throws FalconCLIException {
         if (time != null && !time.isEmpty()) {
             try {
                 return SchemaHelper.parseDateUTC(time);
@@ -404,7 +499,7 @@ public class FalconCLI {
 
     private void validateEntityName(String entityName)
         throws FalconCLIException {
-        if (entityName == null || entityName.equals("")) {
+        if (StringUtils.isEmpty(entityName)) {
             throw new FalconCLIException("Missing argument: name");
         }
     }
@@ -412,7 +507,7 @@ public class FalconCLI {
     private void validateEntityType(String entityType)
         throws FalconCLIException {
 
-        if (entityType == null || entityType.equals("")) {
+        if (StringUtils.isEmpty(entityType)) {
             throw new FalconCLIException("Missing argument: type");
         }
     }
@@ -495,6 +590,16 @@ public class FalconCLI {
                 "Colo name");
         colo.setRequired(false);
         Option effective = new Option(EFFECTIVE_OPT, true, "Effective time for update");
+        Option fields = new Option(FIELDS_OPT, true, "Entity fields to show for a request");
+        Option filterBy = new Option(FILTER_BY_OPT, true,
+                "Filter returned entities by the specified status");
+        Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
+        Option orderBy = new Option(ORDER_BY_OPT, true,
+                "Order returned entities by this field");
+        Option offset = new Option(OFFSET_OPT, true,
+                "Start returning entities from this offset");
+        Option numResults = new Option(NUM_RESULTS_OPT, true,
+                "Number of results to return per request");
 
         entityOptions.addOption(url);
         entityOptions.addOptionGroup(group);
@@ -503,6 +608,12 @@ public class FalconCLI {
         entityOptions.addOption(filePath);
         entityOptions.addOption(colo);
         entityOptions.addOption(effective);
+        entityOptions.addOption(fields);
+        entityOptions.addOption(filterBy);
+        entityOptions.addOption(filterTags);
+        entityOptions.addOption(orderBy);
+        entityOptions.addOption(offset);
+        entityOptions.addOption(numResults);
 
         return entityOptions;
     }
@@ -513,6 +624,8 @@ public class FalconCLI {
 
         Option running = new Option(RUNNING_OPT, false,
                 "Gets running process instances for a given process");
+        Option list = new Option(LIST_OPT, false,
+                "Gets all instances for a given process in the range start time and optional end time");
         Option status = new Option(
                 STATUS_OPT,
                 false,
@@ -560,6 +673,7 @@ public class FalconCLI {
 
         OptionGroup group = new OptionGroup();
         group.addOption(running);
+        group.addOption(list);
         group.addOption(status);
         group.addOption(summary);
         group.addOption(kill);
@@ -603,6 +717,14 @@ public class FalconCLI {
                 true,
                 "describes life cycle of entity , for feed it can be replication/retention "
                        + "and for process it can be execution");
+        Option filterBy = new Option(FILTER_BY_OPT, true,
+                "Filter returned instances by the specified fields");
+        Option orderBy = new Option(ORDER_BY_OPT, true,
+                "Order returned instances by this field");
+        Option offset = new Option(OFFSET_OPT, true,
+                "Start returning instances from this offset");
+        Option numResults = new Option(NUM_RESULTS_OPT, true,
+                "Number of results to return per request");
 
         instanceOptions.addOption(url);
         instanceOptions.addOptionGroup(group);
@@ -616,6 +738,10 @@ public class FalconCLI {
         instanceOptions.addOption(sourceClusters);
         instanceOptions.addOption(colo);
         instanceOptions.addOption(lifecycle);
+        instanceOptions.addOption(filterBy);
+        instanceOptions.addOption(offset);
+        instanceOptions.addOption(orderBy);
+        instanceOptions.addOption(numResults);
 
         return instanceOptions;
     }

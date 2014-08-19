@@ -41,6 +41,20 @@ public class EntityList {
     private final EntityElement[] elements;
 
     /**
+     * List of fields returned by RestAPI.
+     */
+    public static enum EntityFieldList {
+        TYPE, NAME, STATUS, TAGS, PIPELINES
+    }
+
+    /**
+     * Filter by these Fields is supported by RestAPI.
+     */
+    public static enum EntityFilterByFields {
+        TYPE, NAME, STATUS, PIPELINES
+    }
+
+    /**
      * Element within an entity.
      */
     public static class EntityElement {
@@ -53,6 +67,8 @@ public class EntityList {
         public String status;
         @XmlElementWrapper(name = "list")
         public List<String> tag;
+        @XmlElementWrapper(name = "list")
+        public List<String> pipelines;
         //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
         @Override
@@ -64,6 +80,10 @@ public class EntityList {
 
             if (tag != null && !tag.isEmpty()) {
                 outString += " - " + tag.toString();
+            }
+
+            if (pipelines != null && !pipelines.isEmpty()) {
+                outString += " - " + pipelines.toString();
             }
             outString += "\n";
             return outString;
@@ -83,14 +103,19 @@ public class EntityList {
         int len = elements.length;
         EntityElement[] items = new EntityElement[len];
         for (int i = 0; i < len; i++) {
-            Entity e = elements[i];
-            EntityElement o = new EntityElement();
-            o.type = e.getEntityType().name().toLowerCase();
-            o.name = e.getName();
-            o.status = null;
-            items[i] = o;
+            items[i] = createEntityElement(elements[i]);
         }
         this.elements = items;
+    }
+
+    private EntityElement createEntityElement(Entity e) {
+        EntityElement element = new EntityElement();
+        element.type = e.getEntityType().name().toLowerCase();
+        element.name = e.getName();
+        element.status = null;
+        element.tag = new ArrayList<String>();
+        element.pipelines = new ArrayList<String>();
+        return element;
     }
 
     public EntityList(Entity[] dependentEntities, Entity entity) {

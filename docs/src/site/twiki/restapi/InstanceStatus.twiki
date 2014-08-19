@@ -12,8 +12,16 @@ Get status of a specific instance of an entity.
    * :entity-name is name of the entity.
    * start is the start time of the instance that you want to refer to
    * end <optional param> is the end time of the instance that you want to refer to
+   * colo <optional param> colo on which the query should be run
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
-
+   * filterBy <optional param> Filter results by a given list of field,value pairs. Example: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+      * Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER,STARTEDAFTER
+      * Only the instances that match both filters are returned.
+   * orderBy <optional param> is the instance field by which results should be ordered.
+      * Supports ordering by "status","startTime","endTime","cluster"
+   * offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
+   * numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+   
 ---++ Results
 Status of the specified instance.
 
@@ -36,6 +44,41 @@ GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&star
             "instance": "2012-04-03T07:00Z"
         }
     ],
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=STATUS:SUCCEEDED,CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "details": "",
+            "endTime": "2013-10-21T14:40:26-07:00",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T07:00Z"
+        },
+        {
+            "details": "",
+            "endTime": "2013-10-21T14:42:26-07:00",
+            "startTime": "2013-10-21T14:41:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T08:00Z"
+        },
+    ],
+
     "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
     "message": "default\/STATUS\n",
     "status": "SUCCEEDED"

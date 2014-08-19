@@ -27,6 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-470 Add support for pagination, filter by, etc. to Entity and
+   Instance List API (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-581 merlin: Refactor code for cross product and make it a method 
    (Raghav Kumar Gautam via Arpit Gupta) 
    

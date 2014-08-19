@@ -12,8 +12,16 @@ Get log of a specific instance of an entity.
    * :entity-name is name of the entity.
    * start is the start time of the instance that you want to refer to
    * end <optional param> is the end time of the instance that you want to refer to
+   * colo <optional param> colo on which the query should be run
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
-
+   * filterBy <optional param> Filter results by a given list of field,value pairs. Example: filterBy=STATUS:SUCCEEDED,CLUSTER:primary-cluster
+      * Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER,STARTEDAFTER
+      * Only the instances that match both filters are returned.
+   * orderBy <optional param> is the instance field by which results should be ordered.
+      * Supports ordering by "status","startTime","endTime","cluster"
+   * offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
+   * numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+  
 ---++ Results
 Log of specified instance.
 
@@ -48,3 +56,53 @@ GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=
     "status": "SUCCEEDED"
 }
 </verbatim>
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/logs/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=STATUS:SUCCEEDED,CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "actions": [
+                {
+                    "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/000\/pig_SUCCEEDED.log",
+                    "status": "SUCCEEDED",
+                    "action": "pig"
+                }
+            ],
+            "details": "",
+            "endTime": "2013-10-21T14:40:26-07:00",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/000\/oozie.log",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T07:00Z"
+        },
+        {
+            "actions": [
+                {
+                    "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/001\/pig_SUCCEEDED.log",
+                    "status": "SUCCEEDED",
+                    "action": "pig"
+                }
+            ],
+            "details": "",
+            "endTime": "2013-10-21T14:42:27-07:00",
+            "startTime": "2013-10-21T14:41:57-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:50070\/data\/apps\/falcon\/staging\/falcon\/workflows\/process\/SampleProcess\/logs\/job-2012-04-03-07-00\/001\/oozie.log",
+            "status": "SUCCEEDED",
+            "instance": "2012-04-03T08:00Z"
+        }
+    ],
+    "requestId": "default\/3527038e-8334-4e50-8173-76c4fa430d0b\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+
+

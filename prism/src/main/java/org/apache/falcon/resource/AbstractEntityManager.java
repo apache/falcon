@@ -33,7 +33,10 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.store.EntityAlreadyExistsException;
 import org.apache.falcon.entity.v0.*;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.resource.APIResult.Status;
+import org.apache.falcon.resource.EntityList.EntityElement;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.DeploymentUtil;
@@ -41,7 +44,7 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowEngineFactory;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.io.IOUtils;
-import org.datanucleus.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +199,7 @@ public abstract class AbstractEntityManager {
      * Deletes a scheduled entity, a deleted entity is removed completely from
      * execution pool.
      *
-     * @param type entity type
+     * @param type   entity type
      * @param entity entity name
      * @return APIResult
      */
@@ -459,55 +462,156 @@ public abstract class AbstractEntityManager {
     /**
      * Returns the list of entities registered of a given type.
      *
-     * @param type entity type
-     * @param fieldStr fields that the query is interested in, separated by comma
-     * @return String
+     * @param type           Only return entities of this type
+     * @param fieldStr       fields that the query is interested in, separated by comma
+     * @param filterBy       filter by a specific field.
+     * @param offset         Pagination offset
+     * @param resultsPerPage Number of results that should be returned starting at the offset
+     * @return EntityList
      */
-    public EntityList getEntityList(String type, String fieldStr) {
-        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.split(",")));
+    public EntityList getEntityList(String type, String fieldStr, String filterBy, String filterTags,
+                                    String orderBy, Integer offset, Integer resultsPerPage) {
 
-        // Currently only the status of the entity is supported
-        boolean requireStatus = fields.contains("status");
+        HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
+        final HashMap<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        final ArrayList<String> filterByTags = getFilterByTags(filterTags);
 
-        try {
-            EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            final String entityTypeString = type.toLowerCase();
-            Collection<String> entityNames = configStore.getEntities(entityType);
-            if (entityNames == null || entityNames.isEmpty()) {
-                return new EntityList(new Entity[]{});
-            }
-
-            int len = entityNames.size();
-            EntityList.EntityElement[] elements = new EntityList.EntityElement[len];
-
-            int i = 0;
-            for (String entityName : entityNames) {
-                Entity e = configStore.get(entityType, entityName);
-                if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(e)) {
-                    // the user who requested list query has no permission to access this entity.
-                    continue; // Skip this entity
-                }
-
-                EntityList.EntityElement elem = new EntityList.EntityElement();
-                elem.name = e.getName();
-                elem.type = entityTypeString;
-                if (requireStatus) {
-                    String statusString;
-                    try {
-                        EntityStatus status = getStatus(e, entityType);
-                        statusString = status.name();
-                    } catch (FalconException e1) {
-                        statusString = "UNKNOWN";
-                    }
-                    elem.status = statusString;
-                }
-                elements[i++] = elem;
-            }
-            return new EntityList(elements);
-        } catch (Exception e) {
-            LOG.error("Unable to get list for entities for ({})", type, e);
-            throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
+        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        Collection<String> entityNames = configStore.getEntities(entityType);
+        if (entityNames == null || entityNames.isEmpty()) {
+            return new EntityList(new Entity[]{});
         }
+
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+        for (String entityName : entityNames) {
+            Entity entity;
+            try {
+                entity = configStore.get(entityType, entityName);
+                if (entity == null) {
+                    continue;
+                }
+            } catch (FalconException e1) {
+                LOG.error("Unable to get list for entities for ({})", type, e1);
+                throw FalconWebException.newException(e1, Response.Status.BAD_REQUEST);
+            }
+
+            List<String> tags = getTags(entity);
+            List<String> pipelines = getPipelines(entity);
+            String entityStatus = getStatusString(entity);
+
+            if (filterEntity(entity, entityStatus,
+                    filterByFieldsValues, filterByTags, tags, pipelines)) {
+                continue;
+            }
+            entities.add(entity);
+        }
+        // Sort entities before returning a subset of entity elements.
+        entities = sortEntities(entities, orderBy);
+
+        int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
+        if (pageCount == 0) {  // handle pagination
+            return new EntityList(new Entity[]{});
+        }
+
+        return new EntityList(buildEntityElements(offset, fields, entities, pageCount));
+    }
+
+    protected static HashMap<String, String> getFilterByFieldsValues(String filterBy) {
+        //Filter the results by specific field:value
+        HashMap<String, String> filterByFieldValues = new HashMap<String, String>();
+        if (!StringUtils.isEmpty(filterBy)) {
+            String[] fieldValueArray = filterBy.split(",");
+            for (String fieldValue : fieldValueArray) {
+                String[] splits = fieldValue.split(":", 2);
+                String filterByField = splits[0];
+                if (splits.length == 2) {
+                    filterByFieldValues.put(filterByField, splits[1]);
+                } else {
+                    filterByFieldValues.put(filterByField, "");
+                }
+            }
+        }
+        return filterByFieldValues;
+    }
+
+    private static ArrayList<String> getFilterByTags(String filterTags) {
+        ArrayList<String> filterTagsList = new ArrayList<String>();
+        if (!StringUtils.isEmpty(filterTags)) {
+            String[] splits = filterTags.split(",");
+            for (String tag : splits) {
+                filterTagsList.add(tag.trim());
+            }
+        }
+        return filterTagsList;
+    }
+
+    private List<String> getTags(Entity entity) {
+        String rawTags = null;
+        switch (entity.getEntityType()) {
+        case PROCESS:
+            rawTags = ((Process) entity).getTags();
+            break;
+
+        case FEED:
+            rawTags = ((Feed) entity).getTags();
+            break;
+
+        case CLUSTER:
+            rawTags = ((Cluster) entity).getTags();
+            break;
+
+        default:
+            break;
+        }
+
+        List<String> tags = new ArrayList<String>();
+        if (!StringUtils.isEmpty(rawTags)) {
+            for(String tag : rawTags.split(",")) {
+                LOG.info("Adding tag - "+ tag);
+                tags.add(tag.trim());
+            }
+        }
+
+        return tags;
+    }
+
+    private List<String> getPipelines(Entity entity) {
+        List<String> pipelines = new ArrayList<String>();
+        if (entity.getEntityType().equals(EntityType.PROCESS)) {
+            Process process = (Process) entity;
+            String pipelineString = process.getPipelines();
+            if (pipelineString != null) {
+                for (String pipeline : pipelineString.split(",")) {
+                    pipelines.add(pipeline.trim());
+                }
+            }
+        }
+        return pipelines;
+    }
+
+    private String getStatusString(Entity entity) {
+        String statusString;
+        try {
+            statusString = getStatus(entity, entity.getEntityType()).name();
+        } catch (Throwable throwable) {
+            // Unable to fetch statusString, setting it to unknown for backwards compatibility
+            statusString = "UNKNOWN";
+        }
+        return statusString;
+    }
+
+    private boolean filterEntity(Entity entity, String entityStatus,
+                                 HashMap<String, String> filterByFieldsValues, ArrayList<String> filterByTags,
+                                 List<String> tags, List<String> pipelines) {
+        if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)) {
+            // the user who requested list query has no permission to access this entity. Skip this entity
+            return true;
+        }
+
+        return !((filterByTags.size() == 0 || tags.size() == 0 || !filterEntityByTags(filterByTags, tags))
+                && (filterByFieldsValues.size() == 0
+                || !filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines)));
+
     }
 
     protected boolean isEntityAuthorized(Entity entity) {
@@ -516,17 +620,158 @@ public abstract class AbstractEntityManager {
                     entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUgi());
         } catch (Exception e) {
             LOG.error("Authorization failed for entity=" + entity.getName()
-                    + " for user=" + CurrentUser.getUser() , e);
+                    + " for user=" + CurrentUser.getUser(), e);
             return false;
         }
 
         return true;
     }
 
+    private boolean filterEntityByTags(ArrayList<String> filterTagsList, List<String> tags) {
+        boolean filterEntity = false;
+        for (String tag : filterTagsList) {
+            if (!tags.contains(tag)) {
+                filterEntity = true;
+                break;
+            }
+        }
+
+        return filterEntity;
+    }
+
+    private boolean filterEntityByFields(Entity entity, HashMap<String, String> filterKeyVals,
+                                         String status, List<String> pipelines) {
+        boolean filterEntity = false;
+
+        if (filterKeyVals.size() != 0) {
+            String filterValue;
+            for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
+                filterValue = pair.getValue();
+                if (StringUtils.isEmpty(filterValue)) {
+                    continue; // nothing to filter
+                }
+                EntityList.EntityFilterByFields filter =
+                        EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
+                switch (filter) {
+
+                case TYPE:
+                    if (!entity.getEntityType().toString().equalsIgnoreCase(filterValue)) {
+                        filterEntity = true;
+                    }
+                    break;
+
+                case NAME:
+                    if (!entity.getName().equalsIgnoreCase(filterValue)) {
+                        filterEntity = true;
+                    }
+                    break;
+
+                case STATUS:
+                    if (!status.equalsIgnoreCase(filterValue)) {
+                        filterEntity = true;
+                    }
+                    break;
+
+                case PIPELINES:
+                    if (entity.getEntityType().equals(EntityType.PROCESS)
+                            && !pipelines.contains(filterValue)) {
+                        filterEntity = true;
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+                if (filterEntity) {
+                    break;
+                }
+            }
+        }
+        return filterEntity;
+    }
+
+    private ArrayList<Entity> sortEntities(ArrayList<Entity> entities, String orderBy) {
+        // Sort the ArrayList using orderBy param
+        if (!StringUtils.isEmpty(orderBy)) {
+            EntityList.EntityFieldList orderByField = EntityList.EntityFieldList.valueOf(orderBy.toUpperCase());
+
+            switch (orderByField) {
+
+            case TYPE:
+                Collections.sort(entities, new Comparator<Entity>() {
+                    @Override
+                    public int compare(Entity e1, Entity e2) {
+                        return e1.getEntityType().compareTo(e2.getEntityType());
+                    }
+                });
+                break;
+
+            case NAME:
+                Collections.sort(entities, new Comparator<Entity>() {
+                    @Override
+                    public int compare(Entity e1, Entity e2) {
+                        return e1.getName().compareTo(e2.getName());
+                    }
+                });
+                break;
+
+            default:
+                break;
+            }
+        } // else no sort
+
+        return entities;
+    }
+
+    protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults) {
+        /* Get a subset of elements based on offset and count. When returning subset of elements,
+              elements[offset] is included. Size 10, offset 10, return empty list.
+              Size 10, offset 5, count 3, return elements[5,6,7].
+              Size 10, offset 5, count >= 5, return elements[5,6,7,8,9]
+              When count is -1, return elements starting from elements[offset] until the end */
+
+        if (offset >= arraySize || arraySize == 0) {
+            // No elements to return
+            return 0;
+        }
+        int retLen = arraySize - offset;
+        if (retLen > numresults && numresults != -1) {
+            retLen = numresults;
+        }
+        return retLen;
+    }
+
+    private EntityElement[] buildEntityElements(Integer offset, HashSet<String> fields,
+                                                ArrayList<Entity> entities, int pageCount) {
+        EntityElement[] elements = new EntityElement[pageCount];
+        int elementIndex = 0;
+        for (Entity entity : entities.subList(offset, (offset + pageCount))) {
+            elements[elementIndex++] = getEntityElement(entity, fields);
+        }
+        return elements;
+    }
+
+    private EntityElement getEntityElement(Entity entity, HashSet<String> fields) {
+        EntityElement elem = new EntityElement();
+        elem.type = entity.getEntityType().toString();
+        elem.name = entity.getName();
+        if (fields.contains("status")) {
+            elem.status = getStatusString(entity);
+        }
+        if (fields.contains("pipelines")) {
+            elem.pipelines = getPipelines(entity);
+        }
+        if (fields.contains("tags")) {
+            elem.tag = getTags(entity);
+        }
+
+        return elem;
+    }
+
     /**
      * Returns the entity definition as an XML based on name.
      *
-     * @param type entity type
+     * @param type       entity type
      * @param entityName entity name
      * @return String
      */

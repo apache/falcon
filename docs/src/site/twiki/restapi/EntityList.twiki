@@ -9,8 +9,16 @@ Get list of the entities.
 
 ---++ Parameters
    * :entity-type can be cluster, feed or process.
-   * :fields (optional) additional fields that the client are interested in, separated by commas.
-     Currently falcon only support status as a valid field.
+   * :fields <optional param> additional fields that the client are interested in, separated by commas.
+      * Currently falcon supports STATUS, TAGS, PIPELINES as valid fields.
+   * :filterBy <optional param> Filter results by a given list of field,value pair. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+      * Supported filter fields are TYPE, NAME, STATUS, PIPELINES
+      * Only the entities that match both filters are returned.
+   * :tags <optional param> Filter results by a given list of tags, separated by a comma. Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+   * :orderBy <optional param> is the field by which results should be ordered.
+      * Supports ordering by "name","type"
+   * :offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
+   * :numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
 
 ---++ Results
 List of the entities.
@@ -58,3 +66,28 @@ GET http://localhost:15000/api/entities/list/feed?fields=status
 }
 </verbatim>
 
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/list/feed?filterBy=STATUS:RUNNING,PIPELINES:dataReplication&fields=status,pipelines,tags&tags=consumer=consumer@xyz.com&orderBy=name&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "entity": [
+        {
+            "name"  : "SampleInput2",
+            "type"  : "feed",
+            "status": "RUNNING",
+            "pipelines": "dataReplication",
+            "tags":consumer=consumer@xyz.com
+        },
+        {
+            "name": "SampleInput3",
+            "type": "feed",
+            "status": "RUNNING",
+            "pipelines": "dataReplication",
+            "tags":consumer=consumer@xyz.com,owner=producer@xyz.com
+        }
+    ]
+}
+</verbatim>

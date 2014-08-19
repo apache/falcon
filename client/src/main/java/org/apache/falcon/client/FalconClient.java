@@ -24,6 +24,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.EntityType;
@@ -196,6 +197,7 @@ public class FalconClient {
     protected static enum Instances {
         RUNNING("api/instance/running/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         STATUS("api/instance/status/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LIST("api/instance/list", HttpMethod.GET, MediaType.APPLICATION_JSON),
         KILL("api/instance/kill/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         SUSPEND("api/instance/suspend/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         RESUME("api/instance/resume/", HttpMethod.POST, MediaType.APPLICATION_JSON),
@@ -329,23 +331,28 @@ public class FalconClient {
         return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
     }
 
-    public EntityList getEntityList(String entityType) throws FalconCLIException {
-        return sendListRequest(Entities.LIST, entityType);
+    public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
+                                    String orderBy, Integer offset, Integer numResults) throws FalconCLIException {
+        return sendListRequest(Entities.LIST, entityType, fields, filterBy,
+                filterTags, orderBy, offset, numResults);
     }
 
-    public String getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles)
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public String getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
+                                      String filterBy, String orderBy, Integer offset, Integer numResults)
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.RUNNING, type, entity, null, null,
-                null, null, colo, lifeCycles);
+                null, null, colo, lifeCycles, filterBy, orderBy, offset, numResults);
     }
 
     public String getStatusOfInstances(String type, String entity,
                                        String start, String end,
-                                       String colo, List<LifeCycle> lifeCycles) throws FalconCLIException {
+                                       String colo, List<LifeCycle> lifeCycles, String filterBy,
+                                       String orderBy, Integer offset, Integer numResults) throws FalconCLIException {
 
         return sendInstanceRequest(Instances.STATUS, type, entity, start, end,
-                null, null, colo, lifeCycles);
+                null, null, colo, lifeCycles, filterBy, orderBy, offset, numResults);
     }
 
     public String getSummaryOfInstances(String type, String entity,
@@ -355,7 +362,7 @@ public class FalconClient {
         return sendInstanceRequest(Instances.SUMMARY, type, entity, start, end,
                 null, null, colo, lifeCycles);
     }
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
     public String killInstances(String type, String entity, String start,
                                 String end, String colo, String clusters,
                                 String sourceClusters, List<LifeCycle> lifeCycles)
@@ -419,11 +426,12 @@ public class FalconClient {
 
     public String getLogsOfInstances(String type, String entity, String start,
                                      String end, String colo, String runId,
-                                     List<LifeCycle> lifeCycles)
+                                     List<LifeCycle> lifeCycles, String filterBy,
+                                     String orderBy, Integer offset, Integer numResults)
         throws FalconCLIException {
 
         return sendInstanceRequest(Instances.LOG, type, entity, start, end,
-                null, runId, colo, lifeCycles);
+                null, runId, colo, lifeCycles, filterBy, orderBy, offset, numResults);
     }
 
     public String getParamsOfInstance(String type, String entity,
@@ -540,20 +548,6 @@ public class FalconClient {
         return parseEntityList(clientResponse);
     }
 
-    private EntityList sendListRequest(Entities entities, String entityType)
-        throws FalconCLIException {
-
-        ClientResponse clientResponse = service
-                .path(entities.path).path(entityType)
-                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
-                .accept(entities.mimeType).type(MediaType.TEXT_XML)
-                .method(entities.method, ClientResponse.class);
-
-        checkIfSuccessful(clientResponse);
-
-        return parseEntityList(clientResponse);
-    }
-
     private String sendEntityRequestWithObject(Entities entities, String entityType,
                                                Object requestObject, String colo) throws FalconCLIException {
         WebResource resource = service.path(entities.path)
@@ -576,6 +570,14 @@ public class FalconClient {
                                        String entity, String start, String end, InputStream props,
                                        String runid, String colo,
                                        List<LifeCycle> lifeCycles) throws FalconCLIException {
+        return sendInstanceRequest(instances, type, entity, start, end, props,
+                runid, colo, lifeCycles, "", "", 0, -1);
+    }
+
+    private String sendInstanceRequest(Instances instances, String type, String entity,
+                                       String start, String end, InputStream props, String runid, String colo,
+                                       List<LifeCycle> lifeCycles, String filterBy,
+                                       String orderBy, Integer offset, Integer numResults) throws FalconCLIException {
         checkType(type);
         WebResource resource = service.path(instances.path).path(type)
                 .path(entity);
@@ -591,6 +593,14 @@ public class FalconClient {
         if (colo != null) {
             resource = resource.queryParam("colo", colo);
         }
+        if (!StringUtils.isEmpty(filterBy)) {
+            resource = resource.queryParam("filterBy", filterBy);
+        }
+        if (!StringUtils.isEmpty(orderBy)) {
+            resource = resource.queryParam("orderBy", orderBy);
+        }
+        resource = resource.queryParam("offset", offset.toString());
+        resource = resource.queryParam("numResults", numResults.toString());
 
         if (lifeCycles != null) {
             checkLifeCycleOption(lifeCycles, type);
@@ -648,10 +658,38 @@ public class FalconClient {
         }
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    private EntityList sendListRequest(Entities entities, String entityType, String fields, String filterBy,
+                                       String filterTags, String orderBy, Integer offset,
+                                       Integer numResults) throws FalconCLIException {
+        WebResource resource = service.path(entities.path)
+                .path(entityType);
+        if (!StringUtils.isEmpty(filterBy)) {
+            resource = resource.queryParam("filterBy", filterBy);
+        }
+        if (!StringUtils.isEmpty(orderBy)) {
+            resource = resource.queryParam("orderBy", orderBy);
+        }
+        if (!StringUtils.isEmpty(fields)) {
+            resource = resource.queryParam("fields", fields);
+        }
+        if (!StringUtils.isEmpty(filterTags)) {
+            resource = resource.queryParam("tags", filterTags);
+        }
+        resource = resource.queryParam("offset", offset.toString());
+        resource = resource.queryParam("numResults", numResults.toString());
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(entities.mimeType).type(MediaType.TEXT_XML)
+                .method(entities.method, ClientResponse.class);
 
-    private String sendAdminRequest(AdminOperations job)
-        throws FalconCLIException {
+        checkIfSuccessful(clientResponse);
 
+        return parseEntityList(clientResponse);
+    }
+    // RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    private String sendAdminRequest(AdminOperations job) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
                 .accept(job.mimeType)
@@ -747,7 +785,7 @@ public class FalconClient {
                         ? SchemaHelper.formatDateUTC(instance.getEndTime()) : "-";
                 sb.append(toAppend).append("\t");
 
-                toAppend = (instance.getDetails() != null && !instance.getDetails().equals(""))
+                toAppend = (!StringUtils.isEmpty(instance.getDetails()))
                         ? instance.getDetails() : "-";
                 sb.append(toAppend).append("\t");
 
@@ -884,9 +922,7 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private void checkIfSuccessful(ClientResponse clientResponse)
-        throws FalconCLIException {
-
+    private void checkIfSuccessful(ClientResponse clientResponse) throws FalconCLIException {
         Response.Status.Family statusFamily = clientResponse.getClientResponseStatus().getFamily();
         if (statusFamily != Response.Status.Family.SUCCESSFUL
                 && statusFamily != Response.Status.Family.INFORMATIONAL) {

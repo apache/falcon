@@ -739,6 +739,39 @@ public class EntityManagerJerseyIT {
                 .get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
 
+        EntityList result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        for (EntityList.EntityElement entityElement : result.getElements()) {
+            Assert.assertNull(entityElement.status); // status is null
+        }
+
+        response = context.service
+                .path("api/entities/list/process/")
+                .queryParam("filterBy", "TYPE:PROCESS,STATUS:RUNNING")
+                .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
+                .queryParam("orderBy", "name").queryParam("offset", "2")
+                .queryParam("numResults", "2").queryParam("fields", "status,tags")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getElements().length, 2);
+
+        response = context.service
+                .path("api/entities/list/process/")
+                .queryParam("orderBy", "name").queryParam("offset", "50").queryParam("numResults", "2")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getElements(), null);
+
         Map<String, String> overlay = context.getUniqueOverlay();
         overlay.put("cluster", "WTF-" + overlay.get("cluster"));
         response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
@@ -751,7 +784,7 @@ public class EntityManagerJerseyIT {
                 .accept(MediaType.TEXT_XML)
                 .get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), 200);
-        EntityList result = response.getEntity(EntityList.class);
+        result = response.getEntity(EntityList.class);
         Assert.assertNotNull(result);
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null

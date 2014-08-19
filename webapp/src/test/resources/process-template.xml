@@ -18,6 +18,8 @@
   -->
 
 <process name="##processName##" xmlns="uri:falcon:process:0.1">
+    <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting</tags>
+    <pipelines>testPipeline,dataReplicationPipeline</pipelines>
     <clusters>
         <cluster name="##cluster##">
             <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z"/>

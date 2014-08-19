@@ -39,6 +39,13 @@ public class InstancesResult extends APIResult {
         WAITING, RUNNING, SUSPENDED, KILLED, FAILED, SUCCEEDED, ERROR
     }
 
+    /**
+     * RestAPI supports filterBy these fields of instance.
+     */
+    public static enum InstanceFilterFields {
+        STATUS, CLUSTER, SOURCECLUSTER, STARTEDAFTER
+    }
+
     @XmlElement
     private Instance[] instances;
 

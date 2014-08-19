@@ -87,13 +87,22 @@ public class FalconCLISmokeIT {
 
         OozieTestUtils.waitForProcessWFtoStart(context);
 
+        // test entity List cli
+        Assert.assertEquals(0,
+                executeWithURL("entity -list -type cluster"
+                        + " -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("entity -list -type process -fields status "
+                        + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name -offset 1 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("entity -list -type process -fields status "
+                        + " -filterBy STATUS:SUCCEEDED,TYPE:process -orderBy INVALID -offset 0 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")));
 
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type feed -name "
                         + overlay.get("outputFeedName") + " -start " + START_INSTANCE));
-
         Assert.assertEquals(0,
                 executeWithURL("instance -running -type process -name " + overlay.get("processName")));
     }
