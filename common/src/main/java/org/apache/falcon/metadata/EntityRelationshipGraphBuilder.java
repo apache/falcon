@@ -30,6 +30,7 @@ import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Workflow;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,6 +93,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
         addUserRelation(processVertex);
         addDataClassification(process.getTags(), processVertex);
+        addPipelines(process.getPipelines(), processVertex);
 
         for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
             addRelationToCluster(processVertex, cluster.getName(), RelationshipLabel.PROCESS_CLUSTER_EDGE);
@@ -113,6 +115,7 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         updateWorkflowProperties(oldProcess.getWorkflow(), newProcess.getWorkflow(),
                 processEntityVertex, newProcess.getName());
         updateDataClassification(oldProcess.getTags(), newProcess.getTags(), processEntityVertex);
+        updatePipelines(oldProcess.getPipelines(), newProcess.getPipelines(), processEntityVertex);
         updateProcessClusters(oldProcess.getClusters().getClusters(),
                 newProcess.getClusters().getClusters(), processEntityVertex);
         updateProcessInputs(oldProcess.getInputs(), newProcess.getInputs(), processEntityVertex);
@@ -218,14 +221,32 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         addGroups(newGroups, entityVertex);
     }
 
-    private void removeGroups(String groups, Vertex entityVertex) {
-        if (groups == null || groups.length() == 0) {
+    public void updatePipelines(String oldPipelines, String newPipelines, Vertex entityVertex) {
+        if (areSame(oldPipelines, newPipelines)) {
             return;
         }
 
-        String[] oldGroupTags = groups.split(",");
-        for (String groupTag : oldGroupTags) {
-            removeEdge(entityVertex, groupTag, RelationshipLabel.GROUPS.getName());
+        removePipelines(oldPipelines, entityVertex);
+        addPipelines(newPipelines, entityVertex);
+    }
+
+    private void removeGroups(String groups, Vertex entityVertex) {
+        removeGroupsOrPipelines(groups, entityVertex, RelationshipLabel.GROUPS);
+    }
+
+    private void removePipelines(String pipelines, Vertex entityVertex) {
+        removeGroupsOrPipelines(pipelines, entityVertex, RelationshipLabel.PIPELINES);
+    }
+
+    private void removeGroupsOrPipelines(String groupsOrPipelines, Vertex entityVertex,
+                                         RelationshipLabel edgeLabel) {
+        if (StringUtils.isEmpty(groupsOrPipelines)) {
+            return;
+        }
+
+        String[] oldGroupOrPipelinesTags = groupsOrPipelines.split(",");
+        for (String groupOrPipelineTag : oldGroupOrPipelinesTags) {
+            removeEdge(entityVertex, groupOrPipelineTag, edgeLabel.getName());
         }
     }
 

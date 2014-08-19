@@ -82,6 +82,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         if (isPreserveHistory()) {
             Process process = ConfigurationStore.get().get(EntityType.PROCESS, context.getEntityName());
             addDataClassification(process.getTags(), processInstance);
+            addPipelines(process.getPipelines(), processInstance);
         }
 
         return processInstance;

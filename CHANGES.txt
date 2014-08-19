@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-615 Add pipleline element to lineage graph
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-614 Add pipeline element to process entity
    (Balu Vellanki via Venkatesh Seetharam)
 

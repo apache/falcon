@@ -35,8 +35,8 @@ public enum RelationshipLabel {
     // edge labels
     CLUSTER_COLO("collocated"),
     USER("owned-by"),
-    GROUPS("grouped-as");
-
+    GROUPS("grouped-as"),
+    PIPELINES("part-of-pipeline");
 
     private final String name;
 

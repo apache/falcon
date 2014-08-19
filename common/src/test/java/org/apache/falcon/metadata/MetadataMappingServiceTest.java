@@ -192,7 +192,7 @@ public class MetadataMappingServiceTest {
     @Test (dependsOnMethods = "testOnAddFeedEntity")
     public void testOnAddProcessEntity() throws Exception {
         processEntity = EntityBuilderTestUtil.buildProcess(PROCESS_ENTITY_NAME, clusterEntity,
-                "classified-as=Critical");
+                "classified-as=Critical", "testPipeline,dataReplication_Pipeline");
         EntityBuilderTestUtil.addProcessWorkflow(processEntity, WORKFLOW_NAME, WORKFLOW_VERSION);
 
         for (Feed inputFeed : inputFeeds) {
@@ -208,10 +208,10 @@ public class MetadataMappingServiceTest {
         verifyEntityWasAddedToGraph(processEntity.getName(), RelationshipType.PROCESS_ENTITY);
         verifyProcessEntityEdges();
 
-        // +2 = 1 process + 1 tag
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 15);
-        // +7 = user,tag,cluster, 2 inputs,2 outputs
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 29);
+        // +4 = 1 process + 1 tag + 2 pipeline
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 17);
+        // +9 = user,tag,cluster, 2 inputs,2 outputs, 2 pipelines
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 31);
     }
 
     @Test (dependsOnMethods = "testOnAddProcessEntity")
@@ -234,9 +234,9 @@ public class MetadataMappingServiceTest {
         verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
 
         // +6 = 1 process, 2 inputs = 3 instances,2 outputs
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 21);
-        //+32 = +26 for feed instances + 6 for process instance + 6 for second feed instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 67);
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 23);
+        //+40 = +26 for feed instances + 8 for process instance + 6 for second feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 71);
     }
 
     @Test (dependsOnMethods = "testMapLineage")
@@ -251,9 +251,9 @@ public class MetadataMappingServiceTest {
         configStore.publish(EntityType.CLUSTER, bcpCluster);
         verifyEntityWasAddedToGraph("bcp-cluster", RelationshipType.CLUSTER_ENTITY);
 
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 24); // +3 = cluster, colo, tag
-        // +2 edges to above, no user but only to colo and new tag
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 69);
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); // +3 = cluster, colo, tag, 2 pipelines
+        // +4 edges to above, no user but only to colo, new tag, and 2 new pipelines
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 73);
     }
 
     @Test(dependsOnMethods = "testOnChange")
@@ -278,8 +278,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newFeed);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); //+2 = 2 new tags
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 71); // +2 = 1 new cluster, 1 new tag
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 28); //+2 = 2 new tags
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 75); // +2 = 1 new cluster, 1 new tag
     }
 
     private void verifyUpdatedEdges(Feed newFeed) {
@@ -308,7 +308,7 @@ public class MetadataMappingServiceTest {
     public void testOnProcessEntityChange() throws Exception {
         Process oldProcess = processEntity;
         Process newProcess = EntityBuilderTestUtil.buildProcess(oldProcess.getName(), bcpCluster,
-                null);
+                null, null);
         EntityBuilderTestUtil.addProcessWorkflow(newProcess, WORKFLOW_NAME, "2.0.0");
         EntityBuilderTestUtil.addInput(newProcess, inputFeeds.get(0));
 
@@ -320,8 +320,8 @@ public class MetadataMappingServiceTest {
         }
 
         verifyUpdatedEdges(newProcess);
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 26); // +0, no net new
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 67); // -4 = -2 outputs, -1 tag, -1 cluster
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 28); // +0, no net new
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 69); // -6 = -2 outputs, -1 tag, -1 cluster, -2 pipelines
     }
 
     private void verifyUpdatedEdges(Process newProcess) {

@@ -36,7 +36,8 @@ public enum RelationshipType {
     USER("user"),
     COLO("data-center"),
     TAGS("classification"),
-    GROUPS("group");
+    GROUPS("group"),
+    PIPELINES("pipelines");
 
 
     private final String name;

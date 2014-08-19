@@ -101,9 +101,19 @@ public final class EntityBuilderTestUtil {
     public static org.apache.falcon.entity.v0.process.Process buildProcess(String processName,
                                                                            Cluster cluster,
                                                                            String tags) throws Exception {
+        return buildProcess(processName, cluster, tags, null);
+    }
+
+    public static org.apache.falcon.entity.v0.process.Process buildProcess(String processName,
+                                                                           Cluster cluster,
+                                                                           String tags,
+                                                                           String pipelineTags) throws Exception {
         org.apache.falcon.entity.v0.process.Process processEntity = new Process();
         processEntity.setName(processName);
         processEntity.setTags(tags);
+        if (pipelineTags != null) {
+            processEntity.setPipelines(pipelineTags);
+        }
 
         org.apache.falcon.entity.v0.process.Cluster processCluster =
                 new org.apache.falcon.entity.v0.process.Cluster();

@@ -25,6 +25,7 @@ import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,15 +169,11 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected void addGroups(String groups, Vertex fromVertex) {
-        if (groups == null || groups.length() == 0) {
-            return;
-        }
+        addCSVTags(groups, fromVertex, RelationshipType.GROUPS, RelationshipLabel.GROUPS);
+    }
 
-        String[] groupTags = groups.split(",");
-        for (String groupTag : groupTags) {
-            Vertex groupVertex = addVertex(groupTag, RelationshipType.GROUPS);
-            addEdge(fromVertex, groupVertex, RelationshipLabel.GROUPS.getName());
-        }
+    protected void addPipelines(String pipelines, Vertex fromVertex) {
+        addCSVTags(pipelines, fromVertex, RelationshipType.PIPELINES, RelationshipLabel.PIPELINES);
     }
 
     protected void addProcessFeedEdge(Vertex processVertex, Vertex feedVertex,
@@ -190,5 +187,26 @@ public abstract class RelationshipGraphBuilder {
 
     protected String getCurrentTimeStamp() {
         return SchemaHelper.formatDateUTC(new Date());
+    }
+
+    /**
+     * Adds comma separated values as tags.
+     *
+     * @param csvTags           comma separated values.
+     * @param fromVertex        from vertex.
+     * @param relationshipType  vertex type.
+     * @param edgeLabel         edge label.
+     */
+    private void addCSVTags(String csvTags, Vertex fromVertex,
+                            RelationshipType relationshipType, RelationshipLabel edgeLabel) {
+        if (StringUtils.isEmpty(csvTags)) {
+            return;
+        }
+
+        String[] tags = csvTags.split(",");
+        for (String tag : tags) {
+            Vertex vertex = addVertex(tag, relationshipType);
+            addEdge(fromVertex, vertex, edgeLabel.getName());
+        }
     }
 }
