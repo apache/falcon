@@ -94,7 +94,7 @@ public class HCatReplicationTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        Bundle bundle = BundleUtil.readHCatBundle(baseAppHDFSDir, this.getClass().getSimpleName());
+        Bundle bundle = BundleUtil.readHCatBundle();
         bundles[0] = new Bundle(bundle, cluster.getPrefix());
         bundles[0].generateUniqueBundle();
         bundles[0].setClusterInterface(Interfacetype.REGISTRY,

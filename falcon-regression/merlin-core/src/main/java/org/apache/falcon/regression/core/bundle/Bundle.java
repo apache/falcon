@@ -44,7 +44,6 @@ import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
@@ -1030,19 +1029,6 @@ public class Bundle {
         String feedData = getInputFeedFromBundle();
         FeedMerlin feedObject = new FeedMerlin(feedData);
         return feedObject.getName();
-    }
-
-    public void updateTestPath(String testPath) {
-        List<String> newClusters = new ArrayList<String>();
-        for (String cluster : clusters) {
-            ClusterMerlin clusterMerlin = new ClusterMerlin(cluster);
-            for (org.apache.falcon.entity.v0.cluster.Location location : clusterMerlin
-                    .getLocations().getLocations()) {
-                location.setPath(HadoopUtil.stitchPath(testPath, location.getPath()));
-            }
-            newClusters.add(clusterMerlin.toString());
-        }
-        clusters = newClusters;
     }
 
 }
