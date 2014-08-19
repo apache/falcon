@@ -140,14 +140,18 @@ public class EntityList {
         }
 
         if (process != null) {
-            for (Input i : process.getInputs().getInputs()) {
-                if (i.getFeed().equals(entityNameToMatch)) {
-                    tagList.add("Input");
+            if (process.getInputs() != null) {
+                for (Input i : process.getInputs().getInputs()) {
+                    if (i.getFeed().equals(entityNameToMatch)) {
+                        tagList.add("Input");
+                    }
                 }
             }
-            for (Output o : process.getOutputs().getOutputs()) {
-                if (o.getFeed().equals(entityNameToMatch)) {
-                    tagList.add("Output");
+            if (process.getOutputs() != null) {
+                for (Output o : process.getOutputs().getOutputs()) {
+                    if (o.getFeed().equals(entityNameToMatch)) {
+                        tagList.add("Output");
+                    }
                 }
             }
         }

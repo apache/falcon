@@ -34,6 +34,10 @@ import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.entity.v0.process.Input;
+import org.apache.falcon.entity.v0.process.Inputs;
+import org.apache.falcon.entity.v0.process.Output;
+import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
@@ -261,7 +265,8 @@ public class MetadataMappingServiceTest {
         Feed oldFeed = inputFeeds.get(0);
         Feed newFeed = EntityBuilderTestUtil.buildFeed(oldFeed.getName(), clusterEntity,
                 "classified-as=Secured,source=data-warehouse", "reporting");
-        addStorage(newFeed, Storage.TYPE.FILESYSTEM, "jail://global:00/falcon/impression-feed/20140101");
+        addStorage(newFeed, Storage.TYPE.FILESYSTEM,
+                "jail://global:00/falcon/impression-feed/20140101");
 
         try {
             configStore.initiateUpdate(newFeed);
@@ -322,6 +327,37 @@ public class MetadataMappingServiceTest {
         verifyUpdatedEdges(newProcess);
         Assert.assertEquals(getVerticesCount(service.getGraph()), 28); // +0, no net new
         Assert.assertEquals(getEdgesCount(service.getGraph()), 69); // -6 = -2 outputs, -1 tag, -1 cluster, -2 pipelines
+    }
+
+    @Test(dependsOnMethods = "testOnProcessEntityChange")
+    public void testAreSame() throws Exception {
+
+        Inputs inputs1 = new Inputs();
+        Inputs inputs2 = new Inputs();
+        Outputs outputs1 = new Outputs();
+        Outputs outputs2 = new Outputs();
+        // return true when both are null
+        Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(inputs1, inputs2));
+        Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(outputs1, outputs2));
+
+        Input i1 = new Input();
+        i1.setName("input1");
+        Input i2 = new Input();
+        i2.setName("input2");
+        Output o1 = new Output();
+        o1.setName("output1");
+        Output o2 = new Output();
+        o2.setName("output2");
+
+        inputs1.getInputs().add(i1);
+        Assert.assertFalse(EntityRelationshipGraphBuilder.areSame(inputs1, inputs2));
+        outputs1.getOutputs().add(o1);
+        Assert.assertFalse(EntityRelationshipGraphBuilder.areSame(outputs1, outputs2));
+
+        inputs2.getInputs().add(i1);
+        Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(inputs1, inputs2));
+        outputs2.getOutputs().add(o1);
+        Assert.assertTrue(EntityRelationshipGraphBuilder.areSame(outputs1, outputs2));
     }
 
     private void verifyUpdatedEdges(Process newProcess) {

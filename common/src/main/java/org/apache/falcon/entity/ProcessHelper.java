@@ -59,16 +59,18 @@ public final class ProcessHelper {
             return storageType;
         }
 
-        for (Input input : process.getInputs().getInputs()) {
-            Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
-            storageType = FeedHelper.getStorageType(feed, cluster);
-            if (Storage.TYPE.TABLE == storageType) {
-                break;
+        if (process.getInputs() != null) {
+            for (Input input : process.getInputs().getInputs()) {
+                Feed feed = EntityUtil.getEntity(EntityType.FEED, input.getFeed());
+                storageType = FeedHelper.getStorageType(feed, cluster);
+                if (Storage.TYPE.TABLE == storageType) {
+                    break;
+                }
             }
         }
 
         // If input feeds storage type is file system check storage type of output feeds
-        if (Storage.TYPE.FILESYSTEM == storageType) {
+        if (process.getOutputs() != null && Storage.TYPE.FILESYSTEM == storageType) {
             for (Output output : process.getOutputs().getOutputs()) {
                 Feed feed = EntityUtil.getEntity(EntityType.FEED, output.getFeed());
                 storageType = FeedHelper.getStorageType(feed, cluster);

@@ -154,11 +154,13 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             for (LateInput lp : process.getLateProcess().getLateInputs()) {
                 Feed feed = null;
                 String endInstanceTime = "";
-                for (Input input : process.getInputs().getInputs()) {
-                    if (input.getName().equals(lp.getInput())) {
-                        endInstanceTime = input.getEnd();
-                        feed = store.get(EntityType.FEED, input.getFeed());
-                        break;
+                if (process.getInputs() != null) {
+                    for (Input input : process.getInputs().getInputs()) {
+                        if (input.getName().equals(lp.getInput())) {
+                            endInstanceTime = input.getEnd();
+                            feed = store.get(EntityType.FEED, input.getFeed());
+                            break;
+                        }
                     }
                 }
                 if (feed == null) {

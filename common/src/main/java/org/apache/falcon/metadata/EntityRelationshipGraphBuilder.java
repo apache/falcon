@@ -358,8 +358,11 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     public static boolean areSame(Inputs oldProcessInputs, Inputs newProcessInputs) {
-        if (oldProcessInputs == null && newProcessInputs == null
-                || oldProcessInputs == null || newProcessInputs == null
+        if (oldProcessInputs == null && newProcessInputs == null) {
+            return true;
+        }
+
+        if (oldProcessInputs == null || newProcessInputs == null
                 || oldProcessInputs.getInputs().size() != newProcessInputs.getInputs().size()) {
             return false;
         }
@@ -418,8 +421,11 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     public static boolean areSame(Outputs oldProcessOutputs, Outputs newProcessOutputs) {
-        if (oldProcessOutputs == null && newProcessOutputs == null
-                || oldProcessOutputs == null || newProcessOutputs == null
+        if (oldProcessOutputs == null && newProcessOutputs == null) {
+            return true;
+        }
+
+        if (oldProcessOutputs == null || newProcessOutputs == null
                 || oldProcessOutputs.getOutputs().size() != newProcessOutputs.getOutputs().size()) {
             return false;
         }
