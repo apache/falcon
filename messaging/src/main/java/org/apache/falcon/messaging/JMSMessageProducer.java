@@ -18,7 +18,6 @@
 
 package org.apache.falcon.messaging;
 
-import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
@@ -213,7 +212,6 @@ public class JMSMessageProducer {
             }
 
             change(message, WorkflowExecutionArgs.FEED_INSTANCE_PATHS, feedPaths[i]);
-            convertDateFormat(message);
             messages.add(message);
         }
 
@@ -318,16 +316,6 @@ public class JMSMessageProducer {
         }
 
         return message;
-    }
-
-    public void convertDateFormat(Map<String, String> message) {
-        String date = message.get(WorkflowExecutionArgs.NOMINAL_TIME.getName());
-        change(message, WorkflowExecutionArgs.NOMINAL_TIME,
-                SchemaHelper.formatDateUTCToISO8601(date, "yyyy-MM-dd-HH-mm"));
-
-        date = message.get(WorkflowExecutionArgs.TIMESTAMP.getName());
-        change(message, WorkflowExecutionArgs.TIMESTAMP,
-                SchemaHelper.formatDateUTCToISO8601(date, "yyyy-MM-dd-HH-mm"));
     }
 
     @SuppressWarnings("unchecked")

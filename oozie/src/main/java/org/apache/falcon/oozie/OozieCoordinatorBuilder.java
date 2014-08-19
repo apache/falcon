@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -36,6 +37,7 @@ import org.apache.falcon.oozie.process.ProcessExecutionCoordinatorBuilder;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.OozieClient;
 
@@ -55,11 +57,19 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     protected static final String MR_JOB_PRIORITY = "jobPriority";
 
     protected static final String IGNORE = "IGNORE";
-    protected final Tag lifecycle;
+    protected final LifeCycle lifecycle;
 
-    public OozieCoordinatorBuilder(T entity, Tag tag) {
+    public OozieCoordinatorBuilder(T entity, LifeCycle lifecycle) {
         super(entity);
-        this.lifecycle = tag;
+        this.lifecycle = lifecycle;
+    }
+
+    public LifeCycle getLifecycle() {
+        return lifecycle;
+    }
+
+    public Tag getTag() {
+        return lifecycle.getTag();
     }
 
     public static OozieCoordinatorBuilder get(Entity entity, Tag tag) {
@@ -87,11 +97,11 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
     }
 
     protected Path getBuildPath(Path buildPath) {
-        return new Path(buildPath, lifecycle.name());
+        return new Path(buildPath, getTag().name());
     }
 
     protected String getEntityName() {
-        return EntityUtil.getWorkflowName(lifecycle, entity).toString();
+        return EntityUtil.getWorkflowName(getTag(), entity).toString();
     }
 
     protected Path marshal(Cluster cluster, COORDINATORAPP coord,
@@ -104,26 +114,32 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
                                                          String coordName)  throws FalconException {
         Properties props = new Properties();
         props.put(WorkflowExecutionArgs.ENTITY_NAME.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.ENTITY_TYPE.getName(), entity.getEntityType().name());
+        props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), cluster.getName());
         props.put(WorkflowExecutionArgs.NOMINAL_TIME.getName(), NOMINAL_TIME_EL);
         props.put(WorkflowExecutionArgs.TIMESTAMP.getName(), ACTUAL_TIME_EL);
-        props.put("userBrokerUrl", ClusterHelper.getMessageBrokerUrl(cluster));
-        props.put("userBrokerImplClass", ClusterHelper.getMessageBrokerImplClass(cluster));
-        String falconBrokerUrl = StartupProperties.get().getProperty(
-                WorkflowExecutionArgs.BRKR_URL.getName(), "tcp://localhost:61616?daemon=true");
-        props.put(WorkflowExecutionArgs.BRKR_URL.getName(), falconBrokerUrl);
-        String falconBrokerImplClass = StartupProperties.get().getProperty(
-                WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
-        props.put(WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), falconBrokerImplClass);
-        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
-            DEFAULT_BROKER_MSG_TTL.toString());
-        props.put(WorkflowExecutionArgs.BRKR_TTL.getName(), jmsMessageTTL);
-        props.put(WorkflowExecutionArgs.ENTITY_TYPE.getName(), entity.getEntityType().name());
-        props.put("logDir", getLogDirectory(cluster));
+        props.put("falconDataOperation", getOperation().name());
+
+        props.put(WorkflowExecutionArgs.LOG_DIR.getName(), getLogDirectory(cluster));
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());
-        props.put("workflowEngineUrl", ClusterHelper.getOozieUrl(cluster));
+        props.put(WorkflowExecutionArgs.WF_ENGINE_URL.getName(), ClusterHelper.getOozieUrl(cluster));
 
+        addLateDataProperties(props);
+        addBrokerProperties(cluster, props);
+
+        props.put(MR_QUEUE_NAME, "default");
+        props.put(MR_JOB_PRIORITY, "NORMAL");
+
+        //props in entity override the set props.
+        props.putAll(getEntityProperties(entity));
+        return props;
+    }
+
+    protected abstract WorkflowExecutionContext.EntityOperations getOperation();
+
+    private void addLateDataProperties(Properties props) throws FalconException {
         if (EntityUtil.getLateProcess(entity) == null
             || EntityUtil.getLateProcess(entity).getLateInputs() == null
             || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
@@ -131,16 +147,25 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         } else {
             props.put("shouldRecord", "true");
         }
+    }
 
-        props.put("entityName", entity.getName());
-        props.put("entityType", entity.getEntityType().name().toLowerCase());
-        props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), cluster.getName());
+    private void addBrokerProperties(Cluster cluster, Properties props) {
+        props.put(WorkflowExecutionArgs.USER_BRKR_URL.getName(),
+                ClusterHelper.getMessageBrokerUrl(cluster));
+        props.put(WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName(),
+                ClusterHelper.getMessageBrokerImplClass(cluster));
 
-        props.put(MR_QUEUE_NAME, "default");
-        props.put(MR_JOB_PRIORITY, "NORMAL");
-        //props in entity override the set props.
-        props.putAll(getEntityProperties(entity));
-        return props;
+        String falconBrokerUrl = StartupProperties.get().getProperty(
+                "broker.url", "tcp://localhost:61616?daemon=true");
+        props.put(WorkflowExecutionArgs.BRKR_URL.getName(), falconBrokerUrl);
+
+        String falconBrokerImplClass = StartupProperties.get().getProperty(
+                "broker.impl.class", ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
+        props.put(WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName(), falconBrokerImplClass);
+
+        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
+            DEFAULT_BROKER_MSG_TTL.toString());
+        props.put(WorkflowExecutionArgs.BRKR_TTL.getName(), jmsMessageTTL);
     }
 
     protected CONFIGURATION getConfig(Properties props) {

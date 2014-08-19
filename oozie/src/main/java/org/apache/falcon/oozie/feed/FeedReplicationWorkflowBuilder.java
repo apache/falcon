@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -39,7 +40,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
     protected static final String REPLICATION_ACTION_NAME = "replication";
 
     public FeedReplicationWorkflowBuilder(Feed entity) {
-        super(entity, Tag.REPLICATION);
+        super(entity, LifeCycle.REPLICATION);
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
@@ -52,15 +53,7 @@ public abstract class FeedReplicationWorkflowBuilder extends OozieOrchestrationW
         addLibExtensionsToWorkflow(cluster, workflow, Tag.REPLICATION);
 
         marshal(cluster, workflow, buildPath);
-        Properties props = getProperties(buildPath, wfName);
-        props.putAll(getWorkflowProperties());
-        return props;
-    }
-
-    private Properties getWorkflowProperties() {
-        Properties props = new Properties();
-        props.setProperty("falconDataOperation", "REPLICATE");
-        return props;
+        return getProperties(buildPath, wfName);
     }
 
     protected abstract WORKFLOWAPP getWorkflow(Cluster src, Cluster target) throws FalconException;

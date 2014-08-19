@@ -50,7 +50,7 @@ public class WorkflowExecutionContext {
 
     private static final Logger LOG = LoggerFactory.getLogger(WorkflowExecutionContext.class);
 
-    public static final String PROCESS_INSTANCE_FORMAT = "yyyy-MM-dd-HH-mm"; // nominal time
+    public static final String INSTANCE_FORMAT = "yyyy-MM-dd-HH-mm"; // nominal time
 
     public static final String OUTPUT_FEED_SEPARATOR = ",";
     public static final String INPUT_FEED_SEPARATOR = "#";
@@ -145,10 +145,10 @@ public class WorkflowExecutionContext {
      * @return a ISO8601 formatted string
      */
     public String getNominalTimeAsISO8601() {
-        return SchemaHelper.formatDateUTCToISO8601(getNominalTime(), PROCESS_INSTANCE_FORMAT);
+        return SchemaHelper.formatDateUTCToISO8601(getNominalTime(), INSTANCE_FORMAT);
     }
 
-    public String getTimestamp() {
+    String getTimestamp() {
         return getValue(WorkflowExecutionArgs.TIMESTAMP);
     }
 
@@ -157,7 +157,7 @@ public class WorkflowExecutionContext {
      * @return a ISO8601 formatted string
      */
     public String getTimeStampAsISO8601() {
-        return SchemaHelper.formatDateUTCToISO8601(getTimestamp(), PROCESS_INSTANCE_FORMAT);
+        return SchemaHelper.formatDateUTCToISO8601(getTimestamp(), INSTANCE_FORMAT);
     }
 
     public String getClusterName() {

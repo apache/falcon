@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Property;
@@ -275,9 +276,9 @@ public final class FeedHelper {
                 + storage.getTable();
     }
 
-    public static Properties getUserWorkflowProperties(String policy) {
+    public static Properties getUserWorkflowProperties(LifeCycle lifeCycle) {
         Properties props = new Properties();
-        props.put("userWorkflowName", policy + "-policy");
+        props.put("userWorkflowName", lifeCycle.name().toLowerCase() + "-policy");
         props.put("userWorkflowEngine", "falcon");
 
         String version;

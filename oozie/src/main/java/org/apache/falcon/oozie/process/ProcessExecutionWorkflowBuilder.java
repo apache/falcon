@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie.process;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
@@ -58,7 +59,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
         Arrays.asList(new String[]{PREPROCESS_ACTION_NAME, USER_ACTION_NAME, }));
 
     protected ProcessExecutionWorkflowBuilder(Process entity) {
-        super(entity, Tag.DEFAULT);
+        super(entity, LifeCycle.EXECUTION);
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
@@ -100,14 +101,13 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
 
         marshal(cluster, wfApp, buildPath);
         Properties props = getProperties(buildPath, wfName);
-        props.putAll(getWorkflowProperties(cluster));
+        props.putAll(getWorkflowProperties());
 
         return props;
     }
 
-    private Properties getWorkflowProperties(Cluster cluster) {
+    private Properties getWorkflowProperties() {
         Properties props = new Properties();
-        props.setProperty("falconDataOperation", "GENERATE");
         props.setProperty("srcClusterName", "NA");
         return props;
     }

@@ -38,7 +38,6 @@ import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.COORDINATOR;
-import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.process.AbstractTestBase;
@@ -49,6 +48,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -189,10 +189,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         String outEventInstance = coord.getOutputEvents().getDataOut().get(0).getInstance();
         Assert.assertEquals("${now(0,-40)}", outEventInstance);
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
+
+        verifyEntityProperties(feed, trgCluster,
+                WorkflowExecutionContext.EntityOperations.REPLICATE, props);
+        verifyBrokerProperties(trgCluster, props);
 
         // verify the replication param that feed replicator depends on
         String pathsWithPartitions = getPathsWithPartitions(srcCluster, trgCluster, feed);
@@ -208,7 +209,6 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInPaths"), pathsWithPartitions);
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.FILESYSTEM.name());
-        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, feed));
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
@@ -274,7 +274,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(alphaCoord.getEnd(), "2012-10-01T12:11Z");
 
         String pathsWithPartitions = getPathsWithPartitions(srcCluster, alphaTrgCluster, fsReplFeed);
-        assertReplCoord(alphaCoord, fsReplFeed, alphaTrgCluster.getName(), pathsWithPartitions);
+        assertReplCoord(alphaCoord, fsReplFeed, alphaTrgCluster, pathsWithPartitions);
 
         List<Properties> betaCoords = builder.buildCoords(betaTrgCluster, new Path("/beta/falcon/"));
         final COORDINATORAPP betaCoord = getCoordinator(trgMiniDFS,
@@ -283,7 +283,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(betaCoord.getEnd(), "2012-10-01T12:26Z");
 
         pathsWithPartitions = getPathsWithPartitions(srcCluster, betaTrgCluster, fsReplFeed);
-        assertReplCoord(betaCoord, fsReplFeed, betaTrgCluster.getName(), pathsWithPartitions);
+        assertReplCoord(betaCoord, fsReplFeed, betaTrgCluster, pathsWithPartitions);
     }
 
     private String getPathsWithPartitions(Cluster sourceCluster, Cluster targetCluster,
@@ -302,9 +302,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         return parts;
     }
 
-    private void assertReplCoord(COORDINATORAPP coord, Feed aFeed, String clusterName,
-                                 String pathsWithPartitions) throws JAXBException, IOException {
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(aFeed, clusterName);
+    private void assertReplCoord(COORDINATORAPP coord, Feed aFeed, Cluster aCluster,
+                                 String pathsWithPartitions) throws Exception {
+        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                FeedHelper.getCluster(aFeed, aCluster.getName());
         Date startDate = feedCluster.getValidity().getStart();
         Assert.assertEquals(coord.getStart(), SchemaHelper.formatDateUTC(startDate));
 
@@ -319,10 +320,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         List<String> args = replication.getArg();
         Assert.assertEquals(args.size(), 13);
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
 
         Assert.assertEquals(props.get("sourceRelativePaths"), pathsWithPartitions);
         Assert.assertEquals(props.get("sourceRelativePaths"), "${coord:dataIn('input')}/" + srcCluster.getColo());
@@ -331,7 +329,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
         Assert.assertEquals(props.get("maxMaps"), "33");
         Assert.assertEquals(props.get("mapBandwidthKB"), "2048");
-        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, aFeed));
+
+        verifyEntityProperties(aFeed, aCluster,
+                WorkflowExecutionContext.EntityOperations.REPLICATE, props);
+        verifyBrokerProperties(trgCluster, props);
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP workflow, boolean isTable) {
@@ -415,10 +416,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-source-hive-site.xml")));
         Assert.assertTrue(fs.exists(new Path(wfPath + "/conf/falcon-target-hive-site.xml")));
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
 
         final CatalogStorage srcStorage = (CatalogStorage) FeedHelper.createStorage(srcCluster, tableFeed);
         final CatalogStorage trgStorage = (CatalogStorage) FeedHelper.createStorage(trgCluster, tableFeed);
@@ -446,14 +444,18 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconInputFeeds"), tableFeed.getName());
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
-        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, tableFeed));
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "${coord:dataOut('output')}");
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
-        assertReplicationHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord), wfPath.toString());
+        assertReplicationHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
+                wfPath.toString());
+
+        verifyEntityProperties(tableFeed, trgCluster,
+                WorkflowExecutionContext.EntityOperations.REPLICATE, props);
+        verifyBrokerProperties(trgCluster, props);
     }
 
     private void assertReplicationHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
@@ -525,10 +527,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
 
         String feedDataPath = props.get("feedDataPath");
         String storageType = props.get("falconFeedStorageType");
@@ -549,9 +548,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), feed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
-        Assert.assertEquals(props.get("logDir"), getLogPath(srcCluster, feed));
 
         assertWorkflowRetries(coord);
+        verifyEntityProperties(feed, srcCluster,
+                WorkflowExecutionContext.EntityOperations.DELETE, props);
+        verifyBrokerProperties(srcCluster, props);
     }
 
     @Test (dataProvider = "secureOptions")
@@ -571,10 +572,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + tableFeed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
 
         String feedDataPath = props.get("feedDataPath");
         String storageType = props.get("falconFeedStorageType");
@@ -595,9 +593,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), tableFeed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
-        Assert.assertEquals(props.get("logDir"), getLogPath(trgCluster, tableFeed));
 
         assertWorkflowRetries(coord);
+        verifyBrokerProperties(srcCluster, props);
+        verifyEntityProperties(tableFeed, trgCluster,
+                WorkflowExecutionContext.EntityOperations.DELETE, props);
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
         assertHCatCredentials(
@@ -631,10 +631,5 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 }
             }
         }
-    }
-
-    private String getLogPath(Cluster aCluster, Feed aFeed) {
-        Path logPath = EntityUtil.getLogPath(aCluster, aFeed);
-        return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
     }
 }

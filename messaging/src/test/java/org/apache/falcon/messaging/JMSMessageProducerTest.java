@@ -210,9 +210,9 @@ public class JMSMessageProducerTest {
         Assert.assertEquals(message.getString(WorkflowExecutionArgs.ENTITY_NAME.getName()),
                 "agg-coord");
         Assert.assertEquals(message.getString(WorkflowExecutionArgs.NOMINAL_TIME.getName()),
-                "2011-01-01T01:00Z");
+                "2011-01-01-01-00");
         Assert.assertEquals(message.getString(WorkflowExecutionArgs.TIMESTAMP.getName()),
-                "2012-01-01T01:00Z");
+                "2012-01-01-01-00");
         Assert.assertEquals(message.getString(WorkflowExecutionArgs.STATUS.getName()), "SUCCEEDED");
     }
 }

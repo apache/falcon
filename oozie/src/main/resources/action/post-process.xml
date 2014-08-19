@@ -49,15 +49,15 @@
         <arg>-timeStamp</arg>
         <arg>${timeStamp}</arg>
         <arg>-brokerImplClass</arg>
-        <arg>${wf:conf("broker.impl.class")}</arg>
+        <arg>${brokerImplClass}</arg>
         <arg>-brokerUrl</arg>
-        <arg>${wf:conf("broker.url")}</arg>
+        <arg>${brokerUrl}</arg>
         <arg>-userBrokerImplClass</arg>
         <arg>${userBrokerImplClass}</arg>
         <arg>-userBrokerUrl</arg>
         <arg>${userBrokerUrl}</arg>
         <arg>-brokerTTL</arg>
-        <arg>${wf:conf("broker.ttlInMins")}</arg>
+        <arg>${brokerTTL}</arg>
         <arg>-feedNames</arg>
         <arg>${feedNames}</arg>
         <arg>-feedInstancePaths</arg>

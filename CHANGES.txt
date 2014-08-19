@@ -58,6 +58,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-583 Post processing is broken in current trunk
+   (Venkatesh Seetharam via Suhas Vasu)
+
    FALCON-582 Latest changes to LICENSE files results in build failure
    (Srikanth Sundarrajan via Venkatesh Seetharam)
 

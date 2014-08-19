@@ -21,6 +21,7 @@ package org.apache.falcon.oozie.feed;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
@@ -45,6 +46,7 @@ import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.oozie.coordinator.ACTION;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -74,10 +76,11 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     private static final String MR_MAP_BANDWIDTH = "mapBandwidthKB";
 
     public FeedReplicationCoordinatorBuilder(Feed entity) {
-        super(entity, Tag.REPLICATION);
+        super(entity, LifeCycle.REPLICATION);
     }
 
-    @Override public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
+    @Override
+    public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(entity, cluster.getName());
         if (feedCluster.getType() == ClusterType.TARGET) {
             List<Properties> props = new ArrayList<Properties>();
@@ -94,6 +97,11 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
             return props;
         }
         return null;
+    }
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.REPLICATE;
     }
 
     private Properties doBuild(Cluster srcCluster, Cluster trgCluster, Path buildPath) throws FalconException {
@@ -180,7 +188,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         }
 
         propagateLateDataProperties(instancePaths, sourceStorage.getType().name(), props);
-        props.putAll(FeedHelper.getUserWorkflowProperties("replication"));
+        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
 
         workflow.setConfiguration(getConfig(props));
         action.setWorkflow(workflow);

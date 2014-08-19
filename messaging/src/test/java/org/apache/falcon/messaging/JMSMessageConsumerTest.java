@@ -86,7 +86,7 @@ public class JMSMessageConsumerTest {
         }
 
         WorkflowExecutionContext context = WorkflowExecutionContext.create(
-                getMockFalconMessage(15), WorkflowExecutionContext.Type.POST_PROCESSING);
+                getMockFalconMessage(5), WorkflowExecutionContext.Type.POST_PROCESSING);
         context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1"));
 
         MapMessage mapMessage = session.createMapMessage();

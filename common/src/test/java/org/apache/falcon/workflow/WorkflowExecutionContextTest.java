@@ -52,7 +52,7 @@ public class WorkflowExecutionContextTest {
     private static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private static final String ISO8601_TIME = SchemaHelper.formatDateUTCToISO8601(
-            NOMINAL_TIME, WorkflowExecutionContext.PROCESS_INSTANCE_FORMAT);
+            NOMINAL_TIME, WorkflowExecutionContext.INSTANCE_FORMAT);
 
     private WorkflowExecutionContext context;
 

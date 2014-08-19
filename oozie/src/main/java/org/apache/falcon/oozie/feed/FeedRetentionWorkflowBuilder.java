@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -39,7 +40,7 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
     private static final String EVICTION_ACTION_NAME = "eviction";
 
     public FeedRetentionWorkflowBuilder(Feed entity) {
-        super(entity, Tag.DEFAULT);
+        super(entity, LifeCycle.EVICTION);
     }
 
     @Override public Properties build(Cluster cluster, Path buildPath) throws FalconException {
@@ -75,7 +76,6 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
 
     private Properties getWorkflowProperties() {
         Properties props = new Properties();
-        props.setProperty("falconDataOperation", "DELETE");
         props.setProperty("srcClusterName", "NA");
         return props;
     }
@@ -109,5 +109,4 @@ public class FeedRetentionWorkflowBuilder extends OozieOrchestrationWorkflowBuil
             }
         }
     }
-
 }

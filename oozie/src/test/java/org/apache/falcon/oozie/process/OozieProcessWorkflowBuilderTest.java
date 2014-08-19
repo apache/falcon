@@ -44,7 +44,6 @@ import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
 import org.apache.falcon.oozie.bundle.CONFIGURATION;
-import org.apache.falcon.oozie.coordinator.CONFIGURATION.Property;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.workflow.ACTION;
@@ -55,6 +54,7 @@ import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -186,19 +186,14 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(ds.getUriTemplate(),
                 FeedHelper.createStorage(feedCluster, feed).getUriTemplate(LocationType.DATA));
 
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
         assertEquals(props.get("mapred.job.priority"), "LOW");
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         assertLibExtensions(fs, coord, EntityType.PROCESS, null);
-    }
-
-    private String getLogPath(Process process) {
-        Path logPath = EntityUtil.getLogPath(cluster, process);
-        return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
     }
 
     @Test
@@ -285,10 +280,11 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         // verify table and hive props
         Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
@@ -298,7 +294,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
@@ -349,11 +344,11 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
+        HashMap<String, String> props = getCoordProperties(coord);
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
@@ -404,11 +399,11 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
+        HashMap<String, String> props = getCoordProperties(coord);
+
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
@@ -455,11 +450,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
+        HashMap<String, String> props = getCoordProperties(coord);
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         String wfPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
         WORKFLOWAPP parentWorkflow = getWorkflowapp(fs, new Path(wfPath, "workflow.xml"));
@@ -546,10 +540,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
+        HashMap<String, String> props = getCoordProperties(coord);
 
         // verify table props
         Map<String, String> expected = getExpectedProperties(inFeed, outFeed, process);
@@ -558,7 +549,9 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 Assert.assertEquals(entry.getValue(), expected.get(entry.getKey()));
             }
         }
-        Assert.assertEquals(props.get("logDir"), getLogPath(process));
+        verifyEntityProperties(process, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         // verify the late data params
         Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getFeed());
@@ -684,11 +677,10 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         String coordPath = bundle.getCoordinator().get(0).getAppPath().replace("${nameNode}", "");
 
         COORDINATORAPP coord = getCoordinator(fs, new Path(coordPath));
-        HashMap<String, String> props = new HashMap<String, String>();
-        for (Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
-            props.put(prop.getName(), prop.getValue());
-        }
-        Assert.assertEquals(props.get("logDir"), getLogPath(processEntity));
+        HashMap<String, String> props = getCoordProperties(coord);
+        verifyEntityProperties(processEntity, cluster,
+                WorkflowExecutionContext.EntityOperations.GENERATE, props);
+        verifyBrokerProperties(cluster, props);
 
         String[] expected = {
             WorkflowExecutionArgs.FEED_NAMES.getName(),

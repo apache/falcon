@@ -21,6 +21,7 @@ package org.apache.falcon.oozie.process;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -29,9 +30,13 @@ import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
+import org.apache.falcon.oozie.coordinator.CONFIGURATION;
 import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.workflow.ACTION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
+import org.apache.falcon.util.StartupProperties;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -48,6 +53,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -198,5 +204,50 @@ public class AbstractTestBase {
             Assert.assertEquals(action.getRetryMax(), "3");
             Assert.assertEquals(action.getRetryInterval(), "1");
         }
+    }
+
+    protected HashMap<String, String> getCoordProperties(COORDINATORAPP coord) {
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (CONFIGURATION.Property prop : coord.getAction().getWorkflow().getConfiguration().getProperty()) {
+            props.put(prop.getName(), prop.getValue());
+        }
+        return props;
+    }
+
+    protected void verifyEntityProperties(Entity entity, Cluster cluster,
+                                          WorkflowExecutionContext.EntityOperations operation,
+                                          HashMap<String, String> props) throws Exception {
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_NAME.getName()),
+                entity.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.ENTITY_TYPE.getName()),
+                entity.getEntityType().name());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.CLUSTER_NAME.getName()), cluster.getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.LOG_DIR.getName()), getLogPath(cluster, entity));
+        Assert.assertEquals(props.get("falconDataOperation"), operation.name());
+    }
+
+    private String getLogPath(Cluster cluster, Entity entity) {
+        Path logPath = EntityUtil.getLogPath(cluster, entity);
+        return (logPath.toUri().getScheme() == null ? "${nameNode}" : "") + logPath;
+    }
+
+    protected void verifyBrokerProperties(Cluster cluster, HashMap<String, String> props) {
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.USER_BRKR_URL.getName()),
+                ClusterHelper.getMessageBrokerUrl(cluster));
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.USER_BRKR_IMPL_CLASS.getName()),
+                ClusterHelper.getMessageBrokerImplClass(cluster));
+
+        String falconBrokerUrl = StartupProperties.get().getProperty(
+                "broker.url", "tcp://localhost:61616?daemon=true");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.BRKR_URL.getName()), falconBrokerUrl);
+
+        String falconBrokerImplClass = StartupProperties.get().getProperty(
+                "broker.impl.class", ClusterHelper.DEFAULT_BROKER_IMPL_CLASS);
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.BRKR_IMPL_CLASS.getName()),
+                falconBrokerImplClass);
+
+        String jmsMessageTTL = StartupProperties.get().getProperty("broker.ttlInMins",
+                String.valueOf(3 * 24 * 60L));
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.BRKR_TTL.getName()), jmsMessageTTL);
     }
 }

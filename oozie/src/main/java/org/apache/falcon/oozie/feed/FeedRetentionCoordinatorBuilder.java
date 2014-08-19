@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
@@ -46,7 +47,7 @@ import java.util.Properties;
  */
 public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Feed> {
     public FeedRetentionCoordinatorBuilder(Feed entity) {
-        super(entity, Tag.RETENTION);
+        super(entity, LifeCycle.EVICTION);
     }
 
     @Override public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
@@ -85,15 +86,13 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
 
         props.put("limit", feedCluster.getRetention().getLimit().toString());
 
-        props.put(WorkflowExecutionArgs.OPERATION.getName(),
-                WorkflowExecutionContext.EntityOperations.DELETE.name());
         props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), entity.getName());
         props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), IGNORE);
 
         props.put("falconInputFeeds", entity.getName());
         props.put("falconInPaths", IGNORE);
 
-        props.putAll(FeedHelper.getUserWorkflowProperties("eviction"));
+        props.putAll(FeedHelper.getUserWorkflowProperties(getLifecycle()));
 
         WORKFLOW workflow = new WORKFLOW();
         Properties wfProp = OozieOrchestrationWorkflowBuilder.get(entity, cluster, Tag.RETENTION).build(cluster,
@@ -108,5 +107,10 @@ public class FeedRetentionCoordinatorBuilder extends OozieCoordinatorBuilder<Fee
 
         Path marshalPath = marshal(cluster, coord, coordPath);
         return Arrays.asList(getProperties(marshalPath, coordName));
+    }
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.DELETE;
     }
 }

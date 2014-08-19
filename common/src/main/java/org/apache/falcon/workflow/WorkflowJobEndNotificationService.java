@@ -27,6 +27,8 @@ import org.apache.falcon.service.FalconService;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -36,6 +38,8 @@ import java.util.Set;
  * A workflow job end notification service.
  */
 public class WorkflowJobEndNotificationService implements FalconService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(WorkflowJobEndNotificationService.class);
 
     public static final String SERVICE_NAME = WorkflowJobEndNotificationService.class.getSimpleName();
 
@@ -75,7 +79,12 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     public void notifyFailure(WorkflowExecutionContext context) throws FalconException {
         for (WorkflowExecutionListener listener : listeners) {
-            listener.onFailure(context);
+            try {
+                listener.onFailure(context);
+            } catch (Throwable t) {
+                // do not rethrow as other listeners do not get a chance
+                LOG.error("Error in listener {}", listener.getClass().getName(), t);
+            }
         }
 
         instrumentAlert(context);
@@ -83,7 +92,12 @@ public class WorkflowJobEndNotificationService implements FalconService {
 
     public void notifySuccess(WorkflowExecutionContext context) throws FalconException {
         for (WorkflowExecutionListener listener : listeners) {
-            listener.onSuccess(context);
+            try {
+                listener.onSuccess(context);
+            } catch (Throwable t) {
+                // do not rethrow as other listeners do not get a chance
+                LOG.error("Error in listener {}", listener.getClass().getName(), t);
+            }
         }
 
         instrumentAlert(context);

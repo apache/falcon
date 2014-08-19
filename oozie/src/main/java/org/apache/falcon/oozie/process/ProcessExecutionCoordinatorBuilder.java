@@ -20,6 +20,7 @@ package org.apache.falcon.oozie.process;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.EntityUtil;
@@ -50,6 +51,7 @@ import org.apache.falcon.oozie.coordinator.OUTPUTEVENTS;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.coordinator.WORKFLOW;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
@@ -64,7 +66,7 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     public ProcessExecutionCoordinatorBuilder(Process entity) {
-        super(entity, Tag.DEFAULT);
+        super(entity, LifeCycle.EXECUTION);
     }
 
     @Override public List<Properties> buildCoords(Cluster cluster, Path buildPath) throws FalconException {
@@ -104,6 +106,11 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
         Path marshalPath = marshal(cluster, coord, coordPath);
         return Arrays.asList(getProperties(marshalPath, coordName));
+    }
+
+    @Override
+    protected WorkflowExecutionContext.EntityOperations getOperation() {
+        return WorkflowExecutionContext.EntityOperations.GENERATE;
     }
 
     private void initializeCoordAttributes(Cluster cluster, COORDINATORAPP coord, String coordName) {

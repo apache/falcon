@@ -20,6 +20,7 @@ package org.apache.falcon.oozie;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.LifeCycle;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -79,14 +80,22 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     public static final Set<String> FALCON_ACTIONS = new HashSet<String>(Arrays.asList(
         new String[]{PREPROCESS_ACTION_NAME, SUCCESS_POSTPROCESS_ACTION_NAME, FAIL_POSTPROCESS_ACTION_NAME, }));
 
-    private final Tag lifecycle;
+    private final LifeCycle lifecycle;
 
-    public OozieOrchestrationWorkflowBuilder(T entity, Tag lifecycle) {
+    public OozieOrchestrationWorkflowBuilder(T entity, LifeCycle lifecycle) {
         super(entity);
         this.lifecycle = lifecycle;
     }
 
-    public static final OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
+    public LifeCycle getLifecycle() {
+        return lifecycle;
+    }
+
+    public Tag getTag() {
+        return lifecycle.getTag();
+    }
+
+    public static OozieOrchestrationWorkflowBuilder get(Entity entity, Cluster cluster, Tag lifecycle)
         throws FalconException {
         switch (entity.getEntityType()) {
         case FEED:
@@ -194,11 +203,9 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     protected boolean shouldPreProcess() throws FalconException {
-        if (EntityUtil.getLateProcess(entity) == null || EntityUtil.getLateProcess(entity).getLateInputs() == null
-            || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0) {
-            return false;
-        }
-        return true;
+        return !(EntityUtil.getLateProcess(entity) == null
+                || EntityUtil.getLateProcess(entity).getLateInputs() == null
+                || EntityUtil.getLateProcess(entity).getLateInputs().size() == 0);
     }
 
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag) throws FalconException {
