@@ -395,7 +395,7 @@ public final class OozieUtil {
         initialNominalTimes.removeAll(nominalTimesOriginalAndNew);
 
         if (initialNominalTimes.size() != 0) {
-            LOGGER.debug("Missing instance are : " + initialNominalTimes);
+            LOGGER.info("Missing instance are : " + initialNominalTimes);
             LOGGER.debug("Original Bundle ID   : " + originalBundleId);
             LOGGER.debug("New Bundle ID        : " + newBundleId);
 
@@ -456,8 +456,14 @@ public final class OozieUtil {
                                                  String entityName, int bundleNumber)
         throws OozieClientException, IOException {
         String bundleID = InstanceUtil.getSequenceBundleID(helper, entityName, type, bundleNumber);
+        createMissingDependenciesForBundle(helper, bundleID);
+
+    }
+
+    public static void createMissingDependenciesForBundle(ColoHelper helper, String bundleId)
+            throws OozieClientException, IOException {
         OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
-        List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleID).getCoordinators();
+        List<CoordinatorJob> coords = oozieClient.getBundleJobInfo(bundleId).getCoordinators();
         for (CoordinatorJob coord : coords) {
 
             CoordinatorJob temp = oozieClient.getCoordJobInfo(coord.getId());
@@ -465,7 +471,7 @@ public final class OozieUtil {
                  instanceNumber++) {
                 CoordinatorAction instance = temp.getActions().get(instanceNumber);
                 InstanceUtil.createHDFSFolders(helper,
-                    Arrays.asList(instance.getMissingDependencies().split("#")));
+                        Arrays.asList(instance.getMissingDependencies().split("#")));
             }
         }
     }

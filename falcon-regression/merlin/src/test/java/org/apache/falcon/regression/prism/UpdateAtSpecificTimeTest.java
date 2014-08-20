@@ -417,7 +417,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 Util.readEntityName(feed), EntityType.FEED);
 
             //send update again
-            r = prism.getFeedHelper().update(feed, updatedFeed, updateTime);
+            r = prism.getFeedHelper().update(feed, updatedFeed, updateTime, null);
             AssertUtil.assertSucceeded(r);
 
             //verify new bundle creation on cluster_2 and no new bundle on cluster_1
@@ -429,7 +429,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 .verifyNewBundleCreation(cluster_1, newBundle_cluster1, oldNominalTimes_cluster1,
                     feed, false, false);
             //wait till update time is reached
-            TimeUtil.sleepTill(updateTime);
+            TimeUtil.sleepTill(TimeUtil.getTimeWrtSystemTime(5));
 
             //verify new bundle creation with instance matching
             OozieUtil
@@ -542,7 +542,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         logger.info("Updated Feed :" + Util.prettyPrintXml(updatedFeed));
         logger.info("Update Time : " + updateTime);
 
-        r = prism.getFeedHelper().update(feed, updatedFeed, updateTime);
+        r = prism.getFeedHelper().update(feed, updatedFeed, updateTime, null);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster_1, feed, 1);
 
