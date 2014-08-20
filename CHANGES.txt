@@ -64,6 +64,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-616 cluster submission should fail when shared libs copy fail
+   (Shwetha GS via Suhas Vasu)   
+
    FALCON-598 ProcessHelper throws NPE if the process has no inputs OR no
    outputs defined (Balu Vellanki via Venkatesh Seetharam)
 

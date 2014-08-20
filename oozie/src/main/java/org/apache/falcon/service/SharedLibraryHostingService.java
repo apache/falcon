@@ -85,7 +85,7 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             pushLibsToHDFS(properties.getProperty("libext.process.paths"),
                     new Path(libext, EntityType.PROCESS.name()) , cluster, null);
         } catch (IOException e) {
-            LOG.error("Failed to copy shared libs to cluster {}", cluster.getName(), e);
+            throw new FalconException("Failed to copy shared libs to cluster" + cluster.getName(), e);
         }
     }
 
@@ -104,8 +104,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
             throw new FalconException("Unable to connect to HDFS: "
                     + ClusterHelper.getStorageUrl(cluster), e);
         }
-        if (!fs.exists(target)) {
-            fs.mkdirs(target);
+        if (!fs.exists(target) && !fs.mkdirs(target)) {
+            throw new FalconException("mkdir " + target + " failed");
         }
 
         for(String srcPaths : src.split(",")) {
@@ -185,8 +185,8 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
     public void onReload(Entity entity) throws FalconException {
         try {
             onAdd(entity);
-        } catch (FalconException ignored) {
-            LOG.warn("Failed to copy shared libraries to cluster", ignored);
+        } catch (FalconException e) {
+            throw new FalconException(e);
         }
     }
 }
