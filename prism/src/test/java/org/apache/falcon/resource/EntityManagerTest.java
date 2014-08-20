@@ -58,7 +58,7 @@ public class EntityManagerTest extends AbstractEntityManager {
     @DataProvider(name = "validXMLServletStreamProvider")
     private Object[][] servletStreamProvider() {
         ServletInputStream validProcessXML = getServletInputStream(SAMPLE_PROCESS_XML);
-        return new Object[][]{{EntityType.PROCESS, validProcessXML},
+        return new Object[][]{{validProcessXML},
         };
 
     }
