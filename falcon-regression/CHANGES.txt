@@ -1,0 +1,18 @@
+Apache Falcon (incubating) Regression Change log
+
+Trunk (Unreleased)
+
+  INCOMPATIBLE CHANGES
+
+  NEW FEATURES
+
+  IMPROVEMENTS
+   FALCON-581 merlin: Refactor code for cross product and make it a method 
+   (Raghav Kumar Gautam via Arpit Gupta) 
+   
+   FALCON-597 String logged at the start and end of the merlin test are slightly 
+   mismatched (Raghav Kumar Gautam via Arpit Gupta)
+
+  OPTIMIZATIONS
+
+  BUG FIXES

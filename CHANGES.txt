@@ -27,14 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-612 Create CHANGES.txt for falcon-regression(Arpit Gupta via SamarthG)
    FALCON-470 Add support for pagination, filter by, etc. to Entity and
    Instance List API (Balu Vellanki via Venkatesh Seetharam)
-
-   FALCON-581 merlin: Refactor code for cross product and make it a method 
-   (Raghav Kumar Gautam via Arpit Gupta) 
-   
-   FALCON-597 String logged at the start and end of the merlin test are slightly 
-   mismatched (Raghav Kumar Gautam via Arpit Gupta)
 
    FALCON-327 - Simplify message passing framework (Venkatesh Seetharam)
     FALCON-484 - Refactor workflow related code into context, listener and Notification
