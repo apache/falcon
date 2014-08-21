@@ -7,9 +7,15 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-   FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via Arpit Gupta)
+   FALCON-585 Remove requirement to have write access to / (Raghav Kumar Gautam)
+      FALCON-606 hcat tests should stop using root dir (Raghav Kumar Gautam 
+      via Arpit Gupta)
 
-   FALCON-610 Refactoring and documentation updates (Paul Isaychuk via Arpit Gupta)
+   FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via 
+   Arpit Gupta)
+
+   FALCON-610 Refactoring and documentation updates (Paul Isaychuk via 
+   Arpit Gupta)
 
    FALCON-581 Refactor code for cross product and make it a method 
    (Raghav Kumar Gautam via Arpit Gupta) 

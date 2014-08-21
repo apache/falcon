@@ -422,4 +422,24 @@ public final class HadoopUtil {
             }
         }
     }
+
+    /**
+     * Stitch two or more hadoop paths. For eg: stitchHdfsPath("/tmp/", "/test") = "/tmp/test",
+     * stitchHdfsPath("/tmp/", "test") = "/tmp/test", stitchHdfsPath("/tmp", "test") = "/tmp/test"
+     * @param path1 the first path to be stitched
+     * @param path2 the second path to be stitched
+     * @param pathParts other paths to be stitched
+     * @return final stitched path
+     */
+    public static String stitchHdfsPath(String path1, String path2, String... pathParts) {
+        String retValue = stitchTwoHdfsPaths(path1, path2);
+        for (String pathPart : pathParts) {
+            retValue = stitchTwoHdfsPaths(retValue, pathPart);
+        }
+        return retValue;
+    }
+
+    private static String stitchTwoHdfsPaths(String path1, String path2) {
+        return path1.replaceAll("/*$", "") + "/" + path2.replaceAll("^/*", "");
+    }
 }

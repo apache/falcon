@@ -60,12 +60,12 @@ public final class BundleUtil {
         return readBundleFromFolder("ELbundle");
     }
 
-    public static Bundle readHCatBundle() throws IOException {
-        return readBundleFromFolder("hcat");
+    public static Bundle readHCatBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("hcat", appPath, testName);
     }
 
-    public static Bundle readHCat2Bundle() throws IOException {
-        return readBundleFromFolder("hcat_2");
+    public static Bundle readHCat2Bundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("hcat_2", appPath, testName);
     }
 
     public static Bundle readLocalDCBundle() throws IOException {
@@ -78,6 +78,20 @@ public final class BundleUtil {
 
     public static Bundle readUpdateBundle() throws IOException {
         return readBundleFromFolder("updateBundle");
+    }
+
+    /** Generate a bundle from the template stored in a directory
+     * @param templatePath name of directory where template is stored
+     * @param appPath application path where staging/temp/working directory will live
+     * @param testName name of test
+     * @return the customized bundle
+     * @throws IOException
+     */
+    private static Bundle generateBundleFromTemplate(String templatePath, String appPath,
+            String testName) throws IOException {
+        final Bundle bundle = readBundleFromFolder(templatePath);
+        bundle.updateClusterLocations(HadoopUtil.stitchHdfsPath(appPath, testName));
+        return bundle;
     }
 
     private static Bundle readBundleFromFolder(final String folderPath) throws IOException {
