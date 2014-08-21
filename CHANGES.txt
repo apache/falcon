@@ -59,8 +59,12 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-611 Post process arg status is in 'FAILED' state always
+   (Shwetha GS via Suhas Vasu)
+
    FALCON-622 Fix ProcessUpdate and update at specific time test
    (Samarthg)
+
    FALCON-616 cluster submission should fail when shared libs copy fail
    (Shwetha GS via Suhas Vasu)   
 

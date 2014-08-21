@@ -45,7 +45,7 @@
         <arg>-runId</arg>
         <arg>${wf:run()}</arg>
         <arg>-status</arg>
-        <arg>${wf:lastErrorNode() == '' ? 'SUCCEEDED' : 'FAILED'}</arg>
+        <arg>${wf:lastErrorNode() == null ? 'SUCCEEDED' : 'FAILED'}</arg>
         <arg>-timeStamp</arg>
         <arg>${timeStamp}</arg>
         <arg>-brokerImplClass</arg>
