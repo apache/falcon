@@ -61,6 +61,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     private String feedOutputPath =
         baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceRunningTest.class);
+    private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -111,13 +112,13 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     public void getResumedProcessInstance() throws Exception {
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(URLS.SUSPEND_URL,
             bundles[0].getProcessData()));
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.assertSucceeded(prism.getProcessHelper().resume(URLS.RESUME_URL,
             bundles[0].getProcessData()));
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper()
             .getRunningInstance(URLS.INSTANCE_RUNNING,
                 Util.readEntityName(bundles[0].getProcessData()));
@@ -136,7 +137,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(URLS.SUSPEND_URL,
             bundles[0].getProcessData()));
-        TimeUtil.sleepSeconds(5);
+        TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper()
             .getRunningInstance(URLS.INSTANCE_RUNNING,
                 Util.readEntityName(bundles[0].getProcessData()));

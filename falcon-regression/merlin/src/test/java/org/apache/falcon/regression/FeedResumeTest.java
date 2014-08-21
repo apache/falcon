@@ -52,10 +52,6 @@ public class FeedResumeTest extends BaseTestClass {
     private String aggregateWorkflowDir = baseHDFSDir + "/FeedResumeTest/aggregator";
     private static final Logger LOGGER = Logger.getLogger(FeedResumeTest.class);
 
-    public void uploadWorkflow() throws Exception {
-        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-    }
-
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
         LOGGER.info("test name: " + method.getName());

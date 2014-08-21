@@ -395,6 +395,16 @@ public final class HadoopUtil {
             OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "log_01.txt");
     }
 
+    /**
+     * Removes general folder on file system. Creates folders according to passed folders list
+     * and fills them with data if required.
+     *
+     * @param fileSystem destination file system
+     * @param prefix prefix of path where data should be placed
+     * @param folderList list of folders to be created and filled with data if required
+     * @param uploadData if folders should be filled with data
+     * @throws IOException
+     */
     public static void replenishData(FileSystem fileSystem, String prefix, List<String> folderList,
         boolean uploadData) throws IOException {
         //purge data first

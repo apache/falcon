@@ -82,6 +82,7 @@ public class HCatReplicationTest extends BaseTestClass {
 
     final String dbName = "default";
     private static final String localHCatData = OSUtil.getPath(OSUtil.RESOURCES, "hcat", "data");
+    private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() throws IOException {
@@ -184,7 +185,7 @@ public class HCatReplicationTest extends BaseTestClass {
             prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
                 feed)
         );
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
@@ -279,7 +280,7 @@ public class HCatReplicationTest extends BaseTestClass {
             prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
                 feed)
         );
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),

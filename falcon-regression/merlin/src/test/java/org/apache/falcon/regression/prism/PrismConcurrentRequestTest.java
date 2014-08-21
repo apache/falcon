@@ -73,14 +73,16 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         removeBundles();
     }
 
+    /**
+     *  Submits the same feed concurrently in 10 threads. Checks that all attempts succeeded.
+     */
     @Test(groups = {"multiCluster"})
-    public void submitSameFeedParallel() throws Exception {
+    public void submitFeedParallel() throws Exception {
         prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "submit", EntityType.FEED, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.SUBMIT_URL);
+                    prism, URLS.SUBMIT_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -95,16 +97,18 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
+    /**
+     *  Submits the same process concurrently in 10 threads. Checks that all attempts succeeded.
+     */
     @Test(groups = {"multiCluster"})
-    public void submitSameProcessParallel() throws Exception {
+    public void submitProcessParallel() throws Exception {
         prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
         prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getDataSets().get(0));
         prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getDataSets().get(1));
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "submit", EntityType.PROCESS, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.SUBMIT_URL);
+                    prism, URLS.SUBMIT_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -119,15 +123,16 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
-
+    /**
+     *  Tries to delete same process concurrently in 10 threads. All attempts should succeed.
+     */
     @Test(groups = {"multiCluster"})
-    public void deleteSameProcessParallel() throws Exception {
+    public void deleteProcessParallel() throws Exception {
         bundles[0].submitBundle(prism);
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "delete", EntityType.PROCESS, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.DELETE_URL);
+                    prism, URLS.DELETE_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -142,16 +147,17 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
-
+    /**
+     *  Submits all required stuff. Tries to schedule the same process concurrently in 10 threads.
+     *  All attempts should succeed.
+     */
     @Test(groups = {"multiCluster"})
-    public void schedulePrismParallel() throws Exception {
+    public void scheduleProcessParallel() throws Exception {
         bundles[0].submitBundle(prism);
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "schedule", EntityType.PROCESS, brotherGrimm,
-                    bundles[0],
-                    prism,
-                    URLS.SCHEDULE_URL);
+                    bundles[0], prism, URLS.SCHEDULE_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -166,9 +172,12 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
-
+    /**
+     *  Schedules and suspends feed. Tries to resume it concurrently in 2 threads and then
+     *  suspend it again on other 2 threads. All actions should succeed.
+     */
     @Test(groups = {"multiCluster"})
-    public void resumeAnsSuspendParallel() throws Exception {
+    public void resumeAndSuspendFeedParallel() throws Exception {
         brothers = new Brother[4];
         prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
         prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
@@ -179,14 +188,12 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         for (int i = 1; i <= 2; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "resume", EntityType.FEED, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.RESUME_URL);
+                    prism, URLS.RESUME_URL);
         }
         for (int i = 3; i <= 4; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "suspend", EntityType.FEED, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.SUSPEND_URL);
+                    prism, URLS.SUSPEND_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -201,24 +208,28 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
+    /**
+     *  Schedules and suspends feed. Then tries to resume it concurrently in 10 threads. All
+     *  attempts should succeed.
+     */
     @Test(groups = {"multiCluster"})
-    public void resumeParallel() throws Exception {
+    public void resumeFeedParallel() throws Exception {
+        final double delay = 15;
         prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
         prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
         AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed));
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(delay);
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         prism.getFeedHelper().resume(URLS.RESUME_URL, feed);
-        TimeUtil.sleepSeconds(5);
+        TimeUtil.sleepSeconds(delay);
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         prism.getFeedHelper().suspend(URLS.SUSPEND_URL, feed);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(delay);
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.SUSPENDED);
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "resume", EntityType.FEED, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.RESUME_URL);
+                    prism, URLS.RESUME_URL);
         }
         for (Brother brother : brothers) {
             brother.start();
@@ -233,14 +244,15 @@ public class PrismConcurrentRequestTest extends BaseTestClass {
         }
     }
 
-
+    /**
+     *  Tries to submit cluster concurrently in 10 threads. Checks that all attempts succeeded.
+     */
     @Test(groups = {"multiCluster"})
-    public void submitSameClusterParallel() throws Exception {
+    public void submitClusterParallel() throws Exception {
         for (int i = 1; i <= brothers.length; i++) {
             brothers[i - 1] =
                 new Brother("brother" + i, "submit", EntityType.CLUSTER, brotherGrimm, bundles[0],
-                    prism,
-                    URLS.SUBMIT_URL);
+                    prism, URLS.SUBMIT_URL);
         }
         for (Brother brother : brothers) {
             brother.start();

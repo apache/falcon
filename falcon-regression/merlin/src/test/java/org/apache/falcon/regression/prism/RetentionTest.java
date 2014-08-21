@@ -112,6 +112,14 @@ public class RetentionTest extends BaseTestClass {
         }
     }
 
+    /**
+     * Generates folders based on proposed periodicity and then fills them with data if required.
+     *
+     * @param feedType feed retention limit type
+     * @param gap defines what amount of units should be skipped
+     * @param withData should folders be filled with data or not
+     * @throws Exception
+     */
     private void replenishData(FeedType feedType, boolean gap, boolean withData) throws Exception {
         int skip = 1;
         if (gap) {

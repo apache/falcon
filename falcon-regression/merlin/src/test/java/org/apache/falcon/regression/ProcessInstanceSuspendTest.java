@@ -63,6 +63,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceSuspendTest.class);
+    private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -110,7 +111,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult result = prism.getProcessHelper()
@@ -162,7 +163,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult result = prism.getProcessHelper()
@@ -213,7 +214,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult result = prism.getProcessHelper()
@@ -266,6 +267,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         prism.getProcessHelper()
@@ -295,6 +297,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult result = prism.getProcessHelper()

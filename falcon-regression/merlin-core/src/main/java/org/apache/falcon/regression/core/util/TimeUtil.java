@@ -56,7 +56,6 @@ public final class TimeUtil {
     public static String get20roundedTime(String oozieBaseTime) {
         DateTime startTime =
             new DateTime(oozieDateToDate(oozieBaseTime), DateTimeZone.UTC);
-
         if (startTime.getMinuteOfHour() < 20) {
             startTime = startTime.minusMinutes(startTime.getMinuteOfHour());
         } else if (startTime.getMinuteOfHour() < 40) {
@@ -65,13 +64,11 @@ public final class TimeUtil {
             startTime = startTime.minusMinutes(startTime.getMinuteOfHour() + 40);
         }
         return dateToOozieDate(startTime.toDate());
-
     }
 
     public static List<String> getMinuteDatesOnEitherSide(int interval, int minuteSkip) {
         DateTime today = new DateTime(DateTimeZone.UTC);
         LOGGER.info("today is: " + today.toString());
-
         return getMinuteDatesOnEitherSide(today.minusMinutes(interval),
             today.plusMinutes(interval), minuteSkip);
     }
@@ -80,7 +77,6 @@ public final class TimeUtil {
                                                           int minuteSkip) {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
         formatter.withZoneUTC();
-
         return getMinuteDatesOnEitherSide(TimeUtil.oozieDateToDate(startOozieDate),
             TimeUtil.oozieDateToDate(endOozieDate), minuteSkip, formatter);
     }
@@ -89,7 +85,6 @@ public final class TimeUtil {
                                                           int minuteSkip) {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
         formatter.withZoneUTC();
-
         return getMinuteDatesOnEitherSide(startDate, endDate, minuteSkip, formatter);
     }
 
@@ -104,12 +99,10 @@ public final class TimeUtil {
                                                           int minuteSkip,
                                                           DateTimeFormatter formatter) {
         LOGGER.info("generating data between " + formatter.print(startDate) + " and "
-                +
-            formatter.print(endDate));
+                + formatter.print(endDate));
         if (minuteSkip == 0) {
             minuteSkip = 1;
         }
-
         List<String> dates = new ArrayList<String>();
         while (!startDate.isAfter(endDate)) {
             dates.add(formatter.print(startDate));
@@ -168,7 +161,7 @@ public final class TimeUtil {
         for (int counter = 0; !startDate.isAfter(endDate) && counter < 1000; ++counter) {
             startDate = feedType.addTime(startDate, skip);
             dates.add(startDate);
-        }//end of for
+        }
         return dates;
     }
 
@@ -180,7 +173,6 @@ public final class TimeUtil {
         } else {
             jodaTime = jodaTime.minusMinutes(-1 * minutes);
         }
-
         DateTimeFormatter fmt = OozieUtil.getOozieDateTimeFormatter();
         DateTimeZone tz = DateTimeZone.getDefault();
         return fmt.print(tz.convertLocalToUTC(jodaTime.getMillis(), false));
@@ -211,7 +203,6 @@ public final class TimeUtil {
     public static void sleepTill(String startTimeOfLateCoord) {
 
         DateTime finalDate = new DateTime(oozieDateToDate(startTimeOfLateCoord));
-
         while (true) {
             DateTime sysDate = oozieDateToDate(getTimeWrtSystemTime(0));
             sysDate.withZoneRetainFields(DateTimeZone.UTC);
@@ -219,10 +210,8 @@ public final class TimeUtil {
             if (sysDate.compareTo(finalDate) > 0) {
                 break;
             }
-
             TimeUtil.sleepSeconds(15);
         }
-
     }
 
     public static Date getMinutes(String expression, Calendar time) {

@@ -70,6 +70,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     private String feedOutputTimedOutPath =
         baseTestHDFSDir + "/output-data/timedoutStatus/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceStatusTest.class);
+    private static final double TIMEOUT = 15;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -252,7 +253,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(URLS.SUSPEND_URL,
             bundles[0].getProcessData()));
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:00Z");
@@ -319,7 +320,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.SUSPENDED);
         prism.getProcessHelper().resume(URLS.RESUME_URL, bundles[0].getProcessData());
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper()
@@ -387,7 +388,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
                 prism.getProcessHelper().suspend(URLS.SUSPEND_URL, bundles[0].getProcessData()));
         AssertUtil.checkStatus(serverOC.get(0), EntityType.PROCESS, bundles[0].getProcessData(),
                 Job.Status.SUSPENDED);
-        TimeUtil.sleepSeconds(15);
+        TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper()
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");

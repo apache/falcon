@@ -7,7 +7,9 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-   FALCON-581 merlin: Refactor code for cross product and make it a method 
+   FALCON-610 Refactoring and documentation updates (Paul Isaychuk via Arpit Gupta)
+
+   FALCON-581 Refactor code for cross product and make it a method 
    (Raghav Kumar Gautam via Arpit Gupta) 
    
    FALCON-597 String logged at the start and end of the merlin test are slightly 
