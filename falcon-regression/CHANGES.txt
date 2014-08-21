@@ -7,6 +7,8 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
+   FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via Arpit Gupta)
+
    FALCON-610 Refactoring and documentation updates (Paul Isaychuk via Arpit Gupta)
 
    FALCON-581 Refactor code for cross product and make it a method 
