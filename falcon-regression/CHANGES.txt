@@ -5,7 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-
+   FALCON-589 Add test cases for various feed operations on Hcat feeds (Karishma G 
+   via Samarth Gupta)
   IMPROVEMENTS
    FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via Arpit Gupta)
 
