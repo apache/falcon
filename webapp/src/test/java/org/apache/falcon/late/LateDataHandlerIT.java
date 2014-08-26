@@ -118,7 +118,7 @@ public class LateDataHandlerIT {
         String[] args = {
             "-out", lateDataDir,
             "-paths", feedUriTemplate,
-            "-falconInputFeeds", "foo",
+            "-falconInputNames", "foo",
             "-falconInputFeedStorageTypes", "TABLE",
         };
 
@@ -158,7 +158,7 @@ public class LateDataHandlerIT {
         String[] args = {
             "-out", lateDataDir,
             "-paths", feedUriTemplate,
-            "-falconInputFeeds", "foo",
+            "-falconInputNames", "foo",
             "-falconInputFeedStorageTypes", "TABLE",
         };
 

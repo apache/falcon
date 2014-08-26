@@ -80,7 +80,7 @@
         <arg>${wf:user()}</arg>
         <arg>-falconInputFeeds</arg>
         <arg>${falconInputFeeds}</arg>
-        <arg>-falconInputPaths</arg>
+        <arg>-falconInPaths</arg>
         <arg>${falconInPaths}</arg>
         <file>${wf:conf("falcon.libpath")}/activemq-core.jar</file>
         <file>${wf:conf("falcon.libpath")}/geronimo-j2ee-management.jar</file>

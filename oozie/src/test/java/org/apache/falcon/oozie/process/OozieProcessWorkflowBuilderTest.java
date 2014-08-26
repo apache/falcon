@@ -188,6 +188,9 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
 
         HashMap<String, String> props = getCoordProperties(coord);
         assertEquals(props.get("mapred.job.priority"), "LOW");
+        List<Input> inputs = process.getInputs().getInputs();
+        assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()), inputs.get(0).getName() + "#" + inputs
+            .get(1).getName());
 
         verifyEntityProperties(process, cluster,
                 WorkflowExecutionContext.EntityOperations.GENERATE, props);
@@ -558,6 +561,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getFeed());
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
+        Assert.assertEquals(props.get("falconInputs"), process.getInputs().getInputs().get(0).getName());
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getFeed());
@@ -688,10 +692,11 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         verifyBrokerProperties(cluster, props);
 
         String[] expected = {
-            WorkflowExecutionArgs.FEED_NAMES.getName(),
-            WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+            WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(),
+            WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
             WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(),
-            "falconInPaths",
+            WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(),
+            WorkflowExecutionArgs.INPUT_NAMES.getName(),
             WorkflowExecutionArgs.USER_WORKFLOW_NAME.getName(),
             WorkflowExecutionArgs.USER_WORKFLOW_VERSION.getName(),
             WorkflowExecutionArgs.USER_WORKFLOW_ENGINE.getName(),
@@ -729,7 +734,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         verifyBrokerProperties(cluster, props);
 
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), "clicks");
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.FEED_NAMES.getName()), "NONE");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "NONE");
     }
 
     @Test
@@ -758,7 +763,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 WorkflowExecutionContext.EntityOperations.GENERATE, props);
         verifyBrokerProperties(cluster, props);
 
-        Assert.assertEquals(props.get(WorkflowExecutionArgs.FEED_NAMES.getName()), "impressions");
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "impressions");
         Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName()), "NONE");
     }
 }

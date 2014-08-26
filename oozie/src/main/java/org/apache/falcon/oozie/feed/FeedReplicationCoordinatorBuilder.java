@@ -261,16 +261,17 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
                                              String falconFeedStorageType, Properties props) {
         // todo these pairs are the same but used in different context
         // late data handler - should-record action
-        props.put("falconInputFeeds", entity.getName());
-        props.put("falconInPaths", instancePaths);
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), instancePaths);
+        props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), entity.getName());
 
         // storage type for each corresponding feed - in this case only one feed is involved
         // needed to compute usage based on storage type in LateDataHandler
-        props.put("falconInputFeedStorageTypes", falconFeedStorageType);
+        props.put(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName(), falconFeedStorageType);
 
         // falcon post processing
-        props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), entity.getName());
-        props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), "${coord:dataOut('output')}");
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), entity.getName());
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), "${coord:dataOut('output')}");
     }
 
     private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,

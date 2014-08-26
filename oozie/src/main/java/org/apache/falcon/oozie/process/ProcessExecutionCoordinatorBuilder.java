@@ -152,12 +152,14 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeInputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getInputs() == null) {
-            props.put("falconInputFeeds", "NONE");
-            props.put("falconInPaths", IGNORE);
+            props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), "NONE");
+            props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), IGNORE);
+            props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), IGNORE);
             return;
         }
 
         List<String> inputFeeds = new ArrayList<String>();
+        List<String> inputNames = new ArrayList<String>();
         List<String> inputPaths = new ArrayList<String>();
         List<String> inputFeedStorageTypes = new ArrayList<String>();
         for (Input input : entity.getInputs().getInputs()) {
@@ -190,21 +192,23 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
             inputFeeds.add(feed.getName());
             inputPaths.add(inputExpr);
+            inputNames.add(input.getName());
             inputFeedStorageTypes.add(storage.getType().name());
         }
 
-        propagateLateDataProperties(inputFeeds, inputPaths, inputFeedStorageTypes, props);
+        propagateLateDataProperties(inputFeeds, inputNames, inputPaths, inputFeedStorageTypes, props);
     }
 
-    private void propagateLateDataProperties(List<String> inputFeeds, List<String> inputPaths,
+    private void propagateLateDataProperties(List<String> inputFeeds, List<String> inputNames, List<String> inputPaths,
         List<String> inputFeedStorageTypes, Properties props) {
         // populate late data handler - should-record action
-        props.put("falconInputFeeds", StringUtils.join(inputFeeds, '#'));
-        props.put("falconInPaths", StringUtils.join(inputPaths, '#'));
+        props.put(WorkflowExecutionArgs.INPUT_FEED_NAMES.getName(), StringUtils.join(inputFeeds, '#'));
+        props.put(WorkflowExecutionArgs.INPUT_NAMES.getName(), StringUtils.join(inputNames, '#'));
+        props.put(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName(), StringUtils.join(inputPaths, '#'));
 
         // storage type for each corresponding feed sent as a param to LateDataHandler
         // needed to compute usage based on storage type in LateDataHandler
-        props.put("falconInputFeedStorageTypes", StringUtils.join(inputFeedStorageTypes, '#'));
+        props.put(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName(), StringUtils.join(inputFeedStorageTypes, '#'));
     }
 
     private SYNCDATASET createDataSet(Feed feed, Cluster cluster, Storage storage,
@@ -250,8 +254,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
 
     private void initializeOutputPaths(Cluster cluster, COORDINATORAPP coord, Properties props) throws FalconException {
         if (entity.getOutputs() == null) {
-            props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), "NONE");
-            props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), IGNORE);
+            props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "NONE");
+            props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), IGNORE);
             return;
         }
 
@@ -289,8 +293,8 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         }
 
         // Output feed name and path for parent workflow
-        props.put(WorkflowExecutionArgs.FEED_NAMES.getName(), StringUtils.join(outputFeeds, ','));
-        props.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), StringUtils.join(outputPaths, ','));
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeeds, ','));
+        props.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(outputPaths, ','));
     }
 
     private DATAOUT createDataOut(Output output) {

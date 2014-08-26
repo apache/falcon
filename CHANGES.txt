@@ -59,6 +59,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-630 late data rerun for process broken in trunk. (Shwetha GS)
+
    FALCON-611 Post process arg status is in 'FAILED' state always
    (Shwetha GS via Suhas Vasu)
 

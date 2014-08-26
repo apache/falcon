@@ -205,13 +205,13 @@ public class JMSMessageProducer {
 
             // override default values
             if (context.getEntityType().equalsIgnoreCase("PROCESS")) {
-                change(message, WorkflowExecutionArgs.FEED_NAMES, feedNames[i]);
+                change(message, WorkflowExecutionArgs.OUTPUT_FEED_NAMES, feedNames[i]);
             } else {
-                change(message, WorkflowExecutionArgs.FEED_NAMES,
-                        message.get(WorkflowExecutionArgs.FEED_NAMES.getName()));
+                change(message, WorkflowExecutionArgs.OUTPUT_FEED_NAMES,
+                        message.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()));
             }
 
-            change(message, WorkflowExecutionArgs.FEED_INSTANCE_PATHS, feedPaths[i]);
+            change(message, WorkflowExecutionArgs.OUTPUT_FEED_PATHS, feedPaths[i]);
             messages.add(message);
         }
 

@@ -46,8 +46,8 @@ public class FalconPostProcessingTest {
     public void setup() throws Exception {
         args = new String[]{
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
-            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "out-click-logs,out-raw-logs",
-            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "out-click-logs,out-raw-logs",
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
             "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20",
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
             "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
@@ -131,13 +131,13 @@ public class FalconPostProcessingTest {
 
         assertMessage(m);
         if (topic.equals(FALCON_TOPIC_NAME)) {
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
                     "out-click-logs,out-raw-logs");
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                     "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20");
         } else {
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()), "out-click-logs");
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "out-click-logs");
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                     "/out-click-logs/10/05/05/00/20");
         }
 

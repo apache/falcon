@@ -26,6 +26,7 @@ import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.latedata.LateDataHandler;
 import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.queue.DelayedQueue;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -87,11 +88,12 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
         LateDataHandler late = new LateDataHandler();
         Properties properties = handler.getWfEngine().getWorkflowProperties(
                 message.getClusterName(), message.getWfId());
-        String falconInputFeeds = properties.getProperty("falconInputFeeds");
-        String falconInPaths = properties.getProperty("falconInPaths");
-        String falconInputFeedStorageTypes = properties.getProperty("falconInputFeedStorageTypes");
-        String logDir = properties.getProperty("logDir");
-        String nominalTime = properties.getProperty("nominalTime");
+        String falconInputs = properties.getProperty(WorkflowExecutionArgs.INPUT_NAMES.getName());
+        String falconInPaths = properties.getProperty(WorkflowExecutionArgs.INPUT_FEED_PATHS.getName());
+        String falconInputFeedStorageTypes =
+            properties.getProperty(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName());
+        String logDir = properties.getProperty(WorkflowExecutionArgs.LOG_DIR.getName());
+        String nominalTime = properties.getProperty(WorkflowExecutionArgs.NOMINAL_TIME.getName());
         String srcClusterName = properties.getProperty("srcClusterName");
         Path lateLogPath = handler.getLateLogPath(logDir, nominalTime, srcClusterName);
 
@@ -104,22 +106,22 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
         }
 
         String[] pathGroups = falconInPaths.split("#");
-        String[] inputFeeds = falconInputFeeds.split("#");
+        String[] inputs = falconInputs.split("#");
         String[] inputFeedStorageTypes = falconInputFeedStorageTypes.split("#");
 
         Map<String, Long> computedMetrics = new LinkedHashMap<String, Long>();
         Entity entity = EntityUtil.getEntity(message.getEntityType(), message.getEntityName());
         if (EntityUtil.getLateProcess(entity) != null) {
-            List<String> lateFeed = new ArrayList<String>();
+            List<String> lateInput = new ArrayList<String>();
             for (LateInput li : EntityUtil.getLateProcess(entity).getLateInputs()) {
-                lateFeed.add(li.getInput());
+                lateInput.add(li.getInput());
             }
 
             for (int index = 0; index < pathGroups.length; index++) {
-                if (lateFeed.contains(inputFeeds[index])) {
+                if (lateInput.contains(inputs[index])) {
                     long computedMetric = late.computeStorageMetric(
                             pathGroups[index], inputFeedStorageTypes[index], conf);
-                    computedMetrics.put(inputFeeds[index], computedMetric);
+                    computedMetrics.put(inputs[index], computedMetric);
                 }
             }
         } else {

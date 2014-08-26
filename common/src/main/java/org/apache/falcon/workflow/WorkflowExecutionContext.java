@@ -80,8 +80,8 @@ public class WorkflowExecutionContext {
         WorkflowExecutionArgs.NOMINAL_TIME,
         WorkflowExecutionArgs.OPERATION,
 
-        WorkflowExecutionArgs.FEED_NAMES,
-        WorkflowExecutionArgs.FEED_INSTANCE_PATHS,
+        WorkflowExecutionArgs.OUTPUT_FEED_NAMES,
+        WorkflowExecutionArgs.OUTPUT_FEED_PATHS,
 
         WorkflowExecutionArgs.WORKFLOW_ID,
         WorkflowExecutionArgs.WORKFLOW_USER,
@@ -177,7 +177,7 @@ public class WorkflowExecutionContext {
     }
 
     public String getOutputFeedNames() {
-        return getValue(WorkflowExecutionArgs.FEED_NAMES);
+        return getValue(WorkflowExecutionArgs.OUTPUT_FEED_NAMES);
     }
 
     public String[] getOutputFeedNamesList() {
@@ -185,7 +185,7 @@ public class WorkflowExecutionContext {
     }
 
     public String getOutputFeedInstancePaths() {
-        return getValue(WorkflowExecutionArgs.FEED_INSTANCE_PATHS);
+        return getValue(WorkflowExecutionArgs.OUTPUT_FEED_PATHS);
     }
 
     public String[] getOutputFeedInstancePathsList() {

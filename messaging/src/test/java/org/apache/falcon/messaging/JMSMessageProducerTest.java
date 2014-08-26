@@ -72,8 +72,8 @@ public class JMSMessageProducerTest {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
-                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs,raw-logs",
-                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "click-logs,raw-logs",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         List<String[]> messages = new ArrayList<String[]>();
@@ -81,10 +81,10 @@ public class JMSMessageProducerTest {
         testProcessMessageCreator(messages, TOPIC_NAME);
         for (MapMessage m : mapMessages) {
             assertMessage(m);
-            Assert.assertTrue((m.getString(WorkflowExecutionArgs.FEED_NAMES.getName())
+            Assert.assertTrue((m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName())
                     .equals("click-logs,raw-logs")));
             Assert.assertTrue(m
-                    .getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName())
+                    .getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName())
                     .equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
         }
     }
@@ -94,8 +94,8 @@ public class JMSMessageProducerTest {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
-                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "null",
-                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(), "null"));
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "null",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), "null"));
         args.addAll(newArgs);
         List<String[]> messages = new ArrayList<String[]>();
         messages.add(args.toArray(new String[args.size()]));
@@ -103,9 +103,9 @@ public class JMSMessageProducerTest {
         for (MapMessage m : mapMessages) {
             assertMessage(m);
             assertMessage(m);
-            Assert.assertTrue(m.getString(WorkflowExecutionArgs.FEED_NAMES.getName()).equals(
+            Assert.assertTrue(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()).equals(
                     "null"));
-            Assert.assertTrue(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName())
+            Assert.assertTrue(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName())
                     .equals("null"));
         }
     }
@@ -116,8 +116,8 @@ public class JMSMessageProducerTest {
         List<String> args = createCommonArgs();
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
-                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "raw-logs",
-                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "raw-logs",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 "/raw-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         messages.add(args.toArray(new String[args.size()]));
@@ -125,8 +125,8 @@ public class JMSMessageProducerTest {
         args = createCommonArgs();
         newArgs = new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
-                "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs",
-                "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "click-logs",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 "/click-logs/10/05/05/00/20"));
         args.addAll(newArgs);
         messages.add(args.toArray(new String[args.size()]));
