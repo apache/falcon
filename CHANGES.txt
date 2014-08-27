@@ -59,6 +59,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-642 OozieProcessWorkflowBuilderTest test failures. (Shwetha GS)
+
    FALCON-630 late data rerun for process broken in trunk. (Shwetha GS)
 
    FALCON-611 Post process arg status is in 'FAILED' state always

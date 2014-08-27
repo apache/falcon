@@ -561,7 +561,8 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("falconInputFeeds"), process.getInputs().getInputs().get(0).getFeed());
         Assert.assertEquals(props.get("falconInPaths"), "${coord:dataIn('input')}");
         Assert.assertEquals(props.get("falconInputFeedStorageTypes"), Storage.TYPE.TABLE.name());
-        Assert.assertEquals(props.get("falconInputs"), process.getInputs().getInputs().get(0).getName());
+        Assert.assertEquals(props.get(WorkflowExecutionArgs.INPUT_NAMES.getName()),
+            process.getInputs().getInputs().get(0).getName());
 
         // verify the post processing params
         Assert.assertEquals(props.get("feedNames"), process.getOutputs().getOutputs().get(0).getFeed());
