@@ -8,6 +8,9 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-633 RetryTests and Retentions tests should stop using root dir
+   (Raghav Kumar Gautam via Samarth Gupta)
+   
    FALCON-629 Add javadoc for method stitchTwoHdfsPaths (Raghav Kumar Gautam
    via Samarth Gupta) 
 
