@@ -53,6 +53,7 @@ import java.util.List;
 this test currently provide minimum verification. More detailed test should
  be added
  */
+@Test(groups = "embedded")
 public class InstanceSummaryTest extends BaseTestClass {
 
     //1. process : test summary single cluster few instance some future some past
@@ -304,8 +305,5 @@ public class InstanceSummaryTest extends BaseTestClass {
     public void tearDown() throws IOException {
         processBundle.deleteBundle(prism);
         removeBundles();
-        for (FileSystem fs : serverFS) {
-            HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
-        }
     }
 }
