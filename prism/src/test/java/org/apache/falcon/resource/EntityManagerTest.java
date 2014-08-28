@@ -114,7 +114,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         Entity process2 = buildProcess("processAuthUser", System.getProperty("user.name"), "", "");
         configStore.publish(EntityType.PROCESS, process2);
 
-        EntityList entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        EntityList entityList = this.getEntityList("process", "", "", "", "", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
 
@@ -123,7 +123,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          */
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         CurrentUser.authenticate(System.getProperty("user.name"));
-        entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        entityList = this.getEntityList("process", "", "", "", "", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
 
@@ -131,7 +131,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          * Only one entity should be returned when the auth is enabled.
          */
         CurrentUser.authenticate("fakeUser");
-        entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        entityList = this.getEntityList("process", "", "", "", "", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 
@@ -182,6 +182,15 @@ public class EntityManagerTest extends AbstractEntityManager {
         entityList = this.getEntityList("process", "pipelines", "",
                 "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", 10, 2);
         Assert.assertEquals(entityList.getElements().length, 0);
+
+        // Test negative value for numResults, should throw an exception.
+        try {
+            this.getEntityList("process", "pipelines", "",
+                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", 10, -1);
+            Assert.assertTrue(false);
+        } catch (Throwable e) {
+            Assert.assertTrue(true);
+        }
     }
 
     private Entity buildProcess(String name, String username, String tags, String pipelines) {

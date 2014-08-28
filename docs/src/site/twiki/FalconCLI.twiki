@@ -51,6 +51,11 @@ Entities of a particular type can be listed with list sub-command.
 Usage:
 $FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -list
 
+Optional Args : -fields <<field1,field2>> -filterBy <<field1:value1,field2:value2>> -tags <<tagkey=tagvalue,tagkey=tagvalue>>
+-orderBy <<field>> -offset 0 -numResults 10
+
+<a href="./Restapi/EntityList.html">Optional params described here.</a>
+
 ---+++Update
 
 Update operation allows an already submitted/scheduled entity to be updated. Cluster update is currently
@@ -135,7 +140,31 @@ Example : Suppose a process has 3 instance, one has succeeded,one is in running 
 {"status":"SUCCEEDED","message":"getStatus is successful","instances":[{"instance":"2012-05-07T05:02Z","status":"SUCCEEDED","logFile":"http://oozie-dashboard-url"},{"instance":"2012-05-07T05:07Z","status":"RUNNING","logFile":"http://oozie-dashboard-url"}, {"instance":"2010-01-02T11:05Z","status":"WAITING"}] 
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -status
+
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" -colo <<colo>>
+-filterBy <<field1:value1,field2:value2>> -lifecycle <<lifecycles>>
+-orderBy field -offset 0 -numResults 10
+
+<a href="./Restapi/InstanceStatus.html"> Optional params described here.</a>
+
+---+++List
+
+List option via CLI can be used to get single or multiple instances.  If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state. Instance time is also returned. Log location gives the oozie workflow url
+If the instance is in WAITING state, missing dependencies are listed
+
+Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
+
+{"status":"SUCCEEDED","message":"getStatus is successful","instances":[{"instance":"2012-05-07T05:02Z","status":"SUCCEEDED","logFile":"http://oozie-dashboard-url"},{"instance":"2012-05-07T05:07Z","status":"RUNNING","logFile":"http://oozie-dashboard-url"}, {"instance":"2010-01-02T11:05Z","status":"WAITING"}]
+
+Usage:
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -list
+
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+-colo <<colo>> -lifecycle <<lifecycles>>
+-filterBy <<field1:value1,field2:value2>> -orderBy field -offset 0 -numResults 10
+
+<a href="./Restapi/InstanceList.html">Optional params described here.</a>
 
 ---+++Summary
 
@@ -148,7 +177,12 @@ Example : Suppose a process has 3 instance, one has succeeded,one is in running 
 {"status":"SUCCEEDED","message":"getSummary is successful", "cluster": <<name>> [{"SUCCEEDED":"1"}, {"WAITING":"1"}, {"RUNNING":"1"}]}
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -summary -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -summary
+
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+-colo <<colo>> -lifecycle <<lifecycles>>
+
+<a href="./Restapi/InstanceSummary.html">Optional params described here.</a>
 
 ---+++Running
 
@@ -157,12 +191,23 @@ Running option provides all the running instances of the mentioned process.
 Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -running
 
+Optional Args : -colo <<colo>> -lifecycle <<lifecycles>>
+-filterBy <<field1:value1,field2:value2>> -orderBy <<field>> -offset 0 -numResults 10
+
+<a href="./Restapi/InstanceRunning.html">Optional params described here.</a>
+
 ---+++Logs
 
 Get logs for instance actions
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs -start "yyyy-MM-dd'T'HH:mm'Z'" [-end "yyyy-MM-dd'T'HH:mm'Z'"] [-runid <<runid>>]
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -logs
+
+Optional Args : -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" -runid <<runid>>
+-colo <<colo>> -lifecycle <<lifecycles>>
+-filterBy <<field1:value1,field2:value2>> -orderBy field -offset 0 -numResults 10
+
+<a href="./Restapi/InstanceLogs.html">Optional params described here.</a>
 
 ---+++LifeCycle
 

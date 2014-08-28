@@ -405,6 +405,27 @@ public class FalconCLIIT {
                         + overlay.get("outputFeedName")
                         + " -start " + SchemaHelper.getDateFormat().format(new Date())
                         + " -filterBy INVALID:FILTER -offset 0 -numResults 1"));
+
+        // testcase : start str is older than entity schedule time.
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(10000))
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+        // testcase : end str is in future
+        long futureTimeinMilliSecs = (new Date()).getTime()+ 86400000;
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(10000))
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date(futureTimeinMilliSecs))
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+        // Both start and end dates are optional
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type process -name "
                         + overlay.get("processName")

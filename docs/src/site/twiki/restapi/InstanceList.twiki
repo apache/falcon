@@ -8,19 +8,21 @@
 Get list of all instances of a given entity.
 
 ---++ Parameters
-   * :entity-type can either be a feed or a process.
-   * :entity-name is name of the entity.
-   * start is the start time of the instance that you want to refer to
-   * end <optional param> is the end time of the instance that you want to refer to
-   * colo <optional param> colo on which the query should be run
-   * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
-   * filterBy <optional param> Filter results by a given list of field,value pairs. Example: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
-      * Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER,STARTEDAFTER
-      * Only the instances that match both filters are returned.
-   * orderBy <optional param> is the instance field by which results should be ordered.
-      * Supports ordering by "status","startTime","endTime","cluster"
-   * offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
-   * numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+   * :entity-type Valid options are cluster, feed or process.
+   * :entity-name Name of the entity.
+   * start <optional param> Show instances from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * By default, it is set to (end - (10 * entityFrequency)).
+   * end <optional param> Show instances up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * Default is set to now.
+   * colo <optional param> Colo on which the query should be run.
+   * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+   * filterBy <optional param>  Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
+      * Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+      * Query will do an AND among filterBy fields.
+   * orderBy <optional param> Field by which results should be ordered.
+      * Supports ordering by  "status","startTime","endTime","cluster".
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    
 ---++ Results
 List of instances of given entity.

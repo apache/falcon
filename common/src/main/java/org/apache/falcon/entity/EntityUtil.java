@@ -22,6 +22,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -685,6 +686,21 @@ public final class EntityUtil {
     public static boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
         Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
         return Storage.TYPE.TABLE == storageType;
+    }
+
+    public static Pair<Date, Date> getEntityStartEndDates(Entity entityObject) {
+        Set<String> clusters = EntityUtil.getClustersDefined(entityObject);
+        Pair<Date, String> clusterMinStartDate = null;
+        Pair<Date, String> clusterMaxEndDate = null;
+        for (String cluster : clusters) {
+            if (clusterMinStartDate == null || clusterMinStartDate.first.after(getStartTime(entityObject, cluster))) {
+                clusterMinStartDate = Pair.of(getStartTime(entityObject, cluster), cluster);
+            }
+            if (clusterMaxEndDate == null || clusterMaxEndDate.first.before(getEndTime(entityObject, cluster))) {
+                clusterMaxEndDate = Pair.of(getEndTime(entityObject, cluster), cluster);
+            }
+        }
+        return new Pair<Date, Date>(clusterMinStartDate.first, clusterMaxEndDate.first);
     }
 
 }

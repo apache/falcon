@@ -227,8 +227,9 @@ public class FalconCLI {
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
-        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults = validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
+        Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
+                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
 
         colo = getColo(colo);
         String instanceAction = "instance";
@@ -272,7 +273,7 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
-    private Integer validateIntInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
+    private Integer parseIntegerInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -343,8 +344,9 @@ public class FalconCLI {
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
-        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults =validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
+        Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
+                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         validateEntityType(entityType);
 
         if (optionsList.contains(SUBMIT_OPT)) {

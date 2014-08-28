@@ -81,6 +81,8 @@ public class FalconClient {
     private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
     private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
 
+    public static final int DEFAULT_NUM_RESULTS = 10;
+
     public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
         @Override
         public boolean verify(String hostname, SSLSession sslSession) {
@@ -571,7 +573,7 @@ public class FalconClient {
                                        String runid, String colo,
                                        List<LifeCycle> lifeCycles) throws FalconCLIException {
         return sendInstanceRequest(instances, type, entity, start, end, props,
-                runid, colo, lifeCycles, "", "", 0, -1);
+                runid, colo, lifeCycles, "", "", 0, DEFAULT_NUM_RESULTS);
     }
 
     private String sendInstanceRequest(Instances instances, String type, String entity,

@@ -48,7 +48,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") String filterBy,
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
         return super.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, offset, resultsPerPage);
     }
 
@@ -71,7 +71,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") String filterBy,
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
         return super.getInstances(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, offset, resultsPerPage);
     }
@@ -91,7 +91,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") String filterBy,
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
         return super.getStatus(type, entity, startStr, endStr, colo, lifeCycles,
                 filterBy, orderBy, offset, resultsPerPage);
     }
@@ -126,7 +126,7 @@ public class InstanceManager extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") String filterBy,
             @DefaultValue("") @QueryParam("orderBy") String orderBy,
             @DefaultValue("0") @QueryParam("offset") Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") Integer resultsPerPage) {
         return super.getLogs(type, entity, startStr, endStr, colo, runId, lifeCycles,
                 filterBy, orderBy, offset, resultsPerPage);
     }

@@ -8,17 +8,18 @@
 Get list of the entities.
 
 ---++ Parameters
-   * :entity-type can be cluster, feed or process.
-   * :fields <optional param> additional fields that the client are interested in, separated by commas.
-      * Currently falcon supports STATUS, TAGS, PIPELINES as valid fields.
-   * :filterBy <optional param> Filter results by a given list of field,value pair. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
-      * Supported filter fields are TYPE, NAME, STATUS, PIPELINES
-      * Only the entities that match both filters are returned.
-   * :tags <optional param> Filter results by a given list of tags, separated by a comma. Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
-   * :orderBy <optional param> is the field by which results should be ordered.
-      * Supports ordering by "name","type"
-   * :offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
-   * :numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+   * :entity-type Valid options are cluster, feed or process.
+   * fields <optional param> Fields of entity that the user wants to view, separated by commas.
+      * Valid options are STATUS, TAGS, PIPELINES.
+   * filterBy <optional param> Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+      * Supported filter fields are NAME, STATUS, PIPELINES.
+      * Query will do an AND among filterBy fields.
+   * tags <optional param> Return list of entities that have specified tags, separated by a comma. Query will do AND on tag values.
+      * Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+   * orderBy <optional param> Field by which results should be ordered.
+      * Supports ordering by "name".
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
 
 ---++ Results
 List of the entities.
@@ -68,25 +69,25 @@ GET http://localhost:15000/api/entities/list/feed?fields=status
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/list/feed?filterBy=STATUS:RUNNING,PIPELINES:dataReplication&fields=status,pipelines,tags&tags=consumer=consumer@xyz.com&orderBy=name&offset=2&numResults=2
+GET http://localhost:15000/api/entities/list/process?filterBy=STATUS:RUNNING,PIPELINES:dataReplication&fields=status,pipelines,tags&tags=consumer=consumer@xyz.com&orderBy=name&offset=2&numResults=2
 </verbatim>
 ---+++ Result
 <verbatim>
 {
     "entity": [
         {
-            "name"  : "SampleInput2",
-            "type"  : "feed",
+            "name"  : "SampleProcess1",
+            "type"  : "process",
             "status": "RUNNING",
             "pipelines": "dataReplication",
-            "tags":consumer=consumer@xyz.com
+            "tags": "consumer=consumer@xyz.com"
         },
         {
-            "name": "SampleInput3",
-            "type": "feed",
+            "name": "SampleProcess3",
+            "type": "process",
             "status": "RUNNING",
             "pipelines": "dataReplication",
-            "tags":consumer=consumer@xyz.com,owner=producer@xyz.com
+            "tags": "consumer=consumer@xyz.com,owner=producer@xyz.com"
         }
     ]
 }

@@ -8,17 +8,18 @@
 Get a list of instances currently running for a given entity.
 
 ---++ Parameters
-   * :entity-type can either be a feed or a process.
-   * :entity-name is name of the entity.
-   * colo <optional param> colo on which the query should be run
-   * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
-   * filterBy <optional param> Filter results by a given list of field,value pairs. Example: filterBy=STATUS:RUNNING,CLUSTER:primary-cluster
-      * Supported filter fields are STATUS, CLUSTER, SOURCECLUSTER,STARTEDAFTER
-      * Only the instances that match both filters are returned.
-   * orderBy <optional param> is the instance field by which results should be ordered.
-      * Supports ordering by "status","startTime","endTime","cluster"
-   * offset <optional param> start showing results from the offset, used for pagination. Integer, Default is 0
-   * numResults <optional param> number of results to show per request, used for pagination. Integer, Default is -1 (means all results)
+   * :entity-type Valid options are cluster, feed or process.
+   * :entity-name Name of the entity.
+   * colo <optional param> Colo on which the query should be run.
+   * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+   * filterBy <optional param>  Filter results by list of field:value pairs. Example: filterBy=CLUSTER:primary-cluster
+      * Supported filter fields are CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+      * Query will do an AND among filterBy fields.
+   * orderBy <optional param> Field by which results should be ordered.
+      * Supports ordering by "status","startTime","endTime","cluster".
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
+
 
 ---++ Results
 List of instances currently running.
@@ -48,7 +49,7 @@ GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=STATUS:RUNNING,CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
+GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
 </verbatim>
 ---+++ Result
 <verbatim>

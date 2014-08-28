@@ -27,7 +27,11 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-166 Instance status start and end dates are rigid and inconvenient
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-612 Create CHANGES.txt for falcon-regression(Arpit Gupta via SamarthG)
+
    FALCON-470 Add support for pagination, filter by, etc. to Entity and
    Instance List API (Balu Vellanki via Venkatesh Seetharam)
 

@@ -45,7 +45,7 @@ import java.util.*;
  */
 @Path("instance")
 public class InstanceManagerProxy extends AbstractInstanceManager {
-
+    private static final String DEFAULT_NUM_RESULTS = "10";
     private final Map<String, Channel> processInstanceManagerChannels = new HashMap<String, Channel>();
 
     public InstanceManagerProxy() {
@@ -85,7 +85,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") final Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -115,7 +115,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") final Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -141,7 +141,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") final Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
@@ -210,7 +210,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
-            @DefaultValue("-1") @QueryParam("numResults") final Integer resultsPerPage) {
+            @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {

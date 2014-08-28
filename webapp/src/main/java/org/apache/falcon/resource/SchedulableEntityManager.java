@@ -64,7 +64,8 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("") @QueryParam("tags") String tags,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
+                                    @DefaultValue(DEFAULT_NUM_RESULTS)
+                                    @QueryParam("numResults") Integer resultsPerPage) {
         return super.getEntityList(type, fields, filterBy, tags, orderBy, offset, resultsPerPage);
     }
 

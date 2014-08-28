@@ -48,21 +48,21 @@ See also: [[../Security.twiki][Security in Falcon]]
 | DELETE      | [[EntityDelete][api/entities/delete/:entity-type/:entity-name]]             | Delete the entity                  |
 | GET         | [[EntityStatus][api/entities/status/:entity-type/:entity-name]]             | Get the status of the entity       |
 | GET         | [[EntityDefinition][api/entities/definition/:entity-type/:entity-name]]     | Get the definition of the entity   |
-| GET         | [[EntityList][api/entities/list/:entity-type?fields=:fields&filterBy=:filterBy&tags=:tags&orderBy=:orderBy&offset=:offset&numResults=:numResults]]               | Get the list of entities           |
+| GET         | [[EntityList][api/entities/list/:entity-type]]                              | Get the list of entities           |
 | GET         | [[EntityDependencies][api/entities/dependencies/:entity-type/:entity-name]] | Get the dependencies of the entity |
 
 ---++ REST Call on Feed and Process Instances
 
 | *Call Type* | *Resource*                                                                  | *Description*                |
-| GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name?colo=:colo&lifecycle=:lifecycle&...]] | List of running instances.   |
-| GET         | [[InstanceList][api/instance/list/:entity-type/:entity-name?start=:start&end=:end&colo&lifecycle=:lifecycle&...]]   | List of instances   |
-| GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name?start=:start&end=:end&colo=:colo&lifecycle=:lifecycle&...]]   | Status of a given instance   |
+| GET         | [[InstanceRunning][api/instance/running/:entity-type/:entity-name]]         | List of running instances.   |
+| GET         | [[InstanceList][api/instance/list/:entity-type/:entity-name]]               | List of instances   |
+| GET         | [[InstanceStatus][api/instance/status/:entity-type/:entity-name]]           | Status of a given instance   |
 | POST        | [[InstanceKill][api/instance/kill/:entity-type/:entity-name]]               | Kill a given instance        |
 | POST        | [[InstanceSuspend][api/instance/suspend/:entity-type/:entity-name]]         | Suspend a running instance   |
 | POST        | [[InstanceResume][api/instance/resume/:entity-type/:entity-name]]           | Resume a given instance      |
 | POST        | [[InstanceRerun][api/instance/rerun/:entity-type/:entity-name]]             | Rerun a given instance       |
-| GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name?start=:start&end=:end&colo=:colo&lifecycle=:lifecycle&...]]       | Get logs of a given instance |
-| GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name?start=:start&end=:end&colo=:colo&lifecycle=:lifecycle]] | Return summary of instances for an entity |
+| GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
+| GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
 
 ---++ REST Call on Lineage Graph
 

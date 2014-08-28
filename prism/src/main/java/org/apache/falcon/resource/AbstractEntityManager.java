@@ -60,7 +60,9 @@ import java.util.*;
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
+
     protected static final int XML_DEBUG_LEN = 10 * 1024;
+    protected static final String DEFAULT_NUM_RESULTS = "10";
 
     private AbstractWorkflowEngine workflowEngine;
     protected ConfigurationStore configStore = ConfigurationStore.get();
@@ -728,14 +730,22 @@ public abstract class AbstractEntityManager {
               elements[offset] is included. Size 10, offset 10, return empty list.
               Size 10, offset 5, count 3, return elements[5,6,7].
               Size 10, offset 5, count >= 5, return elements[5,6,7,8,9]
-              When count is -1, return elements starting from elements[offset] until the end */
+              return elements starting from elements[offset] until the end OR offset+numResults*/
+
+        if (numresults < 1) {
+            LOG.error("Value for param numResults should be > than 0  : {}", numresults);
+            throw FalconWebException.newException("Value for param numResults should be > than 0  : " + numresults,
+                    Response.Status.BAD_REQUEST);
+        }
+
+        if (offset < 0) { offset = 0; }
 
         if (offset >= arraySize || arraySize == 0) {
             // No elements to return
             return 0;
         }
         int retLen = arraySize - offset;
-        if (retLen > numresults && numresults != -1) {
+        if (retLen > numresults) {
             retLen = numresults;
         }
         return retLen;

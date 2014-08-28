@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.Pair;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -210,6 +211,22 @@ public class EntityUtilTest extends AbstractTestBase {
         Frequency frequency = Frequency.fromString("minutes(1)");
         Assert.assertEquals(3, EntityUtil.getInstanceSequence(start,
                 frequency, tz, instance));
+    }
+
+    @Test
+    public void testGetEntityStartEndDates() throws Exception {
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+
+        Cluster cluster = new Cluster();
+        cluster.setName("testCluster");
+        cluster.setValidity(process.getClusters().getClusters().get(0).getValidity());
+
+        process.getClusters().getClusters().add(cluster);
+
+        Pair<Date, Date> startEndDates = EntityUtil.getEntityStartEndDates(process);
+        Assert.assertEquals(startEndDates.second.toString(), "Sat Dec 29 16:00:00 PST 2091");
+        Assert.assertEquals(startEndDates.first.toString(), "Tue Nov 01 17:00:00 PDT 2011");
     }
 
 }
