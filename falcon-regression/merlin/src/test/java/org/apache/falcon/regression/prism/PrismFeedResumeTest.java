@@ -56,7 +56,8 @@ public class PrismFeedResumeTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
         logger.info("test name: " + method.getName());
-        Bundle bundle = BundleUtil.readLateDataBundle();
+        Bundle bundle = BundleUtil.readLateDataBundle(baseAppHDFSDir,
+            this.getClass().getSimpleName());
 
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));

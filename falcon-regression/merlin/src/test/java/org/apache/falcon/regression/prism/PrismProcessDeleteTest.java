@@ -59,7 +59,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
         logger.info("test name: " + method.getName());
-        bundle = BundleUtil.readLateDataBundle();
+        bundle = BundleUtil.readLateDataBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         for (int i = 0; i < 2; i++) {
             bundles[i] = new Bundle(bundle, servers.get(i));
             bundles[i].generateUniqueBundle();

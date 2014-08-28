@@ -44,8 +44,8 @@ public final class BundleUtil {
     }
     private static final Logger LOGGER = Logger.getLogger(BundleUtil.class);
 
-    public static Bundle readLateDataBundle() throws IOException {
-        return readBundleFromFolder("LateDataBundles");
+    public static Bundle readLateDataBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("LateDataBundles", appPath, testName);
     }
 
     public static Bundle readRetryBundle(String appPath, String testName) throws IOException {

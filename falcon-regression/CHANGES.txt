@@ -7,14 +7,15 @@ Trunk (Unreleased)
   NEW FEATURES
 
   IMPROVEMENTS
-
-   FALCON-633 RetryTests and Retentions tests should stop using root dir
-   (Raghav Kumar Gautam via Samarth Gupta)
    
    FALCON-629 Add javadoc for method stitchTwoHdfsPaths (Raghav Kumar Gautam
    via Samarth Gupta) 
 
    FALCON-585 Remove requirement to have write access to / (Raghav Kumar Gautam)
+      FALCON-641 Tests using LateDataBundles should stop using root dir (Raghav 
+      Kumar Gautam via Arpit Gupta)
+      FALCON-633 RetryTests and Retentions tests should stop using root dir
+      (Raghav Kumar Gautam via Samarth Gupta)
       FALCON-606 hcat tests should stop using root dir (Raghav Kumar Gautam 
       via Arpit Gupta)
 
