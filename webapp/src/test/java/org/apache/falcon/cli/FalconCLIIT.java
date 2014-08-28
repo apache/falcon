@@ -285,6 +285,25 @@ public class FalconCLIIT {
                 executeWithURL("entity -status -type process -name "
                         + overlay.get("processName")));
 
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type feed -cluster "+ overlay.get("cluster")
+                        + " -fields status,tags -start " + START_INSTANCE
+                        + " -filterBy TYPE:FEED -orderBy name "
+                        + " -offset 0 -numResults 1 -numInstances 5"));
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type process -fields status,pipelines"
+                        + " -cluster " + overlay.get("cluster")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -filterBy TYPE:PROCESS -orderBy name "
+                        + " -offset 0 -numResults 1 -numInstances 7"));
+        // No start or end date
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type process -fields status,pipelines"
+                        + " -cluster " + overlay.get("cluster")
+                        + " -filterBy TYPE:PROCESS -orderBy name "
+                        + " -offset 0 -numResults 1 -numInstances 7"));
+
     }
 
     public void testSubCommandPresence() throws Exception {
@@ -457,6 +476,12 @@ public class FalconCLIIT {
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
                         +" -filterBy STATUS:SUCCEEDED -offset 0 -numResults 1"));
+        // When you get a cluster for which there are no feed entities,
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type feed -cluster " + overlay.get("cluster") + " -fields status,tags"
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -offset 0 -numResults 1 -numInstances 3"));
+
     }
 
     public void testInstanceRunningAndSummaryCommands() throws Exception {

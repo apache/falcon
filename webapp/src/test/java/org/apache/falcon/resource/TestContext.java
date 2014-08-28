@@ -38,6 +38,7 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -350,7 +351,7 @@ public class TestContext {
         long time = System.currentTimeMillis();
         clusterName = "cluster" + time;
         overlay.put("cluster", clusterName);
-        overlay.put("colo", "gs");
+        overlay.put("colo", DeploymentUtil.getCurrentColo());
         overlay.put("inputFeedName", "in" + time);
         //only feeds with future dates can be scheduled
         Date endDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
@@ -390,7 +391,7 @@ public class TestContext {
 
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));
-        overlay.put("colo", "gs");
+        overlay.put("colo", DeploymentUtil.getCurrentColo());
         TestContext.overlayParametersOverTemplate(clusterTemplate, overlay);
         EmbeddedCluster cluster = EmbeddedCluster.newCluster(overlay.get("cluster"), true);
 

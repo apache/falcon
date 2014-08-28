@@ -69,6 +69,29 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         return super.getEntityList(type, fields, filterBy, tags, orderBy, offset, resultsPerPage);
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @GET
+    @Path("summary/{type}/{cluster}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Monitored(event = "summary")
+    @Override
+    public EntitySummaryResult getEntitySummary(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("cluster") @PathParam("cluster") String cluster,
+            @DefaultValue("") @QueryParam("start") String startStr,
+            @DefaultValue("") @QueryParam("end") String endStr,
+            @DefaultValue("") @QueryParam("fields") String fields,
+            @DefaultValue("") @QueryParam("filterBy") String entityFilter,
+            @DefaultValue("") @QueryParam("tags")  String entityTags,
+            @DefaultValue("") @QueryParam("orderBy") String entityOrderBy,
+            @DefaultValue("0") @QueryParam("offset") Integer entityOffset,
+            @DefaultValue("10") @QueryParam("numResults") Integer numEntities,
+            @DefaultValue("7") @QueryParam("numInstances") Integer numInstanceResults) {
+        return super.getEntitySummary(type, cluster, startStr, endStr, fields, entityFilter, entityTags,
+                entityOrderBy, entityOffset, numEntities, numInstanceResults);
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
     @GET
     @Path("definition/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})

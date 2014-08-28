@@ -31,6 +31,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
@@ -180,6 +181,7 @@ public class FalconClient {
         STATUS("api/entities/status/", HttpMethod.GET, MediaType.TEXT_XML),
         DEFINITION("api/entities/definition/", HttpMethod.GET, MediaType.TEXT_XML),
         LIST("api/entities/list/", HttpMethod.GET, MediaType.TEXT_XML),
+        SUMMARY("api/entities/summary", HttpMethod.GET, MediaType.APPLICATION_JSON),
         DEPENDENCY("api/entities/dependencies/", HttpMethod.GET, MediaType.TEXT_XML);
 
         private String path;
@@ -333,13 +335,22 @@ public class FalconClient {
         return sendDependencyRequest(Entities.DEPENDENCY, entityType, entityName);
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+
     public EntityList getEntityList(String entityType, String fields, String filterBy, String filterTags,
                                     String orderBy, Integer offset, Integer numResults) throws FalconCLIException {
         return sendListRequest(Entities.LIST, entityType, fields, filterBy,
                 filterTags, orderBy, offset, numResults);
     }
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    public String getEntitySummary(String entityType, String cluster, String start, String end,
+                                   String fields, String filterBy, String filterTags,
+                                   String orderBy, Integer offset, Integer numResults, Integer numInstances)
+        throws FalconCLIException {
+        return sendEntitySummaryRequest(Entities.SUMMARY, entityType, cluster, start, end, fields, filterBy, filterTags,
+                orderBy, offset, numResults, numInstances);
+    }
+
     public String getRunningInstances(String type, String entity, String colo, List<LifeCycle> lifeCycles,
                                       String filterBy, String orderBy, Integer offset, Integer numResults)
         throws FalconCLIException {
@@ -445,7 +456,6 @@ public class FalconClient {
         return sendInstanceRequest(Instances.PARAMS, type, entity,
                 start, null, null, null, colo, lifeCycles);
     }
-    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     public String getThreadDump() throws FalconCLIException {
         return sendAdminRequest(AdminOperations.STACK);
@@ -522,6 +532,51 @@ public class FalconClient {
 
         return parseAPIResult(clientResponse);
     }
+
+    private String sendEntitySummaryRequest(Entities entities, String entityType, String cluster,
+                                            String start, String end,
+                                            String fields, String filterBy, String filterTags,
+                                            String orderBy, Integer offset, Integer numResults,
+                                            Integer numInstances) throws FalconCLIException {
+        WebResource resource;
+        if (StringUtils.isEmpty(cluster)) {
+            resource = service.path(entities.path).path(entityType);
+        } else {
+            resource = service.path(entities.path).path(entityType).path(cluster);
+        }
+
+        if (!StringUtils.isEmpty(fields)) {
+            resource = resource.queryParam("fields", fields);
+        }
+        if (!StringUtils.isEmpty(filterTags)) {
+            resource = resource.queryParam("tags", filterTags);
+        }
+        if (!StringUtils.isEmpty(filterBy)) {
+            resource = resource.queryParam("filterBy", filterBy);
+        }
+        if (!StringUtils.isEmpty(orderBy)) {
+            resource = resource.queryParam("orderBy", orderBy);
+        }
+        if (!StringUtils.isEmpty(start)) {
+            resource = resource.queryParam("start", start);
+        }
+        if (!StringUtils.isEmpty(end)) {
+            resource = resource.queryParam("end", end);
+        }
+
+        resource = resource.queryParam("offset", offset.toString());
+        resource = resource.queryParam("numResults", numResults.toString());
+        resource = resource.queryParam("numInstances", numInstances.toString());
+
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(entities.mimeType).type(MediaType.TEXT_XML)
+                .method(entities.method, ClientResponse.class);
+
+        checkIfSuccessful(clientResponse);
+        return parseProcessEntitySummaryResult(clientResponse);
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private String sendDefinitionRequest(Entities entities, String entityType,
                                          String entityName) throws FalconCLIException {
@@ -722,6 +777,25 @@ public class FalconClient {
         throws FalconCLIException {
 
         return clientResponse.getEntity(String.class);
+    }
+
+    private String parseProcessEntitySummaryResult(ClientResponse clientResponse) {
+        EntitySummaryResult result = clientResponse.getEntity(EntitySummaryResult.class);
+        StringBuilder sb = new StringBuilder();
+        String toAppend;
+        sb.append("Consolidated Status: ").append(result.getStatus()).append("\n");
+        sb.append("\nEntity Summary Result :\n");
+        if (result.getEntitySummaries() != null) {
+            for (EntitySummaryResult.EntitySummary entitySummary : result.getEntitySummaries()) {
+
+                toAppend = entitySummary.toString();
+                sb.append(toAppend).append("\n");
+            }
+        }
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(result.getMessage());
+        sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
     }
 
     private String summarizeProcessInstanceResult(ClientResponse clientResponse) {

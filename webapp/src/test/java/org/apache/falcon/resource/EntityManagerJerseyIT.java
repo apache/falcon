@@ -803,6 +803,19 @@ public class EntityManagerJerseyIT {
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNotNull(entityElement.status); // status is null
         }
+
+        response = context.service
+                .path("api/entities/summary/process/" + overlay.get("cluster"))
+                .queryParam("fields", "status,pipelines")
+                .queryParam("numInstances", "1")
+                .queryParam("orderBy", "name")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        EntitySummaryResult summaryResult = response.getEntity(EntitySummaryResult.class);
+        Assert.assertNotNull(summaryResult);
     }
 
     public Date getEndTime() {

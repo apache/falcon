@@ -12,7 +12,7 @@ Get list of the entities.
    * fields <optional param> Fields of entity that the user wants to view, separated by commas.
       * Valid options are STATUS, TAGS, PIPELINES.
    * filterBy <optional param> Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
-      * Supported filter fields are NAME, STATUS, PIPELINES.
+      * Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
       * Query will do an AND among filterBy fields.
    * tags <optional param> Return list of entities that have specified tags, separated by a comma. Query will do AND on tag values.
       * Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com

@@ -21,7 +21,9 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.ACL;
+import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mock;
@@ -35,6 +37,7 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import static org.mockito.Mockito.when;
 
@@ -48,6 +51,7 @@ public class EntityManagerTest extends AbstractEntityManager {
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+    private static final long DAY_IN_MILLIS = 86400000L;
 
     @BeforeClass
     public void init() {
@@ -199,14 +203,28 @@ public class EntityManagerTest extends AbstractEntityManager {
         acl.setGroup("hdfs");
         acl.setPermission("*");
 
-        Process p = new Process();
-        p.setName(name);
-        p.setACL(acl);
-        p.setPipelines(pipelines);
-        p.setTags(tags);
-        return p;
+        Process process = new Process();
+        process.setName(name);
+        process.setACL(acl);
+        process.setPipelines(pipelines);
+        process.setTags(tags);
+        process.setClusters(buildClusters("cluster" + name));
+        return process;
     }
 
+    private Clusters buildClusters(String name) {
+        Validity validity = new Validity();
+        long startMilliSecs = new Date().getTime() - (2 * DAY_IN_MILLIS);
+        validity.setStart(new Date(startMilliSecs));
+        validity.setEnd(new Date());
+        org.apache.falcon.entity.v0.process.Cluster cluster = new org.apache.falcon.entity.v0.process.Cluster();
+        cluster.setName(name);
+        cluster.setValidity(validity);
+
+        Clusters clusters =  new Clusters();
+        clusters.getClusters().add(cluster);
+        return clusters;
+    }
 
 
     /**

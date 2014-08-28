@@ -1,0 +1,72 @@
+---++  GET /api/entities/summary/:entity-type/:cluster
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity
+
+---++ Parameters
+   * :entity-type Valid options are cluster, feed or process.
+   * :cluster Show entities that belong to this cluster.
+   * start <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * By default, it is set to (end - 2 days).
+   * end <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
+      * Default is set to now.
+   * fields <optional param> Fields of entity that the user wants to view, separated by commas.
+      * Valid options are STATUS, TAGS, PIPELINES.
+   * filterBy <optional param> Filter results by list of field:value pairs. Example: filterBy=STATUS:RUNNING,PIPELINES:clickLogs
+      * Supported filter fields are NAME, STATUS, PIPELINES, CLUSTER.
+      * Query will do an AND among filterBy fields.
+   * tags <optional param> Return list of entities that have specified tags, separated by a comma. Query will do AND on tag values.
+      * Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
+   * orderBy <optional param> Field by which results should be ordered.
+      * Supports ordering by "name".
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
+   * numInstances <optional param> Number of recent instances to show per entity. Only integers > 0 are valid, Default is 7.
+
+---++ Results
+Show entities along with summary of N instances for each entity.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/entities/summary/feed/primary-cluster?filterBy=STATUS:RUNNING&fields=status&tags=consumer=consumer@xyz.com&orderBy=name&offset=0&numResults=1&numInstances=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "entitySummary": [
+        {
+            "name"  : "SampleOutput",
+            "type"  : "feed",
+            "status": "RUNNING",
+            "instances": [
+            {
+                "details": "",
+                "endTime": "2013-10-21T14:40:26-07:00",
+                "startTime": "2013-10-21T14:39:56-07:00",
+                "cluster": "primary-cluster",
+                "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+                "status": "RUNNING",
+                "instance": "2012-04-03T07:00Z"
+            },
+            {
+                "details": "",
+                "endTime": "2013-10-21T14:42:27-07:00",
+                "startTime": "2013-10-21T14:41:57-07:00",
+                "cluster": "primary-cluster",
+                "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
+                "status": "RUNNING",
+                "instance": "2012-04-03T08:00Z"
+            },
+            ]
+        }
+    ]
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>

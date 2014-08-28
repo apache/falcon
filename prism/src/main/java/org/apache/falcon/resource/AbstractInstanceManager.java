@@ -46,7 +46,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
 
     private static final long MINUTE_IN_MILLIS = 60000L;
     private static final long HOUR_IN_MILLIS = 3600000L;
-    private static final long DAY_IN_MILLIS = 86400000L;
+    protected static final long DAY_IN_MILLIS = 86400000L;
     private static final long MONTH_IN_MILLIS = 2592000000L;
 
     protected void checkType(String type) {

@@ -27,6 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-474 Add Bulk APIs to drive the dashboard needs (Balu Vellanki via
+   Venkatesh Seetharam)
+
    FALCON-166 Instance status start and end dates are rigid and inconvenient
    (Balu Vellanki via Venkatesh Seetharam)
 

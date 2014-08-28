@@ -21,6 +21,7 @@ package org.apache.falcon.entity;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
@@ -686,6 +687,52 @@ public final class EntityUtil {
     public static boolean isTableStorageType(Cluster cluster, Process process) throws FalconException {
         Storage.TYPE storageType = ProcessHelper.getStorageType(cluster, process);
         return Storage.TYPE.TABLE == storageType;
+    }
+
+    public static List<String> getTags(Entity entity) {
+        String rawTags = null;
+
+        switch (entity.getEntityType()) {
+        case PROCESS:
+            rawTags = ((Process) entity).getTags();
+            break;
+
+        case FEED:
+            rawTags = ((Feed) entity).getTags();
+            break;
+
+        case CLUSTER:
+            rawTags = ((Cluster) entity).getTags();
+            break;
+
+        default:
+            break;
+        }
+
+        List<String> tags = new ArrayList<String>();
+        if (!StringUtils.isEmpty(rawTags)) {
+            for(String tag : rawTags.split(",")) {
+                tags.add(tag.trim());
+            }
+        }
+
+        return tags;
+    }
+
+    public static List<String> getPipelines(Entity entity) {
+        List<String> pipelines = new ArrayList<String>();
+
+        if (entity.getEntityType().equals(EntityType.PROCESS)) {
+            Process process = (Process) entity;
+            String pipelineString = process.getPipelines();
+            if (pipelineString != null) {
+                for (String pipeline : pipelineString.split(",")) {
+                    pipelines.add(pipeline.trim());
+                }
+            }
+        } // else : Pipelines are only set for Process entities
+
+        return pipelines;
     }
 
     public static Pair<Date, Date> getEntityStartEndDates(Entity entityObject) {
