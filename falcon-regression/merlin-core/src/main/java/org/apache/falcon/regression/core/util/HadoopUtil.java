@@ -439,6 +439,14 @@ public final class HadoopUtil {
         return retValue;
     }
 
+    /**
+     * Stitch two hadoop paths. For eg: stitchTwoHdfsPaths("/tmp/", "/test") = "/tmp/test",
+     * stitchTwoHdfsPaths("/tmp/", "test") = "/tmp/test",
+     * stitchTwoHdfsPaths("/tmp", "test") = "/tmp/test"
+     * @param path1 the first path to be stitched
+     * @param path2 the second path to be stitched
+     * @return final stitched path
+     */
     private static String stitchTwoHdfsPaths(String path1, String path2) {
         return path1.replaceAll("/*$", "") + "/" + path2.replaceAll("^/*", "");
     }
