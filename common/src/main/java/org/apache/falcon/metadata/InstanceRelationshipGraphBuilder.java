@@ -114,6 +114,12 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
     public void addInstanceToEntity(Vertex instanceVertex, String entityName,
                                     RelationshipType entityType, RelationshipLabel edgeLabel) {
+        addInstanceToEntity(instanceVertex, entityName, entityType, edgeLabel, null);
+    }
+
+    public void addInstanceToEntity(Vertex instanceVertex, String entityName,
+                                    RelationshipType entityType, RelationshipLabel edgeLabel,
+                                    String timestamp) {
         Vertex entityVertex = findVertex(entityName, entityType);
         LOG.info("Vertex exists? name={}, type={}, v={}", entityName, entityType, entityVertex);
         if (entityVertex == null) {
@@ -122,7 +128,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             return;
         }
 
-        addEdge(instanceVertex, entityVertex, edgeLabel.getName());
+        addEdge(instanceVertex, entityVertex, edgeLabel.getName(), timestamp);
     }
 
     public void addOutputFeedInstances(WorkflowExecutionContext context,
@@ -166,6 +172,36 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
     }
 
+    public void addReplicatedInstance(WorkflowExecutionContext context) throws FalconException {
+        String outputFeedNamesArg = context.getOutputFeedNames();
+        if ("NONE".equals(outputFeedNamesArg)) {
+            return; // there are no output feeds
+        }
+
+        String[] outputFeedNames = context.getOutputFeedNamesList();
+        String[] outputFeedInstancePaths = context.getOutputFeedInstancePathsList();
+        String targetClusterName = context.getClusterName();
+        String srcClusterName = context.getSrcClusterName();
+
+        // For replication there will be only one output feed name
+        String feedName = outputFeedNames[0];
+        String feedInstanceDataPath = outputFeedInstancePaths[0];
+
+        LOG.info("Computing feed instance for : name=" + feedName + ", path= "
+                + feedInstanceDataPath + ", in cluster: " + srcClusterName);
+        RelationshipType vertexType = RelationshipType.FEED_INSTANCE;
+        String feedInstanceName = getFeedInstanceName(feedName, srcClusterName, feedInstanceDataPath);
+        Vertex feedInstanceVertex = findVertex(feedInstanceName, vertexType);
+
+        LOG.info("Vertex exists? name={}, type={}, v={}", feedInstanceName, vertexType, feedInstanceVertex);
+        if (feedInstanceVertex == null) {
+            throw new IllegalStateException(vertexType + " instance vertex must exist " + feedInstanceName);
+        }
+
+        addInstanceToEntity(feedInstanceVertex, targetClusterName, RelationshipType.CLUSTER_ENTITY,
+                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE, context.getTimeStampAsISO8601());
+    }
+
     private void addFeedInstance(Vertex processInstance, RelationshipLabel edgeLabel,
                                  WorkflowExecutionContext context, String feedName,
                                  String feedInstanceDataPath) throws FalconException {
@@ -193,7 +229,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
     }
 
-    public String getFeedInstanceName(String feedName, String clusterName,
+    public static String getFeedInstanceName(String feedName, String clusterName,
                                       String feedInstancePath) throws FalconException {
         try {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
@@ -209,14 +245,14 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
     }
 
-    private String getTableFeedInstanceName(Feed feed, String feedInstancePath,
+    private static String getTableFeedInstanceName(Feed feed, String feedInstancePath,
                                             Storage.TYPE storageType) throws URISyntaxException {
         CatalogStorage instanceStorage = (CatalogStorage) FeedHelper.createStorage(
                 storageType.name(), feedInstancePath);
         return feed.getName() + "/" + instanceStorage.toPartitionAsPath();
     }
 
-    private String getFileSystemFeedInstanceName(String feedInstancePath, Feed feed,
+    private static String getFileSystemFeedInstanceName(String feedInstancePath, Feed feed,
                                                  Cluster cluster) throws FalconException {
         Storage rawStorage = FeedHelper.createStorage(cluster, feed);
         String feedPathTemplate = rawStorage.getUriTemplate(LocationType.DATA);

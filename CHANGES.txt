@@ -27,6 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-325 Process lineage information for Replication policies
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-474 Add Bulk APIs to drive the dashboard needs (Balu Vellanki via
    Venkatesh Seetharam)
 

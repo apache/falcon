@@ -288,9 +288,9 @@ public class MetadataMappingService
         instanceGraphBuilder.addInputFeedInstances(context, processInstance);
     }
 
-    private void onFeedInstanceReplicated(WorkflowExecutionContext context) {
+    private void onFeedInstanceReplicated(WorkflowExecutionContext context) throws FalconException {
         LOG.info("Adding replicated feed instance: {}", context.getNominalTimeAsISO8601());
-        // todo - tbd
+        instanceGraphBuilder.addReplicatedInstance(context);
     }
 
     private void onFeedInstanceEvicted(WorkflowExecutionContext context) {
