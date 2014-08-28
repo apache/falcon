@@ -260,31 +260,6 @@ public final class HadoopUtil {
         return locations;
     }
 
-    public static void createLateDataFoldersWithRandom(FileSystem fs, String folderPrefix,
-        List<String> folderList) throws IOException {
-        LOGGER.info("creating late data folders.....");
-        folderList.add(SOMETHING_RANDOM);
-
-        for (final String folder : folderList) {
-            fs.mkdirs(new Path(folderPrefix + folder));
-        }
-
-        LOGGER.info("created all late data folders.....");
-    }
-
-    public static void copyDataToFolders(FileSystem fs, List<String> folderList,
-        String directory, String folderPrefix) throws IOException {
-        LOGGER.info("copying data into folders....");
-        List<String> fileLocations = new ArrayList<String>();
-        File[] files = new File(directory).listFiles();
-        if (files != null) {
-            for (final File file : files) {
-                fileLocations.add(file.toString());
-            }
-        }
-        copyDataToFolders(fs, folderPrefix, folderList,
-                fileLocations.toArray(new String[fileLocations.size()]));
-    }
 
     public static void copyDataToFolders(FileSystem fs, final String folderPrefix,
         List<String> folderList, String... fileLocations) throws IOException {
@@ -321,12 +296,11 @@ public final class HadoopUtil {
     public static void lateDataReplenish(FileSystem fs, int interval,
         int minuteSkip, String folderPrefix) throws IOException {
         List<String> folderData = TimeUtil.getMinuteDatesOnEitherSide(interval, minuteSkip);
-
-        createLateDataFoldersWithRandom(fs, folderPrefix, folderData);
-        copyDataToFolders(fs, folderData, OSUtil.NORMAL_INPUT, folderPrefix);
+        folderData.add(SOMETHING_RANDOM);
+        flattenAndPutDataInFolder(fs, OSUtil.NORMAL_INPUT, folderPrefix, folderData);
     }
 
-    public static void createLateDataFolders(FileSystem fs, final String folderPrefix,
+    public static void createFolders(FileSystem fs, final String folderPrefix,
                                              List<String> folderList) throws IOException {
         for (final String folder : folderList) {
             fs.mkdirs(new Path(folderPrefix + folder));
@@ -353,7 +327,7 @@ public final class HadoopUtil {
         List<String> folderPaths = TimeUtil.getMinuteDatesOnEitherSide(interval, minuteSkip);
         LOGGER.info("folderData: " + folderPaths.toString());
 
-        createLateDataFolders(fs, folderPrefix, folderPaths);
+        createFolders(fs, folderPrefix, folderPaths);
 
         if (fileToBePut.equals("_SUCCESS")) {
             copyDataToFolders(fs, folderPrefix, folderPaths, OSUtil.NORMAL_INPUT + "_SUCCESS");
@@ -374,7 +348,7 @@ public final class HadoopUtil {
             }
         }
 
-        createLateDataFolders(fs, folderPrefix, folderPaths);
+        createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
                 OSUtil.NORMAL_INPUT + "log_01.txt");
     }
@@ -390,36 +364,8 @@ public final class HadoopUtil {
             }
         }
 
-        createLateDataFolders(fs, folderPrefix, folderPaths);
+        createFolders(fs, folderPrefix, folderPaths);
         copyDataToFolders(fs, folderPrefix, folderPaths,
             OSUtil.NORMAL_INPUT + "_SUCCESS", OSUtil.NORMAL_INPUT + "log_01.txt");
-    }
-
-    /**
-     * Removes general folder on file system. Creates folders according to passed folders list
-     * and fills them with data if required.
-     *
-     * @param fileSystem destination file system
-     * @param prefix prefix of path where data should be placed
-     * @param folderList list of folders to be created and filled with data if required
-     * @param uploadData if folders should be filled with data
-     * @throws IOException
-     */
-    public static void replenishData(FileSystem fileSystem, String prefix, List<String> folderList,
-        boolean uploadData) throws IOException {
-        //purge data first
-        deleteDirIfExists(prefix, fileSystem);
-
-        folderList.add(SOMETHING_RANDOM);
-
-        for (final String folder : folderList) {
-            final String pathString = prefix + folder;
-            LOGGER.info(fileSystem.getUri() + pathString);
-            fileSystem.mkdirs(new Path(pathString));
-            if (uploadData) {
-                fileSystem.copyFromLocalFile(new Path(OSUtil.RESOURCES + "log_01.txt"),
-                        new Path(pathString));
-            }
-        }
     }
 }

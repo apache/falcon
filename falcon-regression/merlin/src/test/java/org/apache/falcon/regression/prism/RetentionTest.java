@@ -30,6 +30,7 @@ import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
@@ -143,7 +144,13 @@ public class RetentionTest extends BaseTestClass {
             feedType.addTime(today, -36), feedType.addTime(today, 36), skip, feedType);
         final List<String> dataDates = TimeUtil.convertDatesToString(times, feedType.getFormatter());
         logger.info("dataDates = " + dataDates);
-        HadoopUtil.replenishData(clusterFS, testHDFSDir, dataDates, withData);
+        dataDates.add(HadoopUtil.SOMETHING_RANDOM);
+        if (withData) {
+            HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.RESOURCES + "log_01.txt",
+                testHDFSDir, dataDates);
+        } else {
+            HadoopUtil.createFolders(clusterFS, testHDFSDir, dataDates);
+        }
     }
 
     /**

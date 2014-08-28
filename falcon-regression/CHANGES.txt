@@ -10,6 +10,7 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
    
+   FALCON-572 HadoopUtil cleanup in falcon-regression (Ruslan Ostafiychuk via Samarth Gupta)  
    FALCON-632 Refactoring, documentation stuff (Paul Isaychuk via Samarth Gupta)
 
    FALCON-609 UpdateAtSpecificTimeTest, InstanceSummaryTest tagged, fixed, refactored
