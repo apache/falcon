@@ -74,8 +74,11 @@ public class NewRetryTest extends BaseTestClass {
     DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
     final private String baseTestDir = baseHDFSDir + "/NewRetryTest";
     final private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    final private String lateDir = baseTestDir + "/lateDataTest/testFolders/";
-    final private String latePath = lateDir + "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    final private String lateInputDir = baseTestDir + "/lateDataTest/inputFolders/";
+    final private String lateInputPath = lateInputDir + "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    final private String lateOutputDir = baseTestDir + "/lateDataTest/outputFolders/";
+    final private String lateOutputPath = lateOutputDir
+        + "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private DateTime startDate;
     private DateTime endDate;
 
@@ -86,15 +89,17 @@ public class NewRetryTest extends BaseTestClass {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
-        bundles[0] = new Bundle(BundleUtil.readRetryBundle(), cluster);
+        bundles[0] = new Bundle(
+            BundleUtil.readRetryBundle(baseAppHDFSDir, this.getClass().getSimpleName()), cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         startDate = new DateTime(DateTimeZone.UTC).plusMinutes(1);
         endDate = new DateTime(DateTimeZone.UTC).plusMinutes(2);
         bundles[0].setProcessValidity(startDate, endDate);
 
+        bundles[0].setOutputFeedLocationData(lateOutputPath);
         String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
+            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), lateInputPath);
         feed = Util.insertLateFeedValue(feed, new Frequency("minutes(8)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
         bundles[0].getDataSets().add(feed);
@@ -126,8 +131,8 @@ public class NewRetryTest extends BaseTestClass {
         } else {
             AssertUtil.assertSucceeded(response);
             // lets create data now:
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
 
             //schedule process
             AssertUtil.assertSucceeded(
@@ -177,8 +182,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             //now wait till the process is over
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
@@ -235,8 +240,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
 
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
@@ -288,8 +293,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
 
@@ -344,8 +349,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -392,8 +397,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -444,8 +449,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -498,8 +503,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -550,8 +555,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -589,8 +594,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
 
@@ -643,8 +648,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over
@@ -680,7 +685,7 @@ public class NewRetryTest extends BaseTestClass {
     public void testRetryInSuspendedAndResumeCaseWithLateData(Retry retry) throws Exception {
 
         String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
+            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), lateInputPath);
         feed = Util.insertLateFeedValue(feed, new Frequency("minutes(10)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
         bundles[0].getDataSets().add(feed);
@@ -698,8 +703,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             String bundleId = OozieUtil.getBundles(clusterOC,
@@ -774,7 +779,7 @@ public class NewRetryTest extends BaseTestClass {
     public void testRetryInLateDataCase(Retry retry) throws Exception {
 
         String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
+            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), lateInputPath);
 
         feed = Util.insertLateFeedValue(feed, getFrequency(retry));
 
@@ -795,11 +800,11 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             List<String> initialData =
                 Util.getHadoopDataFromDir(clusterFS, bundles[0].getInputFeedFromBundle(),
-                    lateDir);
+                    lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             String bundleId = OozieUtil.getBundles(clusterOC,
@@ -837,7 +842,7 @@ public class NewRetryTest extends BaseTestClass {
             String insertionFolder =
                 Util.findFolderBetweenGivenTimeStamps(now, now.plusMinutes(5), initialData);
             logger.info("inserting data in folder " + insertionFolder + " at " + DateTime.now());
-            HadoopUtil.injectMoreData(clusterFS, lateDir + insertionFolder,
+            HadoopUtil.injectMoreData(clusterFS, lateInputDir + insertionFolder,
                     OSUtil.OOZIE_EXAMPLE_INPUT_DATA + "lateData");
             //now to validate all failed instances to check if they were retried or not.
             validateRetry(clusterOC, bundleId,
@@ -854,7 +859,7 @@ public class NewRetryTest extends BaseTestClass {
     public void testRetryInDeleteAfterPartialRetryCase(Retry retry) throws Exception {
 
         String feed =
-            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), latePath);
+            Util.setFeedPathValue(bundles[0].getInputFeedFromBundle(), lateInputPath);
         feed = Util.insertLateFeedValue(feed, new Frequency("minutes(1)"));
         bundles[0].getDataSets().remove(bundles[0].getInputFeedFromBundle());
         bundles[0].getDataSets().add(feed);
@@ -873,8 +878,8 @@ public class NewRetryTest extends BaseTestClass {
             AssertUtil.assertFailed(response);
         } else {
             AssertUtil.assertSucceeded(response);
-            HadoopUtil.deleteDirIfExists(lateDir, clusterFS);
-            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateDir);
+            HadoopUtil.deleteDirIfExists(lateInputDir, clusterFS);
+            HadoopUtil.lateDataReplenish(clusterFS, 20, 0, lateInputDir);
             AssertUtil.assertSucceeded(
                 prism.getProcessHelper().schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
             //now wait till the process is over

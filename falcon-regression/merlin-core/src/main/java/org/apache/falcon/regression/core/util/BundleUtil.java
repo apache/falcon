@@ -48,14 +48,13 @@ public final class BundleUtil {
         return readBundleFromFolder("LateDataBundles");
     }
 
-    public static Bundle readRetryBundle() throws IOException {
-        return readBundleFromFolder("RetryTests");
+    public static Bundle readRetryBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("RetryTests", appPath, testName);
     }
 
-    public static Bundle readRetentionBundle() throws IOException {
-        return readBundleFromFolder("RetentionBundles");
+    public static Bundle readRetentionBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("RetentionBundles", appPath, testName);
     }
-
     public static Bundle readELBundle() throws IOException {
         return readBundleFromFolder("ELbundle");
     }

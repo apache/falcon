@@ -8,6 +8,10 @@ Trunk (Unreleased)
    FALCON-589 Add test cases for various feed operations on Hcat feeds (Karishma G 
    via Samarth Gupta)
   IMPROVEMENTS
+
+   FALCON-633 RetryTests and Retentions tests should stop using root dir
+   (Raghav Kumar Gautam via Samarth Gupta)
+
    FALCON-632 Refactoring, documentation stuff (Paul Isaychuk via Samarth Gupta)
 
    FALCON-609 UpdateAtSpecificTimeTest, InstanceSummaryTest tagged, fixed, refactored
