@@ -72,7 +72,7 @@ public class RetentionTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
         logger.info("test name: " + method.getName());
-        Bundle bundle = BundleUtil.readRetentionBundle(baseAppHDFSDir, this.getClass().getSimpleName());
+        Bundle bundle = BundleUtil.readRetentionBundle();
         bundles[0] = new Bundle(bundle, cluster);
         bundles[0].setInputFeedDataPath(testHDFSDir);
         bundles[0].generateUniqueBundle();
