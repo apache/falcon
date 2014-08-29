@@ -119,12 +119,10 @@ public final class Util {
     }
 
     public static APIResult parseResponse(ServiceResponse response) throws JAXBException {
-
         if (!isXML(response.getMessage())) {
             return new APIResult(APIResult.Status.FAILED, response.getMessage(), "somerandomstring",
                 response.getCode());
         }
-
         JAXBContext jc = JAXBContext.newInstance(APIResult.class);
         Unmarshaller u = jc.createUnmarshaller();
         APIResult temp;
@@ -143,7 +141,6 @@ public final class Util {
                 temp.setStatus(APIResult.Status.FAILED);
             }
         }
-
         return temp;
     }
 
@@ -170,29 +167,24 @@ public final class Util {
     }
 
     public static String getUniqueString() {
-
         return "-" + UUID.randomUUID().toString().split("-")[0];
     }
 
     public static List<String> getHadoopDataFromDir(FileSystem fs, String feed, String dir)
         throws IOException {
         List<String> finalResult = new ArrayList<String>();
-
         String feedPath = getFeedPath(feed);
         int depth = feedPath.split(dir)[1].split("/").length - 1;
         List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs,
             new Path(dir), depth);
-
         for (Path result : results) {
             int pathDepth = result.toString().split(dir)[1].split("/").length - 1;
             if (pathDepth == depth) {
                 finalResult.add(result.toString().split(dir)[1]);
             }
         }
-
         return finalResult;
     }
-
 
     public static String setFeedProperty(String feed, String propertyName, String propertyValue) {
         FeedMerlin feedObject = new FeedMerlin(feed);
@@ -205,19 +197,14 @@ public final class Util {
                 break;
             }
         }
-
         if (!found) {
             Property property = new Property();
             property.setName(propertyName);
             property.setValue(propertyValue);
             feedObject.getProperties().getProperties().add(property);
         }
-
-
         return feedObject.toString();
-
     }
-
 
     public static String getFeedPath(String feed) {
         FeedMerlin feedObject = new FeedMerlin(feed);
@@ -236,7 +223,6 @@ public final class Util {
         return feedObject.toString();
     }
 
-
     public static String setFeedPathValue(String feed, String pathValue) {
         FeedMerlin feedObject = new FeedMerlin(feed);
         for (Location location : feedObject.getLocations().getLocations()) {
@@ -247,11 +233,9 @@ public final class Util {
         return feedObject.toString();
     }
 
-
     public static String findFolderBetweenGivenTimeStamps(DateTime startTime, DateTime endTime,
                                                           List<String> folderList) {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
-
         for (String folder : folderList) {
             if (folder.compareTo(formatter.print(startTime)) >= 0
                     &&
@@ -285,8 +269,7 @@ public final class Util {
                 .getQaHost(), coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getPassword(),
             "cat /var/log/ivory/application.* | grep \"" + workflowId + "\" | grep "
-                    +
-                "\"Received\" | awk '{print $2}'",
+                    + "\"Received\" | awk '{print $2}'",
             coloHelper.getProcessHelper().getUsername(),
             coloHelper.getProcessHelper().getIdentityFile()
         );
@@ -313,7 +296,6 @@ public final class Util {
         for (String line : raw) {
             finalList.add(line.split(",")[0]);
         }
-
         return finalList;
     }
 
@@ -327,7 +309,6 @@ public final class Util {
 
     public static void startService(IEntityManagerHelper helper)
         throws IOException, JSchException, AuthenticationException, URISyntaxException {
-
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
             helper.getPassword(), helper.getServiceStartCmd(), helper.getServiceUser(),
             helper.getIdentityFile());
@@ -372,17 +353,13 @@ public final class Util {
         }
     }
 
-
     public static String getEnvClusterXML(String cluster, String prefix) {
-
-        ClusterMerlin clusterObject =
-            getClusterObject(cluster);
+        ClusterMerlin clusterObject = getClusterObject(cluster);
         if ((null == prefix) || prefix.isEmpty()) {
             prefix = "";
         } else {
             prefix = prefix + ".";
         }
-
         String hcatEndpoint = Config.getProperty(prefix + "hcat_endpoint");
 
         //now read and set relevant values
@@ -401,7 +378,6 @@ public final class Util {
                 iface.setEndpoint(hcatEndpoint);
             }
         }
-
         //set colo name:
         clusterObject.setColo(Config.getProperty(prefix + "colo"));
         // properties in the cluster needed when secure mode is on
@@ -454,6 +430,13 @@ public final class Util {
         return null;
     }
 
+    /**
+     * Compares two definitions
+     * @param server1 server where 1st definition is stored
+     * @param server2 server where 2nd definition is stored
+     * @param entity entity which is under analysis
+     * @return are definitions identical
+     */
     public static boolean isDefinitionSame(ColoHelper server1, ColoHelper server2,
                                            String entity)
         throws URISyntaxException, IOException, AuthenticationException, JAXBException,
@@ -463,10 +446,9 @@ public final class Util {
     }
 
     /**
-     * emuns used for instance api.
+     * enums used for instance api.
      */
     public enum URLS {
-
         LIST_URL("/api/entities/list"),
         SUBMIT_URL("/api/entities/submit"),
         GET_ENTITY_DEFINITION("/api/entities/definition"),
@@ -497,17 +479,27 @@ public final class Util {
         }
     }
 
-
+    /**
+     * @param pathString whole path
+     * @return path to basic data folder
+     */
     public static String getPathPrefix(String pathString) {
         return pathString.substring(0, pathString.indexOf('$'));
     }
 
+    /**
+     * @param path whole path
+     * @return file name which is retrieved from a path
+     */
     public static String getFileNameFromPath(String path) {
-
         return path.substring(path.lastIndexOf('/') + 1, path.length());
     }
 
-
+    /**
+     * Defines request type according to request url
+     * @param url request url
+     * @return request type
+     */
     public static String getMethodType(String url) {
         List<String> postList = new ArrayList<String>();
         postList.add("/entities/validate");
@@ -531,10 +523,14 @@ public final class Util {
                 return "delete";
             }
         }
-
         return "get";
     }
 
+    /**
+     * Prints xml in readable form
+     * @param xmlString xmlString
+     * @return formatted xmlString
+     */
     public static String prettyPrintXml(final String xmlString) {
         if (xmlString == null) {
             return null;
@@ -554,19 +550,27 @@ public final class Util {
         } catch (TransformerException e) {
             return xmlString;
         }
-
     }
 
+    /**
+     * Converts json string to readable form
+     * @param jsonString json string
+     * @return formatted string
+     */
     public static String prettyPrintJson(final String jsonString) {
         if (jsonString == null) {
             return null;
         }
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonElement json = new JsonParser().parse(jsonString);
-
         return gson.toJson(json);
     }
 
+    /**
+     * Prints xml or json in pretty and readable format
+     * @param str xml or json string
+     * @return converted xml or json
+     */
     public static String prettyPrintXmlOrJson(final String str) {
         if (str == null) {
             return null;
@@ -583,6 +587,13 @@ public final class Util {
         return str;
     }
 
+    /**
+     * Tries to get entity definition.
+     * @param cluster cluster where definition is stored
+     * @param entity entity for which definition is required
+     * @param shouldReturn should the definition be successfully retrieved or not
+     * @return entity definition
+     */
     public static String getEntityDefinition(ColoHelper cluster,
                                              String entity,
                                              boolean shouldReturn) throws
@@ -597,10 +608,8 @@ public final class Util {
         } else {
             helper = cluster.getClusterHelper();
         }
-
         ServiceResponse response = helper.getEntityDefinition(URLS
             .GET_ENTITY_DEFINITION, entity);
-
         if (shouldReturn) {
             AssertUtil.assertSucceeded(response);
         } else {
@@ -608,7 +617,6 @@ public final class Util {
         }
         String result = response.getMessage();
         Assert.assertNotNull(result);
-
         return result;
     }
 }
