@@ -10,6 +10,8 @@ Trunk (Unreleased)
 
   IMPROVEMENTS
 
+   FALCON-655 Skip workflow upload if process won't be submitted (Ruslan Ostafiychuk)
+
    FALCON-587 Don't delete input data in @AfterClass in falcon-regression tests if
    clean_test_dir=false (Ruslan Ostafiychuk)
 

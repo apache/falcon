@@ -50,7 +50,6 @@ public class FeedResumeTest extends BaseTestClass {
     private String feed;
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
-    private String aggregateWorkflowDir = baseHDFSDir + "/FeedResumeTest/aggregator";
     private static final Logger LOGGER = Logger.getLogger(FeedResumeTest.class);
 
     @BeforeMethod(alwaysRun = true)
@@ -59,7 +58,6 @@ public class FeedResumeTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].submitClusters(prism);
         feed = bundles[0].getInputFeedFromBundle();
     }
