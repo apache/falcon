@@ -178,10 +178,6 @@
                         <artifactId>slf4j-simple</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>com.googlecode.json-simple</groupId>
-                        <artifactId>json-simple</artifactId>
-                    </exclusion>
-                    <exclusion>
                         <groupId>org.codehaus.jackson</groupId>
                         <artifactId>jackson-core-asl</artifactId>
                     </exclusion>

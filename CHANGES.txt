@@ -27,6 +27,8 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-654 Exclude junit dependency in pom (Ruslan Ostafiychuk)
+
    FALCON-640 Add ability to specify sort order for orderBy param in RestAPI
    (Balu Vellanki via Venkatesh Seetharam)
 
