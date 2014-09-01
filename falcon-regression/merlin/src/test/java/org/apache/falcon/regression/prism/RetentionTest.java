@@ -45,6 +45,7 @@ import org.apache.oozie.client.OozieClientException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -295,4 +296,8 @@ public class RetentionTest extends BaseTestClass {
         return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, feedTypes, withData);
     }
 
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

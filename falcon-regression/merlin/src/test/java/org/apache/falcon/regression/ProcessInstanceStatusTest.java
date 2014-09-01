@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction.Status;
 import org.apache.oozie.client.Job;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -433,5 +434,10 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
         InstanceUtil.validateFailedInstances(r, 3);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

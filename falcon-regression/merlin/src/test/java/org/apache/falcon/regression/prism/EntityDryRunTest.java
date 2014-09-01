@@ -33,12 +33,14 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /*
@@ -101,14 +103,17 @@ public class EntityDryRunTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateProcess() throws Exception {
-        bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-10), TimeUtil.getTimeWrtSystemTime(100));
+        bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-10),
+            TimeUtil.getTimeWrtSystemTime(100));
         bundles[0].submitAndScheduleProcess();
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
                 bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
         validate(response);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()), 1,
-                "more than one bundle found after failed update request");
+        Assert.assertEquals(
+            OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()),
+            1,
+            "more than one bundle found after failed update request");
     }
 
     /**
@@ -120,7 +125,8 @@ public class EntityDryRunTest extends BaseTestClass {
         String feed = bundles[0].getInputFeedFromBundle();
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(
+            Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
         validate(response);
     }
 
@@ -137,14 +143,22 @@ public class EntityDryRunTest extends BaseTestClass {
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
         validate(response);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster, EntityType.FEED, Util.readEntityName(feed)), 1,
-                "more than one bundle found after failed update request");
+        Assert.assertEquals(
+            OozieUtil.getNumberOfBundle(cluster, EntityType.FEED, Util.readEntityName(feed)), 1,
+            "more than one bundle found after failed update request");
     }
 
     private void validate(ServiceResponse response) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: AUTHENTICATION : E1004 :" +
-                        " E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)"),
-                "Correct response was not present in process / feed schedule");
+        Assert.assertTrue(response.getMessage()
+            .contains("org.apache.falcon.FalconException: AUTHENTICATION : E1004 :" +
+                " E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL" +
+                "(1)"),
+            "Correct response was not present in process / feed schedule");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -50,6 +50,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -62,7 +63,6 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     ColoHelper cluster = servers.get(0);
     FileSystem clusterFS = serverFS.get(0);
     OozieClient clusterOC = serverOC.get(0);
-    private String prefix;
     String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
     String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
     String pigScriptLocation = pigScriptDir + "/id.pig";
@@ -84,10 +84,9 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         String startDate = "2010-01-02T00:40Z";
         String endDate = "2010-01-02T01:10Z";
         bundle.setInputFeedDataPath(inputPath);
-        prefix = bundle.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            bundle.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -181,8 +180,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     }
 
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        logger.info("in @AfterClass");
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

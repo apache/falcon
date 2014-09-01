@@ -43,6 +43,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -76,10 +77,9 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         String endDate = "2010-01-02T01:11Z";
 
         bundle.setInputFeedDataPath(feedInputPath);
-        String prefix = bundle.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            bundle.getFeedDataPathPrefix(), dataDates);
     }
 
 
@@ -206,14 +206,8 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         InstanceUtil.validateSuccessWOInstances(result);
     }
 
-
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        LOGGER.info("in @AfterClass");
-        Bundle b = BundleUtil.readELBundle();
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

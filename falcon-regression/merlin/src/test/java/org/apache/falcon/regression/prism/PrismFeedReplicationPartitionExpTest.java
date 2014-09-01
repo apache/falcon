@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -894,5 +895,10 @@ public class PrismFeedReplicationPartitionExpTest extends BaseTestClass {
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertFailed(r, "is defined more than once for feed");
         Assert.assertTrue(r.getMessage().contains("is defined more than once for feed"));
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -111,4 +111,12 @@ public class BaseTestClass {
             }
         }
     }
+
+    public void cleanTestDirs() throws IOException {
+        if (MerlinConstants.CLEAN_TEST_DIR) {
+            for (FileSystem fs : serverFS) {
+                HadoopUtil.deleteDirIfExists(baseHDFSDir, fs);
+            }
+        }
+    }
 }

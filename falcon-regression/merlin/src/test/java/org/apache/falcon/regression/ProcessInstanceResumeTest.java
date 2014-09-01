@@ -40,6 +40,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -70,11 +71,10 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         String startDate = "2010-01-01T23:20Z";
         String endDate = "2010-01-02T01:40Z";
         b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
 
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            b.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -248,7 +248,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r =
                 prism.getProcessHelper().getProcessInstanceResume(
-                        Util.readEntityName(bundles[0].getProcessData()), null);
+                    Util.readEntityName(bundles[0].getProcessData()), null);
         InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
     }
 
@@ -362,15 +362,8 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         InstanceUtil.validateResponse(result, 6, 6, 0, 0, 0);
     }
 
-
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        LOGGER.info("in @AfterClass");
-
-        Bundle b = BundleUtil.readELBundle();
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -44,6 +44,7 @@ import org.custommonkey.xmlunit.Diff;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.joda.time.DateTime;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -640,5 +641,10 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         processBundle.deleteBundle(prism);
         bundles[0].deleteBundle(prism);
         processBundle.deleteBundle(prism);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -41,6 +41,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -72,10 +73,9 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         String startDate = "2010-01-01T23:20Z";
         String endDate = "2010-01-02T01:21Z";
         b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            b.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -180,7 +180,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startTimeData, endTimeData, 1);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE,
             baseTestHDFSDir + "/input01", dataDates);
-        bundles[0].setInputFeedDataPath(feedInputPath.replace("input/","input01/"));
+        bundles[0].setInputFeedDataPath(feedInputPath.replace("input/", "input01/"));
         bundles[0].setProcessValidity(startTime, endTime);
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
@@ -308,13 +308,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     }
 
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        LOGGER.info("in @AfterClass");
-        Bundle b = BundleUtil.readELBundle();
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
-
 }

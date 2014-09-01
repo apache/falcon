@@ -36,6 +36,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job.Status;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -205,5 +206,10 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
             .getEntityDefinition(URLS.GET_ENTITY_DEFINITION, process);
         Assert.assertTrue(r.getMessage().contains("(process) not found"));
         AssertUtil.assertFailed(r);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

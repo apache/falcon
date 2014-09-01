@@ -47,6 +47,9 @@ public final class MerlinConstants {
     public static final String ACL_OWNER = Config.getProperty("ACL.OWNER", RequestKeys.CURRENT_USER);
     public static final String ACL_GROUP = Config.getProperty("ACL.GROUP", "default");
 
+    public static final boolean CLEAN_TEST_DIR =
+        Boolean.valueOf(Config.getProperty("clean_test_dir", "true"));
+
     /* initialize keyTabMap */
     static {
         final String currentUserKeytab = Config.getProperty(CURRENT_USER_KEYTAB_STR);

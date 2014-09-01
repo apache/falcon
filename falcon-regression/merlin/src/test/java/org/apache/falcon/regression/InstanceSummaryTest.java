@@ -37,6 +37,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction.Status;
 import org.apache.oozie.client.OozieClientException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -305,5 +306,10 @@ public class InstanceSummaryTest extends BaseTestClass {
     public void tearDown() throws IOException {
         processBundle.deleteBundle(prism);
         removeBundles();
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

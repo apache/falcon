@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -159,5 +160,10 @@ public class InstanceParamTest extends BaseTestClass {
         for (FileSystem fs : serverFS) {
             HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

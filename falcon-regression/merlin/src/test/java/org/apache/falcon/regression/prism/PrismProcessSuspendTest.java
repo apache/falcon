@@ -31,11 +31,13 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 public class PrismProcessSuspendTest extends BaseTestClass {
@@ -299,5 +301,10 @@ public class PrismProcessSuspendTest extends BaseTestClass {
             prism.getProcessHelper().suspend(Util.URLS.SUSPEND_URL, bundles[1].getProcessData()));
         AssertUtil.assertFailed(cluster2.getProcessHelper()
             .suspend(Util.URLS.SUSPEND_URL, bundles[1].getProcessData()));
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

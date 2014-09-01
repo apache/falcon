@@ -43,11 +43,13 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -606,7 +608,8 @@ public class LineageApiTest extends BaseTestClass {
 
     @Test
     public void testColoToClusterNode() throws Exception {
-        final VerticesResult verticesResult = lineageHelper.getVerticesByType(Vertex.VERTEX_TYPE.COLO);
+        final VerticesResult verticesResult = lineageHelper.getVerticesByType(
+            Vertex.VERTEX_TYPE.COLO);
         GraphAssert.assertVertexSanity(verticesResult);
         Assert.assertTrue(verticesResult.getTotalSize() > 0, "Expected at least 1 colo node");
         Assert.assertTrue(verticesResult.getTotalSize() <= 3, "Expected at most 3 colo nodes");
@@ -652,5 +655,10 @@ public class LineageApiTest extends BaseTestClass {
         for(FeedMerlin feed : outputFeeds) {
             AssertUtil.checkForListSize(userIncoming.filterByName(feed.getName()), 1);
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

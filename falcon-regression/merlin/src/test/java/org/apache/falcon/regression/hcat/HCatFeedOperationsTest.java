@@ -50,6 +50,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,10 +110,11 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     }
 
     @AfterClass(alwaysRun = true)
-    public void deleteTable() throws HCatException {
+    public void tearDownClass() throws IOException {
         clusterHC.dropTable(dbName, tableName, true);
         clusterHC.dropTable(dbName, randomTblName, true);
         cluster2HC.dropTable(dbName, tableName, true);
+        cleanTestDirs();
     }
 
     /**

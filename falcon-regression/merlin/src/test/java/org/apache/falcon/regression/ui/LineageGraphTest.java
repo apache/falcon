@@ -126,6 +126,7 @@ public class LineageGraphTest extends BaseUITestClass {
     public void tearDown() throws IOException {
         closeBrowser();
         removeBundles();
+        cleanTestDirs();
     }
 
     /**

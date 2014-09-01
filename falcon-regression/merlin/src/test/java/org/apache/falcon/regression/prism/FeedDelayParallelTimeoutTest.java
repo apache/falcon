@@ -30,11 +30,13 @@ import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 @Test(groups = "distributed")
@@ -117,5 +119,10 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         logger.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01));
         prism.getFeedHelper()
             .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedOutput01);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -45,6 +45,7 @@ import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -689,5 +690,10 @@ public class AuthorizationTest extends BaseTestClass {
     public void tearDown() {
         KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }
