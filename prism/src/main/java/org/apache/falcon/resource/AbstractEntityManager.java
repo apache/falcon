@@ -473,12 +473,12 @@ public abstract class AbstractEntityManager {
      * @return EntityList
      */
     public EntityList getEntityList(String type, String fieldStr, String filterBy, String filterTags,
-                                    String orderBy, Integer offset, Integer resultsPerPage) {
+                                    String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
         List<Entity> entities;
         try {
-            entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, offset, resultsPerPage);
+            entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage);
         } catch (Exception e) {
             LOG.error("Failed to get entity list", e);
             throw FalconWebException.newException(e, Response.Status.BAD_REQUEST);
@@ -490,7 +490,7 @@ public abstract class AbstractEntityManager {
     }
 
     protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
-                                       String filterBy, String filterTags, String orderBy,
+                                       String filterBy, String filterTags, String orderBy, String sortOrder,
                                        int offset, int resultsPerPage) throws FalconException {
         final HashMap<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         final ArrayList<String> filterByTags = getFilterByTags(filterTags);
@@ -529,7 +529,7 @@ public abstract class AbstractEntityManager {
             entities.add(entity);
         }
         // Sort entities before returning a subset of entity elements.
-        entities = sortEntities(entities, orderBy);
+        entities = sortEntities(entities, orderBy, sortOrder);
 
         int pageCount = getRequiredNumberOfResults(entities.size(), offset, resultsPerPage);
         if (pageCount == 0) {  // handle pagination
@@ -702,27 +702,19 @@ public abstract class AbstractEntityManager {
         return filterEntity;
     }
 
-    private ArrayList<Entity> sortEntities(ArrayList<Entity> entities, String orderBy) {
+    private ArrayList<Entity> sortEntities(ArrayList<Entity> entities, String orderBy, String sortOrder) {
         // Sort the ArrayList using orderBy param
         if (!StringUtils.isEmpty(orderBy)) {
             EntityList.EntityFieldList orderByField = EntityList.EntityFieldList.valueOf(orderBy.toUpperCase());
-
+            final String order = getValidSortOrder(sortOrder, orderBy);
             switch (orderByField) {
-
-            case TYPE:
-                Collections.sort(entities, new Comparator<Entity>() {
-                    @Override
-                    public int compare(Entity e1, Entity e2) {
-                        return e1.getEntityType().compareTo(e2.getEntityType());
-                    }
-                });
-                break;
 
             case NAME:
                 Collections.sort(entities, new Comparator<Entity>() {
                     @Override
                     public int compare(Entity e1, Entity e2) {
-                        return e1.getName().compareTo(e2.getName());
+                        return (order.equalsIgnoreCase("asc")) ? e1.getName().compareTo(e2.getName())
+                                : e2.getName().compareTo(e1.getName());
                     }
                 });
                 break;
@@ -733,6 +725,21 @@ public abstract class AbstractEntityManager {
         } // else no sort
 
         return entities;
+    }
+
+    protected String getValidSortOrder(String sortOrder, String orderBy) {
+        if (StringUtils.isEmpty(sortOrder)) {
+            return (orderBy.equalsIgnoreCase("starttime")
+                    || orderBy.equalsIgnoreCase("endtime")) ? "desc" : "asc";
+        }
+
+        if (sortOrder.equalsIgnoreCase("asc") || sortOrder.equalsIgnoreCase("desc")) {
+            return sortOrder;
+        }
+
+        String err = "Value for param sortOrder should be \"asc\" or \"desc\". It is  : " + sortOrder;
+        LOG.error(err);
+        throw FalconWebException.newException(err, Response.Status.BAD_REQUEST);
     }
 
     protected int getRequiredNumberOfResults(int arraySize, int offset, int numresults) {

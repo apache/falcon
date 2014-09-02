@@ -176,7 +176,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
      */
     public EntitySummaryResult getEntitySummary(String type, String cluster, String startDate, String endDate,
                                                 String fields, String filterBy, String filterTags,
-                                                String orderBy, Integer offset,
+                                                String orderBy, String sortOrder, Integer offset,
                                                 Integer resultsPerPage, Integer numInstances) {
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
@@ -187,7 +187,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             entities = getEntities(type,
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    cluster, filterBy, filterTags, orderBy, offset, resultsPerPage);
+                    cluster, filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage);
             colo = ((Cluster) configStore.get(EntityType.CLUSTER, cluster)).getColo();
         } catch (Exception e) {
             LOG.error("Failed to get entities", e);
@@ -199,7 +199,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             InstancesResult instancesResult = getInstances(entity.getEntityType().name(), entity.getName(),
                     SchemaHelper.getDateFormat().format(startAndEndDates.first),
                     SchemaHelper.getDateFormat().format(startAndEndDates.second),
-                    colo, null, "", "", 0, numInstances);
+                    colo, null, "", "", "", 0, numInstances);
 
             /* ToDo - Use oozie bulk API after FALCON-591 is implemented
              *       getBulkInstances(entity, cluster,

@@ -53,6 +53,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         return super.getDependencies(type, entity);
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("list/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -63,13 +64,13 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("tags") String tags,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
                                     @DefaultValue(DEFAULT_NUM_RESULTS)
                                     @QueryParam("numResults") Integer resultsPerPage) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, offset, resultsPerPage);
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage);
     }
 
-    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("summary/{type}/{cluster}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -84,11 +85,12 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
             @DefaultValue("") @QueryParam("filterBy") String entityFilter,
             @DefaultValue("") @QueryParam("tags")  String entityTags,
             @DefaultValue("") @QueryParam("orderBy") String entityOrderBy,
+            @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
             @DefaultValue("0") @QueryParam("offset") Integer entityOffset,
             @DefaultValue("10") @QueryParam("numResults") Integer numEntities,
             @DefaultValue("7") @QueryParam("numInstances") Integer numInstanceResults) {
         return super.getEntitySummary(type, cluster, startStr, endStr, fields, entityFilter, entityTags,
-                entityOrderBy, entityOffset, numEntities, numInstanceResults);
+                entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults);
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

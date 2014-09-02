@@ -86,7 +86,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public InstancesResult getRunningInstances(String type, String entity,
                                                String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                               String orderBy, Integer offset, Integer numResults) {
+                                               String orderBy, String sortOrder, Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
         try {
@@ -95,7 +95,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -105,14 +105,16 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public InstancesResult getInstances(String type, String entity, String startStr, String endStr,
                                         String colo, List<LifeCycle> lifeCycles,
-                                        String filterBy, String orderBy, Integer offset, Integer numResults) {
+                                        String filterBy, String orderBy, String sortOrder,
+                                        Integer offset, Integer numResults) {
         return getStatus(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, offset, numResults);
+                filterBy, orderBy, sortOrder, offset, numResults);
     }
 
     public InstancesResult getStatus(String type, String entity, String startStr, String endStr,
                                      String colo, List<LifeCycle> lifeCycles,
-                                     String filterBy, String orderBy, Integer offset, Integer numResults) {
+                                     String filterBy, String orderBy, String sortOrder,
+                                     Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
         try {
@@ -125,7 +127,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             return getInstanceResultSubset(wfEngine.getStatus(entityObject,
                             startAndEndDate.first, startAndEndDate.second, lifeCycles),
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException
@@ -151,16 +153,15 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    public InstancesResult getLogs(String type, String entity, String startStr,
-                                   String endStr, String colo, String runId,
-                                   List<LifeCycle> lifeCycles,
-                                   String filterBy, String orderBy, Integer offset, Integer numResults) {
-
+    public InstancesResult getLogs(String type, String entity, String startStr, String endStr,
+                                   String colo, String runId, List<LifeCycle> lifeCycles,
+                                   String filterBy, String orderBy, String sortOrder,
+                                   Integer offset, Integer numResults) {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             // getStatus does all validations and filters clusters
             InstancesResult result = getStatus(type, entity, startStr, endStr,
-                    colo, lifeCycles, filterBy, orderBy, offset, numResults);
+                    colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults);
             LogProvider logProvider = new LogProvider();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             for (Instance instance : result.getInstances()) {
@@ -174,7 +175,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy, String orderBy,
+    private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy,
+                                                    String orderBy, String sortOrder,
                                                     Integer offset, Integer numResults) {
 
         ArrayList<Instance> instanceSet = new ArrayList<Instance>();
@@ -193,7 +195,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return new InstancesResult(resultSet.getMessage(), new Instance[0]);
         }
         // Sort the ArrayList using orderBy
-        instanceSet = sortInstances(instanceSet, orderBy);
+        instanceSet = sortInstances(instanceSet, orderBy, sortOrder);
         return new InstancesResult(resultSet.getMessage(),
                 instanceSet.subList(offset, (offset+pageCount)).toArray(new Instance[pageCount]));
     }
@@ -256,7 +258,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return instanceSet;
     }
 
-    private ArrayList<Instance> sortInstances(ArrayList<Instance> instanceSet, String orderBy) {
+    private ArrayList<Instance> sortInstances(ArrayList<Instance> instanceSet,
+                                              String orderBy, String sortOrder) {
+        final String order = getValidSortOrder(sortOrder, orderBy);
         if (orderBy.equals("status")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
@@ -267,14 +271,16 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     if (i2.getStatus() == null) {
                         i2.status = InstancesResult.WorkflowStatus.ERROR;
                     }
-                    return i1.getStatus().name().compareTo(i2.getStatus().name());
+                    return (order.equalsIgnoreCase("asc")) ? i1.getStatus().name().compareTo(i2.getStatus().name())
+                            : i2.getStatus().name().compareTo(i1.getStatus().name());
                 }
             });
         } else if (orderBy.equals("cluster")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i1.getCluster().compareTo(i2.getCluster());
+                    return (order.equalsIgnoreCase("asc")) ? i1.getCluster().compareTo(i2.getCluster())
+                            : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
         } else if (orderBy.equals("startTime")){
@@ -283,7 +289,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                 public int compare(Instance i1, Instance i2) {
                     Date start1 = (i1.getStartTime() == null) ? new Date(0) : i1.getStartTime();
                     Date start2 = (i2.getStartTime() == null) ? new Date(0) : i2.getStartTime();
-                    return start2.compareTo(start1); //default desc
+                    return (order.equalsIgnoreCase("asc")) ? start1.compareTo(start2)
+                            : start2.compareTo(start1);
                 }
             });
         } else if (orderBy.equals("endTime")) {
@@ -292,10 +299,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                 public int compare(Instance i1, Instance i2) {
                     Date end1 = (i1.getEndTime() == null) ? new Date(0) : i1.getEndTime();
                     Date end2 = (i2.getEndTime() == null) ? new Date(0) : i2.getEndTime();
-                    return end2.compareTo(end1); //default desc
+                    return (order.equalsIgnoreCase("asc")) ? end1.compareTo(end2)
+                            : end2.compareTo(end1);
                 }
             });
         }//Default : no sort
+
         return instanceSet;
     }
 
@@ -328,7 +337,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                         String type, String entity, String startStr,
                                         String endStr, String colo,
                                         List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {
@@ -352,7 +360,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                            String type, String entity, String startStr,
                                            String endStr, String colo,
                                            List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {

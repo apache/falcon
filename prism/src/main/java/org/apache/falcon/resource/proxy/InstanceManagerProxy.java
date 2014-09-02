@@ -84,6 +84,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
@@ -91,7 +92,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).
                         invoke("getRunningInstances", type, entity, colo, lifeCycles,
-                                filterBy, orderBy, offset, resultsPerPage);
+                                filterBy, orderBy, sortOrder, offset, resultsPerPage);
             }
         }.execute(colo, type, entity);
     }
@@ -114,6 +115,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
@@ -121,7 +123,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstances",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
             }
         }.execute(colo, type, entity);
     }
@@ -140,6 +142,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
@@ -147,7 +150,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
                         type, entity, startStr, endStr, colo, lifeCycles,
-                        filterBy, orderBy, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
             }
         }.execute(colo, type, entity);
     }
@@ -209,6 +212,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles,
             @DefaultValue("") @QueryParam("filterBy") final String filterBy,
             @DefaultValue("") @QueryParam("orderBy") final String orderBy,
+            @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
         return new InstanceProxy() {
@@ -216,7 +220,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getLogs",
                         type, entity, startStr, endStr, colo, runId, lifeCycles,
-                        filterBy, orderBy, offset, resultsPerPage);
+                        filterBy, orderBy, sortOrder, offset, resultsPerPage);
             }
         }.execute(colo, type, entity);
     }

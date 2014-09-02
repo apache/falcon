@@ -21,6 +21,7 @@ Get status of a specific instance of an entity.
       * Query will do an AND among filterBy fields.
    * orderBy <optional param> Field by which results should be ordered.
       * Supports ordering by "status","startTime","endTime","cluster".
+   * sortOrder <optional param> Valid options are "asc" and "desc"
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
 

@@ -86,6 +86,7 @@ public class FalconCLI {
     public static final String FILTER_BY_OPT = "filterBy";
     public static final String TAGS_OPT = "tags";
     public static final String ORDER_BY_OPT = "orderBy";
+    public static final String SORT_ORDER_OPT = "sortOrder";
     public static final String OFFSET_OPT = "offset";
     public static final String NUM_RESULTS_OPT = "numResults";
     public static final String NUM_INSTANCES_OPT = "numInstances";
@@ -229,24 +230,27 @@ public class FalconCLI {
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
+        String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
 
         colo = getColo(colo);
         String instanceAction = "instance";
+        validateSortOrder(sortOrder);
         validateInstanceCommands(optionsList, entity, type, colo);
 
 
         if (optionsList.contains(RUNNING_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
-            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, offset, numResults);
+            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, sortOrder,
+                    offset, numResults);
         } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles,
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } else if (optionsList.contains(SUMMARY_OPT)) {
             result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
@@ -264,7 +268,7 @@ public class FalconCLI {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result = client.getLogsOfInstances(type, entity, start, end, colo, runId, lifeCycles,
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } else if (optionsList.contains(PARARMS_OPT)) {
             // start time is the nominal time of instance
             result = client.getParamsOfInstance(type, entity, start, colo, clusters, sourceClusters, lifeCycles);
@@ -340,6 +344,7 @@ public class FalconCLI {
         String end = commandLine.getOptionValue(END_OPT);
         String time = commandLine.getOptionValue(EFFECTIVE_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
+        String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
@@ -348,6 +353,7 @@ public class FalconCLI {
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         validateEntityType(entityType);
+        validateSortOrder(sortOrder);
         String entityAction = "entity";
 
         if (optionsList.contains(SUBMIT_OPT)) {
@@ -402,7 +408,7 @@ public class FalconCLI {
             validateOrderBy(orderBy, entityAction);
             validateFilterBy(filterBy, entityAction);
             EntityList entityList = client.getEntityList(entityType, fields, filterBy,
-                    filterTags, orderBy, offset, numResults);
+                    filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {
             validateCluster(cluster);
@@ -410,13 +416,22 @@ public class FalconCLI {
             validateFilterBy(filterBy, entityAction);
             validateOrderBy(orderBy, entityAction);
             result = client.getEntitySummary(entityType, cluster, start, end, fields, filterBy, filterTags,
-                    orderBy, offset, numResults, numInstances);
+                    orderBy, sortOrder, offset, numResults, numInstances);
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
             throw new FalconCLIException("Invalid command");
         }
         OUT.get().println(result);
+    }
+
+    private void validateSortOrder(String sortOrder) throws FalconCLIException {
+        if (!StringUtils.isEmpty(sortOrder)) {
+            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
+                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
+                        + sortOrder);
+            }
+        }
     }
 
     private void validateCluster(String cluster) throws FalconCLIException {
@@ -617,6 +632,7 @@ public class FalconCLI {
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned entities by this field");
+        Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
         Option offset = new Option(OFFSET_OPT, true,
                 "Start returning entities from this offset");
         Option numResults = new Option(NUM_RESULTS_OPT, true,
@@ -638,6 +654,7 @@ public class FalconCLI {
         entityOptions.addOption(filterBy);
         entityOptions.addOption(filterTags);
         entityOptions.addOption(orderBy);
+        entityOptions.addOption(sortOrder);
         entityOptions.addOption(offset);
         entityOptions.addOption(numResults);
         entityOptions.addOption(numInstances);
@@ -747,6 +764,7 @@ public class FalconCLI {
                 "Filter returned instances by the specified fields");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned instances by this field");
+        Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
         Option offset = new Option(OFFSET_OPT, true,
                 "Start returning instances from this offset");
         Option numResults = new Option(NUM_RESULTS_OPT, true,
@@ -767,6 +785,7 @@ public class FalconCLI {
         instanceOptions.addOption(filterBy);
         instanceOptions.addOption(offset);
         instanceOptions.addOption(orderBy);
+        instanceOptions.addOption(sortOrder);
         instanceOptions.addOption(numResults);
 
         return instanceOptions;

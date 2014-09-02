@@ -23,6 +23,7 @@ Given an EntityType and cluster, get list of entities along with summary of N re
       * Example: tags=consumer=consumer@xyz.com,owner=producer@xyz.com
    * orderBy <optional param> Field by which results should be ordered.
       * Supports ordering by "name".
+   * sortOrder <optional param> Valid options are "asc" and "desc"
    * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
    * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
    * numInstances <optional param> Number of recent instances to show per entity. Only integers > 0 are valid, Default is 7.

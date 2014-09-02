@@ -749,7 +749,7 @@ public class EntityManagerJerseyIT {
                 .path("api/entities/list/process/")
                 .queryParam("filterBy", "TYPE:PROCESS,STATUS:RUNNING")
                 .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
-                .queryParam("orderBy", "name").queryParam("offset", "2")
+                .queryParam("orderBy", "name").queryParam("sortOrder", "desc").queryParam("offset", "2")
                 .queryParam("numResults", "2").queryParam("fields", "status,tags")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
@@ -762,7 +762,8 @@ public class EntityManagerJerseyIT {
 
         response = context.service
                 .path("api/entities/list/process/")
-                .queryParam("orderBy", "name").queryParam("offset", "50").queryParam("numResults", "2")
+                .queryParam("orderBy", "name").queryParam("sortOrder", "asc")
+                .queryParam("offset", "50").queryParam("numResults", "2")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML)
