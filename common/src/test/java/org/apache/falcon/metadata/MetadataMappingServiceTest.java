@@ -23,6 +23,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
@@ -39,6 +40,7 @@ import org.apache.falcon.entity.v0.process.Inputs;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.retention.EvictionHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
@@ -46,6 +48,7 @@ import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import static org.apache.falcon.workflow.WorkflowExecutionContext.EntityOperations;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
+import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -65,7 +68,8 @@ import java.util.Set;
 public class MetadataMappingServiceTest {
 
     public static final String FALCON_USER = "falcon-user";
-    private static final String LOGS_DIR = "target/log";
+    private static final String LOGS_DIR = "/falcon/staging/feed/logs";
+    private static final String LOG_FILE = "instancePaths-2014-01-01-01-00.csv";
     private static final String NOMINAL_TIME = "2014-01-01-01-00";
 
     public static final String CLUSTER_ENTITY_NAME = "primary-cluster";
@@ -74,6 +78,7 @@ public class MetadataMappingServiceTest {
     public static final String COLO_NAME = "west-coast";
     public static final String GENERATE_WORKFLOW_NAME = "imp-click-join-workflow";
     public static final String REPLICATION_WORKFLOW_NAME = "replication-policy-workflow";
+    private static final String EVICTION_WORKFLOW_NAME = "eviction-policy-workflow";
     public static final String WORKFLOW_VERSION = "1.0.9";
 
     public static final String INPUT_FEED_NAMES = "impression-feed#clicks-feed";
@@ -86,6 +91,8 @@ public class MetadataMappingServiceTest {
         "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join2/20140101";
     private static final String REPLICATED_OUTPUT_INSTANCE_PATHS =
             "jail://global:00/falcon/imp-click-join1/20140101";
+    private static final String EVICTED_OUTPUT_INSTANCE_PATHS =
+            "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join1/20140102";
 
     public static final String BROKER = "org.apache.activemq.ActiveMQConnectionFactory";
 
@@ -97,6 +104,9 @@ public class MetadataMappingServiceTest {
     private List<Feed> inputFeeds = new ArrayList<Feed>();
     private List<Feed> outputFeeds = new ArrayList<Feed>();
     private Process processEntity;
+    private EmbeddedCluster embeddedCluster;
+    private String hdfsUrl;
+    private static String logFilePath;
 
 
     @BeforeClass
@@ -251,6 +261,40 @@ public class MetadataMappingServiceTest {
         // +3 = +2 edges for bcp cluster, no user but only to colo and new tag  + 1 for replicated-to edge to target
         // cluster for each output feed instance
         Assert.assertEquals(getEdgesCount(service.getGraph()), 74);
+    }
+
+    @Test
+    public void   testLineageForRetention() throws Exception {
+        setupForLineageEviciton();
+        String feedName = "imp-click-join1";
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.DELETE, EVICTION_WORKFLOW_NAME,
+                        feedName, "IGNORE", "IGNORE", feedName),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+        List<String> expectedFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
+        List<String> secureFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z",
+                "clicks-feed/2014-01-01T00:00Z");
+        List<String> ownedAndSecureFeeds = Arrays.asList("clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
+        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName(), expectedFeeds, secureFeeds, ownedAndSecureFeeds);
+        String[] paths = EVICTED_OUTPUT_INSTANCE_PATHS.split(EvictionHelper.INSTANCEPATH_SEPARATOR);
+        for (String feedInstanceDataPath : paths) {
+            verifyLineageGraphForReplicationOrEviction(feedName, feedInstanceDataPath, context,
+                    RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE);
+        }
+
+        // No new vertices added
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 23);
+        // +1 =  +2 for evicted-from edge from Feed Instance vertex to cluster.
+        // -1 imp-click-join1 is added twice instead of imp-click-join2 so there is one less edge as there is no
+        // classified-as -> Secure edge.
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 72);
     }
 
     @Test (dependsOnMethods = "testOnAdd")
@@ -647,11 +691,20 @@ public class MetadataMappingServiceTest {
     }
 
     private void verifyLineageGraph(String feedType) {
+        List<String> expectedFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z");
+        List<String> secureFeeds = Arrays.asList("impression-feed/2014-01-01T00:00Z",
+                "clicks-feed/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z");
+        List<String> ownedAndSecureFeeds = Arrays.asList("clicks-feed/2014-01-01T00:00Z",
+                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z");
+        verifyLineageGraph(feedType, expectedFeeds, secureFeeds, ownedAndSecureFeeds);
+    }
+
+    private void verifyLineageGraph(String feedType, List<String> expectedFeeds,
+                                    List<String> secureFeeds, List<String> ownedAndSecureFeeds) {
         // feeds owned by a user
         List<String> feedNamesOwnedByUser = getFeedsOwnedByAUser(feedType);
-        List<String> expected = Arrays.asList("impression-feed/2014-01-01T00:00Z", "clicks-feed/2014-01-01T00:00Z",
-                "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z");
-        Assert.assertTrue(feedNamesOwnedByUser.containsAll(expected));
+        Assert.assertTrue(feedNamesOwnedByUser.containsAll(expectedFeeds));
 
         Graph graph = service.getGraph();
 
@@ -666,14 +719,10 @@ public class MetadataMappingServiceTest {
         Assert.assertEquals(vertexById, feedInstanceVertex);
 
         // feeds classified as secure
-        verifyFeedsClassifiedAsSecure(feedType,
-                Arrays.asList("impression-feed/2014-01-01T00:00Z",
-                        "clicks-feed/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z"));
+        verifyFeedsClassifiedAsSecure(feedType, secureFeeds);
 
         // feeds owned by a user and classified as secure
-        verifyFeedsOwnedByUserAndClassification(feedType, "Financial",
-                Arrays.asList("clicks-feed/2014-01-01T00:00Z",
-                        "imp-click-join1/2014-01-01T00:00Z", "imp-click-join2/2014-01-01T00:00Z"));
+        verifyFeedsOwnedByUserAndClassification(feedType, "Financial", ownedAndSecureFeeds);
     }
 
     private void verifyLineageGraphForReplicationOrEviction(String feedName, String feedInstanceDataPath,
@@ -739,7 +788,8 @@ public class MetadataMappingServiceTest {
             "-" + WorkflowExecutionArgs.BRKR_TTL.getName(), "1000",
 
             "-" + WorkflowExecutionArgs.LOG_DIR.getName(), LOGS_DIR,
-            "-" + WorkflowExecutionArgs.LOG_FILE.getName(), LOGS_DIR + "/log.txt",
+            "-" + WorkflowExecutionArgs.LOG_FILE.getName(),
+            (logFilePath != null ? logFilePath : LOGS_DIR + "/log" + ".txt"),
         };
     }
 
@@ -751,27 +801,30 @@ public class MetadataMappingServiceTest {
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
 
+        addFeedsAndProcess(clusterEntity);
+    }
+
+    private void addFeedsAndProcess(Cluster cluster) throws Exception  {
         // Add input and output feeds
-        Feed impressionsFeed = addFeedEntity("impression-feed", clusterEntity,
+        Feed impressionsFeed = addFeedEntity("impression-feed", cluster,
                 "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
         inputFeeds.add(impressionsFeed);
-        Feed clicksFeed = addFeedEntity("clicks-feed", clusterEntity,
+        Feed clicksFeed = addFeedEntity("clicks-feed", cluster,
                 "classified-as=Secure,classified-as=Financial", "analytics", Storage.TYPE.FILESYSTEM,
                 "/falcon/clicks-feed/${YEAR}-${MONTH}-${DAY}");
         inputFeeds.add(clicksFeed);
-        Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
+        Feed join1Feed = addFeedEntity("imp-click-join1", cluster,
                 "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
         outputFeeds.add(join1Feed);
-        Feed join2Feed = addFeedEntity("imp-click-join2", clusterEntity,
+        Feed join2Feed = addFeedEntity("imp-click-join2", cluster,
                 "classified-as=Secure,classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
                 "/falcon/imp-click-join2/${YEAR}${MONTH}${DAY}");
         outputFeeds.add(join2Feed);
         processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
                 "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
                 WORKFLOW_VERSION);
-
     }
 
     private void setupForLineageReplication() throws Exception {
@@ -783,6 +836,33 @@ public class MetadataMappingServiceTest {
         service.onSuccess(context);
         // Add backup cluster
         addClusterEntity(BCP_CLUSTER_ENTITY_NAME, "east-coast", "classification=bcp");
+    }
+
+    private void setupForLineageEviciton() throws Exception {
+        cleanUp();
+        service.init();
+
+        // Add cluster
+        embeddedCluster = EmbeddedCluster.newCluster(CLUSTER_ENTITY_NAME, true, COLO_NAME,
+                "classification=production");
+        clusterEntity = embeddedCluster.getCluster();
+        configStore.publish(EntityType.CLUSTER, clusterEntity);
+        hdfsUrl = embeddedCluster.getConf().get("fs.default.name");
+
+        addFeedsAndProcess(clusterEntity);
+
+        // GENERATE WF should have run before this to create all instance related vertices
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME,
+                        "imp-click-join1,imp-click-join1", EVICTED_OUTPUT_INSTANCE_PATHS, null, null),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        // Write to csv file
+        String csvData = EVICTED_OUTPUT_INSTANCE_PATHS;
+        logFilePath = hdfsUrl + LOGS_DIR + "/" + LOG_FILE;
+        Path path = new Path(logFilePath);
+        EvictionHelper.logInstancePaths(path.getFileSystem(EmbeddedCluster.newConfiguration()), path, csvData);
     }
 
     private void cleanUp() throws Exception {

@@ -20,8 +20,10 @@ package org.apache.falcon.metadata;
 
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.common.FeedDataPath;
@@ -32,6 +34,8 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.retention.EvictionHelper;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
@@ -200,6 +204,43 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
         addInstanceToEntity(feedInstanceVertex, targetClusterName, RelationshipType.CLUSTER_ENTITY,
                 RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE, context.getTimeStampAsISO8601());
+    }
+
+    public void addEvictedInstance(WorkflowExecutionContext context) throws FalconException {
+        String outputFeedNamesArg = context.getOutputFeedNames();
+        if ("NONE".equals(outputFeedNamesArg)) {
+            LOG.info("There are no output feeds for this process, return");
+            return;
+        }
+
+        String logFile = context.getLogFile();
+        if (StringUtils.isEmpty(logFile)){
+            throw new IllegalArgumentException("csv log file path empty");
+        }
+
+        String clusterName = context.getClusterName();
+        String[] paths = EvictionHelper.getInstancePaths(ClusterHelper.getFileSystem(clusterName), new Path(logFile));
+        if (paths == null || paths.length <= 0) {
+            throw new IllegalArgumentException("No instance paths in log file");
+        }
+
+        // For retention there will be only one output feed name
+        String feedName = outputFeedNamesArg;
+        for (String feedInstanceDataPath : paths) {
+            LOG.info("Computing feed instance for : name=" + feedName + ", path= "
+                    + feedInstanceDataPath + ", in cluster: " + clusterName);
+            RelationshipType vertexType = RelationshipType.FEED_INSTANCE;
+            String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstanceDataPath);
+            Vertex feedInstanceVertex = findVertex(feedInstanceName, vertexType);
+
+            LOG.info("Vertex exists? name={}, type={}, v={}", feedInstanceName, vertexType, feedInstanceVertex);
+            if (feedInstanceVertex == null) {
+                throw new IllegalStateException(vertexType + " instance vertex must exist " + feedInstanceName);
+            }
+
+            addInstanceToEntity(feedInstanceVertex, clusterName, RelationshipType.CLUSTER_ENTITY,
+                    RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE, context.getTimeStampAsISO8601());
+        }
     }
 
     private void addFeedInstance(Vertex processInstance, RelationshipLabel edgeLabel,

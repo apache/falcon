@@ -40,7 +40,6 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -48,10 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -107,7 +103,7 @@ public class FeedEvictor extends Configured implements Tool {
     }
 
     private final Map<VARS, String> map = new TreeMap<VARS, String>();
-    private final StringBuffer instancePaths = new StringBuffer("instancePaths=");
+    private final StringBuffer instancePaths = new StringBuffer();
     private final StringBuffer buffer = new StringBuffer();
 
     @Override
@@ -129,7 +125,8 @@ public class FeedEvictor extends Configured implements Tool {
         Storage storage = FeedHelper.createStorage(feedStorageType, feedPattern);
         evict(storage, retentionLimit, timeZone);
 
-        logInstancePaths(new Path(logFile));
+        Path path = new Path(logFile);
+        EvictionHelper.logInstancePaths(path.getFileSystem(getConf()), path, instancePaths.toString());
 
         int len = buffer.length();
         if (len > 0) {
@@ -183,7 +180,7 @@ public class FeedEvictor extends Configured implements Tool {
             deleteInstance(fs, path, feedBasePath);
             Date date = getDate(path, feedPath, dateMask, timeZone);
             buffer.append(dateFormat.format(date)).append(',');
-            instancePaths.append(path).append(",");
+            instancePaths.append(path).append(EvictionHelper.INSTANCEPATH_SEPARATOR);
         }
     }
 
@@ -195,15 +192,6 @@ public class FeedEvictor extends Configured implements Tool {
             throw new IOException("Unable to resolve pattern for feedPath: " + feedPath);
         }
 
-    }
-
-    private void logInstancePaths(Path path) throws IOException {
-        LOG.info("Writing deleted instances to path {}", path);
-        FileSystem logfs = path.getFileSystem(getConf());
-        OutputStream out = logfs.create(path);
-        out.write(instancePaths.toString().getBytes());
-        out.close();
-        debug(logfs, path);
     }
 
     private Pair<Date, Date> getDateRange(String period) throws ELException {
@@ -328,14 +316,6 @@ public class FeedEvictor extends Configured implements Tool {
             throw new IOException("Unable to delete instance: " + path);
         }
         deleteParentIfEmpty(fs, path.getParent(), feedBasePath);
-    }
-
-    private void debug(FileSystem fs, Path outPath) throws IOException {
-        ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        InputStream instance = fs.open(outPath);
-        IOUtils.copyBytes(instance, writer, 4096, true);
-        LOG.debug("Instance Paths copied to {}", outPath);
-        LOG.debug("Written {}", writer);
     }
 
     private CommandLine getCommand(String[] args) throws org.apache.commons.cli.ParseException {
@@ -552,7 +532,7 @@ public class FeedEvictor extends Configured implements Tool {
                 String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
                 LOG.info("Deleted partition: " + partitionInfo);
                 buffer.append(partSpec).append(',');
-                instancePaths.append(partitionInfo).append(",");
+                instancePaths.append(partitionInfo).append(EvictionHelper.INSTANCEPATH_SEPARATOR);
             }
         }
     }

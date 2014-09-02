@@ -58,11 +58,11 @@ public class EmbeddedCluster {
     }
 
     public static EmbeddedCluster newCluster(final String name) throws Exception {
-        return createClusterAsUser(name, false);
+        return createClusterAsUser(name, false, null, null);
     }
 
     public static EmbeddedCluster newCluster(final String name, boolean global) throws Exception {
-        return createClusterAsUser(name, global);
+        return createClusterAsUser(name, global, null, null);
     }
 
     public static EmbeddedCluster newCluster(final String name,
@@ -71,18 +71,24 @@ public class EmbeddedCluster {
         return hdfsUser.doAs(new PrivilegedExceptionAction<EmbeddedCluster>() {
             @Override
             public EmbeddedCluster run() throws Exception {
-                return createClusterAsUser(name, false);
+                return createClusterAsUser(name, false, null, null);
             }
         });
     }
 
-    private static EmbeddedCluster createClusterAsUser(String name, boolean global) throws IOException {
+    public static EmbeddedCluster newCluster(final String name, boolean global, final String colo,
+                                             final String tags) throws Exception {
+        return createClusterAsUser(name, global, colo, tags);
+    }
+
+    private static EmbeddedCluster createClusterAsUser(String name, boolean global, String colo,
+                                                       String tags) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
         cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
 
         String hdfsUrl = cluster.conf.get("fs.default.name");
         LOG.info("Cluster Namenode = {}", hdfsUrl);
-        cluster.buildClusterObject(name);
+        cluster.buildClusterObject(name, colo, tags);
         return cluster;
     }
 
@@ -90,10 +96,14 @@ public class EmbeddedCluster {
         return FileSystem.get(conf);
     }
 
-    protected void buildClusterObject(String name) {
+    protected void buildClusterObject(String name, String colo, String tags) {
         clusterEntity = new Cluster();
         clusterEntity.setName(name);
-        clusterEntity.setColo("local");
+        clusterEntity.setColo((colo == null) ? "local" : colo);
+        clusterEntity.setDescription("Embedded cluster: " + name);
+        if (tags != null) {
+            clusterEntity.setTags(tags);
+        }
         clusterEntity.setDescription("Embedded cluster: " + name);
 
         Interfaces interfaces = new Interfaces();

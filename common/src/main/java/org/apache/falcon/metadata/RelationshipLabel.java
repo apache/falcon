@@ -39,7 +39,10 @@ public enum RelationshipLabel {
     PIPELINES("pipeline"),
 
     // replication labels
-    FEED_CLUSTER_REPLICATED_EDGE("replicated-to");
+    FEED_CLUSTER_REPLICATED_EDGE("replicated-to"),
+
+    // eviction labels
+    FEED_CLUSTER_EVICTED_EDGE("evicted-from");
 
     private final String name;
 

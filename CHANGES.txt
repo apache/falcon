@@ -27,6 +27,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-594 Process lineage information for Retention policies
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-325 Process lineage information for Replication policies
    (Sowmya Ramesh via Venkatesh Seetharam)
 
