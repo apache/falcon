@@ -72,6 +72,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-649 Remove unnecessary validation for Instance start time in
+   FalconCLI (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-579 Lineage breaks if feed.xml doesn't have the date pattern in
    feed path location (Sowmya Ramesh via Venkatesh Seetharam)
 

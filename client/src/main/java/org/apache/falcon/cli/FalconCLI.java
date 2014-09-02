@@ -235,7 +235,7 @@ public class FalconCLI {
 
         colo = getColo(colo);
         String instanceAction = "instance";
-        validateInstanceCommands(optionsList, entity, type, start, colo);
+        validateInstanceCommands(optionsList, entity, type, colo);
 
 
         if (optionsList.contains(RUNNING_OPT)) {
@@ -290,7 +290,7 @@ public class FalconCLI {
 
     private void validateInstanceCommands(Set<String> optionsList,
                                           String entity, String type,
-                                          String start, String colo) throws FalconCLIException {
+                                          String colo) throws FalconCLIException {
 
         if (StringUtils.isEmpty(entity)) {
             throw new FalconCLIException("Missing argument: name");
@@ -302,12 +302,6 @@ public class FalconCLI {
 
         if (StringUtils.isEmpty(colo)) {
             throw new FalconCLIException("Missing argument: colo");
-        }
-
-        if (!optionsList.contains(RUNNING_OPT)) {
-            if (StringUtils.isEmpty(start)) {
-                throw new FalconCLIException("Missing argument: start");
-            }
         }
 
         if (optionsList.contains(CLUSTERS_OPT)) {
