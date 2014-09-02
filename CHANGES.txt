@@ -72,6 +72,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-650 Instance list APIs occassionally fail when orderBy set to
+   starttime or endtime (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-649 Remove unnecessary validation for Instance start time in
    FalconCLI (Balu Vellanki via Venkatesh Seetharam)
 

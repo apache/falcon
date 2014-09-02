@@ -281,14 +281,18 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i2.getStartTime().compareTo(i1.getStartTime()); //default desc
+                    Date start1 = (i1.getStartTime() == null) ? new Date(0) : i1.getStartTime();
+                    Date start2 = (i2.getStartTime() == null) ? new Date(0) : i2.getStartTime();
+                    return start2.compareTo(start1); //default desc
                 }
             });
         } else if (orderBy.equals("endTime")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i2.getEndTime().compareTo(i1.getEndTime()); //default desc
+                    Date end1 = (i1.getEndTime() == null) ? new Date(0) : i1.getEndTime();
+                    Date end2 = (i2.getEndTime() == null) ? new Date(0) : i2.getEndTime();
+                    return end2.compareTo(end1); //default desc
                 }
             });
         }//Default : no sort

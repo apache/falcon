@@ -813,6 +813,11 @@ public class FalconCLIIT {
                 executeWithURL("instance -logs -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -filterBy STATUS:WAITING -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
                         + " -filterBy STATUS:SUCCEEDED,STARTEDAFTER:"+START_INSTANCE+" -offset 1 -numResults 1"));
         Assert.assertEquals(-1,
                 executeWithURL("instance -logs -type process -name "
