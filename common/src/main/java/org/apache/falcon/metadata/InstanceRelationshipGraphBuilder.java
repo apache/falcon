@@ -194,7 +194,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         LOG.info("Computing feed instance for : name=" + feedName + ", path= "
                 + feedInstanceDataPath + ", in cluster: " + srcClusterName);
         RelationshipType vertexType = RelationshipType.FEED_INSTANCE;
-        String feedInstanceName = getFeedInstanceName(feedName, srcClusterName, feedInstanceDataPath);
+        String feedInstanceName = getFeedInstanceName(feedName, srcClusterName,
+                feedInstanceDataPath, context.getNominalTimeAsISO8601());
         Vertex feedInstanceVertex = findVertex(feedInstanceName, vertexType);
 
         LOG.info("Vertex exists? name={}, type={}, v={}", feedInstanceName, vertexType, feedInstanceVertex);
@@ -219,7 +220,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         }
 
         String clusterName = context.getClusterName();
-        String[] paths = EvictionHelper.getInstancePaths(ClusterHelper.getFileSystem(clusterName), new Path(logFile));
+        String[] paths = EvictionHelper.getInstancePaths(
+                ClusterHelper.getFileSystem(clusterName), new Path(logFile));
         if (paths == null || paths.length <= 0) {
             throw new IllegalArgumentException("No instance paths in log file");
         }
@@ -230,12 +232,15 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             LOG.info("Computing feed instance for : name=" + feedName + ", path= "
                     + feedInstanceDataPath + ", in cluster: " + clusterName);
             RelationshipType vertexType = RelationshipType.FEED_INSTANCE;
-            String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstanceDataPath);
+            String feedInstanceName = getFeedInstanceName(feedName, clusterName,
+                    feedInstanceDataPath, context.getNominalTimeAsISO8601());
             Vertex feedInstanceVertex = findVertex(feedInstanceName, vertexType);
 
-            LOG.info("Vertex exists? name={}, type={}, v={}", feedInstanceName, vertexType, feedInstanceVertex);
+            LOG.info("Vertex exists? name={}, type={}, v={}",
+                    feedInstanceName, vertexType, feedInstanceVertex);
             if (feedInstanceVertex == null) {
-                throw new IllegalStateException(vertexType + " instance vertex must exist " + feedInstanceName);
+                throw new IllegalStateException(vertexType
+                        + " instance vertex must exist " + feedInstanceName);
             }
 
             addInstanceToEntity(feedInstanceVertex, clusterName, RelationshipType.CLUSTER_ENTITY,
@@ -249,7 +254,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         String clusterName = context.getClusterName();
         LOG.info("Computing feed instance for : name=" + feedName + ", path= "
                 + feedInstanceDataPath + ", in cluster: " + clusterName);
-        String feedInstanceName = getFeedInstanceName(feedName, clusterName, feedInstanceDataPath);
+        String feedInstanceName = getFeedInstanceName(feedName, clusterName,
+                feedInstanceDataPath, context.getNominalTimeAsISO8601());
         LOG.info("Adding feed instance: " + feedInstanceName);
         Vertex feedInstance = addVertex(feedInstanceName, RelationshipType.FEED_INSTANCE,
                 context.getTimeStampAsISO8601());
@@ -271,7 +277,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     public static String getFeedInstanceName(String feedName, String clusterName,
-                                      String feedInstancePath) throws FalconException {
+                                             String feedInstancePath,
+                                             String nominalTime) throws FalconException {
         try {
             Feed feed = ConfigurationStore.get().get(EntityType.FEED, feedName);
             Cluster cluster = ConfigurationStore.get().get(EntityType.CLUSTER, clusterName);
@@ -279,7 +286,7 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             Storage.TYPE storageType = FeedHelper.getStorageType(feed, cluster);
             return storageType == Storage.TYPE.TABLE
                     ? getTableFeedInstanceName(feed, feedInstancePath, storageType)
-                    : getFileSystemFeedInstanceName(feedInstancePath, feed, cluster);
+                    : getFileSystemFeedInstanceName(feedInstancePath, feed, cluster, nominalTime);
 
         } catch (URISyntaxException e) {
             throw new FalconException(e);
@@ -294,7 +301,8 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
     }
 
     private static String getFileSystemFeedInstanceName(String feedInstancePath, Feed feed,
-                                                 Cluster cluster) throws FalconException {
+                                                        Cluster cluster,
+                                                        String nominalTime) throws FalconException {
         Storage rawStorage = FeedHelper.createStorage(cluster, feed);
         String feedPathTemplate = rawStorage.getUriTemplate(LocationType.DATA);
         String instance = feedInstancePath;
@@ -304,7 +312,9 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
             instance = instance.replaceFirst(element, "");
         }
 
-        return feed.getName() + "/"
-                + SchemaHelper.formatDateUTCToISO8601(instance, FEED_INSTANCE_FORMAT);
+        return StringUtils.isEmpty(instance)
+                ? feed.getName() + "/" + nominalTime
+                : feed.getName() + "/"
+                        + SchemaHelper.formatDateUTCToISO8601(instance, FEED_INSTANCE_FORMAT);
     }
 }
