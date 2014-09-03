@@ -50,6 +50,8 @@ public class PrismProcessSnSTest extends BaseTestClass {
     OozieClient cluster2OC = serverOC.get(1);
     String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessSnSTest/aggregator";
     private static final Logger logger = Logger.getLogger(PrismProcessSnSTest.class);
+    String process1;
+    String process2;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -65,6 +67,8 @@ public class PrismProcessSnSTest extends BaseTestClass {
             bundles[i].generateUniqueBundle();
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
+        process1 = bundles[0].getProcessData();
+        process2 = bundles[1].getProcessData();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -72,6 +76,11 @@ public class PrismProcessSnSTest extends BaseTestClass {
         removeBundles();
     }
 
+    /**
+     * Submit and schedule process1 on cluster1. Check that process2 is not running on cluster1.
+     * Submit and schedule process2 on cluster2. Check that process2 is running and process1 is
+     * not running on cluster2.
+     */
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testProcessSnSOnBothColos() throws Exception {
         //schedule both bundles
@@ -79,49 +88,49 @@ public class PrismProcessSnSTest extends BaseTestClass {
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
         bundles[1].submitAndScheduleProcess();
-
-        //now check if they have been scheduled correctly or not
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
+
         //check if there is no criss cross
-        ServiceResponse response =
-            prism.getProcessHelper()
-                .getStatus(URLS.STATUS_URL, bundles[1].getProcessData());
+        ServiceResponse response = prism.getProcessHelper().getStatus(URLS.STATUS_URL, process2);
         logger.info(response.getMessage());
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
-
     }
 
+    /**
+     * Submit process1 on cluster1 and schedule it. Check that process1 runs on cluster1 but not
+     * on cluster2. Submit process2 but schedule process1 once more. Check that process1 is running
+     * on cluster1 but not on cluster2.
+     */
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testProcessSnSForSubmittedProcessOnBothColos() throws Exception {
         //schedule both bundles
-
         bundles[0].submitProcess(true);
-
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
 
         bundles[1].submitProcess(true);
 
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
-        //now check if they have been scheduled correctly or not
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         //check if there is no criss cross
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
-
     }
 
+    /**
+     * Submit process1 on cluster1 and schedule it. Check that only process1 runs on cluster1.
+     * Submit process2 and check that it isn't running on cluster1. Submit and schedule process1
+     * once more and check that it is still running on cluster1 but process2 isn't running on
+     * cluster2.
+     */
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testProcessSnSForSubmittedProcessOnBothColosUsingColoHelper()
         throws Exception {
-        //schedule both bundles
-
         bundles[0].submitProcess(true);
-
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
         bundles[1].submitProcess(true);
@@ -130,127 +139,109 @@ public class PrismProcessSnSTest extends BaseTestClass {
         bundles[1].submitProcess(true);
 
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
-        //now check if they have been scheduled correctly or not
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         //check if there is no criss cross
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
-
     }
 
+    /**
+     * Submit and schedule process1 on cluster1 and check that only it is running there. Submit
+     * and schedule process2 on cluster2 and check the same for it. Schedule process1 on cluster2.
+     * Check that it is running on cluster2 and cluster1 but process2 isn't running on cluster1.
+     */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testProcessSnSAlreadyScheduledOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitAndScheduleProcess();
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-        bundles[1].submitAndScheduleProcess();
 
-        //now check if they have been scheduled correctly or not
+        bundles[1].submitAndScheduleProcess();
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-        //check if there is no criss cross
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
 
         //reschedule trial
-
         AssertUtil.assertSucceeded(cluster2.getProcessHelper()
-            .schedule(URLS.SCHEDULE_URL, bundles[0].getProcessData()));
+            .schedule(URLS.SCHEDULE_URL, process1));
         Assert.assertEquals(OozieUtil.getBundles(cluster2.getFeedHelper().getOozieClient(),
-            Util.readEntityName(bundles[0].getProcessData()), EntityType.PROCESS).size(), 1);
+            Util.readEntityName(process1), EntityType.PROCESS).size(), 1);
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
     }
 
+    /**
+     * Submit and schedule both process1 and process2. Suspend process1. Check their statuses.
+     * Submit and schedule process1 once more.
+     */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testSnSSuspendedProcessOnBothColos() throws Exception {
         //schedule both bundles
         bundles[0].submitAndScheduleProcess();
         bundles[1].submitAndScheduleProcess();
-
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper()
-            .suspend(URLS.SUSPEND_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(cluster2.getProcessHelper().suspend(URLS.SUSPEND_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-        //now check if they have been scheduled correctly or not
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
-        Assert.assertEquals(OozieUtil.getBundles(cluster2.getFeedHelper().getOozieClient(),
-            Util.readEntityName(bundles[0].getProcessData()), EntityType.PROCESS).size(), 1);
-        AssertUtil.assertSucceeded(cluster2.getProcessHelper()
-            .resume(URLS.SUSPEND_URL, bundles[0].getProcessData()));
 
-        AssertUtil.assertSucceeded(cluster1.getProcessHelper()
-            .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[1].getProcessData()));
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
+        Assert.assertEquals(OozieUtil.getBundles(cluster2OC, Util.readEntityName(process1),
+            EntityType.PROCESS).size(), 1);
+        AssertUtil.assertSucceeded(cluster2.getProcessHelper().resume(URLS.SUSPEND_URL, process1));
 
-        Assert.assertEquals(OozieUtil.getBundles(cluster1.getFeedHelper().getOozieClient(),
-            Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS).size(), 1);
+        AssertUtil.assertSucceeded(cluster1.getProcessHelper().suspend(URLS.SUSPEND_URL, process2));
+        AssertUtil.assertSucceeded(prism.getProcessHelper()
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process2));
+
+        Assert.assertEquals(OozieUtil.getBundles(cluster1OC, Util.readEntityName(process2),
+            EntityType.PROCESS).size(), 1);
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.SUSPENDED);
     }
 
+    /**
+     * Submit and schedule both processes on both cluster1 and cluster2. Check that they are
+     * running. Delete both of them. Submit and schedule them once more. Check that they are
+     * running again.
+     */
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testSnSDeletedProcessOnBothColos() throws Exception {
         //schedule both bundles
         final String cluster1Running = cluster1.getClusterHelper().getColoName() + "/RUNNING";
         final String cluster2Running = cluster2.getClusterHelper().getColoName() + "/RUNNING";
+
         bundles[0].submitAndScheduleProcess();
-
-        Assert.assertEquals(Util.parseResponse(
-                prism.getProcessHelper()
-                    .getStatus(URLS.STATUS_URL, bundles[0].getProcessData())).getMessage(),
-            cluster1Running
-        );
-
+        Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
+            .getStatus(URLS.STATUS_URL, process1)).getMessage(), cluster1Running);
         bundles[1].submitAndScheduleProcess();
-        Assert.assertEquals(Util.parseResponse(
-                prism.getProcessHelper()
-                    .getStatus(URLS.STATUS_URL, bundles[1].getProcessData())).getMessage(),
-            cluster2Running
-        );
+        Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
+            .getStatus(URLS.STATUS_URL, process2)).getMessage(), cluster2Running);
 
-        AssertUtil.assertSucceeded(
-            prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(URLS.DELETE_URL, process1));
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-        AssertUtil.assertSucceeded(
-            prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(URLS.DELETE_URL, process2));
         AssertUtil.checkStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster1OC, EntityType.PROCESS, bundles[0], Job.Status.KILLED);
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1));
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[1].getProcessData()));
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process2));
 
-        Assert.assertEquals(Util.parseResponse(
-                prism.getProcessHelper()
-                    .getStatus(URLS.STATUS_URL, bundles[0].getProcessData())
-            ).getMessage(),
-            cluster1Running
-        );
-        Assert.assertEquals(Util.parseResponse(
-                prism.getProcessHelper()
-                    .getStatus(URLS.STATUS_URL, bundles[1].getProcessData())
-            ).getMessage(),
-            cluster2Running
-        );
-
+        Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
+            .getStatus(URLS.STATUS_URL, process1)).getMessage(),cluster1Running);
+        Assert.assertEquals(Util.parseResponse(prism.getProcessHelper()
+            .getStatus(URLS.STATUS_URL, process2)).getMessage(), cluster2Running);
     }
 
+    /**
+     * Attempt to submit and schedule processes when all required entities weren't registered
+     */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleNonExistentProcessOnBothColos() throws Exception {
         Assert.assertEquals(Util.parseResponse(cluster2.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()))
-            .getStatusCode(), 404);
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process1)).getStatusCode(), 404);
         Assert.assertEquals(Util.parseResponse(cluster1.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[1].getProcessData()))
-            .getStatusCode(), 404);
-
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
+            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process2)).getStatusCode(), 404);
     }
 }

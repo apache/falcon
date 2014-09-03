@@ -176,27 +176,28 @@ public class ProcessUITest extends BaseUITestClass {
         //check Process statuses via UI
         EntitiesPage page = new EntitiesPage(DRIVER, cluster, EntityType.PROCESS);
         page.navigateTo();
-
-        softAssert.assertEquals(page.getEntityStatus(bundles[0].getProcessName()),
+        String process = bundles[0].getProcessData();
+        String processName = Util.readEntityName(process);
+        softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.SUBMITTED, "Process status should be SUBMITTED");
-        prism.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL, process);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-                .getProcessData()), 1, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
-        softAssert.assertEquals(page.getEntityStatus(bundles[0].getProcessName()),
+        softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.RUNNING, "Process status should be RUNNING");
 
-        ProcessPage processPage = new ProcessPage(DRIVER, cluster, bundles[0].getProcessName());
+        ProcessPage processPage = new ProcessPage(DRIVER, cluster, processName);
         processPage.navigateTo();
 
-        String bundleID = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String bundleID = InstanceUtil.getLatestBundleID(cluster, processName, EntityType.PROCESS);
         Map<Date, CoordinatorAction.Status> actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID,
                 EntityType.PROCESS);
         checkActions(actions, processPage);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-                .getProcessData()), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         processPage.refresh();
         actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID, EntityType.PROCESS);

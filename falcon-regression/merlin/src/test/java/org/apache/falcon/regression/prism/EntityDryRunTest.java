@@ -52,9 +52,9 @@ public class EntityDryRunTest extends BaseTestClass {
     private FileSystem clusterFS = serverFS.get(0);
     private String baseTestHDFSDir = baseHDFSDir + "/EntityDryRunTest";
     private String feedInputPath = baseTestHDFSDir +
-            "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+        "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private String feedOutputPath =
-            baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+        baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(EntityDryRunTest.class);
 
@@ -85,7 +85,6 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     *
      * tries to submit process with invalid el exp
      */
     @Test(groups = {"singleCluster"})
@@ -93,12 +92,11 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitProcess(true);
         ServiceResponse response = prism.getProcessHelper()
-                .schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+            .schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
         validate(response);
     }
 
     /**
-     *
      * tries to update process with invalid EL exp
      */
     @Test(groups = {"singleCluster"})
@@ -108,17 +106,15 @@ public class EntityDryRunTest extends BaseTestClass {
         bundles[0].submitAndScheduleProcess();
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
-                bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
+            bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
         validate(response);
         Assert.assertEquals(
             OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()),
-            1,
-            "more than one bundle found after failed update request");
+            1, "more than one bundle found after failed update request");
     }
 
     /**
      * tries to submit feed with invalied EL exp
-     *
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
@@ -131,14 +127,14 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     *
      * tries to update feed with invalid el exp
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateFeed() throws Exception {
         bundles[0].submitClusters(prism);
         String feed = bundles[0].getInputFeedFromBundle();
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response =
+            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
         AssertUtil.assertSucceeded(response);
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
@@ -150,11 +146,9 @@ public class EntityDryRunTest extends BaseTestClass {
 
     private void validate(ServiceResponse response) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage()
-            .contains("org.apache.falcon.FalconException: AUTHENTICATION : E1004 :" +
-                " E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL" +
-                "(1)"),
-            "Correct response was not present in process / feed schedule");
+        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: " +
+            "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate " +
+            ":${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
     }
 
     @AfterClass(alwaysRun = true)
