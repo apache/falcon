@@ -77,6 +77,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-652 EntityUtils tests are failing (Ajay Yadav via Venkatesh Seetharam)
+
    FALCON-650 Instance list APIs occassionally fail when orderBy set to
    starttime or endtime (Balu Vellanki via Venkatesh Seetharam)
 

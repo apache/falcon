@@ -224,9 +224,11 @@ public class EntityUtilTest extends AbstractTestBase {
 
         process.getClusters().getClusters().add(cluster);
 
-        Pair<Date, Date> startEndDates = EntityUtil.getEntityStartEndDates(process);
-        Assert.assertEquals(startEndDates.second.toString(), "Sat Dec 29 16:00:00 PST 2091");
-        Assert.assertEquals(startEndDates.first.toString(), "Tue Nov 01 17:00:00 PDT 2011");
-    }
+        Date expectedStartDate = new SimpleDateFormat("yyyy-MM-dd z").parse("2011-11-02 UTC");
+        Date expectedEndDate = new SimpleDateFormat("yyyy-MM-dd z").parse("2091-12-30 UTC");
 
+        Pair<Date, Date> startEndDates = EntityUtil.getEntityStartEndDates(process);
+        Assert.assertEquals(startEndDates.first, expectedStartDate);
+        Assert.assertEquals(startEndDates.second, expectedEndDate);
+    }
 }
