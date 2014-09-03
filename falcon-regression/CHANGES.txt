@@ -9,7 +9,7 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
-
+   FALCON-653 Add falcon regression test for zero input process(Karishma via Samarth Gupta)
    FALCON-655 Skip workflow upload if process won't be submitted (Ruslan Ostafiychuk)
 
    FALCON-587 Don't delete input data in @AfterClass in falcon-regression tests if

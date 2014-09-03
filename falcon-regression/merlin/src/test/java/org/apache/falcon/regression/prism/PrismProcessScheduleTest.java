@@ -33,6 +33,7 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.TestNGException;
@@ -53,11 +54,13 @@ public class PrismProcessScheduleTest extends BaseTestClass {
     OozieClient cluster1OC = serverOC.get(0);
     OozieClient cluster2OC = serverOC.get(1);
     String aggregateWorkflowDir = baseHDFSDir + "/PrismProcessScheduleTest/aggregator";
+    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
     private static final Logger logger = Logger.getLogger(PrismProcessScheduleTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES+"workflows/aggregatorNoOutput/");
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -388,10 +391,49 @@ public class PrismProcessScheduleTest extends BaseTestClass {
                 hadoopFileEditor.restore();
             }
         }
-    }
+     }
 
-    @AfterClass(alwaysRun = true)
-    public void tearDownClass() throws IOException {
-        cleanTestDirs();
-    }
+     /**
+     * Schedule a process that contains no inputs. The process should be successfully scheduled.
+     *
+     * @throws Exception
+     */
+     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
+     public void testScheduleWhenZeroInputs()throws Exception{
+         bundles[0].submitClusters(prism);
+         bundles[0].setProcessWorkflow(workflowForNoIpOp);
+         ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+         processObj.setInputs(null);
+         processObj.setLateProcess(null);
+         AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL, bundles[0].getOutputFeedFromBundle()));
+         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
+                 processObj.toString()));
+         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
+                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
+     }
+
+     /**
+     * Schedule a process that contains no inputs or outputs. The process should be successfully scheduled.
+     *
+     * @throws Exception
+     */
+     @Test(groups = {"prism", "0.2", "embedded"}, enabled = true, timeOut = 1800000)
+     public void testScheduleWhenZeroInputsZeroOutputs()throws Exception{
+         bundles[0].submitClusters(prism);
+         bundles[0].setProcessWorkflow(workflowForNoIpOp);
+         ProcessMerlin processObj = new ProcessMerlin(bundles[0].getProcessData());
+         processObj.setInputs(null);
+         processObj.setOutputs(null);
+         processObj.setLateProcess(null);
+         AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
+                 processObj.toString()));
+         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(processObj.toString()), 2,
+                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
+     }
+
+
+     @AfterClass(alwaysRun = true)
+     public void tearDownClass() throws IOException {
+         cleanTestDirs();
+     }
 }
