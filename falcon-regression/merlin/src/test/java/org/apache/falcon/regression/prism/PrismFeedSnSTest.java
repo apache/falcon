@@ -418,12 +418,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
             .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA1, "2099-10-01T12:10Z"),
                 XmlUtil.createRtention("days(10000)", ActionType.DELETE),
                 Util.readEntityName(clust1), ClusterType.SOURCE, "${cluster.colo}",
-                baseHDFSDir + "/localDC/rc/billing/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+                baseHDFSDir + "/localDC/rc/billing" + MINUTE_DATE_PATTERN);
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTimeUA2, "2099-10-01T12:25Z"),
                 XmlUtil.createRtention("days(10000)", ActionType.DELETE),
                 Util.readEntityName(clust2), ClusterType.TARGET, null, baseHDFSDir +
-                    "/clusterPath/localDC/rc/billing/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+                    "/clusterPath/localDC/rc/billing" + MINUTE_DATE_PATTERN);
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
         Util.shutDownService(cluster1.getFeedHelper());

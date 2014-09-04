@@ -73,7 +73,7 @@ import java.util.Random;
 public class NewPrismProcessUpdateTest extends BaseTestClass {
 
     private String baseTestDir = baseHDFSDir + "/NewPrismProcessUpdateTest";
-    private String inputFeedPath = baseTestDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    private String inputFeedPath = baseTestDir + MINUTE_DATE_PATTERN;
     private String workflowPath = baseTestDir + "/falcon-oozie-wf";
     private String workflowPath2 = baseTestDir + "/falcon-oozie-wf2";
     private String aggregatorPath = baseTestDir + "/aggregator";

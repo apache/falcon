@@ -61,8 +61,7 @@ import java.util.List;
 public class InstanceSummaryTest extends BaseTestClass {
 
     String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
-    String feedInputPath = baseTestHDFSDir +
-        "/testInputData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     String startTime;
     String endTime;

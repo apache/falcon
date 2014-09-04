@@ -76,8 +76,8 @@ public class NewRetryTest extends BaseTestClass {
     DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
     final private String baseTestDir = baseHDFSDir + "/NewRetryTest";
     final private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    final private String lateDir = baseTestDir + "/lateDataTest/testFolders/";
-    final private String latePath = lateDir + "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    final private String lateDir = baseTestDir + "/lateDataTest/testFolders";
+    final private String latePath = lateDir + MINUTE_DATE_PATTERN;
     private DateTime startDate;
     private DateTime endDate;
 

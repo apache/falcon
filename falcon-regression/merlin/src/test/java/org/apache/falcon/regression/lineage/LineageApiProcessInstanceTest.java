@@ -60,9 +60,8 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
     String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
     String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     String feedInputPrefix = baseTestHDFSDir + "/input";
-    String feedInputPath = feedInputPrefix + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    String feedOutputPath =
-        baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
+    String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     String processName;
     String inputFeedName;
     String outputFeedName;

@@ -66,8 +66,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     public final String cluster1colo = cluster1.getClusterHelper().getColoName();
     public final String cluster2colo = cluster2.getClusterHelper().getColoName();
     private static final Logger logger = Logger.getLogger(PrismFeedUpdateTest.class);
-    String feedInputTimedOutPath =
-        baseTestDir + "/timedout/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -131,8 +130,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
                 ClusterType.SOURCE, null);
 
         //set new feed input data
-        feed01 = Util.setFeedPathValue(feed01,
-            baseTestDir + "/feed01/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+        feed01 = Util.setFeedPathValue(feed01, baseTestDir + "/feed01" + MINUTE_DATE_PATTERN);
 
         //generate data in both the colos cluster1colo and cluster2colo
         String prefix = InstanceUtil.getFeedPrefix(feed01);

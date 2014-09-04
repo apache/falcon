@@ -54,10 +54,9 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
 
     private String baseTestDir = baseHDFSDir + "/ProcessInstanceRerunTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String feedInputPath = baseTestDir + "/input" + datePattern;
-    private String feedOutputPath = baseTestDir + "/output-data" + datePattern;
-    private String feedInputTimedOutPath = baseTestDir + "/timedout" + datePattern;
+    private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestDir + "/output-data" + MINUTE_DATE_PATTERN;
+    private String feedInputTimedOutPath = baseTestDir + "/timedout" + MINUTE_DATE_PATTERN;
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);

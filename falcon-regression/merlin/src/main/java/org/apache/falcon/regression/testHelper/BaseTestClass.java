@@ -52,6 +52,7 @@ public class BaseTestClass {
     public String baseHDFSDir = "/tmp/falcon-regression";
     public static final String PRISM_PREFIX = "prism";
     protected Bundle[] bundles;
+    public static final String MINUTE_DATE_PATTERN = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
 
 
     public BaseTestClass() {

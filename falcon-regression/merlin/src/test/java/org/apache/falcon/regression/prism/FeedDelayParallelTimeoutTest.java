@@ -46,7 +46,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
     ColoHelper cluster2 = servers.get(1);
 
     String baseTestDir = baseHDFSDir + "/FeedDelayParallelTimeoutTest";
-    String feedInputPath = baseTestDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/";
+    String feedInputPath = baseTestDir + MINUTE_DATE_PATTERN;
     String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(FeedDelayParallelTimeoutTest.class);
 

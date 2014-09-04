@@ -113,8 +113,7 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-11),
             TimeUtil.getTimeWrtSystemTime(6));
 
-        bundles[0].setInputFeedDataPath(
-            baseHDFSDir + "/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        bundles[0].setInputFeedDataPath(baseHDFSDir + "/rawLogs" + MINUTE_DATE_PATTERN);
 
         logger.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
 

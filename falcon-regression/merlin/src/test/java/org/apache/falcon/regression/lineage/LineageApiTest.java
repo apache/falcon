@@ -57,7 +57,6 @@ import java.util.TreeMap;
 
 @Test(groups = "lineage-rest")
 public class LineageApiTest extends BaseTestClass {
-    private static final String datePattern = "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private static final Logger logger = Logger.getLogger(LineageApiTest.class);
     private static final String testName = "LineageApiTest";
     private static final String testTag =
@@ -100,7 +99,7 @@ public class LineageApiTest extends BaseTestClass {
         inputMerlin.setTags(testTag);
         inputFeeds = generateFeeds(numInputFeeds, inputMerlin,
             Generator.getNameGenerator("infeed", inputMerlin.getName()),
-            Generator.getHadoopPathGenerator(feedInputPath, datePattern));
+            Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : inputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL,
                 feed.toString()));
@@ -110,7 +109,7 @@ public class LineageApiTest extends BaseTestClass {
         outputMerlin.setTags(testTag);
         outputFeeds = generateFeeds(numOutputFeeds, outputMerlin,
             Generator.getNameGenerator("outfeed", outputMerlin.getName()),
-            Generator.getHadoopPathGenerator(feedOutputPath, datePattern));
+            Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : outputFeeds) {
             AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL,
                 feed.toString()));

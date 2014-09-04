@@ -56,9 +56,8 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     private String testDir = "/ProcessInstanceKillsTest";
     private String baseTestHDFSDir = baseHDFSDir + testDir;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
-    private String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String feedInputPath = baseTestHDFSDir + "/input" + datePattern;
-    private String feedOutputPath = baseTestHDFSDir + "/output-data" + datePattern;
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceKillsTest.class);
     private static final double TIMEOUT = 15;
     String processName;

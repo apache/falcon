@@ -58,8 +58,7 @@ public class InstanceParamTest extends BaseTestClass {
      */
 
     private String baseTestHDFSDir = baseHDFSDir + "/InstanceParamTest";
-    private String feedInputPath = baseTestHDFSDir +
-        "/testInputData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String startTime;
     private String endTime;

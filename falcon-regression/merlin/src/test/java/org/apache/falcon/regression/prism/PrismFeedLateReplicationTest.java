@@ -56,8 +56,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
     FileSystem cluster2FS = serverFS.get(1);
     FileSystem cluster3FS = serverFS.get(2);
     private String baseTestDir = baseHDFSDir + "/PrismFeedLateReplicationTest";
-    private String inputPath =
-        baseTestDir + "/input-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/";
+    private String inputPath = baseTestDir + "/input-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(PrismFeedLateReplicationTest.class);
 

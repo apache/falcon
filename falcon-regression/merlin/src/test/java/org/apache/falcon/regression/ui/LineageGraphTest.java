@@ -62,8 +62,7 @@ public class LineageGraphTest extends BaseUITestClass {
     private String baseTestDir = baseHDFSDir + "/LineageGraphTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(LineageGraphTest.class);
-    String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    String feedInputPath = baseTestDir + "/input" + datePattern;
+    String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String processName = null;

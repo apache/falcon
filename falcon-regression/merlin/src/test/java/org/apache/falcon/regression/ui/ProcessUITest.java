@@ -69,7 +69,6 @@ public class ProcessUITest extends BaseUITestClass {
     private String baseTestDir = baseHDFSDir + "/TestProcessUI";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(ProcessUITest.class);
-    String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     String feedInputPath = baseTestDir + "/input";
     final String feedOutputPath = baseTestDir + "/output";
     private FileSystem clusterFS = serverFS.get(0);
@@ -96,7 +95,7 @@ public class ProcessUITest extends BaseUITestClass {
         bundles[0].setProcessPeriodicity(1, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(5);
         bundles[0].setInputFeedPeriodicity(1, Frequency.TimeUnit.minutes);
-        bundles[0].setInputFeedDataPath(feedInputPath + datePattern);
+        bundles[0].setInputFeedDataPath(feedInputPath + MINUTE_DATE_PATTERN);
         Process process = bundles[0].getProcessObject();
         Inputs inputs = new Inputs();
         Input input = new Input();
@@ -138,7 +137,7 @@ public class ProcessUITest extends BaseUITestClass {
 
         inputFeeds = LineageApiTest.generateFeeds(numInputFeeds, inputMerlin,
                 Generator.getNameGenerator("infeed", inputMerlin.getName()),
-                Generator.getHadoopPathGenerator(feedInputPath, datePattern));
+                Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         int j = 0;
         for (FeedMerlin feed : inputFeeds) {
             bundles[0].addInputFeedToBundle("inputFeed" + j, feed.toString(), j++);
@@ -146,7 +145,7 @@ public class ProcessUITest extends BaseUITestClass {
 
         outputFeeds = LineageApiTest.generateFeeds(numOutputFeeds, outputMerlin,
                 Generator.getNameGenerator("outfeed", outputMerlin.getName()),
-                Generator.getHadoopPathGenerator(feedOutputPath, datePattern));
+                Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         j = 0;
         for (FeedMerlin feed : outputFeeds) {
             bundles[0].addOutputFeedToBundle("outputFeed" + j, feed.toString(), j++);

@@ -66,7 +66,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     String pigTestDir = baseHDFSDir + "/EmbeddedPigScriptTest";
     String pigScriptDir = pigTestDir + "/EmbeddedPigScriptTest/pig";
     String pigScriptLocation = pigScriptDir + "/id.pig";
-    String inputPath = pigTestDir + "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String inputPath = pigTestDir + "/input" + MINUTE_DATE_PATTERN;
     private static final Logger logger = Logger.getLogger(EmbeddedPigScriptTest.class);
     private static final double TIMEOUT = 15;
     String processName;
@@ -96,8 +96,7 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setInputFeedDataPath(inputPath);
-        bundles[0].setOutputFeedLocationData(
-            pigTestDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        bundles[0].setOutputFeedLocationData(pigTestDir + "/output-data" + MINUTE_DATE_PATTERN);
         bundles[0].setProcessWorkflow(pigScriptLocation);
         bundles[0].setProcessInputNames("INPUT");
         bundles[0].setProcessOutputNames("OUTPUT");

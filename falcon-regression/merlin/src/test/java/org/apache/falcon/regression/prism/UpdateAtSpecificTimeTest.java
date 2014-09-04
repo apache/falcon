@@ -68,7 +68,6 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     ColoHelper cluster2 = servers.get(1);
     ColoHelper cluster3 = servers.get(2);
     FileSystem cluster2FS = serverFS.get(1);
-    private String dateTemplate = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     private final String baseTestDir = baseHDFSDir + "/UpdateAtSpecificTimeTest-data";
     String aggregateWorkflowDir = baseHDFSDir + "/aggregator";
 
@@ -440,7 +439,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         feed = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity(startTime, endTime),
             XmlUtil.createRtention("days(100000)", ActionType.DELETE),
             Util.readEntityName(processBundle.getClusters().get(0)), ClusterType.SOURCE,
-            null, baseTestDir + "/replication" + dateTemplate);
+            null, baseTestDir + "/replication" + MINUTE_DATE_PATTERN);
 
         ServiceResponse r = prism.getClusterHelper().submitEntity(Util.URLS.SUBMIT_URL,
             processBundle.getClusters().get(0));
@@ -585,7 +584,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
                 ("2012-10-01T12:10Z", "2099-10-01T12:10Z"),
             XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(b.getClusters().get(0)), ClusterType.SOURCE, "",
-            "/someTestPath" + dateTemplate);
+            "/someTestPath" + MINUTE_DATE_PATTERN);
         ServiceResponse r = prism.getClusterHelper().submitEntity(Util.URLS
                 .SUBMIT_URL,
             b.getClusters().get(0));
@@ -617,12 +616,12 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             XmlUtil.createValidity(startTimeCluster_target, "2099-10-01T12:25Z"),
             XmlUtil.createRtention("days(100000)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET,
-            null, testDataDir + dateTemplate);
+            null, testDataDir + MINUTE_DATE_PATTERN);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTimeCluster_source, "2099-01-01T00:00Z"),
             XmlUtil.createRtention("days(100000)", ActionType.DELETE),
             Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
-            null, testDataDir + dateTemplate);
+            null, testDataDir + MINUTE_DATE_PATTERN);
 
         //submit clusters
         Bundle.submitCluster(bundles[0], bundles[1], bundles[2]);

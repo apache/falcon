@@ -70,8 +70,7 @@ public class AuthorizationTest extends BaseTestClass {
     private OozieClient clusterOC = serverOC.get(0);
     private String baseTestDir = baseHDFSDir + "/AuthorizationTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
-    private String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String feedInputPath = baseTestDir + "/input" + datePattern;
+    private String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;
 
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
@@ -538,8 +537,8 @@ public class AuthorizationTest extends BaseTestClass {
                 .readEntityName(feed)) && !definition.contains("(feed) not found"),
             "Feed should be already submitted");
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed,
-            baseHDFSDir + "/randomPath/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
+            MINUTE_DATE_PATTERN);
         //try to update feed by U2
         KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
@@ -560,8 +559,8 @@ public class AuthorizationTest extends BaseTestClass {
             Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed,
-            baseHDFSDir + "/randomPath/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
+            MINUTE_DATE_PATTERN);
         //try to update feed by U2
         KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
@@ -651,8 +650,8 @@ public class AuthorizationTest extends BaseTestClass {
             .getLatestBundleID(cluster, Util.readEntityName(feed), EntityType.FEED);
 
         //update feed definition
-        String newFeed = Util.setFeedPathValue(feed,
-            baseHDFSDir + "/randomPath/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+        String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
+            MINUTE_DATE_PATTERN);
 
         //update feed by U1
         KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
