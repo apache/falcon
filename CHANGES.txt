@@ -77,6 +77,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-669 Missing optional workflow execution listeners configuration
+   results in NPE (Raghav Kumar Gautam via Venkatesh Seetharam)
+
    FALCON-644 Falcon message producer masks errors in Post processing
    (Venkatesh Seetharam)
 
