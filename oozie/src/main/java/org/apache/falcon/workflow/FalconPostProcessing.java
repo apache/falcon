@@ -80,6 +80,11 @@ public class FalconPostProcessing extends Configured implements Tool {
             return;
         }
 
-        new JobLogMover().run(context);
+        try {
+            new JobLogMover().run(context);
+        } catch (Exception ignored) {
+            // Mask exception, a failed log mover will not fail the user workflow
+            LOG.error("Exception in job log mover:", ignored);
+        }
     }
 }

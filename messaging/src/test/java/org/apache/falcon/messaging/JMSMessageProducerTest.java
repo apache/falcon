@@ -215,4 +215,21 @@ public class JMSMessageProducerTest {
                 "2012-01-01-01-00");
         Assert.assertEquals(message.getString(WorkflowExecutionArgs.STATUS.getName()), "SUCCEEDED");
     }
+
+    @Test (expectedExceptions = JMSException.class)
+    public void testFailuresInSendMessagesAreNotMasked() throws Exception {
+        List<String> args = new ArrayList<String>(Arrays.asList(
+                "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "raw-logs",
+                "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
+                "/raw-logs/10/05/05/00/20",
+                "-" + WorkflowExecutionArgs.BRKR_URL.getName(), "error"));
+        args.addAll(createCommonArgs());
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(
+                args.toArray(new String[args.size()]), WorkflowExecutionContext.Type.POST_PROCESSING);
+        JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
+                .type(JMSMessageProducer.MessageType.FALCON).build();
+        jmsMessageProducer.sendMessage();
+    }
 }
