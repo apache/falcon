@@ -613,6 +613,11 @@ public final class EntityUtil {
                 return null;
             }
 
+            //If late Arrival is not configured do not process further
+            if(((Feed) entity).getLateArrival() == null){
+                return null;
+            }
+
             LateProcess lateProcess = new LateProcess();
             lateProcess.setDelay(new Frequency(RuntimeProperties.get().getProperty("feed.late.frequency", "hours(3)")));
             lateProcess.setPolicy(

@@ -47,4 +47,17 @@ public class TestLateRerunHandler {
         cutOff = LateRerunHandler.getCutOffTime(feed, nm);
         Assert.assertTrue(cutOff.after(new Date()));
     }
+
+    /**
+     * This test checks that LateData Handler is invoked only if LateArrival
+     * is configured for a feed.
+     */
+    @Test
+    public void testFeedLateArrivalCheck() throws FalconException {
+        Feed feed = new Feed();
+        String nominalTime = "2013-10-01T12:00Z";
+        Date cutOff = LateRerunHandler.getCutOffTime(feed, nominalTime);
+        Assert.assertEquals(cutOff, new Date(0));
+
+    }
 }

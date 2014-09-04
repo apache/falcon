@@ -19,10 +19,12 @@
 package org.apache.falcon.entity;
 
 import org.apache.falcon.Pair;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LateArrival;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
@@ -231,4 +233,16 @@ public class EntityUtilTest extends AbstractTestBase {
         Assert.assertEquals(startEndDates.first, expectedStartDate);
         Assert.assertEquals(startEndDates.second, expectedEndDate);
     }
+
+    @Test
+    public void testGetLateProcessFeed() throws FalconException{
+        Feed feed = new Feed();
+
+        Assert.assertNull(EntityUtil.getLateProcess(feed));
+        LateArrival lateArrival = new LateArrival();
+        lateArrival.setCutOff(Frequency.fromString("days(1)"));
+        feed.setLateArrival(lateArrival);
+        Assert.assertNotNull(EntityUtil.getLateProcess(feed));
+    }
+
 }
