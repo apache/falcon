@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-643 Tests with zero-output/input scenario amended to match test case (Paul Isaychuk via
+   Ruslan Ostafiychuk)
+
    FALCON-660 7 test classes refactored and few of them documented (Paul Isaychuk via
    Ruslan Ostafiychuk)
 

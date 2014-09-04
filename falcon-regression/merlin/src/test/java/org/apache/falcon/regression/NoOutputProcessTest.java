@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression;
 
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
@@ -62,25 +63,19 @@ public class NoOutputProcessTest extends BaseTestClass {
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
-
         logger.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
-
         String startDate = "2010-01-03T00:00Z";
         String endDate = "2010-01-03T03:00Z";
-
         b.setInputFeedDataPath(inputPath);
         String prefix = b.getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
-
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
     }
-
 
     @BeforeMethod(alwaysRun = true)
     public void testName(Method method) throws Exception {
@@ -92,6 +87,9 @@ public class NoOutputProcessTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setProcessValidity("2010-01-03T02:30Z", "2010-01-03T02:45Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
+        process.setOutputs(null);
+        bundles[0].setProcessData(process.toString());
         bundles[0].submitFeedsScheduleProcess(prism);
     }
 
@@ -110,15 +108,11 @@ public class NoOutputProcessTest extends BaseTestClass {
         //wait for all the instances to complete
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-
         Assert.assertEquals(messageConsumer.getReceivedMessages().size(), 3,
             " Message for all the 3 instance not found");
-
         messageConsumer.interrupt();
-
         Util.printMessageData(messageConsumer);
     }
-
 
     @Test(enabled = true, groups = {"singleCluster"})
     public void rm() throws Exception {
@@ -127,22 +121,18 @@ public class NoOutputProcessTest extends BaseTestClass {
         JmsMessageConsumer consumerProcessMsg =
             new JmsMessageConsumer("FALCON." + bundles[0].getProcessName(),
                 cluster.getClusterHelper().getActiveMQ());
-
         consumerEntityMsg.start();
         consumerProcessMsg.start();
 
         //wait for all the instances to complete
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-
         Assert.assertEquals(consumerEntityMsg.getReceivedMessages().size(), 3,
             " Message for all the 3 instance not found");
         Assert.assertEquals(consumerProcessMsg.getReceivedMessages().size(), 3,
             " Message for all the 3 instance not found");
-
         consumerEntityMsg.interrupt();
         consumerProcessMsg.interrupt();
-
         Util.printMessageData(consumerEntityMsg);
         Util.printMessageData(consumerProcessMsg);
     }
