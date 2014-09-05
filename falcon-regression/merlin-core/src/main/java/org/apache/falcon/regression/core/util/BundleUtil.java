@@ -72,10 +72,6 @@ public final class BundleUtil {
         return readBundleFromFolder("LocalDC_feedReplicaltion_BillingRC");
     }
 
-    public static Bundle readImpressionRCBundle() throws IOException {
-        return readBundleFromFolder("impressionRC");
-    }
-
     public static Bundle readUpdateBundle() throws IOException {
         return readBundleFromFolder("updateBundle");
     }

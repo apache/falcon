@@ -40,5 +40,5 @@ Trunk (Unreleased)
    mismatched (Raghav Kumar Gautam via Arpit Gupta)
 
   OPTIMIZATIONS
-
+  FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
   BUG FIXES
