@@ -55,8 +55,9 @@ public final class BundleUtil {
     public static Bundle readRetentionBundle(String appPath, String testName) throws IOException {
         return generateBundleFromTemplate("RetentionBundles", appPath, testName);
     }
-    public static Bundle readELBundle() throws IOException {
-        return readBundleFromFolder("ELbundle");
+
+    public static Bundle readELBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("ELbundle", appPath, testName);
     }
 
     public static Bundle readHCatBundle(String appPath, String testName) throws IOException {

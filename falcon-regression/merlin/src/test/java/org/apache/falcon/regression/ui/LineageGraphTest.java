@@ -64,6 +64,7 @@ public class LineageGraphTest extends BaseUITestClass {
     private static final Logger logger = Logger.getLogger(LineageGraphTest.class);
     String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     String feedInputPath = baseTestDir + "/input" + datePattern;
+    String feedOutputPath = baseTestDir + "/output" + datePattern;
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String processName = null;
@@ -82,7 +83,7 @@ public class LineageGraphTest extends BaseUITestClass {
         throws IOException, JAXBException, URISyntaxException, AuthenticationException,
         OozieClientException {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        bundles[0] = BundleUtil.readELBundle();
+        bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
@@ -96,6 +97,7 @@ public class LineageGraphTest extends BaseUITestClass {
         bundles[0].setProcessConcurrency(5);
         bundles[0].setInputFeedPeriodicity(1, Frequency.TimeUnit.minutes);
         bundles[0].setInputFeedDataPath(feedInputPath);
+        bundles[0].setOutputFeedLocationData(feedInputPath);
         bundles[0].setProcessInput("now(0,0)", String.format("now(0,%d)", inputEnd - 1));
 
         /**provide necessary data for first 3 instances to run*/

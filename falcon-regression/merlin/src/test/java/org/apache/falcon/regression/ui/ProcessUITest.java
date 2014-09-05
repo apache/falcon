@@ -82,7 +82,7 @@ public class ProcessUITest extends BaseUITestClass {
         CleanupUtil.cleanAllEntities(prism);
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         openBrowser();
-        bundles[0] = BundleUtil.readELBundle();
+        bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
@@ -96,6 +96,7 @@ public class ProcessUITest extends BaseUITestClass {
         bundles[0].setProcessConcurrency(5);
         bundles[0].setInputFeedPeriodicity(1, Frequency.TimeUnit.minutes);
         bundles[0].setInputFeedDataPath(feedInputPath + datePattern);
+        bundles[0].setOutputFeedLocationData(feedOutputPath + datePattern);
         Process process = bundles[0].getProcessObject();
         Inputs inputs = new Inputs();
         Input input = new Input();

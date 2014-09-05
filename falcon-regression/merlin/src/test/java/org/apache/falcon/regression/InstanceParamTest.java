@@ -81,7 +81,7 @@ public class InstanceParamTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
         LOGGER.info("test name: " + method.getName());
-        processBundle = BundleUtil.readELBundle();
+        processBundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         processBundle = new Bundle(processBundle, cluster1);
         processBundle.generateUniqueBundle();
         processBundle.setInputFeedDataPath(feedInputPath);

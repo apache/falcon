@@ -70,7 +70,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
-        Bundle bundle = BundleUtil.readELBundle();
+        Bundle bundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundle = new Bundle(bundle, cluster);
         String startDate = "2010-01-01T23:40Z";
         String endDate = "2010-01-02T01:40Z";
@@ -85,7 +85,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
         LOGGER.info("test name: " + method.getName());
-        bundles[0] = BundleUtil.readELBundle();
+        bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setInputFeedDataPath(feedInputPath);
@@ -316,7 +316,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     @AfterClass(alwaysRun = true)
     public void deleteData() throws Exception {
         LOGGER.info("in @AfterClass");
-        Bundle bundle = BundleUtil.readELBundle();
+        Bundle bundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundle = new Bundle(bundle, cluster);
         bundle.setInputFeedDataPath(feedInputPath);
         String prefix = bundle.getFeedDataPathPrefix();

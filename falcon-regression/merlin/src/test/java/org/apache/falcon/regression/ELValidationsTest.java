@@ -129,7 +129,7 @@ public class ELValidationsTest extends BaseTestClass {
         throws IOException, JAXBException, ParseException, URISyntaxException {
         HadoopUtil.uploadDir(server.getClusterHelper().getHadoopFS(),
             aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        Bundle bundle = BundleUtil.readELBundle();
+        Bundle bundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundle = new Bundle(bundle, server.getPrefix());
         bundle.generateUniqueBundle();
         bundle.setProcessWorkflow(aggregateWorkflowDir);

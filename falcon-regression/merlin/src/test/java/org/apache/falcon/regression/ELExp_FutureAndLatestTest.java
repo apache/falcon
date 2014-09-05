@@ -52,6 +52,8 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
     OozieClient clusterOC = serverOC.get(0);
     private String prefix;
     private String baseTestDir = baseHDFSDir + "/ELExp_FutureAndLatest";
+    private String testInputDir = baseTestDir + "/input";
+    private String testOutputDir = baseTestDir + "/output";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(ELExp_FutureAndLatestTest.class);
 
@@ -60,15 +62,14 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
         logger.info("in @BeforeClass");
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
 
-        Bundle b = BundleUtil.readELBundle();
+        Bundle b = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
 
         String startDate = TimeUtil.getTimeWrtSystemTime(-20);
         String endDate = TimeUtil.getTimeWrtSystemTime(70);
 
-        b.setInputFeedDataPath(
-            baseTestDir + "/ELExp_latest/testData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        b.setInputFeedDataPath(testInputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
         b.setProcessWorkflow(aggregateWorkflowDir);
         prefix = b.getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
@@ -81,11 +82,13 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
         logger.info("test name: " + method.getName());
-        bundles[0] = BundleUtil.readELBundle();
+        bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
         bundles[0].setInputFeedDataPath(
-            baseTestDir + "/ELExp_latest/testData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+            testInputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        bundles[0].setOutputFeedLocationData(
+            testOutputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
         bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2015-04-01T00:00Z");
         String processStart = TimeUtil.getTimeWrtSystemTime(-3);

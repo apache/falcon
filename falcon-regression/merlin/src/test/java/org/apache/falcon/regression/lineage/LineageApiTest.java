@@ -83,7 +83,7 @@ public class LineageApiTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true, firstTimeOnly = true)
     public void setUp() throws Exception {
         CleanupUtil.cleanAllEntities(prism);
-        Bundle bundle = BundleUtil.readELBundle();
+        Bundle bundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundle.generateUniqueBundle();
         bundles[0] = new Bundle(bundle, cluster);
         final List<String> clusterStrings = bundles[0].getClusters();

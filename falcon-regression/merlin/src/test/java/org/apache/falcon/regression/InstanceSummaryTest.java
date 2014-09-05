@@ -37,6 +37,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction.Status;
 import org.apache.oozie.client.OozieClientException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -53,6 +54,7 @@ import java.util.List;
 this test currently provide minimum verification. More detailed test should
  be added
  */
+@Test(groups = "embedded")
 public class InstanceSummaryTest extends BaseTestClass {
 
     //1. process : test summary single cluster few instance some future some past
@@ -66,6 +68,8 @@ public class InstanceSummaryTest extends BaseTestClass {
     String baseTestHDFSDir = baseHDFSDir + "/InstanceSummaryTest";
     String feedInputPath = baseTestHDFSDir +
         "/testInputData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String feedOutputPath = baseTestHDFSDir +
+        "/testOutputData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     String startTime;
     String endTime;
@@ -95,10 +99,11 @@ public class InstanceSummaryTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws Exception {
         logger.info("test name: " + method.getName());
-        processBundle = BundleUtil.readELBundle();
+        processBundle = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         processBundle = new Bundle(processBundle, cluster3);
         processBundle.generateUniqueBundle();
         processBundle.setInputFeedDataPath(feedInputPath);
+        processBundle.setOutputFeedLocationData(feedOutputPath);
         processBundle.setProcessWorkflow(aggregateWorkflowDir);
 
         for (int i = 0; i < 3; i++) {
@@ -302,10 +307,6 @@ public class InstanceSummaryTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
-        processBundle.deleteBundle(prism);
-        removeBundles();
-        for (FileSystem fs : serverFS) {
-            HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
-        }
+        removeBundles(processBundle);
     }
 }

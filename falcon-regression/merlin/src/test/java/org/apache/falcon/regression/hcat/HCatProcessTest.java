@@ -522,7 +522,8 @@ public class HCatProcessTest extends BaseTestClass {
         bundles[0].setInputFeedValidity(startDate, endDate);
 
         //
-        String nonHCatFeed = BundleUtil.readELBundle().getOutputFeedFromBundle();
+        String nonHCatFeed = BundleUtil.readELBundle(
+            baseAppHDFSDir, this.getClass().getSimpleName()).getOutputFeedFromBundle();
         final String outputFeedName = bundles[0].getOutputFeedNameFromBundle();
         nonHCatFeed = Util.setFeedName(nonHCatFeed, outputFeedName);
         final List<String> clusterNames = bundles[0].getClusterNames();
@@ -575,7 +576,8 @@ public class HCatProcessTest extends BaseTestClass {
             .location(outputHDFSDir)
             .build());
 
-        String nonHCatFeed = BundleUtil.readELBundle().getInputFeedFromBundle();
+        String nonHCatFeed = BundleUtil.readELBundle(
+            baseAppHDFSDir, this.getClass().getSimpleName()).getInputFeedFromBundle();
         final String inputFeedName = bundles[0].getInputFeedNameFromBundle();
         nonHCatFeed = Util.setFeedName(nonHCatFeed, inputFeedName);
         final List<String> clusterNames = bundles[0].getClusterNames();
