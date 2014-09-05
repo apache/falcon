@@ -614,7 +614,7 @@ public final class EntityUtil {
             }
 
             //If late Arrival is not configured do not process further
-            if(((Feed) entity).getLateArrival() == null){
+            if (((Feed) entity).getLateArrival() == null){
                 return null;
             }
 
