@@ -38,7 +38,6 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.CleanupUtil;
 import org.apache.falcon.regression.core.util.Generator;
 import org.apache.falcon.regression.core.util.GraphAssert;
-import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -91,8 +90,7 @@ public class LineageApiTest extends BaseTestClass {
         Assert.assertEquals(clusterStrings.size(), 1, "Expecting only 1 clusterMerlin.");
         clusterMerlin = new ClusterMerlin(clusterStrings.get(0));
         clusterMerlin.setTags(testTag);
-        AssertUtil.assertSucceeded(
-            prism.getClusterHelper().submitEntity(Util.URLS.SUBMIT_URL, clusterMerlin.toString()));
+        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(clusterMerlin.toString()));
         logger.info("numInputFeeds = " + numInputFeeds);
         logger.info("numOutputFeeds = " + numOutputFeeds);
         final FeedMerlin inputMerlin = new FeedMerlin(bundles[0].getInputFeedFromBundle());
@@ -101,8 +99,7 @@ public class LineageApiTest extends BaseTestClass {
             Generator.getNameGenerator("infeed", inputMerlin.getName()),
             Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : inputFeeds) {
-            AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL,
-                feed.toString()));
+            AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
         }
 
         FeedMerlin outputMerlin = new FeedMerlin(bundles[0].getOutputFeedFromBundle());
@@ -111,8 +108,7 @@ public class LineageApiTest extends BaseTestClass {
             Generator.getNameGenerator("outfeed", outputMerlin.getName()),
             Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         for (FeedMerlin feed : outputFeeds) {
-            AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL,
-                feed.toString()));
+            AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed.toString()));
         }
     }
 

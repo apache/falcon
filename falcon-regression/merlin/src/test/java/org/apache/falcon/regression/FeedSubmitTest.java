@@ -24,7 +24,6 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterClass;
@@ -54,7 +53,7 @@ public class FeedSubmitTest extends BaseTestClass {
 
         //submit the cluster
         ServiceResponse response =
-            prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
+            prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         AssertUtil.assertSucceeded(response);
         feed = bundles[0].getInputFeedFromBundle();
     }
@@ -71,7 +70,7 @@ public class FeedSubmitTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void submitValidFeed() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
     }
 
@@ -82,13 +81,13 @@ public class FeedSubmitTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void submitValidFeedPostDeletion() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().delete(URLS.DELETE_URL, feed);
+        response = prism.getFeedHelper().delete(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
     }
 
@@ -99,13 +98,13 @@ public class FeedSubmitTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void submitValidFeedPostGet() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().getEntityDefinition(URLS.GET_ENTITY_DEFINITION, feed);
+        response = prism.getFeedHelper().getEntityDefinition(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
     }
 
@@ -116,10 +115,10 @@ public class FeedSubmitTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void submitValidFeedTwice() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
     }
 

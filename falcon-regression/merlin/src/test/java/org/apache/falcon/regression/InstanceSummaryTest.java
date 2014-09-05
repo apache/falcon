@@ -255,7 +255,7 @@ public class InstanceSummaryTest extends BaseTestClass {
         feedInputPath, 1);*/
 
         //submit and schedule feed
-        prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
 
         InstancesSummaryResult r = prism.getFeedHelper()
             .getInstanceSummary(Util.readEntityName(feed), "?start=" + startTime);

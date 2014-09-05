@@ -32,7 +32,6 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -105,7 +104,7 @@ public class HCatRetentionTest extends BaseTestClass {
             .setRetentionValue(retentionUnit.getValue() + "(" + retentionPeriod + ")");
         if (retentionPeriod <= 0) {
             AssertUtil.assertFailed(prism.getFeedHelper()
-                .submitEntity(URLS.SUBMIT_URL, bundle.getInputFeedFromBundle()));
+                .submitEntity(bundle.getInputFeedFromBundle()));
         } else {
             final DateTime dataStartTime = new DateTime(
                 feedElement.getClusters().getClusters().get(0).getValidity().getStart(),
@@ -127,12 +126,11 @@ public class HCatRetentionTest extends BaseTestClass {
             AssertUtil.checkForListSizes(initialData, initialPtnList);
 
             AssertUtil.assertSucceeded(prism.getFeedHelper()
-                .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedElement.toString()));
+                .submitAndSchedule(feedElement.toString()));
             final String bundleId = OozieUtil.getBundles(clusterOC, feedElement.getName(),
                 EntityType.FEED).get(0);
             OozieUtil.waitForRetentionWorkflowToSucceed(bundleId, clusterOC);
-            AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(URLS.SUSPEND_URL,
-                feedElement.toString()));
+            AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feedElement.toString()));
 
             List<String> expectedOutput = getExpectedOutput(retentionPeriod, retentionUnit,
                 feedType, new DateTime(DateTimeZone.UTC), initialData);

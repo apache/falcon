@@ -32,7 +32,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -241,11 +240,11 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
-        prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        prism.getProcessHelper().getRunningInstance(processName);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
                 "?start=2010-01-02T01:00Z");
         InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.SUSPENDED);
-        prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        prism.getProcessHelper().getRunningInstance(processName);
     }
 
     /**

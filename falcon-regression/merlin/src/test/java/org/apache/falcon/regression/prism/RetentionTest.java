@@ -35,7 +35,6 @@ import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -113,8 +112,7 @@ public class RetentionTest extends BaseTestClass {
         final FeedMerlin feedObject = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         feedObject.setRetentionValue(retentionUnit.getValue() + "(" + retentionPeriod + ")");
 
-        final ServiceResponse response = prism.getFeedHelper()
-            .submitEntity(URLS.SUBMIT_URL, feedObject.toString());
+        final ServiceResponse response = prism.getFeedHelper().submitEntity(feedObject.toString());
         if (retentionPeriod > 0) {
             AssertUtil.assertSucceeded(response);
 
@@ -174,7 +172,7 @@ public class RetentionTest extends BaseTestClass {
         //get Data created in the cluster
         List<String> initialData = Util.getHadoopDataFromDir(clusterFS, feed, testHDFSDir);
 
-        cluster.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed);
+        cluster.getFeedHelper().schedule(feed);
         logger.info(cluster.getClusterHelper().getActiveMQ());
         final String feedName = Util.readEntityName(feed);
         logger.info(feedName);

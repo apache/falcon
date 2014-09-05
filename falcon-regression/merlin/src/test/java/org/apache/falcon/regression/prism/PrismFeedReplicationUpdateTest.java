@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -142,8 +141,8 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
 
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
 
         //change feed location path
         feed = InstanceUtil.setFeedFilePath(feed, alternativeInputPath);
@@ -264,9 +263,9 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null);
 
         //submit and schedule feeds
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed01);
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed02);
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_URL, outputFeed);
+        prism.getFeedHelper().submitAndSchedule(feed01);
+        prism.getFeedHelper().submitAndSchedule(feed02);
+        prism.getFeedHelper().submitAndSchedule(outputFeed);
 
         //create a process with 2 clusters
 
@@ -291,8 +290,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
             Util.readEntityName(feed02));
 
         //submit and schedule process
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(URLS
-            .SUBMIT_AND_SCHEDULE_URL, process));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process));
 
         logger.info("Wait till process goes into running ");
 

@@ -107,10 +107,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         logger.info("cluster bundles[1]: " + Util.prettyPrintXml(cluster2Def));
 
         //submit 2 clusters
-        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(Util.URLS.SUBMIT_URL,
-            cluster1Def));
-        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(Util.URLS.SUBMIT_URL,
-            cluster2Def));
+        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster1Def));
+        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(cluster2Def));
 
         //get 2 unique feeds
         String feed01 = bundles[0].getInputFeedFromBundle();
@@ -162,10 +160,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         //submit and schedule feeds
         logger.info("feed01: " + Util.prettyPrintXml(feed01));
         logger.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(Util.URLS
-            .SUBMIT_AND_SCHEDULE_URL, feed01));
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(Util.URLS
-            .SUBMIT_AND_SCHEDULE_URL, outputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed01));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(outputFeed));
 
         /* create 2 process with 2 clusters */
         //get first process
@@ -197,10 +193,8 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         //submit and schedule both process
         logger.info("process: " + Util.prettyPrintXml(process01));
         logger.info("process: " + Util.prettyPrintXml(process02));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(Util.URLS
-            .SUBMIT_AND_SCHEDULE_URL, process01));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(Util.URLS
-            .SUBMIT_AND_SCHEDULE_URL, process02));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process01));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitAndSchedule(process02));
         logger.info("Wait till process goes into running ");
         InstanceUtil.waitTillInstanceReachState(cluster1OC, Util.readEntityName(process01), 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 1);

@@ -29,7 +29,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -113,12 +112,12 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void rescheduleSucceeded() throws Exception {
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(bundles[0].getProcessData()));
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
@@ -135,12 +134,12 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
     public void rescheduleFailed() throws Exception {
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(bundles[0].getProcessData()));
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
@@ -161,12 +160,12 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.DONEWITHERROR);
 
         //delete the process
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(bundles[0].getProcessData()));
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
@@ -177,14 +176,14 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      **/
     @Test(enabled = true)
     public void rescheduleKilled() throws Exception {
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.KILLED);
         checkNotFoundDefinition(bundles[0].getProcessData());
 
         //submit and schedule process again
         AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, bundles[0].getProcessData()));
+            .submitAndSchedule(bundles[0].getProcessData()));
         InstanceUtil
             .waitForBundleToReachState(cluster, bundles[0].getProcessName(), Status.SUCCEEDED);
     }
@@ -201,8 +200,7 @@ public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
      */
     private void checkNotFoundDefinition(String process)
         throws URISyntaxException, IOException, AuthenticationException, JAXBException {
-        ServiceResponse r = prism.getProcessHelper()
-            .getEntityDefinition(URLS.GET_ENTITY_DEFINITION, process);
+        ServiceResponse r = prism.getProcessHelper().getEntityDefinition(process);
         Assert.assertTrue(r.getMessage().contains("(process) not found"));
         AssertUtil.assertFailed(r);
     }

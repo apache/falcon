@@ -26,7 +26,6 @@ import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
@@ -117,8 +116,7 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         feedOutput01 = Util.setFeedProperty(feedOutput01, "parallel", "3");
 
         logger.info("feedOutput01: " + Util.prettyPrintXml(feedOutput01));
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedOutput01);
+        prism.getFeedHelper().submitAndSchedule(feedOutput01);
     }
 
     @AfterClass(alwaysRun = true)

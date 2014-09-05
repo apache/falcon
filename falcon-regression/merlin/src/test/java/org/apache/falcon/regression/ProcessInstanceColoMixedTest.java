@@ -32,7 +32,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -182,12 +181,11 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         LOGGER.info("feed02: " + Util.prettyPrintXml(feed02));
         LOGGER.info("outputFeed: " + Util.prettyPrintXml(outputFeed));
 
-        ServiceResponse r = prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed01);
+        ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed01);
         AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed02);
+        r = prism.getFeedHelper().submitAndSchedule(feed02);
         AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, outputFeed);
+        r = prism.getFeedHelper().submitAndSchedule(outputFeed);
         AssertUtil.assertSucceeded(r);
 
         //create a process with 2 clusters
@@ -219,8 +217,7 @@ public class ProcessInstanceColoMixedTest extends BaseTestClass {
         //submit and schedule process
         LOGGER.info("process: " + Util.prettyPrintXml(process));
 
-        prism.getProcessHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, process);
+        prism.getProcessHelper().submitAndSchedule(process);
 
         LOGGER.info("Wait till process goes into running ");
 

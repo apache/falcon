@@ -37,7 +37,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -126,41 +125,37 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void getResumedProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
-        prism.getProcessHelper().suspend(URLS.SUSPEND_URL, process);
+        prism.getProcessHelper().suspend(process);
         TimeUtil.sleepSeconds(TIMEOUT);
-        ServiceResponse status = prism.getProcessHelper().getStatus(URLS.STATUS_URL, process);
+        ServiceResponse status = prism.getProcessHelper().getStatus(process);
         Assert.assertTrue(status.getMessage().contains("SUSPENDED"), "Process not suspended.");
-        prism.getProcessHelper().resume(URLS.RESUME_URL, process);
+        prism.getProcessHelper().resume(process);
         TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
-        InstancesResult r = prism.getProcessHelper()
-            .getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
     @Test(groups = {"singleCluster"})
     public void getSuspendedProcessInstance() throws Exception {
-        prism.getProcessHelper().suspend(URLS.SUSPEND_URL, process);
+        prism.getProcessHelper().suspend(process);
         TimeUtil.sleepSeconds(TIMEOUT);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.SUSPENDED);
-        InstancesResult r = prism.getProcessHelper()
-            .getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }
 
     @Test(groups = {"singleCluster"})
     public void getRunningProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
-        InstancesResult r = prism.getProcessHelper()
-            .getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
     @Test(groups = {"singleCluster"})
     public void getKilledProcessInstance() throws Exception {
-        prism.getProcessHelper().delete(URLS.DELETE_URL, process);
-        InstancesResult r = prism.getProcessHelper()
-            .getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        prism.getProcessHelper().delete(process);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
             "Unexpected status code");
     }
@@ -168,13 +163,12 @@ public class EmbeddedPigScriptTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void getSucceededProcessInstance() throws Exception {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
-        InstancesResult r = prism.getProcessHelper()
-            .getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
         int counter = OSUtil.IS_WINDOWS ? 100 : 50;
         InstanceUtil.waitForBundleToReachState(cluster, Util.getProcessName(bundles[0]
             .getProcessData()), Job.Status.SUCCEEDED, counter);
-        r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING, processName);
+        r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }
 

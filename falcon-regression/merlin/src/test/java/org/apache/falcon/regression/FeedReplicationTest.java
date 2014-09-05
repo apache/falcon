@@ -134,9 +134,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -213,9 +211,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);
@@ -305,9 +301,7 @@ public class FeedReplicationTest extends BaseTestClass {
 
         //submit and schedule feed
         LOGGER.info("Feed : " + Util.prettyPrintXml(feed));
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
 
         //upload necessary data
         DateTime date = new DateTime(startTime, DateTimeZone.UTC);

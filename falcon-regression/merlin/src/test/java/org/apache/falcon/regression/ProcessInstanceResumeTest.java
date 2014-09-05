@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -218,7 +217,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeDeleted() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName,
             "?start=2010-01-02T01:05Z");
         InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.PROCESS_NOT_FOUND);

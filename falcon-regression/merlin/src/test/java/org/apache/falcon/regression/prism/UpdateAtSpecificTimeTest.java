@@ -177,8 +177,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
         //submit and schedule feed
-        ServiceResponse r =
-            prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
@@ -232,10 +231,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             processBundle.submitBundle(prism);
 
             //schedule of 2 cluster
-            cluster1.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL,
-                processBundle.getProcessData());
-            cluster2.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL,
-                processBundle.getProcessData());
+            cluster1.getProcessHelper().schedule(processBundle.getProcessData());
+            cluster2.getProcessHelper().schedule(processBundle.getProcessData());
             InstanceUtil.waitTillInstancesAreCreated(cluster2, processBundle.getProcessData(), 0);
 
             //shut down cluster2
@@ -319,13 +316,13 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             logger.info("feed: " + Util.prettyPrintXml(feed));
 
             //submit feed on all 3 clusters
-            ServiceResponse r = prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL, feed);
+            ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
             AssertUtil.assertSucceeded(r);
 
             //schedule feed of cluster1 and cluster2
-            r = cluster1.getFeedHelper().schedule(Util.URLS.SCHEDULE_URL, feed);
+            r = cluster1.getFeedHelper().schedule(feed);
             AssertUtil.assertSucceeded(r);
-            r = cluster2.getFeedHelper().schedule(Util.URLS.SCHEDULE_URL, feed);
+            r = cluster2.getFeedHelper().schedule(feed);
             AssertUtil.assertSucceeded(r);
             InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
 
@@ -441,10 +438,10 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             Util.readEntityName(processBundle.getClusters().get(0)), ClusterType.SOURCE,
             null, baseTestDir + "/replication" + MINUTE_DATE_PATTERN);
 
-        ServiceResponse r = prism.getClusterHelper().submitEntity(Util.URLS.SUBMIT_URL,
+        ServiceResponse r = prism.getClusterHelper().submitEntity(
             processBundle.getClusters().get(0));
         AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        r = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
 
@@ -585,12 +582,10 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
             XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(b.getClusters().get(0)), ClusterType.SOURCE, "",
             "/someTestPath" + MINUTE_DATE_PATTERN);
-        ServiceResponse r = prism.getClusterHelper().submitEntity(Util.URLS
-                .SUBMIT_URL,
+        ServiceResponse r = prism.getClusterHelper().submitEntity(
             b.getClusters().get(0));
         AssertUtil.assertSucceeded(r);
-        r = prism.getFeedHelper().submitAndSchedule(Util.URLS
-            .SUBMIT_AND_SCHEDULE_URL, feed);
+        r = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(r);
         return feed;
     }

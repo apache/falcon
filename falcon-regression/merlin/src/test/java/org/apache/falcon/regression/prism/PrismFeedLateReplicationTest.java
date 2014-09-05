@@ -29,7 +29,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -127,7 +126,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         String bundleId =
@@ -200,7 +199,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         String postFix = "/US/" + cluster2.getClusterHelper().getColoName();
@@ -393,7 +392,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         //submit and schedule feed
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         //wait till 1st instance of replication coord is SUCCEEDED
@@ -595,7 +594,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         //submit and schedule feed
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         //wait till 1st instance of replication coord is SUCCEEDED

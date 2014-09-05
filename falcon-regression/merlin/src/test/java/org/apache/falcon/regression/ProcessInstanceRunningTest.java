@@ -31,7 +31,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -110,12 +109,11 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(TIMEOUT);
         String process = bundles[0].getProcessData();
-        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(URLS.SUSPEND_URL, process));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(process));
         TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.assertSucceeded(prism.getProcessHelper().resume(URLS.RESUME_URL, process));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().resume(process));
         TimeUtil.sleepSeconds(TIMEOUT);
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
@@ -129,11 +127,9 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     public void getSuspendedProcessInstance() throws Exception {
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(URLS.SUSPEND_URL,
-            bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
         TimeUtil.sleepSeconds(TIMEOUT);
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }
 
@@ -146,8 +142,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void getRunningProcessInstance() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
@@ -158,8 +153,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getNonExistenceProcessInstance() throws Exception {
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            "invalidName");
+        InstancesResult r = prism.getProcessHelper().getRunningInstance("invalidName");
         Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
             "Unexpected status code");
     }
@@ -172,9 +166,8 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void getKilledProcessInstance() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            processName);
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         Assert.assertEquals(r.getStatusCode(), ResponseKeys.PROCESS_NOT_FOUND,
             "Unexpected status code");
     }
@@ -189,8 +182,7 @@ public class ProcessInstanceRunningTest extends BaseTestClass {
     public void getSucceededProcessInstance() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitForBundleToReachState(cluster, processName, Job.Status.SUCCEEDED);
-        InstancesResult r = prism.getProcessHelper().getRunningInstance(URLS.INSTANCE_RUNNING,
-            processName);
+        InstancesResult r = prism.getProcessHelper().getRunningInstance(processName);
         InstanceUtil.validateSuccessWOInstances(r);
     }
 

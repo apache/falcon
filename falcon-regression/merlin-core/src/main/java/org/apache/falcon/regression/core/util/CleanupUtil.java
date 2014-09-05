@@ -73,8 +73,7 @@ public final class CleanupUtil {
     private static EntitiesResult getEntitiesResultOfOneType(
         IEntityManagerHelper iEntityManagerHelper)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        final ServiceResponse clusterResponse =
-            iEntityManagerHelper.listEntities(Util.URLS.LIST_URL);
+        final ServiceResponse clusterResponse = iEntityManagerHelper.listEntities();
         JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
         Unmarshaller u = jc.createUnmarshaller();
         return (EntitiesResult) u.unmarshal(
@@ -86,7 +85,7 @@ public final class CleanupUtil {
             final List<String> clusters = getAllClusters(prism);
             for (String cluster : clusters) {
                 try {
-                    prism.getClusterHelper().deleteByName(Util.URLS.DELETE_URL, cluster, null);
+                    prism.getClusterHelper().deleteByName(cluster, null);
                 } catch (Exception e) {
                     LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
                 }
@@ -103,7 +102,7 @@ public final class CleanupUtil {
             final List<String> feeds = getAllFeeds(prism);
             for (String feed : feeds) {
                 try {
-                    prism.getFeedHelper().deleteByName(Util.URLS.DELETE_URL, feed, null);
+                    prism.getFeedHelper().deleteByName(feed, null);
                 } catch (Exception e) {
                     LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
                 }
@@ -121,7 +120,7 @@ public final class CleanupUtil {
             final List<String> processes = getAllProcesses(prism);
             for (String process : processes) {
                 try {
-                    entityManagerHelper.deleteByName(Util.URLS.DELETE_URL, process, null);
+                    entityManagerHelper.deleteByName(process, null);
                 } catch (Exception e) {
                     LOGGER.warn("Caught exception: " + ExceptionUtils.getStackTrace(e));
                 }
@@ -141,7 +140,7 @@ public final class CleanupUtil {
 
     public static void deleteQuietly(IEntityManagerHelper helper, String feed) {
         try {
-            helper.delete(Util.URLS.DELETE_URL, feed);
+            helper.delete(feed);
         } catch (Exception e) {
             LOGGER.info("Caught exception: " + ExceptionUtils.getStackTrace(e));
         }

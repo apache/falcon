@@ -27,7 +27,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
@@ -95,12 +94,10 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
 
         bundles[0].submitFeedsScheduleProcess(prism);
 
-        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(URLS.DELETE_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(URLS.SUBMIT_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(URLS.SCHEDULE_URL,
-            bundles[0].getProcessData()));
+        String processData = bundles[0].getProcessData();
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(processData));
     }
 
     /**
@@ -118,19 +115,13 @@ public class RescheduleKilledProcessTest extends BaseTestClass {
         logger.info("process: " + Util.prettyPrintXml(bundles[0].getProcessData()));
 
         bundles[0].submitFeedsScheduleProcess(prism);
-
-        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(URLS.DELETE_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(URLS.SUBMIT_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(URLS.SCHEDULE_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(URLS.DELETE_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(URLS.SUBMIT_URL,
-            bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(URLS.SCHEDULE_URL,
-            bundles[0].getProcessData()));
+        String processData = bundles[0].getProcessData();
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().submitEntity(processData));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().schedule(processData));
     }
 
     @AfterClass(alwaysRun = true)

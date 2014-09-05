@@ -36,7 +36,6 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -130,8 +129,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -183,8 +181,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -257,8 +254,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -342,8 +338,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -382,8 +377,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String originalProcessData = bundles[1].getProcessData();
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
@@ -417,8 +411,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
 
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
@@ -500,8 +493,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -587,14 +579,12 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
         waitForProcessToReachACertainState(cluster3, bundles[1], Job.Status.RUNNING);
@@ -602,8 +592,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 EntityType.PROCESS);
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
         //now to update
         while (Util
                 .parseResponse(updateProcessConcurrency(bundles[1],
@@ -622,8 +611,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         OozieUtil.verifyNewBundleCreation(cluster3, oldBundleId, oldNominalTimes,
                 bundles[1].getProcessData(), false, true);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
-        AssertUtil.assertSucceeded(cluster3.getProcessHelper()
-                .resume(URLS.RESUME_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
         AssertUtil.checkStatus(cluster3OC, EntityType.PROCESS, bundles[1], Job.Status.RUNNING);
 
         Job.Status status = OozieUtil.getOozieJobStatus(cluster3.getFeedHelper().getOozieClient(),
@@ -682,8 +670,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         LOGGER.info("process to be scheduled: " + Util.prettyPrintXml(bundles[1].getProcessData()));
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
         String oldBundleId = InstanceUtil
@@ -783,8 +770,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -852,8 +838,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -873,8 +858,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].getProcessObject().setOrder(getRandomExecutionType(bundles[1]));
         //suspend
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
 
         //now to update
         String updateTime = new DateTime(DateTimeZone.UTC).plusMinutes(2).toString();
@@ -886,8 +870,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             TimeUtil.sleepSeconds(10);
         }
 
-        AssertUtil.assertSucceeded(cluster3.getProcessHelper()
-                .resume(URLS.RESUME_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
 
         String prismString = getResponse(prism, bundles[1].getProcessData(), true);
         Assert.assertEquals(Util.getProcessObject(prismString).getParallel(),
@@ -929,8 +912,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -950,8 +932,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         inputFeed = Util.setFeedName(inputFeed, newFeedName);
 
         LOGGER.info(inputFeed);
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, inputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
 
         while (Util.parseResponse(
                 prism.getProcessHelper()
@@ -983,8 +964,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0);
 
@@ -1003,10 +983,8 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         inputFeed = Util.setFeedName(inputFeed, newFeedName);
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, inputFeed));
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
 
         while (Util.parseResponse(
                 prism.getProcessHelper()
@@ -1019,8 +997,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 bundles[1].getProcessData(), true, false);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 1, 10);
 
-        AssertUtil.assertSucceeded(cluster3.getProcessHelper()
-                .resume(URLS.RESUME_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
 
         bundles[1].verifyDependencyListing(cluster2);
 
@@ -1050,8 +1027,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, originalProcess));
+                cluster3.getProcessHelper().schedule(originalProcess));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, originalProcess, 0, 10);
 
@@ -1064,8 +1040,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
                 EntityType.PROCESS);
 
         //submit new feed
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, inputFeed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(inputFeed));
 
         Util.shutDownService(cluster3.getProcessHelper());
 
@@ -1114,8 +1089,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -1181,8 +1155,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -1200,8 +1173,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             newEndTime);
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
         while (Util.parseResponse(
                 prism.getProcessHelper()
                         .update((bundles[1].getProcessData()), bundles[1].getProcessData()))
@@ -1209,8 +1181,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
             LOGGER.info("update didnt SUCCEED in last attempt");
             TimeUtil.sleepSeconds(10);
         }
-        AssertUtil.assertSucceeded(cluster3.getProcessHelper()
-                .resume(URLS.RESUME_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
 
         dualComparison(prism, cluster2, bundles[1].getProcessData());
 
@@ -1249,8 +1220,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
         String oldBundleId = InstanceUtil
@@ -1301,8 +1271,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -1346,8 +1315,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         TimeUtil.sleepSeconds(30);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, bundles[1].getProcessData(), 0, 10);
 
@@ -1385,9 +1353,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData())
-        );
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -1410,9 +1376,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         waitForProcessToReachACertainState(cluster3, bundles[1], Job.Status.RUNNING);
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData())
-        );
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
 
         AssertUtil.assertSucceeded(
                 prism.getProcessHelper()
@@ -1447,8 +1411,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         bundles[1].submitBundle(prism);
         //now to schedule in 1 colo and let it remain in another
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .schedule(URLS.SCHEDULE_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().schedule(bundles[1].getProcessData()));
         String oldBundleId = InstanceUtil
                 .getLatestBundleID(cluster3,
                         Util.readEntityName(bundles[1].getProcessData()), EntityType.PROCESS);
@@ -1467,13 +1430,11 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
         waitForProcessToReachACertainState(cluster3, bundles[1], Job.Status.RUNNING);
 
         AssertUtil.assertSucceeded(
-                cluster3.getProcessHelper()
-                        .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
+                cluster3.getProcessHelper().suspend(bundles[1].getProcessData()));
         AssertUtil.assertSucceeded(
                 prism.getProcessHelper()
                         .update(bundles[1].getProcessData(), bundles[1].getProcessData()));
-        AssertUtil.assertSucceeded(cluster3.getProcessHelper()
-                .resume(URLS.RESUME_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(cluster3.getProcessHelper().resume(bundles[1].getProcessData()));
         List<String> oldNominalTimes =
                 OozieUtil.getActionsNominalTime(cluster3, oldBundleId, EntityType.PROCESS);
 
@@ -1579,8 +1540,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
 
     private String getResponse(ColoHelper prism, String processData, boolean bool)
         throws Exception {
-        ServiceResponse response = prism.getProcessHelper()
-                .getEntityDefinition(Util.URLS.GET_ENTITY_DEFINITION, processData);
+        ServiceResponse response = prism.getProcessHelper().getEntityDefinition(processData);
         if (bool) {
             AssertUtil.assertSucceeded(response);
         } else {

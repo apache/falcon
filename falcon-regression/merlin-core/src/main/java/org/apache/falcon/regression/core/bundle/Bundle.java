@@ -46,7 +46,6 @@ import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -80,22 +79,19 @@ public class Bundle {
     public void submitFeed() throws URISyntaxException, IOException, AuthenticationException, JAXBException {
         submitClusters(prismHelper);
 
-        AssertUtil.assertSucceeded(
-            prismHelper.getFeedHelper().submitEntity(URLS.SUBMIT_URL, dataSets.get(0)));
+        AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitEntity(dataSets.get(0)));
     }
 
     public void submitAndScheduleFeed() throws Exception {
         submitClusters(prismHelper);
 
-        AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitAndSchedule(
-            URLS.SUBMIT_AND_SCHEDULE_URL, dataSets.get(0)));
+        AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitAndSchedule(dataSets.get(0)));
     }
 
     public void submitAndScheduleFeedUsingColoHelper(ColoHelper coloHelper) throws Exception {
         submitFeed();
 
-        AssertUtil.assertSucceeded(
-            coloHelper.getFeedHelper().schedule(Util.URLS.SCHEDULE_URL, dataSets.get(0)));
+        AssertUtil.assertSucceeded(coloHelper.getFeedHelper().schedule(dataSets.get(0)));
     }
 
     public void submitAndScheduleAllFeeds()
@@ -103,8 +99,7 @@ public class Bundle {
         submitClusters(prismHelper);
 
         for (String feed : dataSets) {
-            AssertUtil.assertSucceeded(
-                prismHelper.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed));
+            AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitAndSchedule(feed));
         }
     }
 
@@ -112,8 +107,7 @@ public class Bundle {
         IOException, URISyntaxException, AuthenticationException {
         submitClusters(prismHelper);
         submitFeeds(prismHelper);
-        ServiceResponse r = prismHelper.getProcessHelper().submitEntity(URLS.SUBMIT_URL,
-            processData);
+        ServiceResponse r = prismHelper.getProcessHelper().submitEntity(processData);
         if (shouldSucceed) {
             AssertUtil.assertSucceeded(r);
         }
@@ -128,23 +122,20 @@ public class Bundle {
 
         submitFeeds(prismHelper);
 
-        AssertUtil.assertSucceeded(prismHelper.getProcessHelper().submitAndSchedule(
-                URLS.SUBMIT_AND_SCHEDULE_URL, processData));
+        AssertUtil.assertSucceeded(prismHelper.getProcessHelper().submitAndSchedule(processData));
     }
 
 
     public void submitAndScheduleProcess() throws Exception {
         submitAndScheduleAllFeeds();
 
-        AssertUtil.assertSucceeded(prismHelper.getProcessHelper().submitAndSchedule(
-            URLS.SUBMIT_AND_SCHEDULE_URL, processData));
+        AssertUtil.assertSucceeded(prismHelper.getProcessHelper().submitAndSchedule(processData));
     }
 
     public void submitAndScheduleProcessUsingColoHelper(ColoHelper coloHelper) throws Exception {
         submitProcess(true);
 
-        AssertUtil.assertSucceeded(
-                coloHelper.getProcessHelper().schedule(URLS.SCHEDULE_URL, processData));
+        AssertUtil.assertSucceeded(coloHelper.getProcessHelper().schedule(processData));
     }
 
     public List<String> getClusters() {
@@ -271,7 +262,7 @@ public class Bundle {
         //lets submit all data first
         submitFeeds(helper);
 
-        return helper.getProcessHelper().submitEntity(URLS.SUBMIT_URL, getProcessData());
+        return helper.getProcessHelper().submitEntity(getProcessData());
     }
 
     /**
@@ -293,8 +284,7 @@ public class Bundle {
         }
 
         //lets schedule the damn thing now :)
-        ServiceResponse scheduleResult =
-                helper.getProcessHelper().schedule(URLS.SCHEDULE_URL, getProcessData());
+        ServiceResponse scheduleResult = helper.getProcessHelper().schedule(getProcessData());
         AssertUtil.assertSucceeded(scheduleResult);
         TimeUtil.sleepSeconds(7);
         return scheduleResult.getMessage();
@@ -696,16 +686,14 @@ public class Bundle {
     public void submitClusters(ColoHelper helper, String user)
         throws JAXBException, IOException, URISyntaxException, AuthenticationException {
         for (String cluster : this.clusters) {
-            AssertUtil.assertSucceeded(
-                    helper.getClusterHelper().submitEntity(URLS.SUBMIT_URL, cluster, user));
+            AssertUtil.assertSucceeded(helper.getClusterHelper().submitEntity(cluster, user));
         }
     }
 
     public void submitFeeds(ColoHelper helper)
         throws JAXBException, IOException, URISyntaxException, AuthenticationException {
         for (String feed : this.dataSets) {
-            AssertUtil.assertSucceeded(
-                    helper.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed));
+            AssertUtil.assertSucceeded(helper.getFeedHelper().submitEntity(feed));
         }
     }
 
@@ -757,14 +745,14 @@ public class Bundle {
     public void deleteBundle(ColoHelper helper) {
 
         try {
-            helper.getProcessHelper().delete(URLS.DELETE_URL, getProcessData());
+            helper.getProcessHelper().delete(getProcessData());
         } catch (Exception e) {
             e.getStackTrace();
         }
 
         for (String dataset : getDataSets()) {
             try {
-                helper.getFeedHelper().delete(URLS.DELETE_URL, dataset);
+                helper.getFeedHelper().delete(dataset);
             } catch (Exception e) {
                 e.getStackTrace();
             }
@@ -772,7 +760,7 @@ public class Bundle {
 
         for (String cluster : this.getClusters()) {
             try {
-                helper.getClusterHelper().delete(URLS.DELETE_URL, cluster);
+                helper.getClusterHelper().delete(cluster);
             } catch (Exception e) {
                 e.getStackTrace();
             }
@@ -807,8 +795,7 @@ public class Bundle {
 
         for (Bundle bundle : bundles) {
             ServiceResponse r =
-                prismHelper.getClusterHelper()
-                    .submitEntity(URLS.SUBMIT_URL, bundle.getClusters().get(0));
+                prismHelper.getClusterHelper().submitEntity(bundle.getClusters().get(0));
             Assert.assertTrue(r.getMessage().contains("SUCCEEDED"), r.getMessage());
         }
 
@@ -871,21 +858,18 @@ public class Bundle {
         throws IOException, JAXBException, URISyntaxException, AuthenticationException {
 
         for (int i = 0; i < getClusters().size(); i++) {
-            ServiceResponse r = helper.getClusterHelper()
-                .submitEntity(URLS.SUBMIT_URL, getClusters().get(i));
+            ServiceResponse r = helper.getClusterHelper().submitEntity(getClusters().get(i));
             if (checkSuccess) {
                 AssertUtil.assertSucceeded(r);
             }
         }
         for (int i = 0; i < getDataSets().size(); i++) {
-            ServiceResponse r = helper.getFeedHelper().submitAndSchedule(
-                    URLS.SUBMIT_AND_SCHEDULE_URL, getDataSets().get(i));
+            ServiceResponse r = helper.getFeedHelper().submitAndSchedule(getDataSets().get(i));
             if (checkSuccess) {
                 AssertUtil.assertSucceeded(r);
             }
         }
-        ServiceResponse r = helper.getProcessHelper().submitAndSchedule(
-                URLS.SUBMIT_AND_SCHEDULE_URL, getProcessData());
+        ServiceResponse r = helper.getProcessHelper().submitAndSchedule(getProcessData());
         if (checkSuccess) {
             AssertUtil.assertSucceeded(r);
         }

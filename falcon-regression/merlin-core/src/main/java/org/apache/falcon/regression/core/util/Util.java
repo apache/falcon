@@ -608,8 +608,7 @@ public final class Util {
         } else {
             helper = cluster.getClusterHelper();
         }
-        ServiceResponse response = helper.getEntityDefinition(URLS
-            .GET_ENTITY_DEFINITION, entity);
+        ServiceResponse response = helper.getEntityDefinition(entity);
         if (shouldReturn) {
             AssertUtil.assertSucceeded(response);
         } else {

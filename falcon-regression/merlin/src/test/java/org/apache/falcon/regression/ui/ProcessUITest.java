@@ -179,7 +179,7 @@ public class ProcessUITest extends BaseUITestClass {
         String processName = Util.readEntityName(process);
         softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.SUBMITTED, "Process status should be SUBMITTED");
-        prism.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL, process);
+        prism.getProcessHelper().schedule(process);
 
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS);

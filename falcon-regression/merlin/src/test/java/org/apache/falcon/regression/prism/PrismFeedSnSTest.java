@@ -31,7 +31,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
@@ -120,13 +119,11 @@ public class PrismFeedSnSTest extends BaseTestClass {
         AssertUtil.checkNotStatus(cluster1OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         //ensure only one bundle is there
         Assert.assertEquals(OozieUtil.getBundles(cluster1OC,
             Util.readEntityName(feed1), EntityType.FEED).size(), 1);
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
         //ensure only one bundle is there
         Assert.assertEquals(OozieUtil.getBundles(cluster2OC,
             Util.readEntityName(feed2), EntityType.FEED).size(), 1);
@@ -146,28 +143,26 @@ public class PrismFeedSnSTest extends BaseTestClass {
         bundles[0].submitAndScheduleFeed();
         bundles[1].submitAndScheduleFeed();
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(URLS.SUSPEND_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         Assert.assertEquals(OozieUtil.getBundles(cluster1OC,
             Util.readEntityName(feed1), EntityType.FEED).size(), 1);
 
-        AssertUtil.assertSucceeded(cluster1.getFeedHelper().resume(URLS.RESUME_URL, feed1));
+        AssertUtil.assertSucceeded(cluster1.getFeedHelper().resume(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(URLS.SUSPEND_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed2));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.SUSPENDED);
         Assert.assertEquals(OozieUtil.getBundles(cluster2OC,
             Util.readEntityName(feed2), EntityType.FEED).size(), 1);
-        AssertUtil.assertSucceeded(cluster2.getFeedHelper().resume(URLS.RESUME_URL, feed2));
+        AssertUtil.assertSucceeded(cluster2.getFeedHelper().resume(feed2));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
     }
 
@@ -181,18 +176,16 @@ public class PrismFeedSnSTest extends BaseTestClass {
         bundles[0].submitAndScheduleFeed();
         bundles[1].submitAndScheduleFeed();
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(URLS.DELETE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(URLS.DELETE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed2));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
     }
 
     /**
@@ -200,10 +193,8 @@ public class PrismFeedSnSTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testScheduleNonExistentFeedOnBothColos() throws Exception {
-        AssertUtil.assertFailed(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
-        AssertUtil.assertFailed(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertFailed(prism.getFeedHelper().submitAndSchedule(feed1));
+        AssertUtil.assertFailed(prism.getFeedHelper().submitAndSchedule(feed2));
     }
 
     /**
@@ -213,12 +204,11 @@ public class PrismFeedSnSTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testFeedSnSOn1ColoWhileOtherColoIsDown() throws Exception {
         restartRequired = true;
-        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL,
+        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(
             bundles[1].getClusters().get(0)));
 
         Util.shutDownService(cluster1.getFeedHelper());
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
 
         //now check if they have been scheduled correctly or not
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
@@ -235,8 +225,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
         restartRequired = true;
         bundles[0].submitFeed();
         Util.shutDownService(cluster1.getFeedHelper());
-        AssertUtil.assertFailed(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertFailed(prism.getFeedHelper().submitAndSchedule(feed1));
         AssertUtil.checkNotStatus(cluster2OC, EntityType.PROCESS, bundles[0], Job.Status.RUNNING);
     }
 
@@ -247,8 +236,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testFeedSnSOn1ColoWhileAnotherColoHasSuspendedFeed() throws Exception {
         bundles[0].submitAndScheduleFeed();
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .suspend(URLS.SUSPEND_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         bundles[1].submitAndScheduleFeed();
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
@@ -264,8 +252,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testFeedSnSOn1ColoWhileAnotherColoHasKilledFeed() throws Exception {
         bundles[0].submitAndScheduleFeed();
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().delete(URLS.DELETE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         bundles[1].submitAndScheduleFeed();
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
@@ -282,13 +269,11 @@ public class PrismFeedSnSTest extends BaseTestClass {
     public void testFeedSnSOnBothColosUsingColoHelper() throws Exception {
         //schedule both bundles
         bundles[0].submitFeed();
-        APIResult result = Util.parseResponse((cluster1.getFeedHelper()
-            .submitEntity(URLS.SUBMIT_AND_SCHEDULE_URL, feed1)));
+        APIResult result = Util.parseResponse((cluster1.getFeedHelper().submitEntity(feed1)));
         Assert.assertEquals(result.getStatusCode(), 404);
         AssertUtil.checkNotStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
         bundles[1].submitFeed();
-        result = Util.parseResponse(cluster2.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        result = Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2));
         Assert.assertEquals(result.getStatusCode(), 404);
         AssertUtil.checkNotStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
     }
@@ -302,24 +287,20 @@ public class PrismFeedSnSTest extends BaseTestClass {
     public void testSnSSuspendedFeedOnBothColosUsingColoHelper() throws Exception {
         //schedule both bundles
         bundles[0].submitFeed();
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         bundles[1].submitFeed();
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
 
-        AssertUtil.assertSucceeded(cluster1.getFeedHelper().suspend(URLS.SUSPEND_URL, feed1));
+        AssertUtil.assertSucceeded(cluster1.getFeedHelper().suspend(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
         //now check if they have been scheduled correctly or not
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
-        AssertUtil.assertSucceeded(cluster1.getFeedHelper().resume(URLS.RESUME_URL, feed1));
+        AssertUtil.assertSucceeded(cluster1.getFeedHelper().resume(feed1));
 
-        AssertUtil.assertSucceeded(cluster2.getFeedHelper().suspend(URLS.SUSPEND_URL, feed2));
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
+        AssertUtil.assertSucceeded(cluster2.getFeedHelper().suspend(feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.RUNNING);
     }
@@ -334,21 +315,19 @@ public class PrismFeedSnSTest extends BaseTestClass {
         bundles[0].submitAndScheduleFeed();
         bundles[1].submitAndScheduleFeed();
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(URLS.DELETE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(URLS.DELETE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed2));
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.KILLED);
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1));
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
 
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(URLS.STATUS_URL,
+        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(
             feed1)).getMessage(), cluster1.getClusterHelper().getColoName() + "/RUNNING");
-        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(URLS.STATUS_URL,
+        Assert.assertEquals(Util.parseResponse(prism.getFeedHelper().getStatus(
             feed2)).getMessage(), cluster2.getClusterHelper().getColoName() + "/RUNNING");
     }
 
@@ -357,11 +336,9 @@ public class PrismFeedSnSTest extends BaseTestClass {
      */
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testSNSNonExistentFeedOnBothColosUsingColoHelper() throws Exception {
-        Assert.assertEquals(Util.parseResponse(cluster1.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed1))
+        Assert.assertEquals(Util.parseResponse(cluster1.getFeedHelper().submitAndSchedule(feed1))
             .getStatusCode(), 404);
-        Assert.assertEquals(Util.parseResponse(cluster2.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2))
+        Assert.assertEquals(Util.parseResponse(cluster2.getFeedHelper().submitAndSchedule(feed2))
             .getStatusCode(), 404);
     }
 
@@ -372,12 +349,11 @@ public class PrismFeedSnSTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2", "distributed"})
     public void testFeedSnSOn1ColoWhileOtherColoIsDownUsingColoHelper() throws Exception {
         restartRequired = true;
-        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL,
+        AssertUtil.assertSucceeded(prism.getClusterHelper().submitEntity(
             bundles[1].getClusters().get(0)));
 
         Util.shutDownService(cluster1.getFeedHelper());
-        AssertUtil.assertSucceeded(prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed2));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed2));
 
         //now check if they have been scheduled correctly or not
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);
@@ -397,12 +373,12 @@ public class PrismFeedSnSTest extends BaseTestClass {
 
         bundles[0].setCLusterColo(cluster1.getClusterHelper().getColoName());
         logger.info("cluster bundles[0]: " + Util.prettyPrintXml(clust1));
-        ServiceResponse r = prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, clust1);
+        ServiceResponse r = prism.getClusterHelper().submitEntity(clust1);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         bundles[1].setCLusterColo(cluster2.getClusterHelper().getColoName());
         logger.info("cluster bundles[1]: " + Util.prettyPrintXml(clust2));
-        r = prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, clust2);
+        r = prism.getClusterHelper().submitEntity(clust2);
         Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         String startTimeUA1 = "2012-10-01T12:00Z";
@@ -428,13 +404,13 @@ public class PrismFeedSnSTest extends BaseTestClass {
 
         Util.shutDownService(cluster1.getFeedHelper());
 
-        r = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        r = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertPartial(r);
-        r = prism.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed);
+        r = prism.getFeedHelper().schedule(feed);
         AssertUtil.assertPartial(r);
         Util.startService(cluster1.getFeedHelper());
-        prism.getClusterHelper().delete(URLS.DELETE_URL, clust1);
-        prism.getClusterHelper().delete(URLS.DELETE_URL, clust2);
+        prism.getClusterHelper().delete(clust1);
+        prism.getClusterHelper().delete(clust2);
     }
 
     /**
@@ -445,7 +421,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
     public void testFeedSnSOn1ColoWhileAnotherColoHasSuspendedFeedUsingColoHelper()
         throws Exception {
         bundles[0].submitAndScheduleFeed();
-        AssertUtil.assertSucceeded(cluster1.getFeedHelper().suspend(URLS.SUSPEND_URL, feed1));
+        AssertUtil.assertSucceeded(cluster1.getFeedHelper().suspend(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.SUSPENDED);
 
         bundles[1].submitAndScheduleFeed();
@@ -462,7 +438,7 @@ public class PrismFeedSnSTest extends BaseTestClass {
     @Test(groups = {"prism", "0.2", "embedded"})
     public void testFeedSnSOn1ColoWhileAnotherColoHasKilledFeedUsingColoHelper() throws Exception {
         bundles[0].submitAndScheduleFeed();
-        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(URLS.DELETE_URL, feed1));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed1));
         AssertUtil.checkStatus(cluster1OC, EntityType.FEED, bundles[0], Job.Status.KILLED);
         bundles[1].submitAndScheduleFeed();
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, bundles[1], Job.Status.RUNNING);

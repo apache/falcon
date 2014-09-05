@@ -182,10 +182,7 @@ public class HCatReplicationTest extends BaseTestClass {
             Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
             tableUri);
 
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
         Assert.assertEquals(InstanceUtil
@@ -277,10 +274,7 @@ public class HCatReplicationTest extends BaseTestClass {
             Util.readEntityName(bundles[2].getClusters().get(0)), ClusterType.TARGET, null,
             tableUri);
 
-        AssertUtil.assertSucceeded(
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         TimeUtil.sleepSeconds(TIMEOUT);
         //check if all coordinators exist
         Assert.assertEquals(InstanceUtil

@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
@@ -93,15 +92,15 @@ public class FeedInstanceStatusTest extends BaseTestClass {
 
         logger.info("cluster bundle1: " + Util.prettyPrintXml(bundles[0].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
-            .submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0)));
+            .submitEntity(bundles[0].getClusters().get(0)));
 
         logger.info("cluster bundle2: " + Util.prettyPrintXml(bundles[1].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
-            .submitEntity(URLS.SUBMIT_URL, bundles[1].getClusters().get(0)));
+            .submitEntity(bundles[1].getClusters().get(0)));
 
         logger.info("cluster bundle3: " + Util.prettyPrintXml(bundles[2].getClusters().get(0)));
         AssertUtil.assertSucceeded(prism.getClusterHelper()
-            .submitEntity(URLS.SUBMIT_URL, bundles[2].getClusters().get(0)));
+            .submitEntity(bundles[2].getClusters().get(0)));
 
         String feed = bundles[0].getDataSets().get(0);
         String feedName = Util.readEntityName(feed);
@@ -135,11 +134,11 @@ public class FeedInstanceStatusTest extends BaseTestClass {
             "?start=" + TimeUtil.addMinsToTime(startTime, 100)
                 + "&end=" + TimeUtil.addMinsToTime(startTime, 120));
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitEntity(feed));
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 100));
 
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
 
         // both replication instances
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
@@ -215,7 +214,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
             .addMinsToTime(startTime, 20) + "&end=" + TimeUtil.addMinsToTime(startTime, 40));
 
         //get running instances
-        prism.getFeedHelper().getRunningInstance(URLS.INSTANCE_RUNNING, feedName);
+        prism.getFeedHelper().getRunningInstance(feedName);
 
         //rerun succeeded instance
         prism.getFeedHelper().getProcessInstanceRerun(feedName, "?start=" + startTime);
@@ -237,7 +236,7 @@ public class FeedInstanceStatusTest extends BaseTestClass {
             + "&end=" + TimeUtil.addMinsToTime(startTime, 110));
 
         //kill feed
-        prism.getFeedHelper().delete(URLS.DELETE_URL, feed);
+        prism.getFeedHelper().delete(feed);
         InstancesResult responseInstance = prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + startTime + "&end=" + TimeUtil.addMinsToTime(startTime, 110));
 

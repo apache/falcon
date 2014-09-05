@@ -128,7 +128,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         feed = bundles[1].getInputFeedFromBundle();
         FeedMerlin feedObj = new FeedMerlin(feed);
         feedObj.setTableValue(dbName, randomTblName, FeedType.YEARLY.getHcatPathValue());
-        ServiceResponse response = prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL, feedObj.toString());
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
         AssertUtil.assertFailed(response);
     }
 
@@ -144,13 +144,13 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         feed = bundles[0].getInputFeedFromBundle();
         FeedMerlin feedObj = new FeedMerlin(feed);
         feedObj.setTableValue(dbName, tableName, FeedType.YEARLY.getHcatPathValue());
-        ServiceResponse response = prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL, feedObj.toString());
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().delete(Util.URLS.DELETE_URL, feedObj.toString());
+        response = prism.getFeedHelper().delete(feedObj.toString());
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().submitEntity(Util.URLS.SUBMIT_URL, feedObj.toString());
+        response = prism.getFeedHelper().submitEntity(feedObj.toString());
         AssertUtil.assertSucceeded(response);
     }
 
@@ -178,10 +178,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
                 tableUri);
 
-        AssertUtil.assertPartial(
-                prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                        feed)
-        );
+        AssertUtil.assertPartial(prism.getFeedHelper().submitAndSchedule(feed));
     }
 
     /**
@@ -209,10 +206,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.TARGET, null,
                 tableUri);
 
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL,
-                        feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         Assert.assertEquals(InstanceUtil
                 .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feed),
                         "REPLICATION"), 1);
@@ -231,19 +225,13 @@ public class HCatFeedOperationsTest extends BaseTestClass {
 
         submitAndScheduleReplicationFeedWhenTableExistsOnSourceAndTarget();
 
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().suspend(Util.URLS.SUSPEND_URL,
-                        feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed));
 
         //check that feed suspended on both clusters
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.SUSPENDED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, feed, Job.Status.SUSPENDED);
 
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().resume(Util.URLS.RESUME_URL,
-                        feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().resume(feed));
 
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, feed, Job.Status.RUNNING);
@@ -259,10 +247,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
     public void deleteReplicationFeed() throws Exception {
         submitAndScheduleReplicationFeedWhenTableExistsOnSourceAndTarget();
 
-        AssertUtil.assertSucceeded(
-                prism.getFeedHelper().delete(Util.URLS.DELETE_URL,
-                        feed)
-        );
+        AssertUtil.assertSucceeded(prism.getFeedHelper().delete(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.KILLED);
         AssertUtil.checkStatus(cluster2OC, EntityType.FEED, feed, Job.Status.KILLED);
     }

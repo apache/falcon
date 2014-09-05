@@ -89,8 +89,7 @@ public class EntityDryRunTest extends BaseTestClass {
     public void testDryRunFailureScheduleProcess() throws Exception {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitProcess(true);
-        ServiceResponse response = prism.getProcessHelper()
-            .schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+        ServiceResponse response = prism.getProcessHelper().schedule(bundles[0].getProcessData());
         validate(response);
     }
 
@@ -119,8 +118,7 @@ public class EntityDryRunTest extends BaseTestClass {
         String feed = bundles[0].getInputFeedFromBundle();
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(
-            Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         validate(response);
     }
 
@@ -131,8 +129,7 @@ public class EntityDryRunTest extends BaseTestClass {
     public void testDryRunFailureUpdateFeed() throws Exception {
         bundles[0].submitClusters(prism);
         String feed = bundles[0].getInputFeedFromBundle();
-        ServiceResponse response =
-            prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
