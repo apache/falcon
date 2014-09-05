@@ -63,6 +63,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceRerunTest.class);
     private static final double TIMEOUT = 10;
     private String processName;
+    private String start = "?start=2010-01-02T01:00Z";
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -86,6 +87,8 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         bundles[0].generateUniqueBundle();
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
+        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         processName = bundles[0].getProcessName();
     }
 
@@ -104,8 +107,6 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunSomeKilled02() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
@@ -113,11 +114,11 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:16Z");
+            start + "&end=2010-01-02T01:16Z");
         InstanceUtil.validateResponse(r, 4, 0, 0, 0, 4);
         List<String> wfIDs = InstanceUtil.getWorkflows(cluster, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 5, 1, 0);
     }
 
@@ -129,8 +130,6 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunMultipleKilled() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         String process = bundles[0].getProcessData();
@@ -138,11 +137,11 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         InstancesResult r = prism.getProcessHelper()
-            .getProcessInstanceKill(processName, "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            .getProcessInstanceKill(processName, start + "&end=2010-01-02T01:11Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
         List<String> wfIDs =  InstanceUtil.getWorkflows(cluster, processName);
         prism.getProcessHelper().
-            getProcessInstanceRerun(processName, "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            getProcessInstanceRerun(processName, start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 3, 3, 0, 0);
     }
 
@@ -155,19 +154,17 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunSomeKilled01() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
         String process = bundles[0].getProcessData();
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         InstancesResult r = prism.getProcessHelper()
-            .getProcessInstanceKill(processName, "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            .getProcessInstanceKill(processName, start + "&end=2010-01-02T01:11Z");
         InstanceUtil.validateResponse(r, 3, 0, 0, 0, 3);
         List<String> wfIDs = InstanceUtil.getWorkflows(cluster, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         TimeUtil.sleepSeconds(TIMEOUT);
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 6, 6, 0, 0);
     }
@@ -180,16 +177,14 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunSingleKilled() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
         String process = bundles[0].getProcessData();
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
-        prism.getProcessHelper().getProcessInstanceKill(processName, "?start=2010-01-02T01:00Z");
+        prism.getProcessHelper().getProcessInstanceKill(processName, start);
         String wfID = InstanceUtil.getWorkflows(cluster, processName, Status.KILLED).get(0);
-        prism.getProcessHelper().getProcessInstanceRerun(processName, "?start=2010-01-02T01:00Z");
+        prism.getProcessHelper().getProcessInstanceRerun(processName, start);
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -202,8 +197,6 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunSingleSucceeded() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
@@ -213,7 +206,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
                Status.SUCCEEDED).get(0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
             .Status.SUCCEEDED, EntityType.PROCESS);
-        prism.getProcessHelper().getProcessInstanceRerun(processName, "?start=2010-01-02T01:00Z");
+        prism.getProcessHelper().getProcessInstanceRerun(processName, start);
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -226,15 +219,13 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunSingleSuspended() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:06Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:06Z");
+            start + "&end=2010-01-02T01:06Z");
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:06Z");
+            start + "&end=2010-01-02T01:06Z");
         Assert.assertEquals(InstanceUtil.getInstanceStatus(cluster, processName, 0, 1),
             CoordinatorAction.Status.SUSPENDED);
     }
@@ -247,8 +238,6 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceRerunMultipleSucceeded() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
@@ -258,7 +247,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         List<String> wfIDs = InstanceUtil.getWorkflows(cluster, processName);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         InstanceUtil.areWorkflowsRunning(clusterOC, wfIDs, 3, 3, 0, 0);
     }
 
@@ -272,9 +261,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
     public void testProcessInstanceRerunTimedOut() throws Exception {
         bundles[0].setInputFeedDataPath(feedInputTimedOutPath);
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessTimeOut(2, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
@@ -282,7 +269,7 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.TIMEDOUT, EntityType.PROCESS);
         prism.getProcessHelper().getProcessInstanceRerun(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:11Z");
+            start + "&end=2010-01-02T01:11Z");
         s = InstanceUtil.getInstanceStatus(cluster, processName, 0, 0);
         Assert.assertEquals(s, CoordinatorAction.Status.WAITING,
             "instance should have been in WAITING state");

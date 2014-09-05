@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-674 General code factored out for ProcessInstance* tests (Paul Isaychuk via Ruslan
+   Ostafiychuk)
+
    FALCON-657 String datePattern moved to BaseTestClass (Ruslan Ostafiychuk)
 
    FALCON-643 Tests with zero-output/input scenario amended to match test case (Paul Isaychuk via
