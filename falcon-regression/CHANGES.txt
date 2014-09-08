@@ -9,6 +9,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-656 add test in falcon regression's Authorization test where non-feed owner updates
+   a feed with a dependent process(Karishma via Samarth Gupta)
    FALCON-674 General code factored out for ProcessInstance* tests (Paul Isaychuk via Ruslan
    Ostafiychuk)
 

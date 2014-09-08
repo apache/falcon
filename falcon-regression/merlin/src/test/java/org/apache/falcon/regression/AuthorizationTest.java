@@ -669,6 +669,34 @@ public class AuthorizationTest extends BaseTestClass {
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
     }
 
+    public void u1ScheduleFeedU2ScheduleDependantProcessU2UpdateFeed() throws Exception {
+        String feed = bundles[0].getInputFeedFromBundle();
+        String process = bundles[0].getProcessData();
+        //submit both feeds
+        bundles[0].submitClusters(prism);
+        bundles[0].submitFeeds(prism);
+        //schedule input feed by U1
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(Util.URLS.SCHEDULE_URL, feed));
+        AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
+
+        //by U2 schedule process dependent on scheduled feed by U1
+        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(Util
+                 .URLS.SUBMIT_AND_SCHEDULE_URL, process, MerlinConstants.USER2_NAME);
+        AssertUtil.assertSucceeded(serviceResponse);
+        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+
+        //update feed definition
+        String newFeed = Util.setFeedPathValue(feed,
+        baseHDFSDir + "/randomPath/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/");
+
+        //update feed by U2
+        serviceResponse = prism.getFeedHelper().update(feed, newFeed,
+        TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.USER2_NAME);
+        AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
+                 "Feed scheduled by first user should not be updated by second user");
+    }
+
     private String getBundleUser(ColoHelper coloHelper, String entityName, EntityType entityType)
         throws OozieClientException {
         String newProcessBundleId = InstanceUtil.getLatestBundleID(coloHelper, entityName,
