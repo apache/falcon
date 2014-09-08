@@ -664,13 +664,13 @@ public class AuthorizationTest extends BaseTestClass {
         bundles[0].submitClusters(prism);
         bundles[0].submitFeeds(prism);
         //schedule input feed by U1
-        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(Util.URLS.SCHEDULE_URL, feed));
+        AssertUtil.assertSucceeded(prism.getFeedHelper().schedule(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
 
         //by U2 schedule process dependent on scheduled feed by U1
         KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
-        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(Util
-                 .URLS.SUBMIT_AND_SCHEDULE_URL, process, MerlinConstants.USER2_NAME);
+        ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process,
+            MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
 
