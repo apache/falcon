@@ -30,6 +30,7 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.CatalogTable;
+import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
@@ -92,9 +93,8 @@ public class MetadataMappingServiceTest {
     public static final String OUTPUT_FEED_NAMES = "imp-click-join1,imp-click-join2";
     public static final String OUTPUT_INSTANCE_PATHS =
         "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join2/20140101";
-    private static final String REPLICATED_OUTPUT_INSTANCE_PATHS =
-            "jail://global:00/falcon/imp-click-join1/20140101";
-    private static final String EVICTED_OUTPUT_INSTANCE_PATHS =
+    private static final String REPLICATED_INSTANCE = "raw-click";
+    private static final String EVICTED_INSTANCE_PATHS =
             "jail://global:00/falcon/imp-click-join1/20140101,jail://global:00/falcon/imp-click-join1/20140102";
     public static final String OUTPUT_INSTANCE_PATHS_NO_DATE =
             "jail://global:00/falcon/imp-click-join1,jail://global:00/falcon/imp-click-join2";
@@ -273,24 +273,33 @@ public class MetadataMappingServiceTest {
     public void  testLineageForReplication() throws Exception {
         setupForLineageReplication();
 
-        String feedName = "imp-click-join1";
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-            EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, feedName,
-            REPLICATED_OUTPUT_INSTANCE_PATHS, null, null), WorkflowExecutionContext.Type.POST_PROCESSING);
+                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_INSTANCE,
+                        "jail://global:00/falcon/raw-click/bcp/20140101",
+                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_INSTANCE),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
         service.onSuccess(context);
 
         debug(service.getGraph());
         GraphUtils.dump(service.getGraph());
-        verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName());
 
-        verifyLineageGraphForReplicationOrEviction(feedName, REPLICATED_OUTPUT_INSTANCE_PATHS, context,
+        verifyLineageGraphForReplicationOrEviction(REPLICATED_INSTANCE,
+                "jail://global:00/falcon/raw-click/bcp/20140101", context,
                 RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
 
-        // +3 = cluster, colo, tag
-        Assert.assertEquals(getVerticesCount(service.getGraph()), 26);
-        // +3 = +2 edges for bcp cluster, no user but only to colo and new tag  + 1 for replicated-to edge to target
-        // cluster for each output feed instance
-        Assert.assertEquals(getEdgesCount(service.getGraph()), 74);
+        // +6 [primary, bcp cluster] = cluster, colo, tag,
+        // +4 [input feed] = feed, tag, group, user
+        // +4 [output feed] = 1 feed + 1 tag + 2 groups
+        // +4 [process] = 1 process + 1 tag + 2 pipeline
+        // +3 = 1 process, 1 input, 1 output
+        Assert.assertEquals(getVerticesCount(service.getGraph()), 21);
+        // +4 [cluster] = cluster to colo and tag [primary and bcp],
+        // +4 [input feed] = cluster, tag, group, user
+        // +5 [output feed] = cluster + user + Group + 2Tags
+        // +7 = user,tag,cluster, 1 input,1 output, 2 pipelines
+        // +19 = +6 for output feed instances + 7 for process instance + 6 for input feed instance
+        // +1 for replicated-to edge to target cluster for each output feed instance
+        Assert.assertEquals(getEdgesCount(service.getGraph()), 40);
     }
 
     @Test
@@ -313,7 +322,7 @@ public class MetadataMappingServiceTest {
         List<String> ownedAndSecureFeeds = Arrays.asList("clicks-feed/2014-01-01T00:00Z",
                 "imp-click-join1/2014-01-01T00:00Z", "imp-click-join1/2014-01-02T00:00Z");
         verifyLineageGraph(RelationshipType.FEED_INSTANCE.getName(), expectedFeeds, secureFeeds, ownedAndSecureFeeds);
-        String[] paths = EVICTED_OUTPUT_INSTANCE_PATHS.split(EvictionHelper.INSTANCEPATH_SEPARATOR);
+        String[] paths = EVICTED_INSTANCE_PATHS.split(EvictionHelper.INSTANCEPATH_SEPARATOR);
         for (String feedInstanceDataPath : paths) {
             verifyLineageGraphForReplicationOrEviction(feedName, feedInstanceDataPath, context,
                     RelationshipLabel.FEED_CLUSTER_EVICTED_EDGE);
@@ -481,10 +490,20 @@ public class MetadataMappingServiceTest {
     }
 
     private Feed addFeedEntity(String feedName, Cluster cluster, String tags, String groups,
-                              Storage.TYPE storageType, String uriTemplate) throws Exception {
-        Feed feed = EntityBuilderTestUtil.buildFeed(feedName, cluster,
+                               Storage.TYPE storageType, String uriTemplate) throws Exception {
+        return addFeedEntity(feedName, new Cluster[]{cluster}, tags, groups, storageType, uriTemplate);
+    }
+
+    private Feed addFeedEntity(String feedName, Cluster[] clusters, String tags, String groups,
+                               Storage.TYPE storageType, String uriTemplate) throws Exception {
+        Feed feed = EntityBuilderTestUtil.buildFeed(feedName, clusters,
                 tags, groups);
         addStorage(feed, storageType, uriTemplate);
+        for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
+            if (feedCluster.getName().equals(BCP_CLUSTER_ENTITY_NAME)) {
+                feedCluster.setType(ClusterType.TARGET);
+            }
+        }
         configStore.publish(EntityType.FEED, feed);
         return feed;
     }
@@ -521,6 +540,24 @@ public class MetadataMappingServiceTest {
             CatalogTable table = new CatalogTable();
             table.setUri(uriTemplate);
             feed.setTable(table);
+        }
+    }
+
+    private static void addStorage(org.apache.falcon.entity.v0.feed.Cluster cluster, Feed feed,
+                                   Storage.TYPE storageType, String uriTemplate) {
+        if (storageType == Storage.TYPE.FILESYSTEM) {
+            Locations locations = new Locations();
+            feed.setLocations(locations);
+
+            Location location = new Location();
+            location.setType(LocationType.DATA);
+            location.setPath(uriTemplate);
+            cluster.setLocations(new Locations());
+            cluster.getLocations().getLocations().add(location);
+        } else {
+            CatalogTable table = new CatalogTable();
+            table.setUri(uriTemplate);
+            cluster.setTable(table);
         }
     }
 
@@ -759,7 +796,7 @@ public class MetadataMappingServiceTest {
                                                             WorkflowExecutionContext context,
                                                             RelationshipLabel edgeLabel) throws Exception {
         String feedInstanceName = InstanceRelationshipGraphBuilder.getFeedInstanceName(feedName
-                , context.getSrcClusterName(), feedInstanceDataPath, context.getNominalTimeAsISO8601());
+                , context.getClusterName(), feedInstanceDataPath, context.getNominalTimeAsISO8601());
         Vertex feedVertex = getEntityVertex(feedInstanceName, RelationshipType.FEED_INSTANCE);
 
         Edge edge = feedVertex.getEdges(Direction.OUT, edgeLabel.getName())
@@ -777,7 +814,7 @@ public class MetadataMappingServiceTest {
                                                String falconInputFeeds) {
         String cluster;
         if (EntityOperations.REPLICATE == operation) {
-            cluster = BCP_CLUSTER_ENTITY_NAME + WorkflowExecutionContext.CLUSTER_NAME_SEPARATOR + CLUSTER_ENTITY_NAME;
+            cluster = BCP_CLUSTER_ENTITY_NAME;
         } else {
             cluster = CLUSTER_ENTITY_NAME;
         }
@@ -858,14 +895,58 @@ public class MetadataMappingServiceTest {
     }
 
     private void setupForLineageReplication() throws Exception {
-        setup();
+        cleanUp();
+        service.init();
+
+        // Add cluster
+        clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
+                "classification=production");
+        // Add backup cluster
+        Cluster bcpCluster = addClusterEntity(BCP_CLUSTER_ENTITY_NAME, "east-coast", "classification=bcp");
+
+        Cluster[] clusters = {clusterEntity, bcpCluster};
+
+        // Add feed
+        Feed rawFeed = addFeedEntity(REPLICATED_INSTANCE, clusters,
+                "classified-as=Secure", "analytics", Storage.TYPE.FILESYSTEM,
+                "/falcon/raw-click/${YEAR}/${MONTH}/${DAY}");
+        // Add uri template for each cluster
+        for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : rawFeed.getClusters().getClusters()) {
+            if (feedCluster.getName().equals(CLUSTER_ENTITY_NAME)) {
+                addStorage(feedCluster, rawFeed, Storage.TYPE.FILESYSTEM,
+                        "/falcon/raw-click/primary/${YEAR}/${MONTH}/${DAY}");
+            } else {
+                addStorage(feedCluster, rawFeed, Storage.TYPE.FILESYSTEM,
+                        "/falcon/raw-click/bcp/${YEAR}/${MONTH}/${DAY}");
+            }
+        }
+
+        // update config store
+        try {
+            configStore.initiateUpdate(rawFeed);
+            configStore.update(EntityType.FEED, rawFeed);
+        } finally {
+            configStore.cleanupUpdateInit();
+        }
+        inputFeeds.add(rawFeed);
+
+        // Add output feed
+        Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
+                "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
+                "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
+        outputFeeds.add(join1Feed);
+
+        processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
+                "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
+                WORKFLOW_VERSION);
+
         // GENERATE WF should have run before this to create all instance related vertices
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-            EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, null, null, null, null)
-            , WorkflowExecutionContext.Type.POST_PROCESSING);
+                EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "imp-click-join1",
+                "jail://global:00/falcon/imp-click-join1/20140101",
+                "jail://global:00/falcon/raw-click/primary/20140101",
+                REPLICATED_INSTANCE), WorkflowExecutionContext.Type.POST_PROCESSING);
         service.onSuccess(context);
-        // Add backup cluster
-        addClusterEntity(BCP_CLUSTER_ENTITY_NAME, "east-coast", "classification=bcp");
     }
 
     private void setupForLineageEviciton() throws Exception {
@@ -884,12 +965,12 @@ public class MetadataMappingServiceTest {
         // GENERATE WF should have run before this to create all instance related vertices
         WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
                         EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME,
-                        "imp-click-join1,imp-click-join1", EVICTED_OUTPUT_INSTANCE_PATHS, null, null),
+                        "imp-click-join1,imp-click-join1", EVICTED_INSTANCE_PATHS, null, null),
                 WorkflowExecutionContext.Type.POST_PROCESSING);
         service.onSuccess(context);
 
         // Write to csv file
-        String csvData = EVICTED_OUTPUT_INSTANCE_PATHS;
+        String csvData = EVICTED_INSTANCE_PATHS;
         logFilePath = hdfsUrl + LOGS_DIR + "/" + LOG_FILE;
         Path path = new Path(logFilePath);
         EvictionHelper.logInstancePaths(path.getFileSystem(EmbeddedCluster.newConfiguration()), path, csvData);

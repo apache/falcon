@@ -77,6 +77,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-694 StringIndexOutOfBoundsException while updating graph DB for
+   replicated instance (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-695 Lineage: "stored-in" edge is added between feed entity and
    target cluster (Sowmya Ramesh via Venkatesh Seetharam)
 

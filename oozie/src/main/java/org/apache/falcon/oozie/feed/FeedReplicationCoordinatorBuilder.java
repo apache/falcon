@@ -159,10 +159,6 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
         workflow.setAppPath(getStoragePath(buildPath));
         Properties props = createCoordDefaultConfiguration(trgCluster, wfName);
-        // Override CLUSTER_NAME property to include both source and target cluster
-        String clusterProperty = trgCluster.getName()
-                + WorkflowExecutionContext.CLUSTER_NAME_SEPARATOR + srcCluster.getName();
-        props.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), clusterProperty);
         props.put("srcClusterName", srcCluster.getName());
         props.put("srcClusterColo", srcCluster.getColo());
         if (props.get(MR_MAX_MAPS) == null) { // set default if user has not overridden

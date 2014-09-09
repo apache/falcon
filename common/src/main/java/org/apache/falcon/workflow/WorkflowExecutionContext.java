@@ -54,7 +54,6 @@ public class WorkflowExecutionContext {
 
     public static final String OUTPUT_FEED_SEPARATOR = ",";
     public static final String INPUT_FEED_SEPARATOR = "#";
-    public static final String CLUSTER_NAME_SEPARATOR = ",";
 
     /**
      * Workflow execution status.
@@ -161,26 +160,7 @@ public class WorkflowExecutionContext {
     }
 
     public String getClusterName() {
-        String value =  getValue(WorkflowExecutionArgs.CLUSTER_NAME);
-        if (EntityOperations.REPLICATE != getOperation()) {
-            return value;
-        }
-
-        return value.split(CLUSTER_NAME_SEPARATOR)[0];
-    }
-
-    public String getSrcClusterName() {
-        String value =  getValue(WorkflowExecutionArgs.CLUSTER_NAME);
-        if (EntityOperations.REPLICATE != getOperation()) {
-            return value;
-        }
-
-        String[] parts = value.split(CLUSTER_NAME_SEPARATOR);
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Replicated cluster pair is missing in " + value);
-        }
-
-        return parts[1];
+        return getValue(WorkflowExecutionArgs.CLUSTER_NAME);
     }
 
     public String getEntityName() {

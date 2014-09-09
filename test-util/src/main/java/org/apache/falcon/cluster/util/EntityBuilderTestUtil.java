@@ -74,7 +74,7 @@ public final class EntityBuilderTestUtil {
         return cluster;
     }
 
-    public static Feed buildFeed(String feedName, Cluster cluster, String tags, String groups) {
+    public static Feed buildFeed(String feedName, Cluster[] clusters, String tags, String groups) {
         Feed feed = new Feed();
         feed.setName(feedName);
         feed.setTags(tags);
@@ -82,12 +82,15 @@ public final class EntityBuilderTestUtil {
         feed.setFrequency(Frequency.fromString("hours(1)"));
 
         org.apache.falcon.entity.v0.feed.Clusters
-                clusters = new org.apache.falcon.entity.v0.feed.Clusters();
-        feed.setClusters(clusters);
-        org.apache.falcon.entity.v0.feed.Cluster feedCluster =
-                new org.apache.falcon.entity.v0.feed.Cluster();
-        feedCluster.setName(cluster.getName());
-        clusters.getClusters().add(feedCluster);
+                feedClusters = new org.apache.falcon.entity.v0.feed.Clusters();
+        feed.setClusters(feedClusters);
+
+        for (Cluster cluster : clusters) {
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                    new org.apache.falcon.entity.v0.feed.Cluster();
+            feedCluster.setName(cluster.getName());
+            feedClusters.getClusters().add(feedCluster);
+        }
 
         org.apache.falcon.entity.v0.feed.ACL feedACL = new org.apache.falcon.entity.v0.feed.ACL();
         feedACL.setOwner(USER);
@@ -96,6 +99,10 @@ public final class EntityBuilderTestUtil {
         feed.setACL(feedACL);
 
         return feed;
+    }
+
+    public static Feed buildFeed(String feedName, Cluster cluster, String tags, String groups) {
+        return buildFeed(feedName, new Cluster[]{cluster}, tags, groups);
     }
 
     public static org.apache.falcon.entity.v0.process.Process buildProcess(String processName,

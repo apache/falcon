@@ -185,16 +185,15 @@ public class InstanceRelationshipGraphBuilder extends RelationshipGraphBuilder {
         String[] outputFeedNames = context.getOutputFeedNamesList();
         String[] outputFeedInstancePaths = context.getOutputFeedInstancePathsList();
         String targetClusterName = context.getClusterName();
-        String srcClusterName = context.getSrcClusterName();
 
         // For replication there will be only one output feed name
         String feedName = outputFeedNames[0];
         String feedInstanceDataPath = outputFeedInstancePaths[0];
 
         LOG.info("Computing feed instance for : name=" + feedName + ", path= "
-                + feedInstanceDataPath + ", in cluster: " + srcClusterName);
+                + feedInstanceDataPath + ", in cluster: " + targetClusterName);
         RelationshipType vertexType = RelationshipType.FEED_INSTANCE;
-        String feedInstanceName = getFeedInstanceName(feedName, srcClusterName,
+        String feedInstanceName = getFeedInstanceName(feedName, targetClusterName,
                 feedInstanceDataPath, context.getNominalTimeAsISO8601());
         Vertex feedInstanceVertex = findVertex(feedInstanceName, vertexType);
 
