@@ -55,11 +55,12 @@ public final class UpdateHelper {
 
     private static final String[] FEED_FIELDS = new String[]{"partitions", "groups", "lateArrival.cutOff",
                                                              "schema.location", "schema.provider",
-                                                             "ACL.group", "ACL.owner", "ACL.permission", };
+                                                             "group", "owner", "permission", };
     private static final String[] PROCESS_FIELDS = new String[]{"retry.policy", "retry.delay", "retry.attempts",
                                                                 "lateProcess.policy", "lateProcess.delay",
                                                                 "lateProcess.lateInputs[\\d+].input",
-                                                                "lateProcess.lateInputs[\\d+].workflowPath", };
+                                                                "lateProcess.lateInputs[\\d+].workflowPath",
+                                                                "owner", "group", "permission", };
 
     private UpdateHelper() {}
 

@@ -298,6 +298,37 @@ public class UpdateHelperTest extends AbstractTestBase {
         Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
     }
 
+    @Test
+    public void testIsEntityACLUpdated() throws Exception {
+        Feed oldFeed = parser.parseAndValidate(this.getClass().getResourceAsStream(FEED_XML));
+        String cluster = "testCluster";
+        Feed newFeed = (Feed) oldFeed.copy();
+        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
+
+        Path feedPath = EntityUtil.getNewStagingPath(clusterEntity, oldFeed);
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
+
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
+        newFeed.getACL().setOwner("new-user");
+        newFeed.getACL().setGroup("new-group");
+        Assert.assertNotEquals(oldFeed.getACL().getOwner(), newFeed.getACL().getOwner());
+        Assert.assertNotEquals(oldFeed.getACL().getGroup(), newFeed.getACL().getGroup());
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldFeed, newFeed, cluster, feedPath));
+
+        Process oldProcess = processParser.parseAndValidate(this.getClass().getResourceAsStream(PROCESS_XML));
+        prepare(oldProcess);
+        Process newProcess = (Process) oldProcess.copy();
+        Path procPath = EntityUtil.getNewStagingPath(clusterEntity, oldProcess);
+
+        Assert.assertFalse(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+        org.apache.falcon.entity.v0.process.ACL processACL =
+                new org.apache.falcon.entity.v0.process.ACL();
+        processACL.setOwner("owner");
+        processACL.setOwner("group");
+        newProcess.setACL(processACL);
+        Assert.assertTrue(UpdateHelper.isEntityUpdated(oldProcess, newProcess, cluster, procPath));
+    }
+
     private static Location getLocation(Feed feed, LocationType type, String cluster) {
         org.apache.falcon.entity.v0.feed.Cluster feedCluster = FeedHelper.getCluster(feed, cluster);
         if (feedCluster.getLocations() != null) {
