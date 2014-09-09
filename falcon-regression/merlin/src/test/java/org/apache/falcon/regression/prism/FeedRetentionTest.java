@@ -70,12 +70,14 @@ public class FeedRetentionTest extends BaseTestClass {
     public void setUp(Method method) throws Exception {
         logger.info("test name: " + method.getName());
         //getImpressionRC bundle
-        bundles[0] = BundleUtil.readImpressionRCBundle();
+        bundles[0] =
+            BundleUtil.readImpressionRCBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster1);
         bundles[0].setProcessWorkflow(impressionrcWorkflowDir);
 
-        bundles[1] = BundleUtil.readImpressionRCBundle();
+        bundles[1] =
+            BundleUtil.readImpressionRCBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[1].generateUniqueBundle();
         bundles[1] = new Bundle(bundles[1], cluster2);
         bundles[1].setProcessWorkflow(impressionrcWorkflowDir);

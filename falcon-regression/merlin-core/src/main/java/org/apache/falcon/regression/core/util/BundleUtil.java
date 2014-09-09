@@ -68,16 +68,16 @@ public final class BundleUtil {
         return generateBundleFromTemplate("hcat_2", appPath, testName);
     }
 
-    public static Bundle readLocalDCBundle() throws IOException {
-        return readBundleFromFolder("LocalDC_feedReplicaltion_BillingRC");
+    public static Bundle readLocalDCBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("LocalDC_feedReplicaltion_BillingRC", appPath, testName);
     }
 
-    public static Bundle readImpressionRCBundle() throws IOException {
-        return readBundleFromFolder("impressionRC");
+    public static Bundle readImpressionRCBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("impressionRC", appPath, testName);
     }
 
-    public static Bundle readUpdateBundle() throws IOException {
-        return readBundleFromFolder("updateBundle");
+    public static Bundle readUpdateBundle(String appPath, String testName) throws IOException {
+        return generateBundleFromTemplate("updateBundle", appPath, testName);
     }
 
     /** Generate a bundle from the template stored in a directory

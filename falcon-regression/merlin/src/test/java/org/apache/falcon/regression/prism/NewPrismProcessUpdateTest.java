@@ -88,7 +88,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void testSetup(Method method) throws Exception {
         LOGGER.info("test name: " + method.getName());
-        Bundle b = BundleUtil.readUpdateBundle();
+        Bundle b = BundleUtil.readUpdateBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(b, cluster1);
         bundles[0].generateUniqueBundle();
         bundles[1] = new Bundle(b, cluster2);

@@ -81,7 +81,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     @BeforeMethod(alwaysRun = true)
     public void setup(Method method) throws IOException {
         logger.info("test name: " + method.getName());
-        Bundle bundle = BundleUtil.readLocalDCBundle();
+        Bundle bundle =
+            BundleUtil.readLocalDCBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundle, cluster_1);
         bundles[1] = new Bundle(bundle, cluster_2);
         bundles[2] = new Bundle(bundle, cluster_3);
