@@ -22,6 +22,7 @@ import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Inputs;
@@ -66,7 +67,9 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
         addGroups(feed.getGroups(), feedVertex);
 
         for (org.apache.falcon.entity.v0.feed.Cluster feedCluster : feed.getClusters().getClusters()) {
-            addRelationToCluster(feedVertex, feedCluster.getName(), RelationshipLabel.FEED_CLUSTER_EDGE);
+            if (ClusterType.TARGET != feedCluster.getType()) {
+                addRelationToCluster(feedVertex, feedCluster.getName(), RelationshipLabel.FEED_CLUSTER_EDGE);
+            }
         }
     }
 
@@ -264,14 +267,18 @@ public class EntityRelationshipGraphBuilder extends RelationshipGraphBuilder {
 
         // remove edges to old clusters
         for (org.apache.falcon.entity.v0.feed.Cluster oldCuster : oldClusters) {
-            removeEdge(feedEntityVertex, oldCuster.getName(),
-                    RelationshipLabel.FEED_CLUSTER_EDGE.getName());
+            if (ClusterType.TARGET != oldCuster.getType()) {
+                removeEdge(feedEntityVertex, oldCuster.getName(),
+                        RelationshipLabel.FEED_CLUSTER_EDGE.getName());
+            }
         }
 
         // add edges to new clusters
         for (org.apache.falcon.entity.v0.feed.Cluster newCluster : newClusters) {
-            addRelationToCluster(feedEntityVertex, newCluster.getName(),
-                    RelationshipLabel.FEED_CLUSTER_EDGE);
+            if (ClusterType.TARGET != newCluster.getType()) {
+                addRelationToCluster(feedEntityVertex, newCluster.getName(),
+                        RelationshipLabel.FEED_CLUSTER_EDGE);
+            }
         }
     }
 

@@ -77,6 +77,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-695 Lineage: "stored-in" edge is added between feed entity and
+   target cluster (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-669 Missing optional workflow execution listeners configuration
    results in NPE (Raghav Kumar Gautam via Venkatesh Seetharam)
 
