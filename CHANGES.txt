@@ -77,6 +77,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-702 JailedFileSystem does not work for relative paths
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-677 Feed data and stats path defaults to /tmp/. (Suhas Vasu via Shwetha GS)
 
    FALCON-590 Update to ACLs added to process is not handled

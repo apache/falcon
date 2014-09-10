@@ -69,6 +69,9 @@ public class JailedFileSystem extends FileSystem {
     }
 
     private Path toLocalPath(Path f) {
+        if (!f.isAbsolute()) {
+            f = new Path(getWorkingDirectory(), f);
+        }
         return new Path(basePath + f.toUri().getPath());
     }
 
