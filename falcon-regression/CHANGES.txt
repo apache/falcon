@@ -9,6 +9,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-696 Pull oozie logs at the end of tests (Raghav Kumar Gautam)
+
    FALCON-675 Request URLS moved from parameters into methods in falcon-regression (Ruslan
    Ostafiychuk)
 

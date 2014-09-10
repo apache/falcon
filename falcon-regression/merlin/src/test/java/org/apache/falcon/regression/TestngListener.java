@@ -20,12 +20,17 @@ package org.apache.falcon.regression;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.regression.core.helpers.ColoHelper;
+import org.apache.falcon.regression.core.util.Config;
+import org.apache.falcon.regression.core.util.LogUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseUITestClass;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.testng.IExecutionListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
@@ -34,21 +39,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class TestngListener implements ITestListener {
+public class TestngListener implements ITestListener, IExecutionListener {
     private static final Logger logger = Logger.getLogger(TestngListener.class);
+    private final String hr = StringUtils.repeat("-", 100);
 
     @Override
     public void onTestStart(ITestResult result) {
-        logLine();
+        logger.info(hr);
         logger.info(
             String.format("Testing going to start for: %s.%s(%s)", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters())));
         NDC.push(result.getName());
-    }
-
-    private void logLine() {
-        logger.info(
-            "-----------------------------------------------------------------------------------------------");
     }
 
     private void logEndOfTest(ITestResult result, String outcome) {
@@ -56,7 +57,7 @@ public class TestngListener implements ITestListener {
             String.format("Testing going to end for: %s.%s(%s) %s", result.getTestClass().getName(),
                 result.getName(), Arrays.toString(result.getParameters()), outcome));
         NDC.pop();
-        logLine();
+        logger.info(hr);
     }
 
     @Override
@@ -80,7 +81,7 @@ public class TestngListener implements ITestListener {
         }
 
         logger.info(ExceptionUtils.getStackTrace(result.getThrowable()));
-        logLine();
+        logger.info(hr);
     }
 
     @Override
@@ -100,4 +101,24 @@ public class TestngListener implements ITestListener {
     @Override
     public void onFinish(ITestContext context) {
     }
+
+    @Override
+    public void onExecutionStart() {
+    }
+
+    @Override
+    public void onExecutionFinish() {
+        if (!Config.getBoolean("log.capture.oozie", false)) {
+            logger.info("oozie log capturing is disabled");
+            return;
+        }
+        final String logLocation = Config.getProperty("log.capture.location", "./");
+        final String[] serverNames = Config.getStringArray("servers");
+        for (final String serverName : serverNames) {
+            final ColoHelper coloHelper = new ColoHelper(serverName.trim());
+            LogUtil.writeOozieLogs(coloHelper, logLocation);
+        }
+    }
+
+
 }

@@ -52,4 +52,7 @@ public final class Config {
         return INSTANCE.confObj.getString(key, defaultValue);
     }
 
+    public static boolean getBoolean(String key, boolean defaultValue) {
+        return INSTANCE.confObj.getBoolean(key, defaultValue);
+    }
 }
