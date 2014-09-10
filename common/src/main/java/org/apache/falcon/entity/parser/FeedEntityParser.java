@@ -21,11 +21,7 @@ package org.apache.falcon.entity.parser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.catalog.CatalogServiceFactory;
-import org.apache.falcon.entity.CatalogStorage;
-import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.FeedHelper;
-import org.apache.falcon.entity.Storage;
+import org.apache.falcon.entity.*;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
@@ -35,6 +31,7 @@ import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -50,6 +47,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.List;
 
 /**
  * Parser that parses feed entity definition.
@@ -81,6 +79,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         validateFeedStorage(feed);
+        validateFeedPath(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
         validateACL(feed);
@@ -430,6 +429,29 @@ public class FeedEntityParser extends EntityParser<Feed> {
             } catch(FalconException e) {
                 throw new ValidationException(e);
             }
+        }
+    }
+
+    /**
+     * Validate if FileSystem based feed contains location type data.
+     *
+     * @param feed Feed entity
+     * @throws FalconException
+     */
+    private void validateFeedPath(Feed feed) throws FalconException {
+        if (FeedHelper.getStorageType(feed) == Storage.TYPE.TABLE) {
+            return;
+        }
+
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            List<Location> locations = FeedHelper.getLocations(cluster, feed);
+            Location dataLocation = FileSystemStorage.getLocation(locations, LocationType.DATA);
+
+            if (dataLocation == null) {
+                throw new ValidationException(feed.getName() + " is a FileSystem based feed "
+                        + "but it doesn't contain location type - data in cluster " + cluster.getName().toString());
+            }
+
         }
     }
 }

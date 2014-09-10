@@ -194,7 +194,7 @@ public final class FeedHelper {
         return getStorageType(feed, feedCluster);
     }
 
-    protected static List<Location> getLocations(Cluster cluster, Feed feed) {
+    public static List<Location> getLocations(Cluster cluster, Feed feed) {
         // check if locations are overridden in cluster
         final Locations clusterLocations = cluster.getLocations();
         if (clusterLocations != null

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.AccessControlList;
@@ -167,8 +168,12 @@ public class FileSystemStorage implements Storage {
 
     @Override
     public String getUriTemplate(LocationType locationType) {
+        return getUriTemplate(locationType, locations);
+    }
+
+    public String getUriTemplate(LocationType locationType, List<Location> locationList) {
         Location locationForType = null;
-        for (Location location : locations) {
+        for (Location location : locationList) {
             if (location.getType() == locationType) {
                 locationForType = location;
                 break;
@@ -176,7 +181,7 @@ public class FileSystemStorage implements Storage {
         }
 
         if (locationForType == null) {
-            return "/tmp";
+            return null;
         }
 
         // normalize the path so trailing and double '/' are removed
@@ -216,27 +221,24 @@ public class FileSystemStorage implements Storage {
         final List<Location> fsStorageLocations = fsStorage.getLocations();
 
         return getLocations().size() == fsStorageLocations.size()
-               && getLocation(getLocations(), LocationType.DATA).getPath().equals(
-                   getLocation(fsStorageLocations, LocationType.DATA).getPath())
-               && getLocation(getLocations(), LocationType.META).getPath().equals(
-                   getLocation(fsStorageLocations, LocationType.META).getPath())
-               && getLocation(getLocations(), LocationType.STATS).getPath().equals(
-                   getLocation(fsStorageLocations, LocationType.STATS).getPath())
-               && getLocation(getLocations(), LocationType.TMP).getPath().equals(
-                   getLocation(fsStorageLocations, LocationType.TMP).getPath());
+                && StringUtils.equals(getUriTemplate(LocationType.DATA, getLocations()),
+                    getUriTemplate(LocationType.DATA, fsStorageLocations))
+                && StringUtils.equals(getUriTemplate(LocationType.STATS, getLocations()),
+                    getUriTemplate(LocationType.STATS, fsStorageLocations))
+                && StringUtils.equals(getUriTemplate(LocationType.META, getLocations()),
+                    getUriTemplate(LocationType.META, fsStorageLocations))
+                && StringUtils.equals(getUriTemplate(LocationType.TMP, getLocations()),
+                    getUriTemplate(LocationType.TMP, fsStorageLocations));
     }
 
-    private static Location getLocation(List<Location> locations, LocationType type) {
+    public static Location getLocation(List<Location> locations, LocationType type) {
         for (Location loc : locations) {
             if (loc.getType() == type) {
                 return loc;
             }
         }
 
-        Location loc = new Location();
-        loc.setPath("/tmp");
-        loc.setType(type);
-        return loc;
+        return null;
     }
 
     @Override

@@ -162,8 +162,6 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
                 coord.getOutputEvents().getDataOut().get(1).getName());
         assertEquals(process.getOutputs().getOutputs().get(0).getName() + "meta",
                 coord.getOutputEvents().getDataOut().get(2).getName());
-        assertEquals(process.getOutputs().getOutputs().get(0).getName() + "tmp",
-                coord.getOutputEvents().getDataOut().get(3).getName());
 
         assertEquals(process.getOutputs().getOutputs().get(0).getName(),
                 coord.getOutputEvents().getDataOut().get(0).getName());
@@ -172,7 +170,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         assertEquals(process.getOutputs().getOutputs().get(0).getName(),
                 coord.getOutputEvents().getDataOut().get(0).getDataset());
 
-        assertEquals(6, coord.getDatasets().getDatasetOrAsyncDataset().size());
+        assertEquals(5, coord.getDatasets().getDatasetOrAsyncDataset().size());
 
         ConfigurationStore store = ConfigurationStore.get();
         Feed feed = store.get(EntityType.FEED, process.getInputs().getInputs().get(0).getFeed());

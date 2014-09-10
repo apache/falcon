@@ -175,6 +175,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
                 }
 
                 SYNCDATASET syncdataset = createDataSet(feed, cluster, storage, input.getName(), LocationType.DATA);
+                if (syncdataset == null) {
+                    return;
+                }
                 coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
                 DATAIN datain = createDataIn(input);
@@ -218,6 +221,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         syncdataset.setFrequency("${coord:" + feed.getFrequency().toString() + "}");
 
         String uriTemplate = storage.getUriTemplate(locationType);
+        if (uriTemplate == null) {
+            return null;
+        }
         if (storage.getType() == Storage.TYPE.TABLE) {
             uriTemplate = uriTemplate.replace("thrift", "hcat"); // Oozie requires this!!!
         }
@@ -274,6 +280,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
             Storage storage = FeedHelper.createStorage(cluster, feed);
 
             SYNCDATASET syncdataset = createDataSet(feed, cluster, storage, output.getName(), LocationType.DATA);
+            if (syncdataset == null) {
+                return;
+            }
             coord.getDatasets().getDatasetOrAsyncDataset().add(syncdataset);
 
             DATAOUT dataout = createDataOut(output);
@@ -320,6 +329,9 @@ public class ProcessExecutionCoordinatorBuilder extends OozieCoordinatorBuilder<
         String type = locType.name().toLowerCase();
 
         SYNCDATASET dataset = createDataSet(feed, cluster, storage, name + type, locType);
+        if (dataset == null) {
+            return;
+        }
         coord.getDatasets().getDatasetOrAsyncDataset().add(dataset);
 
         DATAOUT dataout = new DATAOUT();

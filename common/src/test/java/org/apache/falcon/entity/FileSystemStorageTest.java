@@ -70,7 +70,7 @@ public class FileSystemStorageTest {
                 + "/stats/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}";
 
         FileSystemStorage storage = new FileSystemStorage(feedBasePath);
-        Assert.assertEquals(storage.getUriTemplate(), feedBasePath + "#TMP=/tmp");
+        Assert.assertEquals(storage.getUriTemplate(), feedBasePath);
 
         Assert.assertEquals("hdfs://localhost:8020", storage.getStorageUrl());
         Assert.assertEquals("hdfs://localhost:8020/data/YYYY/feed1/mmHH/dd/MM/${YEAR}-${MONTH}-${DAY}/more/${YEAR}",
