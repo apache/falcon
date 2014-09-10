@@ -71,8 +71,8 @@ public class FeedProducerTest {
 
         args = new String[] {
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), TOPIC_NAME,
-            "-" + WorkflowExecutionArgs.FEED_NAMES.getName(), "click-logs",
-            "-" + WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "click-logs",
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
             "/click-logs/10/05/05/00/20",
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
             "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
@@ -179,7 +179,7 @@ public class FeedProducerTest {
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/20");
 
         for (m = null; m == null;) {
@@ -187,7 +187,7 @@ public class FeedProducerTest {
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/21");
 
         for (m = null; m == null;) {
@@ -195,7 +195,7 @@ public class FeedProducerTest {
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/22");
 
         for (m = null; m == null;) {
@@ -203,7 +203,7 @@ public class FeedProducerTest {
         }
         System.out.println("Consumed: " + m.toString());
         assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName()),
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
                 "/falcon/feed/agg-logs/path1/2010/10/10/23");
 
         connection.close();

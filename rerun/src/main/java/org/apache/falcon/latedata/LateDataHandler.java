@@ -26,6 +26,7 @@ import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -72,12 +73,12 @@ public class LateDataHandler extends Configured implements Tool {
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("falconInputFeeds", true,
+        opt = new Option(WorkflowExecutionArgs.INPUT_NAMES.getName(), true,
                 "Input feed names, further separated by #");
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("falconInputFeedStorageTypes", true,
+        opt = new Option(WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName(), true,
                 "Feed storage types corresponding to Input feed names, separated by #");
         opt.setRequired(true);
         options.addOption(opt);
@@ -94,9 +95,10 @@ public class LateDataHandler extends Configured implements Tool {
             return 0;
         }
 
-        String[] inputFeeds = getOptionValue(command, "falconInputFeeds").split("#");
+        String[] inputFeeds = getOptionValue(command, WorkflowExecutionArgs.INPUT_NAMES.getName()).split("#");
         String[] pathGroups = pathStr.split("#");
-        String[] inputFeedStorageTypes = getOptionValue(command, "falconInputFeedStorageTypes").split("#");
+        String[] inputFeedStorageTypes =
+            getOptionValue(command, WorkflowExecutionArgs.INPUT_STORAGE_TYPES.getName()).split("#");
 
         Map<String, Long> metrics = computeMetrics(inputFeeds, pathGroups, inputFeedStorageTypes);
 

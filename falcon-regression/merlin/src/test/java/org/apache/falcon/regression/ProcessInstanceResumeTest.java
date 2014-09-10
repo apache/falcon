@@ -30,7 +30,6 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -40,6 +39,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -52,14 +52,14 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private String baseTestHDFSDir = baseHDFSDir + "/ProcessInstanceResumeTest";
-    private String feedInputPath = baseTestHDFSDir +
-        "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String feedOutputPath =
-        baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceResumeTest.class);
     private static final double SCHEDULED = 15;
     private static final double AFFECTED = 10;
+    private String processName;
+    private String wholeRange = "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z";
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
@@ -70,11 +70,9 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         String startDate = "2010-01-01T23:20Z";
         String endDate = "2010-01-02T01:40Z";
         b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
-
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            b.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -86,6 +84,11 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         bundles[0].setInputFeedDataPath(feedInputPath);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
+        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setProcessConcurrency(6);
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
+        processName = Util.readEntityName(bundles[0].getProcessData());
     }
 
     @AfterMethod(alwaysRun = true)
@@ -102,25 +105,17 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeOnlyEnd() throws Exception {
-        bundles[0].setProcessConcurrency(6);
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 2, 4, 0, 0);
-
-        result = prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?end=2010-01-02T01:15Z");
-        InstanceUtil.validateSuccessWithStatusCode(result, ResponseKeys.UNPARSEABLE_DATE);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            wholeRange);
+        InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
+        r = prism.getProcessHelper().getProcessInstanceResume(processName, "?end=2010-01-02T01:15Z");
+        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
     }
 
     /**
@@ -131,28 +126,18 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeResumeSome() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+            "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 2, 4, 0, 0);
-
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:16Z");
-        result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 5, 1, 0, 0);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            wholeRange);
+        InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
+        prism.getProcessHelper().getProcessInstanceResume(processName,
+            "?start=2010-01-02T01:05Z&end=2010-01-02T01:16Z");
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName, wholeRange);
+        InstanceUtil.validateResponse(r, 6, 5, 1, 0, 0);
     }
 
     /**
@@ -163,28 +148,17 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeResumeMany() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
+        String withinRange = "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z";
+        prism.getProcessHelper().getProcessInstanceSuspend(processName, withinRange);
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 2, 4, 0, 0);
-
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
-        result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 6, 0, 0, 0);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            wholeRange);
+        InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
+        prism.getProcessHelper().getProcessInstanceResume(processName, withinRange);
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName, wholeRange);
+        InstanceUtil.validateResponse(r, 6, 6, 0, 0, 0);
     }
 
     /**
@@ -195,22 +169,15 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeSingle() throws Exception {
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z");
+        String start = "?start=2010-01-02T01:00Z";
+        prism.getProcessHelper().getProcessInstanceSuspend(processName, start);
         TimeUtil.sleepSeconds(AFFECTED);
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z");
+        prism.getProcessHelper().getProcessInstanceResume(processName, start);
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult r = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, start);
         InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.RUNNING);
     }
 
@@ -222,15 +189,9 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeNonExistent() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstancesResult r =
-            prism.getProcessHelper()
-                .getProcessInstanceResume("invalidName",
-                    "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume("invalidName",
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
         InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.PROCESS_NOT_FOUND);
     }
 
@@ -242,13 +203,8 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeNoParams() throws Exception {
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
-        InstancesResult r =
-                prism.getProcessHelper().getProcessInstanceResume(
-                        Util.readEntityName(bundles[0].getProcessData()), null);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
         InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
     }
 
@@ -260,15 +216,10 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeDeleted() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
-        prism.getProcessHelper().delete(URLS.DELETE_URL, bundles[0].getProcessData());
-        InstancesResult r = prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
+        prism.getProcessHelper().delete(bundles[0].getProcessData());
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName,
+            "?start=2010-01-02T01:05Z");
         InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.PROCESS_NOT_FOUND);
     }
 
@@ -279,23 +230,14 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeNonSuspended() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
-        InstanceUtil.validateResponse(result, 1, 1, 0, 0, 0);
-        result = prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z");
-        InstanceUtil.validateResponse(result, 1, 1, 0, 0, 0);
+        String start = "?start=2010-01-02T01:05Z";
+        prism.getProcessHelper().getProcessInstanceResume(processName, start);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, start);
+        InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
+        r = prism.getProcessHelper().getProcessInstanceResume(processName, start);
+        InstanceUtil.validateResponse(r, 1, 1, 0, 0, 0);
     }
 
     /**
@@ -307,28 +249,18 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeLastInstance() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:25Z");
+        String last = "?start=2010-01-02T01:25Z";
+        prism.getProcessHelper().getProcessInstanceSuspend(processName, last);
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 5, 1, 0, 0);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            wholeRange);
+        InstanceUtil.validateResponse(r, 6, 5, 1, 0, 0);
         TimeUtil.sleepSeconds(10);
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:25Z");
-        result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 6, 0, 0, 0);
+        prism.getProcessHelper().getProcessInstanceResume(processName, last);
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName, wholeRange);
+        InstanceUtil.validateResponse(r, 6, 6, 0, 0, 0);
     }
 
     /**
@@ -339,38 +271,21 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceResumeWithinRange() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:26Z");
-        bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
-        bundles[0].setProcessConcurrency(6);
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(SCHEDULED);
-        prism.getProcessHelper()
-            .getProcessInstanceSuspend(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
+        String withinRange = "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z";
+        prism.getProcessHelper().getProcessInstanceSuspend(processName, withinRange);
         TimeUtil.sleepSeconds(AFFECTED);
-        InstancesResult result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 2, 4, 0, 0);
-        prism.getProcessHelper()
-            .getProcessInstanceResume(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:05Z&end=2010-01-02T01:21Z");
-        result = prism.getProcessHelper()
-            .getProcessInstanceStatus(Util.readEntityName(bundles[0].getProcessData()),
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z");
-        InstanceUtil.validateResponse(result, 6, 6, 0, 0, 0);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
+            wholeRange);
+        InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
+        prism.getProcessHelper().getProcessInstanceResume(processName, withinRange);
+        r = prism.getProcessHelper().getProcessInstanceStatus(processName, wholeRange);
+        InstanceUtil.validateResponse(r, 6, 6, 0, 0, 0);
     }
 
-
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        LOGGER.info("in @AfterClass");
-
-        Bundle b = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
-        b = new Bundle(b, cluster);
-        b.setInputFeedDataPath(feedInputPath);
-        String prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

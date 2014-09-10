@@ -33,12 +33,14 @@ import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /*
@@ -49,10 +51,8 @@ public class EntityDryRunTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private String baseTestHDFSDir = baseHDFSDir + "/EntityDryRunTest";
-    private String feedInputPath = baseTestHDFSDir +
-            "/input/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    private String feedOutputPath =
-            baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
+    private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private static final Logger LOGGER = Logger.getLogger(EntityDryRunTest.class);
 
@@ -83,68 +83,71 @@ public class EntityDryRunTest extends BaseTestClass {
     }
 
     /**
-     *
      * tries to submit process with invalid el exp
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleProcess() throws Exception {
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitProcess(true);
-        ServiceResponse response = prism.getProcessHelper()
-                .schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+        ServiceResponse response = prism.getProcessHelper().schedule(bundles[0].getProcessData());
         validate(response);
     }
 
     /**
-     *
      * tries to update process with invalid EL exp
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateProcess() throws Exception {
-        bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-10), TimeUtil.getTimeWrtSystemTime(100));
+        bundles[0].setProcessValidity(TimeUtil.getTimeWrtSystemTime(-10),
+            TimeUtil.getTimeWrtSystemTime(100));
         bundles[0].submitAndScheduleProcess();
         bundles[0].setProcessProperty("EntityDryRunTestProp", "${coord:someEL(1)");
         ServiceResponse response = prism.getProcessHelper().update(bundles[0].getProcessData(),
-                bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
+            bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
         validate(response);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()), 1,
-                "more than one bundle found after failed update request");
+        Assert.assertEquals(
+            OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()),
+            1, "more than one bundle found after failed update request");
     }
 
     /**
      * tries to submit feed with invalied EL exp
-     *
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureScheduleFeed() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         bundles[0].submitClusters(prism);
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         validate(response);
     }
 
     /**
-     *
      * tries to update feed with invalid el exp
      */
     @Test(groups = {"singleCluster"})
     public void testDryRunFailureUpdateFeed() throws Exception {
         bundles[0].submitClusters(prism);
         String feed = bundles[0].getInputFeedFromBundle();
-        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(Util.URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         AssertUtil.assertSucceeded(response);
         feed = Util.setFeedProperty(feed, "EntityDryRunTestProp", "${coord:someEL(1)");
         response = prism.getFeedHelper().update(feed, feed);
         validate(response);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster, EntityType.FEED, Util.readEntityName(feed)), 1,
-                "more than one bundle found after failed update request");
+        Assert.assertEquals(
+            OozieUtil.getNumberOfBundle(cluster, EntityType.FEED, Util.readEntityName(feed)), 1,
+            "more than one bundle found after failed update request");
     }
 
     private void validate(ServiceResponse response) throws JAXBException {
         AssertUtil.assertFailed(response);
-        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: AUTHENTICATION : E1004 :" +
-                        " E1004: Expression language evaluation error, Unable to evaluate :${coord:someEL(1)"),
-                "Correct response was not present in process / feed schedule");
+        Assert.assertTrue(response.getMessage().contains("org.apache.falcon.FalconException: " +
+            "AUTHENTICATION : E1004 : Expression language evaluation error, Unable to evaluate " +
+            ":${coord:someEL(1)"), "Correct response was not present in process / feed schedule");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

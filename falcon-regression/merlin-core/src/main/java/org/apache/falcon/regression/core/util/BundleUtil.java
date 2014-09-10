@@ -72,10 +72,6 @@ public final class BundleUtil {
         return generateBundleFromTemplate("LocalDC_feedReplicaltion_BillingRC", appPath, testName);
     }
 
-    public static Bundle readImpressionRCBundle(String appPath, String testName) throws IOException {
-        return generateBundleFromTemplate("impressionRC", appPath, testName);
-    }
-
     public static Bundle readUpdateBundle(String appPath, String testName) throws IOException {
         return generateBundleFromTemplate("updateBundle", appPath, testName);
     }
@@ -93,7 +89,7 @@ public final class BundleUtil {
         bundle.updateClusterLocations(HadoopUtil.stitchHdfsPath(appPath, testName));
         return bundle;
     }
-
+    
     private static Bundle readBundleFromFolder(final String folderPath) throws IOException {
         LOGGER.info("Loading xmls from directory: " + folderPath);
         File directory = null;
@@ -136,8 +132,7 @@ public final class BundleUtil {
     public static void submitAllClusters(ColoHelper prismHelper, Bundle... b)
         throws IOException, URISyntaxException, AuthenticationException {
         for (Bundle aB : b) {
-            ServiceResponse r = prismHelper.getClusterHelper()
-                .submitEntity(Util.URLS.SUBMIT_URL, aB.getClusters().get(0));
+            ServiceResponse r = prismHelper.getClusterHelper().submitEntity(aB.getClusters().get(0));
             Assert.assertTrue(r.getMessage().contains("SUCCEEDED"));
 
         }

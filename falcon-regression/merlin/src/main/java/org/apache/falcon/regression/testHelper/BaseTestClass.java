@@ -55,6 +55,7 @@ public class BaseTestClass {
         "/tmp/falcon-regression-app");
     public static final String PRISM_PREFIX = "prism";
     protected Bundle[] bundles;
+    public static final String MINUTE_DATE_PATTERN = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
 
 
     public BaseTestClass() {
@@ -111,6 +112,14 @@ public class BaseTestClass {
                 if (bundle != null) {
                     bundle.deleteBundle(prism);
                 }
+            }
+        }
+    }
+
+    public void cleanTestDirs() throws IOException {
+        if (MerlinConstants.CLEAN_TEST_DIR) {
+            for (FileSystem fs : serverFS) {
+                HadoopUtil.deleteDirIfExists(baseHDFSDir, fs);
             }
         }
     }

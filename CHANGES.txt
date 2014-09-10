@@ -27,7 +27,25 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-654 Exclude junit dependency in pom (Ruslan Ostafiychuk)
+
+   FALCON-640 Add ability to specify sort order for orderBy param in RestAPI
+   (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-594 Process lineage information for Retention policies
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-325 Process lineage information for Replication policies
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-474 Add Bulk APIs to drive the dashboard needs (Balu Vellanki via
+   Venkatesh Seetharam)
+
+   FALCON-166 Instance status start and end dates are rigid and inconvenient
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-612 Create CHANGES.txt for falcon-regression(Arpit Gupta via SamarthG)
+
    FALCON-470 Add support for pagination, filter by, etc. to Entity and
    Instance List API (Balu Vellanki via Venkatesh Seetharam)
 
@@ -59,6 +77,30 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-669 Missing optional workflow execution listeners configuration
+   results in NPE (Raghav Kumar Gautam via Venkatesh Seetharam)
+
+   FALCON-644 Falcon message producer masks errors in Post processing
+   (Venkatesh Seetharam)
+
+   FALCON-338 - late data recording is enabled by default for all feeds
+   irrespective of late arrival config (Ajay Yadav via Suhas Vasu)
+
+   FALCON-652 EntityUtils tests are failing (Ajay Yadav via Venkatesh Seetharam)
+
+   FALCON-650 Instance list APIs occassionally fail when orderBy set to
+   starttime or endtime (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-649 Remove unnecessary validation for Instance start time in
+   FalconCLI (Balu Vellanki via Venkatesh Seetharam)
+
+   FALCON-579 Lineage breaks if feed.xml doesn't have the date pattern in
+   feed path location (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-642 OozieProcessWorkflowBuilderTest test failures. (Shwetha GS)
+
+   FALCON-630 late data rerun for process broken in trunk. (Shwetha GS)
+
    FALCON-611 Post process arg status is in 'FAILED' state always
    (Shwetha GS via Suhas Vasu)
 

@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -57,24 +58,20 @@ public class InstanceParamTest extends BaseTestClass {
      */
 
     private String baseTestHDFSDir = baseHDFSDir + "/InstanceParamTest";
-    private String feedInputPath = baseTestHDFSDir
-            +
-        "/testInputData/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    private String feedInputPath = baseTestHDFSDir + "/testInputData" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     private String startTime;
     private String endTime;
-
     private ColoHelper cluster1 = servers.get(0);
-    private OozieClient oC1 = serverOC.get(0);
+    private OozieClient cluster1OC = serverOC.get(0);
     private Bundle processBundle;
     private static final Logger LOGGER = Logger.getLogger(InstanceParamTest.class);
-
+    private String processName;
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-        startTime = TimeUtil.get20roundedTime(TimeUtil
-            .getTimeWrtSystemTime(-20));
+        startTime = TimeUtil.get20roundedTime(TimeUtil.getTimeWrtSystemTime(-20));
         endTime = TimeUtil.getTimeWrtSystemTime(60);
     }
 
@@ -91,7 +88,12 @@ public class InstanceParamTest extends BaseTestClass {
             bundles[i].generateUniqueBundle();
             bundles[i].setProcessWorkflow(aggregateWorkflowDir);
         }
+        processName = processBundle.getProcessName();
     }
+
+    /**
+     * Schedule process. Get params of waiting instance.
+     */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceWaiting()
         throws URISyntaxException, JAXBException, AuthenticationException, IOException,
@@ -103,12 +105,14 @@ public class InstanceParamTest extends BaseTestClass {
             ClusterType.SOURCE, null, null);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
-        InstancesResult r = prism.getProcessHelper()
-            .getInstanceParams(Util.readEntityName(processBundle.getProcessData()),
-                "?start="+startTime);
+        InstancesResult r = prism.getProcessHelper().getInstanceParams(processName,
+            "?start=" + startTime);
         r.getMessage();
     }
 
+    /**
+     * Schedule process. Wait till instance succeeded. Get its params.
+     */
     @Test(timeOut = 1200000, enabled = true)
     public void getParamsValidRequestInstanceSucceeded()
         throws URISyntaxException, JAXBException, AuthenticationException, IOException,
@@ -120,16 +124,18 @@ public class InstanceParamTest extends BaseTestClass {
             ClusterType.SOURCE, null, null);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
-        OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
-            processBundle.getProcessName(), 0);
-        InstanceUtil.waitTillInstanceReachState(oC1, processBundle.getProcessName(), 1,
+        OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, processName, 1,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS, 10);
         InstancesResult r = prism.getProcessHelper()
-            .getInstanceParams(Util.readEntityName(processBundle.getProcessData()),
-                "?start="+startTime);
+            .getInstanceParams(processName, "?start=" + startTime);
         LOGGER.info(r.getMessage());
     }
 
+    /**
+     *  Schedule process. Wait till instance got killed. Get its params.
+     *  TODO: change according to test case
+     */
     @Test(timeOut = 1200000, enabled = false)
     public void getParamsValidRequestInstanceKilled()
         throws URISyntaxException, JAXBException, AuthenticationException, IOException,
@@ -141,15 +147,12 @@ public class InstanceParamTest extends BaseTestClass {
             ClusterType.SOURCE, null, null);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, processBundle.getProcessData(), 0);
-        OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS,
-            processBundle.getProcessName(), 0);
-        InstanceUtil.waitTillInstanceReachState(oC1, processBundle.getProcessName(), 0,
+        OozieUtil.createMissingDependencies(cluster1, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(cluster1OC, processName, 0,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper()
-            .getInstanceParams(Util.readEntityName(processBundle.getProcessData()),
-                "?start="+startTime);
+            .getInstanceParams(processName, "?start=" + startTime);
         r.getMessage();
-
     }
 
     @AfterMethod(alwaysRun = true)
@@ -159,5 +162,10 @@ public class InstanceParamTest extends BaseTestClass {
         for (FileSystem fs : serverFS) {
             HadoopUtil.deleteDirIfExists(Util.getPathPrefix(feedInputPath), fs);
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

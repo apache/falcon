@@ -51,7 +51,7 @@ public class EntityList {
      * Filter by these Fields is supported by RestAPI.
      */
     public static enum EntityFilterByFields {
-        TYPE, NAME, STATUS, PIPELINES
+        TYPE, NAME, STATUS, PIPELINES, CLUSTER
     }
 
     /**

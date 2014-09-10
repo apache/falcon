@@ -62,9 +62,8 @@ public class LineageGraphTest extends BaseUITestClass {
     private String baseTestDir = baseHDFSDir + "/LineageGraphTest";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(LineageGraphTest.class);
-    String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    String feedInputPath = baseTestDir + "/input" + datePattern;
-    String feedOutputPath = baseTestDir + "/output" + datePattern;
+    String feedInputPath = baseTestDir + "/input" + MINUTE_DATE_PATTERN;;
+    String feedOutputPath = baseTestDir + "/output" + MINUTE_DATE_PATTERN;;
     private FileSystem clusterFS = serverFS.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String processName = null;
@@ -114,7 +113,7 @@ public class LineageGraphTest extends BaseUITestClass {
         inputFeedName = bundles[0].getInputFeedNameFromBundle();
         outputFeedName = bundles[0].getOutputFeedNameFromBundle();
         /**schedule process, wait for instances to succeed*/
-        prism.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().schedule(bundles[0].getProcessData());
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         /**get process instances*/
@@ -128,6 +127,7 @@ public class LineageGraphTest extends BaseUITestClass {
     public void tearDown() throws IOException {
         closeBrowser();
         removeBundles();
+        cleanTestDirs();
     }
 
     /**

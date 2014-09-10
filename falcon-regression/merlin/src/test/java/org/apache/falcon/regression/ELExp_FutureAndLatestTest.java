@@ -38,6 +38,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -50,7 +51,6 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
     ColoHelper cluster = servers.get(0);
     FileSystem clusterFS = serverFS.get(0);
     OozieClient clusterOC = serverOC.get(0);
-    private String prefix;
     private String baseTestDir = baseHDFSDir + "/ELExp_FutureAndLatest";
     private String testInputDir = baseTestDir + "/input";
     private String testOutputDir = baseTestDir + "/output";
@@ -69,14 +69,13 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
         String startDate = TimeUtil.getTimeWrtSystemTime(-20);
         String endDate = TimeUtil.getTimeWrtSystemTime(70);
 
-        b.setInputFeedDataPath(testInputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        b.setInputFeedDataPath(testInputDir + MINUTE_DATE_PATTERN);
         b.setProcessWorkflow(aggregateWorkflowDir);
-        prefix = b.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
 
         List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 1);
 
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
+        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
+            b.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -85,10 +84,8 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0] = new Bundle(bundles[0], cluster);
         bundles[0].generateUniqueBundle();
-        bundles[0].setInputFeedDataPath(
-            testInputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
-        bundles[0].setOutputFeedLocationData(
-            testOutputDir + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}");
+        bundles[0].setInputFeedDataPath(testInputDir + MINUTE_DATE_PATTERN);
+        bundles[0].setOutputFeedLocationData(testOutputDir + MINUTE_DATE_PATTERN);
         bundles[0].setInputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setInputFeedValidity("2010-04-01T00:00Z", "2015-04-01T00:00Z");
         String processStart = TimeUtil.getTimeWrtSystemTime(-3);
@@ -121,8 +118,7 @@ public class ELExp_FutureAndLatestTest extends BaseTestClass {
     }
 
     @AfterClass(alwaysRun = true)
-    public void deleteData() throws Exception {
-        logger.info("in @AfterClass");
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

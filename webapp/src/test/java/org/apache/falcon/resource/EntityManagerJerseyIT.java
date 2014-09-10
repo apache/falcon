@@ -749,7 +749,7 @@ public class EntityManagerJerseyIT {
                 .path("api/entities/list/process/")
                 .queryParam("filterBy", "TYPE:PROCESS,STATUS:RUNNING")
                 .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
-                .queryParam("orderBy", "name").queryParam("offset", "2")
+                .queryParam("orderBy", "name").queryParam("sortOrder", "desc").queryParam("offset", "2")
                 .queryParam("numResults", "2").queryParam("fields", "status,tags")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
@@ -762,7 +762,8 @@ public class EntityManagerJerseyIT {
 
         response = context.service
                 .path("api/entities/list/process/")
-                .queryParam("orderBy", "name").queryParam("offset", "50").queryParam("numResults", "2")
+                .queryParam("orderBy", "name").queryParam("sortOrder", "asc")
+                .queryParam("offset", "50").queryParam("numResults", "2")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
                 .accept(MediaType.TEXT_XML)
@@ -803,6 +804,19 @@ public class EntityManagerJerseyIT {
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNotNull(entityElement.status); // status is null
         }
+
+        response = context.service
+                .path("api/entities/summary/process/" + overlay.get("cluster"))
+                .queryParam("fields", "status,pipelines")
+                .queryParam("numInstances", "1")
+                .queryParam("orderBy", "name")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        EntitySummaryResult summaryResult = response.getEntity(EntitySummaryResult.class);
+        Assert.assertNotNull(summaryResult);
     }
 
     public Date getEndTime() {

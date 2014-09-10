@@ -29,18 +29,19 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.WorkflowJob;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -54,8 +55,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
     FileSystem cluster2FS = serverFS.get(1);
     FileSystem cluster3FS = serverFS.get(2);
     private String baseTestDir = baseHDFSDir + "/PrismFeedLateReplicationTest";
-    private String inputPath =
-        baseTestDir + "/input-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}/";
+    private String inputPath = baseTestDir + "/input-data" + MINUTE_DATE_PATTERN;
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(PrismFeedLateReplicationTest.class);
 
@@ -126,7 +126,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         String bundleId =
@@ -199,7 +199,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
 
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         String postFix = "/US/" + cluster2.getClusterHelper().getColoName();
@@ -392,7 +392,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         //submit and schedule feed
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         //wait till 1st instance of replication coord is SUCCEEDED
@@ -594,7 +594,7 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
         //submit and schedule feed
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
-        prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
 
         //wait till 1st instance of replication coord is SUCCEEDED
@@ -669,5 +669,10 @@ public class PrismFeedLateReplicationTest extends BaseTestClass {
                 && InstanceUtil.getInstanceRunIdFromCoord(cluster1, replicationCoordIDTarget.get(1),
                 0) == 1,
             "id have to be equal 1");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

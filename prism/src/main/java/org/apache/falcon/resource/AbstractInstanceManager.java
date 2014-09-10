@@ -24,6 +24,7 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.logging.LogProvider;
 import org.apache.falcon.resource.InstancesResult.Instance;
@@ -42,6 +43,11 @@ import java.util.*;
  */
 public abstract class AbstractInstanceManager extends AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractInstanceManager.class);
+
+    private static final long MINUTE_IN_MILLIS = 60000L;
+    private static final long HOUR_IN_MILLIS = 3600000L;
+    protected static final long DAY_IN_MILLIS = 86400000L;
+    private static final long MONTH_IN_MILLIS = 2592000000L;
 
     protected void checkType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -80,7 +86,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public InstancesResult getRunningInstances(String type, String entity,
                                                String colo, List<LifeCycle> lifeCycles, String filterBy,
-                                               String orderBy, Integer offset, Integer numResults) {
+                                               String orderBy, String sortOrder, Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
         try {
@@ -89,7 +95,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -99,26 +105,29 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     public InstancesResult getInstances(String type, String entity, String startStr, String endStr,
                                         String colo, List<LifeCycle> lifeCycles,
-                                        String filterBy, String orderBy, Integer offset, Integer numResults) {
+                                        String filterBy, String orderBy, String sortOrder,
+                                        Integer offset, Integer numResults) {
         return getStatus(type, entity, startStr, endStr, colo, lifeCycles,
-                filterBy, orderBy, offset, numResults);
+                filterBy, orderBy, sortOrder, offset, numResults);
     }
 
     public InstancesResult getStatus(String type, String entity, String startStr, String endStr,
                                      String colo, List<LifeCycle> lifeCycles,
-                                     String filterBy, String orderBy, Integer offset, Integer numResults) {
+                                     String filterBy, String orderBy, String sortOrder,
+                                     Integer offset, Integer numResults) {
         checkColo(colo);
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            validateParams(type, entity, startStr, endStr);
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+
             // LifeCycle lifeCycleObject = EntityUtil.getLifeCycle(lifeCycle);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return getInstanceResultSubset(wfEngine.getStatus(entityObject, start, end, lifeCycles),
-                    filterBy, orderBy, offset, numResults);
+            return getInstanceResultSubset(wfEngine.getStatus(entityObject,
+                            startAndEndDate.first, startAndEndDate.second, lifeCycles),
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException
@@ -132,30 +141,27 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            validateParams(type, entity, startStr, endStr);
-
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getSummary(entityObject, start, end, lifeCycles);
+            return wfEngine.getSummary(entityObject, startAndEndDate.first, startAndEndDate.second, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
         }
     }
 
-    public InstancesResult getLogs(String type, String entity, String startStr,
-                                   String endStr, String colo, String runId,
-                                   List<LifeCycle> lifeCycles,
-                                   String filterBy, String orderBy, Integer offset, Integer numResults) {
-
+    public InstancesResult getLogs(String type, String entity, String startStr, String endStr,
+                                   String colo, String runId, List<LifeCycle> lifeCycles,
+                                   String filterBy, String orderBy, String sortOrder,
+                                   Integer offset, Integer numResults) {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             // getStatus does all validations and filters clusters
             InstancesResult result = getStatus(type, entity, startStr, endStr,
-                    colo, lifeCycles, filterBy, orderBy, offset, numResults);
+                    colo, lifeCycles, filterBy, orderBy, sortOrder, offset, numResults);
             LogProvider logProvider = new LogProvider();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             for (Instance instance : result.getInstances()) {
@@ -169,7 +175,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
     }
 
-    private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy, String orderBy,
+    private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy,
+                                                    String orderBy, String sortOrder,
                                                     Integer offset, Integer numResults) {
 
         ArrayList<Instance> instanceSet = new ArrayList<Instance>();
@@ -188,7 +195,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return new InstancesResult(resultSet.getMessage(), new Instance[0]);
         }
         // Sort the ArrayList using orderBy
-        instanceSet = sortInstances(instanceSet, orderBy);
+        instanceSet = sortInstances(instanceSet, orderBy, sortOrder);
         return new InstancesResult(resultSet.getMessage(),
                 instanceSet.subList(offset, (offset+pageCount)).toArray(new Instance[pageCount]));
     }
@@ -251,7 +258,9 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return instanceSet;
     }
 
-    private ArrayList<Instance> sortInstances(ArrayList<Instance> instanceSet, String orderBy) {
+    private ArrayList<Instance> sortInstances(ArrayList<Instance> instanceSet,
+                                              String orderBy, String sortOrder) {
+        final String order = getValidSortOrder(sortOrder, orderBy);
         if (orderBy.equals("status")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
@@ -262,31 +271,40 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                     if (i2.getStatus() == null) {
                         i2.status = InstancesResult.WorkflowStatus.ERROR;
                     }
-                    return i1.getStatus().name().compareTo(i2.getStatus().name());
+                    return (order.equalsIgnoreCase("asc")) ? i1.getStatus().name().compareTo(i2.getStatus().name())
+                            : i2.getStatus().name().compareTo(i1.getStatus().name());
                 }
             });
         } else if (orderBy.equals("cluster")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i1.getCluster().compareTo(i2.getCluster());
+                    return (order.equalsIgnoreCase("asc")) ? i1.getCluster().compareTo(i2.getCluster())
+                            : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
         } else if (orderBy.equals("startTime")){
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i1.getStartTime().compareTo(i2.getStartTime());
+                    Date start1 = (i1.getStartTime() == null) ? new Date(0) : i1.getStartTime();
+                    Date start2 = (i2.getStartTime() == null) ? new Date(0) : i2.getStartTime();
+                    return (order.equalsIgnoreCase("asc")) ? start1.compareTo(start2)
+                            : start2.compareTo(start1);
                 }
             });
         } else if (orderBy.equals("endTime")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
-                    return i1.getEndTime().compareTo(i2.getEndTime());
+                    Date end1 = (i1.getEndTime() == null) ? new Date(0) : i1.getEndTime();
+                    Date end2 = (i2.getEndTime() == null) ? new Date(0) : i2.getEndTime();
+                    return (order.equalsIgnoreCase("asc")) ? end1.compareTo(end2)
+                            : end2.compareTo(end1);
                 }
             });
         }//Default : no sort
+
         return instanceSet;
     }
 
@@ -303,13 +321,12 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                 throw new FalconException("For displaying wf-params there can't be more than one lifecycle "
                         + lifeCycles);
             }
-            validateParams(type, entity, startTime, null);
-
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Date start = EntityUtil.parseDateUTC(startTime);
-            Date end = getEndDate(start, null);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startTime, null);
+
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getInstanceParams(entityObject, start, end, lifeCycles);
+            return wfEngine.getInstanceParams(entityObject, startAndEndDate.first, startAndEndDate.second, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to display params of an instance", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -320,21 +337,19 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                         String type, String entity, String startStr,
                                         String endStr, String colo,
                                         List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             audit(request, entity, type, "INSTANCE_KILL");
-            validateParams(type, entity, startStr, endStr);
-
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.killInstances(entityObject, start, end, props, lifeCycles);
+            return wfEngine.killInstances(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to kill instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -345,21 +360,19 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                            String type, String entity, String startStr,
                                            String endStr, String colo,
                                            List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             audit(request, entity, type, "INSTANCE_SUSPEND");
-            validateParams(type, entity, startStr, endStr);
-
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.suspendInstances(entityObject, start, end, props, lifeCycles);
+            return wfEngine.suspendInstances(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to suspend instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -376,15 +389,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             audit(request, entity, type, "INSTANCE_RESUME");
-            validateParams(type, entity, startStr, endStr);
-
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.resumeInstances(entityObject, start, end, props, lifeCycles);
+            return wfEngine.resumeInstances(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to resume instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -400,15 +412,14 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             audit(request, entity, type, "INSTANCE_RERUN");
-            validateParams(type, entity, startStr, endStr);
-
-            Date start = EntityUtil.parseDateUTC(startStr);
-            Date end = getEndDate(start, endStr);
+            validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.reRunInstances(entityObject, start, end, props, lifeCycles);
+            return wfEngine.reRunInstances(entityObject,
+                    startAndEndDate.first, startAndEndDate.second, props, lifeCycles);
         } catch (Exception e) {
             LOG.error("Failed to rerun instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
@@ -427,75 +438,72 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         return props;
     }
 
-    private Date getEndDate(Date start, String endStr) throws FalconException {
-        Date end;
-        if (StringUtils.isEmpty(endStr)) {
-            end = new Date(start.getTime() + 1000); // next sec
-        } else {
-            end = EntityUtil.parseDateUTC(endStr);
+    private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr)
+        throws FalconException {
+        Pair<Date, Date> clusterStartEndDates = EntityUtil.getEntityStartEndDates(entityObject);
+        Frequency frequency = EntityUtil.getFrequency(entityObject);
+        Date endDate = getEndDate(endStr, clusterStartEndDates.second);
+        Date startDate = getStartDate(startStr, endDate, clusterStartEndDates.first, frequency);
+
+        if (startDate.after(endDate)) {
+            throw new FalconException("Specified End date " + SchemaHelper.getDateFormat().format(endDate)
+                    + " is before the entity was scheduled " + SchemaHelper.getDateFormat().format(startDate));
         }
-        return end;
+        return new Pair<Date, Date>(startDate, endDate);
     }
 
-    private void validateParams(String type, String entity, String startStr,
-                                String endStr) throws FalconException {
+    private Date getEndDate(String endStr, Date clusterEndDate) throws FalconException {
+        Date endDate = StringUtils.isEmpty(endStr) ? new Date() : EntityUtil.parseDateUTC(endStr);
+        if (endDate.after(clusterEndDate)) {
+            endDate = clusterEndDate;
+        }
+        return endDate;
+    }
+
+    private Date getStartDate(String startStr, Date end,
+                              Date clusterStartDate, Frequency frequency) throws FalconException {
+        Date start;
+        final int dateMultiplier = 10;
+        if (StringUtils.isEmpty(startStr)) {
+            // set startDate to endDate - 10 times frequency
+            long startMillis = end.getTime();
+
+            switch (frequency.getTimeUnit().getCalendarUnit()){
+            case Calendar.MINUTE :
+                startMillis -= frequency.getFrequencyAsInt() * MINUTE_IN_MILLIS * dateMultiplier;
+                break;
+
+            case Calendar.HOUR :
+                startMillis -= frequency.getFrequencyAsInt() * HOUR_IN_MILLIS * dateMultiplier;
+                break;
+
+            case Calendar.DATE :
+                startMillis -= frequency.getFrequencyAsInt() * DAY_IN_MILLIS * dateMultiplier;
+                break;
+
+            case Calendar.MONTH :
+                startMillis -= frequency.getFrequencyAsInt() * MONTH_IN_MILLIS * dateMultiplier;
+                break;
+
+            default:
+                break;
+            }
+
+            start = new Date(startMillis);
+        } else {
+            start = EntityUtil.parseDateUTC(startStr);
+        }
+
+        if (start.before(clusterStartDate)) {
+            start = clusterStartDate;
+        }
+
+        return start;
+    }
+
+    private void validateParams(String type, String entity) throws FalconException {
         validateNotEmpty("entityType", type);
         validateNotEmpty("entityName", entity);
-        validateNotEmpty("start", startStr);
-
-        Entity entityObject = EntityUtil.getEntity(type, entity);
-        validateDateRange(entityObject, startStr, endStr);
-    }
-
-    private void validateDateRange(Entity entity, String start, String end) throws FalconException {
-        Set<String> clusters = EntityUtil.getClustersDefined(entity);
-        Pair<Date, String> clusterMinStartDate = null;
-        Pair<Date, String> clusterMaxEndDate = null;
-        for (String cluster : clusters) {
-            if (clusterMinStartDate == null || clusterMinStartDate.first.after(
-                    EntityUtil.getStartTime(entity, cluster))) {
-                clusterMinStartDate = Pair.of(EntityUtil.getStartTime(entity, cluster), cluster);
-            }
-            if (clusterMaxEndDate == null || clusterMaxEndDate.first.before(EntityUtil.getEndTime(entity, cluster))) {
-                clusterMaxEndDate = Pair.of(EntityUtil.getEndTime(entity, cluster), cluster);
-            }
-        }
-
-        validateDateRangeFor(entity, clusterMinStartDate, clusterMaxEndDate,
-                start, end);
-    }
-
-    private void validateDateRangeFor(Entity entity, Pair<Date, String> clusterMinStart,
-                                      Pair<Date, String> clusterMaxEnd, String start,
-                                      String end) throws FalconException{
-
-        Date instStart = EntityUtil.parseDateUTC(start);
-        if (instStart.before(clusterMinStart.first)) {
-            throw new ValidationException("Start date " + start + " is before "
-                    + entity.getEntityType() + "'s  start "
-                    + SchemaHelper.formatDateUTC(clusterMinStart.first)
-                    + " for cluster " + clusterMinStart.second);
-        }
-
-        if (StringUtils.isNotEmpty(end)) {
-            Date instEnd = EntityUtil.parseDateUTC(end);
-            if (instStart.after(instEnd)) {
-                throw new ValidationException("Start date " + start
-                        + " is after end date " + end);
-            }
-
-            if (instEnd.after(clusterMaxEnd.first)) {
-                throw new ValidationException("End date " + end + " is after "
-                        + entity.getEntityType() + "'s end "
-                        + SchemaHelper.formatDateUTC(clusterMaxEnd.first)
-                        + " for cluster " + clusterMaxEnd.second);
-            }
-        } else if (instStart.after(clusterMaxEnd.first)) {
-            throw new ValidationException("Start date " + start + " is after "
-                    + entity.getEntityType() + "'s end "
-                    + SchemaHelper.formatDateUTC(clusterMaxEnd.first)
-                    + " for cluster " + clusterMaxEnd.second);
-        }
     }
 
     private void validateNotEmpty(String field, String param) throws ValidationException {

@@ -105,9 +105,9 @@ public class JMSMessageConsumerTest {
         message.put(WorkflowExecutionArgs.CLUSTER_NAME.getName(), "cluster1");
         message.put(WorkflowExecutionArgs.ENTITY_NAME.getName(), "process1");
         message.put(WorkflowExecutionArgs.ENTITY_TYPE.getName(), "PROCESS");
-        message.put(WorkflowExecutionArgs.FEED_INSTANCE_PATHS.getName(),
+        message.put(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
                 "/clicks/hour/00/0" + i);
-        message.put(WorkflowExecutionArgs.FEED_NAMES.getName(), "clicks");
+        message.put(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "clicks");
         message.put(WorkflowExecutionArgs.LOG_FILE.getName(), "/logfile");
         message.put(WorkflowExecutionArgs.LOG_DIR.getName(), "/tmp/log");
         message.put(WorkflowExecutionArgs.NOMINAL_TIME.getName(), "2012-10-10-10-10");

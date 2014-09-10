@@ -23,7 +23,6 @@ import org.apache.falcon.regression.core.response.InstancesSummaryResult;
 import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -46,29 +45,28 @@ public class ClusterEntityHelperImpl extends IEntityManagerHelper {
         return Util.readEntityName(entity);
     }
 
-    public ServiceResponse getStatus(URLS url, String data, String user) {
+    public ServiceResponse getStatus(String data, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
-    public ServiceResponse resume(URLS url, String data, String user) {
+    public ServiceResponse resume(String data, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
-    public ServiceResponse schedule(URLS url, String data, String user) {
+    public ServiceResponse schedule(String data, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
-    public ServiceResponse submitAndSchedule(URLS url, String data, String user) {
+    public ServiceResponse submitAndSchedule(String data, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
-    public ServiceResponse suspend(URLS url, String data, String user) {
+    public ServiceResponse suspend(String data, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
     @Override
-    public InstancesResult getRunningInstance(
-        URLS processRunningInstance, String name, String user) {
+    public InstancesResult getRunningInstance(String name, String user) {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 

@@ -21,7 +21,9 @@ import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.ACL;
+import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
 import org.mockito.Mock;
@@ -35,6 +37,7 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import static org.mockito.Mockito.when;
 
@@ -48,6 +51,7 @@ public class EntityManagerTest extends AbstractEntityManager {
     private static final String SAMPLE_PROCESS_XML = "/process-version-0.xml";
 
     private static final String SAMPLE_INVALID_PROCESS_XML = "/process-invalid.xml";
+    private static final long DAY_IN_MILLIS = 86400000L;
 
     @BeforeClass
     public void init() {
@@ -114,7 +118,7 @@ public class EntityManagerTest extends AbstractEntityManager {
         Entity process2 = buildProcess("processAuthUser", System.getProperty("user.name"), "", "");
         configStore.publish(EntityType.PROCESS, process2);
 
-        EntityList entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        EntityList entityList = this.getEntityList("process", "", "", "", "", "asc", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
 
@@ -123,7 +127,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          */
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         CurrentUser.authenticate(System.getProperty("user.name"));
-        entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        entityList = this.getEntityList("process", "", "", "", "", "desc", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
 
@@ -131,7 +135,7 @@ public class EntityManagerTest extends AbstractEntityManager {
          * Only one entity should be returned when the auth is enabled.
          */
         CurrentUser.authenticate("fakeUser");
-        entityList = this.getEntityList("process", "", "", "", "", 0, -1);
+        entityList = this.getEntityList("process", "", "", "", "", "", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 
@@ -161,17 +165,17 @@ public class EntityManagerTest extends AbstractEntityManager {
         configStore.publish(EntityType.PROCESS, process4);
 
         EntityList entityList = this.getEntityList("process", "tags", "PIPELINES:dataReplicationPipeline",
-                "", "name", 1, 2);
+                "", "name", "desc", 1, 2);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
-        Assert.assertEquals(entityList.getElements()[1].name, "process4");
-        Assert.assertEquals(entityList.getElements()[1].tag.size(), 1);
-        Assert.assertEquals(entityList.getElements()[1].tag.get(0), "owner=producer@xyz.com");
+        Assert.assertEquals(entityList.getElements()[1].name, "process1");
+        Assert.assertEquals(entityList.getElements()[1].tag.size(), 2);
+        Assert.assertEquals(entityList.getElements()[1].tag.get(0), "consumer=consumer@xyz.com");
         Assert.assertEquals(entityList.getElements()[0].status, null);
 
 
         entityList = this.getEntityList("process", "pipelines", "",
-                "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", 0, 2);
+                "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", "", 0, 2);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 2);
         Assert.assertEquals(entityList.getElements()[1].name, "process2");
@@ -180,8 +184,26 @@ public class EntityManagerTest extends AbstractEntityManager {
         Assert.assertEquals(entityList.getElements()[0].tag, null);
 
         entityList = this.getEntityList("process", "pipelines", "",
-                "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", 10, 2);
+                "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", "", 10, 2);
         Assert.assertEquals(entityList.getElements().length, 0);
+
+        // Test negative value for numResults, should throw an exception.
+        try {
+            this.getEntityList("process", "pipelines", "",
+                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", "", 10, -1);
+            Assert.assertTrue(false);
+        } catch (Throwable e) {
+            Assert.assertTrue(true);
+        }
+
+        // Test invalid entry for sortOrder
+        try {
+            this.getEntityList("process", "pipelines", "",
+                    "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", "invalid", 10, 2);
+            Assert.assertTrue(false);
+        } catch (Throwable e) {
+            Assert.assertTrue(true);
+        }
     }
 
     private Entity buildProcess(String name, String username, String tags, String pipelines) {
@@ -190,14 +212,28 @@ public class EntityManagerTest extends AbstractEntityManager {
         acl.setGroup("hdfs");
         acl.setPermission("*");
 
-        Process p = new Process();
-        p.setName(name);
-        p.setACL(acl);
-        p.setPipelines(pipelines);
-        p.setTags(tags);
-        return p;
+        Process process = new Process();
+        process.setName(name);
+        process.setACL(acl);
+        process.setPipelines(pipelines);
+        process.setTags(tags);
+        process.setClusters(buildClusters("cluster" + name));
+        return process;
     }
 
+    private Clusters buildClusters(String name) {
+        Validity validity = new Validity();
+        long startMilliSecs = new Date().getTime() - (2 * DAY_IN_MILLIS);
+        validity.setStart(new Date(startMilliSecs));
+        validity.setEnd(new Date());
+        org.apache.falcon.entity.v0.process.Cluster cluster = new org.apache.falcon.entity.v0.process.Cluster();
+        cluster.setName(name);
+        cluster.setValidity(validity);
+
+        Clusters clusters =  new Clusters();
+        clusters.getClusters().add(cluster);
+        return clusters;
+    }
 
 
     /**

@@ -26,6 +26,7 @@ import org.aspectj.lang.annotation.Aspect;
  * Create a method with params you want to monitor via Aspect and log in metric
  * and iMon, invoke this method from code.
  */
+@SuppressWarnings("UnusedParameters")
 @Aspect
 public final class GenericAlert {
 
@@ -107,6 +108,12 @@ public final class GenericAlert {
             @Dimension(value = "message") String message,
             @Dimension(value = "exception") Throwable throwable) {
         return "IGNORE";
+    }
 
+    @Monitored(event = "jms-message-consumer-failed")
+    public static String alertJMSMessageConsumerFailed(
+            @Dimension(value = "error-message") String errorMessage,
+            @Dimension(value = "exception") Throwable throwable) {
+        return "IGNORE";
     }
 }

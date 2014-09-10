@@ -76,28 +76,28 @@ public class Brother extends Thread {
         try {
             switch (url) {
             case SUBMIT_URL:
-                output = entityManagerHelper.submitEntity(url, data);
+                output = entityManagerHelper.submitEntity(data);
                 break;
             case GET_ENTITY_DEFINITION:
-                output = entityManagerHelper.getEntityDefinition(url, data);
+                output = entityManagerHelper.getEntityDefinition(data);
                 break;
             case DELETE_URL:
-                output = entityManagerHelper.delete(url, data);
+                output = entityManagerHelper.delete(data);
                 break;
             case SUSPEND_URL:
-                output = entityManagerHelper.suspend(url, data);
+                output = entityManagerHelper.suspend(data);
                 break;
             case SCHEDULE_URL:
-                output = entityManagerHelper.schedule(url, data);
+                output = entityManagerHelper.schedule(data);
                 break;
             case RESUME_URL:
-                output = entityManagerHelper.resume(url, data);
+                output = entityManagerHelper.resume(data);
                 break;
             case SUBMIT_AND_SCHEDULE_URL:
-                output = entityManagerHelper.submitAndSchedule(url, data);
+                output = entityManagerHelper.submitAndSchedule(data);
                 break;
             case STATUS_URL:
-                output = entityManagerHelper.getStatus(url, data);
+                output = entityManagerHelper.getStatus(data);
                 break;
             default:
                 LOGGER.error("Unexpected url: " + url);

@@ -143,9 +143,9 @@ public class JMSMessageProducer {
      * Sends all arguments.
      *
      * @return error code
-     * @throws JMSException
+     * @throws Exception
      */
-    public int sendMessage() throws JMSException {
+    public int sendMessage() throws Exception {
         return sendMessage(WorkflowExecutionArgs.values());
     }
 
@@ -156,9 +156,9 @@ public class JMSMessageProducer {
      *
      * @param filteredArgs args sent in the message.
      * @return error code
-     * @throws JMSException
+     * @throws Exception
      */
-    public int sendMessage(WorkflowExecutionArgs[] filteredArgs) throws JMSException {
+    public int sendMessage(WorkflowExecutionArgs[] filteredArgs) throws Exception {
         List<Map<String, String>> messageList = buildMessageList(filteredArgs);
 
         if (messageList.isEmpty()) {
@@ -174,10 +174,6 @@ public class JMSMessageProducer {
                 LOG.info("Sending message: {}", message);
                 sendMessage(connection, message);
             }
-        } catch (JMSException e) {
-            LOG.error("Error in getConnection:", e);
-        } catch (Exception e) {
-            LOG.error("Error in getConnection:", e);
         } finally {
             closeQuietly(connection);
         }
@@ -205,13 +201,13 @@ public class JMSMessageProducer {
 
             // override default values
             if (context.getEntityType().equalsIgnoreCase("PROCESS")) {
-                change(message, WorkflowExecutionArgs.FEED_NAMES, feedNames[i]);
+                change(message, WorkflowExecutionArgs.OUTPUT_FEED_NAMES, feedNames[i]);
             } else {
-                change(message, WorkflowExecutionArgs.FEED_NAMES,
-                        message.get(WorkflowExecutionArgs.FEED_NAMES.getName()));
+                change(message, WorkflowExecutionArgs.OUTPUT_FEED_NAMES,
+                        message.get(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()));
             }
 
-            change(message, WorkflowExecutionArgs.FEED_INSTANCE_PATHS, feedPaths[i]);
+            change(message, WorkflowExecutionArgs.OUTPUT_FEED_PATHS, feedPaths[i]);
             messages.add(message);
         }
 

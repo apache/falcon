@@ -20,10 +20,12 @@ package org.apache.falcon.messaging;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -44,18 +46,17 @@ import java.util.Map;
  * Subscribes to the falcon topic for handling retries and alerts.
  */
 public class JMSMessageConsumer implements MessageListener, ExceptionListener {
-    private static final Logger LOG = Logger.getLogger(JMSMessageConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMSMessageConsumer.class);
 
     private final String implementation;
     private final String userName;
     private final String password;
     private final String url;
     private final String topicName;
+    private final WorkflowJobEndNotificationService jobEndNotificationService;
 
     private Connection connection;
     private TopicSubscriber subscriber;
-
-    private final WorkflowJobEndNotificationService jobEndNotificationService;
 
     public JMSMessageConsumer(String implementation, String userName,
                               String password, String url, String topicName,
@@ -87,22 +88,20 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     @Override
     public void onMessage(Message message) {
         MapMessage mapMessage = (MapMessage) message;
+        LOG.info("Received message {}", message.toString());
 
         try {
-            if (LOG.isDebugEnabled()) {debug(mapMessage); }
-
             WorkflowExecutionContext context = createContext(mapMessage);
             if (context.hasWorkflowFailed()) {
                 onFailure(context);
             } else if (context.hasWorkflowSucceeded()) {
                 onSuccess(context);
             }
-        } catch (JMSException e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
-        } catch (FalconException e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
         } catch (Exception e) {
-            LOG.info("Error in onMessage for subscriber of topic: " + this.toString(), e);
+            String errorMessage = "Error in onMessage for subscriber of topic: "
+                    + topicName + ", Message: " + message.toString();
+            LOG.info(errorMessage, e);
+            GenericAlert.alertJMSMessageConsumerFailed(errorMessage, e);
         }
     }
 
@@ -127,20 +126,11 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
         jobEndNotificationService.notifySuccess(context);
     }
 
-    private void debug(MapMessage mapMessage) throws JMSException {
-        StringBuilder buff = new StringBuilder();
-        buff.append("Received:{");
-        for (WorkflowExecutionArgs arg : WorkflowExecutionArgs.values()) {
-            buff.append(arg.getName()).append('=')
-                .append(mapMessage.getString(arg.getName())).append(", ");
-        }
-        buff.append("}");
-        LOG.debug(buff);
-    }
-
     @Override
     public void onException(JMSException ignore) {
-        LOG.info("Error in onException for subscriber of topic: " + this.toString(), ignore);
+        String errorMessage = "Error in onException for subscriber of topic: " + topicName;
+        LOG.info(errorMessage, ignore);
+        GenericAlert.alertJMSMessageConsumerFailed(errorMessage, ignore);
     }
 
     public void closeSubscriber() throws FalconException {

@@ -18,10 +18,13 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.Pair;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.LateArrival;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Process;
 import org.testng.Assert;
@@ -210,6 +213,36 @@ public class EntityUtilTest extends AbstractTestBase {
         Frequency frequency = Frequency.fromString("minutes(1)");
         Assert.assertEquals(3, EntityUtil.getInstanceSequence(start,
                 frequency, tz, instance));
+    }
+
+    @Test
+    public void testGetEntityStartEndDates() throws Exception {
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(
+                getClass().getResourceAsStream(PROCESS_XML));
+
+        Cluster cluster = new Cluster();
+        cluster.setName("testCluster");
+        cluster.setValidity(process.getClusters().getClusters().get(0).getValidity());
+
+        process.getClusters().getClusters().add(cluster);
+
+        Date expectedStartDate = new SimpleDateFormat("yyyy-MM-dd z").parse("2011-11-02 UTC");
+        Date expectedEndDate = new SimpleDateFormat("yyyy-MM-dd z").parse("2091-12-30 UTC");
+
+        Pair<Date, Date> startEndDates = EntityUtil.getEntityStartEndDates(process);
+        Assert.assertEquals(startEndDates.first, expectedStartDate);
+        Assert.assertEquals(startEndDates.second, expectedEndDate);
+    }
+
+    @Test
+    public void testGetLateProcessFeed() throws FalconException{
+        Feed feed = new Feed();
+
+        Assert.assertNull(EntityUtil.getLateProcess(feed));
+        LateArrival lateArrival = new LateArrival();
+        lateArrival.setCutOff(Frequency.fromString("days(1)"));
+        feed.setLateArrival(lateArrival);
+        Assert.assertNotNull(EntityUtil.getLateProcess(feed));
     }
 
 }

@@ -25,18 +25,18 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /**
@@ -48,12 +48,8 @@ public class FeedStatusTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private OozieClient clusterOC = serverOC.get(0);
     private String feed;
-    private String aggregateWorkflowDir = baseHDFSDir + "/FeedStatusTest/aggregator";
     private static final Logger LOGGER = Logger.getLogger(FeedStatusTest.class);
 
-    public void uploadWorkflow() throws Exception {
-        uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-    }
 
     @BeforeMethod(alwaysRun = true)
     public void setUp(Method method) throws Exception {
@@ -61,11 +57,10 @@ public class FeedStatusTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle(baseAppHDFSDir, this.getClass().getSimpleName());
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].setProcessWorkflow(aggregateWorkflowDir);
 
         //submit the cluster
         ServiceResponse response =
-            prism.getClusterHelper().submitEntity(URLS.SUBMIT_URL, bundles[0].getClusters().get(0));
+            prism.getClusterHelper().submitEntity(bundles[0].getClusters().get(0));
         AssertUtil.assertSucceeded(response);
         feed = bundles[0].getInputFeedFromBundle();
     }
@@ -83,12 +78,11 @@ public class FeedStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getStatusForScheduledFeed() throws Exception {
-        ServiceResponse response =
-            prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
         LOGGER.info("Feed: " + Util.prettyPrintXml(feed));
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().getStatus(URLS.STATUS_URL, feed);
+        response = prism.getFeedHelper().getStatus(feed);
 
         AssertUtil.assertSucceeded(response);
 
@@ -105,15 +99,14 @@ public class FeedStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getStatusForSuspendedFeed() throws Exception {
-        ServiceResponse response =
-            prism.getFeedHelper().submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);
 
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().suspend(URLS.SUSPEND_URL, feed);
+        response = prism.getFeedHelper().suspend(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().getStatus(URLS.STATUS_URL, feed);
+        response = prism.getFeedHelper().getStatus(feed);
 
         AssertUtil.assertSucceeded(response);
         String colo = prism.getFeedHelper().getColo();
@@ -129,11 +122,11 @@ public class FeedStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getStatusForSubmittedFeed() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
 
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().getStatus(URLS.STATUS_URL, feed);
+        response = prism.getFeedHelper().getStatus(feed);
 
         AssertUtil.assertSucceeded(response);
         String colo = prism.getFeedHelper().getColo();
@@ -148,14 +141,13 @@ public class FeedStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getStatusForDeletedFeed() throws Exception {
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().delete(URLS.DELETE_URL, feed);
+        response = prism.getFeedHelper().delete(feed);
         AssertUtil.assertSucceeded(response);
 
-        response = prism.getFeedHelper().getStatus(URLS.STATUS_URL, feed);
+        response = prism.getFeedHelper().getStatus(feed);
         AssertUtil.assertFailed(response);
 
         Assert.assertTrue(
@@ -170,10 +162,15 @@ public class FeedStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void getStatusForNonExistentFeed() throws Exception {
-        ServiceResponse response = prism.getFeedHelper().getStatus(URLS.STATUS_URL, feed);
+        ServiceResponse response = prism.getFeedHelper().getStatus(feed);
         AssertUtil.assertFailed(response);
         Assert.assertTrue(
             response.getMessage().contains(Util.readEntityName(feed) + " (FEED) not found"));
 
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

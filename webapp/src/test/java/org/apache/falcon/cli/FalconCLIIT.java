@@ -285,6 +285,34 @@ public class FalconCLIIT {
                 executeWithURL("entity -status -type process -name "
                         + overlay.get("processName")));
 
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type feed -cluster "+ overlay.get("cluster")
+                        + " -fields status,tags -start " + START_INSTANCE
+                        + " -filterBy TYPE:FEED -orderBy name -sortOrder asc "
+                        + " -offset 0 -numResults 1 -numInstances 5"));
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type process -fields status,pipelines"
+                        + " -cluster " + overlay.get("cluster")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -filterBy TYPE:PROCESS -orderBy name -sortOrder desc "
+                        + " -offset 0 -numResults 1 -numInstances 7"));
+
+        Assert.assertEquals(-1,
+                executeWithURL("entity -summary -type process -fields status,pipelines"
+                        + " -cluster " + overlay.get("cluster")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(0))
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date())
+                        + " -filterBy TYPE:PROCESS -orderBy name -sortOrder invalid "
+                        + " -offset 0 -numResults 1 -numInstances 7"));
+
+        // No start or end date
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type process -fields status,pipelines"
+                        + " -cluster " + overlay.get("cluster")
+                        + " -filterBy TYPE:PROCESS -orderBy name "
+                        + " -offset 0 -numResults 1 -numInstances 7"));
+
     }
 
     public void testSubCommandPresence() throws Exception {
@@ -394,23 +422,55 @@ public class FalconCLIIT {
                 executeWithURL("instance -running -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start " + startTimeString
-                        + " -orderBy startTime -offset 0 -numResults 1"));
+                        + " -orderBy startTime -sortOrder asc -offset 0 -numResults 1"));
         Assert.assertEquals(-1,
                 executeWithURL("instance -running -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start " + SchemaHelper.getDateFormat().format(new Date())
                         + " -orderBy INVALID -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + startTimeString
+                        + " -orderBy startTime -sortOrder desc -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + startTimeString
+                        + " -orderBy startTime -sortOrder invalid -offset 0 -numResults 1"));
+
         Assert.assertEquals(-1,
                 executeWithURL("instance -running -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start " + SchemaHelper.getDateFormat().format(new Date())
                         + " -filterBy INVALID:FILTER -offset 0 -numResults 1"));
+
+        // testcase : start str is older than entity schedule time.
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(10000))
+                        + " -orderBy startTime -sortOrder asc -offset 0 -numResults 1"));
+        // testcase : end str is in future
+        long futureTimeinMilliSecs = (new Date()).getTime()+ 86400000;
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date(10000))
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date(futureTimeinMilliSecs))
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+        // Both start and end dates are optional
+        Assert.assertEquals(0,
+                executeWithURL("instance -running -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -orderBy startTime -offset 0 -numResults 1"));
+
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type process -name "
                         + overlay.get("processName")
                         + " -start "+ START_INSTANCE
                         + " -filterBy STATUS:SUCCEEDED,STARTEDAFTER:"+START_INSTANCE
-                        + " -orderBy startTime -offset 0 -numResults 1"));
+                        + " -orderBy startTime -sortOrder desc -offset 0 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("instance -list -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
@@ -436,6 +496,12 @@ public class FalconCLIIT {
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
                         +" -filterBy STATUS:SUCCEEDED -offset 0 -numResults 1"));
+        // When you get a cluster for which there are no feed entities,
+        Assert.assertEquals(0,
+                executeWithURL("entity -summary -type feed -cluster " + overlay.get("cluster") + " -fields status,tags"
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -offset 0 -numResults 1 -numInstances 3"));
+
     }
 
     public void testInstanceRunningAndSummaryCommands() throws Exception {
@@ -601,14 +667,15 @@ public class FalconCLIIT {
                         + " -offset 0 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -list -type process -fields status "
-                        + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name -offset 1 -numResults 1"));
+                        + " -filterBy STATUS:SUBMITTED,TYPE:process -orderBy name "
+                        + " -sortOrder asc -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -list -type process -fields status,pipelines "
                         + " -filterBy STATUS:SUBMITTED,type:process -orderBy name -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -list -type process -fields status,pipelines "
                         + " -filterBy STATUS:SUBMITTED,pipelines:testPipeline "
-                        + " -orderBy name -offset 1 -numResults 1"));
+                        + " -orderBy name -sortOrder desc -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -list -type process -fields status,tags "
                         + " -tags owner=producer@xyz.com,department=forecasting "
@@ -624,7 +691,11 @@ public class FalconCLIIT {
                         + " -filterBy INVALID:FILTER,TYPE:process -orderBy name -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("entity -definition -type cluster -name " + overlay.get("cluster")));
-
+        Assert.assertEquals(-1,
+                executeWithURL("entity -list -type process -fields status,tags "
+                        + " -tags owner=producer@xyz.com,department=forecasting "
+                        + " -filterBy STATUS:SUBMITTED,type:process "
+                        + " -orderBy name -sortOrder invalid -offset 1 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("instance -status -type feed -name "
                         + overlay.get("outputFeedName") + " -start " + START_INSTANCE));
@@ -762,7 +833,31 @@ public class FalconCLIIT {
                 executeWithURL("instance -logs -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE
-                        + " -filterBy STATUS:SUCCEEDED -orderBy startTime -offset 0 -numResults 1"));
+                        + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
+                        + " -sortOrder asc -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -filterBy STATUS:SUCCEEDED -orderBy starttime "
+                        + " -sortOrder asc -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -filterBy STATUS:SUCCEEDED -orderBy cluster "
+                        + " -sortOrder asc -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -filterBy STATUS:WAITING -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(-1,
+                executeWithURL("instance -logs -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -filterBy STATUS:SUCCEEDED -orderBy endtime "
+                        + " -sortOrder invalid -offset 0 -numResults 1"));
         Assert.assertEquals(0,
                 executeWithURL("instance -logs -type process -name "
                         + overlay.get("processName")

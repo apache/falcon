@@ -30,11 +30,11 @@ import org.apache.falcon.regression.core.supportClasses.JmsMessageConsumer;
 import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.MathUtil;
 import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -44,6 +44,7 @@ import org.apache.oozie.client.OozieClientException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -65,7 +66,6 @@ public class RetentionTest extends BaseTestClass {
     String baseTestHDFSDir = baseHDFSDir + "/RetentionTest/";
     String testHDFSDir = baseTestHDFSDir + TEST_FOLDERS;
     private static final Logger logger = Logger.getLogger(RetentionTest.class);
-
     ColoHelper cluster = servers.get(0);
     FileSystem clusterFS = serverFS.get(0);
     OozieClient clusterOC = serverOC.get(0);
@@ -85,12 +85,26 @@ public class RetentionTest extends BaseTestClass {
         removeBundles();
     }
 
+    /**
+     * Particular test case for https://issues.apache.org/jira/browse/FALCON-321
+     * @throws Exception
+     */
     @Test
     public void testRetentionWithEmptyDirectories() throws Exception {
-        // test for https://issues.apache.org/jira/browse/FALCON-321
         testRetention(24, RetentionUnit.HOURS, true, FeedType.DAILY, false);
     }
 
+    /**
+     * Tests retention with different parameters. Validates its results based on expected and
+     * actual retained data.
+     *
+     * @param retentionPeriod period for which data should be retained
+     * @param retentionUnit type of retention limit attribute
+     * @param gaps defines gaps within list of data folders
+     * @param feedType feed type
+     * @param withData should folders be filled with data or not
+     * @throws Exception
+     */
     @Test(groups = {"0.1", "0.2", "prism"}, dataProvider = "betterDP", priority = -1)
     public void testRetention(final int retentionPeriod, final RetentionUnit retentionUnit,
         final boolean gaps, final FeedType feedType, final boolean withData) throws Exception {
@@ -98,8 +112,7 @@ public class RetentionTest extends BaseTestClass {
         final FeedMerlin feedObject = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         feedObject.setRetentionValue(retentionUnit.getValue() + "(" + retentionPeriod + ")");
 
-        final ServiceResponse response = prism.getFeedHelper()
-            .submitEntity(URLS.SUBMIT_URL, feedObject.toString());
+        final ServiceResponse response = prism.getFeedHelper().submitEntity(feedObject.toString());
         if (retentionPeriod > 0) {
             AssertUtil.assertSucceeded(response);
 
@@ -125,45 +138,61 @@ public class RetentionTest extends BaseTestClass {
         if (gap) {
             skip = gaps[new Random().nextInt(gaps.length)];
         }
-
         final DateTime today = new DateTime(DateTimeZone.UTC);
         final List<DateTime> times = TimeUtil.getDatesOnEitherSide(
             feedType.addTime(today, -36), feedType.addTime(today, 36), skip, feedType);
         final List<String> dataDates = TimeUtil.convertDatesToString(times, feedType.getFormatter());
         logger.info("dataDates = " + dataDates);
-
-        HadoopUtil.replenishData(clusterFS, testHDFSDir, dataDates, withData);
+        dataDates.add(HadoopUtil.SOMETHING_RANDOM);
+        if (withData) {
+            HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.RESOURCES + "log_01.txt",
+                testHDFSDir, dataDates);
+        } else {
+            HadoopUtil.createFolders(clusterFS, testHDFSDir, dataDates);
+        }
     }
 
+    /**
+     * Schedules feed and waits till retention succeeds. Makes validation of data which was removed
+     * and which was retained.
+     *
+     * @param feed analyzed retention feed
+     * @param feedType feed type
+     * @param retentionUnit type of retention limit attribute
+     * @param retentionPeriod period for which data should be retained
+     * @throws OozieClientException
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws AuthenticationException
+     * @throws JMSException
+     */
     private void commonDataRetentionWorkflow(String feed, FeedType feedType,
         RetentionUnit retentionUnit, int retentionPeriod) throws OozieClientException,
         IOException, URISyntaxException, AuthenticationException, JMSException {
         //get Data created in the cluster
         List<String> initialData = Util.getHadoopDataFromDir(clusterFS, feed, testHDFSDir);
 
-        cluster.getFeedHelper().schedule(URLS.SCHEDULE_URL, feed);
+        cluster.getFeedHelper().schedule(feed);
         logger.info(cluster.getClusterHelper().getActiveMQ());
         final String feedName = Util.readEntityName(feed);
         logger.info(feedName);
         JmsMessageConsumer messageConsumer = new JmsMessageConsumer("FALCON." + feedName,
                 cluster.getClusterHelper().getActiveMQ());
         messageConsumer.start();
-
         final DateTime currentTime = new DateTime(DateTimeZone.UTC);
         String bundleId = OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0);
 
         List<String> workflows = OozieUtil.waitForRetentionWorkflowToSucceed(bundleId, clusterOC);
         logger.info("workflows: " + workflows);
-
         messageConsumer.interrupt();
         Util.printMessageData(messageConsumer);
+
         //now look for cluster data
         List<String> finalData = Util.getHadoopDataFromDir(clusterFS, feed, testHDFSDir);
 
         //now see if retention value was matched to as expected
         List<String> expectedOutput = filterDataOnRetention(initialData, currentTime, retentionUnit,
             retentionPeriod, feedType);
-
         logger.info("initialData = " + initialData);
         logger.info("finalData = " + finalData);
         logger.info("expectedOutput = " + expectedOutput);
@@ -171,23 +200,31 @@ public class RetentionTest extends BaseTestClass {
         final List<String> missingData = new ArrayList<String>(initialData);
         missingData.removeAll(expectedOutput);
         validateDataFromFeedQueue(feedName, messageConsumer.getReceivedMessages(), missingData);
-
         Assert.assertEquals(finalData.size(), expectedOutput.size(),
-            "sizes of outputs are different! please check");
+            "Expected and actual sizes of retained data are different! Please check.");
 
         Assert.assertTrue(Arrays.deepEquals(finalData.toArray(new String[finalData.size()]),
             expectedOutput.toArray(new String[expectedOutput.size()])));
     }
 
+    /**
+     * Makes validation based on comparison of data which is expected to be removed with data
+     * mentioned in messages from ActiveMQ
+     *
+     * @param feedName feed name
+     * @param messages messages from ActiveMQ
+     * @param missingData data which is expected to be removed after retention succeeded
+     * @throws OozieClientException
+     * @throws JMSException
+     */
     private void validateDataFromFeedQueue(String feedName, List<MapMessage> messages,
         List<String> missingData) throws OozieClientException, JMSException {
         //just verify that each element in queue is same as deleted data!
         List<String> workflowIds = OozieUtil.getWorkflowJobs(cluster,
                 OozieUtil.getBundles(clusterOC, feedName, EntityType.FEED).get(0));
 
-        //create queuedata folderList:
+        //create queue data folderList:
         List<String> deletedFolders = new ArrayList<String>();
-
         for (MapMessage message : messages) {
             if (message != null) {
                 Assert.assertEquals(message.getString("entityName"), feedName);
@@ -205,7 +242,6 @@ public class RetentionTest extends BaseTestClass {
                     cluster.getFeedHelper().getActiveMQ());
             }
         }
-
         Assert.assertEquals(deletedFolders.size(), missingData.size(),
             "Output size is different than expected!");
         Assert.assertTrue(Arrays.deepEquals(missingData.toArray(new String[missingData.size()]),
@@ -213,6 +249,16 @@ public class RetentionTest extends BaseTestClass {
             "The missing data and message for delete operation don't correspond");
     }
 
+    /**
+     * Evaluates amount of data which is expected to be retained
+     *
+     * @param inputData initial data on cluster
+     * @param currentTime current date
+     * @param retentionUnit type of retention limit attribute
+     * @param retentionPeriod period for which data should be retained
+     * @param feedType feed type
+     * @return list of data folders which are expected to be present on cluster
+     */
     private List<String> filterDataOnRetention(List<String> inputData, DateTime currentTime,
         RetentionUnit retentionUnit, int retentionPeriod, FeedType feedType) {
         final List<String> finalData = new ArrayList<String>();
@@ -232,6 +278,9 @@ public class RetentionTest extends BaseTestClass {
 
     final static int[] gaps = new int[]{2, 4, 5, 1};
 
+    /**
+     * Provides different sets of parameters for retention workflow.
+     */
     @DataProvider(name = "betterDP")
     public Object[][] getTestData(Method m) {
         // a negative value like -4 should be covered in validation scenarios.
@@ -245,4 +294,8 @@ public class RetentionTest extends BaseTestClass {
         return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, feedTypes, withData);
     }
 
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

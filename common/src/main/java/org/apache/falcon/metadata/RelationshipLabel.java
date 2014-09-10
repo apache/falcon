@@ -36,7 +36,13 @@ public enum RelationshipLabel {
     CLUSTER_COLO("collocated"),
     USER("owned-by"),
     GROUPS("grouped-as"),
-    PIPELINES("part-of-pipeline");
+    PIPELINES("pipeline"),
+
+    // replication labels
+    FEED_CLUSTER_REPLICATED_EDGE("replicated-to"),
+
+    // eviction labels
+    FEED_CLUSTER_EVICTED_EDGE("evicted-from");
 
     private final String name;
 

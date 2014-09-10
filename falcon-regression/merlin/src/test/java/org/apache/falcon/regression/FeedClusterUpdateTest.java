@@ -30,17 +30,18 @@ import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.core.util.XmlUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /**
@@ -124,13 +125,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-        response = cluster2.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -182,8 +182,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
                 "REPLICATION"), 0);
@@ -222,13 +221,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-        response = cluster2.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -282,8 +280,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
@@ -317,13 +314,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-        response = cluster2.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -377,8 +373,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
@@ -412,14 +407,13 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
 
-        response = cluster2.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -471,8 +465,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
@@ -506,13 +499,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-        response = cluster2.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = cluster2.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -566,8 +558,7 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
 
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
@@ -612,14 +603,13 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
 
-        response = prism.getFeedHelper().schedule(URLS.SCHEDULE_URL, feedOriginalSubmit);
+        response = prism.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -665,12 +655,10 @@ public class FeedClusterUpdateTest extends BaseTestClass {
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
-        response =
-            cluster3.getFeedHelper().getEntityDefinition(URLS.GET_ENTITY_DEFINITION, feedUpdated);
+        response = cluster3.getFeedHelper().getEntityDefinition(feedUpdated);
         AssertUtil.assertFailed(response);
 
-        prism.getFeedHelper()
-            .submitAndSchedule(URLS.SUBMIT_AND_SCHEDULE_URL, feedUpdated);
+        prism.getFeedHelper().submitAndSchedule(feedUpdated);
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
                 "REPLICATION"), 0);
@@ -744,14 +732,12 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
         logger.info("Feed: " + Util.prettyPrintXml(feedOriginalSubmit));
 
-        ServiceResponse response =
-            prism.getFeedHelper().submitEntity(URLS.SUBMIT_URL, feedOriginalSubmit);
+        ServiceResponse response = prism.getFeedHelper().submitEntity(feedOriginalSubmit);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(response);
 
         //schedule on source
-        response = prism.getFeedHelper().schedule(URLS.SCHEDULE_URL,
-            feedOriginalSubmit);
+        response = prism.getFeedHelper().schedule(feedOriginalSubmit);
         TimeUtil.sleepSeconds(20);
         AssertUtil.assertSucceeded(response);
 
@@ -803,20 +789,14 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
 
         //verify xmls definitions
-        response =
-            cluster1.getFeedHelper().getEntityDefinition(URLS.GET_ENTITY_DEFINITION, feedUpdated);
+        response = cluster1.getFeedHelper().getEntityDefinition(feedUpdated);
         AssertUtil.assertFailed(response);
-        response = cluster2.getFeedHelper().getEntityDefinition(URLS
-            .GET_ENTITY_DEFINITION, feedUpdated);
+        response = cluster2.getFeedHelper().getEntityDefinition(feedUpdated);
         AssertUtil.assertFailed(response);
-        response = cluster3.getFeedHelper().getEntityDefinition(URLS
-            .GET_ENTITY_DEFINITION, feedUpdated);
-        Assert.assertTrue(XmlUtil.isIdentical(feedUpdated,
-            response.getMessage()));
-        response = prism.getFeedHelper().getEntityDefinition(URLS
-            .GET_ENTITY_DEFINITION, feedUpdated);
-        Assert.assertTrue(XmlUtil.isIdentical(feedUpdated,
-            response.getMessage()));
+        response = cluster3.getFeedHelper().getEntityDefinition(feedUpdated);
+        Assert.assertTrue(XmlUtil.isIdentical(feedUpdated, response.getMessage()));
+        response = prism.getFeedHelper().getEntityDefinition(feedUpdated);
+        Assert.assertTrue(XmlUtil.isIdentical(feedUpdated, response.getMessage()));
 
         Assert.assertEquals(InstanceUtil
             .checkIfFeedCoordExist(cluster2.getFeedHelper(), Util.readEntityName(feedUpdated),
@@ -854,4 +834,9 @@ public class FeedClusterUpdateTest extends BaseTestClass {
 
     }
     */
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

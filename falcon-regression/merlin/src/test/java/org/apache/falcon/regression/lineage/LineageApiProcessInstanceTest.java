@@ -39,11 +39,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.Job;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,9 +60,8 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
     String baseTestHDFSDir = baseHDFSDir + "/LineageApiInstanceTest";
     String aggregateWorkflowDir = baseTestHDFSDir + "/aggregator";
     String feedInputPrefix = baseTestHDFSDir + "/input";
-    String feedInputPath = feedInputPrefix + "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
-    String feedOutputPath =
-        baseTestHDFSDir + "/output-data/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
+    String feedInputPath = feedInputPrefix + MINUTE_DATE_PATTERN;
+    String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
     String processName;
     String inputFeedName;
     String outputFeedName;
@@ -225,4 +226,8 @@ public class LineageApiProcessInstanceTest extends BaseTestClass {
 
     }
 
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

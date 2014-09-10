@@ -5,25 +5,62 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-589 Add test cases for various feed operations on Hcat feeds (Karishma G 
+   via Samarth Gupta)
 
   IMPROVEMENTS
-   
-   FALCON-629 Add javadoc for method stitchTwoHdfsPaths (Raghav Kumar Gautam
-   via Samarth Gupta) 
-
    FALCON-585 Remove requirement to have write access to / (Raghav Kumar Gautam)
+      FALCON-680: Tests using LocalDC, impressionRC, updateBundle should stop using root dir
+      (Raghav Kumar Gautam)
+
+      FALCON-679: Tests using ELbundle should stop writing to root dir (Raghav Kumar Gautam) 
+
       FALCON-641 Tests using LateDataBundles should stop using root dir (Raghav 
       Kumar Gautam via Arpit Gupta)
+
       FALCON-633 RetryTests and Retentions tests should stop using root dir
       (Raghav Kumar Gautam via Samarth Gupta)
+
+      FALCON-629 Add javadoc for method stitchTwoHdfsPaths (Raghav Kumar Gautam
+      via Samarth Gupta) 
+
       FALCON-606 hcat tests should stop using root dir (Raghav Kumar Gautam 
       via Arpit Gupta)
 
-   FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via 
-   Arpit Gupta)
+   FALCON-675 Request URLS moved from parameters into methods in falcon-regression (Ruslan
+   Ostafiychuk)
 
-   FALCON-610 Refactoring and documentation updates (Paul Isaychuk via 
-   Arpit Gupta)
+   FALCON-656 add test in falcon regression's Authorization test where non-feed owner updates
+   a feed with a dependent process(Karishma via Samarth Gupta)
+
+   FALCON-674 General code factored out for ProcessInstance* tests (Paul Isaychuk via Ruslan
+   Ostafiychuk)
+
+   FALCON-657 String datePattern moved to BaseTestClass (Ruslan Ostafiychuk)
+
+   FALCON-643 Tests with zero-output/input scenario amended to match test case (Paul Isaychuk via
+   Ruslan Ostafiychuk)
+
+   FALCON-660 7 test classes refactored and few of them documented (Paul Isaychuk via
+   Ruslan Ostafiychuk)
+
+   FALCON-653 Add falcon regression test for zero input process(Karishma via Samarth Gupta)
+   FALCON-655 Skip workflow upload if process won't be submitted (Ruslan Ostafiychuk)
+
+   FALCON-587 Don't delete input data in @AfterClass in falcon-regression tests if
+   clean_test_dir=false (Ruslan Ostafiychuk)
+
+   FALCON-646 Refactoring, documentation stuff (Paul Isaychuk via Ruslan Ostafiychuk)
+
+   FALCON-572 HadoopUtil cleanup in falcon-regression (Ruslan Ostafiychuk via Samarth Gupta)
+   FALCON-632 Refactoring, documentation stuff (Paul Isaychuk via Samarth Gupta)
+
+   FALCON-609 UpdateAtSpecificTimeTest, InstanceSummaryTest tagged, fixed, refactored
+   (Paul Isaychuk via Samarth Gupta)
+
+   FALCON-619 ELExp_FutureAndLatestTest stabilization (Paul Isaychuk via Arpit Gupta)
+   
+   FALCON-610 Refactoring and documentation updates (Paul Isaychuk via Arpit Gupta)
 
    FALCON-581 Refactor code for cross product and make it a method 
    (Raghav Kumar Gautam via Arpit Gupta) 
@@ -32,5 +69,5 @@ Trunk (Unreleased)
    mismatched (Raghav Kumar Gautam via Arpit Gupta)
 
   OPTIMIZATIONS
-
+  FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
   BUG FIXES

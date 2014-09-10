@@ -46,6 +46,7 @@ import org.apache.log4j.Logger;
 import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -68,7 +69,6 @@ public class ProcessUITest extends BaseUITestClass {
     private String baseTestDir = baseHDFSDir + "/TestProcessUI";
     private String aggregateWorkflowDir = baseTestDir + "/aggregator";
     private static final Logger logger = Logger.getLogger(ProcessUITest.class);
-    String datePattern = "/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}";
     String feedInputPath = baseTestDir + "/input";
     final String feedOutputPath = baseTestDir + "/output";
     private FileSystem clusterFS = serverFS.get(0);
@@ -95,8 +95,8 @@ public class ProcessUITest extends BaseUITestClass {
         bundles[0].setProcessPeriodicity(1, Frequency.TimeUnit.minutes);
         bundles[0].setProcessConcurrency(5);
         bundles[0].setInputFeedPeriodicity(1, Frequency.TimeUnit.minutes);
-        bundles[0].setInputFeedDataPath(feedInputPath + datePattern);
-        bundles[0].setOutputFeedLocationData(feedOutputPath + datePattern);
+        bundles[0].setInputFeedDataPath(feedInputPath + MINUTE_DATE_PATTERN);
+        bundles[0].setOutputFeedLocationData(feedOutputPath + MINUTE_DATE_PATTERN);
         Process process = bundles[0].getProcessObject();
         Inputs inputs = new Inputs();
         Input input = new Input();
@@ -138,7 +138,7 @@ public class ProcessUITest extends BaseUITestClass {
 
         inputFeeds = LineageApiTest.generateFeeds(numInputFeeds, inputMerlin,
                 Generator.getNameGenerator("infeed", inputMerlin.getName()),
-                Generator.getHadoopPathGenerator(feedInputPath, datePattern));
+                Generator.getHadoopPathGenerator(feedInputPath, MINUTE_DATE_PATTERN));
         int j = 0;
         for (FeedMerlin feed : inputFeeds) {
             bundles[0].addInputFeedToBundle("inputFeed" + j, feed.toString(), j++);
@@ -146,7 +146,7 @@ public class ProcessUITest extends BaseUITestClass {
 
         outputFeeds = LineageApiTest.generateFeeds(numOutputFeeds, outputMerlin,
                 Generator.getNameGenerator("outfeed", outputMerlin.getName()),
-                Generator.getHadoopPathGenerator(feedOutputPath, datePattern));
+                Generator.getHadoopPathGenerator(feedOutputPath, MINUTE_DATE_PATTERN));
         j = 0;
         for (FeedMerlin feed : outputFeeds) {
             bundles[0].addOutputFeedToBundle("outputFeed" + j, feed.toString(), j++);
@@ -176,27 +176,28 @@ public class ProcessUITest extends BaseUITestClass {
         //check Process statuses via UI
         EntitiesPage page = new EntitiesPage(DRIVER, cluster, EntityType.PROCESS);
         page.navigateTo();
-
-        softAssert.assertEquals(page.getEntityStatus(bundles[0].getProcessName()),
+        String process = bundles[0].getProcessData();
+        String processName = Util.readEntityName(process);
+        softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.SUBMITTED, "Process status should be SUBMITTED");
-        prism.getProcessHelper().schedule(Util.URLS.SCHEDULE_URL, bundles[0].getProcessData());
+        prism.getProcessHelper().schedule(process);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-                .getProcessData()), 1, CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
 
-        softAssert.assertEquals(page.getEntityStatus(bundles[0].getProcessName()),
+        softAssert.assertEquals(page.getEntityStatus(processName),
                 EntitiesPage.EntityStatus.RUNNING, "Process status should be RUNNING");
 
-        ProcessPage processPage = new ProcessPage(DRIVER, cluster, bundles[0].getProcessName());
+        ProcessPage processPage = new ProcessPage(DRIVER, cluster, processName);
         processPage.navigateTo();
 
-        String bundleID = InstanceUtil.getLatestBundleID(cluster, bundles[0].getProcessName(), EntityType.PROCESS);
+        String bundleID = InstanceUtil.getLatestBundleID(cluster, processName, EntityType.PROCESS);
         Map<Date, CoordinatorAction.Status> actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID,
                 EntityType.PROCESS);
         checkActions(actions, processPage);
 
-        InstanceUtil.waitTillInstanceReachState(clusterOC, Util.readEntityName(bundles[0]
-                .getProcessData()), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
 
         processPage.refresh();
         actions = OozieUtil.getActionsNominalTimeAndStatus(prism, bundleID, EntityType.PROCESS);
@@ -222,5 +223,10 @@ public class ProcessUITest extends BaseUITestClass {
                 softAssert.assertFalse(isPresent, "Lineage button should not be present for instance: " + oozieDate);
             }
         }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
     }
 }

@@ -27,15 +27,7 @@
     <frequency>minutes(5)</frequency>
     <late-arrival cut-off="days(100000)"/>
     <clusters>
-        <cluster name="lhr1-emerald" type="target" partition="${cluster.colo}">
-            <validity start="2012-07-20T00:00Z" end="2099-07-16T00:00Z"/>
-            <retention limit="days(10000)" action="delete"/>
-        </cluster>
-        <cluster name="ua2-ruby" type="target" partition="${cluster.colo}">
-            <validity start="2012-07-16T00:00Z" end="2099-07-16T00:00Z"/>
-            <retention limit="days(10000)" action="delete"/>
-        </cluster>
-         <cluster name="prod-gloabl" type="source">
+         <cluster name="clusterName" type="source">
             <validity start="2012-07-20T03:00Z" end="2099-07-16T00:00Z"/>
             <retention limit="days(10000)" action="delete"/>
         </cluster>
@@ -45,8 +37,8 @@
         <location type="stats" path="/data/regression/fetlrc/billing/stats"/>
         <location type="meta" path="/data/regression/fetlrc/billing/metadata"/>
     </locations>
-    <ACL owner="fetl" group="group" permission="0x755"/>
-    <schema location="/databus/streams_local/click_rr/schema/" provider="protobuf"/>
+    <ACL owner="default" group="group" permission="0x755"/>
+    <schema location="/schemaLocaltion/" provider="protobuf"/>
 
     <properties>
     <property name="field1" value="value1" />

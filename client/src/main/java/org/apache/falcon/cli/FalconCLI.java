@@ -65,6 +65,7 @@ public class FalconCLI {
     public static final String ENTITY_CMD = "entity";
     public static final String ENTITY_TYPE_OPT = "type";
     public static final String COLO_OPT = "colo";
+    public static final String CLUSTER_OPT = "cluster";
     public static final String ENTITY_NAME_OPT = "name";
     public static final String FILE_PATH_OPT = "file";
     public static final String SUBMIT_OPT = "submit";
@@ -85,8 +86,10 @@ public class FalconCLI {
     public static final String FILTER_BY_OPT = "filterBy";
     public static final String TAGS_OPT = "tags";
     public static final String ORDER_BY_OPT = "orderBy";
+    public static final String SORT_ORDER_OPT = "sortOrder";
     public static final String OFFSET_OPT = "offset";
     public static final String NUM_RESULTS_OPT = "numResults";
+    public static final String NUM_INSTANCES_OPT = "numInstances";
 
     public static final String INSTANCE_CMD = "instance";
     public static final String START_OPT = "start";
@@ -227,23 +230,27 @@ public class FalconCLI {
         List<LifeCycle> lifeCycles = getLifeCycle(commandLine.getOptionValue(LIFECYCLE_OPT));
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
-        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults = validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
+        String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
+        Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
+                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
 
         colo = getColo(colo);
         String instanceAction = "instance";
-        validateInstanceCommands(optionsList, entity, type, start, colo);
+        validateSortOrder(sortOrder);
+        validateInstanceCommands(optionsList, entity, type, colo);
 
 
         if (optionsList.contains(RUNNING_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
-            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, offset, numResults);
+            result = client.getRunningInstances(type, entity, colo, lifeCycles, filterBy, orderBy, sortOrder,
+                    offset, numResults);
         } else if (optionsList.contains(STATUS_OPT) || optionsList.contains(LIST_OPT)) {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result = client.getStatusOfInstances(type, entity, start, end, colo, lifeCycles,
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } else if (optionsList.contains(SUMMARY_OPT)) {
             result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
@@ -261,7 +268,7 @@ public class FalconCLI {
             validateOrderBy(orderBy, instanceAction);
             validateFilterBy(filterBy, instanceAction);
             result = client.getLogsOfInstances(type, entity, start, end, colo, runId, lifeCycles,
-                    filterBy, orderBy, offset, numResults);
+                    filterBy, orderBy, sortOrder, offset, numResults);
         } else if (optionsList.contains(PARARMS_OPT)) {
             // start time is the nominal time of instance
             result = client.getParamsOfInstance(type, entity, start, colo, clusters, sourceClusters, lifeCycles);
@@ -272,7 +279,7 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
-    private Integer validateIntInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
+    private Integer parseIntegerInput(String optionValue, int defaultVal, String optionName) throws FalconCLIException {
         Integer integer = defaultVal;
         if (optionValue != null) {
             try {
@@ -287,7 +294,7 @@ public class FalconCLI {
 
     private void validateInstanceCommands(Set<String> optionsList,
                                           String entity, String type,
-                                          String start, String colo) throws FalconCLIException {
+                                          String colo) throws FalconCLIException {
 
         if (StringUtils.isEmpty(entity)) {
             throw new FalconCLIException("Missing argument: name");
@@ -299,12 +306,6 @@ public class FalconCLI {
 
         if (StringUtils.isEmpty(colo)) {
             throw new FalconCLIException("Missing argument: colo");
-        }
-
-        if (!optionsList.contains(RUNNING_OPT)) {
-            if (StringUtils.isEmpty(start)) {
-                throw new FalconCLIException("Missing argument: start");
-            }
         }
 
         if (optionsList.contains(CLUSTERS_OPT)) {
@@ -338,14 +339,22 @@ public class FalconCLI {
         String entityName = commandLine.getOptionValue(ENTITY_NAME_OPT);
         String filePath = commandLine.getOptionValue(FILE_PATH_OPT);
         String colo = commandLine.getOptionValue(COLO_OPT);
+        String cluster = commandLine.getOptionValue(CLUSTER_OPT);
+        String start = commandLine.getOptionValue(START_OPT);
+        String end = commandLine.getOptionValue(END_OPT);
         String time = commandLine.getOptionValue(EFFECTIVE_OPT);
         String orderBy = commandLine.getOptionValue(ORDER_BY_OPT);
+        String sortOrder = commandLine.getOptionValue(SORT_ORDER_OPT);
         String filterBy = commandLine.getOptionValue(FILTER_BY_OPT);
         String filterTags = commandLine.getOptionValue(TAGS_OPT);
         String fields = commandLine.getOptionValue(FIELDS_OPT);
-        Integer offset = validateIntInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
-        Integer numResults =validateIntInput(commandLine.getOptionValue(NUM_RESULTS_OPT), -1, "numResults");
+        Integer offset = parseIntegerInput(commandLine.getOptionValue(OFFSET_OPT), 0, "offset");
+        Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
+                FalconClient.DEFAULT_NUM_RESULTS, "numResults");
+        Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
         validateEntityType(entityType);
+        validateSortOrder(sortOrder);
+        String entityAction = "entity";
 
         if (optionsList.contains(SUBMIT_OPT)) {
             validateFilePath(filePath);
@@ -396,17 +405,39 @@ public class FalconCLI {
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
             validateEntityFields(fields);
-            validateOrderBy(orderBy, "entity");
-            validateFilterBy(filterBy, "entity");
+            validateOrderBy(orderBy, entityAction);
+            validateFilterBy(filterBy, entityAction);
             EntityList entityList = client.getEntityList(entityType, fields, filterBy,
-                    filterTags, orderBy, offset, numResults);
+                    filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
+        }  else if (optionsList.contains(SUMMARY_OPT)) {
+            validateCluster(cluster);
+            validateEntityFields(fields);
+            validateFilterBy(filterBy, entityAction);
+            validateOrderBy(orderBy, entityAction);
+            result = client.getEntitySummary(entityType, cluster, start, end, fields, filterBy, filterTags,
+                    orderBy, sortOrder, offset, numResults, numInstances);
         } else if (optionsList.contains(HELP_CMD)) {
             OUT.get().println("Falcon Help");
         } else {
             throw new FalconCLIException("Invalid command");
         }
         OUT.get().println(result);
+    }
+
+    private void validateSortOrder(String sortOrder) throws FalconCLIException {
+        if (!StringUtils.isEmpty(sortOrder)) {
+            if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
+                throw new FalconCLIException("Value for param sortOrder should be \"asc\" or \"desc\". It is  : "
+                        + sortOrder);
+            }
+        }
+    }
+
+    private void validateCluster(String cluster) throws FalconCLIException {
+        if (StringUtils.isEmpty(cluster)) {
+            throw new FalconCLIException("Missing argument: cluster");
+        }
     }
 
     private String getColo(String colo) throws FalconCLIException, IOException {
@@ -563,6 +594,8 @@ public class FalconCLI {
                 "Gets the dependencies of entity");
         Option list = new Option(LIST_OPT, false,
                 "List entities registerd for a type");
+        Option entitySummary = new Option(SUMMARY_OPT, false,
+                "Get summary of instances for list of entities");
 
         OptionGroup group = new OptionGroup();
         group.addOption(submit);
@@ -577,6 +610,7 @@ public class FalconCLI {
         group.addOption(definition);
         group.addOption(dependency);
         group.addOption(list);
+        group.addOption(entitySummary);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option entityType = new Option(ENTITY_TYPE_OPT, true,
@@ -586,8 +620,10 @@ public class FalconCLI {
                 "Path to entity xml file");
         Option entityName = new Option(ENTITY_NAME_OPT, true,
                 "Entity type, can be cluster, feed or process xml");
-        Option colo = new Option(COLO_OPT, true,
-                "Colo name");
+        Option start = new Option(START_OPT, true, "Start time is optional for summary");
+        Option end = new Option(END_OPT, true, "End time is optional for summary");
+        Option colo = new Option(COLO_OPT, true, "Colo name");
+        Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
         colo.setRequired(false);
         Option effective = new Option(EFFECTIVE_OPT, true, "Effective time for update");
         Option fields = new Option(FIELDS_OPT, true, "Entity fields to show for a request");
@@ -596,10 +632,13 @@ public class FalconCLI {
         Option filterTags = new Option(TAGS_OPT, true, "Filter returned entities by the specified tags");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned entities by this field");
+        Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
         Option offset = new Option(OFFSET_OPT, true,
                 "Start returning entities from this offset");
         Option numResults = new Option(NUM_RESULTS_OPT, true,
                 "Number of results to return per request");
+        Option numInstances = new Option(NUM_INSTANCES_OPT, true,
+                "Number of instances to return per entity summary request");
 
         entityOptions.addOption(url);
         entityOptions.addOptionGroup(group);
@@ -607,13 +646,18 @@ public class FalconCLI {
         entityOptions.addOption(entityName);
         entityOptions.addOption(filePath);
         entityOptions.addOption(colo);
+        entityOptions.addOption(cluster);
+        entityOptions.addOption(start);
+        entityOptions.addOption(end);
         entityOptions.addOption(effective);
         entityOptions.addOption(fields);
         entityOptions.addOption(filterBy);
         entityOptions.addOption(filterTags);
         entityOptions.addOption(orderBy);
+        entityOptions.addOption(sortOrder);
         entityOptions.addOption(offset);
         entityOptions.addOption(numResults);
+        entityOptions.addOption(numInstances);
 
         return entityOptions;
     }
@@ -670,7 +714,6 @@ public class FalconCLI {
                 false,
                 "Displays the workflow parameters for a given instance of specified nominal time");
 
-
         OptionGroup group = new OptionGroup();
         group.addOption(running);
         group.addOption(list);
@@ -721,6 +764,7 @@ public class FalconCLI {
                 "Filter returned instances by the specified fields");
         Option orderBy = new Option(ORDER_BY_OPT, true,
                 "Order returned instances by this field");
+        Option sortOrder = new Option(SORT_ORDER_OPT, true, "asc or desc order for results");
         Option offset = new Option(OFFSET_OPT, true,
                 "Start returning instances from this offset");
         Option numResults = new Option(NUM_RESULTS_OPT, true,
@@ -741,6 +785,7 @@ public class FalconCLI {
         instanceOptions.addOption(filterBy);
         instanceOptions.addOption(offset);
         instanceOptions.addOption(orderBy);
+        instanceOptions.addOption(sortOrder);
         instanceOptions.addOption(numResults);
 
         return instanceOptions;

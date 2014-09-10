@@ -26,16 +26,17 @@ import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.core.util.Util;
-import org.apache.falcon.regression.core.util.Util.URLS;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.TestNGException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,8 +94,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         List<String> initialUA2ArchiveStore = cluster1.getProcessHelper().getArchiveInfo();
 
         //lets now delete the cluster from both colos
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         //now lets get the final states
         List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -145,8 +145,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             Util.shutDownService(cluster2.getClusterHelper());
 
             //lets now delete the cluster from both colos
-            AssertUtil.assertFailed(prism.getProcessHelper()
-                .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+            AssertUtil.assertFailed(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -178,8 +177,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             //bring service up
             Util.startService(cluster2.getProcessHelper());
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             HashMap<String, List<String>> systemPostUp = getSystemState(EntityType.PROCESS);
 
@@ -208,9 +206,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             //now submit the thing to prism
             bundles[0].submitFeedsScheduleProcess();
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
             //fetch the initial store and archive state for prism
             List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
             List<String> initialPrismArchiveStore = prism.getProcessHelper().getArchiveInfo();
@@ -223,9 +219,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             List<String> initialUA2ArchiveStore = cluster1.getProcessHelper().getArchiveInfo();
 
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -266,8 +260,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             Util.shutDownService(cluster2.getClusterHelper());
 
             //lets now delete the cluster from both colos
-            AssertUtil.assertFailed(prism.getProcessHelper()
-                .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+            AssertUtil.assertFailed(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //now lets get the final states
             List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -285,8 +278,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //delete again
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //get final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -339,8 +331,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //delete
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //get final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -394,9 +385,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //delete
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //get final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -426,9 +415,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             Util.startService(cluster2.getClusterHelper());
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         } catch (Exception e) {
             logger.info(e.getMessage());
@@ -456,8 +443,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         List<String> initialUA2ArchiveStore = cluster1.getProcessHelper().getArchiveInfo();
 
         //lets now delete the cluster from both colos
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         //now lets get the final states
         List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -494,8 +480,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         bundles[1].submitFeedsScheduleProcess();
 
         //suspend UA1 colo thingy
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .suspend(URLS.SUSPEND_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
 
         //fetch the initial store and archive state for prism
         List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -509,8 +494,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         List<String> initialUA2ArchiveStore = cluster1.getProcessHelper().getArchiveInfo();
 
         //lets now delete the cluster from both colos
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         //now lets get the final states
         List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -548,10 +532,8 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         bundles[1].submitFeedsScheduleProcess();
 
         //suspend UA1 colo thingy
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .suspend(URLS.SUSPEND_URL, bundles[0].getProcessData()));
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .suspend(URLS.SUSPEND_URL, bundles[1].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(bundles[1].getProcessData()));
 
         //fetch the initial store and archive state for prism
         List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -565,8 +547,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         List<String> initialUA2ArchiveStore = cluster1.getProcessHelper().getArchiveInfo();
 
         //lets now delete the cluster from both colos
-        AssertUtil.assertSucceeded(prism.getProcessHelper()
-            .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+        AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
         //now lets get the final states
         List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -604,9 +585,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             bundles[1].submitFeedsScheduleProcess();
 
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .suspend(Util.URLS.SUSPEND_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().suspend(bundles[0].getProcessData()));
 
             //fetch the initial store and archive state for prism
             List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -623,8 +602,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             Util.shutDownService(cluster2.getFeedHelper());
 
             //lets now delete the cluster from both colos
-            AssertUtil.assertFailed(prism.getProcessHelper()
-                .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+            AssertUtil.assertFailed(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -682,8 +660,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             Util.shutDownService(cluster2.getFeedHelper());
 
             //lets now delete the cluster from both colos
-            AssertUtil.assertFailed(prism.getProcessHelper()
-                .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData()));
+            AssertUtil.assertFailed(prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -714,9 +691,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             Util.startService(cluster2.getClusterHelper());
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             HashMap<String, List<String>> systemPostUp = getSystemState(EntityType.PROCESS);
 
@@ -748,9 +723,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //now submit the thing to prism
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .suspend(Util.URLS.SUSPEND_URL, bundles[1].getProcessData())
-            );
+                prism.getProcessHelper().suspend(bundles[1].getProcessData()));
             //fetch the initial store and archive state for prism
             List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
             List<String> initialPrismArchiveStore = prism.getProcessHelper().getArchiveInfo();
@@ -767,9 +740,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //lets now delete the cluster from both colos
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[1].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[1].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -815,12 +786,9 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //now submit the thing to prism
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .suspend(Util.URLS.SUSPEND_URL, bundles[1].getProcessData())
-            );
+                prism.getProcessHelper().suspend(bundles[1].getProcessData()));
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .suspend(Util.URLS.SUSPEND_URL, bundles[0].getProcessData()));
+                prism.getProcessHelper().suspend(bundles[0].getProcessData()));
             //fetch the initial store and archive state for prism
             List<String> initialPrismStore = prism.getProcessHelper().getStoreInfo();
             List<String> initialPrismArchiveStore = prism.getProcessHelper().getArchiveInfo();
@@ -837,9 +805,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //lets now delete the cluster from both colos
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[1].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[1].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -898,9 +864,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
 
             //lets now delete the cluster from both colos
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[1].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[1].getProcessData()));
 
             //now lets get the final states
             List<String> finalPrismStore = prism.getProcessHelper().getStoreInfo();
@@ -933,9 +897,7 @@ public class PrismProcessDeleteTest extends BaseTestClass {
             Util.startService(cluster2.getClusterHelper());
 
             AssertUtil.assertSucceeded(
-                prism.getProcessHelper()
-                    .delete(Util.URLS.DELETE_URL, bundles[0].getProcessData())
-            );
+                prism.getProcessHelper().delete(bundles[0].getProcessData()));
 
             HashMap<String, List<String>> systemPostUp = getSystemState(EntityType.PROCESS);
 
@@ -1005,5 +967,8 @@ public class PrismProcessDeleteTest extends BaseTestClass {
         return temp;
     }
 
-
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws IOException {
+        cleanTestDirs();
+    }
 }

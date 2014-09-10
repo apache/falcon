@@ -109,8 +109,19 @@ public abstract class RelationshipGraphBuilder {
     }
 
     protected Edge addEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {
+        return addEdge(fromVertex, toVertex, edgeLabel, null);
+    }
+
+    protected Edge addEdge(Vertex fromVertex, Vertex toVertex,
+                           String edgeLabel, String timestamp) {
         Edge edge = findEdge(fromVertex, toVertex, edgeLabel);
-        return edge != null ? edge : fromVertex.addEdge(edgeLabel, toVertex);
+
+        Edge edgeToVertex = edge != null ? edge : fromVertex.addEdge(edgeLabel, toVertex);
+        if (timestamp != null) {
+            edgeToVertex.setProperty(RelationshipProperty.TIMESTAMP.getName(), timestamp);
+        }
+
+        return edgeToVertex;
     }
 
     protected void removeEdge(Vertex fromVertex, Vertex toVertex, String edgeLabel) {

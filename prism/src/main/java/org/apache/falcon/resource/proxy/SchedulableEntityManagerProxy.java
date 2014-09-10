@@ -30,6 +30,7 @@ import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractSchedulableEntityManager;
 import org.apache.falcon.resource.EntityList;
+import org.apache.falcon.resource.EntitySummaryResult;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 import org.apache.falcon.util.DeploymentUtil;
@@ -292,20 +293,6 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
     }
 
     @GET
-    @Path("list/{type}")
-    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
-    @Override
-    public EntityList getEntityList(@PathParam("type") String type,
-                                    @DefaultValue("") @QueryParam("fields") String fields,
-                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
-                                    @DefaultValue("") @QueryParam("tags") String tags,
-                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
-                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, offset, resultsPerPage);
-    }
-
-    @GET
     @Path("definition/{type}/{entity}")
     @Produces({MediaType.TEXT_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Override
@@ -401,6 +388,46 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             }
         }.execute();
     }
+
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
+    @GET
+    @Path("list/{type}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Override
+    public EntityList getEntityList(@PathParam("type") String type,
+                                    @DefaultValue("") @QueryParam("fields") String fields,
+                                    @DefaultValue("") @QueryParam("filterBy") String filterBy,
+                                    @DefaultValue("") @QueryParam("tags") String tags,
+                                    @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
+                                    @DefaultValue("0") @QueryParam("offset") Integer offset,
+                                    @DefaultValue(DEFAULT_NUM_RESULTS)
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage);
+    }
+
+    @GET
+    @Path("summary/{type}/{cluster}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Monitored(event = "summary")
+    @Override
+    public EntitySummaryResult getEntitySummary(
+            @Dimension("type") @PathParam("type") final String type,
+            @Dimension("cluster") @PathParam("cluster") final String cluster,
+            @DefaultValue("") @QueryParam("start") String startStr,
+            @DefaultValue("") @QueryParam("end") String endStr,
+            @DefaultValue("") @QueryParam("fields") final String entityFields,
+            @DefaultValue("") @QueryParam("filterBy") final String entityFilter,
+            @DefaultValue("") @QueryParam("tags") final String entityTags,
+            @DefaultValue("") @QueryParam("orderBy") final String entityOrderBy,
+            @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
+            @DefaultValue("0") @QueryParam("offset") final Integer entityOffset,
+            @DefaultValue("10") @QueryParam("numResults") final Integer numEntities,
+            @DefaultValue("7") @QueryParam("numInstances") final Integer numInstanceResults) {
+        return super.getEntitySummary(type, cluster, startStr, endStr, entityFields, entityFilter,
+                entityTags, entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults);
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     private abstract class EntityProxy {
         private String type;

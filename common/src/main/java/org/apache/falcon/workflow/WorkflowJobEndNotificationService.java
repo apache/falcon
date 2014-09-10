@@ -18,6 +18,7 @@
 
 package org.apache.falcon.workflow;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -54,6 +55,10 @@ public class WorkflowJobEndNotificationService implements FalconService {
     public void init() throws FalconException {
         String listenerClassNames = StartupProperties.get().getProperty(
                 "workflow.execution.listeners");
+        if (StringUtils.isEmpty(listenerClassNames)) {
+            return;
+        }
+
         for (String listenerClassName : listenerClassNames.split(",")) {
             listenerClassName = listenerClassName.trim();
             if (listenerClassName.isEmpty()) {

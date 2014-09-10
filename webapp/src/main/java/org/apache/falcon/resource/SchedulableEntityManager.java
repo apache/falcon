@@ -53,6 +53,7 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
         return super.getDependencies(type, entity);
     }
 
+    //SUSPEND CHECKSTYLE CHECK ParameterNumberCheck
     @GET
     @Path("list/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
@@ -63,10 +64,35 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
                                     @DefaultValue("") @QueryParam("filterBy") String filterBy,
                                     @DefaultValue("") @QueryParam("tags") String tags,
                                     @DefaultValue("") @QueryParam("orderBy") String orderBy,
+                                    @DefaultValue("asc") @QueryParam("sortOrder") String sortOrder,
                                     @DefaultValue("0") @QueryParam("offset") Integer offset,
-                                    @DefaultValue("-1") @QueryParam("numResults") Integer resultsPerPage) {
-        return super.getEntityList(type, fields, filterBy, tags, orderBy, offset, resultsPerPage);
+                                    @DefaultValue(DEFAULT_NUM_RESULTS)
+                                    @QueryParam("numResults") Integer resultsPerPage) {
+        return super.getEntityList(type, fields, filterBy, tags, orderBy, sortOrder, offset, resultsPerPage);
     }
+
+    @GET
+    @Path("summary/{type}/{cluster}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
+    @Monitored(event = "summary")
+    @Override
+    public EntitySummaryResult getEntitySummary(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("cluster") @PathParam("cluster") String cluster,
+            @DefaultValue("") @QueryParam("start") String startStr,
+            @DefaultValue("") @QueryParam("end") String endStr,
+            @DefaultValue("") @QueryParam("fields") String fields,
+            @DefaultValue("") @QueryParam("filterBy") String entityFilter,
+            @DefaultValue("") @QueryParam("tags")  String entityTags,
+            @DefaultValue("") @QueryParam("orderBy") String entityOrderBy,
+            @DefaultValue("asc") @QueryParam("sortOrder") String entitySortOrder,
+            @DefaultValue("0") @QueryParam("offset") Integer entityOffset,
+            @DefaultValue("10") @QueryParam("numResults") Integer numEntities,
+            @DefaultValue("7") @QueryParam("numInstances") Integer numInstanceResults) {
+        return super.getEntitySummary(type, cluster, startStr, endStr, fields, entityFilter, entityTags,
+                entityOrderBy, entitySortOrder, entityOffset, numEntities, numInstanceResults);
+    }
+    //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
     @GET
     @Path("definition/{type}/{entity}")
