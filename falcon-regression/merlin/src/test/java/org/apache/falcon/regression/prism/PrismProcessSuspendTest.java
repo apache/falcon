@@ -184,7 +184,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
         }
     }
 
-    @Test(groups = "embedded")
+    @Test(groups = "distributed")
     public void testSuspendNonExistentProcessOnBothColos() throws Exception {
         AssertUtil.assertFailed(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
         AssertUtil.assertFailed(prism.getProcessHelper().suspend(bundles[1].getProcessData()));
@@ -193,7 +193,7 @@ public class PrismProcessSuspendTest extends BaseTestClass {
         AssertUtil.assertFailed(cluster2.getProcessHelper().suspend(bundles[0].getProcessData()));
     }
 
-    @Test(groups = "embedded")
+    @Test(groups = "distributed")
     public void testSuspendSubmittedProcessOnBothColos() throws Exception {
         bundles[0].submitProcess(true);
         bundles[1].submitProcess(true);

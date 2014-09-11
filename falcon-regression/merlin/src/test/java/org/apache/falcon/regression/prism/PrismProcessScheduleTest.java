@@ -199,7 +199,7 @@ public class PrismProcessScheduleTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = {"prism", "0.2", "embedded"})
+    @Test(groups = {"prism", "0.2", "distributed"})
     public void testScheduleNonExistentProcessOnBothColos() throws Exception {
         AssertUtil.assertFailed(cluster2.getProcessHelper().schedule(process1));
         AssertUtil.assertFailed(cluster1.getProcessHelper().schedule(process2));
