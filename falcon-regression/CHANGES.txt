@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-693 Tests with zero inp/outp fixed to use correct workflow, javadocs
+   added (Paul Isaychuk)
+
    FALCON-711 Test retagged (Paul Isaychuk)
 
    FALCON-696 Pull oozie logs at the end of tests (Raghav Kumar Gautam)

@@ -63,6 +63,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     OozieClient cluster1OC = serverOC.get(0);
     String baseTestDir = baseHDFSDir + "/PrismFeedUpdateTest";
     String aggregateWorkflowDir = baseTestDir + "/aggregator";
+    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noinop";
     public final String cluster1colo = cluster1.getClusterHelper().getColoName();
     public final String cluster2colo = cluster2.getClusterHelper().getColoName();
     private static final Logger logger = Logger.getLogger(PrismFeedUpdateTest.class);
@@ -71,6 +72,7 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     @BeforeClass(alwaysRun = true)
     public void uploadWorkflow() throws Exception {
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -91,12 +93,14 @@ public class PrismFeedUpdateTest extends BaseTestClass {
     }
 
     /**
-     * TODO : complete test case
+     * Set 2 processes with common output feed. Second one is zero-input process. Update feed
+     * queue. TODO : complete test case
      */
     @Test(enabled = true, timeOut = 1200000)
     public void updateFeedQueue_dependentMultipleProcess_oneProcessZeroInput() throws Exception {
         //cluster1colo and cluster2colo are source. feed01 on cluster1colo target cluster2colo,
         // feed02 on cluster2colo target cluster1colo
+        bundles[0].setProcessWorkflow(workflowForNoIpOp);
         String cluster1Def = bundles[0].getClusters().get(0);
         String cluster2Def = bundles[1].getClusters().get(0);
 

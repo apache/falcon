@@ -58,13 +58,13 @@ public class NoOutputProcessTest extends BaseTestClass {
     OozieClient clusterOC = serverOC.get(0);
     String testDir = baseHDFSDir + "/NoOutputProcessTest";
     String inputPath = testDir + "/input" + MINUTE_DATE_PATTERN;
-    String aggregateWorkflowDir = testDir + "/aggregator";
+    String workflowForNoIpOp = baseHDFSDir + "/PrismProcessScheduleTest/noInOp";
     private static final Logger logger = Logger.getLogger(NoOutputProcessTest.class);
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
         logger.info("in @BeforeClass");
-        HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
+        uploadDirToClusters(workflowForNoIpOp, OSUtil.RESOURCES + "workflows/aggregatorNoOutput/");
         Bundle b = BundleUtil.readELBundle();
         b.generateUniqueBundle();
         b = new Bundle(b, cluster);
@@ -83,12 +83,13 @@ public class NoOutputProcessTest extends BaseTestClass {
         bundles[0] = BundleUtil.readELBundle();
         bundles[0].generateUniqueBundle();
         bundles[0] = new Bundle(bundles[0], cluster);
-        bundles[0].setProcessWorkflow(aggregateWorkflowDir);
+        bundles[0].setProcessWorkflow(workflowForNoIpOp);
         bundles[0].setInputFeedDataPath(inputPath);
         bundles[0].setProcessValidity("2010-01-03T02:30Z", "2010-01-03T02:45Z");
         bundles[0].setProcessPeriodicity(5, TimeUnit.minutes);
         ProcessMerlin process = new ProcessMerlin(bundles[0].getProcessData());
         process.setOutputs(null);
+        process.setLateProcess(null);
         bundles[0].setProcessData(process.toString());
         bundles[0].submitFeedsScheduleProcess(prism);
     }
@@ -98,6 +99,11 @@ public class NoOutputProcessTest extends BaseTestClass {
         removeBundles();
     }
 
+    /**
+     * Waits till process ends successfully. Check that JMS messages related to entities
+     * reflects info about succeeded process instances as expected.
+     * @throws Exception
+     */
     @Test(enabled = true, groups = {"singleCluster"})
     public void checkForJMSMsgWhenNoOutput() throws Exception {
         logger.info("attaching messageConsumer to:   " + "FALCON.ENTITY.TOPIC");
@@ -114,6 +120,11 @@ public class NoOutputProcessTest extends BaseTestClass {
         Util.printMessageData(messageConsumer);
     }
 
+    /**
+     * Waits till process ends successfully. Checks that JMS messages related to entities
+     * and to particular process reflects info about succeeded process instances as expected.
+     * @throws Exception
+     */
     @Test(enabled = true, groups = {"singleCluster"})
     public void rm() throws Exception {
         JmsMessageConsumer consumerEntityMsg =
