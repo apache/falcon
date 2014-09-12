@@ -21,6 +21,7 @@ package org.apache.falcon.resource;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.resource.metadata.AbstractMetadataResource;
+import org.apache.falcon.util.DeploymentUtil;
 import org.json.simple.JSONValue;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -60,7 +61,7 @@ public class MetadataResourceJerseyIT {
     }
 
     @Test
-    public void testMetadataList() throws Exception {
+    public void testMetadataDiscoveryResourceList() throws Exception {
 
         ClientResponse response = context.service
                 .path("api/metadata/cluster_entity/list")
@@ -91,7 +92,30 @@ public class MetadataResourceJerseyIT {
                 .get(ClientResponse.class);
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         results = (Map) JSONValue.parse(response.getEntity(String.class));
-        Assert.assertEquals(((Long)results.get(AbstractMetadataResource.TOTAL_SIZE)).longValue(), 0);
+        Assert.assertEquals(Integer.parseInt(results.get(AbstractMetadataResource.TOTAL_SIZE).toString()), 0);
+    }
+
+    @Test
+    public void testMetadataDiscoveryResourceRelations() throws Exception {
+        ClientResponse response = context.service
+                .path("api/metadata/process_entity/" + context.processName + "/relations")
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        Map results = (Map) JSONValue.parse(response.getEntity(String.class));
+        Assert.assertEquals(results.get("name"), context.processName);
+
+        response = context.service
+                .path("api/metadata/colo/" + DeploymentUtil.getCurrentColo() + "/relations")
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        results = (Map) JSONValue.parse(response.getEntity(String.class));
+        Assert.assertEquals(results.get("name"), DeploymentUtil.getCurrentColo());
+        List inVertices = (List) results.get("inVertices");
+        Assert.assertTrue(inVertices.size() >= 1);
     }
 
     private ThreadLocal<TestContext> contexts = new ThreadLocal<TestContext>();

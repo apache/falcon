@@ -82,3 +82,4 @@ See also: [[../Security.twiki][Security in Falcon]]
 
 | *Call Type* | *Resource*                                                                           | *Description*                                                                 |
 | GET         | [[MetadataList][api/metadata/:dimension-type/list]]                                  | list of dimensions  |
+| GET         | [MetadataRelations][api/metadata/:dimension-type/:dimension-name/relations]]         | Return all relations of a dimension |

@@ -1,0 +1,45 @@
+---++  GET api/metadata/:dimension-type/:dimension-name/relations
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get all relations of a specific dimension.
+
+---++ Parameters
+   * :type Valid dimension types are cluster_entity,feed_entity, process_entity, user, colo, tags, groups, pipelines
+   * :name Name of the dimension.
+
+---++ Results
+Get all relations of a specific dimension.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/metadata/process_entity/sample-process/relations
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "timestamp":"2014-09-09T01:31Z",
+    "userWorkflowEngine":"pig",
+    "name":"sample-process",
+    "type":"PROCESS_ENTITY",
+    "userWorkflowName":"imp-click-join-workflow",
+    "version":"1.0.9",
+    "inVertices":[
+        {"name":"clicks-feed","type":"FEED_ENTITY","label":"input"},
+        {"name":"impression-feed","type":"FEED_ENTITY","label":"input"},
+        {"name":"sample-process\/2014-01-01T01:00Z","type":"PROCESS_INSTANCE","label":"instance-of"}
+    ],
+    "outVertices":[
+        {"name":"Critical","type":"TAGS","label":"classified-as"},
+        {"name":"testPipeline","type":"PIPELINES","label":"pipeline"},
+        {"name":"primary-cluster","type":"CLUSTER_ENTITY","label":"runs-on"},
+        {"name":"imp-click-join2","type":"FEED_ENTITY","label":"output"},
+        {"name":"imp-click-join1","type":"FEED_ENTITY","label":"output"},
+        {"name":"falcon-user","type":"USER","label":"owned-by"}
+    ]
+}
+</verbatim>

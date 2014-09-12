@@ -40,10 +40,12 @@ public class FalconMetadataCLI {
     public static final AtomicReference<PrintStream> OUT = new AtomicReference<PrintStream>(System.out);
 
     public static final String LIST_OPT = "list";
+    public static final String RELATIONS_OPT = "relations";
 
     public static final String URL_OPTION = "url";
     public static final String TYPE_OPT = "type";
     public static final String CLUSTER_OPT = "cluster";
+    public static final String NAME_OPT = "name";
 
     public FalconMetadataCLI() {}
 
@@ -56,11 +58,15 @@ public class FalconMetadataCLI {
         String result = null;
         String dimensionType = commandLine.getOptionValue(TYPE_OPT);
         String cluster = commandLine.getOptionValue(CLUSTER_OPT);
+        String dimensionName = commandLine.getOptionValue(NAME_OPT);
 
         validateDimensionType(dimensionType.toUpperCase());
 
         if (optionsList.contains(LIST_OPT)) {
             result = client.getDimensionList(dimensionType, cluster);
+        } else if (optionsList.contains(RELATIONS_OPT)) {
+            validateDimensionName(dimensionName, RELATIONS_OPT);
+            result = client.getDimensionRelations(dimensionType, dimensionName);
         }
 
         OUT.get().println(result);
@@ -78,21 +84,31 @@ public class FalconMetadataCLI {
         }
     }
 
+    private void validateDimensionName(String dimensionName, String action) throws FalconCLIException {
+        if (StringUtils.isEmpty(dimensionName)) {
+            throw new FalconCLIException("Dimension ID cannot be empty or null for action " + action);
+        }
+    }
+
     public Options createMetadataOptions() {
         Options metadataOptions = new Options();
 
         OptionGroup group = new OptionGroup();
         Option list = new Option(LIST_OPT, false, "List all dimensions");
+        Option relations = new Option(RELATIONS_OPT, false, "List all relations for a dimension");
         group.addOption(list);
+        group.addOption(relations);
 
         Option url = new Option(URL_OPTION, true, "Falcon URL");
         Option type = new Option(TYPE_OPT, true, "Dimension type");
+        Option name = new Option(NAME_OPT, true, "Dimension name");
         Option cluster = new Option(CLUSTER_OPT, true, "Cluster name");
 
         metadataOptions.addOptionGroup(group);
         metadataOptions.addOption(url);
         metadataOptions.addOption(type);
         metadataOptions.addOption(cluster);
+        metadataOptions.addOption(name);
 
         return metadataOptions;
     }

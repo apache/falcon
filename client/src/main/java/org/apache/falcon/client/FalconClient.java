@@ -208,7 +208,8 @@ public class FalconClient {
      */
     protected static enum MetadataOperations {
 
-        LIST("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LIST("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        RELATIONS("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -504,7 +505,11 @@ public class FalconClient {
     }
 
     public String getDimensionList(String dimensionType, String cluster) throws FalconCLIException {
-        return sendMetadataListRequest(MetadataOperations.LIST, dimensionType, cluster);
+        return sendMetadataRequest(MetadataOperations.LIST, dimensionType, null, cluster);
+    }
+
+    public String getDimensionRelations(String dimensionType, String dimensionName) throws FalconCLIException {
+        return sendMetadataRequest(MetadataOperations.RELATIONS, dimensionType, dimensionName, null);
     }
 
     /**
@@ -788,12 +793,28 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendMetadataListRequest(final MetadataOperations op, final String dimensionType,
-                                           final String cluster) throws FalconCLIException {
-        WebResource resource = service
-                .path(op.path)
-                .path(dimensionType)
-                .path(FalconMetadataCLI.LIST_OPT);
+    private String sendMetadataRequest(final MetadataOperations operation,
+                                       final String dimensionType,
+                                       final String dimensionName,
+                                       final String cluster) throws FalconCLIException {
+        WebResource resource;
+        switch (operation) {
+        case LIST:
+            resource = service.path(operation.path)
+                    .path(dimensionType)
+                    .path(FalconMetadataCLI.LIST_OPT);
+            break;
+
+        case RELATIONS:
+            resource = service.path(operation.path)
+                    .path(dimensionType)
+                    .path(dimensionName)
+                    .path(FalconMetadataCLI.RELATIONS_OPT);
+            break;
+
+        default:
+            throw new FalconCLIException("Invalid Metadata client Operation " + operation.toString());
+        }
 
         if (!StringUtils.isEmpty(cluster)) {
             resource = resource.queryParam(FalconMetadataCLI.CLUSTER_OPT, cluster);
@@ -801,8 +822,8 @@ public class FalconClient {
 
         ClientResponse clientResponse = resource
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
-                .accept(op.mimeType).type(op.mimeType)
-                .method(op.method, ClientResponse.class);
+                .accept(operation.mimeType).type(operation.mimeType)
+                .method(operation.method, ClientResponse.class);
 
         checkIfSuccessful(clientResponse);
         return parseStringResult(clientResponse);

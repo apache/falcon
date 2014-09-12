@@ -732,18 +732,63 @@ public class FalconCLIIT {
         String metadataListCommand = FalconCLI.METADATA_CMD + " -" + FalconMetadataCLI.LIST_OPT + " -"
                 + FalconMetadataCLI.TYPE_OPT + " ";
         String clusterString = " -" + FalconMetadataCLI.CLUSTER_OPT + " " + clusterName;
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.toString()));
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.toString()));
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.toString()));
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.toString()
+
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.name()));
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.name()));
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.name()));
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.name()
                 + clusterString));
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.toString()
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.name()
                 + clusterString));
-        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.toString()
+        Assert.assertEquals(0,
+                executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.name()
                 + clusterString));
 
         Assert.assertEquals(-1, executeWithURL(metadataListCommand + "feed"));
         Assert.assertEquals(-1, executeWithURL(metadataListCommand + "invalid"));
+    }
+
+    @Test
+    public void testMetadataRelationsCommands() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
+
+        String processName = overlay.get("processName");
+        String feedName = overlay.get("outputFeedName");
+        String clusterName = overlay.get("cluster");
+
+        Assert.assertEquals(0,
+                executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
+                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName));
+
+        Assert.assertEquals(0,
+                executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
+                        + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName));
+
+        OozieTestUtils.waitForProcessWFtoStart(context);
+
+        String metadataRelationsCommand = FalconCLI.METADATA_CMD + " -" + FalconMetadataCLI.RELATIONS_OPT + " -"
+                + FalconMetadataCLI.TYPE_OPT + " ";
+
+        Assert.assertEquals(0,
+                executeWithURL(metadataRelationsCommand + RelationshipType.CLUSTER_ENTITY.name()
+                        + " -" + FalconMetadataCLI.NAME_OPT + " " + clusterName));
+        Assert.assertEquals(0,
+                executeWithURL(metadataRelationsCommand + RelationshipType.PROCESS_ENTITY.name()
+                + " -" + FalconMetadataCLI.NAME_OPT + " " + processName));
+
+        Assert.assertEquals(-1, executeWithURL(metadataRelationsCommand + "feed -"
+                + FalconMetadataCLI.NAME_OPT + " " + clusterName));
+        Assert.assertEquals(-1, executeWithURL(metadataRelationsCommand + "invalid -"
+                + FalconMetadataCLI.NAME_OPT + " " + clusterName));
+        Assert.assertEquals(-1,
+                executeWithURL(metadataRelationsCommand + RelationshipType.CLUSTER_ENTITY.name()));
     }
 
     public void testContinue() throws Exception {

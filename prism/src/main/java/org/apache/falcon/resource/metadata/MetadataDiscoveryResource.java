@@ -22,6 +22,8 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.GraphQuery;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
+import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
@@ -54,9 +56,9 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
     @GET
     @Path("/{type}/list")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response listDimensionValues(@PathParam("type") String type,
+    public Response listDimensionValues(@PathParam("type") String dimensionType,
                                         @QueryParam("cluster") final String clusterName) {
-        RelationshipType relationshipType = validateAndParseDimensionType(type.toUpperCase());
+        RelationshipType relationshipType = validateAndParseDimensionType(dimensionType.toUpperCase());
         GraphQuery query = getGraph().query();
         JSONArray dimensionValues = new JSONArray();
 
@@ -66,13 +68,10 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
                     query.vertices().iterator());
         } else {
             // Get clusterVertex, get adjacent vertices of clusterVertex that match dimension type.
-            query = query
-                    .has(RelationshipProperty.TYPE.getName(), RelationshipType.CLUSTER_ENTITY.getName())
-                    .has(RelationshipProperty.NAME.getName(), clusterName);
-            Iterator<Vertex> clusterIterator = query.vertices().iterator();
-            if (clusterIterator.hasNext()) {
-                dimensionValues = getDimensionsFromClusterVertex(
-                        dimensionValues, clusterIterator.next(), relationshipType);
+            Vertex clusterVertex = getVertex(clusterName, RelationshipType.CLUSTER_ENTITY.getName());
+            if (clusterVertex != null) {
+                dimensionValues = getDimensionsFromClusterVertex(dimensionValues,
+                        clusterVertex, relationshipType);
             } // else, no cluster found. Return empty results
         }
 
@@ -85,6 +84,76 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
         }
+    }
+
+    /**
+     * Get relations of a dimension identified by type and name.
+     *
+     * GET http://host/metadata/dimension-type/dimension-name/relations
+     */
+    @GET
+    @Path("/{type}/{name}/relations")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getDimensionRelations(@PathParam("type") String dimensionType,
+                                          @PathParam("name") String dimensionName) {
+        RelationshipType relationshipType = validateAndParseDimensionType(dimensionType.toUpperCase());
+        validateDimensionName(dimensionName);
+        Vertex dimensionVertex = getVertex(dimensionName, relationshipType.getName());
+        if (dimensionVertex == null) {
+            return Response.ok(new JSONObject()).build();
+        }
+
+        JSONObject vertexProperties;
+        try {
+            vertexProperties = GraphSONUtility.jsonFromElement(
+                    dimensionVertex, getVertexIndexedKeys(), GraphSONMode.NORMAL);
+            // over-write the type - fix this kludge
+            vertexProperties.put(RelationshipProperty.TYPE.getName(), relationshipType.toString());
+
+            Iterator<Edge> inEdges = dimensionVertex.query().direction(Direction.IN).edges().iterator();
+            vertexProperties.put("inVertices", getAdjacentVerticesJson(inEdges, Direction.OUT));
+
+            Iterator<Edge> outEdges = dimensionVertex.query().direction(Direction.OUT).edges().iterator();
+            vertexProperties.put("outVertices", getAdjacentVerticesJson(outEdges, Direction.IN));
+
+        } catch (JSONException e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+        }
+
+        return Response.ok(vertexProperties).build();
+    }
+
+    private JSONArray getAdjacentVerticesJson(Iterator<Edge> edges,
+                                              Direction direction) throws JSONException {
+        JSONArray adjVertices = new JSONArray();
+        while (edges.hasNext()) {
+            Edge edge = edges.next();
+            Vertex vertex = edge.getVertex(direction);
+            JSONObject vertexObject = new JSONObject();
+            vertexObject.put(RelationshipProperty.NAME.getName(),
+                    vertex.getProperty(RelationshipProperty.NAME.getName()));
+            vertexObject.put(RelationshipProperty.TYPE.getName(),
+                    getVertexRelationshipType(vertex));
+            vertexObject.put("label", edge.getLabel());
+            adjVertices.put(vertexObject);
+        }
+
+        return adjVertices;
+    }
+
+    private String getVertexRelationshipType(Vertex vertex) {
+        String type = vertex.getProperty(RelationshipProperty.TYPE.getName());
+        return RelationshipType.fromString(type).toString();
+    }
+
+    private Vertex getVertex(String name, String type) {
+        Iterator<Vertex> vertexIterator = getGraph().query()
+                .has(RelationshipProperty.TYPE.getName(), type)
+                .has(RelationshipProperty.NAME.getName(), name)
+                .vertices().iterator();
+
+        return vertexIterator.hasNext() ? vertexIterator.next() :  null;
     }
 
     private JSONArray getDimensionsFromClusterVertex(JSONArray dimensionValues, Vertex clusterVertex,
@@ -153,7 +222,15 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             return RelationshipType.valueOf(type);
         } catch (IllegalArgumentException iae) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid Dimension type : " +  type).type("text/plain").build());
+                    .entity("Invalid Dimension type : " + type).type("text/plain").build());
+        }
+    }
+
+    private void validateDimensionName(String name) {
+        if (StringUtils.isEmpty(name)) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Dimension name cannot be empty for Relations API").type("text/plain")
+                    .build());
         }
     }
 }

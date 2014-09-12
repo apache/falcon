@@ -305,17 +305,24 @@ $FALCON_HOME/bin/falcon admin -status
 
 ---+++ List
 
-List all dimensions of type.
-
+Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
 Usage:
 $FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
 
 Optional Args : -cluster <<cluster name>>
 
-Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
 Example:
 $FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
 $FALCON_HOME/bin/falcon metadata -list -type tags
+
+---+++ Relations
+
+List all dimensions related to specified Dimension identified by dimension-type and dimension-name.
+Usage:
+$FALCON_HOME/bin/falcon metadata  -relations -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines] -name <<Dimension Name>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -relations -type process_entity -name sample-process
 
 ---++ Recipe Options
 
