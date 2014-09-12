@@ -18,6 +18,7 @@
 
 package org.apache.falcon.cli;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
@@ -27,11 +28,13 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Test for Falcon CLI.
@@ -40,8 +43,10 @@ import java.util.Map;
  */
 @Test(groups = {"exhaustive"})
 public class FalconCLIIT {
+    private static final String RECIPE_PROPERTIES_FILE_XML = "/process.properties";
 
     private InMemoryWriter stream = new InMemoryWriter(System.out);
+    private String recipePropertiesFilePath;
 
     @BeforeClass
     public void prepare() throws Exception {
@@ -873,6 +878,65 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE
                         + " -filterBy STATUS:SUCCEEDED -orderBy wrongOrder -offset 0 -numResults 1"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testRecipeCommand() throws Exception {
+        recipeSetup();
+        try {
+            Assert.assertEquals(executeWithURL("recipe -name " + "process"), 0);
+        } finally {
+            if (recipePropertiesFilePath != null) {
+                new File(recipePropertiesFilePath).delete();
+            }
+        }
+    }
+
+    private void recipeSetup() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+
+        createPropertiesFile(context);
+        String filePath = TestContext.overlayParametersOverTemplate(context.getClusterFileTemplate(),
+                overlay);
+        Assert.assertEquals(0,
+                executeWithURL("entity -submit -type cluster -file " + filePath));
+        context.setCluster(overlay.get("cluster"));
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
+        Assert.assertEquals(0,
+                executeWithURL("entity -submit -type feed -file " + filePath));
+
+        filePath = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE2, overlay);
+        Assert.assertEquals(0,
+                executeWithURL("entity -submit -type feed -file " + filePath));
+    }
+
+    private void createPropertiesFile(TestContext context) throws Exception  {
+        InputStream in = this.getClass().getResourceAsStream(RECIPE_PROPERTIES_FILE_XML);
+        Properties props = new Properties();
+        props.load(in);
+        in.close();
+
+        String wfFile = TestContext.class.getResource("/fs-workflow.xml").getPath();
+        String resourcePath = FilenameUtils.getFullPathNoEndSeparator(wfFile);
+        String libPath = TestContext.getTempFile("target/lib", "recipe", ".jar").getAbsolutePath();
+
+        File file = new File(resourcePath, "process.properties");
+        OutputStream out = new FileOutputStream(file);
+        props.setProperty("falcon.recipe.processName", context.getProcessName());
+        props.setProperty("falcon.recipe.src.cluster.name", context.getClusterName());
+        props.setProperty("falcon.recipe.inputFeedName", context.getInputFeedName());
+        props.setProperty("falcon.recipe.outputFeedName", context.getOutputFeedName());
+        props.setProperty("falcon.recipe.workflow.path", TestContext.class.getResource("/fs-workflow.xml").getPath());
+        props.setProperty("falcon.recipe.workflow.lib.path", new File(libPath).getParent());
+        props.setProperty("falcon.recipe.src.cluster.hdfs.writeEndPoint", "jail://global:00");
+
+        props.store(out, null);
+        out.close();
+
+        recipePropertiesFilePath = file.getAbsolutePath();
     }
 
     private int executeWithURL(String command) throws Exception {

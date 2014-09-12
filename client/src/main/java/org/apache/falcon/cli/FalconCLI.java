@@ -121,6 +121,11 @@ public class FalconCLI {
     public static final String VALUE_OPT = "value";
     public static final String DIRECTION_OPT = "direction";
 
+    // Recipe Command
+    public static final String RECIPE_CMD = "recipe";
+    public static final String RECIPE_NAME = "name";
+    public static final String RECIPE_TOOL_CLASS_NAME = "tool";
+
     private final Properties clientProperties;
 
     public FalconCLI() throws Exception {
@@ -168,6 +173,7 @@ public class FalconCLI {
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceOptions(), false);
         parser.addCommand(GRAPH_CMD, "", "graph operations", createGraphOptions(), true);
+        parser.addCommand(RECIPE_CMD, "", "recipe operations", createRecipeOptions(), true);
 
         try {
             CLIParser.Command command = parser.parse(args);
@@ -187,6 +193,8 @@ public class FalconCLI {
                     instanceCommand(commandLine, client);
                 } else if (command.getName().equals(GRAPH_CMD)) {
                     graphCommand(commandLine, client);
+                } else if (command.getName().equals(RECIPE_CMD)) {
+                    recipeCommand(commandLine, client);
                 }
             }
             return exitValue;
@@ -357,21 +365,21 @@ public class FalconCLI {
         String entityAction = "entity";
 
         if (optionsList.contains(SUBMIT_OPT)) {
-            validateFilePath(filePath);
+            validateFilePath(filePath, "file");
             validateColo(optionsList);
             result = client.submit(entityType, filePath);
         } else if (optionsList.contains(UPDATE_OPT)) {
-            validateFilePath(filePath);
+            validateFilePath(filePath, "file");
             validateColo(optionsList);
             validateEntityName(entityName);
             Date effectiveTime = parseDateString(time);
             result = client.update(entityType, entityName, filePath, effectiveTime);
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
-            validateFilePath(filePath);
+            validateFilePath(filePath, "file");
             validateColo(optionsList);
             result = client.submitAndSchedule(entityType, filePath);
         } else if (optionsList.contains(VALIDATE_OPT)) {
-            validateFilePath(filePath);
+            validateFilePath(filePath, "file");
             validateColo(optionsList);
             result = client.validate(entityType, filePath);
         } else if (optionsList.contains(SCHEDULE_OPT)) {
@@ -448,11 +456,11 @@ public class FalconCLI {
         return colo;
     }
 
-    private void validateFilePath(String filePath)
+    private void validateFilePath(String filePath, String argument)
         throws FalconCLIException {
 
         if (StringUtils.isEmpty(filePath)) {
-            throw new FalconCLIException("Missing argument: file");
+            throw new FalconCLIException("Missing argument: " + argument);
         }
     }
 
@@ -823,6 +831,20 @@ public class FalconCLI {
         return graphOptions;
     }
 
+    private Options createRecipeOptions() {
+        Options recipeOptions = new Options();
+        Option url = new Option(URL_OPTION, true, "Falcon URL");
+        recipeOptions.addOption(url);
+
+        Option recipeFileOpt = new Option(RECIPE_NAME, true, "recipe name");
+        recipeOptions.addOption(recipeFileOpt);
+
+        Option recipeToolClassName = new Option(RECIPE_TOOL_CLASS_NAME, true, "recipe class");
+        recipeOptions.addOption(recipeToolClassName);
+
+        return recipeOptions;
+    }
+
     private void graphCommand(CommandLine commandLine,
                               FalconClient client) throws FalconCLIException {
         Set<String> optionsList = new HashSet<String>();
@@ -964,5 +986,15 @@ public class FalconCLI {
             return lifeCycles;
         }
         return null;
+    }
+
+    private void recipeCommand(CommandLine commandLine, FalconClient client) throws FalconCLIException {
+        String recipeName = commandLine.getOptionValue(RECIPE_NAME);
+        String recipeToolClass = commandLine.getOptionValue(RECIPE_TOOL_CLASS_NAME);
+
+        validateFilePath(recipeName, RECIPE_NAME);
+
+        String result = client.submitRecipe(recipeName, recipeToolClass);
+        OUT.get().println(result);
     }
 }

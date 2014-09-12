@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-635 Add recipe option in falcon client (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
    FALCON-615 Add pipleline element to lineage graph
    (Sowmya Ramesh via Venkatesh Seetharam)
 

@@ -21,7 +21,7 @@
     <tags>consumer=consumer@xyz.com, owner=producer@xyz.com, department=forecasting</tags>
     <pipelines>testPipeline,dataReplicationPipeline</pipelines>
     <clusters>
-        <cluster name="##cluster##">
+        <cluster name="##src.cluster.name##">
             <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z"/>
         </cluster>
     </clusters>
@@ -43,7 +43,7 @@
         <property name="baseTime" value="${today(0,0)}"/>
         <property name="sundayThisWeek" value="${currentWeek('SUN', 0, 0)}"/>
     </properties>
-    <workflow engine="oozie" path="/falcon/test/workflow"/>
+    <workflow engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
     <retry policy="periodic" delay="minutes(10)" attempts="3"/>
 
     <late-process policy="exp-backoff" delay="hours(1)">

@@ -29,6 +29,8 @@ import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.recipe.RecipeTool;
+import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
@@ -49,12 +51,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Date;
@@ -81,6 +85,9 @@ public class FalconClient {
     public static final String AUTH_COOKIE = "hadoop.auth";
     private static final String AUTH_COOKIE_EQ = AUTH_COOKIE + "=";
     private static final KerberosAuthenticator AUTHENTICATOR = new KerberosAuthenticator();
+
+    private static final String TEMPLATE_SUFFIX = "-template.xml";
+    private static final String PROPERTIES_SUFFIX = ".properties";
 
     public static final int DEFAULT_NUM_RESULTS = 10;
 
@@ -965,6 +972,59 @@ public class FalconClient {
 
     public String getEdge(String id) throws FalconCLIException {
         return sendGraphRequest(GraphOperations.EDGES, id);
+    }
+
+    public String submitRecipe(String recipeName,
+                               String recipeToolClassName) throws FalconCLIException {
+        String recipePath = clientProperties.getProperty("falcon.recipe.path",
+            System.getProperty("falcon.home"));
+
+        String recipeFilePath = recipePath + File.separator + recipeName + TEMPLATE_SUFFIX;
+        File file = new File(recipeFilePath);
+        if (!file.exists()) {
+            throw new FalconCLIException("Recipe template file does not exist : " + recipeFilePath);
+        }
+
+        String propertiesFilePath = recipePath + File.separator + recipeName + PROPERTIES_SUFFIX;
+        file = new File(propertiesFilePath);
+        if (!file.exists()) {
+            throw new FalconCLIException("Recipe properties file does not exist : " + propertiesFilePath);
+        }
+
+        String processFile = null;
+        try {
+            String prefix =  "falcon-recipe" + "-" + System.currentTimeMillis();
+            File tmpPath = new File("/tmp");
+            if (!tmpPath.exists()) {
+                if (!tmpPath.mkdir()) {
+                    throw new FalconCLIException("Creating directory failed: " + tmpPath.getAbsolutePath());
+                }
+            }
+            File f = File.createTempFile(prefix, ".xml", tmpPath);
+            f.deleteOnExit();
+
+            processFile = f.getAbsolutePath();
+            String[] args = {
+                "-" + RecipeToolArgs.RECIPE_FILE_ARG.getName(), recipeFilePath,
+                "-" + RecipeToolArgs.RECIPE_PROPERTIES_FILE_ARG.getName(), propertiesFilePath,
+                "-" + RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG.getName(), processFile,
+            };
+
+            if (recipeToolClassName != null) {
+                Class<?> clz = Class.forName(recipeToolClassName);
+                Method method = clz.getMethod("main", String[].class);
+                method.invoke(null, args);
+            } else {
+                RecipeTool.main(args);
+            }
+            validate(EntityType.PROCESS.toString(), processFile);
+            String result = submitAndSchedule(EntityType.PROCESS.toString(), processFile);
+            return result + System.getProperty("line.separator") + "Submitted process entity: " + processFile;
+        } catch (Exception e) {
+            String msg = (processFile == null) ? e.getMessage()
+                : e.getMessage() + System.getProperty("line.separator") + "Submitted process entity: " + processFile;
+            throw new FalconCLIException(msg, e);
+        }
     }
 
     private String sendGraphRequest(GraphOperations job, String id) throws FalconCLIException {
