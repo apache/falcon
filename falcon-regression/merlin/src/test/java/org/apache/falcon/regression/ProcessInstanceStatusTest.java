@@ -161,7 +161,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 400);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
@@ -174,7 +174,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T02:30Z");
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
@@ -203,7 +203,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
                 "?start=2010-01-02T00:00Z&end=2010-01-02T01:20Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 400);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
@@ -269,7 +269,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
             Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 400);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
@@ -364,7 +364,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T02:30Z");
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**

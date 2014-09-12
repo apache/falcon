@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-720 Fix ProcessInstanceStatusTest as per FALCON-166
+   (Raghav Kumar Gautam)
+
    FALCON-693 Tests with zero inp/outp fixed to use correct workflow, javadocs
    added (Paul Isaychuk)
 
