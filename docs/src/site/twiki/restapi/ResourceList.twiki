@@ -5,6 +5,7 @@
    * <a href="#REST_Call_on_Feed_and_Process_Instances">REST Call on Feed/Process Instances</a>
    * <a href="#REST_Call_on_Admin_Resource">REST Call on Admin Resource</a>
    * <a href="#REST_Call_on_Lineage_Graph">REST Call on Lineage Graph Resource</a>
+   * <a href="#REST_Call_on_Metadata_Resource">REST Call on Metadata Resource</a>
 
 ---++ Authentication
 
@@ -76,3 +77,8 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[AdjacentVertices][api/graphs/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges of the vertex with the specified direction |
 | GET         | [[AllEdges][api/graphs/lineage//edges/all]]                                          | get all edges                                                                 |
 | GET         | [[Edge][api/graphs/lineage/edges/:id]]                                               | get the edge with the specified id                                            |
+
+---++ REST Call on Metadata Resource
+
+| *Call Type* | *Resource*                                                                           | *Description*                                                                 |
+| GET         | [[MetadataList][api/metadata/:dimension-type/list]]                                  | list of dimensions  |

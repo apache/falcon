@@ -54,7 +54,7 @@ public class PigProcessIT {
 
     @BeforeClass
     public void prepare() throws Exception {
-        TestContext.prepare(CLUSTER_TEMPLATE);
+        TestContext.prepare(CLUSTER_TEMPLATE, true);
 
         overlay = context.getUniqueOverlay();
 

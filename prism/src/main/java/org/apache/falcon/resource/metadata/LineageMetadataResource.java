@@ -21,24 +21,21 @@ package org.apache.falcon.resource.metadata;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
-import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.metadata.GraphUtils;
-import org.apache.falcon.metadata.MetadataMappingService;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
-import org.apache.falcon.service.Services;
 import org.apache.falcon.util.StartupProperties;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.lang.StringUtils;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -51,7 +48,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Jersey Resource for lineage metadata operations.
@@ -59,34 +55,9 @@ import java.util.Set;
  * https://github.com/tinkerpop/rexster/wiki/Basic-REST-API
  */
 @Path("graphs/lineage")
-public class LineageMetadataResource {
+public class LineageMetadataResource extends AbstractMetadataResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(LineageMetadataResource.class);
-
-    public static final String RESULTS = "results";
-    public static final String TOTAL_SIZE = "totalSize";
-
-    private final MetadataMappingService service;
-
-    public LineageMetadataResource() {
-        if (Services.get().isRegistered(MetadataMappingService.SERVICE_NAME)) {
-            service = Services.get().getService(MetadataMappingService.SERVICE_NAME);
-        } else {
-            service = null;
-        }
-    }
-
-    private Graph getGraph() {
-        return service.getGraph();
-    }
-
-    private Set<String> getVertexIndexedKeys() {
-        return service.getVertexIndexedKeys();
-    }
-
-    private Set<String> getEdgeIndexedKeys() {
-        return service.getEdgeIndexedKeys();
-    }
 
     /**
      * Dump the graph.

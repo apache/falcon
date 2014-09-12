@@ -387,7 +387,7 @@ public class TestContext {
     }
 
     public static void prepare() throws Exception {
-        prepare(TestContext.CLUSTER_TEMPLATE);
+        prepare(TestContext.CLUSTER_TEMPLATE, true);
     }
 
     private static void mkdir(FileSystem fs, Path path) throws Exception {
@@ -402,14 +402,16 @@ public class TestContext {
         }
     }
 
-    public static void prepare(String clusterTemplate) throws Exception {
+    public static void prepare(String clusterTemplate, boolean disableLineage) throws Exception {
         // setup a logged in user
         CurrentUser.authenticate(REMOTE_USER);
 
-        // disable recording lineage metadata if enabled
-        String services = StartupProperties.get().getProperty("application.services");
-        StartupProperties.get().setProperty("application.services",
-                services.replace("org.apache.falcon.metadata.MetadataMappingService", ""));
+        if (disableLineage) {
+            // disable recording lineage metadata
+            String services = StartupProperties.get().getProperty("application.services");
+            StartupProperties.get().setProperty("application.services",
+                    services.replace("org.apache.falcon.metadata.MetadataMappingService", ""));
+        }
 
         Map<String, String> overlay = new HashMap<String, String>();
         overlay.put("cluster", RandomStringUtils.randomAlphabetic(5));

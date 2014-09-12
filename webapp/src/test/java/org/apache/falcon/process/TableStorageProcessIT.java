@@ -66,7 +66,7 @@ public class TableStorageProcessIT {
 
     @BeforeClass
     public void prepare() throws Exception {
-        TestContext.prepare(CLUSTER_TEMPLATE);
+        TestContext.prepare(CLUSTER_TEMPLATE, true);
 
         overlay = context.getUniqueOverlay();
         String filePath = TestContext.overlayParametersOverTemplate(CLUSTER_TEMPLATE, overlay);

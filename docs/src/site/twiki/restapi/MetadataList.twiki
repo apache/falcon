@@ -1,0 +1,30 @@
+---++  GET api/metadata/:type/list
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get all dimensions of specified type.
+
+---++ Parameters
+   * :type Valid dimension types are cluster_entity,feed_entity, process_entity, user, colo, tags, groups, pipelines
+   * cluster <optional query param> Show dimensions related to this cluster.
+
+
+---++ Results
+List of dimensions that match requested type [and cluster].
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/metadata/process_entity/list?cluster=primary-cluster
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "results": ["sampleIngestProcess","testProcess","anotherProcess"],
+    "totalSize": 3
+}
+</verbatim>
+

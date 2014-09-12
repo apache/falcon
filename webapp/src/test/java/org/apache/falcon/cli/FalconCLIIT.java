@@ -20,6 +20,7 @@ package org.apache.falcon.cli;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.metadata.RelationshipType;
 import org.apache.falcon.resource.TestContext;
 import org.apache.falcon.util.OozieTestUtils;
 import org.testng.Assert;
@@ -708,6 +709,42 @@ public class FalconCLIIT {
                 executeWithURL("instance -running -type process -name " + overlay.get("processName")));
     }
 
+    @Test
+    public void testMetadataListCommands() throws Exception {
+        TestContext context = new TestContext();
+        Map<String, String> overlay = context.getUniqueOverlay();
+        submitTestFiles(context, overlay);
+
+        String processName = overlay.get("processName");
+        String feedName = overlay.get("outputFeedName");
+        String clusterName = overlay.get("cluster");
+
+        Assert.assertEquals(0,
+                executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
+                        + FalconCLI.ENTITY_TYPE_OPT + " process  -" + FalconCLI.ENTITY_NAME_OPT + " " + processName));
+
+        Assert.assertEquals(0,
+                executeWithURL(FalconCLI.ENTITY_CMD + " -" + FalconCLI.SCHEDULE_OPT + " -"
+                        + FalconCLI.ENTITY_TYPE_OPT + " feed -" + FalconCLI.ENTITY_NAME_OPT + " " + feedName));
+
+        OozieTestUtils.waitForProcessWFtoStart(context);
+
+        String metadataListCommand = FalconCLI.METADATA_CMD + " -" + FalconMetadataCLI.LIST_OPT + " -"
+                + FalconMetadataCLI.TYPE_OPT + " ";
+        String clusterString = " -" + FalconMetadataCLI.CLUSTER_OPT + " " + clusterName;
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.toString()));
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.toString()));
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.toString()));
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.PROCESS_ENTITY.toString()
+                + clusterString));
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.FEED_ENTITY.toString()
+                + clusterString));
+        Assert.assertEquals(0, executeWithURL(metadataListCommand + RelationshipType.CLUSTER_ENTITY.toString()
+                + clusterString));
+
+        Assert.assertEquals(-1, executeWithURL(metadataListCommand + "feed"));
+        Assert.assertEquals(-1, executeWithURL(metadataListCommand + "invalid"));
+    }
 
     public void testContinue() throws Exception {
         TestContext context = new TestContext();

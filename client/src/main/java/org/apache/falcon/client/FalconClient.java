@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.LifeCycle;
+import org.apache.falcon.cli.FalconMetadataCLI;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.recipe.RecipeTool;
@@ -196,6 +197,24 @@ public class FalconClient {
         private String mimeType;
 
         Entities(String path, String method, String mimeType) {
+            this.path = path;
+            this.method = method;
+            this.mimeType = mimeType;
+        }
+    }
+
+    /**
+     * Methods allowed on Metadata Resources.
+     */
+    protected static enum MetadataOperations {
+
+        LIST("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+
+        private String path;
+        private String method;
+        private String mimeType;
+
+        MetadataOperations(String path, String method, String mimeType) {
             this.path = path;
             this.method = method;
             this.mimeType = mimeType;
@@ -484,6 +503,10 @@ public class FalconClient {
         return clientResponse.getStatus();
     }
 
+    public String getDimensionList(String dimensionType, String cluster) throws FalconCLIException {
+        return sendMetadataListRequest(MetadataOperations.LIST, dimensionType, cluster);
+    }
+
     /**
      * Converts a InputStream into ServletInputStream.
      *
@@ -762,6 +785,26 @@ public class FalconClient {
                 .accept(job.mimeType)
                 .type(job.mimeType)
                 .method(job.method, ClientResponse.class);
+        return parseStringResult(clientResponse);
+    }
+
+    private String sendMetadataListRequest(final MetadataOperations op, final String dimensionType,
+                                           final String cluster) throws FalconCLIException {
+        WebResource resource = service
+                .path(op.path)
+                .path(dimensionType)
+                .path(FalconMetadataCLI.LIST_OPT);
+
+        if (!StringUtils.isEmpty(cluster)) {
+            resource = resource.queryParam(FalconMetadataCLI.CLUSTER_OPT, cluster);
+        }
+
+        ClientResponse clientResponse = resource
+                .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
+                .accept(op.mimeType).type(op.mimeType)
+                .method(op.method, ClientResponse.class);
+
+        checkIfSuccessful(clientResponse);
         return parseStringResult(clientResponse);
     }
 

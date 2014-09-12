@@ -59,6 +59,7 @@ public class FalconCLI {
     public static final String STATUS_OPTION = "status";
     public static final String ADMIN_CMD = "admin";
     public static final String HELP_CMD = "help";
+    public static final String METADATA_CMD = "metadata";
     private static final String VERSION_CMD = "version";
     private static final String STACK_OPTION = "stack";
 
@@ -162,6 +163,7 @@ public class FalconCLI {
     public synchronized int run(final String[] args) {
 
         CLIParser parser = new CLIParser("falcon", FALCON_HELP);
+        FalconMetadataCLI metadataCLI = new FalconMetadataCLI();
 
         parser.addCommand(ADMIN_CMD, "", "admin operations", createAdminOptions(), true);
         parser.addCommand(HELP_CMD, "", "display usage", new Options(), false);
@@ -173,6 +175,8 @@ public class FalconCLI {
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceOptions(), false);
         parser.addCommand(GRAPH_CMD, "", "graph operations", createGraphOptions(), true);
+        parser.addCommand(METADATA_CMD, "", "Metadata operations like list, relations",
+                metadataCLI.createMetadataOptions(), true);
         parser.addCommand(RECIPE_CMD, "", "recipe operations", createRecipeOptions(), true);
 
         try {
@@ -193,6 +197,8 @@ public class FalconCLI {
                     instanceCommand(commandLine, client);
                 } else if (command.getName().equals(GRAPH_CMD)) {
                     graphCommand(commandLine, client);
+                } else if (command.getName().equals(METADATA_CMD)) {
+                    metadataCLI.metadataCommand(commandLine, client);
                 } else if (command.getName().equals(RECIPE_CMD)) {
                     recipeCommand(commandLine, client);
                 }

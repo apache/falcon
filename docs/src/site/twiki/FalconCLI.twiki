@@ -301,6 +301,22 @@ Status returns the current state of Falcon (running or stopped).
 Usage:
 $FALCON_HOME/bin/falcon admin -status
 
+---++ Metadata Options
+
+---+++ List
+
+List all dimensions of type.
+
+Usage:
+$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
+
+Optional Args : -cluster <<cluster name>>
+
+Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
+Example:
+$FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
+$FALCON_HOME/bin/falcon metadata -list -type tags
+
 ---++ Recipe Options
 
 ---+++ Submit Recipe
