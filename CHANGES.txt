@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-636 Add a sample recipe for disaster recovery of hdfs dirs/files
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-635 Add recipe option in falcon client (Sowmya Ramesh via
    Venkatesh Seetharam)
 

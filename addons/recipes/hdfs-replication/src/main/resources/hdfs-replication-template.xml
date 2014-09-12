@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<process name="##name##" xmlns="uri:falcon:process:0.1">
+    <clusters>
+        <!--  source  -->
+        <cluster name="##src.cluster.name##">
+            <validity end="##src.cluster.validity.end##" start="##src.cluster.validity.start##"/>
+        </cluster>
+    </clusters>
+
+    <parallel>1</parallel>
+    <order>LAST_ONLY</order>
+    <frequency>##process.frequency##</frequency>
+    <timezone>UTC</timezone>
+
+    <properties>
+        <property name="oozie.wf.subworkflow.classpath.inheritance" value="true"/>
+        <property name="##process.property2.name##" value="##process.property2.value##"/>
+        <property name="##process.property3.name##" value="##process.property3.value##"/>
+        <property name="##process.property4.name##" value="##process.property4.value##"/>
+        <property name="##process.property5.name##" value="##process.property5.value##"/>
+        <property name="##process.property6.name##" value="##process.property6.value##"/>
+        <property name="##process.property7.name##" value="##process.property7.value##"/>
+    </properties>
+
+    <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##"/>
+    <retry policy="periodic" delay="minutes(10)" attempts="3"/>
+</process>
