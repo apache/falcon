@@ -61,6 +61,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-713 UpdateAtSpecificTimeTest#updateTimeInPast_Feed should submitAndSchedule feed rather
+   then submit (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-707 ProcessInstanceSuspendTest is failing because input path is not set correctly
    (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 

@@ -177,7 +177,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         logger.info("feed: " + Util.prettyPrintXml(feed));
 
         //submit and schedule feed
-        ServiceResponse r = prism.getFeedHelper().submitEntity(feed);
+        ServiceResponse r = prism.getFeedHelper().submitAndSchedule(feed);
         TimeUtil.sleepSeconds(10);
         AssertUtil.assertSucceeded(r);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
