@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-726 Expect less fields in messages in falcon-regression
+   (Ruslan Ostafiychuk)
+
    FALCON-720 Fix ProcessInstanceStatusTest as per FALCON-166
    (Raghav Kumar Gautam)
 

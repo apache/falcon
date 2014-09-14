@@ -234,12 +234,8 @@ public class RetentionTest extends BaseTestClass {
                 Assert.assertEquals(message.getString("workflowId"), workflowIds.get(0));
 
                 //verify other data also
-                Assert.assertEquals(message.getString("topicName"), "FALCON." + feedName);
-                Assert.assertEquals(message.getString("brokerImplClass"),
-                    "org.apache.activemq.ActiveMQConnectionFactory");
+                Assert.assertEquals(message.getJMSDestination().toString(), "topic://FALCON." + feedName);
                 Assert.assertEquals(message.getString("status"), "SUCCEEDED");
-                Assert.assertEquals(message.getString("brokerUrl"),
-                    cluster.getFeedHelper().getActiveMQ());
             }
         }
         Assert.assertEquals(deletedFolders.size(), missingData.size(),
