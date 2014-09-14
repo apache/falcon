@@ -64,6 +64,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-716 PrismFeedSuspendTest tests retagged as distributed (Ruslan Ostafiychuk)
+
    FALCON-713 UpdateAtSpecificTimeTest#updateTimeInPast_Feed should submitAndSchedule feed rather
    then submit (Paul Isaychuk via Ruslan Ostafiychuk)
 

@@ -129,7 +129,7 @@ public class PrismFeedSuspendTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = "embedded")
+    @Test(groups = "distributed")
     public void testSuspendNonExistentFeedOnBothColos() throws Exception {
         AssertUtil.assertFailed(prism.getFeedHelper().suspend(bundles[0].getDataSets().get(0)));
         AssertUtil.assertFailed(prism.getFeedHelper().suspend(bundles[1].getDataSets().get(0)));
@@ -143,7 +143,7 @@ public class PrismFeedSuspendTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(groups = "embedded")
+    @Test(groups = "distributed")
     public void testSuspendSubmittedFeedOnBothColos() throws Exception {
         bundles[0].submitFeed();
         bundles[1].submitFeed();
