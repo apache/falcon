@@ -121,7 +121,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
                 "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
         result = prism.getProcessHelper().getProcessInstanceStatus(processName,
                 "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(result, 400);
+        InstanceUtil.validateSuccessWithStatusCode(result, 0);
     }
 
     /**
@@ -180,7 +180,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**

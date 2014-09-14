@@ -115,7 +115,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
             wholeRange);
         InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
         r = prism.getProcessHelper().getProcessInstanceResume(processName, "?end=2010-01-02T01:15Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
@@ -205,7 +205,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     public void testProcessInstanceResumeNoParams() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
+        InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
     /**
