@@ -222,10 +222,10 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         TimeUtil.sleepSeconds(TIMEOUT);
         prism.getProcessHelper()
-            .getProcessInstanceKill(processName, "?start=2010-01-02T01:05Z&end=2010-01-02T01:15Z");
+            .getProcessInstanceKill(processName, "?start=2010-01-02T01:05Z&end=2010-01-02T01:16Z");
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(r, 5, 2, 0, 0, 3);
     }
 
@@ -244,7 +244,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         prism.getProcessHelper().getProcessInstanceKill(processName, "?start=2010-01-02T01:20Z");
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(r, 5, 4, 0, 0, 1);
     }
 
