@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-729 HCatFeedOperationsTest should not initialize hcat client during
+   var declaration (Raghav Kumar Gautam)
+
    FALCON-726 Expect less fields in messages in falcon-regression
    (Ruslan Ostafiychuk)
 

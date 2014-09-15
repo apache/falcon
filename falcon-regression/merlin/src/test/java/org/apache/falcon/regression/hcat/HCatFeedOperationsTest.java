@@ -59,11 +59,11 @@ public class HCatFeedOperationsTest extends BaseTestClass {
 
     ColoHelper cluster = servers.get(0);
     OozieClient clusterOC = serverOC.get(0);
-    HCatClient clusterHC = cluster.getClusterHelper().getHCatClient();
+    HCatClient clusterHC;
 
     ColoHelper cluster2 = servers.get(1);
     OozieClient cluster2OC = serverOC.get(1);
-    HCatClient cluster2HC = cluster2.getClusterHelper().getHCatClient();
+    HCatClient cluster2HC;
 
     private String dbName = "default";
     private String tableName = "hcatFeedOperationsTest";
@@ -78,6 +78,8 @@ public class HCatFeedOperationsTest extends BaseTestClass {
 
     @BeforeClass(alwaysRun = true)
     public void createTestData() throws Exception {
+        clusterHC = cluster.getClusterHelper().getHCatClient();
+        cluster2HC = cluster2.getClusterHelper().getHCatClient();
         //create an empty table for feed operations
         ArrayList<HCatFieldSchema> partitions = new ArrayList<HCatFieldSchema>();
         partitions.add(HCatUtil.getStringSchema("year", "yearPartition"));
