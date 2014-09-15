@@ -89,6 +89,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-727 JQuery license is incorrectly mentioned in the header file. (Srikanth Sundarrajan)
+
    FALCON-702 JailedFileSystem does not work for relative paths
    (Sowmya Ramesh via Venkatesh Seetharam)
 
