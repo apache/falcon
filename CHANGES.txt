@@ -142,6 +142,8 @@ Release Version: 0.5-incubating
     FALCON-123 Improve build speeds in falcon. (Srikanth Sundarrajan via Shwetha GS)
 
   BUG FIXES
+    FALCON-727 JQuery license is incorrectly mentioned in the header file. (Srikanth Sundarrajan)
+
     FALCON-691 Build issues - Hadoop-2 profile (Srikanth Sundarrajan)
 
     FALCON-582 Latest changes to LICENSE files results in build failure (Srikanth Sundarrajan)

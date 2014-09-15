@@ -221,4 +221,7 @@ This product bundles dust 2.0.0, which is available under a
 MIT license. For details, see docs/license/dust-LICENSE.txt
 
 This product bundles dust-helpers 1.2.0, which is available under a
-MIT license. For details, see docs/license/dust-LICENSE.txt
+MIT license. For details, see docs/license/dust-helpers-LICENSE.txt
+
+This product bundles jquery 1.11.0, which is available under a
+MIT license. For details, see docs/license/jquery-LICENSE.txt
