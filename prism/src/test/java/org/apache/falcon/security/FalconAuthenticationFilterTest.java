@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
@@ -71,7 +72,9 @@ public class FalconAuthenticationFilterTest {
         conf.put("type", "simple");
         conf.put("config.prefix.type", "");
         conf.put("anonymous.allowed", "true");
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
         Mockito.when(mockConfig.getInitParameterNames()).thenReturn(conf.keys());
+        Mockito.when(mockConfig.getServletContext()).thenReturn(servletContext);
 
         for (Map.Entry<String, String> entry : conf.entrySet()) {
             Mockito.when(mockConfig.getInitParameter(entry.getKey())).thenReturn(entry.getValue());

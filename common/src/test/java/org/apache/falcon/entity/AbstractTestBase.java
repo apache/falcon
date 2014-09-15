@@ -143,14 +143,10 @@ public class AbstractTestBase {
         return stringWriter.toString();
     }
 
-
+    // assumes there will always be at least one group for a logged in user
     protected String getGroupName() throws IOException {
-        return getGroupName(true);
-    }
-
-    protected String getGroupName(boolean first) throws IOException {
         String[] groupNames = CurrentUser.getProxyUgi().getGroupNames();
         System.out.println("groupNames = " + Arrays.asList(groupNames));
-        return groupNames.length > 1 ? groupNames[first ? 0 : groupNames.length - 1] : "admin";
+        return groupNames[0];
     }
 }
