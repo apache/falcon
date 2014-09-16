@@ -746,39 +746,6 @@ public class EntityManagerJerseyIT {
         }
 
         response = context.service
-                .path("api/entities/list/process/")
-                .queryParam("filterBy", "TYPE:PROCESS,STATUS:RUNNING")
-                .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
-                .queryParam("orderBy", "name").queryParam("sortOrder", "desc").queryParam("offset", "2")
-                .queryParam("numResults", "2").queryParam("fields", "status,tags")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
-        Assert.assertNotNull(result);
-        Assert.assertEquals(result.getElements().length, 2);
-
-        response = context.service
-                .path("api/entities/list/process/")
-                .queryParam("orderBy", "name").queryParam("sortOrder", "asc")
-                .queryParam("offset", "50").queryParam("numResults", "2")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.TEXT_XML)
-                .accept(MediaType.TEXT_XML)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
-        Assert.assertNotNull(result);
-        Assert.assertEquals(result.getElements(), null);
-
-        Map<String, String> overlay = context.getUniqueOverlay();
-        overlay.put("cluster", "WTF-" + overlay.get("cluster"));
-        response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
-        context.assertSuccessful(response);
-
-        response = context.service
                 .path("api/entities/list/cluster/")
                 .header("Cookie", context.getAuthenticationToken())
                 .type(MediaType.TEXT_XML)
@@ -790,33 +757,6 @@ public class EntityManagerJerseyIT {
         for (EntityList.EntityElement entityElement : result.getElements()) {
             Assert.assertNull(entityElement.status); // status is null
         }
-
-        response = context.service
-                .path("api/entities/list/cluster/")
-                .queryParam("fields", "status")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        result = response.getEntity(EntityList.class);
-        Assert.assertNotNull(result);
-        for (EntityList.EntityElement entityElement : result.getElements()) {
-            Assert.assertNotNull(entityElement.status); // status is null
-        }
-
-        response = context.service
-                .path("api/entities/summary/process/" + overlay.get("cluster"))
-                .queryParam("fields", "status,pipelines")
-                .queryParam("numInstances", "1")
-                .queryParam("orderBy", "name")
-                .header("Cookie", context.getAuthenticationToken())
-                .type(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        Assert.assertEquals(response.getStatus(), 200);
-        EntitySummaryResult summaryResult = response.getEntity(EntitySummaryResult.class);
-        Assert.assertNotNull(summaryResult);
     }
 
     public Date getEndTime() {
