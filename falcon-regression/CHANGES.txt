@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-739 JmsMessageConsumer should start daemon threads (Raghav Kumar
+   Gautam)
+
    FALCON-729 HCatFeedOperationsTest should not initialize hcat client during
    var declaration (Raghav Kumar Gautam)
 

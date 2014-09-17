@@ -55,6 +55,7 @@ public class JmsMessageConsumer extends Thread {
         this.topicName = topicName;
         this.brokerURL = brokerURL;
         receivedMessages = new ArrayList<MapMessage>();
+        setDaemon(true);
     }
 
     @Override
