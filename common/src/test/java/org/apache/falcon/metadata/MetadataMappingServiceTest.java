@@ -169,7 +169,7 @@ public class MetadataMappingServiceTest {
                 "/falcon/impression-feed/${YEAR}/${MONTH}/${DAY}");
         inputFeeds.add(impressionsFeed);
         verifyEntityWasAddedToGraph(impressionsFeed.getName(), RelationshipType.FEED_ENTITY);
-        verifyFeedEntityEdges(impressionsFeed.getName());
+        verifyFeedEntityEdges(impressionsFeed.getName(), "Secure", "analytics");
         Assert.assertEquals(getVerticesCount(service.getGraph()), 7); // +4 = feed, tag, group, user
         Assert.assertEquals(getEdgesCount(service.getGraph()), 6); // +4 = cluster, tag, group, user
 
@@ -297,6 +297,37 @@ public class MetadataMappingServiceTest {
         // +19 = +6 for output feed instances + 7 for process instance + 6 for input feed instance
         // +1 for replicated-to edge to target cluster for each output feed instance
         Assert.assertEquals(getEdgesCount(service.getGraph()), 40);
+    }
+
+    @Test
+    public void testLineageForReplicationForNonGeneratedInstances() throws Exception {
+        cleanUp();
+        service.init();
+
+        addClusterAndFeedForReplication();
+        // Get the vertices before running replication WF
+        long beforeVerticesCount = getVerticesCount(service.getGraph());
+        long beforeEdgesCount = getEdgesCount(service.getGraph());
+
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                        EntityOperations.REPLICATE, REPLICATION_WORKFLOW_NAME, REPLICATED_FEED,
+                        "jail://global:00/falcon/raw-click/bcp/20140101",
+                        "jail://global:00/falcon/raw-click/primary/20140101", REPLICATED_FEED),
+                WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+
+        debug(service.getGraph());
+        GraphUtils.dump(service.getGraph());
+
+        verifyFeedEntityEdges(REPLICATED_FEED, "Secure", "analytics");
+        verifyLineageGraphForReplicationOrEviction(REPLICATED_FEED,
+                "jail://global:00/falcon/raw-click/bcp/20140101", context,
+                RelationshipLabel.FEED_CLUSTER_REPLICATED_EDGE);
+
+        // +1 for the new instance vertex added
+        Assert.assertEquals(getVerticesCount(service.getGraph()), beforeVerticesCount + 1);
+        // +6 = instance-of, stored-in, owned-by, classification, group, replicated-to
+        Assert.assertEquals(getEdgesCount(service.getGraph()), beforeEdgesCount + 6);
     }
 
     @Test
@@ -605,7 +636,7 @@ public class MetadataMappingServiceTest {
                 "production", RelationshipType.TAGS.getName());
     }
 
-    private void verifyFeedEntityEdges(String feedName) {
+    private void verifyFeedEntityEdges(String feedName, String tag, String group) {
         Vertex feedVertex = getEntityVertex(feedName, RelationshipType.FEED_ENTITY);
 
         // verify edge to cluster vertex
@@ -614,12 +645,13 @@ public class MetadataMappingServiceTest {
         // verify edge to user vertex
         verifyVertexForEdge(feedVertex, Direction.OUT, RelationshipLabel.USER.getName(),
                 FALCON_USER, RelationshipType.USER.getName());
+
         // verify edge to tags vertex
         verifyVertexForEdge(feedVertex, Direction.OUT, "classified-as",
-                "Secure", RelationshipType.TAGS.getName());
+                tag, RelationshipType.TAGS.getName());
         // verify edge to group vertex
         verifyVertexForEdge(feedVertex, Direction.OUT, RelationshipLabel.GROUPS.getName(),
-                "analytics", RelationshipType.GROUPS.getName());
+                group, RelationshipType.GROUPS.getName());
     }
 
     private void verifyProcessEntityEdges() {
@@ -834,7 +866,7 @@ public class MetadataMappingServiceTest {
                                                String falconInputFeeds) {
         String cluster;
         if (EntityOperations.REPLICATE == operation) {
-            cluster = BCP_CLUSTER_ENTITY_NAME;
+            cluster = BCP_CLUSTER_ENTITY_NAME + WorkflowExecutionContext.CLUSTER_NAME_SEPARATOR + CLUSTER_ENTITY_NAME;
         } else {
             cluster = CLUSTER_ENTITY_NAME;
         }
@@ -916,6 +948,28 @@ public class MetadataMappingServiceTest {
         cleanUp();
         service.init();
 
+        addClusterAndFeedForReplication();
+
+        // Add output feed
+        Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
+                "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
+                "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
+        outputFeeds.add(join1Feed);
+
+        processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
+                "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
+                WORKFLOW_VERSION);
+
+        // GENERATE WF should have run before this to create all instance related vertices
+        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
+                EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "imp-click-join1",
+                "jail://global:00/falcon/imp-click-join1/20140101",
+                "jail://global:00/falcon/raw-click/primary/20140101",
+                REPLICATED_FEED), WorkflowExecutionContext.Type.POST_PROCESSING);
+        service.onSuccess(context);
+    }
+
+    private void addClusterAndFeedForReplication() throws Exception {
         // Add cluster
         clusterEntity = addClusterEntity(CLUSTER_ENTITY_NAME, COLO_NAME,
                 "classification=production");
@@ -947,24 +1001,6 @@ public class MetadataMappingServiceTest {
             configStore.cleanupUpdateInit();
         }
         inputFeeds.add(rawFeed);
-
-        // Add output feed
-        Feed join1Feed = addFeedEntity("imp-click-join1", clusterEntity,
-                "classified-as=Financial", "reporting,bi", Storage.TYPE.FILESYSTEM,
-                "/falcon/imp-click-join1/${YEAR}${MONTH}${DAY}");
-        outputFeeds.add(join1Feed);
-
-        processEntity = addProcessEntity(PROCESS_ENTITY_NAME, clusterEntity,
-                "classified-as=Critical", "testPipeline,dataReplication_Pipeline", GENERATE_WORKFLOW_NAME,
-                WORKFLOW_VERSION);
-
-        // GENERATE WF should have run before this to create all instance related vertices
-        WorkflowExecutionContext context = WorkflowExecutionContext.create(getTestMessageArgs(
-                EntityOperations.GENERATE, GENERATE_WORKFLOW_NAME, "imp-click-join1",
-                "jail://global:00/falcon/imp-click-join1/20140101",
-                "jail://global:00/falcon/raw-click/primary/20140101",
-                REPLICATED_FEED), WorkflowExecutionContext.Type.POST_PROCESSING);
-        service.onSuccess(context);
     }
 
     private void setupForLineageEviction() throws Exception {

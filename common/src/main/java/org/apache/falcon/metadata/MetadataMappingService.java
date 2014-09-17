@@ -267,6 +267,7 @@ public class MetadataMappingService
 
         case REPLICATE:
             onFeedInstanceReplicated(context);
+            getTransactionalGraph().commit();
             break;
 
         case DELETE:
