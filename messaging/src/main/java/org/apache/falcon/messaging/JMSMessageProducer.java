@@ -18,12 +18,12 @@
 
 package org.apache.falcon.messaging;
 
+import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +35,7 @@ import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.Topic;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -290,19 +288,7 @@ public class JMSMessageProducer {
             return new String[0];
         }
 
-        ByteArrayOutputStream writer = new ByteArrayOutputStream();
-        InputStream instance = fs.open(logFile);
-        IOUtils.copyBytes(instance, writer, 4096, true);
-        String[] instancePaths = writer.toString().split("=");
-        fs.delete(logFile, true);
-        LOG.info("Deleted feed instance paths file:" + logFile);
-        if (instancePaths.length == 1) {
-            LOG.debug("Returning 0 instance paths for feed ");
-            return new String[0];
-        } else {
-            LOG.debug("Returning instance paths for feed " + instancePaths[1]);
-            return instancePaths[1].split(",");
-        }
+        return EvictedInstanceSerDe.deserializeEvictedInstancePaths(fs, logFile);
     }
 
     private Map<String, String> buildMessage(final WorkflowExecutionArgs[] filter) {
@@ -311,6 +297,8 @@ public class JMSMessageProducer {
             message.put(arg.getName(), context.getValue(arg));
         }
 
+        // this is NOT useful since the file is deleted after message is sent
+        message.remove(WorkflowExecutionArgs.LOG_FILE.getName());
         return message;
     }
 

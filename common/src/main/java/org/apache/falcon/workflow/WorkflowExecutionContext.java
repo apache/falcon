@@ -87,7 +87,7 @@ public class WorkflowExecutionContext {
         WorkflowExecutionArgs.RUN_ID,
         WorkflowExecutionArgs.STATUS,
         WorkflowExecutionArgs.TIMESTAMP,
-        WorkflowExecutionArgs.LOG_FILE,
+        WorkflowExecutionArgs.LOG_DIR,
     };
 
     private final Map<WorkflowExecutionArgs, String> context;

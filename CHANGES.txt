@@ -94,6 +94,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-731 Lineage capture for evicted instance is broken
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-724 Build fails as Integration test fails (Balu Vellanki via
    Venkatesh Seetharam)
 

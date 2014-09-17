@@ -75,7 +75,7 @@ public enum WorkflowExecutionArgs {
     BRKR_TTL("brokerTTL", "time to live for broker message in sec", false),
 
     // state maintained
-    LOG_FILE("logFile", "log file path where feeds to be deleted are recorded"),
+    LOG_FILE("logFile", "log file path where feeds to be deleted are recorded", false),
     // execution context data recorded
     LOG_DIR("logDir", "log dir where lineage can be recorded"),
 

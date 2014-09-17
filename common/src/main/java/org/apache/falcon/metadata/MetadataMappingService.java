@@ -271,6 +271,7 @@ public class MetadataMappingService
 
         case DELETE:
             onFeedInstanceEvicted(context);
+            getTransactionalGraph().commit();
             break;
 
         default:

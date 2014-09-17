@@ -126,7 +126,8 @@ public class FeedEvictor extends Configured implements Tool {
         evict(storage, retentionLimit, timeZone);
 
         Path path = new Path(logFile);
-        EvictionHelper.logInstancePaths(path.getFileSystem(getConf()), path, instancePaths.toString());
+        EvictedInstanceSerDe.serializeEvictedInstancePaths(
+                path.getFileSystem(getConf()), path, instancePaths);
 
         int len = buffer.length();
         if (len > 0) {
@@ -180,7 +181,7 @@ public class FeedEvictor extends Configured implements Tool {
             deleteInstance(fs, path, feedBasePath);
             Date date = getDate(path, feedPath, dateMask, timeZone);
             buffer.append(dateFormat.format(date)).append(',');
-            instancePaths.append(path).append(EvictionHelper.INSTANCEPATH_SEPARATOR);
+            instancePaths.append(path).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
         }
     }
 
@@ -532,7 +533,7 @@ public class FeedEvictor extends Configured implements Tool {
                 String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
                 LOG.info("Deleted partition: " + partitionInfo);
                 buffer.append(partSpec).append(',');
-                instancePaths.append(partitionInfo).append(EvictionHelper.INSTANCEPATH_SEPARATOR);
+                instancePaths.append(partitionInfo).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
             }
         }
     }
@@ -553,5 +554,4 @@ public class FeedEvictor extends Configured implements Tool {
             }
         }
     }
-
 }

@@ -18,13 +18,13 @@
 
 package org.apache.falcon.entity;
 
-import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.*;
+import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.entity.v0.cluster.Interface;
+import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.util.HashMap;
@@ -38,12 +38,6 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {
-    }
-
-    public static FileSystem getFileSystem(String cluster) throws FalconException {
-        Cluster clusterEntity = ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
-        Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
-        return HadoopClientFactory.get().createProxiedFileSystem(conf);
     }
 
     public static Configuration getConfiguration(Cluster cluster) {
@@ -114,10 +108,6 @@ public final class ClusterHelper {
         String normalizedUrl = getInterface(cluster, type).getEndpoint();
         String normalizedPath = new Path(normalizedUrl + "/").toString();
         return normalizedPath.substring(0, normalizedPath.length() - 1);
-    }
-
-    public static String getCompleteLocation(Cluster cluster, String locationKey) {
-        return getStorageUrl(cluster) + "/" + getLocation(cluster, locationKey);
     }
 
     public static String getLocation(Cluster cluster, String locationKey) {
