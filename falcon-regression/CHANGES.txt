@@ -70,6 +70,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-733 HCatProcess tests fail because _SUCCESS file is non-zero size (Raghav Kumar Gautam
+   via Ruslan Ostafiychuk)
+
    FALCON-723 Fix ProcessInstanceResumeTest and ProcessInstanceSuspendTest as per FALCON-166 (Ruslan Ostafiychuk)
 
    FALCON-715 "end" parameter should be greater than last instances startTime (Ruslan Ostafiychuk)
