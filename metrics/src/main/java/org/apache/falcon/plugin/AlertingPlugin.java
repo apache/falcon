@@ -19,24 +19,12 @@
 package org.apache.falcon.plugin;
 
 import org.apache.falcon.aspect.AlertMessage;
-import org.apache.falcon.aspect.ResourceMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Plugin for logging metrics using log4j.
+ * Generic interface to receiving alerts.
  */
-public class LoggingPlugin implements MonitoringPlugin, AlertingPlugin {
-    private static final Logger METRIC = LoggerFactory.getLogger("METRIC");
-    private static final Logger ALERT = LoggerFactory.getLogger("ALERT");
+public interface AlertingPlugin {
 
-    @Override
-    public void monitor(ResourceMessage message) {
-        METRIC.info("{}", message);
-    }
+    void alert(AlertMessage message);
 
-    @Override
-    public void alert(AlertMessage message) {
-        ALERT.info("{}", message);
-    }
 }

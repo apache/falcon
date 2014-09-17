@@ -18,6 +18,7 @@
 
 package org.apache.falcon.util;
 
+import org.apache.falcon.monitors.Alert;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
 
@@ -48,7 +49,8 @@ public final class ResourcesReflectionUtil {
     }
 
     public static Map<Integer, String> getResourceDimensionsName(String methodName) {
-        return METHODS.get(methodName) != null ? Collections.unmodifiableMap(METHODS.get(methodName).params) : null;
+        return METHODS.get(methodName) != null
+                ? Collections.unmodifiableMap(METHODS.get(methodName).params) : null;
     }
 
     public static String getResourceMonitorName(String methodName) {
@@ -56,8 +58,7 @@ public final class ResourcesReflectionUtil {
     }
 
     public static Integer getResourceTimeTakenName(String methodName) {
-        return METHODS.get(methodName) != null ? METHODS.get(methodName).timeTakenArgIndex
-                : null;
+        return METHODS.get(methodName) != null ? METHODS.get(methodName).timeTakenArgIndex : null;
     }
 
     /**
@@ -81,11 +82,11 @@ public final class ResourcesReflectionUtil {
     private static void buildAnnotationsMapForClass(String className) {
         Class clazz;
         try {
-            clazz = ResourcesReflectionUtil.class.
-                    getClassLoader().loadClass(className);
+            clazz = ResourcesReflectionUtil.class.getClassLoader().loadClass(className);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Unable to load class " + className, e);
         }
+
         Method[] declMethods = clazz.getMethods();
 
         // scan every method
@@ -93,20 +94,17 @@ public final class ResourcesReflectionUtil {
             Annotation[] methodAnnots = declMethod.getDeclaredAnnotations();
             // scan every annotation on method
             for (Annotation methodAnnot : methodAnnots) {
-                if (methodAnnot.annotationType().getSimpleName()
-                        .equals(Monitored.class.getSimpleName())) {
+                final String simpleName = methodAnnot.annotationType().getSimpleName();
+                if (simpleName.equals(Monitored.class.getSimpleName())
+                        || simpleName.equals(Alert.class.getSimpleName())) {
                     MethodAnnotation annotation = new MethodAnnotation();
-                    annotation.monitoredName = getAnnotationValue(
-                            methodAnnot, "event");
-                    Annotation[][] paramAnnots = declMethod
-                            .getParameterAnnotations();
+                    annotation.monitoredName = getAnnotationValue(methodAnnot, "event");
+                    Annotation[][] paramAnnots = declMethod.getParameterAnnotations();
+
                     // scan every param
                     annotation.params = getDeclaredParamAnnots(paramAnnots, annotation);
-                    METHODS.put(
-                            clazz.getSimpleName() + "."
-                                    + declMethod.getName(), annotation);
+                    METHODS.put(clazz.getSimpleName() + "." + declMethod.getName(), annotation);
                 }
-
             }
         }
     }
@@ -126,8 +124,8 @@ public final class ResourcesReflectionUtil {
                 }
             }
         }
-        return params;
 
+        return params;
     }
 
     private static String getAnnotationValue(Annotation annotation,
@@ -145,5 +143,4 @@ public final class ResourcesReflectionUtil {
 
         return value;
     }
-
 }

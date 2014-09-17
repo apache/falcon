@@ -54,6 +54,15 @@
         </layout>
     </appender>
 
+    <appender name="ALERT" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="${falcon.log.dir}/${falcon.app.type}.alerts.log"/>
+        <param name="Append" value="true"/>
+        <param name="Threshold" value="debug"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %m%n"/>
+        </layout>
+    </appender>
+
     <appender name="SECURITY" class="org.apache.log4j.DailyRollingFileAppender">
         <param name="File" value="${user.dir}/target/logs/security.audit.log"/>
         <param name="Append" value="true"/>

@@ -16,27 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.plugin;
+package org.apache.falcon.monitors;
 
-import org.apache.falcon.aspect.AlertMessage;
-import org.apache.falcon.aspect.ResourceMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Plugin for logging metrics using log4j.
+ * Alert annotation for monitoring.
  */
-public class LoggingPlugin implements MonitoringPlugin, AlertingPlugin {
-    private static final Logger METRIC = LoggerFactory.getLogger("METRIC");
-    private static final Logger ALERT = LoggerFactory.getLogger("ALERT");
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Alert {
 
-    @Override
-    public void monitor(ResourceMessage message) {
-        METRIC.info("{}", message);
-    }
-
-    @Override
-    public void alert(AlertMessage message) {
-        ALERT.info("{}", message);
-    }
+    /**
+     * @return Event name associated with this alert
+     */
+    String event();
 }

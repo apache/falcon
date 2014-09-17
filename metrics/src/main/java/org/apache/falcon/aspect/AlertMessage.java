@@ -16,27 +16,41 @@
  * limitations under the License.
  */
 
-package org.apache.falcon.plugin;
-
-import org.apache.falcon.aspect.AlertMessage;
-import org.apache.falcon.aspect.ResourceMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.apache.falcon.aspect;
 
 /**
- * Plugin for logging metrics using log4j.
+ * Message to be sent to the alerting system.
  */
-public class LoggingPlugin implements MonitoringPlugin, AlertingPlugin {
-    private static final Logger METRIC = LoggerFactory.getLogger("METRIC");
-    private static final Logger ALERT = LoggerFactory.getLogger("ALERT");
+public class AlertMessage {
 
-    @Override
-    public void monitor(ResourceMessage message) {
-        METRIC.info("{}", message);
+    private final String event;
+    private final String alert;
+    private final String error;
+
+    public AlertMessage(String event, String alert, String error) {
+        this.event = event;
+        this.alert = alert;
+        this.error = error;
+    }
+
+    public String getEvent() {
+        return event;
+    }
+
+    public String getAlert() {
+        return alert;
+    }
+
+    public String getError() {
+        return error;
     }
 
     @Override
-    public void alert(AlertMessage message) {
-        ALERT.info("{}", message);
+    public String toString() {
+        return "AlertMessage{"
+                + "event='" + event + '\''
+                + ", alert='" + alert + '\''
+                + ", error='" + error + '\''
+                + '}';
     }
 }
