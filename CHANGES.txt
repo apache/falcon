@@ -33,6 +33,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-665 Handle message consumption failures in JMSMessageConsumer
+   (Venkatesh Seetharam)
+
    FALCON-662 Fetch relationships for a given type API (Balu Vellanki via
    Venkatesh Seetharam)
 

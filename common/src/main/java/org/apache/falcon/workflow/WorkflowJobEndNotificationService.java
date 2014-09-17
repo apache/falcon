@@ -82,7 +82,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
         listeners.remove(listener);
     }
 
-    public void notifyFailure(WorkflowExecutionContext context) throws FalconException {
+    public void notifyFailure(WorkflowExecutionContext context) {
         for (WorkflowExecutionListener listener : listeners) {
             try {
                 listener.onFailure(context);
@@ -95,7 +95,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
         instrumentAlert(context);
     }
 
-    public void notifySuccess(WorkflowExecutionContext context) throws FalconException {
+    public void notifySuccess(WorkflowExecutionContext context) {
         for (WorkflowExecutionListener listener : listeners) {
             try {
                 listener.onSuccess(context);
@@ -108,7 +108,7 @@ public class WorkflowJobEndNotificationService implements FalconService {
         instrumentAlert(context);
     }
 
-    private void instrumentAlert(WorkflowExecutionContext context) throws FalconException {
+    private void instrumentAlert(WorkflowExecutionContext context) {
         String clusterName = context.getClusterName();
         String entityName = context.getEntityName();
         String entityType = context.getEntityType();
@@ -118,14 +118,14 @@ public class WorkflowJobEndNotificationService implements FalconService {
         String nominalTime = context.getNominalTimeAsISO8601();
         String runId = String.valueOf(context.getWorkflowRunId());
 
-        CurrentUser.authenticate(context.getWorkflowUser());
-        AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
-        InstancesResult result = wfEngine.getJobDetails(clusterName, workflowId);
-        Date startTime = result.getInstances()[0].startTime;
-        Date endTime = result.getInstances()[0].endTime;
-        Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
-
         try {
+            CurrentUser.authenticate(context.getWorkflowUser());
+            AbstractWorkflowEngine wfEngine = WorkflowEngineFactory.getWorkflowEngine();
+            InstancesResult result = wfEngine.getJobDetails(clusterName, workflowId);
+            Date startTime = result.getInstances()[0].startTime;
+            Date endTime = result.getInstances()[0].endTime;
+            Long duration = (endTime.getTime() - startTime.getTime()) * 1000000;
+
             if (context.hasWorkflowFailed()) {
                 GenericAlert.instrumentFailedInstance(clusterName, entityType,
                         entityName, nominalTime, workflowId, workflowUser, runId, operation,
@@ -135,8 +135,9 @@ public class WorkflowJobEndNotificationService implements FalconService {
                         entityName, nominalTime, workflowId, workflowUser, runId, operation,
                         SchemaHelper.formatDateUTC(startTime), duration);
             }
-        } catch (Exception e) {
-            throw new FalconException(e);
+        } catch (FalconException e) {
+            // Logging an error and ignoring since there are listeners for extensions
+            LOG.error("Instrumenting alert failed for: " + context, e);
         }
     }
 }

@@ -48,6 +48,8 @@ import java.util.Map;
 public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     private static final Logger LOG = LoggerFactory.getLogger(JMSMessageConsumer.class);
 
+    private static final String FALCON_CLIENT_ID = "falcon-server";
+
     private final String implementation;
     private final String userName;
     private final String password;
@@ -56,7 +58,8 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     private final WorkflowJobEndNotificationService jobEndNotificationService;
 
     private Connection connection;
-    private TopicSubscriber subscriber;
+    private TopicSession topicSession;
+    private TopicSubscriber topicSubscriber;
 
     public JMSMessageConsumer(String implementation, String userName,
                               String password, String url, String topicName,
@@ -72,15 +75,17 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     public void startSubscriber() throws FalconException {
         try {
             connection = createAndGetConnection(implementation, userName, password, url);
-            TopicSession session = (TopicSession) connection.createSession(
-                    false, Session.AUTO_ACKNOWLEDGE);
-            Topic destination = session.createTopic(topicName);
-            subscriber = session.createSubscriber(destination);
-            subscriber.setMessageListener(this);
+            connection.setClientID(FALCON_CLIENT_ID);
+
+            topicSession = (TopicSession) connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic destination = topicSession.createTopic(topicName);
+            topicSubscriber = topicSession.createDurableSubscriber(destination, FALCON_CLIENT_ID);
+            topicSubscriber.setMessageListener(this);
+
             connection.setExceptionListener(this);
             connection.start();
         } catch (Exception e) {
-            LOG.error("Error starting subscriber of topic: " + this.toString(), e);
+            LOG.error("Error starting topicSubscriber of topic: " + this.toString(), e);
             throw new FalconException(e);
         }
     }
@@ -88,17 +93,19 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     @Override
     public void onMessage(Message message) {
         MapMessage mapMessage = (MapMessage) message;
-        LOG.info("Received message {}", message.toString());
+        LOG.info("Received JMS message {}", message.toString());
 
         try {
             WorkflowExecutionContext context = createContext(mapMessage);
+            LOG.info("Created context from JMS message {}", context);
+
             if (context.hasWorkflowFailed()) {
                 onFailure(context);
             } else if (context.hasWorkflowSucceeded()) {
                 onSuccess(context);
             }
-        } catch (Exception e) {
-            String errorMessage = "Error in onMessage for subscriber of topic: "
+        } catch (JMSException e) {
+            String errorMessage = "Error in onMessage for topicSubscriber of topic: "
                     + topicName + ", Message: " + message.toString();
             LOG.info(errorMessage, e);
             GenericAlert.alertJMSMessageConsumerFailed(errorMessage, e);
@@ -118,33 +125,57 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
         return WorkflowExecutionContext.create(wfProperties);
     }
 
-    public void onFailure(WorkflowExecutionContext context) throws FalconException {
+    public void onFailure(WorkflowExecutionContext context) {
         jobEndNotificationService.notifyFailure(context);
     }
 
-    public void onSuccess(WorkflowExecutionContext context) throws FalconException {
+    public void onSuccess(WorkflowExecutionContext context) {
         jobEndNotificationService.notifySuccess(context);
     }
 
     @Override
     public void onException(JMSException ignore) {
-        String errorMessage = "Error in onException for subscriber of topic: " + topicName;
+        String errorMessage = "Error in onException for topicSubscriber of topic: " + topicName;
         LOG.info(errorMessage, ignore);
         GenericAlert.alertJMSMessageConsumerFailed(errorMessage, ignore);
     }
 
-    public void closeSubscriber() throws FalconException {
-        try {
-            LOG.info("Closing subscriber on topic : " + this.topicName);
-            if (subscriber != null) {
-                subscriber.close();
+    public void closeSubscriber() {
+        LOG.info("Closing topicSubscriber on topic : " + this.topicName);
+        // closing each quietly so client id can be unsubscribed
+        closeTopicSubscriberQuietly();
+        closeTopicSessionQuietly();
+        closeConnectionQuietly();
+    }
+
+    private void closeTopicSubscriberQuietly() {
+        if (topicSubscriber != null) {
+            try {
+                topicSubscriber.close();
+            } catch (JMSException ignore) {
+                LOG.error("Error closing JMS topic subscriber: " + topicSubscriber, ignore);
             }
-            if (connection != null) {
+        }
+    }
+
+    private void closeTopicSessionQuietly() {
+        if (topicSession != null) { // unsubscribe the durable topic topicSubscriber
+            try {
+                topicSession.unsubscribe(FALCON_CLIENT_ID);
+                topicSession.close();
+            } catch (JMSException ignore) {
+                LOG.error("Error closing JMS topic session: " + topicSession, ignore);
+            }
+        }
+    }
+
+    private void closeConnectionQuietly() {
+        if (connection != null) {
+            try {
                 connection.close();
+            } catch (JMSException ignore) {
+                LOG.error("Error closing JMS connection: " + connection, ignore);
             }
-        } catch (JMSException e) {
-            LOG.error("Error closing subscriber of topic: " + this.toString(), e);
-            throw new FalconException(e);
         }
     }
 

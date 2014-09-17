@@ -20,6 +20,7 @@ package org.apache.falcon.messaging;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -59,6 +60,7 @@ public class JMSMessageConsumerTest {
         broker.setDataDirectory("target/activemq");
         broker.setBrokerName("localhost");
         broker.start();
+        broker.deleteAllMessages();
     }
 
     public void sendMessages(String topic) throws JMSException, FalconException, IOException {
@@ -137,11 +139,19 @@ public class JMSMessageConsumerTest {
                     BROKER_URL, TOPIC_NAME+","+SECONDARY_TOPIC_NAME, new WorkflowJobEndNotificationService());
             subscriber.startSubscriber();
             sendMessages(TOPIC_NAME);
-            Assert.assertEquals(broker.getAdminView().getTotalEnqueueCount(), 9);
+
+            final BrokerView adminView = broker.getAdminView();
+
+            Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
+            Assert.assertEquals(adminView.getTotalEnqueueCount(), 11);
+            Assert.assertEquals(adminView.getTotalConsumerCount(), 2);
 
             sendMessages(SECONDARY_TOPIC_NAME);
-            Assert.assertEquals(broker.getAdminView().getTotalEnqueueCount(), 17);
-            Assert.assertEquals(broker.getAdminView().getTotalConsumerCount(), 2);
+
+            Assert.assertEquals(adminView.getTotalEnqueueCount(), 20);
+            Assert.assertEquals(adminView.getTotalDequeueCount(), 0);
+            Assert.assertEquals(adminView.getTotalConsumerCount(), 3);
+
             subscriber.closeSubscriber();
         } catch (Exception e) {
             Assert.fail("This should not have thrown an exception.", e);

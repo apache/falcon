@@ -285,6 +285,11 @@ public class WorkflowExecutionContext {
         }
     }
 
+    @Override
+    public String toString() {
+        return "WorkflowExecutionContext{" + context.toString() + "}";
+    }
+
     @SuppressWarnings("unchecked")
     public static WorkflowExecutionContext deSerialize(String contextFile) throws FalconException {
         try {
