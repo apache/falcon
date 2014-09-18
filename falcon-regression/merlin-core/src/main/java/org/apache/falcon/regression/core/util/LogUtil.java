@@ -61,8 +61,12 @@ public class LogUtil {
                 }
                 for (BundleJob oneJobInfo : bundleJobsInfo) {
                     final String bundleJobId = oneJobInfo.getId();
-                    writeOneJobInfo(oozieClient, bundleJobId, location, filter);
-                    writeOneJobLog(oozieClient, bundleJobId, location, filter);
+                    if(!skipInfo()) {
+                        writeOneJobInfo(oozieClient, bundleJobId, location, filter);
+                    }
+                    if(!skipLog()) {
+                        writeOneJobLog(oozieClient, bundleJobId, location, filter);
+                    }
                 }
             }
 
@@ -131,8 +135,12 @@ public class LogUtil {
                 }
                 for (CoordinatorJob oneJobInfo : coordJobsInfo) {
                     final String coordJobId = oneJobInfo.getId();
-                    writeOneJobInfo(oozieClient, coordJobId, location, filter);
-                    writeOneJobLog(oozieClient, coordJobId, location, filter);
+                    if(!skipInfo()) {
+                        writeOneJobInfo(oozieClient, coordJobId, location, filter);
+                    }
+                    if(!skipLog()) {
+                        writeOneJobLog(oozieClient, coordJobId, location, filter);
+                    }
                 }
             }
 
@@ -199,8 +207,12 @@ public class LogUtil {
                 }
                 for (WorkflowJob oneJobInfo : wfJobsInfo) {
                     final String wfJobId = oneJobInfo.getId();
-                    writeOneJobInfo(oozieClient, wfJobId, location, filter);
-                    writeOneJobLog(oozieClient, wfJobId, location, filter);
+                    if(!skipInfo()) {
+                        writeOneJobInfo(oozieClient, wfJobId, location, filter);
+                    }
+                    if(!skipLog()) {
+                        writeOneJobLog(oozieClient, wfJobId, location, filter);
+                    }
                 }
             }
 
@@ -259,6 +271,14 @@ public class LogUtil {
             }
         },
         ;
+
+        private static boolean skipInfo() {
+            return Config.getBoolean("log.capture.oozie.skip_info", false);
+        }
+
+        private static boolean skipLog() {
+            return Config.getBoolean("log.capture.oozie.skip_log", false);
+        }
 
         /**
          * Pull and dump info and log of all jobs of a type

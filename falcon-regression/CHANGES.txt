@@ -9,6 +9,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-745 LogUtil requires fine control over what to dump (Raghav Kumar
+   Gautam)
+
    FALCON-739 JmsMessageConsumer should start daemon threads (Raghav Kumar
    Gautam)
 

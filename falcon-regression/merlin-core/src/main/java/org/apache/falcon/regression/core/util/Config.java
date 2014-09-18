@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
@@ -35,6 +36,10 @@ public final class Config {
         try {
             LOGGER.info("Going to read properties from: " + propFileName);
             confObj = new PropertiesConfiguration(Config.class.getResource("/" + propFileName));
+            //if changed configuration will be reloaded within 2 min
+            final FileChangedReloadingStrategy reloadingStrategy = new FileChangedReloadingStrategy();
+            reloadingStrategy.setRefreshDelay(2 * 60 * 1000);
+            confObj.setReloadingStrategy(reloadingStrategy);
         } catch (ConfigurationException e) {
             Assert.fail("Could not read properties because of exception: " + e);
         }
