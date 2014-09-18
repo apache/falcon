@@ -73,6 +73,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-736 OneNonCatInputOneHCatOutput test fails because of change in parameter name (Raghav Kumar Gautam
+   via Ruslan Ostafiychuk)
+
    FALCON-733 HCatProcess tests fail because _SUCCESS file is non-zero size (Raghav Kumar Gautam
    via Ruslan Ostafiychuk)
 

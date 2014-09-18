@@ -21,7 +21,7 @@ CREATE EXTERNAL TABLE ${falcon_outputData_database}.temp_table_on_raw_data(id ST
  LOCATION '${inputData}';
 
 INSERT OVERWRITE TABLE ${falcon_outputData_database}.${falcon_outputData_table}
- PARTITION (dt='${falcon_outputData_dated_partition_value}')
+ PARTITION (dt='${falcon_outputData_dated_partition_value_dt}')
  SELECT id, value FROM temp_table_on_raw_data;
 
 DROP TABLE IF EXISTS ${falcon_outputData_database}.temp_table_on_raw_data;
