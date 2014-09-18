@@ -114,10 +114,10 @@ public class NoOutputProcessTest extends BaseTestClass {
         //wait for all the instances to complete
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-        Assert.assertEquals(messageConsumer.getReceivedMessages().size(), 3,
-            " Message for all the 3 instance not found");
         messageConsumer.interrupt();
         Util.printMessageData(messageConsumer);
+        Assert.assertEquals(messageConsumer.getReceivedMessages().size(), 3,
+            " Message for all the 3 instance not found");
     }
 
     /**
@@ -138,14 +138,14 @@ public class NoOutputProcessTest extends BaseTestClass {
         //wait for all the instances to complete
         InstanceUtil.waitTillInstanceReachState(clusterOC, bundles[0].getProcessName(), 3,
             CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
-        Assert.assertEquals(consumerEntityMsg.getReceivedMessages().size(), 3,
-            " Message for all the 3 instance not found");
-        Assert.assertEquals(consumerProcessMsg.getReceivedMessages().size(), 3,
-            " Message for all the 3 instance not found");
         consumerEntityMsg.interrupt();
         consumerProcessMsg.interrupt();
         Util.printMessageData(consumerEntityMsg);
         Util.printMessageData(consumerProcessMsg);
+        Assert.assertEquals(consumerEntityMsg.getReceivedMessages().size(), 3,
+            " Message for all the 3 instance not found");
+        Assert.assertEquals(consumerProcessMsg.getReceivedMessages().size(), 3,
+            " Message for all the 3 instance not found");
     }
 
     @AfterClass(alwaysRun = true)
