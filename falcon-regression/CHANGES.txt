@@ -76,6 +76,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-747 validateSuccessOnlyStart should use '1' as expected value (Ruslan Ostafiychuk)
+
    FALCON-737 In NoOutputProcessTest print info before assertion (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
    FALCON-736 OneNonCatInputOneHCatOutput test fails because of change in parameter name (Raghav Kumar Gautam

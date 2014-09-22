@@ -256,7 +256,7 @@ public final class InstanceUtil {
     public static void validateSuccessOnlyStart(InstancesResult r,
             InstancesResult.WorkflowStatus ws) {
         Assert.assertEquals(r.getStatus(), APIResult.Status.SUCCEEDED);
-        Assert.assertEquals(1, runningInstancesInResult(r, ws));
+        Assert.assertEquals(runningInstancesInResult(r, ws), 1);
     }
 
     /**
