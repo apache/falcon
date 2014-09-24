@@ -258,7 +258,7 @@ With the integration of Hive, Falcon also provides retention for tables in Hive 
 
 ---+++ Example:
 If retention period is 10 hours, and the policy kicks in at time 't', the data retained by system is essentially the
-one falling in between [t-10h,t]. Any data in the boundaries [-�,t-10h) and (t,�] is removed from the system.
+one in range [t-10h, t]. Any data before t-10h and after t is removed from the system.
 
 The 'action' attribute can attain values of DELETE/ARCHIVE. Based upon the tag value, the data eligible for removal is either
 deleted/archived.

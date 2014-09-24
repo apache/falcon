@@ -1,0 +1,84 @@
+---++  GET /api/instance/params/:entity-type/:entity-name
+   * <a href="#Description">Description</a>
+   * <a href="#Parameters">Parameters</a>
+   * <a href="#Results">Results</a>
+   * <a href="#Examples">Examples</a>
+
+---++ Description
+Get a list of instances along with the information for workflow params.
+
+---++ Parameters
+   * :entity-type Valid options are cluster, feed or process.
+   * :entity-name Name of the entity.
+   * colo <optional param> Colo on which the query should be run.
+   * lifecycle <optional param> Valid lifecycles for feed are Eviction/Replication(default) and for process is Execution(default).
+   * filterBy <optional param>  Filter results by list of field:value pairs. Example: filterBy=CLUSTER:primary-cluster
+      * Supported filter fields are CLUSTER, SOURCECLUSTER, STARTEDAFTER.
+      * Query will do an AND among filterBy fields.
+   * orderBy <optional param> Field by which results should be ordered.
+      * Supports ordering by "status","startTime","endTime","cluster".
+   * offset <optional param> Show results from the offset, used for pagination. Defaults to 0.
+   * numResults <optional param> Number of results to show per request, used for pagination. Only integers > 0 are valid, Default is 10.
+
+
+---++ Results
+List of instances currently running.
+
+---++ Examples
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "startTime": "2013-10-21T14:39:28-07:00",
+            "cluster": "primary-cluster",
+            "status": "RUNNING",
+            "instance": "2012-04-03T06:00Z"
+        }
+    ],
+    "requestId": "default\/12e9a7d4-3b4f-4a76-b471-c8f3786a62a0\n",
+    "message": "default\/Running Instances\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+
+---+++ Rest Call
+<verbatim>
+GET http://localhost:15000/api/instance/running/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&filterBy=CLUSTER:primary-cluster&orderBy=startTime&offset=2&numResults=2
+</verbatim>
+---+++ Result
+<verbatim>
+{
+    "instances": [
+        {
+            "details": "",
+            "endTime": "2013-10-21T14:40:26-07:00",
+            "startTime": "2013-10-21T14:39:56-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "status": "RUNNING",
+            "instance": "2012-04-03T07:00Z"
+        },
+        {
+            "details": "",
+            "endTime": "2013-10-21T14:42:27-07:00",
+            "startTime": "2013-10-21T14:41:57-07:00",
+            "cluster": "primary-cluster",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933397-oozie-rgau-W",
+            "status": "RUNNING",
+            "instance": "2012-04-03T08:00Z"
+        },
+    ],
+
+    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "message": "default\/STATUS\n",
+    "status": "SUCCEEDED"
+}
+</verbatim>
+
+
