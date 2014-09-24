@@ -33,6 +33,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-576 Update Installation notes for Mac OS (Ajay Yadav via
+   Venkatesh Seetharam)
+
    FALCON-666 Add Alerts for unrecoverable failures (Venkatesh Seetharam)
 
    FALCON-665 Handle message consumption failures in JMSMessageConsumer

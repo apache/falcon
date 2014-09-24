@@ -160,6 +160,18 @@ In addition you can set any other environment variables you might need. This fil
 #export FALCON_EXPANDED_WEBAPP_DIR=
 </verbatim>
 
+
+*NOTE for Mac OS users*
+<verbatim>
+If you are using a Mac OS, you will need to configure the FALCON_SERVER_OPTS (explained above).
+
+In  {package dir}/conf/falcon-env.sh uncomment the following line
+#export FALCON_SERVER_OPTS=
+
+and change it to look as below
+export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
+</verbatim>
+
 *Starting Falcon Server*
 <verbatim>
 bin/falcon-start [-port <port>]
