@@ -527,6 +527,27 @@ public class EntityManagerJerseyIT {
         context.assertSuccessful(response);
     }
 
+    public void testProcesssScheduleAndDelete() throws Exception {
+        TestContext context = newContext();
+        ClientResponse clientResponse;
+        Map<String, String> overlay = context.getUniqueOverlay();
+        String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.PROCESS_TEMPLATE, overlay);
+        Process process = (Process) EntityType.PROCESS.getUnmarshaller().unmarshal(new File(tmpFileName));
+        updateEndtime(process);
+        File tmpFile = TestContext.getTempFile();
+        EntityType.PROCESS.getMarshaller().marshal(process, tmpFile);
+        context.scheduleProcess(tmpFile.getAbsolutePath(), overlay);
+        OozieTestUtils.waitForBundleStart(context, Status.RUNNING);
+
+        //Delete a scheduled process
+        clientResponse = context.service
+                .path("api/entities/delete/process/" + context.processName)
+                .header("Cookie", context.getAuthenticationToken())
+                .accept(MediaType.TEXT_XML)
+                .delete(ClientResponse.class);
+        context.assertSuccessful(clientResponse);
+    }
+
     public void testGetEntityDefinition() throws Exception {
         TestContext context = newContext();
         ClientResponse response;

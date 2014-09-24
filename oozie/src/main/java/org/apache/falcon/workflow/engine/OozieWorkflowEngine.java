@@ -378,10 +378,6 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 LOG.debug("Killed coord {} on cluster {}", coord.getId(), clusterName);
             }
 
-            //set end time of bundle
-            client.change(job.getId(), OozieClient.CHANGE_VALUE_ENDTIME + "=" + SchemaHelper.formatDateUTC(new Date()));
-            LOG.debug("Changed end time of bundle {} on cluster {}", job.getId(), clusterName);
-
             //kill bundle
             client.kill(job.getId());
             LOG.debug("Killed bundle {} on cluster {}", job.getId(), clusterName);
