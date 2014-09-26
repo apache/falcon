@@ -225,23 +225,23 @@ public class InstanceSummaryTest extends BaseTestClass {
         //cluster_1 is target, cluster_2 is source and cluster_3 is neutral
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
 
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-10-01T12:10Z"),
-                XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
                 Util.readEntityName(bundles[2].getClusters().get(0)), null, null);
 
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-10-01T12:25Z"),
-                XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
                 Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET,
                 null, feedInputPath);
 
         feed = InstanceUtil
             .setFeedCluster(feed, XmlUtil.createValidity(startTime, "2099-01-01T00:00Z"),
-                XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+                XmlUtil.createRetention("days(100000)", ActionType.DELETE),
                 Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
                 null, feedInputPath);
 

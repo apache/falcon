@@ -431,10 +431,10 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         String feed = processBundle.getDataSets().get(0);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         feed = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE),
             Util.readEntityName(processBundle.getClusters().get(0)), ClusterType.SOURCE,
             null, baseTestDir + "/replication" + MINUTE_DATE_PATTERN);
 
@@ -575,11 +575,11 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         String feed = b.getDataSets().get(0);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         feed = InstanceUtil.setFeedCluster(feed, XmlUtil.createValidity
                 ("2012-10-01T12:10Z", "2099-10-01T12:10Z"),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(b.getClusters().get(0)), ClusterType.SOURCE, "",
             "/someTestPath" + MINUTE_DATE_PATTERN);
         ServiceResponse r = prism.getClusterHelper().submitEntity(
@@ -601,20 +601,20 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
         //cluster1 is target, cluster2 is source and cluster3 is neutral
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTimeCluster_source, "2099-10-01T12:10Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE),
             Util.readEntityName(bundles[2].getClusters().get(0)), null, null);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTimeCluster_target, "2099-10-01T12:25Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)), ClusterType.TARGET,
             null, testDataDir + MINUTE_DATE_PATTERN);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTimeCluster_source, "2099-01-01T00:00Z"),
-            XmlUtil.createRtention("days(100000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(100000)", ActionType.DELETE),
             Util.readEntityName(bundles[1].getClusters().get(0)), ClusterType.SOURCE,
             null, testDataDir + MINUTE_DATE_PATTERN);
 

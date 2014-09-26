@@ -85,30 +85,30 @@ public class FeedDelayParallelTimeoutTest extends BaseTestClass {
         feedOutput01 = InstanceUtil
             .setFeedCluster(feedOutput01,
                 XmlUtil.createValidity("2010-10-01T12:00Z", "2099-01-01T00:00Z"),
-                XmlUtil.createRtention("days(10000)", ActionType.DELETE), null,
+                XmlUtil.createRetention("days(10000)", ActionType.DELETE), null,
                 ClusterType.SOURCE, null);
 
         // uncomment below 2 line when falcon in sync with ivory
 
         //	feedOutput01 = instanceUtil.setFeedCluster(feedOutput01,
         // XmlUtil.createValidity("2013-04-21T00:00Z",
-        // "2099-10-01T12:10Z"),XmlUtil.createRtention("hours(15)",ActionType.DELETE),
+        // "2099-10-01T12:10Z"),XmlUtil.createRetention("hours(15)",ActionType.DELETE),
         // Util.readClusterName(bundles[1].getClusters().get(0)),ClusterType.SOURCE,"",delay,
         // feedInputPath);
         //	feedOutput01 = instanceUtil.setFeedCluster(feedOutput01,
         // XmlUtil.createValidity("2013-04-21T00:00Z",
-        // "2099-10-01T12:25Z"),XmlUtil.createRtention("hours(15)",ActionType.DELETE),
+        // "2099-10-01T12:25Z"),XmlUtil.createRetention("hours(15)",ActionType.DELETE),
         // Util.readClusterName(bundles[0].getClusters().get(0)),ClusterType.TARGET,"",delay,
         // feedOutputPath);
 
         //feedOutput01 = instanceUtil.setFeedCluster(feedOutput01,
         // XmlUtil.createValidity("2013-04-21T00:00Z",
-        // "2099-10-01T12:10Z"),XmlUtil.createRtention("hours(15)",ActionType.DELETE),
+        // "2099-10-01T12:10Z"),XmlUtil.createRetention("hours(15)",ActionType.DELETE),
         // Util.readClusterName(bundles[1].getClusters().get(0)),ClusterType.SOURCE,"",
         // feedInputPath);
         //feedOutput01 = instanceUtil.setFeedCluster(feedOutput01,
         // XmlUtil.createValidity("2013-04-21T00:00Z",
-        // "2099-10-01T12:25Z"),XmlUtil.createRtention("hours(15)",ActionType.DELETE),
+        // "2099-10-01T12:25Z"),XmlUtil.createRetention("hours(15)",ActionType.DELETE),
         // Util.readClusterName(bundles[0].getClusters().get(0)),ClusterType.TARGET,"",
         // feedOutputPath);
 

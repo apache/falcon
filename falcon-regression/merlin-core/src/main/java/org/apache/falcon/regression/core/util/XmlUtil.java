@@ -46,7 +46,7 @@ public final class XmlUtil {
         return v;
     }
 
-    public static Retention createRtention(String limit, ActionType action) {
+    public static Retention createRetention(String limit, ActionType action) {
         Retention r = new Retention();
         r.setLimit(new Frequency(limit));
         r.setAction(action);

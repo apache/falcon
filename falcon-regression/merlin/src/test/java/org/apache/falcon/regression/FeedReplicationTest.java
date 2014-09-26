@@ -117,18 +117,18 @@ public class FeedReplicationTest extends BaseTestClass {
         //erase all clusters from feed definition
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         //set cluster1 as source
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)),
             ClusterType.SOURCE, null);
         //set cluster2 as target
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[1].getClusters().get(0)),
             ClusterType.TARGET, null, targetDataLocation);
 
@@ -188,24 +188,24 @@ public class FeedReplicationTest extends BaseTestClass {
         //erase all clusters from feed definition
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         //set cluster1 as source
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)),
             ClusterType.SOURCE, null);
         //set cluster2 as target
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[1].getClusters().get(0)),
             ClusterType.TARGET, null, targetDataLocation);
         //set cluster3 as target
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[2].getClusters().get(0)),
             ClusterType.TARGET, null, targetDataLocation);
 
@@ -284,18 +284,18 @@ public class FeedReplicationTest extends BaseTestClass {
         //erase all clusters from feed definition
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE), null,
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE), null,
             ClusterType.SOURCE, null);
         //set cluster1 as source
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[0].getClusters().get(0)),
             ClusterType.SOURCE, null);
         //set cluster2 as target
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity(startTime, endTime),
-            XmlUtil.createRtention("days(1000000)", ActionType.DELETE),
+            XmlUtil.createRetention("days(1000000)", ActionType.DELETE),
             Util.readEntityName(bundles[1].getClusters().get(0)),
             ClusterType.TARGET, null, targetDataLocation);
 
