@@ -9,6 +9,10 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-645 add test to falcon regression for change made in default behaviour 
+   of instance request ( Karishma Via Samarth Gupta)
+
    FALCON-745 LogUtil requires fine control over what to dump (Raghav Kumar
    Gautam)
 

@@ -25,20 +25,23 @@ import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
 import org.apache.falcon.regression.core.response.ResponseKeys;
-import org.apache.falcon.regression.core.util.AssertUtil;
-import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.regression.core.util.TimeUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.CoordinatorAction;
 import org.apache.oozie.client.CoordinatorAction.Status;
 import org.apache.oozie.client.Job;
 import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.OozieClientException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -50,7 +53,6 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.util.List;
 
 /**
  * Process instance status tests.
@@ -80,13 +82,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         Bundle bundle = BundleUtil.readELBundle();
         bundle.generateUniqueBundle();
         bundle = new Bundle(bundle, cluster);
-        String startDate = "2010-01-01T23:40Z";
-        String endDate = "2010-01-02T02:40Z";
         bundle.setInputFeedDataPath(feedInputPath);
-        String prefix = bundle.getFeedDataPathPrefix();
-        HadoopUtil.deleteDirIfExists(prefix.substring(1), clusterFS);
-        List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT, prefix, dataDates);
     }
 
     /**
@@ -124,6 +120,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setProcessPeriodicity(1, TimeUnit.minutes);
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T10:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
@@ -151,7 +148,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
 
     /**
      * Schedule process. Perform -getStatus using -end parameter which is out of process
-     * validity range. Attempt should fail.
+     * validity range. Attempt should succeed with end defaulted to entity end.
      *
      * @throws Exception
      */
@@ -161,20 +158,25 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateResponse(r, 5, 0, 0, 5, 0);
     }
 
     /**
-     * Schedule process and try to -getStatus without date parameters. Attempt should fail with
-     * an appropriate message.
+     * Schedule process and try to -getStatus without date parameters. Attempt should succeed. Start defaults
+     * to start of entity and end defaults to end of entity.
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusDateEmpty()
-        throws JAXBException, AuthenticationException, IOException, URISyntaxException {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T02:30Z");
+        throws JAXBException, AuthenticationException, IOException, URISyntaxException, OozieClientException {
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:30Z");
+        bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 5 ,
+                CoordinatorAction.Status.RUNNING, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateResponse(r, 6, 5, 0, 1, 0);
     }
 
     /**
@@ -187,23 +189,28 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     public void testProcessInstanceStatusStartAndEnd() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
     /**
      * Schedule process. Perform -getStatus using -start parameter which is out of process
-     * validity range. Attempt should fail.
+     * validity range. Attempt should succeed, with start defaulted to entity start time.
      *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusStartOutOfRange() throws Exception {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
+        bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T00:00Z&end=2010-01-02T01:20Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+            "?start=2010-01-02T00:00Z&end=2010-01-02T01:21Z");
+        InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.RUNNING);
     }
 
     /**
@@ -217,7 +224,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         AssertUtil.assertSucceeded(prism.getProcessHelper().delete(bundles[0].getProcessData()));
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
         if ((r.getStatusCode() != ResponseKeys.PROCESS_NOT_FOUND)) {
             Assert.assertTrue(false);
         }
@@ -235,13 +242,13 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(bundles[0].getProcessData()));
         TimeUtil.sleepSeconds(TIMEOUT);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z");
+            "?start=2010-01-02T01:00Z");
         InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.SUSPENDED);
     }
 
     /**
      * Schedule process. Try to -getStatus using -start/-end parameters with values which were
-     * reversed i.e. -start is further then -end. Attempt should fail.
+     * reversed i.e. -start is further than -end. Attempt should fail.
      *
      * @throws Exception
      */
@@ -249,13 +256,13 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     public void testProcessInstanceStatusReverseDateRange() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:20Z&end=2010-01-02T01:07Z");
+            "?start=2010-01-02T01:20Z&end=2010-01-02T01:07Z");
         InstanceUtil.validateSuccessWithStatusCode(r, 400);
     }
 
     /**
      * Schedule process. Perform -getStatus using -start/-end parameters which are out of process
-     * validity range. Attempt should fail.
+     * validity range. Attempt should succeed, with start/end defaulted to entity's start/end.
      *
      * @throws Exception
      */
@@ -265,11 +272,13 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
         bundles[0].setOutputFeedLocationData(feedOutputPath);
         bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 2,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateResponse(r, 5, 2, 0, 3, 0);
     }
 
     /**
@@ -282,10 +291,13 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     public void testProcessInstanceStatusResumed() throws Exception {
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].setOutputFeedLocationData(feedOutputPath);
-        bundles[0].setProcessConcurrency(2);
+        bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
         String process = bundles[0].getProcessData();
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         prism.getProcessHelper().suspend(process);
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.SUSPENDED);
         prism.getProcessHelper().resume(process);
@@ -306,11 +318,13 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusOnlyStart() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.RUNNING);
+        InstanceUtil.validateResponse(r, 5, 1, 0, 4, 0);
     }
 
     /**
@@ -331,40 +345,22 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
     }
 
     /**
-     * Schedule process. Suspend it. -getStatus of it's instances. Check if response reflects
-     * their status as suspended.
+     * Schedule process. Try to -getStatus without time range parameters. Attempt succeeds.
      *
-     * @throws Exception
-     */
-    @Test(groups = {"singleCluster"})
-    public void testProcessInstanceStatusSuspended() throws Exception {
-        for (int i = 0; i < bundles[0].getClusters().size(); i++) {
-            LOGGER.info("cluster to be submitted: " + i + "  "
-                    + Util.prettyPrintXml(bundles[0].getClusters().get(i)));
-        }
-        String process = bundles[0].getProcessData();
-        bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.RUNNING);
-        AssertUtil.assertSucceeded(prism.getProcessHelper().suspend(process));
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, process, Job.Status.SUSPENDED);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
-            "?start=2010-01-02T01:00Z&end=2010-01-02T01:20Z");
-        InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.SUSPENDED);
-    }
-
-    /**
-     * Schedule process. Try to -getStatus without time range parameters. Attempt should fails
-     * with an appropriate status code.
      *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusWoParams() throws Exception {
-        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T02:30Z");
+        bundles[0].setProcessConcurrency(5);
+        bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateResponse(r, 5, 5, 0, 0, 0);
     }
 
     /**

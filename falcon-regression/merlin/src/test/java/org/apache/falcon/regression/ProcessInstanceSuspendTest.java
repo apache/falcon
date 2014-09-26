@@ -23,15 +23,14 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.InstancesResult;
-import org.apache.falcon.regression.core.response.InstancesResult.WorkflowStatus;
 import org.apache.falcon.regression.core.response.ResponseKeys;
-import org.apache.falcon.regression.core.util.AssertUtil;
-import org.apache.falcon.regression.core.util.BundleUtil;
-import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
+import org.apache.falcon.regression.core.util.HadoopUtil;
+import org.apache.falcon.regression.core.util.BundleUtil;
+import org.apache.falcon.regression.core.util.OozieUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
-import org.apache.falcon.regression.core.util.TimeUtil;
 import org.apache.falcon.regression.core.util.Util;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
@@ -62,7 +61,6 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
     private static final Logger LOGGER = Logger.getLogger(ProcessInstanceSuspendTest.class);
-    private static final double TIMEOUT = 15;
     private String processName;
     private OozieClient clusterOC = serverOC.get(0);
 
@@ -70,16 +68,9 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
     public void createTestData() throws Exception {
         LOGGER.info("in @BeforeClass");
         HadoopUtil.uploadDir(clusterFS, aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
-
         Bundle bundle = BundleUtil.readELBundle();
         bundle = new Bundle(bundle, cluster);
-        String startDate = "2010-01-01T23:40Z";
-        String endDate = "2010-01-02T01:40Z";
         bundle.setInputFeedDataPath(feedInputPath);
-
-        List<String> dataDates = TimeUtil.getMinuteDatesOnEitherSide(startDate, endDate, 20);
-        HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.NORMAL_INPUT,
-            bundle.getFeedDataPathPrefix(), dataDates);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -102,7 +93,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
 
     /**
      * Schedule process. Try to suspend instances with start/end parameters which are
-     * wider then process validity range. Should fail.
+     * wider then process validity range. Succeeds.
      *
      * @throws Exception
      */
@@ -111,17 +102,18 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 5, 0, 0, 0);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
+            "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
         result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
-        InstanceUtil.validateSuccessWithStatusCode(result, 0);
+            "?start=2010-01-02T00:00Z&end=2010-01-02T01:30Z");
+        InstanceUtil.validateResponse(result, 5, 0, 5, 0, 0);
     }
 
     /**
@@ -135,10 +127,12 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:04Z");
         bundles[0].setProcessConcurrency(1);
         bundles[0].submitFeedsScheduleProcess(prism);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, Util.getProcessName(bundles[0]
             .getProcessData()), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                "?start=2010-01-02T01:00Z");
+            "?start=2010-01-02T01:00Z");
         InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
@@ -153,34 +147,32 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 5, 0, 0, 0);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 0, 5, 0, 0);
     }
 
     /**
      * Schedule process and try to perform -suspend action without date range parameters.
-     * Attempt should fail.
+     * Attempt should fail. Will fail because of jira : https://issues.apache.org/jira/browse/FALCON-710
      *
      * @throws Exception
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceSuspendWoParams() throws Exception {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:22Z");
-        bundles[0].setProcessConcurrency(2);
         bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateSuccessWithStatusCode(r, ResponseKeys.UNPARSEABLE_DATE);
     }
 
     /**
@@ -194,16 +186,17 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:22Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:22Z");
         InstanceUtil.validateResponse(result, 5, 3, 0, 2, 0);
         prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
         result = prism.getProcessHelper().getProcessInstanceStatus(processName,
-                "?start=2010-01-02T01:00Z&end=2010-01-02T01:22Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:22Z");
         InstanceUtil.validateResponse(result, 5, 0, 3, 2, 0);
     }
 
@@ -217,10 +210,8 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
         InstancesResult r = prism.getProcessHelper()
-                .getProcessInstanceSuspend("invalidName", "?start=2010-01-02T01:20Z");
+            .getProcessInstanceSuspend("invalidName", "?start=2010-01-02T01:20Z");
         if ((r.getStatusCode() != ResponseKeys.PROCESS_NOT_FOUND)) {
             Assert.assertTrue(false);
         }
@@ -228,7 +219,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
 
     /**
      * Schedule process. Perform -suspend action using only -start parameter which points to start
-     * time of process. Check that only 1 instance is suspended then.
+     * time of process. Attempt suspends all instances
      *
      * @throws Exception
      */
@@ -237,14 +228,12 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:11Z");
         bundles[0].setProcessConcurrency(3);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
-        prism.getProcessHelper().getRunningInstance(processName);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 3,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
-                "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateSuccessOnlyStart(r, WorkflowStatus.SUSPENDED);
-        prism.getProcessHelper().getRunningInstance(processName);
+            "?start=2010-01-02T01:00Z");
+        InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
     }
 
     /**
@@ -259,9 +248,10 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:23Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);
-        TimeUtil.sleepSeconds(TIMEOUT);
-        AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
-            Job.Status.RUNNING);
+        InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
+        OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
+            CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 5, 0, 0, 0);
