@@ -501,4 +501,19 @@ public abstract class IEntityManagerHelper {
         return (InstancesResult) InstanceUtil
             .createAndSendRequestProcessInstance(url, params, allColo, null);
     }
+
+    /**
+     * Lists all entities which are tagged by a given pipeline.
+     * @param pipeline filter
+     * @return service response
+     * @throws AuthenticationException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    public ServiceResponse getListByPipeline(String pipeline)
+        throws AuthenticationException, IOException, URISyntaxException {
+        String url = createUrl(this.hostname + URLS.LIST_URL.getValue() + "/" + getEntityType());
+        url += "?filterBy=PIPELINES:" + pipeline;
+        return Util.sendRequest(url, "get", null, null);
+    }
 }

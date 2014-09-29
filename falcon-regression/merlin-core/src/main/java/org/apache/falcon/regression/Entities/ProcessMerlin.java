@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.Entities;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
@@ -238,6 +239,18 @@ public class ProcessMerlin extends Process {
         }
         setOutputs(os);
         setLateProcess(null);
+    }
+
+    /**
+     * Sets process pipelines tag.
+     * @param pipelines set of pipelines to be set to process
+     */
+    public void setPipelineTag(String... pipelines){
+        if (ArrayUtils.isNotEmpty(pipelines)){
+            this.pipelines = StringUtils.join(pipelines, ",");
+        } else {
+            this.pipelines = null;
+        }
     }
 }
 

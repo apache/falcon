@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.core.helpers;
 
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.Util;
 
 /** Helper class to work with feed endpoints of a colo. */
@@ -36,5 +37,9 @@ public class DataEntityHelperImpl extends IEntityManagerHelper {
         return Util.readEntityName(entity);
     }
 
+    @Override
+    public ServiceResponse getListByPipeline(String pipeline){
+        throw new UnsupportedOperationException("Not valid for Feed Entity.");
+    }
 }
 

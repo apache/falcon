@@ -119,4 +119,8 @@ public class ClusterEntityHelperImpl extends IEntityManagerHelper {
         throw new UnsupportedOperationException(INVALID_ERR);
     }
 
+    @Override
+    public ServiceResponse getListByPipeline(String pipeline){
+        throw new UnsupportedOperationException(INVALID_ERR);
+    }
 }

@@ -1015,4 +1015,13 @@ public class Bundle {
         return feedObject.getName();
     }
 
+    /**
+     * Sets process pipelines.
+     * @param pipelines proposed pipelines
+     */
+    public void setProcessPipeline(String... pipelines){
+        ProcessMerlin process = new ProcessMerlin(getProcessData());
+        process.setPipelineTag(pipelines);
+        setProcessData(process.toString());
+    }
 }

@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-743 Adding tests for cases related to usage of pipelines tag
+   (Paul Isaychuk via Raghav Kumar Gautam)
+
    FALCON-589 Add test cases for various feed operations on Hcat feeds (Karishma G 
    via Samarth Gupta)
 

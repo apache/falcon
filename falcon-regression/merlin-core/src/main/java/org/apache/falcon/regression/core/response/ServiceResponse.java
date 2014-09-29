@@ -18,13 +18,18 @@
 
 package org.apache.falcon.regression.core.response;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.util.Util;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 
 /** Class to represent falcon's response to a rest request. */
 public class ServiceResponse {
@@ -81,5 +86,20 @@ public class ServiceResponse {
     }
 
     public ServiceResponse() {
+    }
+
+    /**
+     * Retrieves EntitiesResult from a message if possible.
+     * @return EntitiesResult
+     */
+    public EntitiesResult getEntitiesResult(){
+        try {
+            JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
+            Unmarshaller u = jc.createUnmarshaller();
+            return  (EntitiesResult) u.unmarshal(new StringReader(message));
+        } catch (JAXBException e) {
+            LOGGER.info("getEntitiesResult() failed:\n" + ExceptionUtils.getStackTrace(e));
+            return null;
+        }
     }
 }
