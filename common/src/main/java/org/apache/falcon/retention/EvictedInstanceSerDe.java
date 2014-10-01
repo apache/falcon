@@ -20,6 +20,8 @@ package org.apache.falcon.retention;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +39,7 @@ public final class EvictedInstanceSerDe {
 
     private static final Logger LOG = LoggerFactory.getLogger(EvictedInstanceSerDe.class);
 
-    private static final String INSTANCEPATH_PREFIX = "instancePaths=";
-    private static final String INSTANCES_SEPARATOR = "=";
+    public static final String INSTANCEPATH_PREFIX = "instancePaths=";
     public static final String INSTANCEPATH_SEPARATOR = ",";
 
 
@@ -64,6 +65,10 @@ public final class EvictedInstanceSerDe {
             out = fileSystem.create(logFilePath);
             instances.insert(0, INSTANCEPATH_PREFIX); // add the prefix
             out.write(instances.toString().getBytes());
+
+            // To make sure log cleaning service can delete this file
+            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+            fileSystem.setPermission(logFilePath, permission);
         } finally {
             if (out != null) {
                 out.close();
@@ -96,23 +101,17 @@ public final class EvictedInstanceSerDe {
      */
     public static String[] deserializeEvictedInstancePaths(final FileSystem fileSystem,
                                                            final Path logFile) throws IOException {
-        try {
-            ByteArrayOutputStream writer = new ByteArrayOutputStream();
-            InputStream instance = fileSystem.open(logFile);
-            IOUtils.copyBytes(instance, writer, 4096, true);
-            String[] instancePaths = writer.toString().split(INSTANCES_SEPARATOR);
+        ByteArrayOutputStream writer = new ByteArrayOutputStream();
+        InputStream instance = fileSystem.open(logFile);
+        IOUtils.copyBytes(instance, writer, 4096, true);
+        String[] instancePaths = writer.toString().split(INSTANCEPATH_PREFIX);
 
-            LOG.info("Deleted feed instance paths file:" + logFile);
-            if (instancePaths.length == 1) {
-                LOG.debug("Returning 0 instance paths for feed ");
-                return new String[0];
-            } else {
-                LOG.debug("Returning instance paths for feed " + instancePaths[1]);
-                return instancePaths[1].split(INSTANCEPATH_SEPARATOR);
-            }
-        } finally {
-            // clean up the serialized state
-            fileSystem.delete(logFile, true);
+        if (instancePaths.length <= 1) {
+            LOG.info("Returning 0 instance paths for feed ");
+            return new String[0];
+        } else {
+            LOG.info("Returning instance paths for feed {}", instancePaths[1]);
+            return instancePaths[1].split(INSTANCEPATH_SEPARATOR);
         }
     }
 }

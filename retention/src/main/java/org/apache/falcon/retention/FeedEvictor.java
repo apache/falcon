@@ -179,7 +179,7 @@ public class FeedEvictor extends Configured implements Tool {
         Path feedBasePath = getFeedBasePath(feedPath);
         for (Path path : toBeDeleted) {
             deleteInstance(fs, path, feedBasePath);
-            Date date = getDate(path, feedPath, dateMask, timeZone);
+            Date date = getDate(new Path(path.toUri().getPath()), feedPath, dateMask, timeZone);
             buffer.append(dateFormat.format(date)).append(',');
             instancePaths.append(path).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
         }
@@ -218,7 +218,7 @@ public class FeedEvictor extends Configured implements Tool {
             LOG.debug("Considering {}", file.getPath().toUri().getPath());
             LOG.debug("Date: {}", date);
             if (date != null && !isDateInRange(date, start)) {
-                toBeDeleted.add(new Path(file.getPath().toUri().getPath()));
+                toBeDeleted.add(file.getPath());
             }
         }
         return toBeDeleted;
@@ -533,9 +533,30 @@ public class FeedEvictor extends Configured implements Tool {
                 String partitionInfo = partitionToDrop.getValues().toString().replace("," , ";");
                 LOG.info("Deleted partition: " + partitionInfo);
                 buffer.append(partSpec).append(',');
-                instancePaths.append(partitionInfo).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
+                instancePaths.append(getEvictedPartitionPath(storage, partitionToDrop))
+                        .append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
             }
         }
+    }
+
+    private static String getEvictedPartitionPath(final CatalogStorage storage,
+                                                  final CatalogPartition partitionToDrop) {
+        String uriTemplate = storage.getUriTemplate(); // no need for location type for table
+        List<String> values = partitionToDrop.getValues();
+        StringBuilder partitionPath = new StringBuilder();
+        int index = 0;
+        for (String partitionKey : storage.getDatedPartitionKeys()) {
+            String dateMask = storage.getPartitionValue(partitionKey);
+            String date = values.get(index);
+
+            partitionPath.append(uriTemplate.replace(dateMask, date));
+            partitionPath.append(CatalogStorage.PARTITION_SEPARATOR);
+            LOG.info("partitionPath: " + partitionPath);
+        }
+        partitionPath.setLength(partitionPath.length() - 1);
+
+        LOG.info("Return partitionPath: " + partitionPath);
+        return partitionPath.toString();
     }
 
     private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {

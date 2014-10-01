@@ -68,17 +68,13 @@ public class JMSMessageProducer {
         this.messageType = messageType;
     }
 
-    public boolean isFalconEntityTopic() {
-        return messageType == MessageType.FALCON;
-    }
-
     // convention over configuration
     public String getTopicName() {
         String topicNameValue = context.getValue(WorkflowExecutionArgs.TOPIC_NAME);
         return topicNameValue != null
                 ? topicNameValue  // return if user has set a topic
                 : FALCON_TOPIC_PREFIX // else falcon entity topic or user = FALCON.$entity_name
-                        + (messageType == MessageType.FALCON ? ENTITY_TOPIC_NAME : context.getEntityName());
+                + (messageType == MessageType.FALCON ? ENTITY_TOPIC_NAME : context.getEntityName());
     }
 
     public String getBrokerImplClass() {
@@ -180,7 +176,7 @@ public class JMSMessageProducer {
     }
 
     private List<Map<String, String>> buildMessageList(WorkflowExecutionArgs[] filteredArgs) {
-        String[] feedNames = getFeedNames();
+        String[] feedNames = context.getOutputFeedNamesList();
         if (feedNames == null) {
             return Collections.emptyList();
         }
@@ -252,26 +248,7 @@ public class JMSMessageProducer {
         message.put(key.getName(), value);
     }
 
-    private String[] getFeedNames() {
-        String feedNameStr = context.getOutputFeedNames();
-        if (isFalconEntityTopic()) {
-            return new String[]{feedNameStr};
-        }
-
-        if (feedNameStr.equals("null")) {
-            return null;
-        }
-
-        return context.getOutputFeedNamesList();
-    }
-
     private String[] getFeedPaths() throws IOException {
-
-        if (isFalconEntityTopic()) {
-            LOG.debug("Returning instance paths for Falcon Topic: " + context.getOutputFeedInstancePaths());
-            return new String[]{context.getOutputFeedInstancePaths(), };
-        }
-
         WorkflowExecutionContext.EntityOperations operation = context.getOperation();
         if (operation == WorkflowExecutionContext.EntityOperations.GENERATE
                 || operation == WorkflowExecutionContext.EntityOperations.REPLICATE) {

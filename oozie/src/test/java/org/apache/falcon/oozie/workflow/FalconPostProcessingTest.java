@@ -130,17 +130,9 @@ public class FalconPostProcessingTest {
         System.out.println("Consumed: " + m.toString());
 
         assertMessage(m);
-        if (topic.equals(FALCON_TOPIC_NAME)) {
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
-                    "out-click-logs,out-raw-logs");
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                    "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20");
-        } else {
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "out-click-logs");
-            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                    "/out-click-logs/10/05/05/00/20");
-        }
-
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "out-click-logs");
+        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
+                "/out-click-logs/10/05/05/00/20");
         connection.close();
     }
 

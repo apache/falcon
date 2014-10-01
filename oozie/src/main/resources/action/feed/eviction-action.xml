@@ -48,7 +48,7 @@
         <arg>-frequency</arg>
         <arg>${frequency}</arg>
         <arg>-logFile</arg>
-        <arg>${logDir}/instancePaths-${nominalTime}.csv</arg>
+        <arg>${logDir}/job-${nominalTime}/${wf:run()}/evicted-instancePaths.csv</arg>
     </java>
     <ok to="succeeded-post-processing"/>
     <error to="failed-post-processing"/>

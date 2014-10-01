@@ -70,6 +70,8 @@ public class JMSMessageProducerTest {
     @Test
     public void testWithFeedOutputPaths() throws Exception {
         List<String> args = createCommonArgs();
+        String[] outputFeedNames = {"click-logs", "raw-logs", };
+        String[] outputFeeedPaths = {"/click-logs/10/05/05/00/20", "/raw-logs/10/05/05/00/20", };
         List<String> newArgs = new ArrayList<String>(Arrays.asList(
                 "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), "agg-coord",
                 "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "click-logs,raw-logs",
@@ -79,13 +81,15 @@ public class JMSMessageProducerTest {
         List<String[]> messages = new ArrayList<String[]>();
         messages.add(args.toArray(new String[args.size()]));
         testProcessMessageCreator(messages, TOPIC_NAME);
+        int index = 0;
         for (MapMessage m : mapMessages) {
             assertMessage(m);
             Assert.assertTrue((m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName())
-                    .equals("click-logs,raw-logs")));
+                    .equals(outputFeedNames[index])));
             Assert.assertTrue(m
                     .getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName())
-                    .equals("/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20"));
+                    .equals(outputFeeedPaths[index]));
+            ++index;
         }
     }
 

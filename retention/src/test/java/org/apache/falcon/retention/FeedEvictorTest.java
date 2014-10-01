@@ -122,7 +122,7 @@ public class FeedEvictorTest {
             assertFailures(fs, pair);
             compare(map.get("feed1"), stream.getBuffer());
 
-            String expectedInstancePaths = getExpectedInstancePaths(dataPath.replaceAll(storageUrl, ""));
+            String expectedInstancePaths = getExpectedInstancePaths(dataPath);
             Assert.assertEquals(readLogFile(new Path(logFile)), expectedInstancePaths);
 
             String deletedPath = expectedInstancePaths.split(",")[0].split("=")[1];
@@ -222,7 +222,7 @@ public class FeedEvictorTest {
             compare(map.get("feed2"), stream.getBuffer());
 
             Assert.assertEquals(readLogFile(new Path(logFile)),
-                    getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")));
+                    getExpectedInstancePaths(dataPath));
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);
@@ -356,7 +356,7 @@ public class FeedEvictorTest {
             assertFailures(fs, pair);
 
             Assert.assertEquals(readLogFile(new Path(logFile)),
-                    getExpectedInstancePaths(dataPath.replaceAll(storageUrl, "")));
+                    getExpectedInstancePaths(dataPath));
 
         } catch (Exception e) {
             Assert.fail("Unknown exception", e);

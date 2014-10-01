@@ -545,10 +545,10 @@ public class TableStorageFeedEvictorIT {
 
     // instance paths could be deleted in any order; compare the list of evicted paths
     private void validateInstancePaths(String actualInstancesEvicted, String expectedInstancePaths) {
-        String[] actualEvictedPathStr = actualInstancesEvicted.split("=");
-        String[] expectedEvictedPathStr = expectedInstancePaths.split("=");
-        if (actualEvictedPathStr.length == 1) {
-            Assert.assertEquals(expectedEvictedPathStr.length, 1);
+        String[] actualEvictedPathStr = actualInstancesEvicted.split("instancePaths=");
+        String[] expectedEvictedPathStr = expectedInstancePaths.split("instancePaths=");
+        if (actualEvictedPathStr.length == 0) {
+            Assert.assertEquals(expectedEvictedPathStr.length, 0);
         } else {
             Assert.assertEquals(actualEvictedPathStr.length, 2);
             Assert.assertEquals(expectedEvictedPathStr.length, 2);

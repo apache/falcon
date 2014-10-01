@@ -101,6 +101,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-760 Messaging is broken for FALCON.ENTITY.TOPIC in case of Eviction
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-768 Change dashboard USER_ID to falcon-dashboard (Balu Vellanki via
    Venkatesh Seetharam)
 
