@@ -221,6 +221,7 @@
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-client</artifactId>
 		                <version>${hadoop.version}</version>
+                        <scope>provided</scope>
 		                <exclusions>
                             <exclusion>
                                 <groupId>com.sun.jersey</groupId>
@@ -234,61 +235,97 @@
                                 <groupId>com.sun.jersey</groupId>
                                 <artifactId>jersey-json</artifactId>
                             </exclusion>
-		                    <exclusion>
-		                        <groupId>org.glassfish</groupId>
-		                        <artifactId>javax.servlet</artifactId>
-		                    </exclusion>
+                            <exclusion>
+                                <groupId>org.glassfish</groupId>
+                                <artifactId>javax.servlet</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
 		                </exclusions>
 		            </dependency>
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-hdfs</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-common</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-mapreduce-client-common</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-hdfs</artifactId>
 		                <version>${hadoop.version}</version>
 		                <classifier>tests</classifier>
-		            </dependency>
+                        <scope>test</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-common</artifactId>
 		                <version>${hadoop.version}</version>
 		                <classifier>tests</classifier>
-		            </dependency>
+                        <scope>test</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-yarn-server-nodemanager</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                    </dependency>
 
 		            <dependency>
 		                <groupId>org.apache.hadoop</groupId>
 		                <artifactId>hadoop-auth</artifactId>
 		                <version>${hadoop.version}</version>
-		            </dependency>
+                        <scope>provided</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.apache.hadoop</groupId>
+                                <artifactId>hadoop-annotations</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
                 </dependencies>
           </dependencyManagement>
         </profile>
@@ -585,12 +622,28 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${jersey.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>${jersey.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>${jersey.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-core</artifactId>
+                <version>${jersey.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -659,12 +712,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-beans</artifactId>
                 <version>3.0.3.RELEASE</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-server</artifactId>
-                <version>${jersey.version}</version>
             </dependency>
 
             <dependency>

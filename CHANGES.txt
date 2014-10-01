@@ -101,6 +101,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-759 Adding cluster entity fails when Yarn TimelineClient is enabled
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-740 Entity kill job calls OozieClient.kill on bundle coord job ids
    before calling kill on bundle job id (Sowmya Ramesh via Venkatesh Seetharam)
 
