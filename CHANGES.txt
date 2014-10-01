@@ -101,6 +101,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-768 Change dashboard USER_ID to falcon-dashboard (Balu Vellanki via
+   Venkatesh Seetharam)
+
    FALCON-759 Adding cluster entity fails when Yarn TimelineClient is enabled
    (Balu Vellanki via Venkatesh Seetharam)
 

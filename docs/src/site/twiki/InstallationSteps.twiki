@@ -222,6 +222,18 @@ bin/falcon help
 
 Once falcon / prism is started, you can view the status of falcon entities using the Web-based dashboard. The web UI works in both distributed and embedded mode. You can open your browser at the corresponding port to use the web UI.
 
+Falcon dashboard makes the REST api calls as user "falcon-dashboard". If this user does not exist on your falcon and oozie servers, please create the user.
+
+<verbatim>
+## create user.
+[root@falconhost ~] useradd -U -m falcon-dashboard -G users
+
+## verify user is created with membership in correct groups.
+[root@falconhost ~] groups falcon-dashboard
+falcon-dashboard : falcon-dashboard users
+[root@falconhost ~]
+</verbatim>
+
 *Stopping Falcon Server*
 <verbatim>
 bin/falcon-stop

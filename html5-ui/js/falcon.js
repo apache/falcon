@@ -17,7 +17,7 @@
 (function(exports) {
   "use strict";
 
-  var USER_ID = 'dashboard';
+  var USER_ID = 'falcon-dashboard';
 
   function onError(msg) {
     $('#alert-panel-body').html(msg);
