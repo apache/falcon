@@ -12,6 +12,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-701 HadoopUtil and Util classes documented (Paul Isaychuk via
+   Raghav Kumar Gautam)
+
    FALCON-750 Method name fixed (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-645 add test to falcon regression for change made in default behaviour 

@@ -90,18 +90,34 @@ public final class Util {
     }
     private static final Logger LOGGER = Logger.getLogger(Util.class);
 
+    /**
+     * Sends request without data and user.
+     */
     public static ServiceResponse sendRequest(String url, String method)
         throws IOException, URISyntaxException, AuthenticationException {
         return sendRequest(url, method, null, null);
     }
 
+    /**
+     * Sends api request without data.
+     */
     public static ServiceResponse sendRequest(String url, String method, String user)
         throws IOException, URISyntaxException, AuthenticationException {
         return sendRequest(url, method, null, user);
     }
 
-    public static ServiceResponse sendRequest(String url, String method, String data,
-                                              String user)
+    /**
+     * Sends api requests.
+     * @param url target url
+     * @param method request method
+     * @param data data to be places in body of request
+     * @param user user to be used to send request
+     * @return api response
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws AuthenticationException
+     */
+    public static ServiceResponse sendRequest(String url, String method, String data, String user)
         throws IOException, URISyntaxException, AuthenticationException {
         BaseRequest request = new BaseRequest(url, method, user, data);
         request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.XML_CONTENT_TYPE);
@@ -109,15 +125,29 @@ public final class Util {
         return new ServiceResponse(response);
     }
 
+    /**
+     * @param data process definition
+     * @return process name
+     */
     public static String getProcessName(String data) {
         ProcessMerlin processElement = new ProcessMerlin(data);
         return processElement.getName();
     }
 
+    /**
+     * @param data string data
+     * @return is data should be considered as XMl
+     */
     private static boolean isXML(String data) {
         return data != null && data.trim().length() > 0 && data.trim().startsWith("<");
     }
 
+    /**
+     * Converts service response to api result form.
+     * @param response service response
+     * @return api result
+     * @throws JAXBException
+     */
     public static APIResult parseResponse(ServiceResponse response) throws JAXBException {
         if (!isXML(response.getMessage())) {
             return new APIResult(APIResult.Status.FAILED, response.getMessage(), "somerandomstring",
@@ -144,6 +174,14 @@ public final class Util {
         return temp;
     }
 
+    /**
+     * Lists all directories contained in a store by sub-path.
+     * @param helper cluster where store is present
+     * @param subPath sub-path
+     * @return list of all directories in the sub-path
+     * @throws IOException
+     * @throws JSchException
+     */
     public static List<String> getStoreInfo(IEntityManagerHelper helper, String subPath)
         throws IOException, JSchException {
         if (helper.getStoreLocation().startsWith("hdfs:")) {
@@ -156,6 +194,10 @@ public final class Util {
         }
     }
 
+    /**
+     * @param data entity definition
+     * @return entity name
+     */
     public static String readEntityName(String data) {
         if (data.contains("uri:falcon:feed")) {
             return new FeedMerlin(data).getName();
@@ -166,17 +208,27 @@ public final class Util {
         }
     }
 
+    /**
+     * @return unique string
+     */
     public static String getUniqueString() {
         return "-" + UUID.randomUUID().toString().split("-")[0];
     }
 
+    /**
+     * Retrieves all hadoop data directories from a specific data path.
+     * @param fs filesystem
+     * @param feed feed definition
+     * @param dir specific directory
+     * @return all
+     * @throws IOException
+     */
     public static List<String> getHadoopDataFromDir(FileSystem fs, String feed, String dir)
         throws IOException {
         List<String> finalResult = new ArrayList<String>();
         String feedPath = getFeedPath(feed);
         int depth = feedPath.split(dir)[1].split("/").length - 1;
-        List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs,
-            new Path(dir), depth);
+        List<Path> results = HadoopUtil.getAllDirsRecursivelyHDFS(fs, new Path(dir), depth);
         for (Path result : results) {
             int pathDepth = result.toString().split(dir)[1].split("/").length - 1;
             if (pathDepth == depth) {
@@ -186,6 +238,13 @@ public final class Util {
         return finalResult;
     }
 
+    /**
+     * Sets custom feed property.
+     * @param feed feed definition
+     * @param propertyName custom property name
+     * @param propertyValue custom property value
+     * @return updated feed
+     */
     public static String setFeedProperty(String feed, String propertyName, String propertyValue) {
         FeedMerlin feedObject = new FeedMerlin(feed);
         boolean found = false;
@@ -206,6 +265,10 @@ public final class Util {
         return feedObject.toString();
     }
 
+    /**
+     * @param feed feed definition
+     * @return feed data path
+     */
     public static String getFeedPath(String feed) {
         FeedMerlin feedObject = new FeedMerlin(feed);
         for (Location location : feedObject.getLocations().getLocations()) {
@@ -213,16 +276,27 @@ public final class Util {
                 return location.getPath();
             }
         }
-
         return null;
     }
 
+    /**
+     * Sets cut-off period.
+     * @param feed feed definition
+     * @param frequency cut-off period
+     * @return updated feed
+     */
     public static String insertLateFeedValue(String feed, Frequency frequency) {
         FeedMerlin feedObject = new FeedMerlin(feed);
         feedObject.getLateArrival().setCutOff(frequency);
         return feedObject.toString();
     }
 
+    /**
+     * Sets data location for a feed.
+     * @param feed feed definition
+     * @param pathValue new path
+     * @return updated feed
+     */
     public static String setFeedPathValue(String feed, String pathValue) {
         FeedMerlin feedObject = new FeedMerlin(feed);
         for (Location location : feedObject.getLocations().getLocations()) {
@@ -233,6 +307,13 @@ public final class Util {
         return feedObject.toString();
     }
 
+    /**
+     * Finds first folder within a date range.
+     * @param startTime start date
+     * @param endTime end date
+     * @param folderList list of folders which are under analysis
+     * @return first matching folder or null if not present in a list
+     */
     public static String findFolderBetweenGivenTimeStamps(DateTime startTime, DateTime endTime,
                                                           List<String> folderList) {
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy/MM/dd/HH/mm");
@@ -246,12 +327,24 @@ public final class Util {
         return null;
     }
 
+    /**
+     * @param feedString feed definition
+     * @param newName new name
+     * @return feed with updated name
+     */
     public static String setFeedName(String feedString, String newName) {
         FeedMerlin feedObject = new FeedMerlin(feedString);
         feedObject.setName(newName);
         return feedObject.toString().trim();
     }
 
+    /**
+     * Sets name for a cluster by given order number.
+     * @param feedString feed which contains a cluster
+     * @param clusterName new cluster name
+     * @param clusterIndex index of cluster which should be updated
+     * @return feed with cluster name updated
+     */
     public static String setClusterNameInFeed(String feedString, String clusterName,
                                               int clusterIndex) {
         FeedMerlin feedObject = new FeedMerlin(feedString);
@@ -259,6 +352,10 @@ public final class Util {
         return feedObject.toString().trim();
     }
 
+    /**
+     * @param clusterXML cluster definition
+     * @return cluster definition converted to object representation
+     */
     public static ClusterMerlin getClusterObject(String clusterXML) {
         return new ClusterMerlin(clusterXML);
     }
@@ -276,7 +373,6 @@ public final class Util {
         List<String> finalList = new ArrayList<String>();
         for (String line : raw) {
             finalList.add(line.split(",")[0]);
-
         }
         return finalList;
     }
@@ -299,6 +395,12 @@ public final class Util {
         return finalList;
     }
 
+    /**
+     * Shuts down falcon server on a given host using sudo credentials.
+     * @param helper given host
+     * @throws IOException
+     * @throws JSchException
+     */
     public static void shutDownService(IEntityManagerHelper helper)
         throws IOException, JSchException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
@@ -307,6 +409,14 @@ public final class Util {
         TimeUtil.sleepSeconds(10);
     }
 
+    /**
+     * Start falcon server on a given host using sudo credentials and checks if it succeeds.
+     * @param helper given host
+     * @throws IOException
+     * @throws JSchException
+     * @throws AuthenticationException
+     * @throws URISyntaxException
+     */
     public static void startService(IEntityManagerHelper helper)
         throws IOException, JSchException, AuthenticationException, URISyntaxException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
@@ -327,18 +437,34 @@ public final class Util {
         throw new RuntimeException("Service on" + helper.getHostname() + " did not start!");
     }
 
+    /**
+     * Stops and starts falcon service for a given host using sudo credentials.
+     * @param helper given host
+     * @throws IOException
+     * @throws JSchException
+     * @throws AuthenticationException
+     * @throws URISyntaxException
+     */
     public static void restartService(IEntityManagerHelper helper)
         throws IOException, JSchException, AuthenticationException, URISyntaxException {
         LOGGER.info("restarting service for: " + helper.getQaHost());
-
         shutDownService(helper);
         startService(helper);
     }
 
+    /**
+     * @param processData process definition
+     * @return process definition converted to object representation.
+     */
     public static Process getProcessObject(String processData) {
         return new ProcessMerlin(processData);
     }
 
+    /**
+     * Prints JMSConsumer messages content.
+     * @param messageConsumer the source JMSConsumer
+     * @throws JMSException
+     */
     public static void printMessageData(JmsMessageConsumer messageConsumer) throws JMSException {
         LOGGER.info("dumping all queue data:");
         for (MapMessage mapMessage : messageConsumer.getReceivedMessages()) {
@@ -353,6 +479,12 @@ public final class Util {
         }
     }
 
+    /**
+     * Configures cluster definition according to provided properties.
+     * @param cluster cluster which should be configured
+     * @param prefix current cluster prefix
+     * @return modified cluster definition
+     */
     public static String getEnvClusterXML(String cluster, String prefix) {
         ClusterMerlin clusterObject = getClusterObject(cluster);
         if ((null == prefix) || prefix.isEmpty()) {
@@ -410,6 +542,12 @@ public final class Util {
         return clusterObject.toString();
     }
 
+    /**
+     * Forms property object based on parameters.
+     * @param name property name
+     * @param value property value
+     * @return property object
+     */
     public static org.apache.falcon.entity.v0.cluster.Property
     getFalconClusterPropertyObject(String name, String value) {
         org.apache.falcon.entity.v0.cluster.Property property = new org
@@ -419,6 +557,11 @@ public final class Util {
         return property;
     }
 
+    /**
+     * Get entity type according to its definition.
+     * @param entity entity which is under analysis
+     * @return entity type
+     */
     public static EntityType getEntityType(String entity) {
         if (entity.contains("uri:falcon:process:0.1")) {
             return EntityType.PROCESS;
@@ -431,7 +574,7 @@ public final class Util {
     }
 
     /**
-     * Compares two definitions
+     * Compares two definitions.
      * @param server1 server where 1st definition is stored
      * @param server2 server where 2nd definition is stored
      * @param entity entity which is under analysis
@@ -480,7 +623,7 @@ public final class Util {
     }
 
     /**
-     * @param pathString whole path
+     * @param pathString whole path.
      * @return path to basic data folder
      */
     public static String getPathPrefix(String pathString) {
@@ -488,7 +631,7 @@ public final class Util {
     }
 
     /**
-     * @param path whole path
+     * @param path whole path.
      * @return file name which is retrieved from a path
      */
     public static String getFileNameFromPath(String path) {
@@ -496,7 +639,7 @@ public final class Util {
     }
 
     /**
-     * Defines request type according to request url
+     * Defines request type according to request url.
      * @param url request url
      * @return request type
      */
@@ -527,7 +670,7 @@ public final class Util {
     }
 
     /**
-     * Prints xml in readable form
+     * Prints xml in readable form.
      * @param xmlString xmlString
      * @return formatted xmlString
      */
@@ -553,7 +696,7 @@ public final class Util {
     }
 
     /**
-     * Converts json string to readable form
+     * Converts json string to readable form.
      * @param jsonString json string
      * @return formatted string
      */
@@ -567,7 +710,7 @@ public final class Util {
     }
 
     /**
-     * Prints xml or json in pretty and readable format
+     * Prints xml or json in pretty and readable format.
      * @param str xml or json string
      * @return converted xml or json
      */
