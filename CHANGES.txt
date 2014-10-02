@@ -33,6 +33,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-748 Falcon throws '413 Full Head' error message when kerberos is
+   enabled with AD (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-767 Upgrade Hadoop from 2.4 to 2.5 (Sowmya Ramesh via Venkatesh Seetharam)
 
    FALCON-651 Typos in Falcon Documentation (Ajay Yadav via Venkatesh Seetharam)

@@ -204,6 +204,9 @@ Following is the Server Side Configuration Setup for Authentication.
 
 # Comma separated list of black listed users
 *.falcon.http.authentication.blacklisted.users=
+
+# Increase Jetty request buffer size to accommodate the generated Kerberos token
+*.falcon.jetty.request.buffer.size=16192
 </verbatim>
 
 ---+++ Pseudo/Simple Configuration

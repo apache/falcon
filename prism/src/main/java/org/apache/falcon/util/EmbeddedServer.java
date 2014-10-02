@@ -42,6 +42,13 @@ public class EmbeddedServer {
         Connector connector = new SocketConnector();
         connector.setPort(port);
         connector.setHost("0.0.0.0");
+
+        // this is to enable large header sizes when Kerberos is enabled with AD
+        final Integer bufferSize = Integer.valueOf(StartupProperties.get().getProperty(
+                "falcon.jetty.request.buffer.size", "16192"));
+        connector.setHeaderBufferSize(bufferSize);
+        connector.setRequestBufferSize(bufferSize);
+
         return connector;
     }
 
