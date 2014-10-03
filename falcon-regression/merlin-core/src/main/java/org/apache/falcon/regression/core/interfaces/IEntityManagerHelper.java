@@ -409,6 +409,8 @@ public abstract class IEntityManagerHelper {
 
     public ServiceResponse update(String oldEntity, String newEntity, String user)
         throws IOException, URISyntaxException, AuthenticationException {
+        LOGGER.info("Updating " + getEntityType() + ": \n" + Util.prettyPrintXml(oldEntity));
+        LOGGER.info("To " + getEntityType() + ": \n" + Util.prettyPrintXml(newEntity));
         String url = createUrl(this.hostname + URLS.UPDATE.getValue(), getEntityType(),
             getEntityName(oldEntity));
         return Util.sendRequest(url + colo, "post", newEntity, user);
@@ -417,6 +419,8 @@ public abstract class IEntityManagerHelper {
     public ServiceResponse update(String oldEntity, String newEntity, String updateTime,
                                   String user)
         throws IOException, URISyntaxException, AuthenticationException {
+        LOGGER.info("Updating " + getEntityType() + ": \n" + Util.prettyPrintXml(oldEntity));
+        LOGGER.info("To " + getEntityType() + ": \n" + Util.prettyPrintXml(newEntity));
         String url = this.hostname + URLS.UPDATE.getValue() + "/" + getEntityType() + "/"
             + Util.readEntityName(oldEntity);
         String urlPart = colo == null || colo.isEmpty() ? "?" : colo + "&";

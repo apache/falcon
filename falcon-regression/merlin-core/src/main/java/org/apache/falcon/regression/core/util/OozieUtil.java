@@ -422,10 +422,9 @@ public final class OozieUtil {
         return DateTimeFormat.forPattern("yyyy'-'MM'-'dd'T'HH':'mm'Z'");
     }
 
-    public static int getNumberOfBundle(ColoHelper helper, EntityType type, String entityName)
+    public static int getNumberOfBundle(OozieClient oozieClient, EntityType type, String entityName)
         throws OozieClientException {
-        return OozieUtil.getBundles(helper.getFeedHelper().getOozieClient(),
-            entityName, type).size();
+        return OozieUtil.getBundles(oozieClient, entityName, type).size();
     }
 
     public static void createMissingDependencies(ColoHelper helper, EntityType type,

@@ -32,6 +32,7 @@ import org.apache.falcon.regression.core.util.Util;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.OozieClient;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -50,6 +51,7 @@ public class EntityDryRunTest extends BaseTestClass {
 
     private ColoHelper cluster = servers.get(0);
     private FileSystem clusterFS = serverFS.get(0);
+    private OozieClient clusterOC = serverOC.get(0);
     private String baseTestHDFSDir = baseHDFSDir + "/EntityDryRunTest";
     private String feedInputPath = baseTestHDFSDir + "/input" + MINUTE_DATE_PATTERN;
     private String feedOutputPath = baseTestHDFSDir + "/output-data" + MINUTE_DATE_PATTERN;
@@ -106,7 +108,7 @@ public class EntityDryRunTest extends BaseTestClass {
             bundles[0].getProcessData(), TimeUtil.getTimeWrtSystemTime(5), null);
         validate(response);
         Assert.assertEquals(
-            OozieUtil.getNumberOfBundle(cluster, EntityType.PROCESS, bundles[0].getProcessName()),
+            OozieUtil.getNumberOfBundle(clusterOC, EntityType.PROCESS, bundles[0].getProcessName()),
             1, "more than one bundle found after failed update request");
     }
 
@@ -135,7 +137,7 @@ public class EntityDryRunTest extends BaseTestClass {
         response = prism.getFeedHelper().update(feed, feed);
         validate(response);
         Assert.assertEquals(
-            OozieUtil.getNumberOfBundle(cluster, EntityType.FEED, Util.readEntityName(feed)), 1,
+            OozieUtil.getNumberOfBundle(clusterOC, EntityType.FEED, Util.readEntityName(feed)), 1,
             "more than one bundle found after failed update request");
     }
 

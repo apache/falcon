@@ -235,9 +235,9 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         feed.addProperty("someProp", "someVal");
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed.toString(), feed.toString()));
         //check for new feed bundle creation
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(prism, EntityType.FEED,
+        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.FEED,
             feed.getName()), 2);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1, EntityType.PROCESS,
+        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.PROCESS,
             bundles[0].getProcessName()), 1);
     }
 
@@ -263,9 +263,9 @@ public class PrismFeedUpdateTest extends BaseTestClass {
         feed.setAvailabilityFlag("mytestflag");
         AssertUtil.assertSucceeded(prism.getFeedHelper().update(feed.toString(), feed.toString()));
         //check for new feed bundle creation
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1, EntityType.FEED,
+        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.FEED,
             feed.getName()), 2);
-        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1, EntityType.PROCESS,
+        Assert.assertEquals(OozieUtil.getNumberOfBundle(cluster1OC, EntityType.PROCESS,
             bundles[0].getProcessName()), 2);
     }
 

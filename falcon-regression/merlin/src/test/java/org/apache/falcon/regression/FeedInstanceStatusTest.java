@@ -160,12 +160,12 @@ public class FeedInstanceStatusTest extends BaseTestClass {
         prism.getFeedHelper().getProcessInstanceStatus(feedName,
             "?start=" + TimeUtil.addMinsToTime(startTime, 40));
 
-        String postFix = "/US/" + cluster2.getClusterHelper().getColo();
+        String postFix = "/US/" + cluster2.getClusterHelper().getColoName();
         String prefix = bundles[0].getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster2FS);
         HadoopUtil.lateDataReplenish(cluster2FS, 80, 20, prefix, postFix);
 
-        postFix = "/UK/" + cluster3.getClusterHelper().getColo();
+        postFix = "/UK/" + cluster3.getClusterHelper().getColoName();
         prefix = bundles[0].getFeedDataPathPrefix();
         HadoopUtil.deleteDirIfExists(prefix.substring(1), cluster3FS);
         HadoopUtil.lateDataReplenish(cluster3FS, 80, 20, prefix, postFix);

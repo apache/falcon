@@ -87,6 +87,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-776 Fixing PrismFeedUpdateTest and FeedInstanceStatus test issues (Raghav Kumar Gautam
+   via Ruslan Ostafiychuk)
+
    FALCON-747 validateSuccessOnlyStart should use '1' as expected value (Ruslan Ostafiychuk)
 
    FALCON-737 In NoOutputProcessTest print info before assertion (Raghav Kumar Gautam via Ruslan Ostafiychuk)
