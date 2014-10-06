@@ -25,6 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -125,7 +126,9 @@ public class WorkflowExecutionContext {
     }
 
     public String getContextFile() {
-        return getValue(WorkflowExecutionArgs.CONTEXT_FILE);
+        return EntityType.PROCESS.name().equals(getEntityType())
+            ? getValue(WorkflowExecutionArgs.CONTEXT_FILE)
+            : "/context/" + getValue(WorkflowExecutionArgs.CONTEXT_FILE); // needed by feed clean up
     }
 
     public String getLogDir() {
@@ -188,7 +191,7 @@ public class WorkflowExecutionContext {
     }
 
     public String getEntityType() {
-        return getValue(WorkflowExecutionArgs.ENTITY_TYPE);
+        return getValue(WorkflowExecutionArgs.ENTITY_TYPE).toUpperCase();
     }
 
     public EntityOperations getOperation() {

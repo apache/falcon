@@ -23,11 +23,13 @@ import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.fs.FileStatus;
@@ -95,17 +97,24 @@ public abstract class AbstractCleanupHandler {
         return HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
     }
 
-    protected void delete(Cluster cluster, Entity entity, long retention)
-        throws FalconException {
-
-        FileStatus[] logs = getAllLogs(cluster, entity);
-        delete(cluster, entity, retention, logs);
+    protected void delete(String clusterName, Entity entity, long retention) throws FalconException {
+        Cluster currentCluster = STORE.get(EntityType.CLUSTER, clusterName);
+        if (isClusterInCurrentColo(currentCluster.getColo())) {
+            LOG.info("Cleaning up logs for {}: {} in cluster: {} with retention: {}",
+                    entity.getEntityType(), entity.getName(), clusterName, retention);
+            FileStatus[] logs = getAllLogs(currentCluster, entity);
+            deleteInternal(currentCluster, entity, retention, logs);
+        } else {
+            LOG.info("Ignoring cleanup for {}: {} in cluster: {} as this does not belong to current colo",
+                    entity.getEntityType(), entity.getName(), clusterName);
+        }
     }
 
-    protected void delete(Cluster cluster, Entity entity, long retention, FileStatus[] logs)
-        throws FalconException {
+    protected void deleteInternal(Cluster cluster, Entity entity,
+                                  long retention, FileStatus[] logs) throws FalconException {
         if (logs == null || logs.length == 0) {
-            LOG.info("Nothing to delete for cluster: {}, entity: {}", cluster.getName(), entity.getName());
+            LOG.info("Nothing to delete for cluster: {}, entity: {}", cluster.getName(),
+                    entity.getName());
             return;
         }
 
@@ -146,7 +155,8 @@ public abstract class AbstractCleanupHandler {
 
     protected abstract String getRelativeLogPath();
 
-    protected String getCurrentColo() {
-        return StartupProperties.get().getProperty("current.colo", "default");
+    protected boolean isClusterInCurrentColo(String colo) {
+        final String currentColo = StartupProperties.get().getProperty("current.colo", "default");
+        return DeploymentUtil.isEmbeddedMode() || currentColo.equals(colo);
     }
 }

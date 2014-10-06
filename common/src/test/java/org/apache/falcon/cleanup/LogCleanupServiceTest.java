@@ -18,18 +18,13 @@
 package org.apache.falcon.cleanup;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.Tag;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.AbstractTestBase;
-import org.apache.falcon.entity.CatalogStorage;
-import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -48,10 +43,6 @@ public class LogCleanupServiceTest extends AbstractTestBase {
     private FileSystem fs;
     private FileSystem tfs;
     private EmbeddedCluster targetDfsCluster;
-    private Path sourceStagingPath1;
-    private Path sourceStagingPath2;
-    private Path targetStagingPath1;
-    private Path targetStagingPath2;
 
     private final Path instanceLogPath = new Path("/projects/falcon/staging/falcon/workflows/process/"
         + "sample" + "/logs/job-2010-01-01-01-00/000");
@@ -123,8 +114,6 @@ public class LogCleanupServiceTest extends AbstractTestBase {
 
         // table feed staging dir setup
         initializeStagingDirs();
-        createStageData(sourceStagingPath1, targetStagingPath1, 0);
-        createStageData(sourceStagingPath2, targetStagingPath2, 10000);
         Thread.sleep(1000);
     }
 
@@ -132,46 +121,15 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         final InputStream inputStream = getClass().getResourceAsStream("/config/feed/hive-table-feed.xml");
         Feed tableFeed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(inputStream);
         getStore().publish(EntityType.FEED, tableFeed);
-
-        final Cluster srcCluster = dfsCluster.getCluster();
-        final CatalogStorage sourceStorage = (CatalogStorage) FeedHelper.createStorage(srcCluster, tableFeed);
-        String sourceStagingDir = FeedHelper.getStagingDir(srcCluster, tableFeed, sourceStorage, Tag.REPLICATION);
-
-        sourceStagingPath1 = new Path(sourceStagingDir + "/ds=2012092400/" + System.currentTimeMillis());
-        sourceStagingPath2 = new Path(sourceStagingDir + "/ds=2012092500/" + System.currentTimeMillis());
-
-        final Cluster targetCluster = targetDfsCluster.getCluster();
-        final CatalogStorage targetStorage = (CatalogStorage) FeedHelper.createStorage(targetCluster, tableFeed);
-        String targetStagingDir = FeedHelper.getStagingDir(targetCluster, tableFeed, targetStorage, Tag.REPLICATION);
-
-        targetStagingPath1 = new Path(targetStagingDir + "/ds=2012092400/" + System.currentTimeMillis());
-        targetStagingPath2 = new Path(targetStagingDir + "/ds=2012092500/" + System.currentTimeMillis());
-    }
-
-    private void createStageData(Path sourcePath, Path targetPath, int offset) throws Exception {
-        fs.mkdirs(sourcePath);
-        Path metaSource = new Path(sourcePath, "_metadata.xml");
-        Path dataSource = new Path(sourcePath, "data.txt");
-        fs.createNewFile(metaSource);
-        fs.createNewFile(dataSource);
-        FileStatus status = fs.getFileStatus(metaSource);
-        fs.setTimes(metaSource, status.getModificationTime() + offset, status.getAccessTime());
-        status = fs.getFileStatus(dataSource);
-        fs.setTimes(dataSource, status.getModificationTime() + offset, status.getAccessTime());
-
-        tfs.mkdirs(targetPath);
-        Path metaTarget = new Path(targetPath, "_metadata.xml");
-        Path dataTarget = new Path(targetPath, "data.txt");
-        tfs.createNewFile(metaTarget);
-        tfs.createNewFile(dataTarget);
-        status = tfs.getFileStatus(metaTarget);
-        tfs.setTimes(metaTarget, status.getModificationTime() + offset, status.getAccessTime());
-        status = tfs.getFileStatus(dataTarget);
-        tfs.setTimes(dataTarget, status.getModificationTime() + offset, status.getAccessTime());
     }
 
     @Test
     public void testProcessLogs() throws IOException, FalconException, InterruptedException {
+
+        Assert.assertTrue(fs.exists(instanceLogPath));
+        Assert.assertTrue(fs.exists(instanceLogPath1));
+        Assert.assertTrue(fs.exists(instanceLogPath2));
+        Assert.assertTrue(fs.exists(instanceLogPath3));
 
         AbstractCleanupHandler processCleanupHandler = new ProcessCleanupHandler();
         processCleanupHandler.cleanup();
@@ -182,8 +140,13 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Assert.assertTrue(fs.exists(instanceLogPath3));
     }
 
-    @Test (enabled = false)
+    @Test
     public void testFeedLogs() throws IOException, FalconException, InterruptedException {
+
+        Assert.assertTrue(fs.exists(feedInstanceLogPath));
+        Assert.assertTrue(tfs.exists(feedInstanceLogPath));
+        Assert.assertTrue(fs.exists(feedInstanceLogPath1));
+        Assert.assertTrue(tfs.exists(feedInstanceLogPath1));
 
         AbstractCleanupHandler feedCleanupHandler = new FeedCleanupHandler();
         feedCleanupHandler.cleanup();
@@ -192,19 +155,5 @@ public class LogCleanupServiceTest extends AbstractTestBase {
         Assert.assertFalse(tfs.exists(feedInstanceLogPath));
         Assert.assertTrue(fs.exists(feedInstanceLogPath1));
         Assert.assertTrue(tfs.exists(feedInstanceLogPath1));
-
-        // source table replication staging dirs
-        Assert.assertFalse(fs.exists(new Path(sourceStagingPath1, "_metadata.xml")));
-        Assert.assertFalse(fs.exists(new Path(sourceStagingPath1, "data.txt")));
-
-        Assert.assertTrue(fs.exists(new Path(sourceStagingPath2, "_metadata.xml")));
-        Assert.assertTrue(fs.exists(new Path(sourceStagingPath2, "data.txt")));
-
-        // target table replication staging dirs
-        Assert.assertFalse(tfs.exists(new Path(targetStagingPath1, "_metadata.xml")));
-        Assert.assertFalse(tfs.exists(new Path(targetStagingPath1, "data.txt")));
-
-        Assert.assertTrue(tfs.exists(new Path(targetStagingPath2, "_metadata.xml")));
-        Assert.assertTrue(tfs.exists(new Path(targetStagingPath2, "data.txt")));
     }
 }

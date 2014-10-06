@@ -54,7 +54,6 @@ public class LogCleanupService implements FalconService {
         Timer timer = new Timer();
         timer.schedule(new CleanupThread(), 0, getDelay());
         LOG.info("Falcon log cleanup service initialized");
-
     }
 
     private static class CleanupThread extends TimerTask {
@@ -91,5 +90,4 @@ public class LogCleanupService implements FalconService {
             throw new FalconException("Exception in EL evaluation", e);
         }
     }
-
 }

@@ -19,7 +19,6 @@ package org.apache.falcon.cleanup;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 
 import java.util.Collection;
@@ -37,17 +36,8 @@ public class FeedCleanupHandler extends AbstractCleanupHandler {
             long retention = getRetention(feed, feed.getFrequency().getTimeUnit());
 
             for (org.apache.falcon.entity.v0.feed.Cluster cluster : feed.getClusters().getClusters()) {
-                Cluster currentCluster = STORE.get(EntityType.CLUSTER, cluster.getName());
-                if (currentCluster.getColo().equals(getCurrentColo())) {
-                    LOG.info("Cleaning up logs & staged data for feed: {} in cluster: {} with retention: {}",
-                            feedName, cluster.getName(), retention);
-                    delete(currentCluster, feed, retention);
-                } else {
-                    LOG.info("Ignoring cleanup for feed: {} in cluster: {} as this does not belong to current colo",
-                            feedName, cluster.getName());
-                }
+                delete(cluster.getName(), feed, retention);
             }
-
         }
     }
 

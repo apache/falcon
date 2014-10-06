@@ -141,7 +141,7 @@ public class WorkflowExecutionContextTest {
 
     @Test
     public void testGetEntityType() throws Exception {
-        Assert.assertEquals(context.getEntityType(), "process");
+        Assert.assertEquals(context.getEntityType(), "PROCESS");
     }
 
     @Test

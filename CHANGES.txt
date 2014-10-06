@@ -109,6 +109,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-773 Log clean up handlers only work in distributed mode
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-760 Messaging is broken for FALCON.ENTITY.TOPIC in case of Eviction
    (Sowmya Ramesh via Venkatesh Seetharam)
 
