@@ -57,7 +57,6 @@ import java.util.*;
  */
 public abstract class AbstractEntityManager {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntityManager.class);
-    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
 
     protected static final int XML_DEBUG_LEN = 10 * 1024;
     protected static final String DEFAULT_NUM_RESULTS = "10";
@@ -154,7 +153,6 @@ public abstract class AbstractEntityManager {
 
         checkColo(colo);
         try {
-            audit(request, "STREAMED_DATA", type, "SUBMIT");
             Entity entity = submitInternal(request, type);
             return new APIResult(APIResult.Status.SUCCEEDED, "Submit successful (" + type + ") " + entity.getName());
         } catch (Throwable e) {
@@ -207,7 +205,6 @@ public abstract class AbstractEntityManager {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            audit(request, entity, type, "DELETE");
             String removedFromEngine = "";
             try {
                 Entity entityObj = EntityUtil.getEntity(type, entity);
@@ -239,7 +236,6 @@ public abstract class AbstractEntityManager {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
-            audit(request, entityName, type, "UPDATE");
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
             Entity newEntity = deserializeEntity(request, entityType);
             validate(newEntity);
@@ -381,14 +377,6 @@ public abstract class AbstractEntityManager {
         byte[] data = new byte[XML_DEBUG_LEN];
         IOUtils.readFully(xmlStream, data, 0, XML_DEBUG_LEN);
         return new String(data);
-    }
-
-    protected void audit(HttpServletRequest request, String entity, String type, String action) {
-        if (request == null) {
-            return; // this must be internal call from Falcon
-        }
-        AUDIT.info("Performed {} on {} ({}) :: {}/{}",
-                action, entity, type, request.getRemoteHost(), CurrentUser.getUser());
     }
 
     private enum EntityStatus {

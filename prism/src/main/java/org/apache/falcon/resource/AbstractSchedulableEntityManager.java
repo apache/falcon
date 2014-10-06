@@ -60,7 +60,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
             @Dimension("colo") @PathParam("colo") String colo) {
         checkColo(colo);
         try {
-            audit(request, entity, type, "SCHEDULED");
             scheduleInternal(type, entity);
             return new APIResult(APIResult.Status.SUCCEEDED, entity + "(" + type + ") scheduled successfully");
         } catch (Throwable e) {
@@ -89,7 +88,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
-            audit(request, "STREAMED_DATA", type, "SUBMIT_AND_SCHEDULE");
             Entity entity = submitInternal(request, type);
             scheduleInternal(type, entity.getName());
             return new APIResult(APIResult.Status.SUCCEEDED,
@@ -114,7 +112,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
-            audit(request, entity, type, "SUSPEND");
             Entity entityObj = EntityUtil.getEntity(type, entity);
             if (getWorkflowEngine().isActive(entityObj)) {
                 getWorkflowEngine().suspend(entityObj);
@@ -143,7 +140,6 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         checkColo(colo);
         try {
             checkSchedulableEntity(type);
-            audit(request, entity, type, "RESUME");
             Entity entityObj = EntityUtil.getEntity(type, entity);
             if (getWorkflowEngine().isActive(entityObj)) {
                 getWorkflowEngine().resume(entityObj);

@@ -18,14 +18,15 @@
 package org.apache.falcon.aspect;
 
 import org.apache.falcon.monitors.Alert;
+import org.apache.falcon.monitors.Auditable;
 import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.monitors.TimeTaken;
 import org.aspectj.lang.annotation.Aspect;
 
 /**
- * Create a method with params you want to monitor via Aspect and log in metric
- * and iMon, invoke this method from code.
+ * Create a method with params you want to monitor/alert/audit via Aspect
+ * and log in metric, invoke this method from code.
  */
 @SuppressWarnings("UnusedParameters")
 @Aspect
@@ -109,6 +110,17 @@ public final class GenericAlert {
     public static String alertJMSMessageConsumerFailed(
             @Dimension(value = "message") String message,
             @Dimension(value = "exception") Throwable throwable) {
+        return "IGNORE";
+    }
+
+    @Auditable(operation = "record-audit")
+    public static String audit(
+            @Dimension(value = "request-user")    String user,          // who
+            @Dimension(value = "remote-address")  String remoteAddress, // who
+            @Dimension(value = "remote-host")     String remoteHost,    // who
+            @Dimension(value = "request-url")     String requestUrl,    // what
+            @Dimension(value = "server-address")  String serverAddress, // what server
+            @Dimension(value = "request-time")    String time) {        // when
         return "IGNORE";
     }
 }

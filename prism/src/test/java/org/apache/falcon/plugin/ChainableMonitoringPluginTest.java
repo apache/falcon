@@ -19,17 +19,22 @@
 package org.apache.falcon.plugin;
 
 import org.apache.falcon.aspect.AlertMessage;
+import org.apache.falcon.aspect.AuditMessage;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.aspect.ResourceMessage;
+import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.util.StartupProperties;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.Date;
+
 /**
  * Test for ChainableMonitoringPlugin.
  */
-public class ChainableMonitoringPluginTest implements MonitoringPlugin, AlertingPlugin {
+public class ChainableMonitoringPluginTest
+        implements MonitoringPlugin, AlertingPlugin, AuditingPlugin {
 
     @BeforeClass
     public void setUp() throws Exception {
@@ -44,6 +49,8 @@ public class ChainableMonitoringPluginTest implements MonitoringPlugin, Alerting
         GenericAlert.instrumentFailedInstance("cluster", "process", "agg-coord", "120:df",
                 "ef-id", "wf-user", "1", "DELETE", "now", "error", "none", 1242);
         GenericAlert.alertJMSMessageConsumerFailed("test-alert", new Exception("test"));
+        GenericAlert.audit("falcon", "127.0.0.1", "localhost",  "test-action", "127.0.0.1",
+                SchemaHelper.formatDateUTC(new Date()));
     }
 
     @Override
@@ -56,5 +63,11 @@ public class ChainableMonitoringPluginTest implements MonitoringPlugin, Alerting
     public void alert(AlertMessage alertMessage) {
         Assert.assertNotNull(alertMessage);
         Assert.assertEquals(alertMessage.getEvent(), "jms-message-consumer-failed");
+    }
+
+    @Override
+    public void audit(AuditMessage auditMessage) {
+        Assert.assertNotNull(auditMessage);
+        Assert.assertEquals(auditMessage.getRequestUrl(), "test-action");
     }
 }

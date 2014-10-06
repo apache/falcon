@@ -19,16 +19,19 @@
 package org.apache.falcon.plugin;
 
 import org.apache.falcon.aspect.AlertMessage;
+import org.apache.falcon.aspect.AuditMessage;
 import org.apache.falcon.aspect.ResourceMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Plugin for logging metrics using log4j.
+ * Plugin implementation for logging metrics/alerts/audits that logs to a file.
  */
-public class LoggingPlugin implements MonitoringPlugin, AlertingPlugin {
+public class DefaultMonitoringPlugin implements MonitoringPlugin, AlertingPlugin, AuditingPlugin {
+
     private static final Logger METRIC = LoggerFactory.getLogger("METRIC");
     private static final Logger ALERT = LoggerFactory.getLogger("ALERT");
+    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
 
     @Override
     public void monitor(ResourceMessage message) {
@@ -38,5 +41,10 @@ public class LoggingPlugin implements MonitoringPlugin, AlertingPlugin {
     @Override
     public void alert(AlertMessage message) {
         ALERT.info("{}", message);
+    }
+
+    @Override
+    public void audit(AuditMessage auditMessage) {
+        AUDIT.info("{}", auditMessage);
     }
 }

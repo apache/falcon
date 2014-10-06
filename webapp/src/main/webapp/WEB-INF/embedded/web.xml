@@ -26,6 +26,11 @@
     <description>Apache Falcon Embedded Server</description>
 
     <filter>
+        <filter-name>audit</filter-name>
+        <filter-class>org.apache.falcon.security.FalconAuditFilter</filter-class>
+    </filter>
+
+    <filter>
         <filter-name>authentication</filter-name>
         <filter-class>org.apache.falcon.security.FalconAuthenticationFilter</filter-class>
     </filter>
@@ -34,6 +39,11 @@
         <filter-name>authorization</filter-name>
         <filter-class>org.apache.falcon.security.FalconAuthorizationFilter</filter-class>
     </filter>
+
+    <filter-mapping>
+        <filter-name>audit</filter-name>
+        <servlet-name>FalconRESTApi</servlet-name>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>authentication</filter-name>

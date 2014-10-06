@@ -21,6 +21,7 @@ package org.apache.falcon.plugin;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.AbstractFalconAspect;
 import org.apache.falcon.aspect.AlertMessage;
+import org.apache.falcon.aspect.AuditMessage;
 import org.apache.falcon.aspect.ResourceMessage;
 import org.apache.falcon.util.ReflectionUtils;
 import org.apache.falcon.util.StartupProperties;
@@ -34,24 +35,26 @@ import java.util.List;
 
 /**
  * This class implements the chain of responsibility for configured implementations
- * of {@link MonitoringPlugin}. {@link LoggingPlugin} is the default.
+ * of {@link MonitoringPlugin}. {@link DefaultMonitoringPlugin} is the default.
  */
 @Aspect
 public class ChainableMonitoringPlugin extends AbstractFalconAspect
-        implements MonitoringPlugin, AlertingPlugin {
+        implements MonitoringPlugin, AlertingPlugin, AuditingPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(ChainableMonitoringPlugin.class);
 
     private List<MonitoringPlugin> monitoringPlugins = new ArrayList<MonitoringPlugin>();
     private List<AlertingPlugin> alertingPlugins = new ArrayList<AlertingPlugin>();
+    private List<AuditingPlugin> auditingPlugins = new ArrayList<AuditingPlugin>();
 
     public ChainableMonitoringPlugin() {
         initializeMonitoringPlugins();
         initializeAlertingPlugins();
+        initializeAuditingPlugins();
     }
 
     private void initializeMonitoringPlugins() {
         String pluginClasses = StartupProperties.get().
-                getProperty("monitoring.plugins", LoggingPlugin.class.getName());
+                getProperty("monitoring.plugins", DefaultMonitoringPlugin.class.getName());
         try {
             for (String pluginClass : pluginClasses.split(",")) {
                 MonitoringPlugin plugin = ReflectionUtils.getInstanceByClassName(pluginClass.trim());
@@ -59,14 +62,14 @@ public class ChainableMonitoringPlugin extends AbstractFalconAspect
                 LOG.info("Registered Monitoring Plugin {}", pluginClass);
             }
         } catch (FalconException e) {
-            monitoringPlugins = Arrays.asList((MonitoringPlugin) new LoggingPlugin());
+            monitoringPlugins = Arrays.asList((MonitoringPlugin) new DefaultMonitoringPlugin());
             LOG.error("Unable to initialize monitoring.plugins: {}", pluginClasses, e);
         }
     }
 
     private void initializeAlertingPlugins() {
         String pluginClasses = StartupProperties.get().
-                getProperty("alerting.plugins", LoggingPlugin.class.getName());
+                getProperty("alerting.plugins", DefaultMonitoringPlugin.class.getName());
         try {
             for (String pluginClass : pluginClasses.split(",")) {
                 AlertingPlugin plugin = ReflectionUtils.getInstanceByClassName(pluginClass.trim());
@@ -74,8 +77,23 @@ public class ChainableMonitoringPlugin extends AbstractFalconAspect
                 LOG.info("Registered Alerting Plugin {}", pluginClass);
             }
         } catch (FalconException e) {
-            alertingPlugins = Arrays.asList((AlertingPlugin) new LoggingPlugin());
+            alertingPlugins = Arrays.asList((AlertingPlugin) new DefaultMonitoringPlugin());
             LOG.error("Unable to initialize alerting.plugins: {}", pluginClasses, e);
+        }
+    }
+
+    private void initializeAuditingPlugins() {
+        String pluginClasses = StartupProperties.get().
+                getProperty("auditing.plugins", DefaultMonitoringPlugin.class.getName());
+        try {
+            for (String pluginClass : pluginClasses.split(",")) {
+                AuditingPlugin plugin = ReflectionUtils.getInstanceByClassName(pluginClass.trim());
+                auditingPlugins.add(plugin);
+                LOG.info("Registered Auditing Plugin {}", pluginClass);
+            }
+        } catch (FalconException e) {
+            alertingPlugins = Arrays.asList((AlertingPlugin) new DefaultMonitoringPlugin());
+            LOG.error("Unable to initialize auditing.plugins: {}", pluginClasses, e);
         }
     }
 
@@ -106,7 +124,23 @@ public class ChainableMonitoringPlugin extends AbstractFalconAspect
             try {
                 plugin.alert(alertMessage);
             } catch (Exception e) {
-                LOG.debug("Unable to publish message to {}", plugin.getClass(), e);
+                LOG.debug("Unable to publish alert to {}", plugin.getClass(), e);
+            }
+        }
+    }
+
+    @Override
+    public void publishAudit(AuditMessage auditMessage) {
+        audit(auditMessage);
+    }
+
+    @Override
+    public void audit(AuditMessage auditMessage) {
+        for (AuditingPlugin plugin : auditingPlugins) {
+            try {
+                plugin.audit(auditMessage);
+            } catch (Exception e) {
+                LOG.debug("Unable to publish auditMessage to {}", plugin.getClass(), e);
             }
         }
     }

@@ -10,13 +10,14 @@
    * <a href="#Updating_process_and_feed_definition">Updating process and feed definition</a>
    * <a href="#Handling_late_input_data">Handling late input data</a>
    * <a href="#Idempotency">Idempotency</a>
-   * <a href="#Alerting_and_Monitoring">Alerting and Monitoring</a>
    * <a href="#Falcon_EL_Expressions">Falcon EL Expressions</a>
    * <a href="#Lineage">Lineage</a>
    * <a href="#Security">Security</a>
    * <a href="#Recipes">Recipes</a>
+   * <a href="#Monitoring">Monitoring</a>
 
 ---++ Architecture
+
 ---+++ Introduction
 Falcon is a feed and process management platform over hadoop. Falcon essentially transforms user's feed
 and process configurations into repeated actions through a standard workflow engine. Falcon by itself
@@ -557,76 +558,6 @@ All the operations in Falcon are Idempotent. That is if you make same request to
 Idempotency also by takes care of the condition when request is sent through prism and fails on one or more servers. For example prism is configured to send request to 3 servers. First user sends a request to SUBMIT a process on all 3 of them, and receives a response SUCCESSFUL from all of them. Then due to some issue one of the servers goes down, and user send a request to schedule the submitted process. This time he will receive a response with PARTIAL status and a FAILURE message from the server that has gone down. If the users check he will find the process would have been started and running on the 2 SUCCESSFUL servers. Now the issue with server is figured out and it is brought up. Sending the SCHEDULE request again through prism will result in a SUCCESSFUL response from prism as well as other three servers, but this time PROCESS will be SCHEDULED only on the server which had failed earlier and other two will keep running as before. 
  
 
----++ Alerting and Monitoring
----+++ Alerting
-Falcon provides monitoring of various events by capturing metrics of those events.
-The metric numbers can then be used to monitor performance and health of the Falcon system and the entire processing pipelines.
-
-Users can view the logs of these events in the metric.log file, by default this file is created under ${user.dir}/logs/ directory.
-Users may also extend the Falcon monitoring framework to send events to systems like Mondemand/lwes.
-
-The following events are captured by Falcon for logging the metrics:
-   1. New cluster definitions posted to Falcon (success & failures)
-   1. New feed definition posted to Falcon (success & failures)
-   1. New process definition posted to Falcon (success & failures)
-   1. Process update events (success & failures)
-   1. Feed update events (success & failures)
-   1. Cluster update events (success & failures)
-   1. Process suspend events (success & failures)
-   1. Feed suspend events (success & failures)
-   1. Process resume events (success & failures)
-   1. Feed resume events (success & failures)
-   1. Process remove events (success & failures)
-   1. Feed remove events (success & failures)
-   1. Cluster remove events (success & failures)
-   1. Process instance kill events (success & failures)
-   1. Process instance re-run events (success & failures)
-   1. Process instance generation events
-   1. Process instance failure events
-   1. Process instance auto-retry events
-   1. Process instance retry exhaust events
-   1. Feed instance deletion event
-   1. Feed instance deletion failure event (no retries)
-   1. Feed instance replication event
-   1. Feed instance replication failure event
-   1. Feed instance replication auto-retry event
-   1. Feed instance replication retry exhaust event
-   1. Feed instance late arrival event
-   1. Feed instance post cut-off arrival event
-   1. Process re-run due to late feed event
-   1. Transaction rollback failed event
-
-The metric logged for an event has the following properties:
-   1. Action - Name of the event.
-   2. Dimensions - A list of name/value pairs of various attributes for a given action.
-   3. Status- Status of an action FAILED/SUCCEEDED.
-   4. Time-taken - Time taken in nanoseconds for a given action.
-
-An example for an event logged for a submit of a new process definition:   
-
-   2012-05-04 12:23:34,026 {Action:submit, Dimensions:{entityType=process}, Status: SUCCEEDED, Time-taken:97087000 ns}
-
-Users may parse the metric.log or capture these events from custom monitoring frameworks and can plot various graphs 
-or send alerts according to their requirements.
-
----+++ Notifications
-Falcon creates a JMS topic for every process/feed that is scheduled in Falcon.
-The implementation class and the broker url of the JMS engine are read from the dependent cluster's definition.
-Users may register consumers on the required topic to check the availability or status of feed instances.
- 
-For a given process that is scheduled, the name of the topic is same as the process name.
-Falcon sends a Map message for every feed produced by the instance of a process to the JMS topic.
-The JMS !MapMessage sent to a topic has the following properties:
-entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
-
-For a given feed that is scheduled, the name of the topic is same as the feed name.
-Falcon sends a map message for every feed instance that is deleted/archived/replicated depending upon the retention policy set in the feed definition.
-The JMS !MapMessage sent to a topic has the following properties:
-entityName, feedNames, feedInstancePath, workflowId, runId, nominalTime, timeStamp, brokerUrl, brokerImplClass, entityType, operation, logFile, topicName, status, brokerTTL;
-
-The JMS messages are automatically purged after a certain period (default 3 days) by the Falcon JMS house-keeping service.TTL (Time-to-live) for JMS message
-can be configured in the Falcon's startup.properties file.
-
 ---++ Falcon EL Expressions
 
 
@@ -753,3 +684,7 @@ Security is detailed in [[Security][Security]].
 ---++ Recipes
 
 Recipes is detailed in [[Recipes][Recipes]].
+
+--++ Monitoring
+
+Monitoring and Operationalizing Falcon is detailed in [[Operability][Operability]].

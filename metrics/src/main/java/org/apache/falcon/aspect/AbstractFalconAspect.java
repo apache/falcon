@@ -110,4 +110,31 @@ public abstract class AbstractFalconAspect {
     }
 
     public abstract void publishAlert(AlertMessage alertMessage);
+
+    @Around("@annotation(org.apache.falcon.monitors.Auditable)")
+    public Object logAroundAudit(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object[] args = joinPoint.getArgs();
+        Object result;
+
+        try {
+            result = joinPoint.proceed();
+        } finally {
+            AuditMessage auditMessage = new AuditMessage(
+                    getStringValue(args[0], "Unknown-User"),
+                    getStringValue(args[1], "Unknown-Address"),
+                    getStringValue(args[2], "Unknown-Host"),
+                    args[3].toString(),
+                    args[4].toString(),
+                    args[5].toString());
+            publishAudit(auditMessage);
+        }
+
+        return result;
+    }
+
+    private String getStringValue(Object value, String defaultValue) {
+        return value == null ? defaultValue : value.toString();
+    }
+
+    public abstract void publishAudit(AuditMessage auditMessage);
 }

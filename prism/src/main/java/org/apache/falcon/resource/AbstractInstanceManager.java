@@ -341,7 +341,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            audit(request, entity, type, "INSTANCE_KILL");
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
@@ -364,7 +363,6 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            audit(request, entity, type, "INSTANCE_SUSPEND");
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
@@ -383,12 +381,10 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                                           String type, String entity, String startStr,
                                           String endStr, String colo,
                                           List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            audit(request, entity, type, "INSTANCE_RESUME");
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
@@ -406,12 +402,10 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     public InstancesResult reRunInstance(String type, String entity, String startStr,
                                          String endStr, HttpServletRequest request,
                                          String colo, List<LifeCycle> lifeCycles) {
-
         checkColo(colo);
         checkType(type);
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
-            audit(request, entity, type, "INSTANCE_RERUN");
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);

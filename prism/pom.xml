@@ -198,7 +198,6 @@
                         <include>org/apache/falcon/resource/proxy/InstanceManagerProxy.java</include>
                         <include>org/apache/falcon/resource/AbstractInstanceManager.java</include>
                         <include>org/apache/falcon/plugin/ChainableMonitoringPlugin.java</include>
-                        <include>org/apache/falcon/service/FalconTopicSubscriber.java</include>
                         <include>org/apache/falcon/aspect/GenericAlert.java</include>
                         <include>org/apache/falcon/aspect/GenericAlertTest.java</include>
                     </includes>

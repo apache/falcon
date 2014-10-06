@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-687 Add hooks for extensions in Audit (Venkatesh Seetharam)
+
    FALCON-636 Add a sample recipe for disaster recovery of hdfs dirs/files
    (Sowmya Ramesh via Venkatesh Seetharam)
 

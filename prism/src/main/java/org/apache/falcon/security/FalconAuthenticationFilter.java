@@ -19,6 +19,7 @@
 package org.apache.falcon.security;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.util.Servlets;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
@@ -167,7 +168,7 @@ public class FalconAuthenticationFilter
                 if (httpRequest.getMethod().equals("OPTIONS")) { // option request meant only for authentication
                     optionsServlet.service(request, response);
                 } else {
-                    final String user = getUserFromRequest(httpRequest);
+                    final String user = Servlets.getUserFromRequest(httpRequest);
                     if (StringUtils.isEmpty(user)) {
                         ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                                 "User can't be empty");
@@ -180,7 +181,8 @@ public class FalconAuthenticationFilter
                             NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
                             NDC.push(requestId);
                             CurrentUser.authenticate(user);
-                            LOG.info("Request from user: {}, URL={}", user, getRequestUrl(httpRequest));
+                            LOG.info("Request from user: {}, URL={}", user,
+                                    Servlets.getRequestURI(httpRequest));
 
                             filterChain.doFilter(servletRequest, servletResponse);
                         } finally {
@@ -189,34 +191,6 @@ public class FalconAuthenticationFilter
                         }
                     }
                 }
-            }
-
-            private String getUserFromRequest(HttpServletRequest httpRequest) {
-                String user = httpRequest.getRemoteUser(); // this is available from wrapper in super class
-                if (!StringUtils.isEmpty(user)) {
-                    return user;
-                }
-
-                user = httpRequest.getParameter("user.name"); // available in query-param
-                if (!StringUtils.isEmpty(user)) {
-                    return user;
-                }
-
-                user = httpRequest.getHeader("Remote-User"); // backwards-compatibility
-                if (!StringUtils.isEmpty(user)) {
-                    return user;
-                }
-
-                return null;
-            }
-
-            private String getRequestUrl(HttpServletRequest request) {
-                StringBuffer url = request.getRequestURL();
-                if (request.getQueryString() != null) {
-                    url.append("?").append(request.getQueryString());
-                }
-
-                return url.toString();
             }
         };
 

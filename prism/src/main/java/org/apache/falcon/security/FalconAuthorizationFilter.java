@@ -31,7 +31,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This enforces authorization as part of the filter before processing the request.
@@ -62,28 +61,35 @@ public class FalconAuthorizationFilter implements Filter {
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-
-        String pathInfo = httpRequest.getPathInfo();
-        String[] paths = getResourcesAndActions(pathInfo);
-        final String resource = paths[0];
-        final String action = paths[1];
-        final String entityType = paths.length > 2 ? paths[2] : null;
-        final String entityName = paths.length > 3 ? paths[3] : null;
+        RequestParts requestParts = getUserRequest(httpRequest);
 
         if (isAuthorizationEnabled) {
-            LOG.info("Authorizing user={} against resource={}, action={}, entity name={}, "
-                + "entity type={}", CurrentUser.getUser(), resource, action, entityName, entityType);
-            authorizationProvider.authorizeResource(resource, action,
-                    entityType, entityName, CurrentUser.getProxyUgi());
+            LOG.info("Authorizing user={} against request={}", CurrentUser.getUser(), requestParts);
+            authorizationProvider.authorizeResource(requestParts.getResource(),
+                    requestParts.getAction(), requestParts.getEntityType(),
+                    requestParts.getEntityName(), CurrentUser.getProxyUgi());
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private static String[] getResourcesAndActions(String pathInfo) {
-        List<String> splits = new ArrayList<String>();
+    @Override
+    public void destroy() {
+        authorizationProvider = null;
+    }
+
+    /**
+     * Returns the resource and action for the given request.
+     *
+     * @param httpRequest    an HTTP servlet request
+     * @return the parts of a path
+     */
+    private static RequestParts getUserRequest(HttpServletRequest httpRequest) {
+        String pathInfo = httpRequest.getPathInfo();
         final String[] pathSplits = pathInfo.substring(1).split("/");
         final String resource = pathSplits[0];
+
+        ArrayList<String> splits = new ArrayList<String>();
         if (resource.equals("graphs")) {
             splits.add(pathSplits[1]);  // resource
             splits.add(pathSplits[2]);  // action
@@ -98,11 +104,50 @@ public class FalconAuthorizationFilter implements Filter {
             }
         }
 
-        return splits.toArray(new String[splits.size()]);
+        final String entityType = splits.size() > 2 ? splits.get(2) : null;
+        final String entityName = splits.size() > 3 ? splits.get(3) : null;
+
+        return new RequestParts(splits.get(0), splits.get(1), entityName, entityType);
     }
 
-    @Override
-    public void destroy() {
-        authorizationProvider = null;
+    private static class RequestParts {
+        private final String resource;
+        private final String action;
+        private final String entityName;
+        private final String entityType;
+
+        public RequestParts(String resource, String action,
+                            String entityName, String entityType) {
+            this.resource = resource;
+            this.action = action;
+            this.entityName = entityName;
+            this.entityType = entityType;
+        }
+
+        public String getResource() {
+            return resource;
+        }
+
+        public String getAction() {
+            return action;
+        }
+
+        public String getEntityName() {
+            return entityName;
+        }
+
+        public String getEntityType() {
+            return entityType;
+        }
+
+        @Override
+        public String toString() {
+            return "RequestParts{"
+                    + "resource='" + resource + '\''
+                    + ", action='" + action + '\''
+                    + ", entityName='" + entityName + '\''
+                    + ", entityType='" + entityType + '\''
+                    + '}';
+        }
     }
 }
