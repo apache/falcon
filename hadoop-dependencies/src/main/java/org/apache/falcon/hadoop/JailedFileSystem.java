@@ -98,11 +98,6 @@ public class JailedFileSystem extends FileSystem {
     }
 
     @Override
-    public boolean delete(Path f) throws IOException {
-        return delete(toLocalPath(f), false);
-    }
-
-    @Override
     public boolean delete(Path f, boolean recursive) throws IOException {
         Path localPath = toLocalPath(f);
         if (localPath.toUri().getPath().trim().equals("/")) {
@@ -121,10 +116,11 @@ public class JailedFileSystem extends FileSystem {
             FileStatus[] jailFileStatuses = new FileStatus[fileStatuses.length];
             for (int index = 0; index < fileStatuses.length; index++) {
                 FileStatus status = fileStatuses[index];
-                jailFileStatuses[index] = new FileStatus(status.getLen(), status.isDir(),
+                jailFileStatuses[index] = new FileStatus(status.getLen(), status.isDirectory(),
                         status.getReplication(), status.getBlockSize(), status.getModificationTime(),
                         status.getAccessTime(), status.getPermission(), status.getOwner(), status.getGroup(),
-                        fromLocalPath(status.getPath()).makeQualified(this));
+                        fromLocalPath(status.getPath())
+                                .makeQualified(this.getUri(), this.getWorkingDirectory()));
             }
             return jailFileStatuses;
         }
@@ -181,7 +177,7 @@ public class JailedFileSystem extends FileSystem {
         if (status == null) {
             return null;
         }
-        return new FileStatus(status.getLen(), status.isDir(),
+        return new FileStatus(status.getLen(), status.isDirectory(),
                 status.getReplication(), status.getBlockSize(), status.getModificationTime(),
                 status.getAccessTime(), status.getPermission(), status.getOwner(), status.getGroup(),
                 fromLocalPath(status.getPath()).makeQualified(this.getUri(), this.getWorkingDirectory()));

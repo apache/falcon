@@ -35,7 +35,8 @@ public class ClassicClientProtocolProvider extends ClientProtocolProvider {
     @Override
     public ClientProtocol create(Configuration conf) throws IOException {
         String framework = conf.get(MRConfig.FRAMEWORK_NAME, "unittests");
-        String tracker = conf.get("mapred.job.tracker", conf.get("yarn.resourcemanager.address", LOCALHOST));
+        String tracker = conf.get("mapreduce.jobtracker.address",
+                conf.get("yarn.resourcemanager.address", LOCALHOST));
         if (!"unittests".equals(framework) || !tracker.startsWith(LOCALHOST)) {
             return null;
         }

@@ -47,7 +47,7 @@ public final class ClusterHelper {
         conf.set(HadoopClientFactory.FS_DEFAULT_NAME_KEY, storageUrl);
 
         final String executeEndPoint = getMREndPoint(cluster);
-        conf.set(HadoopClientFactory.MR_JOB_TRACKER_KEY, executeEndPoint);
+        conf.set(HadoopClientFactory.MR_JT_ADDRESS_KEY, executeEndPoint);
         conf.set(HadoopClientFactory.YARN_RM_ADDRESS_KEY, executeEndPoint);
 
         if (cluster.getProperties() != null) {

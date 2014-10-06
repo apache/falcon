@@ -1,4 +1,3 @@
-
  Licensed to the Apache Software Foundation (ASF) under one
  or more contributor license agreements.  See the NOTICE file
  distributed with this work for additional information
@@ -29,7 +28,6 @@ merlin-core has al the utils used by merlin
 Build Command : 
 ------------------
 
-Fast Build : mvn clean install -DskipTests -DskipCheck=true -Phadoop-1
-Regression build : mvn clean install -Phadoop-1
-Profiles Supported: hadoop-1,hadoop-2
-(hadoop-1 is by default for chd repo)
+Fast Build : mvn clean install -DskipTests -DskipCheck=true -Phadoop-2
+Regression build : mvn clean install -Phadoop-2
+Profiles Supported: hadoop-2

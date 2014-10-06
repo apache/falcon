@@ -19,7 +19,6 @@
 package org.apache.falcon.listener;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.falcon.JobTrackerService;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,26 +36,12 @@ public class HadoopStartupListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
-            startLocalJobRunner();
-
             startBroker();
             startHiveMetaStore();
 
         } catch (Exception e) {
             LOG.error("Unable to start daemons", e);
             throw new RuntimeException("Unable to start daemons", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void startLocalJobRunner() throws Exception {
-        String className = "org.apache.hadoop.mapred.LocalRunnerV1";
-        try {
-            Class<? extends JobTrackerService>  runner = (Class<? extends JobTrackerService>) Class.forName(className);
-            JobTrackerService service = runner.newInstance();
-            service.start();
-        } catch (ClassNotFoundException e) {
-            LOG.warn("v1 Hadoop components not found. Assuming v2", e);
         }
     }
 
@@ -90,33 +75,6 @@ public class HadoopStartupListener implements ServletContextListener {
         } catch (Exception e) {
             throw new RuntimeException("Unable to start hive metastore server.", e);
         }
-    }
-
-    private Object instance(String clsName) throws Exception {
-        return Class.forName(clsName).newInstance();
-    }
-
-    @SuppressWarnings("rawtypes")
-    private void invoke(Object service, String methodName, Class argCls, Object arg) throws Exception {
-        if (argCls == null) {
-            service.getClass().getMethod(methodName).invoke(service);
-        } else {
-            service.getClass().getMethod(methodName, argCls).invoke(service, arg);
-        }
-    }
-
-    private void startService(final Object service, final String method) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    LOG.info("Starting service {}", service.getClass().getName());
-                    invoke(service, method, null, null);
-                } catch(Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).start();
     }
 
     @Override

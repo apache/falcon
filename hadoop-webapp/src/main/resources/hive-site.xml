@@ -30,7 +30,7 @@
     </property>
 
     <property>
-        <name>fs.default.name</name>
+        <name>fs.defaultFS</name>
         <value>jail://global:00</value>
     </property>
 

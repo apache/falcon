@@ -84,9 +84,9 @@ public class EmbeddedCluster {
     private static EmbeddedCluster createClusterAsUser(String name, boolean global, String colo,
                                                        String tags) throws IOException {
         EmbeddedCluster cluster = new EmbeddedCluster();
-        cluster.conf.set("fs.default.name", "jail://" + (global ? "global" : name) + ":00");
+        cluster.conf.set("fs.defaultFS", "jail://" + (global ? "global" : name) + ":00");
 
-        String hdfsUrl = cluster.conf.get("fs.default.name");
+        String hdfsUrl = cluster.conf.get("fs.defaultFS");
         LOG.info("Cluster Namenode = {}", hdfsUrl);
         cluster.buildClusterObject(name, colo, tags);
         return cluster;
@@ -109,7 +109,7 @@ public class EmbeddedCluster {
         Interfaces interfaces = new Interfaces();
         interfaces.getInterfaces().add(newInterface(Interfacetype.WORKFLOW,
                 "http://localhost:41000/oozie", "0.1"));
-        String fsUrl = conf.get("fs.default.name");
+        String fsUrl = conf.get("fs.defaultFS");
         interfaces.getInterfaces().add(newInterface(Interfacetype.READONLY, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.WRITE, fsUrl, "0.1"));
         interfaces.getInterfaces().add(newInterface(Interfacetype.EXECUTE,

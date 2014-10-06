@@ -236,7 +236,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         }
 
         for (FileStatus lib : libs) {
-            if (lib.isDir()) {
+            if (lib.isDirectory()) {
                 continue;
             }
 

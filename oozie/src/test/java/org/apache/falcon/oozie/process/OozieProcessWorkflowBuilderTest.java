@@ -40,6 +40,7 @@ import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
 import org.apache.falcon.entity.v0.process.Validity;
 import org.apache.falcon.entity.v0.process.Workflow;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -95,7 +96,7 @@ public class OozieProcessWorkflowBuilderTest extends AbstractTestBase {
         CurrentUser.authenticate("falcon");
 
         Configuration conf = EmbeddedCluster.newCluster("testCluster").getConf();
-        hdfsUrl = conf.get("fs.default.name");
+        hdfsUrl = conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
     }
 
     private void storeEntity(EntityType type, String name, String resource) throws Exception {

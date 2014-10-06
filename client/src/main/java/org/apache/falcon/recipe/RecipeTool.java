@@ -258,7 +258,7 @@ public class RecipeTool extends Configured implements Tool {
 
     private static Configuration getConfiguration(final String storageEndpoint) throws Exception {
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", storageEndpoint);
+        conf.set("fs.defaultFS", storageEndpoint);
         return conf;
     }
 

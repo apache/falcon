@@ -22,6 +22,7 @@ import org.apache.falcon.Pair;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -59,7 +60,7 @@ public class FeedEvictorTest {
     @BeforeClass
     public void start() throws Exception {
         cluster = EmbeddedCluster.newCluster("test");
-        hdfsUrl = cluster.getConf().get("fs.default.name");
+        hdfsUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
         FeedEvictor.OUT.set(stream);
     }
 
@@ -104,7 +105,7 @@ public class FeedEvictorTest {
 
             Pair<List<String>, List<String>> pair =
                     createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS, "/data");
-            final String storageUrl = cluster.getConf().get("fs.default.name");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             String dataPath = LocationType.DATA.name() + "="
                     + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";
@@ -204,7 +205,7 @@ public class FeedEvictorTest {
 
             Pair<List<String>, List<String>> pair =
                     createTestData("feed2", "yyyyMMddHH/'more'/yyyy", 5, TimeUnit.HOURS, "/data");
-            final String storageUrl = cluster.getConf().get("fs.default.name");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             String dataPath = LocationType.DATA.name() + "="
                     + storageUrl + "/data/YYYY/feed2/mmHH/dd/MM/?{YEAR}?{MONTH}?{DAY}?{HOUR}/more/?{YEAR}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
@@ -241,12 +242,14 @@ public class FeedEvictorTest {
             Pair<List<String>, List<String>> pair = createTestData("/data");
             FeedEvictor.main(new String[] {
                 "-feedBasePath", LocationType.DATA.name() + "="
-                    + cluster.getConf().get("fs.default.name") + "/data/YYYY/feed3/dd/MM/?{MONTH}/more/?{HOUR}",
+                    + cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                    + "/data/YYYY/feed3/dd/MM/?{MONTH}/more/?{HOUR}",
                 "-retentionType", "instance",
                 "-retentionLimit", "months(5)",
                 "-timeZone", "UTC",
                 "-frequency", "hourly",
-                "-logFile", conf.get("fs.default.name") + "/falcon/staging/feed/2012-01-01-04-00",
+                "-logFile", conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                + "/falcon/staging/feed/2012-01-01-04-00",
                 "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
             });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
@@ -255,7 +258,8 @@ public class FeedEvictorTest {
             String dataPath = "/data/YYYY/feed4/dd/MM/02/more/hello";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[] {
-                "-feedBasePath", LocationType.DATA.name() + "=" + cluster.getConf().get("fs.default.name") + dataPath,
+                "-feedBasePath", LocationType.DATA.name() + "="
+                    + cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY) + dataPath,
                 "-retentionType", "instance",
                 "-retentionLimit", "hours(5)",
                 "-timeZone", "UTC",
@@ -285,7 +289,7 @@ public class FeedEvictorTest {
             createTestData("/stats");
             createTestData("/meta");
             createTestData("/tmp");
-            final String storageUrl = cluster.getConf().get("fs.default.name");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             FeedEvictor.main(new String[] {
                 "-feedBasePath", getFeedBasePath(LocationType.DATA, storageUrl)
                 + "#" + getFeedBasePath(LocationType.STATS, storageUrl)
@@ -295,14 +299,16 @@ public class FeedEvictorTest {
                 "-retentionLimit", "months(5)",
                 "-timeZone", "UTC",
                 "-frequency", "hourly",
-                "-logFile", conf.get("fs.default.name") + "/falcon/staging/feed/2012-01-01-04-00",
-                "-falconFeedStorageType", Storage.TYPE.FILESYSTEM.name(),
+                "-logFile", conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                + "/falcon/staging/feed/2012-01-01-04-00", "-falconFeedStorageType",
+                Storage.TYPE.FILESYSTEM.name(),
             });
             Assert.assertEquals("instances=NULL", stream.getBuffer());
 
             stream.clear();
             String dataPath = LocationType.DATA.name() + "="
-                    + cluster.getConf().get("fs.default.name") + "/data/YYYY/feed4/dd/MM/02/more/hello";
+                    + cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                    + "/data/YYYY/feed4/dd/MM/02/more/hello";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-02-00.csv";
             FeedEvictor.main(new String[]{
                 "-feedBasePath", dataPath,
@@ -336,7 +342,7 @@ public class FeedEvictorTest {
             createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS, "/stats");
             createTestData("feed1", "yyyy-MM-dd/'more'/yyyy", 10, TimeUnit.DAYS, "/meta");
 
-            final String storageUrl = cluster.getConf().get("fs.default.name");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             String dataPath =
                     "DATA=" + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}"
                     + "#STATS=" + storageUrl + "/stats/YYYY/feed1/mmHH/dd/MM/?{YEAR}-?{MONTH}-?{DAY}/more/?{YEAR}"
@@ -373,7 +379,7 @@ public class FeedEvictorTest {
 
             Pair<List<String>, List<String>> pair = generateInstances(fs, "feed1",
                 "yyyy/MM/dd/'more'/yyyy", 10, TimeUnit.DAYS, "/data", false);
-            final String storageUrl = cluster.getConf().get("fs.default.name");
+            final String storageUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
             String dataPath = LocationType.DATA.name() + "="
                 + storageUrl + "/data/YYYY/feed1/mmHH/dd/MM/?{YEAR}/?{MONTH}/?{DAY}/more/?{YEAR}";
             String logFile = hdfsUrl + "/falcon/staging/feed/instancePaths-2012-01-01-01-00.csv";

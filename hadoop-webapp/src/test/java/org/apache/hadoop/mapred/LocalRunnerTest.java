@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.mapred;
 
-import org.apache.falcon.JobTrackerService;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.annotations.Test;
 
@@ -30,16 +29,8 @@ public class LocalRunnerTest {
     @SuppressWarnings("unchecked")
     public void testLocalRunner() throws Exception {
         Configuration conf = new Configuration();
-        conf.set("mapred.job.tracker", "localhost:41021");
+        conf.set("mapreduce.jobtracker.address", "localhost:41021");
         conf.set("mapreduce.framework.name", "unittests");
-        String hadoopProfle = System.getProperty("hadoop.profile", "1");
-        if (hadoopProfle.equals("1")) {
-            String className = "org.apache.hadoop.mapred.LocalRunnerV1";
-            Class<? extends JobTrackerService> runner =
-                    (Class<? extends JobTrackerService>) Class.forName(className);
-            JobTrackerService service = runner.newInstance();
-            service.start();
-        }
         JobClient client = new JobClient(new JobConf(conf));
         System.out.println(client.getSystemDir());
     }

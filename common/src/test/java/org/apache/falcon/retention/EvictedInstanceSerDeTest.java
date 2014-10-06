@@ -19,6 +19,7 @@
 package org.apache.falcon.retention;
 
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -47,7 +48,7 @@ public class EvictedInstanceSerDeTest {
     @BeforeClass
     public void start() throws Exception {
         cluster = EmbeddedCluster.newCluster("test");
-        String hdfsUrl = cluster.getConf().get("fs.default.name");
+        String hdfsUrl = cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
 
         fs = FileSystem.get(cluster.getConf());
         csvFilePath = new Path(hdfsUrl + "/falcon/staging/feed/instancePaths-2014-10-01-01-00.csv");

@@ -41,6 +41,7 @@ import org.apache.falcon.entity.v0.feed.Properties;
 import org.apache.falcon.entity.v0.feed.Property;
 import org.apache.falcon.entity.v0.process.PolicyType;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -141,8 +142,8 @@ public class UpdateHelperTest extends AbstractTestBase {
         //Don't Update if the lib is not updated
         fs.delete(new Path(staging, "checksums"), true);
         FSDataOutputStream stream = fs.create(new Path(staging, "checksums"));
-        stream.write((dfsCluster.getConf().get("fs.default.name") + lib.toString() + "="
-                + fs.getFileChecksum(lib).toString() + "\n").getBytes());
+        stream.write((dfsCluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY)
+                + lib.toString() + "=" + fs.getFileChecksum(lib).toString() + "\n").getBytes());
         stream.close();
         Assert.assertFalse(UpdateHelper.isWorkflowUpdated(cluster, process, staging));
 

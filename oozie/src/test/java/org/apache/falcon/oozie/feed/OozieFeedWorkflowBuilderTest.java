@@ -33,6 +33,7 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieCoordinatorBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.OozieOrchestrationWorkflowBuilder;
@@ -94,10 +95,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         CurrentUser.authenticate("falcon");
 
         srcMiniDFS = EmbeddedCluster.newCluster("cluster1");
-        String srcHdfsUrl = srcMiniDFS.getConf().get("fs.default.name");
+        String srcHdfsUrl = srcMiniDFS.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
 
         trgMiniDFS = EmbeddedCluster.newCluster("cluster2");
-        String trgHdfsUrl = trgMiniDFS.getConf().get("fs.default.name");
+        String trgHdfsUrl = trgMiniDFS.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
 
         cleanupStore();
 

@@ -24,6 +24,7 @@ import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -39,8 +40,8 @@ import java.security.PrivilegedExceptionAction;
  */
 public final class HadoopClientFactory {
 
-    public static final String FS_DEFAULT_NAME_KEY = "fs.default.name";
-    public static final String MR_JOB_TRACKER_KEY = "mapred.job.tracker";
+    public static final String FS_DEFAULT_NAME_KEY = CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY;
+    public static final String MR_JT_ADDRESS_KEY = "mapreduce.jobtracker.address";
     public static final String YARN_RM_ADDRESS_KEY = "yarn.resourcemanager.address";
 
     private static final HadoopClientFactory INSTANCE = new HadoopClientFactory();
@@ -173,7 +174,7 @@ public final class HadoopClientFactory {
      */
     public static void validateJobClient(String executeUrl) throws IOException {
         final JobConf jobConf = new JobConf();
-        jobConf.set(MR_JOB_TRACKER_KEY, executeUrl);
+        jobConf.set(MR_JT_ADDRESS_KEY, executeUrl);
         jobConf.set(YARN_RM_ADDRESS_KEY, executeUrl);
 
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();

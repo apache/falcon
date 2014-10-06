@@ -23,6 +23,7 @@ import org.apache.falcon.cluster.util.EmbeddedCluster;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -167,7 +168,8 @@ public class FileSystemStorageTest {
         FileSystem fs = cluster.getFileSystem();
         fs.mkdirs(path);
 
-        FileSystemStorage storage = new FileSystemStorage(cluster.getConf().get("fs.default.name"), locations);
+        FileSystemStorage storage = new FileSystemStorage(
+                cluster.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY), locations);
         storage.validateACL(new TestACL(user, user, "0x755"));
 
         //-ve case

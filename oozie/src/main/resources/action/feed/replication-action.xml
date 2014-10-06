@@ -25,10 +25,6 @@
                 <name>oozie.launcher.mapreduce.job.user.classpath.first</name>
                 <value>true</value>
             </property>
-            <property> <!-- hadoop 1 parameter -->
-                <name>oozie.launcher.mapreduce.user.classpath.first</name>
-                <value>true</value>
-            </property>
             <property>
                 <name>mapred.job.queue.name</name>
                 <value>${queueName}</value>

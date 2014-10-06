@@ -27,6 +27,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.mockito.MockitoAnnotations;
@@ -79,7 +80,8 @@ public class TestLateData {
         case CLUSTER:
             Cluster cluster = (Cluster) unmarshaller.unmarshal(this.getClass().getResource(CLUSTER_XML));
             cluster.setName(name);
-            ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(conf.get("fs.default.name"));
+            ClusterHelper.getInterface(cluster, Interfacetype.WRITE).setEndpoint(
+                    conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
             store.publish(type, cluster);
             break;
 

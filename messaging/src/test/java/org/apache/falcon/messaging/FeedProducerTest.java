@@ -33,6 +33,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
@@ -66,7 +67,7 @@ public class FeedProducerTest {
 
         this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
         conf = dfsCluster.getConf();
-        logFile = new Path(conf.get("fs.default.name"),
+        logFile = new Path(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY),
                 "/falcon/feed/agg-logs/instance-2012-01-01-10-00.csv");
 
         args = new String[] {

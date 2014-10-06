@@ -22,7 +22,7 @@
 
 <configuration>
     <property>
-        <name>mapred.job.tracker</name>
+        <name>mapreduce.jobtracker.address</name>
         <value>localhost:41021</value>
     </property>
 

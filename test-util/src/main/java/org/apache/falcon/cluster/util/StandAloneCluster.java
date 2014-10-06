@@ -43,12 +43,12 @@ public final class StandAloneCluster extends EmbeddedCluster {
 
         for (Interface inter : cluster.getCluster().getInterfaces().getInterfaces()) {
             if (inter.getType() == Interfacetype.WRITE) {
-                cluster.getConf().set("fs.default.name", inter.getEndpoint());
+                cluster.getConf().set("fs.defaultFS", inter.getEndpoint());
                 break;
             }
         }
 
-        LOG.info("Cluster Namenode = {}", cluster.getConf().get("fs.default.name"));
+        LOG.info("Cluster Namenode = {}", cluster.getConf().get("fs.defaultFS"));
         return cluster;
     }
 

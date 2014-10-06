@@ -29,14 +29,14 @@ this would be used in the context of feed replication.
 <verbatim>
 <interface type="write" endpoint="hdfs://localhost:8020" version="0.20.2" />
 </verbatim>
-A write interface specifies the interface to write to hdfs, it's endpoint is the value of fs.default.name.
+A write interface specifies the interface to write to hdfs, it's endpoint is the value of fs.defaultFS.
 Falcon uses this interface to write system data to hdfs and feeds referencing this cluster are written to hdfs
 using the same write interface.
 
 <verbatim>
 <interface type="execute" endpoint="localhost:8021" version="0.20.2" />
 </verbatim>
-An execute interface specifies the interface for job tracker, it's endpoint is the value of mapred.job.tracker. 
+An execute interface specifies the interface for job tracker, it's endpoint is the value of mapreduce.jobtracker.address.
 Falcon uses this interface to submit the processes as jobs on !JobTracker defined here.
 
 <verbatim>

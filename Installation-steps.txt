@@ -38,6 +38,7 @@ a. Building falcon from the source release
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 
 
 b. Building falcon from the source repository
@@ -48,6 +49,7 @@ b. Building falcon from the source repository
 * export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 
 
 2. Deploying Falcon
@@ -122,5 +124,5 @@ d. Stopping Falcon Server
 
 * cd <<project home>>
 * src/bin/pacakge.sh <<hadoop-version>>
-  >> ex. src/bin/pacakge.sh 1.1.2 or src/bin/pacakge.sh 0.20.2-cdh3u5
+  >> ex. src/bin/pacakge.sh 2.5.0
   >> oozie bundle available in target/package/oozie-4.0.0/distro/target/oozie-4.0.0-distro.tar.gz

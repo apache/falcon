@@ -33,35 +33,6 @@
     <packaging>jar</packaging>
     <profiles>
         <profile>
-            <id>hadoop-1</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-core</artifactId>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.eclipse.jdt</groupId>
-                            <artifactId>core</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>tomcat</groupId>
-                            <artifactId>jasper-runtime</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>tomcat</groupId>
-                            <artifactId>jasper-compiler</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.hive.hcatalog</groupId>
-                    <artifactId>webhcat-java-client</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
             <id>hadoop-2</id>
             <dependencies>
             	<dependency>

@@ -159,7 +159,7 @@
                 write specifies the interface to write to hdfs, it's endpoint is the value
                 of fs.default.name.ex: hdfs://corp.namenode:8020
                 execute specifies the interface for job tracker, it's endpoint is the value
-                of mapred.job.tracker. ex:corp.jt:8021
+                of mapreduce.jobtracker.address. ex:corp.jt:8021
                 workflow specifies the interface for workflow engine, example of it's
                 endpoint is value for OOZIE_URL.ex: http://corp.oozie:11000/oozie
                 messaging specifies the interface for sending feed availability messages, it's

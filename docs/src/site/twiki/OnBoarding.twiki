@@ -24,11 +24,11 @@ Cluster definition that contains end points for name node, job tracker, oozie an
 <cluster colo="ua2" description="" name="corp" xmlns="uri:falcon:cluster:0.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">    
     <interfaces>
-        <interface type="readonly" endpoint="hftp://name-node.com:50070" version="0.20.2-cdh3u0" />
+        <interface type="readonly" endpoint="hftp://name-node.com:50070" version="2.5.0" />
 
-        <interface type="write" endpoint="hdfs://name-node.com:54310" version="0.20.2-cdh3u0" />
+        <interface type="write" endpoint="hdfs://name-node.com:54310" version="2.5.0" />
 
-        <interface type="execute" endpoint="job-tracker:54311" version="0.20.2-cdh3u0" />
+        <interface type="execute" endpoint="job-tracker:54311" version="2.5.0" />
 
         <interface type="workflow" endpoint="http://oozie.com:11000/oozie/" version="3.1.4" />
 

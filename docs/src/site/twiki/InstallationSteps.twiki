@@ -8,10 +8,10 @@ git clone https://git-wip-us.apache.org/repos/asf/incubator-falcon.git falcon
 
 cd falcon
 
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install [For hadoop 1]
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install -Phadoop-2 [For hadoop 2]
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
+*Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
 [optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie. Oozie versions >= 3.oozie-3.2.0-incubating are supported]
 
 </verbatim>
@@ -21,8 +21,7 @@ Once the build successfully completes, artifacts can be packaged for deployment.
 *Embedded Mode*
 <verbatim>
 
-mvn clean assembly:assembly -DskipTests -DskipCheck=true [For hadoop 1]
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -P hadoop-2 [For hadoop 2]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true
 
 </verbatim>
 
@@ -63,8 +62,7 @@ Tar is structured as follows
 
 <verbatim>
 
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-1 [For hadoop 1]
-mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2 [For hadoop 2]
+mvn clean assembly:assembly -DskipTests -DskipCheck=true -Pdistributed,hadoop-2
 
 </verbatim>
 
@@ -249,7 +247,7 @@ bin/prism-stop
 cd <<project home>>
 src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 
->> ex. src/bin/package.sh 1.1.2 3.1.3-incubating or src/bin/package.sh 0.20.2-cdh3u5 4.0.0
+>> ex. src/bin/package.sh 2.5.0 4.0.0
 >> Falcon package is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
 >> Oozie package is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
 </verbatim>
