@@ -87,6 +87,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-779 ProcessInstanceStatusTest#testProcessInstanceStatusReverseDateRange fixed (Paul
+   Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-776 Fixing PrismFeedUpdateTest and FeedInstanceStatus test issues (Raghav Kumar Gautam
    via Ruslan Ostafiychuk)
 

@@ -154,30 +154,16 @@ public final class InstanceUtil {
             r.setStatusCode(ResponseKeys.PROCESS_NOT_FOUND);
             return r;
         } else if (jsonString.contains("Parameter start is empty")
-                ||
-                jsonString.contains("Unparseable date:")) {
+                || jsonString.contains("Unparseable date:")) {
             r.setStatusCode(ResponseKeys.UNPARSEABLE_DATE);
             return r;
         } else if (response.getStatusLine().getStatusCode() == 400
-                &&
-                jsonString.contains("(FEED) not found")) {
-            r.setStatusCode(400);
-            return r;
-        } else if (
-                (response.getStatusLine().getStatusCode() == 400
-                        &&
-                        jsonString.contains("is beforePROCESS  start"))
-                        ||
-                        response.getStatusLine().getStatusCode() == 400
-                                &&
-                                jsonString.contains("is after end date")
-                        || (response.getStatusLine().getStatusCode() == 400
-                        &&
-                        jsonString.contains("is after PROCESS's end"))
-                        ||
-                        (response.getStatusLine().getStatusCode() == 400
-                                &&
-                                jsonString.contains("is before PROCESS's  start"))) {
+            && (jsonString.contains("(FEED) not found")
+            || jsonString.contains("is beforePROCESS  start")
+            || jsonString.contains("is after end date")
+            || jsonString.contains("is after PROCESS's end"))
+            || jsonString.contains("is before PROCESS's  start")
+            || jsonString.contains("is before the entity was scheduled")) {
             r.setStatusCode(400);
             return r;
         }
