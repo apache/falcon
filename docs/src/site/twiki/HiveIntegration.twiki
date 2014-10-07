@@ -41,11 +41,11 @@ Hence, Falcon for Hive support needs Oozie 4.x.
 
 
 ---++ Oozie Shared Library setup
-Falcon post Hive integration depends heavily on the [[http://oozie.apache.org/docs/4.0.0/WorkflowFunctionalSpec.html#a17_HDFS_Share_Libraries_for_Workflow_Applications_since_Oozie_2.3][shared library feature of Oozie]].
+Falcon post Hive integration depends heavily on the [[http://oozie.apache.org/docs/4.0.1/WorkflowFunctionalSpec.html#a17_HDFS_Share_Libraries_for_Workflow_Applications_since_Oozie_2.3][shared library feature of Oozie]].
 Since the sheer number of jars for HCatalog, Pig and Hive are in the many 10s in numbers, its quite daunting to
 redistribute the dependent jars from Falcon.
 
-[[http://oozie.apache.org/docs/4.0.0/DG_QuickStart.html#Oozie_Share_Lib_Installation][This is a one time effort in Oozie setup and is quite straightforward.]]
+[[http://oozie.apache.org/docs/4.0.1/DG_QuickStart.html#Oozie_Share_Lib_Installation][This is a one time effort in Oozie setup and is quite straightforward.]]
 
 
 ---++ Approach
@@ -195,7 +195,7 @@ Following is an example entity configuration for lifecycle management functions 
         <interface type="execute" endpoint="localhost:10300"
                    version="1.1.1" />
         <interface type="workflow" endpoint="http://localhost:11010/oozie/"
-                   version="3.3.0" />
+                   version="4.0.1" />
         <interface type="registry" endpoint="thrift://localhost:19083"
                    version="0.11.0" />
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
@@ -227,7 +227,7 @@ Following is an example entity configuration for lifecycle management functions 
         <interface type="execute" endpoint="localhost:20300"
                    version="1.1.1" />
         <interface type="workflow" endpoint="http://localhost:11020/oozie/"
-                   version="3.3.0" />
+                   version="4.0.1" />
         <interface type="registry" endpoint="thrift://localhost:29083"
                    version="0.11.0" />
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"

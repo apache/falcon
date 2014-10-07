@@ -76,7 +76,7 @@ public class ClusterEntityParserTest extends AbstractTestBase {
 
         Interface workflow = ClusterHelper.getInterface(cluster, Interfacetype.WORKFLOW);
         Assert.assertEquals(workflow.getEndpoint(), "http://localhost:11000/oozie/");
-        Assert.assertEquals(workflow.getVersion(), "3.1");
+        Assert.assertEquals(workflow.getVersion(), "4.0");
 
         Assert.assertEquals(ClusterHelper.getLocation(cluster, "staging"), "/projects/falcon/staging");
 

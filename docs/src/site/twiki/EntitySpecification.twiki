@@ -40,7 +40,7 @@ An execute interface specifies the interface for job tracker, it's endpoint is t
 Falcon uses this interface to submit the processes as jobs on !JobTracker defined here.
 
 <verbatim>
-<interface type="workflow" endpoint="http://localhost:11000/oozie/" version="3.1" />
+<interface type="workflow" endpoint="http://localhost:11000/oozie/" version="4.0" />
 </verbatim>
 A workflow interface specifies the interface for workflow engine, example of its endpoint is the value for OOZIE_URL.
 Falcon uses this interface to schedule the processes referencing this cluster on workflow engine defined here.
@@ -645,8 +645,8 @@ There are 2 engines supported today.
 ---++++ Oozie
 
 As part of oozie workflow engine support, users can embed a oozie workflow.
-Refer to oozie [[http://oozie.apache.org/docs/4.0.0/DG_Overview.html][workflow overview]] and
-[[http://oozie.apache.org/docs/4.0.0/WorkflowFunctionalSpec.html][workflow specification]] for details.
+Refer to oozie [[http://oozie.apache.org/docs/4.0.1/DG_Overview.html][workflow overview]] and
+[[http://oozie.apache.org/docs/4.0.1/WorkflowFunctionalSpec.html][workflow specification]] for details.
 
 Syntax:
 <verbatim>

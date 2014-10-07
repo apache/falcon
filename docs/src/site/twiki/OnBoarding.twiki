@@ -30,7 +30,7 @@ Cluster definition that contains end points for name node, job tracker, oozie an
 
         <interface type="execute" endpoint="job-tracker:54311" version="2.5.0" />
 
-        <interface type="workflow" endpoint="http://oozie.com:11000/oozie/" version="3.1.4" />
+        <interface type="workflow" endpoint="http://oozie.com:11000/oozie/" version="4.0.1" />
 
         <interface type="messaging" endpoint="tcp://jms-server.com:61616?daemon=true" version="5.1.6" />
     </interfaces>

@@ -35,6 +35,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-758 Discontinue support for Oozie-3.x (Peeyush Bishnoi via
+   Venkatesh Seetharam)
+
    FALCON-757 Discontinue support for Hadoop-1.x (Sowmya Ramesh via
    Venkatesh Seetharam)
 

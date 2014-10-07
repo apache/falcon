@@ -12,7 +12,8 @@ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m" && mvn clean install
 
 [optionally -Dhadoop.version=<<hadoop.version>> can be appended to build for a specific version of hadoop]
 *Note:* Falcon drops support for Hadoop-1 and only supports Hadoop-2 from Falcon 0.6 onwards
-[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie. Oozie versions >= 3.oozie-3.2.0-incubating are supported]
+[optionally -Doozie.version=<<oozie version>> can be appended to build with a specific version of oozie.
+Oozie versions >= 4 are supported]
 
 </verbatim>
 
@@ -247,9 +248,10 @@ bin/prism-stop
 cd <<project home>>
 src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 
+>> ex. src/bin/package.sh 1.1.2 4.0.1 or src/bin/package.sh 0.20.2-cdh3u5 4.0.1
 >> ex. src/bin/package.sh 2.5.0 4.0.0
 >> Falcon package is available in <<falcon home>>/target/falcon-<<version>>-bin.tar.gz
->> Oozie package is available in <<falcon home>>/target/oozie-3.3.2-distro.tar.gz
+>> Oozie package is available in <<falcon home>>/target/oozie-4.0.1-distro.tar.gz
 </verbatim>
 
 ---+++ Running Examples using embedded package

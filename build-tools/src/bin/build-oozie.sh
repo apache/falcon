@@ -40,11 +40,6 @@ then
 fi
 
 PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION.tar.gz"
-if [ $VERSION == '3.1.3-incubating' ]
-then
-    PKG_URL="http://archive.apache.org/dist/oozie/$VERSION/oozie-$VERSION-src.tar.gz"
-fi
-
 PKG=oozie-$VERSION
 
 mkdir -p ../target
@@ -60,23 +55,6 @@ sed -i.bak s/$VERSION\<\\/version\>/$BUILD_VERSION\<\\/version\>/g pom.xml */pom
 patch -p0 < ../../build-tools/src/patches/oozie-site.patch
 
 case $VERSION in
-3.2.0-incubating )
-    patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
-    patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
-    patch -p0 < ../../build-tools/src/patches/OOZIE-882.patch
-    ;;
-3.3.0 )
-    patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
-    patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
-    ;;
-3.3.1 )
-    patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6-3.2.0.patch
-    patch -p0 < ../../build-tools/src/patches/OOZIE-1465.patch
-    ;;
-3.3.2 )
-    patch -p0 < ../../build-tools/src/patches/OOZIE-674-v6.patch
-    patch -p0 < ../../build-tools/src/patches/OOZIE-1465-3.3.2.patch
-    ;;
 4.0.0 )
     patch -p1 --verbose < ../../build-tools/src/patches/OOZIE-1551-4.0.patch
     patch -p0 < ../../build-tools/src/patches/OOZIE-1741.patch

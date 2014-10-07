@@ -82,7 +82,7 @@ Cluster:
                    version="0.20.2"/>
         <interface type="execute" endpoint="localhost:41021" version="0.20.2"/>
         <interface type="workflow" endpoint="http://localhost:41000/oozie/"
-                   version="3.1"/>
+                   version="4.0"/>
         <interface type="messaging" endpoint="tcp://localhost:61616?daemon=true"
                    version="5.1.6"/>
         <interface type="registry" endpoint="Hcat" version="1"/>
