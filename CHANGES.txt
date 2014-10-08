@@ -112,6 +112,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-788 Lineage: Minor bug fixes (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-777 UT intermittent failures in Messaging tests depending on Thread.sleep
    (Sowmya Ramesh via Venkatesh Seetharam)
 
