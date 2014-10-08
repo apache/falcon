@@ -112,6 +112,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-777 UT intermittent failures in Messaging tests depending on Thread.sleep
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-773 Log clean up handlers only work in distributed mode
    (Balu Vellanki via Venkatesh Seetharam)
 

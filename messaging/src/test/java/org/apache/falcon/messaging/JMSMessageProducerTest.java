@@ -37,6 +37,7 @@ import javax.jms.Session;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Test for falcon topic message producer.
@@ -51,6 +52,7 @@ public class JMSMessageProducerTest {
     private List<MapMessage> mapMessages;
 
     private volatile AssertionError error;
+    private CountDownLatch latch = new CountDownLatch(1);
 
     @BeforeClass
     public void setup() throws Exception {
@@ -175,7 +177,9 @@ public class JMSMessageProducerTest {
             }
         };
         t.start();
-        Thread.sleep(100);
+
+        // Wait for consumer to be ready
+        latch.await();
 
         for (String[] message : messages) {
             WorkflowExecutionContext context = WorkflowExecutionContext.create(
@@ -200,6 +204,7 @@ public class JMSMessageProducerTest {
         Destination destination = session.createTopic(topicsToListen);
         MessageConsumer consumer = session.createConsumer(destination);
 
+        latch.countDown();
         mapMessages = new ArrayList<MapMessage>();
         for (int i=0; i<size; i++) {
             MapMessage m = (MapMessage) consumer.receive();
