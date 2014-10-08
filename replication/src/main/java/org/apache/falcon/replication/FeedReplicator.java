@@ -20,7 +20,6 @@ package org.apache.falcon.replication;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.EntityUtil;
-import org.apache.falcon.entity.Storage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -44,6 +43,7 @@ import java.util.regex.Pattern;
 public class FeedReplicator extends Configured implements Tool {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeedReplicator.class);
+    private static final String IGNORE = "IGNORE";
 
     public static void main(String[] args) throws Exception {
         ToolRunner.run(new Configuration(), new FeedReplicator(), args);
@@ -62,16 +62,15 @@ public class FeedReplicator extends Configured implements Tool {
         LOG.info("{} found conf ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
-        String falconFeedStorageType = cmd.getOptionValue("falconFeedStorageType").trim();
-        Storage.TYPE feedStorageType = Storage.TYPE.valueOf(falconFeedStorageType);
+        final boolean includePathSet = !IGNORE.equalsIgnoreCase(conf.get("falcon.include.path"));
 
-        DistCp distCp = (feedStorageType == Storage.TYPE.FILESYSTEM)
+        DistCp distCp = (includePathSet)
                 ? new CustomReplicator(conf, options)
                 : new DistCp(conf, options);
         LOG.info("Started DistCp");
         distCp.execute();
 
-        if (feedStorageType == Storage.TYPE.FILESYSTEM) {
+        if (includePathSet) {
             executePostProcessing(options);  // this only applies for FileSystem Storage.
         }
 
@@ -116,8 +115,7 @@ public class FeedReplicator extends Configured implements Tool {
         distcpOptions.setSyncFolder(true);
         distcpOptions.setBlocking(true);
         distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidthKB(Integer.valueOf(cmd.getOptionValue("mapBandwidthKB")));
-
+        distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidthKB")));
         return distcpOptions;
     }
 
