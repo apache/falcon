@@ -244,20 +244,51 @@ public final class OozieUtil {
         return false;
     }
 
+
     public static List<String> getMissingDependencies(ColoHelper helper, String bundleID)
-        throws OozieClientException {
-        BundleJob bundleJob = helper.getClusterHelper().getOozieClient().getBundleJobInfo(bundleID);
-        CoordinatorJob jobInfo =
-            helper.getClusterHelper().getOozieClient().getCoordJobInfo(
-                bundleJob.getCoordinators().get(0).getId());
-        List<CoordinatorAction> actions = jobInfo.getActions();
+            throws OozieClientException {
+        CoordinatorJob jobInfo;
+        jobInfo = null;
+        OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
+        BundleJob bundleJob = oozieClient.getBundleJobInfo(bundleID);
+        List<CoordinatorJob> coordinatorJobList = bundleJob.getCoordinators();
+        if (coordinatorJobList.size() > 1) {
 
-        if (actions.size() < 1) {
-            return null;
+            for (CoordinatorJob coord : bundleJob.getCoordinators()) {
+                LOGGER.info("Appname is : " + coord.getAppName());
+                if ((coord.getAppName().contains("DEFAULT") && coord.getAppName().contains("PROCESS"))
+                        ||
+                        (coord.getAppName().contains("REPLICATION") && coord.getAppName().contains("FEED")))
+                    jobInfo = oozieClient.getCoordJobInfo(coord.getId());
+                else {
+                    LOGGER.info("Desired coord does not exists on " + oozieClient.getOozieUrl());
+                }
+            }
+
         }
-        LOGGER.info("conf from event: " + actions.get(0).getMissingDependencies());
+        else {
+            jobInfo = oozieClient.getCoordJobInfo(bundleJob.getCoordinators().get(0).getId());
+        }
 
-        String[] missingDependencies = actions.get(0).getMissingDependencies().split("#");
+        LOGGER.info("Coordinator id : " + jobInfo);
+        List<CoordinatorAction> actions = null;
+        if (jobInfo != null) {
+            actions = jobInfo.getActions();
+        }
+
+        if (actions != null) {
+            if (actions.size() < 1) {
+                return null;
+            }
+        }
+        if (actions != null) {
+            LOGGER.info("conf from event: " + actions.get(0).getMissingDependencies());
+        }
+
+        String[] missingDependencies = new String[0];
+        if (actions != null) {
+            missingDependencies = actions.get(0).getMissingDependencies().split("#");
+        }
         return new ArrayList<String>(Arrays.asList(missingDependencies));
     }
 
@@ -473,5 +504,13 @@ public final class OozieUtil {
                         Arrays.asList(instance.getMissingDependencies().split("#")));
             }
         }
+    }
+
+    public static void validateRetryAttempts(ColoHelper helper, String bundleId,EntityType type, int attempts) throws OozieClientException {
+        OozieClient oozieClient = helper.getClusterHelper().getOozieClient();
+        CoordinatorJob coord = getDefaultOozieCoord(helper, bundleId,type);
+        int actualRun = oozieClient.getJobInfo(coord.getActions().get(0).getExternalId()).getRun();
+        LOGGER.info("Actual run count: " + actualRun); // wrt 0
+        Assert.assertEquals(actualRun, attempts, "Rerun attempts did not match");
     }
 }

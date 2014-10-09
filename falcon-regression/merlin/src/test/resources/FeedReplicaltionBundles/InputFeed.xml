@@ -17,7 +17,7 @@
   limitations under the License.
   -->
 
-<feed name="FETL-BillingRC" description="billing RC File" xmlns="uri:falcon:feed:0.1">
+<feed name="InputFeed" description="Input File" xmlns="uri:falcon:feed:0.1">
     <partitions>
         <partition name="colo"/>
         <partition name="eventTime"/>
@@ -27,8 +27,8 @@
     <frequency>minutes(5)</frequency>
     <late-arrival cut-off="days(100000)"/>
     <clusters>
-         <cluster name="clusterName" type="source">
-            <validity start="2012-07-20T03:00Z" end="2099-07-16T00:00Z"/>
+        <cluster name="lhr1-emerald" type="target" partition="${cluster.colo}">
+            <validity start="2012-07-20T00:00Z" end="2099-07-16T00:00Z"/>
             <retention limit="days(10000)" action="delete"/>
         </cluster>
     </clusters>
@@ -37,12 +37,11 @@
         <location type="stats" path="/data/regression/fetlrc/billing/stats"/>
         <location type="meta" path="/data/regression/fetlrc/billing/metadata"/>
     </locations>
-    <ACL owner="default" group="group" permission="0x755"/>
-    <schema location="/schemaLocaltion/" provider="protobuf"/>
+    <ACL owner="fetl" group="group" permission="0x755"/>
+    <schema location="/databus/streams_local/click_rr/schema/" provider="protobuf"/>
 
     <properties>
     <property name="field1" value="value1" />
     <property name="field2" value="value2" />
   </properties>
 </feed>
-

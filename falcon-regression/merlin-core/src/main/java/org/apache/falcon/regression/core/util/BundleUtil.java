@@ -44,6 +44,10 @@ public final class BundleUtil {
     }
     private static final Logger LOGGER = Logger.getLogger(BundleUtil.class);
 
+    public static Bundle readFeedReplicaltionBundle() throws IOException {
+        return readBundleFromFolder("FeedReplicaltionBundles");
+    }
+
     public static Bundle readLateDataBundle() throws IOException {
         return readBundleFromFolder("LateDataBundles");
     }
@@ -66,10 +70,6 @@ public final class BundleUtil {
 
     public static Bundle readHCat2Bundle() throws IOException {
         return readBundleFromFolder("hcat_2");
-    }
-
-    public static Bundle readLocalDCBundle() throws IOException {
-        return readBundleFromFolder("LocalDC_feedReplicaltion_BillingRC");
     }
 
     public static Bundle readUpdateBundle() throws IOException {

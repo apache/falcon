@@ -12,6 +12,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+
+   FALCON-631 add late data regression test for feed and process(Pragya
+   via Samarth Gupta)
    FALCON-701 HadoopUtil and Util classes documented (Paul Isaychuk via
    Raghav Kumar Gautam)
 

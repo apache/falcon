@@ -19,9 +19,9 @@
 
 <cluster name="ivory2-stg4" description="" colo="stg" xmlns="uri:falcon:cluster:0.1">
     <interfaces>
-        <interface type="readonly" endpoint="hftp://stg-nn.blue.ua2.inmobi.com:50070" version="2.5.0"/>
-        <interface type="execute" endpoint="stg-jt.blue.ua2.inmobi.com:54311" version="2.5.0"/>
-        <interface type="write" endpoint="hdfs://stg-nn.blue.ua2.inmobi.com:54310" version="2.5.0"/>
+        <interface type="readonly" endpoint="hftp://stg-nn.blue.ua2.inmobi.com:50070" version="0.20.2-cdh3u0"/>
+        <interface type="execute" endpoint="stg-jt.blue.ua2.inmobi.com:54311" version="0.20.2-cdh3u0"/>
+        <interface type="write" endpoint="hdfs://stg-nn.blue.ua2.inmobi.com:54310" version="0.20.2-cdh3u0"/>
         <interface type="messaging" endpoint="tcp://gs1134.blue.ua2.inmobi.com:61618?daemon=true" version="5.1.6"/>
         <interface type="workflow" endpoint="http://gs1134.blue.ua2.inmobi.com:11002/oozie/" version="3.1.4"/>
     </interfaces>
@@ -31,8 +31,8 @@
         <location name="working" path="/projects/ivory2/stg/working"/>
     </locations>
     <properties>
-        <property name="colo.name" value="ua2"/>
-        <property name="hbase.zookeeper.quorum" value="gs1001.grid.corp.inmobi.com"/>
+        <property name="colo.name" value="ua1"/>
+        <property name="hbase.zookeeper.quorum" value="192.168.138.115"/>
         <property name="hbase.zookeeper.property.clientPort" value="2181"/>
     </properties>
 </cluster>
