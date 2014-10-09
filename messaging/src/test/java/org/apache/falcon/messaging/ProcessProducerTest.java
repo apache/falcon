@@ -22,6 +22,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.commons.lang.StringUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -34,6 +35,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Test for process message producer.
@@ -47,14 +49,16 @@ public class ProcessProducerTest {
     private BrokerService broker;
 
     private volatile AssertionError error;
+    private CountDownLatch latch = new CountDownLatch(1);
+    private String[] outputFeedNames = {"click-logs", "raw-logs"};
+    private String[] outputFeedPaths = {"/click-logs/10/05/05/00/20", "/raw-logs/10/05/05/00/20"};
 
     @BeforeClass
     public void setup() throws Exception {
         args = new String[] {
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
-            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "click-logs,raw-logs",
-            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
-            "/click-logs/10/05/05/00/20,/raw-logs/10/05/05/00/20",
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeedNames, ","),
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(outputFeedPaths, ","),
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
             "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
             "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
@@ -103,7 +107,7 @@ public class ProcessProducerTest {
             }
         };
         t.start();
-        Thread.sleep(100);
+        latch.await();
 
         WorkflowExecutionContext context = WorkflowExecutionContext.create(
                 args, WorkflowExecutionContext.Type.POST_PROCESSING);
@@ -126,25 +130,17 @@ public class ProcessProducerTest {
         Destination destination = session.createTopic(getTopicName());
         MessageConsumer consumer = session.createConsumer(destination);
 
-        // wait till you get at least one message
-        MapMessage m;
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "click-logs");
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/click-logs/10/05/05/00/20");
+        latch.countDown();
 
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
+        for(int index = 0; index < outputFeedNames.length; ++index) {
+            MapMessage m = (MapMessage) consumer.receive();
+            System.out.println("Consumed: " + m.toString());
+            assertMessage(m);
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
+                    outputFeedNames[index]);
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
+                    outputFeedPaths[index]);
         }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "raw-logs");
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/raw-logs/10/05/05/00/20");
         connection.close();
     }
 

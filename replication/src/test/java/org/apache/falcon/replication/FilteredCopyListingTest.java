@@ -26,6 +26,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.tools.CopyListingFileStatus;
 import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.util.DistCpUtils;
 import org.testng.Assert;
@@ -117,6 +118,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         new FilteredCopyListing(new Configuration(), CREDENTIALS).buildListing(listingPath, options);
 
@@ -132,6 +134,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         Configuration configuration = new Configuration();
         configuration.set("falcon.include.path", "*/3/*");
@@ -149,6 +152,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         Configuration configuration = new Configuration();
         configuration.set("falcon.include.path", "*/3/?");
@@ -166,6 +170,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         Configuration configuration = new Configuration();
         configuration.set("falcon.include.path", "*/3/[47]");
@@ -183,6 +188,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         Configuration configuration = new Configuration();
         configuration.set("falcon.include.path", "*/3/40");
@@ -200,6 +206,7 @@ public class FilteredCopyListingTest {
         Path target = new Path(fileSystemPath.toString() + "///tmp/target");
         Path listingPath = new Path(fileSystemPath.toString() + "///tmp/META/fileList.seq");
         DistCpOptions options = new DistCpOptions(Arrays.asList(source), target);
+        options.setSyncFolder(true);
 
         Configuration configuration = new Configuration();
         configuration.set("falcon.include.path", "*/3/{4,7}");
@@ -212,13 +219,13 @@ public class FilteredCopyListingTest {
         SequenceFile.Reader reader = new SequenceFile.Reader(FileSystem.getLocal(new Configuration()),
                 listingPath, new Configuration());
         Text key = new Text();
-        FileStatus value = new FileStatus();
+        FileStatus value = new CopyListingFileStatus();
         Map<String, String> actualValues = new HashMap<String, String>();
         while (reader.next(key, value)) {
             actualValues.put(value.getPath().toString(), key.toString());
         }
 
-        Assert.assertEquals(expected == -1 ? EXPECTED_VALUES.size() : expected, actualValues.size());
+        Assert.assertEquals(actualValues.size(), expected == -1 ? EXPECTED_VALUES.size() : expected);
         for (Map.Entry<String, String> entry : actualValues.entrySet()) {
             Assert.assertEquals(entry.getValue(), EXPECTED_VALUES.get(entry.getKey()));
         }

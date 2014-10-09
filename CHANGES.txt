@@ -35,6 +35,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-20 Remove dependency on custom InMobi DistCp (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
    FALCON-758 Discontinue support for Oozie-3.x (Peeyush Bishnoi via
    Venkatesh Seetharam)
 
@@ -112,6 +115,16 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-786 FalconAuditFilter - Arguments in wrong order (Venkatesh Seetharam)
+
+   FALCON-789 Post processing is broken for Feeds (Sowmya Ramesh via
+   Venkatesh Seetharam)
+
+   FALCON-788 Lineage: Minor bug fixes (Sowmya Ramesh via Venkatesh Seetharam)
+
+   FALCON-777 UT intermittent failures in Messaging tests depending on Thread.sleep
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-773 Log clean up handlers only work in distributed mode
    (Balu Vellanki via Venkatesh Seetharam)
 

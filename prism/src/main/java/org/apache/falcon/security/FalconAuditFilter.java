@@ -68,7 +68,7 @@ public class FalconAuditFilter implements Filter {
 
         LOG.debug("Audit: {}/{} performed request {} ({}) at time {}",
                 who, fromAddress, whatURL, whatAddrs, whenISO9601);
-        GenericAlert.audit(who, fromHost, fromAddress, whatURL, whatAddrs, whenISO9601);
+        GenericAlert.audit(who, fromAddress, fromHost, whatURL, whatAddrs, whenISO9601);
     }
 
     private String getUserFromRequest(HttpServletRequest httpRequest) {

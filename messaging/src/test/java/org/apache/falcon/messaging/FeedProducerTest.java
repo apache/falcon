@@ -20,6 +20,7 @@ package org.apache.falcon.messaging;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -40,6 +41,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -61,6 +63,11 @@ public class FeedProducerTest {
     private volatile AssertionError error;
     private EmbeddedCluster dfsCluster;
     private Configuration conf;
+    private CountDownLatch latch = new CountDownLatch(1);
+    private String[] instancePaths = {"/falcon/feed/agg-logs/path1/2010/10/10/20",
+        "/falcon/feed/agg-logs/path1/2010/10/10/21",
+        "/falcon/feed/agg-logs/path1/2010/10/10/22",
+        "/falcon/feed/agg-logs/path1/2010/10/10/23", };
 
     @BeforeClass
     public void setup() throws Exception {
@@ -111,12 +118,7 @@ public class FeedProducerTest {
     public void testLogFile() throws Exception {
         FileSystem fs = dfsCluster.getFileSystem();
         OutputStream out = fs.create(logFile);
-        InputStream in = new ByteArrayInputStream(
-                ("instancePaths=/falcon/feed/agg-logs/path1/2010/10/10/20,"
-                        + "/falcon/feed/agg-logs/path1/2010/10/10/21,"
-                        + "/falcon/feed/agg-logs/path1/2010/10/10/22,"
-                        + "/falcon/feed/agg-logs/path1/2010/10/10/23")
-                        .getBytes());
+        InputStream in = new ByteArrayInputStream(("instancePaths=" + StringUtils.join(instancePaths, ",")).getBytes());
         IOUtils.copyBytes(in, out, conf);
         testProcessMessageCreator();
     }
@@ -150,8 +152,9 @@ public class FeedProducerTest {
             }
         };
         t.start();
-        Thread.sleep(100);
 
+        // Wait for consumer to be ready
+        latch.await();
         WorkflowExecutionContext context = WorkflowExecutionContext.create(
                 args, WorkflowExecutionContext.Type.POST_PROCESSING);
         JMSMessageProducer jmsMessageProducer = JMSMessageProducer.builder(context)
@@ -173,41 +176,23 @@ public class FeedProducerTest {
         Destination destination = session.createTopic(TOPIC_NAME);
         MessageConsumer consumer = session.createConsumer(destination);
 
-        // wait till you get atleast one message
-        MapMessage m;
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/falcon/feed/agg-logs/path1/2010/10/10/20");
-
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/falcon/feed/agg-logs/path1/2010/10/10/21");
-
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/falcon/feed/agg-logs/path1/2010/10/10/22");
-
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/falcon/feed/agg-logs/path1/2010/10/10/23");
+        latch.countDown();
+        verifyMesssage(consumer);
 
         connection.close();
+    }
+
+    private void verifyMesssage(MessageConsumer consumer) throws JMSException {
+        for (String instancePath : instancePaths) {
+            // receive call is blocking
+            MapMessage m = (MapMessage) consumer.receive();
+
+            System.out.println("Received JMS message {}" + m.toString());
+            System.out.println("Consumed: " + m.toString());
+            assertMessage(m);
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
+                    instancePath);
+        }
     }
 
     private void assertMessage(MapMessage m) throws JMSException {

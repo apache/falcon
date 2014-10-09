@@ -25,6 +25,7 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
 import org.apache.falcon.metadata.RelationshipType;
@@ -81,8 +82,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             response.put(TOTAL_SIZE, dimensionValues.length());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -117,8 +117,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
             vertexProperties.put("outVertices", getAdjacentVerticesJson(outEdges, Direction.IN));
 
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
         return Response.ok(vertexProperties).build();

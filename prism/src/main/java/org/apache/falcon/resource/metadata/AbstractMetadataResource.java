@@ -25,6 +25,9 @@ import org.apache.falcon.service.Services;
 
 import java.util.Set;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 /**
  * A base class for managing Metadata operations.
 ]*/
@@ -35,23 +38,36 @@ public abstract class AbstractMetadataResource {
     protected MetadataMappingService service;
 
     public AbstractMetadataResource() {
-        service = (MetadataMappingService)getService(MetadataMappingService.SERVICE_NAME);
+        FalconService falconService = getService(MetadataMappingService.SERVICE_NAME);
+        service = (falconService != null) ? (MetadataMappingService)falconService : null;
     }
 
-    public static FalconService getService(String serviceName) {
+    private static FalconService getService(String serviceName) {
         return (Services.get().isRegistered(serviceName))
                 ? Services.get().getService(serviceName) : null;
     }
 
     protected Graph getGraph() {
+        checkIfMetadataMappingServiceIsEnabled();
         return service.getGraph();
     }
 
     protected Set<String> getVertexIndexedKeys() {
+        checkIfMetadataMappingServiceIsEnabled();
         return service.getVertexIndexedKeys();
     }
 
     protected Set<String> getEdgeIndexedKeys() {
+        checkIfMetadataMappingServiceIsEnabled();
         return service.getEdgeIndexedKeys();
+    }
+
+    private void checkIfMetadataMappingServiceIsEnabled() {
+        if (service == null) {
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                    .entity("Lineage " + MetadataMappingService.SERVICE_NAME + " is not enabled.")
+                    .type("text/plain")
+                    .build());
+        }
     }
 }

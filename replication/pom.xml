@@ -42,6 +42,10 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-distcp</artifactId>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
@@ -55,11 +59,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hadoop.inmobi.tools</groupId>
-            <artifactId>hadoop-distcp</artifactId>
         </dependency>
 
         <dependency>

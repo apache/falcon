@@ -36,6 +36,7 @@ import java.io.IOException;
 public class CustomReplicator extends DistCp {
 
     private static final Logger LOG = LoggerFactory.getLogger(CustomReplicator.class);
+    private final DistCpOptions inputOptions;
 
     /**
      * Public Constructor. Creates DistCp object with specified input-parameters.
@@ -47,6 +48,7 @@ public class CustomReplicator extends DistCp {
      */
     public CustomReplicator(Configuration configuration, DistCpOptions inputOptions) throws Exception {
         super(configuration, inputOptions);
+        this.inputOptions = inputOptions;
     }
 
     @Override

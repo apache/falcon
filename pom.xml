@@ -109,7 +109,6 @@
         <activemq.version>5.4.3</activemq.version>
         <hive.version>0.11.0</hive.version>
         <hcatalog.version>0.11.0</hcatalog.version>
-        <hadoop-distcp.version>0.11</hadoop-distcp.version>
         <jetty.version>6.1.26</jetty.version>
         <jersey.version>1.9</jersey.version>
         <internal.maven.repo>file:///tmp/falcontemprepo</internal.maven.repo>
@@ -235,6 +234,13 @@
                                 <artifactId>hadoop-annotations</artifactId>
                             </exclusion>
                         </exclusions>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-distcp</artifactId>
+                        <version>${hadoop.version}</version>
+                        <scope>provided</scope>
                     </dependency>
                 </dependencies>
           </dependencyManagement>
@@ -776,24 +782,6 @@
                 <artifactId>oozie-webapp</artifactId>
                 <version>${oozie.buildversion}</version>
                 <type>war</type>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-auth</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.hadoop.inmobi.tools</groupId>
-                <artifactId>hadoop-distcp</artifactId>
-                <version>${hadoop-distcp.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>

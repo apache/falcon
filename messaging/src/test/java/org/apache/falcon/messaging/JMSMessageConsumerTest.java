@@ -76,7 +76,8 @@ public class JMSMessageConsumerTest {
         for (int i = 0; i < 3; i++) {
             WorkflowExecutionContext context = WorkflowExecutionContext.create(
                     getMockFalconMessage(i), WorkflowExecutionContext.Type.POST_PROCESSING);
-            context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1"));
+            context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1",
+                    "process", WorkflowExecutionContext.EntityOperations.GENERATE));
 
             MapMessage message = session.createMapMessage();
             for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {
@@ -89,7 +90,8 @@ public class JMSMessageConsumerTest {
 
         WorkflowExecutionContext context = WorkflowExecutionContext.create(
                 getMockFalconMessage(5), WorkflowExecutionContext.Type.POST_PROCESSING);
-        context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1"));
+        context.serialize(WorkflowExecutionContext.getFilePath("/tmp/log", "process1",
+                "process", WorkflowExecutionContext.EntityOperations.GENERATE));
 
         MapMessage mapMessage = session.createMapMessage();
         for (Map.Entry<WorkflowExecutionArgs, String> entry : context.entrySet()) {

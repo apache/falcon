@@ -33,6 +33,10 @@
                 <name>oozie.launcher.mapred.job.priority</name>
                 <value>${jobPriority}</value>
             </property>
+            <property>  <!-- DistCp jars -->
+                <name>oozie.action.sharelib.for.java</name>
+                <value>distcp</value>
+            </property>
         </configuration>
         <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
         <arg>-Dfalcon.include.path=${sourceRelativePaths}</arg>
@@ -48,7 +52,6 @@
         <arg>${distcpTargetPaths}</arg>
         <arg>-falconFeedStorageType</arg>
         <arg>${falconFeedStorageType}</arg>
-        <file>${wf:conf("falcon.libpath")}/hadoop-distcp.jar</file>
     </java>
     <ok to="succeeded-post-processing"/>
     <error to="failed-post-processing"/>

@@ -21,12 +21,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.falcon.workflow.FalconPostProcessing;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
+import org.apache.commons.lang.StringUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import javax.jms.*;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Test for validating the falcon post processing utility.
@@ -36,19 +38,20 @@ public class FalconPostProcessingTest {
     private String[] args;
     private static final String BROKER_URL = "vm://localhost?broker.useJmx=false&broker.persistent=true";
     private static final String BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
-    private static final String FALCON_TOPIC_NAME = "FALCON.ENTITY.TOPIC";
     private static final String ENTITY_NAME = "agg-coord";
     private BrokerService broker;
 
     private volatile AssertionError error;
+    private CountDownLatch latch = new CountDownLatch(1);
+    private String[] outputFeedNames = {"out-click-logs", "out-raw-logs"};
+    private String[] outputFeedPaths = {"/out-click-logs/10/05/05/00/20", "/out-raw-logs/10/05/05/00/20"};
 
     @BeforeClass
     public void setup() throws Exception {
         args = new String[]{
             "-" + WorkflowExecutionArgs.ENTITY_NAME.getName(), ENTITY_NAME,
-            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), "out-click-logs,out-raw-logs",
-            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(),
-            "/out-click-logs/10/05/05/00/20,/out-raw-logs/10/05/05/00/20",
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName(), StringUtils.join(outputFeedNames, ","),
+            "-" + WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName(), StringUtils.join(outputFeedPaths, ","),
             "-" + WorkflowExecutionArgs.WORKFLOW_ID.getName(), "workflow-01-00",
             "-" + WorkflowExecutionArgs.WORKFLOW_USER.getName(), "falcon",
             "-" + WorkflowExecutionArgs.RUN_ID.getName(), "1",
@@ -95,8 +98,8 @@ public class FalconPostProcessingTest {
             @Override
             public void run() {
                 try {
-                    consumer(BROKER_URL, "FALCON." + ENTITY_NAME);  // user message
-                    consumer(BROKER_URL, FALCON_TOPIC_NAME);  // falcon message
+                    // falcon message [FALCON_TOPIC_NAME] and user message ["FALCON." + ENTITY_NAME]
+                    consumer(BROKER_URL, "FALCON.>");
                 } catch (AssertionError e) {
                     error = e;
                 } catch (JMSException ignore) {
@@ -105,7 +108,8 @@ public class FalconPostProcessingTest {
             }
         };
         t.start();
-        Thread.sleep(1500);
+
+        latch.await();
         new FalconPostProcessing().run(this.args);
         t.join();
         if (error != null) {
@@ -122,18 +126,30 @@ public class FalconPostProcessingTest {
         Destination destination = session.createTopic(topic);
         MessageConsumer consumer = session.createConsumer(destination);
 
-        // wait till you get atleast one message
-        MapMessage m;
-        for (m = null; m == null;) {
-            m = (MapMessage) consumer.receive();
-        }
-        System.out.println("Consumed: " + m.toString());
+        latch.countDown();
 
-        assertMessage(m);
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()), "out-click-logs");
-        Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
-                "/out-click-logs/10/05/05/00/20");
+        // Verify user message
+        verifyMesssage(consumer);
+
+        // Verify falcon message
+        verifyMesssage(consumer);
+
         connection.close();
+    }
+
+    private void verifyMesssage(MessageConsumer consumer) throws JMSException {
+        for (int index = 0; index < outputFeedPaths.length; ++index) {
+            // receive call is blocking
+            MapMessage m = (MapMessage) consumer.receive();
+
+            System.out.println("Received JMS message {}" + m.toString());
+            System.out.println("Consumed: " + m.toString());
+            assertMessage(m);
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_NAMES.getName()),
+                    outputFeedNames[index]);
+            Assert.assertEquals(m.getString(WorkflowExecutionArgs.OUTPUT_FEED_PATHS.getName()),
+                    outputFeedPaths[index]);
+        }
     }
 
     private void assertMessage(MapMessage m) throws JMSException {

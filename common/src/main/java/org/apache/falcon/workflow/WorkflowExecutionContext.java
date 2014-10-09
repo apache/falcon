@@ -126,9 +126,7 @@ public class WorkflowExecutionContext {
     }
 
     public String getContextFile() {
-        return EntityType.PROCESS.name().equals(getEntityType())
-            ? getValue(WorkflowExecutionArgs.CONTEXT_FILE)
-            : "/context/" + getValue(WorkflowExecutionArgs.CONTEXT_FILE); // needed by feed clean up
+        return getValue(WorkflowExecutionArgs.CONTEXT_FILE);
     }
 
     public String getLogDir() {
@@ -326,9 +324,14 @@ public class WorkflowExecutionContext {
         }
     }
 
-    public static String getFilePath(String logDir, String entityName) {
+    public static String getFilePath(String logDir, String entityName, String entityType,
+                                     EntityOperations operation) {
+        // needed by feed clean up
+        String parentSuffix = EntityType.PROCESS.name().equals(entityType)
+                || EntityOperations.REPLICATE == operation ? "" : "/context/";
+
         // LOG_DIR is sufficiently unique
-        return new Path(logDir, entityName + "-wf-post-exec-context.json").toString();
+        return new Path(logDir + parentSuffix, entityName + "-wf-post-exec-context.json").toString();
     }
 
     public static WorkflowExecutionContext create(String[] args, Type type) throws FalconException {
@@ -346,12 +349,13 @@ public class WorkflowExecutionContext {
             throw new FalconException("Error parsing wf args", e);
         }
 
-        wfProperties.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
-        wfProperties.put(WorkflowExecutionArgs.CONTEXT_FILE,
-                getFilePath(wfProperties.get(WorkflowExecutionArgs.LOG_DIR),
-                        wfProperties.get(WorkflowExecutionArgs.ENTITY_NAME)));
+        WorkflowExecutionContext executionContext = new WorkflowExecutionContext(wfProperties);
+        executionContext.context.put(WorkflowExecutionArgs.CONTEXT_TYPE, type.name());
+        executionContext.context.put(WorkflowExecutionArgs.CONTEXT_FILE,
+                getFilePath(executionContext.getLogDir(), executionContext.getEntityName(),
+                        executionContext.getEntityType(), executionContext.getOperation()));
 
-        return new WorkflowExecutionContext(wfProperties);
+        return executionContext;
     }
 
     private static CommandLine getCommand(String[] arguments) throws ParseException {

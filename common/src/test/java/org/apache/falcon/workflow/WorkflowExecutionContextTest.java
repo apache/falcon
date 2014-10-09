@@ -96,7 +96,8 @@ public class WorkflowExecutionContextTest {
     @Test
     public void testGetContextFile() throws Exception {
         Assert.assertEquals(context.getContextFile(),
-                WorkflowExecutionContext.getFilePath(context.getLogDir(), context.getEntityName()));
+                WorkflowExecutionContext.getFilePath(context.getLogDir(), context.getEntityName(),
+                        context.getEntityType(), context.getOperation()));
     }
 
     @Test
@@ -257,9 +258,30 @@ public class WorkflowExecutionContextTest {
     }
 
     @Test
-    public void testGetFilePath() throws Exception {
-        Assert.assertEquals(WorkflowExecutionContext.getFilePath(LOGS_DIR, ENTITY_NAME),
+    public void testGetFilePathForProcess() throws Exception {
+        final String filePath = WorkflowExecutionContext.getFilePath(LOGS_DIR,
+                ENTITY_NAME, "PROCESS", WorkflowExecutionContext.EntityOperations.GENERATE);
+        Assert.assertEquals(filePath,
                 LOGS_DIR + "/" + ENTITY_NAME + "-wf-post-exec-context.json");
+        Assert.assertEquals(context.getContextFile(), filePath);
+    }
+
+
+    @Test
+    public void testGetFilePathForFeedRetention() throws Exception {
+        final String filePath = WorkflowExecutionContext.getFilePath(LOGS_DIR,
+                ENTITY_NAME, "FEED", WorkflowExecutionContext.EntityOperations.DELETE);
+        Assert.assertEquals(filePath,
+                LOGS_DIR + "/context/" + ENTITY_NAME + "-wf-post-exec-context.json");
+    }
+
+    @Test
+    public void testGetFilePathForFeedReplication() throws Exception {
+        final String filePath = WorkflowExecutionContext.getFilePath(LOGS_DIR,
+                ENTITY_NAME, "FEED", WorkflowExecutionContext.EntityOperations.REPLICATE);
+        Assert.assertEquals(filePath,
+                LOGS_DIR + "/" + ENTITY_NAME + "-wf-post-exec-context.json");
+        Assert.assertEquals(context.getContextFile(), filePath);
     }
 
     private static String[] getTestMessageArgs() {

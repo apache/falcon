@@ -26,6 +26,7 @@ import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONMode;
 import com.tinkerpop.blueprints.util.io.graphson.GraphSONUtility;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconWebException;
 import org.apache.falcon.metadata.GraphUtils;
 import org.apache.falcon.metadata.RelationshipLabel;
 import org.apache.falcon.metadata.RelationshipProperty;
@@ -69,7 +70,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Path("/serialize")
     @Produces({MediaType.APPLICATION_JSON})
     public Response serializeGraph() {
-        checkIfMetadataMappingServiceIsEnabled();
         String file = StartupProperties.get().getProperty("falcon.graph.serialize.path")
                 + "/lineage-graph-" + System.currentTimeMillis() + ".json";
         LOG.info("Serialize Graph to: {}", file);
@@ -77,8 +77,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             GraphUtils.dump(getGraph(), file);
             return Response.ok().build();
         } catch (Exception e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -92,14 +91,12 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Path("/vertices/all")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVertices() {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get All Vertices");
         try {
             JSONObject response = buildJSONResponse(getGraph().getVertices());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -113,7 +110,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Path("/vertices/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVertex(@PathParam("id") final String vertexId) {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex for vertexId= {}", vertexId);
         validateInputs("Invalid argument: vertex id passed is null or empty.", vertexId);
         try {
@@ -124,8 +120,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     vertex, getVertexIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -153,7 +148,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     public Response getVertexProperties(@PathParam("id") final String vertexId,
                                         @DefaultValue("false") @QueryParam("relationships")
                                         final String relationships) {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex for vertexId= {}", vertexId);
         validateInputs("Invalid argument: vertex id passed is null or empty.", vertexId);
         try {
@@ -166,8 +160,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             response.put(TOTAL_SIZE, vertexProperties.size());
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -253,7 +246,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVertices(@QueryParam("key") final String key,
                                 @QueryParam("value") final String value) {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertices for property key= {}, value= {}", key, value);
         validateInputs("Invalid argument: key or value passed is null or empty.", key, value);
         try {
@@ -261,8 +253,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return Response.ok(response).build();
 
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -278,7 +269,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getVertexEdges(@PathParam("id") String vertexId,
                                    @PathParam("direction") String direction) {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex edges for vertexId= {}, direction= {}", vertexId, direction);
         // Validate vertex id. Direction is validated in VertexQueryArguments.
         validateInputs("Invalid argument: vertex id or direction passed is null or empty.", vertexId, direction);
@@ -288,8 +278,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
             return getVertexEdges(vertex, direction);
 
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -347,15 +336,13 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Path("/edges/all")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getEdges() {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get All Edges.");
         try {
             JSONObject response = buildJSONResponse(getGraph().getEdges());
             return Response.ok(response).build();
 
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -369,7 +356,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     @Path("/edges/{id}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getEdge(@PathParam("id") final String edgeId) {
-        checkIfMetadataMappingServiceIsEnabled();
         LOG.info("Get vertex for edgeId= {}", edgeId);
         validateInputs("Invalid argument: edge id passed is null or empty.", edgeId);
         try {
@@ -386,8 +372,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
                     edge, getEdgeIndexedKeys(), GraphSONMode.NORMAL));
             return Response.ok(response).build();
         } catch (JSONException e) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(JSONObject.quote("An error occurred: " + e.getMessage())).build());
+            throw FalconWebException.newException(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -405,16 +390,6 @@ public class LineageMetadataResource extends AbstractMetadataResource {
         response.put(TOTAL_SIZE, counter);
 
         return response;
-    }
-
-    private void checkIfMetadataMappingServiceIsEnabled() {
-        if (service == null) {
-            throw new WebApplicationException(
-                    Response.status(Response.Status.NOT_FOUND)
-                            .entity("Lineage Metadata Service is not enabled.")
-                            .type("text/plain")
-                            .build());
-        }
     }
 
     private static void validateInputs(String errorMsg, String... inputs) {
