@@ -157,11 +157,30 @@ public final class AssertUtil {
      * @throws JAXBException
      */
     public static void assertSucceeded(ServiceResponse response) throws JAXBException {
-        Assert.assertEquals(Util.parseResponse(response).getStatus(),
+        final APIResult apiResult = Util.parseResponse(response);
+        Assert.assertEquals(apiResult.getStatus(),
             APIResult.Status.SUCCEEDED, "Status should be SUCCEEDED");
-        Assert.assertEquals(Util.parseResponse(response).getStatusCode(), 200,
+        Assert.assertEquals(apiResult.getStatusCode(), 200,
             "Status code should be 200");
-        Assert.assertNotNull(Util.parseResponse(response).getMessage(), "Status message is null");
+        Assert.assertNotNull(apiResult.getMessage(), "Status message is null");
+    }
+
+    /**
+     * Checks that ServiceResponse status is SUCCEEDED.
+     *
+     * @param response ServiceResponse
+     * @return if the response was a success or not
+     */
+    public static boolean checkSucceeded(ServiceResponse response) {
+        final APIResult apiResult;
+        try {
+            apiResult = Util.parseResponse(response);
+        } catch (JAXBException e) {
+            return false;
+        }
+        return apiResult.getStatus() == APIResult.Status.SUCCEEDED
+            && apiResult.getStatusCode() == 200
+            && apiResult.getMessage() != null;
     }
 
     /**

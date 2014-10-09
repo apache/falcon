@@ -18,6 +18,11 @@
 
 package org.apache.falcon.regression.core.util;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.testng.Assert;
+
+import java.util.Arrays;
+
 public class MathUtil {
     private MathUtil() {
         throw new AssertionError("Instantiating utility class...");
@@ -56,5 +61,16 @@ public class MathUtil {
             }
         }
         return result;
+    }
+
+    public static Object[][] append(Object[][] arr1, Object[][] arr2) {
+        Assert.assertFalse(ArrayUtils.isEmpty(arr1), "arr1 can't be empty:"
+            + Arrays.deepToString(arr1));
+        Assert.assertFalse(ArrayUtils.isEmpty(arr2), "arr2 can't be empty:"
+            + Arrays.deepToString(arr2));
+        Assert.assertEquals(arr1[0].length, arr2[0].length, "Array rows are not compatible. "
+            + "row of first array: " + Arrays.deepToString(arr1[0])
+            + "row of second array: " + Arrays.deepToString(arr2[0]));
+        return (Object[][]) ArrayUtils.addAll(arr1, arr2);
     }
 }

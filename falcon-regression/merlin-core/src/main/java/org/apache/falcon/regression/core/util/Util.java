@@ -595,6 +595,7 @@ public final class Util {
         LIST_URL("/api/entities/list"),
         SUBMIT_URL("/api/entities/submit"),
         GET_ENTITY_DEFINITION("/api/entities/definition"),
+        DEPENDENCIES("/api/entities/dependencies"),
         DELETE_URL("/api/entities/delete"),
         SCHEDULE_URL("/api/entities/schedule"),
         VALIDATE_URL("/api/entities/validate"),

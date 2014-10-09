@@ -21,6 +21,7 @@ package org.apache.falcon.regression.Entities;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.regression.core.util.Util;
 import org.testng.Assert;
@@ -80,5 +81,16 @@ public class ClusterMerlin extends Cluster {
         final HashMap<String, String> nameMap = new HashMap<String, String>(1);
         nameMap.put(oldName, newName);
         return nameMap;
+    }
+
+    /**
+     * Set ACL.
+     */
+    public void setACL(String owner, String group, String permission) {
+        ACL acl = new ACL();
+        acl.setOwner(owner);
+        acl.setGroup(group);
+        acl.setPermission(permission);
+        this.setACL(acl);
     }
 }

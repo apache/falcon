@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.Clusters;
@@ -173,4 +174,16 @@ public class FeedMerlin extends Feed {
             }
         }
     }
+
+    /**
+     * Set ACL.
+     */
+    public void setACL(String owner, String group, String permission) {
+        ACL acl = new ACL();
+        acl.setOwner(owner);
+        acl.setGroup(group);
+        acl.setPermission(permission);
+        this.setACL(acl);
+    }
+
 }

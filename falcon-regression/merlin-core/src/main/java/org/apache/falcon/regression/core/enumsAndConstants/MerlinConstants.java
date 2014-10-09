@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import java.util.HashMap;
 
 /**
- * Class for test contants.
+ * Class for test constants.
  */
 public final class MerlinConstants {
     private MerlinConstants() {
@@ -37,9 +37,22 @@ public final class MerlinConstants {
 
     public static final boolean IS_SECURE =
         "kerberos".equals(new Configuration().get("hadoop.security.authentication", "simple"));
+    /** the user that is going to run tests. */
     public static final String CURRENT_USER_NAME = System.getProperty("user.name");
-    private static final String CURRENT_USER_KEYTAB_STR =
-        "current_user_keytab";
+    /** keytab of current user. */
+    private static final String CURRENT_USER_KEYTAB_STR = "current_user_keytab";
+    /** group of the current user. */
+    public static final String CURRENT_USER_GROUP =
+        Config.getProperty("current_user.group.name", "users");
+
+    /** a user that does not belong to the group of current user. */
+    public static final String DIFFERENT_USER = Config.getProperty("other.user.name", "root");
+
+    /** falcon admin user: the user that started falcon prism/server processes. */
+    public static final String ADMIN_USER_NAME = Config.getProperty("admin.user.name", "falcon");
+
+    /** a user that belongs to falcon admin group but is not same as falcon admin user. */
+    public static final String ADMIN2_USER_NAME = Config.getProperty("admin2.user.name", "falcon2");
     private static final String USER_2_NAME_STR = "user2_name";
     private static final String USER_2_KEYTAB_STR = "user2_keytab";
     public static final String USER2_NAME;
@@ -64,6 +77,9 @@ public final class MerlinConstants {
         keyTabMap = new HashMap<String, String>();
         keyTabMap.put(CURRENT_USER_NAME, currentUserKeytab);
         keyTabMap.put(user2Name, user2Keytab);
+        keyTabMap.put(ADMIN_USER_NAME, Config.getProperty("admin.user.keytab"));
+        keyTabMap.put(ADMIN2_USER_NAME, Config.getProperty("admin2.user.keytab"));
+        keyTabMap.put(DIFFERENT_USER, Config.getProperty("other.user.keytab"));
     }
 
     public static String getKeytabForUser(String user) {

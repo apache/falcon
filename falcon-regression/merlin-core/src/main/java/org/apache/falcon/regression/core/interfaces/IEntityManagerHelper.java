@@ -361,6 +361,12 @@ public abstract class IEntityManagerHelper {
             getEntityType(), getEntityName(data) + colo), "get", user);
     }
 
+    public ServiceResponse getEntityDependencies(String data, String user)
+        throws IOException, URISyntaxException, AuthenticationException {
+        return Util.sendRequest(createUrl(this.hostname + URLS.DEPENDENCIES.getValue(),
+            getEntityType(), getEntityName(data) + colo), "get", user);
+    }
+
     public InstancesResult getRunningInstance(String name)
         throws IOException, URISyntaxException, AuthenticationException {
         return getRunningInstance(name, null);

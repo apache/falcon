@@ -47,22 +47,23 @@ public final class CleanupUtil {
 
     public static List<String> getAllProcesses(ColoHelper prism)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        return getAllEntitiesOfOneType(prism.getProcessHelper());
+        return getAllEntitiesOfOneType(prism.getProcessHelper(), null);
     }
 
     public static List<String> getAllFeeds(ColoHelper prism)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        return getAllEntitiesOfOneType(prism.getFeedHelper());
+        return getAllEntitiesOfOneType(prism.getFeedHelper(), null);
     }
 
     public static List<String> getAllClusters(ColoHelper prism)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        return getAllEntitiesOfOneType(prism.getClusterHelper());
+        return getAllEntitiesOfOneType(prism.getClusterHelper(), null);
     }
 
-    private static List<String> getAllEntitiesOfOneType(IEntityManagerHelper iEntityManagerHelper)
+    public static List<String> getAllEntitiesOfOneType(IEntityManagerHelper iEntityManagerHelper,
+                                                       String user)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        final EntitiesResult entitiesResult = getEntitiesResultOfOneType(iEntityManagerHelper);
+        final EntitiesResult entitiesResult = getEntitiesResultOfOneType(iEntityManagerHelper, user);
         List<String> clusters = new ArrayList<String>();
         for (EntityResult entity : entitiesResult.getEntities()) {
             clusters.add(entity.getName());
@@ -71,9 +72,9 @@ public final class CleanupUtil {
     }
 
     private static EntitiesResult getEntitiesResultOfOneType(
-        IEntityManagerHelper iEntityManagerHelper)
+        IEntityManagerHelper iEntityManagerHelper, String user)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        final ServiceResponse clusterResponse = iEntityManagerHelper.listEntities();
+        final ServiceResponse clusterResponse = iEntityManagerHelper.listEntities(user);
         JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
         Unmarshaller u = jc.createUnmarshaller();
         return (EntitiesResult) u.unmarshal(

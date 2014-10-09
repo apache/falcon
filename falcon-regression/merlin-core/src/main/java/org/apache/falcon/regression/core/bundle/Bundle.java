@@ -1024,4 +1024,33 @@ public class Bundle {
         process.setPipelineTag(pipelines);
         setProcessData(process.toString());
     }
+
+    /**
+     * Set ACL of bundle's cluster.
+     */
+    public void setCLusterACL(String owner, String group, String permission) {
+        ClusterMerlin clusterMerlin = getClusterElement();
+        clusterMerlin.setACL(owner, group, permission);
+        writeClusterElement(clusterMerlin);
+
+    }
+
+    /**
+     * Set ACL of bundle's input feed.
+     */
+    public void setInputFeedACL(String owner, String group, String permission) {
+        String feedName = getInputFeedNameFromBundle();
+        FeedMerlin feedMerlin = getFeedElement(feedName);
+        feedMerlin.setACL(owner, group, permission);
+        writeFeedElement(feedMerlin, feedName);
+    }
+
+    /**
+     * Set ACL of bundle's process.
+     */
+    public void setProcessACL(String owner, String group, String permission) {
+        ProcessMerlin processMerlin = getProcessObject();
+        processMerlin.setACL(owner, group, permission);
+        setProcessData(processMerlin.toString());
+    }
 }

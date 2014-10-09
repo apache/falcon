@@ -23,6 +23,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.process.ACL;
 import org.apache.falcon.entity.v0.process.Cluster;
 import org.apache.falcon.entity.v0.process.Clusters;
 import org.apache.falcon.entity.v0.process.Input;
@@ -252,6 +253,18 @@ public class ProcessMerlin extends Process {
             this.pipelines = null;
         }
     }
+
+    /**
+     * Set ACL.
+     */
+    public void setACL(String owner, String group, String permission) {
+        ACL acl = new ACL();
+        acl.setOwner(owner);
+        acl.setGroup(group);
+        acl.setPermission(permission);
+        this.setACL(acl);
+    }
+
 }
 
 
