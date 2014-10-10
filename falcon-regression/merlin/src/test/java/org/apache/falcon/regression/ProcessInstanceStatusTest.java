@@ -154,6 +154,7 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusEndOutOfRange() throws Exception {
+        HadoopUtil.deleteDirIfExists(baseTestHDFSDir + "/input", clusterFS);
         bundles[0].setOutputFeedPeriodicity(5, TimeUnit.minutes);
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
