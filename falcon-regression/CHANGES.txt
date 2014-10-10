@@ -14,9 +14,12 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-798 optionalTest_updateProcessMakeOptionalCompulsory fixed (Paul
+   Isaychuk via Raghav Kumar Gautam)
 
    FALCON-631 add late data regression test for feed and process(Pragya
    via Samarth Gupta)
+
    FALCON-701 HadoopUtil and Util classes documented (Paul Isaychuk via
    Raghav Kumar Gautam)
 
