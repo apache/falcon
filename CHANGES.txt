@@ -115,6 +115,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-792 Integration test EntityManagerPaginationJerseyIT fails
+   occasionally (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-787 FalconCLI - Submit recipe failed (Sowmya Ramesh via
    Venkatesh Seetharam)
 

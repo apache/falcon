@@ -68,7 +68,7 @@ public class EntityManagerPaginationJerseyIT {
     public void testPagination() {
         ClientResponse response = context.service
                 .path("api/entities/list/process/")
-                .queryParam("filterBy", "TYPE:PROCESS,STATUS:RUNNING")
+                .queryParam("filterBy", "TYPE:PROCESS")
                 .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
                 .queryParam("orderBy", "name").queryParam("sortOrder", "desc").queryParam("offset", "2")
                 .queryParam("numResults", "2").queryParam("fields", "status,tags")
