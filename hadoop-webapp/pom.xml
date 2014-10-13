@@ -115,6 +115,12 @@
                     <artifactId>jersey-core</artifactId>
                     <scope>compile</scope>
                 </dependency>
+
+                <dependency>
+                    <groupId>org.codehaus.jettison</groupId>
+                    <artifactId>jettison</artifactId>
+                    <scope>compile</scope>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>

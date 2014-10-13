@@ -115,6 +115,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-800 Falcon lineage is not working (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-792 Integration test EntityManagerPaginationJerseyIT fails
    occasionally (Balu Vellanki via Venkatesh Seetharam)
 
