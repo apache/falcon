@@ -14,6 +14,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-706 Parse json with instances to InstancesResult using joda's DateTime (Ruslan
+   Ostafiychuk)
+
    FALCON-798 optionalTest_updateProcessMakeOptionalCompulsory fixed (Paul
    Isaychuk via Raghav Kumar Gautam)
 

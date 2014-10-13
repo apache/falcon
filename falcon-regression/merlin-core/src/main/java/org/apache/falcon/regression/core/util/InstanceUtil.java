@@ -19,6 +19,10 @@
 package org.apache.falcon.regression.core.util;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -59,6 +63,7 @@ import org.apache.oozie.client.Job.Status;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
+import org.joda.time.DateTime;
 import org.testng.Assert;
 
 import java.io.BufferedReader;
@@ -66,9 +71,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -167,15 +174,14 @@ public final class InstanceUtil {
             r.setStatusCode(400);
             return r;
         }
-        if (url.contains("/summary/")) {
-            r = new GsonBuilder().setPrettyPrinting().create()
-                    .fromJson(jsonString, InstancesSummaryResult.class);
-        } else {
-
-            r = new GsonBuilder().create()
-                    .fromJson(jsonString, InstancesResult.class);
-        }
-
+        r = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
+                @Override
+                public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c)
+                    throws JsonParseException {
+                    return new DateTime(json.getAsString()).toDate();
+                }
+            }).create().fromJson(jsonString,
+            url.contains("/summary/") ? InstancesSummaryResult.class : InstancesResult.class);
         LOGGER.info("r.getMessage(): " + r.getMessage());
         LOGGER.info("r.getStatusCode(): " + r.getStatusCode());
         LOGGER.info("r.getStatus() " + r.getStatus());
