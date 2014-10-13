@@ -1040,8 +1040,11 @@ public class FalconClient {
 
     public String submitRecipe(String recipeName,
                                String recipeToolClassName) throws FalconCLIException {
-        String recipePath = clientProperties.getProperty("falcon.recipe.path",
-            System.getProperty("falcon.home"));
+        String recipePath = clientProperties.getProperty("falcon.recipe.path");
+
+        if (StringUtils.isEmpty(recipePath)) {
+            throw new FalconCLIException("falcon.recipe.path is not set in client.properties");
+        }
 
         String recipeFilePath = recipePath + File.separator + recipeName + TEMPLATE_SUFFIX;
         File file = new File(recipeFilePath);
@@ -1055,7 +1058,7 @@ public class FalconClient {
             throw new FalconCLIException("Recipe properties file does not exist : " + propertiesFilePath);
         }
 
-        String processFile = null;
+        String processFile;
         try {
             String prefix =  "falcon-recipe" + "-" + System.currentTimeMillis();
             File tmpPath = new File("/tmp");
@@ -1082,12 +1085,9 @@ public class FalconClient {
                 RecipeTool.main(args);
             }
             validate(EntityType.PROCESS.toString(), processFile);
-            String result = submitAndSchedule(EntityType.PROCESS.toString(), processFile);
-            return result + System.getProperty("line.separator") + "Submitted process entity: " + processFile;
+            return submitAndSchedule(EntityType.PROCESS.toString(), processFile);
         } catch (Exception e) {
-            String msg = (processFile == null) ? e.getMessage()
-                : e.getMessage() + System.getProperty("line.separator") + "Submitted process entity: " + processFile;
-            throw new FalconCLIException(msg, e);
+            throw new FalconCLIException(e.getMessage(), e);
         }
     }
 

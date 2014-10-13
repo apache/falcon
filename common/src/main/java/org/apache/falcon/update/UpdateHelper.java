@@ -132,7 +132,7 @@ public final class UpdateHelper {
 
             //Get checksum from user wf/lib
             Map<String, String> wfPaths = checksumAndCopy(fs, new Path(process.getWorkflow().getPath()), null);
-            if (process.getWorkflow().getLib() != null) {
+            if (StringUtils.isNotEmpty(process.getWorkflow().getLib())) {
                 wfPaths.putAll(checksumAndCopy(fs, new Path(process.getWorkflow().getLib()), null));
             }
 

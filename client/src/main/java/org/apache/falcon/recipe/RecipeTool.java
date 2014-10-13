@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -71,17 +72,20 @@ public class RecipeTool extends Configured implements Tool {
         Properties recipeProperties = loadProperties(recipePropertiesFilePath);
         validateProperties(recipeProperties);
 
-        validateArtifacts(recipeProperties);
-        String recipeName = FilenameUtils.getBaseName(recipePropertiesFilePath);
-
         FileSystem fs = getFileSystemForHdfs(recipeProperties);
+
+        validateArtifacts(recipeProperties, fs);
+
+        String recipeName = FilenameUtils.getBaseName(recipePropertiesFilePath);
         copyFilesToHdfsIfRequired(recipeProperties, fs, recipeName);
 
         Map<String, String> overlayMap = getOverlay(recipeProperties);
-        overlayParametersOverTemplate(argMap.get(RecipeToolArgs.RECIPE_FILE_ARG), argMap.get(RecipeToolArgs
-                .RECIPE_PROCESS_XML_FILE_PATH_ARG), overlayMap);
+        String processFilename = overlayParametersOverTemplate(argMap.get(RecipeToolArgs.RECIPE_FILE_ARG),
+                argMap.get(RecipeToolArgs.RECIPE_PROCESS_XML_FILE_PATH_ARG), overlayMap);
+        System.out.println("Generated process file to be scheduled: ");
+        System.out.println(FileUtils.readFileToString(new File(processFilename)));
 
-        System.out.println("Completed disaster recovery");
+        System.out.println("Completed recipe processing");
         return 0;
     }
 
@@ -130,19 +134,24 @@ public class RecipeTool extends Configured implements Tool {
         }
     }
 
-    private static void validateArtifacts(final Properties recipeProperties) throws Exception{
+    private static void validateArtifacts(final Properties recipeProperties, final FileSystem fs) throws Exception{
         // validate the WF path
         String wfPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_PATH.getName());
 
-        // If the file doesn't exist locally throw exception
-        if (!StringUtils.isEmpty(wfPath) && !doesFileExist(wfPath)) {
-            throw new Exception("Recipe workflow file does not exist : " + wfPath);
+        // Check if file exists on HDFS
+        if (StringUtils.isNotEmpty(wfPath) && !fs.exists(new Path(wfPath))) {
+            // If the file doesn't exist locally throw exception
+            if (!doesFileExist(wfPath)) {
+                throw new Exception("Recipe workflow file does not exist : " + wfPath + " on local FS or HDFS");
+            }
         }
 
         // validate lib path
         String libPath = recipeProperties.getProperty(RecipeToolOptions.WORKFLOW_LIB_PATH.getName());
-        if (!StringUtils.isEmpty(libPath) && !doesFileExist(libPath)) {
-            throw new Exception("Recipe lib file path does not exist : " + libPath);
+        if (StringUtils.isNotEmpty(libPath) && !fs.exists(new Path(libPath))) {
+            if (!doesFileExist(libPath)) {
+                throw new Exception("Recipe lib file path does not exist : " + libPath + " on local FS or HDFS");
+            }
         }
     }
 
@@ -177,7 +186,8 @@ public class RecipeTool extends Configured implements Tool {
                     String variable = line.substring(matcher.start(), matcher.end());
                     String paramString = overlay.get(variable.substring(2, variable.length() - 2));
                     if (paramString == null) {
-                        throw new Exception("Match not found for the template: " + variable);
+                        throw new Exception("Match not found for the template: " + variable
+                                + ". Please add it in recipe properties file");
                     }
                     line = line.replace(variable, paramString);
                     matcher = RECIPE_VAR_PATTERN.matcher(line);
@@ -195,39 +205,50 @@ public class RecipeTool extends Configured implements Tool {
     private static void copyFilesToHdfsIfRequired(final Properties recipeProperties,
                                                   final FileSystem fs,
                                                   final String recipeName) throws Exception {
+
+        String hdfsPath = HDFS_WF_PATH + recipeName + File.separator;
+
         String recipeWfPathName = RecipeToolOptions.WORKFLOW_PATH.getName();
         String wfPath = recipeProperties.getProperty(recipeWfPathName);
         String wfPathValue;
 
-        String hdfsPath = HDFS_WF_PATH + recipeName + File.separator;
-        if (!StringUtils.isEmpty(wfPath)) {
+        // Copy only if files are on local FS
+        if (StringUtils.isNotEmpty(wfPath) && !fs.exists(new Path(wfPath))) {
             createDirOnHdfs(hdfsPath, fs);
             if (new File(wfPath).isDirectory()) {
                 wfPathValue = hdfsPath + getLastPartOfPath(wfPath);
+                copyFileFromLocalToHdfs(wfPath, hdfsPath, true, wfPathValue, fs);
             } else {
                 wfPathValue = hdfsPath + new File(wfPath).getName();
+                copyFileFromLocalToHdfs(wfPath, hdfsPath, false, null, fs);
             }
-            copyFileFromLocalToHdfs(wfPath, hdfsPath, fs);
             // Update the property with the hdfs path
-            recipeProperties.setProperty(recipeWfPathName, wfPathValue);
-            System.out.println("recipeWfPathName: " + recipeProperties.getProperty(recipeWfPathName));
+            recipeProperties.setProperty(recipeWfPathName,
+                    fs.getFileStatus(new Path(wfPathValue)).getPath().toString());
+            System.out.println("Copied WF to: " + recipeProperties.getProperty(recipeWfPathName));
         }
 
         String recipeWfLibPathName = RecipeToolOptions.WORKFLOW_LIB_PATH.getName();
         String libPath = recipeProperties.getProperty(recipeWfLibPathName);
         String libPathValue;
-        if (!StringUtils.isEmpty(libPath)) {
+        // Copy only if files are on local FS
+        boolean isLibPathEmpty = StringUtils.isEmpty(libPath);
+        if (!isLibPathEmpty && !fs.exists(new Path(libPath))) {
             if (new File(libPath).isDirectory()) {
                 libPathValue = hdfsPath + getLastPartOfPath(libPath);
-                copyFileFromLocalToHdfs(libPath, hdfsPath, fs);
+                copyFileFromLocalToHdfs(libPath, hdfsPath, true, libPathValue, fs);
             } else {
                 libPathValue = hdfsPath + "lib" + File.separator + new File(libPath).getName();
-                copyFileFromLocalToHdfs(libPath, libPathValue, fs);
+                copyFileFromLocalToHdfs(libPath, libPathValue, false, null, fs);
             }
 
             // Update the property with the hdfs path
-            recipeProperties.setProperty(recipeWfLibPathName, libPathValue);
-            System.out.println("recipeWfLibPathName: " + recipeProperties.getProperty(recipeWfLibPathName));
+            recipeProperties.setProperty(recipeWfLibPathName,
+                    fs.getFileStatus(new Path(libPathValue)).getPath().toString());
+            System.out.println("Copied WF libs to: " + recipeProperties.getProperty(recipeWfLibPathName));
+        } else if (isLibPathEmpty) {
+            // Replace ##workflow.lib.path## with "" to ignore lib in workflow template
+            recipeProperties.setProperty(recipeWfLibPathName, "");
         }
     }
 
@@ -250,9 +271,18 @@ public class RecipeTool extends Configured implements Tool {
 
     private static void copyFileFromLocalToHdfs(final String localFilePath,
                                                 final String hdfsFilePath,
+                                                final boolean copyDir,
+                                                final String hdfsFileDirPath,
                                                 final FileSystem fs) throws IOException {
-        // For cases where validation of process entity file fails, the artifacts would have been already copied to
-        // HDFS. Set overwrite to true so that next submit recipe copies updated artifats from local FS to HDFS
+        /* If directory already exists and has contents, copyFromLocalFile with overwrite set to yes will fail with
+         * "Target is a directory". Delete the directory */
+        if (copyDir) {
+            Path hdfsPath = new Path(hdfsFileDirPath);
+            fs.delete(hdfsPath, true);
+        }
+
+        /* For cases where validation of process entity file fails, the artifacts would have been already copied to
+         * HDFS. Set overwrite to true so that next submit recipe copies updated artifacts from local FS to HDFS */
         fs.copyFromLocalFile(false, true, new Path(localFilePath), new Path(hdfsFilePath));
     }
 

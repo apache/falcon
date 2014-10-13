@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity.parser;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -127,7 +128,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
             }
 
-            if (libPath != null && !fs.exists(new Path(libPath))) {
+            if (StringUtils.isNotEmpty(libPath) && !fs.exists(new Path(libPath))) {
                 throw new ValidationException("Lib path: " + libPath + " does not exists in HDFS: " + nameNode);
             }
         } catch (IOException e) {

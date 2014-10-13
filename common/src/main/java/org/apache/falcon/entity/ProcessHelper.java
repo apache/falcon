@@ -101,10 +101,11 @@ public final class ProcessHelper {
     public static Path getUserLibPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
         Path buildPath) throws FalconException {
         try {
-            if (process.getWorkflow().getLib() == null) {
+            String userLibPath = process.getWorkflow().getLib();
+            if (StringUtils.isEmpty(userLibPath)) {
                 return null;
             }
-            Path libPath = new Path(process.getWorkflow().getLib());
+            Path libPath = new Path(userLibPath);
 
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
             if (fs.isFile(libPath)) {

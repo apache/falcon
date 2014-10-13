@@ -18,6 +18,7 @@
 
 package org.apache.falcon.oozie.process;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
@@ -124,7 +125,8 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
             //Copy user workflow and lib to staging dir
             Map<String, String> checksums = UpdateHelper.checksumAndCopy(fs, new Path(entity.getWorkflow().getPath()),
                 new Path(buildPath, EntityUtil.PROCESS_USER_DIR));
-            if (entity.getWorkflow().getLib() != null && fs.exists(new Path(entity.getWorkflow().getLib()))) {
+            if (StringUtils.isNotEmpty(entity.getWorkflow().getLib())
+                    && fs.exists(new Path(entity.getWorkflow().getLib()))) {
                 checksums.putAll(UpdateHelper.checksumAndCopy(fs, new Path(entity.getWorkflow().getLib()),
                     new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR)));
             }

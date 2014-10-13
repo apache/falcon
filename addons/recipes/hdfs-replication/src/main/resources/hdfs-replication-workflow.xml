@@ -39,19 +39,24 @@
                     <name>oozie.use.system.libpath</name>
                     <value>true</value>
                 </property>
+                <property>
+                    <name>oozie.action.sharelib.for.java</name>
+                    <value>distcp</value>
+                </property>
             </configuration>
             <main-class>org.apache.falcon.replication.FeedReplicator</main-class>
             <arg>-Dmapred.job.queue.name=${queueName}</arg>
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-maxMaps</arg>
             <arg>${maxMaps}</arg>
+            <arg>-mapBandwidthKB</arg>
+            <arg>${mapBandwidthKB}</arg>
             <arg>-sourcePaths</arg>
             <arg>${nameNode}${drSourceDir}</arg>
             <arg>-targetPath</arg>
             <arg>${drTargetClusterFS}${drTargetDir}</arg>
             <arg>-falconFeedStorageType</arg>
             <arg>FILESYSTEM</arg>
-            <file>${wf:conf("falcon.libpath")}/hadoop-distcp.jar</file>
         </java>
         <ok to="end"/>
         <error to="fail"/>

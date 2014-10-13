@@ -62,7 +62,9 @@ public class FeedReplicator extends Configured implements Tool {
         LOG.info("{} found conf ? {}", confPath, confPath.getFileSystem(conf).exists(confPath));
         conf.addResource(confPath);
 
-        final boolean includePathSet = !IGNORE.equalsIgnoreCase(conf.get("falcon.include.path"));
+        String includePathConf = conf.get("falcon.include.path");
+        final boolean includePathSet = (includePathConf != null)
+                && !IGNORE.equalsIgnoreCase(includePathConf);
 
         DistCp distCp = (includePathSet)
                 ? new CustomReplicator(conf, options)

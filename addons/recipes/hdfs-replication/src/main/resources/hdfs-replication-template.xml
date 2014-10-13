@@ -26,6 +26,7 @@
     </clusters>
 
     <parallel>1</parallel>
+    <!-- Dir replication needs to run only once to catch up -->
     <order>LAST_ONLY</order>
     <frequency>##process.frequency##</frequency>
     <timezone>UTC</timezone>
@@ -40,6 +41,6 @@
         <property name="##process.property7.name##" value="##process.property7.value##"/>
     </properties>
 
-    <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##"/>
+    <workflow name="##workflow.name##" engine="oozie" path="##workflow.path##" lib="##workflow.lib.path##"/>
     <retry policy="periodic" delay="minutes(10)" attempts="3"/>
 </process>
