@@ -14,6 +14,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-802 Authorization test disabled (Paul Isaychuk)
+
    FALCON-706 Parse json with instances to InstancesResult using joda's DateTime (Ruslan
    Ostafiychuk)
 

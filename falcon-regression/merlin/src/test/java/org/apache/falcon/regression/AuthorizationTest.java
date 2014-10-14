@@ -657,6 +657,9 @@ public class AuthorizationTest extends BaseTestClass {
         Assert.assertEquals(oldProcessUser, newProcessUser, "User should be the same");
     }
 
+    //disabled since, falcon does not have authorization https://issues.apache
+    // .org/jira/browse/FALCON-388
+    @Test(enabled = false)
     public void u1ScheduleFeedU2ScheduleDependantProcessU2UpdateFeed() throws Exception {
         String feed = bundles[0].getInputFeedFromBundle();
         String process = bundles[0].getProcessData();
