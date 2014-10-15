@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.rerun.queue;
 
+import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.FalconException;
 import org.apache.commons.io.IOUtils;
 import org.apache.falcon.aspect.GenericAlert;
@@ -127,7 +128,8 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
             for (File rerunFile : files) {
                 BufferedReader reader = null;
                 try {
-                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(rerunFile), "UTF_8"));
+                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(rerunFile),
+                            CharEncoding.UTF_8));
                     String line;
                     while ((line = reader.readLine()) != null) {
                         T event = new RerunEventFactory<T>().getRerunEvent(

@@ -18,6 +18,7 @@
 
 package org.apache.falcon.entity.store;
 
+import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -55,7 +56,7 @@ public final class ConfigurationStore implements FalconService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationStore.class);
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
-    private static final String UTF_8 = "UTF-8";
+    private static final String UTF_8 = CharEncoding.UTF_8;
 
     private static final ConfigurationStore STORE = new ConfigurationStore();
 

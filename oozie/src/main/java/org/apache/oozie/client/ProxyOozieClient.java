@@ -18,6 +18,7 @@
 
 package org.apache.oozie.client;
 
+import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.RuntimeProperties;
@@ -131,7 +132,7 @@ public class ProxyOozieClient extends AuthOozieClient {
             throws IOException, OozieClientException {
             conn.setRequestProperty("content-type", RestConstants.XML_CONTENT_TYPE);
             if ((conn.getResponseCode() == HttpURLConnection.HTTP_OK)) {
-                Reader reader = new InputStreamReader(conn.getInputStream(), "UTF_8");
+                Reader reader = new InputStreamReader(conn.getInputStream(), CharEncoding.UTF_8);
                 JSONObject json = (JSONObject) JSONValue.parse(reader);
                 Properties props = new Properties();
                 props.putAll(json);
