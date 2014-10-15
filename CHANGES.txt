@@ -35,6 +35,8 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-762 Support feed listing for file system storage (Srikanth Sundarrajan)
+
    FALCON-20 Remove dependency on custom InMobi DistCp (Sowmya Ramesh via
    Venkatesh Seetharam)
 

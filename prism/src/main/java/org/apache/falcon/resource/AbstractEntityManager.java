@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 /**
@@ -806,5 +807,40 @@ public abstract class AbstractEntityManager {
 
     protected AbstractWorkflowEngine getWorkflowEngine() {
         return this.workflowEngine;
+    }
+
+    protected <T extends APIResult> T consolidateResult(Map<String, T> results, Class<T> clazz) {
+        if (results == null || results.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder message = new StringBuilder();
+        StringBuilder requestIds = new StringBuilder();
+        List instances = new ArrayList();
+        int statusCount = 0;
+        for (Map.Entry<String, T> entry : results.entrySet()) {
+            String colo = entry.getKey();
+            T result = results.get(colo);
+            message.append(colo).append('/').append(result.getMessage()).append('\n');
+            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
+            statusCount += result.getStatus().ordinal();
+
+            if (result.getCollection() == null) {
+                continue;
+            }
+            Collections.addAll(instances, result.getCollection());
+        }
+        Object[] arrInstances = instances.toArray();
+        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
+                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
+        try {
+            Constructor<T> constructor = clazz.getConstructor(Status.class, String.class);
+            T result = constructor.newInstance(status, message.toString());
+            result.setCollection(arrInstances);
+            result.setRequestId(requestIds.toString());
+            return result;
+        } catch (Exception e) {
+            throw new FalconRuntimException("Unable to consolidate result.", e);
+        }
     }
 }

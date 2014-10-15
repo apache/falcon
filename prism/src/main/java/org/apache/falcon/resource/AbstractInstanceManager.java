@@ -21,6 +21,7 @@ package org.apache.falcon.resource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.*;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -49,7 +50,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     protected static final long DAY_IN_MILLIS = 86400000L;
     private static final long MONTH_IN_MILLIS = 2592000000L;
 
-    protected void checkType(String type) {
+    protected EntityType checkType(String type) {
         if (StringUtils.isEmpty(type)) {
             throw FalconWebException.newInstanceException("entity type is empty",
                     Response.Status.BAD_REQUEST);
@@ -60,8 +61,10 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                         "Instance management functions don't apply to Cluster entities",
                         Response.Status.BAD_REQUEST);
             }
+            return entityType;
         }
     }
+
 
     protected List<LifeCycle> checkAndUpdateLifeCycle(List<LifeCycle> lifeCycleValues,
                                                       String type) throws FalconException {
@@ -190,14 +193,16 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         instanceSet = filteredInstanceSet(resultSet, instanceSet, getFilterByFieldsValues(filterBy));
 
         int pageCount = super.getRequiredNumberOfResults(instanceSet.size(), offset, numResults);
+        InstancesResult result = new InstancesResult(resultSet.getStatus(), resultSet.getMessage());
         if (pageCount == 0) {
             // return empty result set
-            return new InstancesResult(resultSet.getMessage(), new Instance[0]);
+            result.setInstances(new Instance[0]);
+            return result;
         }
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy, sortOrder);
-        return new InstancesResult(resultSet.getMessage(),
-                instanceSet.subList(offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+        result.setCollection(instanceSet.subList(offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+        return result;
     }
 
     private ArrayList<Instance> filteredInstanceSet(InstancesResult resultSet, ArrayList<Instance> instanceSet,
@@ -309,6 +314,25 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
+
+    public FeedInstanceResult getListing(String type, String entity, String startStr,
+                                         String endStr, String colo) {
+        checkColo(colo);
+        EntityType entityType = checkType(type);
+        try {
+            if (entityType != EntityType.FEED) {
+                throw new IllegalArgumentException("getLocation is not applicable for " + type);
+            }
+            validateParams(type, entity);
+            Entity entityObject = EntityUtil.getEntity(type, entity);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+
+            return FeedHelper.getFeedInstanceListing(entityObject, startAndEndDate.first, startAndEndDate.second);
+        } catch (Throwable e) {
+            LOG.error("Failed to get instances listing", e);
+            throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+    }
 
     public InstancesResult getInstanceParams(String type,
                                           String entity, String startTime,

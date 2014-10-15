@@ -20,7 +20,11 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.AccessControlList;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * A class to encapsulate the storage for a given feed which can either be
@@ -81,4 +85,10 @@ public interface Storage {
      * @throws FalconException if the permissions are not valid.
      */
     void validateACL(AccessControlList acl) throws FalconException;
+
+    /**
+     * Get Feed Listing for a feed between a date range.
+     */
+    List<FeedInstanceStatus> getListing(Feed feed, String cluster, LocationType locationType,
+                                        Date start, Date end) throws FalconException;
 }

@@ -18,6 +18,9 @@
 
 package org.apache.falcon.entity;
 
+import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
@@ -38,6 +41,10 @@ public final class ClusterHelper {
     public static final String DEFAULT_BROKER_IMPL_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private ClusterHelper() {
+    }
+
+    public static Cluster getCluster(String cluster) throws FalconException {
+        return ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
     }
 
     public static Configuration getConfiguration(Cluster cluster) {

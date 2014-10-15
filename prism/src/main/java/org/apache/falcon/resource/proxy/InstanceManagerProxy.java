@@ -26,10 +26,9 @@ import org.apache.falcon.monitors.Dimension;
 import org.apache.falcon.monitors.Monitored;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.AbstractInstanceManager;
+import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
-import org.apache.falcon.resource.InstancesResult.Instance;
 import org.apache.falcon.resource.InstancesSummaryResult;
-import org.apache.falcon.resource.InstancesSummaryResult.InstanceSummary;
 import org.apache.falcon.resource.channel.Channel;
 import org.apache.falcon.resource.channel.ChannelFactory;
 
@@ -38,6 +37,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 /**
@@ -87,7 +87,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).
@@ -118,7 +118,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstances",
@@ -145,7 +145,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getStatus",
@@ -167,11 +167,31 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("end-time") @QueryParam("end") final String endStr,
             @Dimension("colo") @QueryParam("colo") final String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
-        return new InstanceSummaryProxy() {
+        return new InstanceProxy<InstancesSummaryResult>(InstancesSummaryResult.class) {
             @Override
             protected InstancesSummaryResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getSummary",
                         type, entity, startStr, endStr, colo, lifeCycles);
+            }
+        }.execute(colo, type, entity);
+    }
+
+    @GET
+    @Path("listing/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-listing")
+    @Override
+    public FeedInstanceResult getListing(
+            @Dimension("type") @PathParam("type") final String type,
+            @Dimension("entity") @PathParam("entity") final String entity,
+            @Dimension("start-time") @QueryParam("start") final String start,
+            @Dimension("end-time") @QueryParam("end") final String end,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return new InstanceProxy<FeedInstanceResult>(FeedInstanceResult.class) {
+            @Override
+            protected FeedInstanceResult doExecute(String colo) throws FalconException {
+                return getInstanceManager(colo).invoke("getListing",
+                        type, entity, start, end, colo);
             }
         }.execute(colo, type, entity);
     }
@@ -187,7 +207,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("start-time") @QueryParam("start") final String start,
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getInstanceParams",
@@ -195,7 +215,6 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             }
         }.execute(colo, type, entity);
     }
-
 
     @GET
     @Path("logs/{type}/{entity}")
@@ -215,7 +234,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @DefaultValue("") @QueryParam("sortOrder") final String sortOrder,
             @DefaultValue("0") @QueryParam("offset") final Integer offset,
             @DefaultValue(DEFAULT_NUM_RESULTS) @QueryParam("numResults") final Integer resultsPerPage) {
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("getLogs",
@@ -240,7 +259,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("killInstance",
@@ -263,7 +282,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("colo") @QueryParam("colo") String colo,
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("suspendInstance",
@@ -287,7 +306,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("resumeInstance",
@@ -311,7 +330,7 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") final List<LifeCycle> lifeCycles) {
 
         final HttpServletRequest bufferedRequest = new BufferedRequest(request);
-        return new InstanceProxy() {
+        return new InstanceProxy<InstancesResult>(InstancesResult.class) {
             @Override
             protected InstancesResult doExecute(String colo) throws FalconException {
                 return getInstanceManager(colo).invoke("reRunInstance",
@@ -321,23 +340,28 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 
-    private abstract class InstanceProxy {
+    private abstract class InstanceProxy<T extends APIResult> {
 
-        public InstancesResult execute(String coloExpr, String type, String name) {
+        private final Class<T> clazz;
+
+        public InstanceProxy(Class<T> resultClazz) {
+            this.clazz = resultClazz;
+        }
+
+        public T execute(String coloExpr, String type, String name) {
             Set<String> colos = getColosFromExpression(coloExpr, type, name);
 
-            Map<String, InstancesResult> results = new HashMap<String, InstancesResult>();
+            Map<String, T> results = new HashMap<String, T>();
             for (String colo : colos) {
                 try {
-                    InstancesResult resultHolder = doExecute(colo);
+                    T resultHolder = doExecute(colo);
                     results.put(colo, resultHolder);
                 } catch (FalconException e) {
-                    results.put(colo, new InstancesResult(APIResult.Status.FAILED,
-                            e.getClass().getName() + "::" + e.getMessage(),
-                            new InstancesResult.Instance[0]));
+                    results.put(colo, getResultInstance(APIResult.Status.FAILED,
+                            e.getClass().getName() + "::" + e.getMessage()));
                 }
             }
-            InstancesResult finalResult = consolidateInstanceResult(results);
+            T finalResult = consolidateResult(results, clazz);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
                 throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {
@@ -345,100 +369,15 @@ public class InstanceManagerProxy extends AbstractInstanceManager {
             }
         }
 
-        protected abstract InstancesResult doExecute(String colo) throws FalconException;
-    }
+        protected abstract T doExecute(String colo) throws FalconException;
 
-    private abstract class InstanceSummaryProxy {
-
-        public InstancesSummaryResult execute(String coloExpr, String type, String name) {
-            Set<String> colos = getColosFromExpression(coloExpr, type, name);
-
-            Map<String, InstancesSummaryResult> results = new HashMap<String, InstancesSummaryResult>();
-            for (String colo : colos) {
-                try {
-                    InstancesSummaryResult resultHolder = doExecute(colo);
-                    results.put(colo, resultHolder);
-                } catch (FalconException e) {
-                    results.put(colo, new InstancesSummaryResult(APIResult.Status.FAILED,
-                            e.getClass().getName() + "::" + e.getMessage(),
-                            new InstancesSummaryResult.InstanceSummary[0]));
-                }
-            }
-            InstancesSummaryResult finalResult = consolidateInstanceSummaryResult(results);
-            if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
-                throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
-            } else {
-                return finalResult;
+        private T getResultInstance(APIResult.Status status, String message) {
+            try {
+                Constructor<T> constructor = clazz.getConstructor(APIResult.Status.class, String.class);
+                return constructor.newInstance(status, message);
+            } catch (Exception e) {
+                throw new FalconRuntimException("Unable to consolidate result.", e);
             }
         }
-
-        protected abstract InstancesSummaryResult doExecute(String colo) throws FalconException;
-    }
-
-    private InstancesResult consolidateInstanceResult(Map<String, InstancesResult> results) {
-        if (results == null || results.isEmpty()) {
-            return null;
-        }
-
-        StringBuilder message = new StringBuilder();
-        StringBuilder requestIds = new StringBuilder();
-        List<Instance> instances = new ArrayList<Instance>();
-        int statusCount = 0;
-        for (Map.Entry<String, InstancesResult> entry : results.entrySet()) {
-            String colo = entry.getKey();
-            InstancesResult result = results.get(colo);
-            message.append(colo).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
-            statusCount += result.getStatus().ordinal();
-
-            if (result.getInstances() == null) {
-                continue;
-            }
-
-            for (Instance instance : result.getInstances()) {
-                instance.instance = instance.getInstance();
-                instances.add(instance);
-            }
-        }
-        Instance[] arrInstances = new Instance[instances.size()];
-        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        InstancesResult result = new InstancesResult(status, message.toString(), instances.toArray(arrInstances));
-        result.setRequestId(requestIds.toString());
-        return result;
-    }
-
-    private InstancesSummaryResult consolidateInstanceSummaryResult(Map<String, InstancesSummaryResult> results) {
-        if (results == null || results.isEmpty()) {
-            return null;
-        }
-
-        StringBuilder message = new StringBuilder();
-        StringBuilder requestIds = new StringBuilder();
-        List<InstanceSummary> instances = new ArrayList<InstanceSummary>();
-        int statusCount = 0;
-        for (Map.Entry<String, InstancesSummaryResult> entry : results.entrySet()) {
-            String colo = entry.getKey();
-            InstancesSummaryResult result = results.get(colo);
-            message.append(colo).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
-            statusCount += result.getStatus().ordinal();
-
-            if (result.getInstancesSummary() == null) {
-                continue;
-            }
-
-            for (InstanceSummary instance : result.getInstancesSummary()) {
-                instance.summaryMap = instance.getSummaryMap();
-                instances.add(instance);
-            }
-        }
-        InstanceSummary[] arrInstances = new InstanceSummary[instances.size()];
-        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        InstancesSummaryResult result = new InstancesSummaryResult(status, message.toString(),
-                instances.toArray(arrInstances));
-        result.setRequestId(requestIds.toString());
-        return result;
     }
 }

@@ -43,7 +43,6 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -129,7 +128,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         if (!embeddedMode) {
             results.put(PRISM_TAG, super.submit(bufferedRequest, type, currentColo));
         }
-        return consolidateResult(results);
+        return consolidateResult(results, APIResult.class);
     }
 
     private Entity getEntity(HttpServletRequest request, String type) {
@@ -187,7 +186,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         if (!embeddedMode) {
             results.put(PRISM_TAG, super.delete(bufferedRequest, type, entity, currentColo));
         }
-        return consolidateResult(results);
+        return consolidateResult(results, APIResult.class);
     }
 
     @POST
@@ -258,7 +257,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
             results.put(PRISM_TAG, super.update(bufferedRequest, type, entityName, currentColo, effectiveTime));
         }
 
-        return consolidateResult(results);
+        return consolidateResult(results, APIResult.class);
     }
 
     @GET
@@ -338,7 +337,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         Map<String, APIResult> results = new HashMap<String, APIResult>();
         results.put("submit", submit(bufferedRequest, type, coloExpr));
         results.put("schedule", schedule(bufferedRequest, type, entity, coloExpr));
-        return consolidateResult(results);
+        return consolidateResult(results, APIResult.class);
     }
 
     @POST
@@ -451,7 +450,7 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
                             new APIResult(APIResult.Status.FAILED, e.getClass().getName() + "::" + e.getMessage()));
                 }
             }
-            APIResult finalResult = consolidateResult(results);
+            APIResult finalResult = consolidateResult(results, APIResult.class);
             if (finalResult.getStatus() != APIResult.Status.SUCCEEDED) {
                 throw FalconWebException.newException(finalResult, Response.Status.BAD_REQUEST);
             } else {
@@ -464,28 +463,5 @@ public class SchedulableEntityManagerProxy extends AbstractSchedulableEntityMana
         }
 
         protected abstract APIResult doExecute(String colo) throws FalconException;
-    }
-
-    private APIResult consolidateResult(Map<String, APIResult> results) {
-        if (results == null || results.size() == 0) {
-            return null;
-        }
-
-        StringBuilder buffer = new StringBuilder();
-        StringBuilder requestIds = new StringBuilder();
-        int statusCount = 0;
-        for (Entry<String, APIResult> entry : results.entrySet()) {
-            String colo = entry.getKey();
-            APIResult result = entry.getValue();
-            buffer.append(colo).append('/').append(result.getMessage()).append('\n');
-            requestIds.append(colo).append('/').append(result.getRequestId()).append('\n');
-            statusCount += result.getStatus().ordinal();
-        }
-
-        APIResult.Status status = (statusCount == 0) ? APIResult.Status.SUCCEEDED
-                : ((statusCount == results.size() * 2) ? APIResult.Status.FAILED : APIResult.Status.PARTIAL);
-        APIResult result = new APIResult(status, buffer.toString());
-        result.setRequestId(requestIds.toString());
-        return result;
     }
 }

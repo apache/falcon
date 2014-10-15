@@ -53,16 +53,6 @@ public class InstancesResult extends APIResult {
         super();
     }
 
-    public InstancesResult(String message, Instance[] instances) {
-        this(Status.SUCCEEDED, message, instances);
-    }
-
-    public InstancesResult(Status status, String message,
-                           Instance[] instanceExes) {
-        super(status, message);
-        this.instances = instanceExes;
-    }
-
     public InstancesResult(Status status, String message) {
         super(status, message);
     }
@@ -74,6 +64,24 @@ public class InstancesResult extends APIResult {
 
     public void setInstances(Instance[] instances) {
         this.instances = instances;
+    }
+
+    @Override
+    public Object[] getCollection() {
+        return getInstances();
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setInstances(new Instance[0]);
+        } else {
+            Instance[] newInstances = new Instance[items.length];
+            for (int index = 0; index < items.length; index++) {
+                newInstances[index] = (Instance)items[index];
+            }
+            setInstances(newInstances);
+        }
     }
 
     /**

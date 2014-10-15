@@ -20,6 +20,7 @@ package org.apache.falcon.expression;
 
 import org.apache.commons.el.ExpressionEvaluatorImpl;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.common.FeedDataPath;
 
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ExpressionEvaluator;
@@ -95,6 +96,18 @@ public final class ExpressionHelper implements FunctionMapper, VariableResolver 
 
     public static void setReferenceDate(Date date) {
         referenceDate.set(date);
+    }
+
+    public static Properties getTimeVariables(Date date, TimeZone tz) {
+        Properties vars = new Properties();
+        Calendar cal = Calendar.getInstance(tz);
+        cal.setTime(date);
+        vars.put(FeedDataPath.VARS.YEAR.name(), String.format("%04d", cal.get(Calendar.YEAR)));
+        vars.put(FeedDataPath.VARS.MONTH.name(), String.format("%02d", (cal.get(Calendar.MONTH) + 1)));
+        vars.put(FeedDataPath.VARS.DAY.name(), String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
+        vars.put(FeedDataPath.VARS.HOUR.name(), String.format("%02d", cal.get(Calendar.HOUR_OF_DAY)));
+        vars.put(FeedDataPath.VARS.MINUTE.name(), String.format("%02d", cal.get(Calendar.MINUTE)));
+        return vars;
     }
 
     private static int getDayOffset(String weekDayName) {

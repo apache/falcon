@@ -20,11 +20,22 @@ package org.apache.falcon.entity;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.AccessControlList;
+import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
+import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.feed.Cluster;
+import org.apache.falcon.entity.v0.feed.Clusters;
+import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Validity;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -32,8 +43,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
+import java.util.Random;
+import java.util.TimeZone;
 
 /**
  * Test class for File System Storage.
@@ -388,5 +406,129 @@ public class FileSystemStorageTest {
         public String getPermission() {
             return permission;
         }
+    }
+
+    @DataProvider(name = "testListingDataProvider")
+    private Object[][] createTestListingData() {
+        final long millis = 24L * 3600 * 1000;
+        final long now = System.currentTimeMillis();
+        TimeZone utc = TimeZone.getTimeZone("UTC");
+        return new Object[][] {
+            {null, Frequency.fromString("hours(2)"), utc, new Date(now - 60 * millis), new Date(now - 56 * millis)},
+            {null, Frequency.fromString("days(1)"), utc, new Date(now - 20 * millis), new Date(now + 6 * millis)},
+            {null, Frequency.fromString("months(1)"), utc, new Date(now - 85 * millis), new Date(now - 10 * millis)},
+        };
+    }
+
+    @Test (dataProvider = "testListingDataProvider")
+    public void testListing(String availabilityFlag, Frequency frequency, TimeZone timeZone,
+                            Date start, Date end) throws Exception {
+        EmbeddedCluster cluster = EmbeddedCluster.newCluster("TestFeedListing", false);
+        FileSystem fs = cluster.getFileSystem();
+        ConfigurationStore.get().publish(EntityType.CLUSTER, cluster.getCluster());
+        try {
+            Feed feed = getFeed(availabilityFlag, frequency, timeZone);
+            List<FeedInstanceStatus> expected = prepareData(fs, feed, start, end);
+            FileSystemStorage fileSystemStorage = new FileSystemStorage(cluster.getFileSystem().
+                    getUri().toString(), feed.getLocations());
+            List<FeedInstanceStatus> actual = fileSystemStorage.
+                    getListing(feed, "TestFeedListing", LocationType.DATA, start, end);
+            Assert.assertEquals(actual, expected, "Feed instance Listings doesn't match");
+        } finally {
+            ConfigurationStore.get().remove(EntityType.CLUSTER, cluster.getCluster().getName());
+        }
+    }
+
+    @SuppressWarnings("MagicConstant")
+    private List<FeedInstanceStatus> prepareData(FileSystem fs, Feed feed,
+                                                 Date start, Date end) throws Exception {
+        fs.delete(new Path("/TestFeedListing"), true);
+        Random random = new Random();
+        List<FeedInstanceStatus> instances = new ArrayList<FeedInstanceStatus>();
+        String basePath = feed.getLocations().getLocations().get(0).getPath();
+        Frequency frequency = feed.getFrequency();
+        TimeZone tz = feed.getTimezone();
+        Date dataStart = EntityUtil.getNextStartTime(feed.getClusters().getClusters().get(0).getValidity().getStart(),
+                feed.getFrequency(), tz, new Date(start.getTime()));
+        Date dataEnd = new Date(end.getTime());
+        while (dataStart.before(dataEnd)) {
+            Properties properties = ExpressionHelper.getTimeVariables(dataStart, tz);
+            String path = ExpressionHelper.substitute(basePath, properties);
+            FeedInstanceStatus instance = new FeedInstanceStatus(path);
+            instance.setStatus(FeedInstanceStatus.AvailabilityStatus.MISSING);
+            instance.setSize(-1);
+            instance.setCreationTime(0);
+            String dateMask = FeedHelper.getDateFormatInPath(basePath);
+            Date date = FeedHelper.getDate(new Path(path), basePath, dateMask, tz.getID());
+            instance.setInstance(SchemaHelper.formatDateUTC(date));
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dataStart);
+            cal.add(frequency.getTimeUnit().getCalendarUnit(), frequency.getFrequencyAsInt());
+            dataStart.setTime(cal.getTimeInMillis());
+            if (random.nextBoolean()) {
+                OutputStream out = fs.create(new Path(path, "file"));
+                out.write("Hello World\n".getBytes());
+                out.close();
+                instance.setSize(12);
+                if (feed.getAvailabilityFlag() == null
+                        || (feed.getAvailabilityFlag() != null && random.nextBoolean())) {
+                    //If availability is not present or if ok to create availability file, mark as available
+                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.AVAILABLE);
+                    if (feed.getAvailabilityFlag() != null) {
+                        fs.create(new Path(path, feed.getAvailabilityFlag())).close();
+                    }
+                } else if (feed.getAvailabilityFlag() != null) {
+                    //If availability is present or not ok to create availability file, mark as partial
+                    fs.mkdirs(new Path(path));
+                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
+                }
+            } else {
+                if (feed.getAvailabilityFlag() == null && random.nextBoolean()) {
+                    //If availability is not present or ok to create dir, mark as empty
+                    fs.mkdirs(new Path(path));
+                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
+                    instance.setSize(0);
+                } else if (feed.getAvailabilityFlag() != null && random.nextBoolean()) {
+                    //If availability is present and ok to create dir, mark as partial
+                    fs.mkdirs(new Path(path));
+                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
+                } else if (feed.getAvailabilityFlag() != null)  {
+                    //If availability is present and ok to create empty instance
+                    fs.create(new Path(path, feed.getAvailabilityFlag())).close();
+                    instance.setStatus(FeedInstanceStatus.AvailabilityStatus.EMPTY);
+                    instance.setSize(0);
+                }
+            }
+            try {
+                FileStatus fileStatus = fs.getFileStatus(new Path(path));
+                instance.setCreationTime(fileStatus.getModificationTime());
+            } catch (IOException e) {
+                //ignore
+            }
+            instances.add(instance);
+        }
+        return instances;
+    }
+
+    private Feed getFeed(String availabilityFlag, Frequency frequency, TimeZone timeZone) {
+        Feed feed = new Feed();
+        feed.setAvailabilityFlag(availabilityFlag);
+        feed.setFrequency(frequency);
+        feed.setTimezone(timeZone);
+        feed.setLocations(new Locations());
+        Location dataLocation = new Location();
+        feed.getLocations().getLocations().add(dataLocation);
+        dataLocation.setPath("/TestFeedListing/data/${YEAR}/${MONTH}/${DAY}"
+                + (frequency.getTimeUnit() == Frequency.TimeUnit.hours ? "/${HOUR}" : "") + "/MORE");
+        dataLocation.setType(LocationType.DATA);
+        feed.setClusters(new Clusters());
+        Cluster cluster = new Cluster();
+        cluster.setName("TestFeedListing");
+        feed.getClusters().getClusters().add(cluster);
+        Validity validity = new Validity();
+        cluster.setValidity(validity);
+        validity.setStart(new Date(System.currentTimeMillis() - (1000L * 24 * 3600000)));
+        validity.setEnd(new Date(System.currentTimeMillis() + (1000L * 24 * 3600000)));
+        return feed;
     }
 }

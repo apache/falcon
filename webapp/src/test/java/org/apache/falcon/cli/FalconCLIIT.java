@@ -404,6 +404,11 @@ public class FalconCLIIT {
                         + " -start " + SchemaHelper.getDateFormat().format(new Date())));
 
         Assert.assertEquals(0,
+                executeWithURL("instance -listing -type feed -name "
+                        + overlay.get("outputFeedName")
+                        + " -start " + SchemaHelper.getDateFormat().format(new Date())));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -status -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));

@@ -39,16 +39,6 @@ public class InstancesSummaryResult extends APIResult {
         super();
     }
 
-    public InstancesSummaryResult(String message, InstanceSummary[] instancesSummary) {
-        this(Status.SUCCEEDED, message, instancesSummary);
-    }
-
-    public InstancesSummaryResult(Status status, String message,
-                                  InstanceSummary[] instancesSummary) {
-        super(status, message);
-        this.instancesSummary = instancesSummary;
-    }
-
     public InstancesSummaryResult(Status status, String message) {
         super(status, message);
     }
@@ -59,6 +49,24 @@ public class InstancesSummaryResult extends APIResult {
 
     public void setInstancesSummary(InstanceSummary[] instancesSummary) {
         this.instancesSummary = instancesSummary;
+    }
+
+    @Override
+    public Object[] getCollection() {
+        return getInstancesSummary();
+    }
+
+    @Override
+    public void setCollection(Object[] items) {
+        if (items == null) {
+            setInstancesSummary(new InstanceSummary[0]);
+        } else {
+            InstanceSummary[] newInstances = new InstanceSummary[items.length];
+            for (int index = 0; index < items.length; index++) {
+                newInstances[index] = (InstanceSummary)items[index];
+            }
+            setInstancesSummary(newInstances);
+        }
     }
 
     /**

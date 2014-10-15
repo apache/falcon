@@ -104,4 +104,11 @@ public class APIResult {
             return e.getMessage();
         }
     }
+
+    public Object[] getCollection() {
+        return null;
+    }
+
+    public void setCollection(Object[] items) {
+    }
 }

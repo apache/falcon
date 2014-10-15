@@ -35,6 +35,7 @@ import org.apache.falcon.recipe.RecipeToolArgs;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.EntitySummaryResult;
+import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.resource.InstancesResult;
 import org.apache.falcon.resource.InstancesSummaryResult;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
@@ -235,7 +236,8 @@ public class FalconClient {
         RERUN("api/instance/rerun/", HttpMethod.POST, MediaType.APPLICATION_JSON),
         LOG("api/instance/logs/", HttpMethod.GET, MediaType.APPLICATION_JSON),
         SUMMARY("api/instance/summary/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        PARAMS("api/instance/params/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        LISTING("api/instance/listing/", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -406,6 +408,13 @@ public class FalconClient {
                 null, null, colo, lifeCycles);
     }
 
+    public String getFeedListing(String type, String entity, String start,
+                                     String end, String colo)
+        throws FalconCLIException {
+
+        return sendInstanceRequest(Instances.LISTING, type, entity, start, end, null, null, colo, null);
+    }
+
     public String killInstances(String type, String entity, String start,
                                 String end, String colo, String clusters,
                                 String sourceClusters, List<LifeCycle> lifeCycles)
@@ -479,7 +488,6 @@ public class FalconClient {
 
     public String getParamsOfInstance(String type, String entity,
                                       String start, String colo,
-                                      String clusters, String sourceClusters,
                                       List<LifeCycle> lifeCycles)
         throws FalconCLIException, UnsupportedEncodingException {
 
@@ -729,14 +737,16 @@ public class FalconClient {
         }
         checkIfSuccessful(clientResponse);
 
-        if (instances.name().equals("LOG")) {
+        switch (instances) {
+        case LOG:
             return parseProcessInstanceResultLogs(clientResponse, runid);
-        } else if (instances.name().equals("SUMMARY")) {
+        case SUMMARY:
             return summarizeProcessInstanceResult(clientResponse);
-        } else {
+        case LISTING:
+            return parseFeedInstanceResult(clientResponse);
+        default:
             return parseProcessInstanceResult(clientResponse);
         }
-
     }
 
     //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
@@ -998,6 +1008,45 @@ public class FalconClient {
                         sb.append(action.getStatus()).append("\t").append(action.getLogFile()).append("\n");
                     }
                 }
+            }
+        }
+        sb.append("\nAdditional Information:\n");
+        sb.append("Response: ").append(result.getMessage());
+        sb.append("Request Id: ").append(result.getRequestId());
+        return sb.toString();
+    }
+
+    private String parseFeedInstanceResult(ClientResponse clientResponse) {
+        FeedInstanceResult result = clientResponse.getEntity(FeedInstanceResult.class);
+        StringBuilder sb = new StringBuilder();
+        String toAppend;
+
+        sb.append("Consolidated Status: ").append(result.getStatus()).append("\n");
+
+        sb.append("\nInstances:\n");
+        sb.append("Cluster\t\tInstance\t\tStatus\t\tSize\t\tCreationTime\t\tDetails\n");
+        sb.append("-----------------------------------------------------------------------------------------------\n");
+        if (result.getInstances() != null) {
+            for (FeedInstanceResult.Instance instance : result.getInstances()) {
+
+                toAppend = instance.getCluster() != null ? instance.getCluster() : "-";
+                sb.append(toAppend).append("\t");
+
+                toAppend = instance.getInstance() != null ? instance.getInstance() : "-";
+                sb.append(toAppend).append("\t");
+
+                toAppend = instance.getStatus() != null ? instance.getStatus() : "-";
+                sb.append(toAppend).append("\t");
+
+                toAppend = instance.getSize() != -1 ? String.valueOf(instance.getSize()) : "-";
+                sb.append(toAppend).append("\t");
+
+                toAppend = instance.getCreationTime() != 0
+                        ? SchemaHelper.formatDateUTC(new Date(instance.getCreationTime())) : "-";
+                sb.append(toAppend).append("\t");
+
+                toAppend = StringUtils.isEmpty(instance.getUri()) ? "-" : instance.getUri();
+                sb.append(toAppend).append("\n");
             }
         }
         sb.append("\nAdditional Information:\n");

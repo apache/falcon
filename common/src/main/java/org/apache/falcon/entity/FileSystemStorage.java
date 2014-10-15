@@ -22,13 +22,17 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.AccessControlList;
+import org.apache.falcon.entity.v0.SchemaHelper;
+import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,8 +43,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 /**
@@ -241,6 +249,16 @@ public class FileSystemStorage implements Storage {
         return null;
     }
 
+    public static Properties getFeedProperties(Feed feed) {
+        Properties feedProperties = new Properties();
+        if (feed.getProperties() != null) {
+            for (org.apache.falcon.entity.v0.feed.Property property : feed.getProperties().getProperties()) {
+                feedProperties.put(property.getName(), property.getValue());
+            }
+        }
+        return feedProperties;
+    }
+
     @Override
     public void validateACL(AccessControlList acl) throws FalconException {
         try {
@@ -270,6 +288,78 @@ public class FileSystemStorage implements Storage {
             LOG.error("Can't validate ACL on storage {}", getStorageUrl(), e);
             throw new RuntimeException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
         }
+    }
+
+    @Override
+    @SuppressWarnings("MagicConstant")
+    public List<FeedInstanceStatus> getListing(Feed feed, String clusterName, LocationType locationType,
+                                               Date start, Date end) throws FalconException {
+
+        Calendar calendar = Calendar.getInstance();
+        List<Location> clusterSpecificLocation = FeedHelper.
+                getLocations(FeedHelper.getCluster(feed, clusterName), feed);
+        Location location = getLocation(clusterSpecificLocation, locationType);
+        try {
+            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
+            Cluster cluster = ClusterHelper.getCluster(clusterName);
+            Properties baseProperties = FeedHelper.getClusterProperties(cluster);
+            baseProperties.putAll(FeedHelper.getFeedProperties(feed));
+            List<FeedInstanceStatus> instances = new ArrayList<FeedInstanceStatus>();
+            Date feedStart = FeedHelper.getCluster(feed, clusterName).getValidity().getStart();
+            TimeZone tz = feed.getTimezone();
+            Date alignedStart = EntityUtil.getNextStartTime(feedStart, feed.getFrequency(), tz, start);
+
+            String basePath = location.getPath();
+            while (!end.before(alignedStart)) {
+                Properties allProperties = ExpressionHelper.getTimeVariables(alignedStart, tz);
+                allProperties.putAll(baseProperties);
+                String feedInstancePath = ExpressionHelper.substitute(basePath, allProperties);
+                FileStatus fileStatus = getFileStatus(fileSystem, new Path(feedInstancePath));
+                FeedInstanceStatus instance = new FeedInstanceStatus(feedInstancePath);
+                String dateMask = FeedHelper.getDateFormatInPath(basePath);
+                Date date = FeedHelper.getDate(new Path(feedInstancePath), basePath, dateMask, tz.getID());
+                instance.setInstance(SchemaHelper.formatDateUTC(date));
+                if (fileStatus != null) {
+                    instance.setCreationTime(fileStatus.getModificationTime());
+                    ContentSummary contentSummary = fileSystem.getContentSummary(fileStatus.getPath());
+                    if (contentSummary != null) {
+                        long size = contentSummary.getSpaceConsumed();
+                        instance.setSize(size);
+                        if (!StringUtils.isEmpty(feed.getAvailabilityFlag())) {
+                            FileStatus doneFile = getFileStatus(fileSystem,
+                                    new Path(fileStatus.getPath(), feed.getAvailabilityFlag()));
+                            if (doneFile != null) {
+                                instance.setStatus(FeedInstanceStatus.AvailabilityStatus.AVAILABLE);
+                            } else {
+                                instance.setStatus(FeedInstanceStatus.AvailabilityStatus.PARTIAL);
+                            }
+                        } else {
+                            instance.setStatus(size > 0 ? FeedInstanceStatus.AvailabilityStatus.AVAILABLE
+                                    : FeedInstanceStatus.AvailabilityStatus.EMPTY);
+                        }
+                    }
+                }
+                instances.add(instance);
+                calendar.setTime(alignedStart);
+                calendar.add(feed.getFrequency().getTimeUnit().getCalendarUnit(),
+                        feed.getFrequency().getFrequencyAsInt());
+                alignedStart = calendar.getTime();
+            }
+            return instances;
+        } catch (IOException e) {
+            LOG.error("Unable to retrieve listing for {}:{}", locationType, getStorageUrl(), e);
+            throw new FalconException("Unable to retrieve listing for (URI " + getStorageUrl() + ")", e);
+        }
+    }
+
+    public FileStatus getFileStatus(FileSystem fileSystem, Path feedInstancePath) {
+        FileStatus fileStatus = null;
+        try {
+            fileStatus = fileSystem.getFileStatus(feedInstancePath);
+        } catch (IOException ignore) {
+            //ignore
+        }
+        return fileStatus;
     }
 
     private Configuration getConf() {

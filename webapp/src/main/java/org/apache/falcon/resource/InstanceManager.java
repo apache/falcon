@@ -115,6 +115,20 @@ public class InstanceManager extends AbstractInstanceManager {
     }
 
     @GET
+    @Path("listing/{type}/{entity}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Monitored(event = "instance-listing")
+    @Override
+    public FeedInstanceResult getListing(
+            @Dimension("type") @PathParam("type") String type,
+            @Dimension("entity") @PathParam("entity") String entity,
+            @Dimension("start-time") @QueryParam("start") String start,
+            @Dimension("end-time") @QueryParam("end") String end,
+            @Dimension("colo") @QueryParam("colo") String colo) {
+        return super.getListing(type, entity, start, end, colo);
+    }
+
+    @GET
     @Path("logs/{type}/{entity}")
     @Produces(MediaType.APPLICATION_JSON)
     @Monitored(event = "instance-logs")
@@ -149,7 +163,6 @@ public class InstanceManager extends AbstractInstanceManager {
             @Dimension("lifecycle") @QueryParam("lifecycle") List<LifeCycle> lifeCycles) {
         return super.getInstanceParams(type, entity, start, colo, lifeCycles);
     }
-
 
     @POST
     @Path("kill/{type}/{entity}")
