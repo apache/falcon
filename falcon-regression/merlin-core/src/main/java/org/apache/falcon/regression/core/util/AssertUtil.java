@@ -158,11 +158,11 @@ public final class AssertUtil {
      */
     public static void assertSucceeded(ServiceResponse response) throws JAXBException {
         final APIResult apiResult = Util.parseResponse(response);
-        Assert.assertEquals(apiResult.getStatus(),
-            APIResult.Status.SUCCEEDED, "Status should be SUCCEEDED");
-        Assert.assertEquals(apiResult.getStatusCode(), 200,
-            "Status code should be 200");
         Assert.assertNotNull(apiResult.getMessage(), "Status message is null");
+        Assert.assertEquals(apiResult.getStatus(), APIResult.Status.SUCCEEDED,
+            "Status should be SUCCEEDED. Message: " + apiResult.getMessage());
+        Assert.assertEquals(apiResult.getStatusCode(), 200,
+            "Status code should be 200. Message: " + apiResult.getMessage());
     }
 
     /**
@@ -189,9 +189,9 @@ public final class AssertUtil {
      * @param response ProcessInstancesResult
      */
     public static void assertSucceeded(InstancesResult response) {
-        Assert.assertNotNull(response.getMessage());
+        Assert.assertNotNull(response.getMessage(), "Status message is null");
         Assert.assertEquals(response.getStatus(), APIResult.Status.SUCCEEDED,
-            "Status should be SUCCEEDED");
+            "Status should be SUCCEEDED. Message: " + response.getMessage());
     }
 
     /**
