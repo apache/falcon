@@ -32,11 +32,13 @@ import org.apache.falcon.cli.FalconCLI;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
 import org.apache.falcon.cluster.util.EmbeddedCluster;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -103,6 +105,7 @@ public class TestContext {
 
     protected String clusterName;
     protected String processName;
+    protected String processEndTime;
     protected String inputFeedName;
     protected String outputFeedName;
 
@@ -187,6 +190,10 @@ public class TestContext {
 
     public String getProcessName() {
         return processName;
+    }
+
+    public String getProcessEndTime() {
+        return processEndTime;
     }
 
     public String getInputFeedName() {
@@ -279,11 +286,44 @@ public class TestContext {
             try {
                 cluster = EmbeddedCluster.newCluster(overlay.get("cluster"), true);
                 clusterName = cluster.getCluster().getName();
+                deleteClusterLocations(cluster.getCluster(), cluster.getFileSystem());
+                createClusterLocations(cluster.getCluster(), cluster.getFileSystem());
             } catch (Exception e) {
                 throw new IOException("Unable to setup cluster info", e);
             }
         }
         return submitFileToFalcon(entityType, tmpFile);
+    }
+
+    public static void deleteClusterLocations(Cluster clusterEntity,
+                                              FileSystem fs) throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
+        Path stagingPath = new Path(stagingLocation);
+        if (fs.exists(stagingPath)) {
+            fs.delete(stagingPath, true);
+        }
+
+        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
+        Path workingPath = new Path(workingLocation);
+        if (fs.exists(workingPath)) {
+            fs.delete(workingPath, true);
+        }
+    }
+
+    public static void createClusterLocations(Cluster clusterEntity,
+                                              FileSystem fs) throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
+        Path stagingPath = new Path(stagingLocation);
+        if (!fs.exists(stagingPath)) {
+            HadoopClientFactory.mkdirs(fs, stagingPath, HadoopClientFactory.ALL_PERMISSION);
+        }
+
+        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
+        Path workingPath = new Path(workingLocation);
+        if (!fs.exists(workingPath)) {
+            HadoopClientFactory
+                    .mkdirs(fs, workingPath, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+        }
     }
 
     public ClientResponse submitFileToFalcon(EntityType entityType, String tmpFile) throws IOException {
@@ -376,6 +416,8 @@ public class TestContext {
         //only feeds with future dates can be scheduled
         Date endDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
         overlay.put("feedEndDate", SchemaHelper.formatDateUTC(endDate));
+        processEndTime = SchemaHelper.formatDateUTC(endDate);
+        overlay.put("processEndDate", processEndTime);
         outputFeedName = "out" + time;
         overlay.put("outputFeedName", outputFeedName);
         processName = "p" + time;
@@ -436,6 +478,18 @@ public class TestContext {
         mkdir(fs, new Path(wfParent, "input/2012/04/20/00"));
         Path outPath = new Path(wfParent, "output");
         mkdir(fs, outPath, new FsPermission((short) 511));
+
+        // init cluster locations
+        initClusterLocations(cluster, fs);
+    }
+
+    private static void initClusterLocations(EmbeddedCluster cluster,
+                                             FileSystem fs) throws Exception {
+        String stagingPath = ClusterHelper.getLocation(cluster.getCluster(), "staging");
+        mkdir(fs, new Path(stagingPath), HadoopClientFactory.ALL_PERMISSION);
+
+        String workingPath = ClusterHelper.getLocation(cluster.getCluster(), "working");
+        mkdir(fs, new Path(workingPath), HadoopClientFactory.READ_EXECUTE_PERMISSION);
     }
 
     public static void cleanupStore() throws Exception {

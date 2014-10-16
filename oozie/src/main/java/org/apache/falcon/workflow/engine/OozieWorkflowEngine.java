@@ -21,6 +21,7 @@ package org.apache.falcon.workflow.engine;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.LifeCycle;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
@@ -30,6 +31,7 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.oozie.OozieBundleBuilder;
 import org.apache.falcon.oozie.OozieEntityBuilder;
 import org.apache.falcon.oozie.bundle.BUNDLEAPP;
@@ -63,6 +65,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -146,6 +149,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             OozieEntityBuilder builder = OozieEntityBuilder.get(entity);
             for (String clusterName: schedClusters) {
                 Cluster cluster = STORE.get(EntityType.CLUSTER, clusterName);
+                prepareEntityBuildPath(entity, cluster);
                 Path buildPath = EntityUtil.getNewStagingPath(cluster, entity);
                 Properties properties = builder.build(cluster, buildPath);
                 if (properties == null) {
@@ -157,6 +161,29 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                 dryRunInternal(cluster, new Path(properties.getProperty(OozieEntityBuilder.ENTITY_PATH)));
                 scheduleEntity(clusterName, properties, entity);
             }
+        }
+    }
+
+    /**
+     * Prepare the staging and logs dir for this entity with default permissions.
+     *
+     * @param entity  entity
+     * @param cluster cluster entity
+     * @throws FalconException
+     */
+    private void prepareEntityBuildPath(Entity entity, Cluster cluster) throws FalconException {
+        Path stagingPath = EntityUtil.getBaseStagingPath(cluster, entity);
+        Path logPath = EntityUtil.getLogPath(cluster, entity);
+
+        try {
+            HadoopClientFactory.mkdirsWithDefaultPerms(
+                    HadoopClientFactory.get().createProxiedFileSystem(
+                            ClusterHelper.getConfiguration(cluster)), stagingPath);
+            HadoopClientFactory.mkdirsWithDefaultPerms(
+                    HadoopClientFactory.get().createProxiedFileSystem(
+                            ClusterHelper.getConfiguration(cluster)), logPath);
+        } catch (IOException e) {
+            throw new FalconException("Error preparing base staging dirs: " + stagingPath, e);
         }
     }
 
@@ -434,7 +461,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
             for (String cluster : clusters) {
                 ProxyOozieClient client = OozieClientFactory.get(cluster);
-                List<String> wfNames = EntityUtil.getWorkflowNames(entity, cluster);
+                List<String> wfNames = EntityUtil.getWorkflowNames(entity);
                 List<WorkflowJob> wfs = getRunningWorkflows(cluster, wfNames);
                 if (wfs != null) {
                     for (WorkflowJob job : wfs) {
@@ -812,6 +839,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
+    @SuppressWarnings("MagicConstant")
     protected Map<String, List<CoordinatorAction>> getCoordActions(Entity entity, Date start, Date end,
                                                                    List<LifeCycle> lifeCycles) throws FalconException {
         Map<String, List<BundleJob>> bundlesMap = findBundles(entity);
@@ -1071,6 +1099,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         return new Date(1000L * 60 * minute + date.getTime());
     }
 
+    @SuppressWarnings("MagicConstant")
     private Date getCoordLastActionTime(CoordinatorJob coord) {
         if (coord.getNextMaterializedTime() != null) {
             Calendar cal = Calendar.getInstance(EntityUtil.getTimeZone(coord.getTimeZone()));

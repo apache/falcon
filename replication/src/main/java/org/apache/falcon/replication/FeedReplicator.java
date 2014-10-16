@@ -19,7 +19,9 @@ package org.apache.falcon.replication;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.EntityUtil;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -129,9 +131,10 @@ public class FeedReplicator extends Configured implements Tool {
         return listPaths;
     }
 
-    private void executePostProcessing(DistCpOptions options) throws IOException {
+    private void executePostProcessing(DistCpOptions options) throws IOException, FalconException {
         Path targetPath = options.getTargetPath();
-        FileSystem fs = targetPath.getFileSystem(getConf());
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                targetPath.toUri(), getConf());
         List<Path> inPaths = options.getSourcePaths();
         assert inPaths.size() == 1 : "Source paths more than 1 can't be handled";
 

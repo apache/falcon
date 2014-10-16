@@ -120,7 +120,8 @@ public abstract class OozieCoordinatorBuilder<T extends Entity> extends OozieEnt
         props.put(WorkflowExecutionArgs.TIMESTAMP.getName(), ACTUAL_TIME_EL);
         props.put("falconDataOperation", getOperation().name());
 
-        props.put(WorkflowExecutionArgs.LOG_DIR.getName(), getLogDirectory(cluster));
+        props.put(WorkflowExecutionArgs.LOG_DIR.getName(),
+                getStoragePath(EntityUtil.getLogPath(cluster, entity)));
         props.put(OozieClient.EXTERNAL_ID,
             new ExternalId(entity.getName(), EntityUtil.getWorkflowNameTag(coordName, entity),
                 "${coord:nominalTime()}").getId());

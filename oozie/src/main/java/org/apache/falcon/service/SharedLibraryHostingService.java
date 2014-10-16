@@ -28,7 +28,6 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.util.StartupProperties;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -73,40 +72,35 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
         Path lib = new Path(ClusterHelper.getLocation(cluster, "working"), "lib");
         Path libext = new Path(ClusterHelper.getLocation(cluster, "working"), "libext");
         try {
+            FileSystem fs = HadoopClientFactory.get().createFalconFileSystem(
+                    ClusterHelper.getConfiguration(cluster));
+
             Properties properties = StartupProperties.get();
-            pushLibsToHDFS(properties.getProperty("system.lib.location"), lib, cluster, NON_FALCON_JAR_FILTER);
-            pushLibsToHDFS(properties.getProperty("libext.paths"), libext, cluster, null);
-            pushLibsToHDFS(properties.getProperty("libext.feed.paths"),
-                    new Path(libext, EntityType.FEED.name()) , cluster, null);
-            pushLibsToHDFS(properties.getProperty("libext.feed.replication.paths"),
-                    new Path(libext, EntityType.FEED.name() + "/replication"), cluster, null);
-            pushLibsToHDFS(properties.getProperty("libext.feed.retention.paths"),
-                    new Path(libext, EntityType.FEED.name() + "/retention"), cluster, null);
-            pushLibsToHDFS(properties.getProperty("libext.process.paths"),
-                    new Path(libext, EntityType.PROCESS.name()) , cluster, null);
+            pushLibsToHDFS(fs, properties.getProperty("system.lib.location"), lib,
+                    NON_FALCON_JAR_FILTER);
+            pushLibsToHDFS(fs, properties.getProperty("libext.paths"), libext, null);
+            pushLibsToHDFS(fs, properties.getProperty("libext.feed.paths"),
+                    new Path(libext, EntityType.FEED.name()) , null);
+            pushLibsToHDFS(fs, properties.getProperty("libext.feed.replication.paths"),
+                    new Path(libext, EntityType.FEED.name() + "/replication"), null);
+            pushLibsToHDFS(fs, properties.getProperty("libext.feed.retention.paths"),
+                    new Path(libext, EntityType.FEED.name() + "/retention"), null);
+            pushLibsToHDFS(fs, properties.getProperty("libext.process.paths"),
+                    new Path(libext, EntityType.PROCESS.name()) , null);
         } catch (IOException e) {
             throw new FalconException("Failed to copy shared libs to cluster" + cluster.getName(), e);
         }
     }
 
-    public static void pushLibsToHDFS(String src, Path target, Cluster cluster, FalconPathFilter pathFilter)
-        throws IOException, FalconException {
+    @SuppressWarnings("ConstantConditions")
+    public static void pushLibsToHDFS(FileSystem fs, String src, Path target,
+                                      FalconPathFilter pathFilter) throws IOException, FalconException {
         if (StringUtils.isEmpty(src)) {
             return;
         }
 
         LOG.debug("Copying libs from {}", src);
-        FileSystem fs;
-        try {
-            fs = getFileSystem(cluster);
-            fs.getConf().set("dfs.umaskmode", "022");  // drwxr-xr-x
-        } catch (Exception e) {
-            throw new FalconException("Unable to connect to HDFS: "
-                    + ClusterHelper.getStorageUrl(cluster), e);
-        }
-        if (!fs.exists(target) && !fs.mkdirs(target)) {
-            throw new FalconException("mkdir " + target + " failed");
-        }
+        createTargetPath(fs, target);
 
         for(String srcPaths : src.split(",")) {
             File srcFile = new File(srcPaths);
@@ -133,18 +127,20 @@ public class SharedLibraryHostingService implements ConfigurationChangeListener 
                     }
                 }
                 fs.copyFromLocalFile(false, true, new Path(file.getAbsolutePath()), targetFile);
-                LOG.info("Copied {} to {} in {}", file.getAbsolutePath(), targetFile.toString(), fs.getUri());
+                fs.setPermission(targetFile, HadoopClientFactory.READ_EXECUTE_PERMISSION);
+                LOG.info("Copied {} to {} in {}",
+                        file.getAbsolutePath(), targetFile.toString(), fs.getUri());
             }
         }
     }
 
-    // the dir is owned by Falcon but world-readable
-    private static FileSystem getFileSystem(Cluster cluster)
-        throws FalconException, IOException {
-        Configuration conf = ClusterHelper.getConfiguration(cluster);
-        conf.setInt("ipc.client.connect.max.retries", 10);
-
-        return HadoopClientFactory.get().createFileSystem(conf);
+    private static void createTargetPath(FileSystem fs,
+                                         Path target) throws IOException, FalconException {
+        // the dir and files MUST be readable by all users
+        if (!fs.exists(target)
+                && !FileSystem.mkdirs(fs, target, HadoopClientFactory.READ_EXECUTE_PERMISSION)) {
+            throw new FalconException("mkdir " + target + " failed");
+        }
     }
 
     @Override

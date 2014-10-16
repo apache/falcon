@@ -109,8 +109,8 @@ public class EntityManagerJerseyIT {
         ClientResponse response = context.submitToFalcon(TestContext.CLUSTER_TEMPLATE, overlay, EntityType.CLUSTER);
         context.assertSuccessful(response);
         FileSystem fs = context.getCluster().getFileSystem();
-        assertLibs(fs, new Path("/project/falcon/working/libext/FEED/retention"));
-        assertLibs(fs, new Path("/project/falcon/working/libext/PROCESS"));
+        assertLibs(fs, new Path("/projects/falcon/working/libext/FEED/retention"));
+        assertLibs(fs, new Path("/projects/falcon/working/libext/PROCESS"));
 
         String tmpFileName = TestContext.overlayParametersOverTemplate(TestContext.FEED_TEMPLATE1, overlay);
         Feed feed = (Feed) EntityType.FEED.getUnmarshaller().unmarshal(new File(tmpFileName));

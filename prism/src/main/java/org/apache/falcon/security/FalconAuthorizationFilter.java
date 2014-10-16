@@ -67,7 +67,7 @@ public class FalconAuthorizationFilter implements Filter {
             LOG.info("Authorizing user={} against request={}", CurrentUser.getUser(), requestParts);
             authorizationProvider.authorizeResource(requestParts.getResource(),
                     requestParts.getAction(), requestParts.getEntityType(),
-                    requestParts.getEntityName(), CurrentUser.getProxyUgi());
+                    requestParts.getEntityName(), CurrentUser.getProxyUGI());
         }
 
         filterChain.doFilter(request, response);

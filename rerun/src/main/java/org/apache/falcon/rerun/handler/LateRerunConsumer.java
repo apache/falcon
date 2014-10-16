@@ -99,7 +99,7 @@ public class LateRerunConsumer<T extends LateRerunHandler<DelayedQueue<LaterunEv
 
         final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
         Configuration conf = LateRerunHandler.getConfiguration(storageEndpoint);
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(lateLogPath.toUri(), conf);
         if (!fs.exists(lateLogPath)) {
             LOG.warn("Late log file: {} not found", lateLogPath);
             return "";

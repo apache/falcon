@@ -51,8 +51,11 @@ import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -92,7 +95,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
     @BeforeClass
     public void setUpDFS() throws Exception {
-        CurrentUser.authenticate("falcon");
+        CurrentUser.authenticate(System.getProperty("user.name"));
 
         srcMiniDFS = EmbeddedCluster.newCluster("cluster1");
         String srcHdfsUrl = srcMiniDFS.getConf().get(HadoopClientFactory.FS_DEFAULT_NAME_KEY);
@@ -240,7 +243,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     }
 
     private COORDINATORAPP getCoordinator(EmbeddedCluster cluster, String appPath) throws Exception {
-        return getCoordinator(cluster.getFileSystem(), new Path(StringUtils.removeStart(appPath, "${nameNode}")));
+        return getCoordinator(cluster.getFileSystem(),
+                new Path(StringUtils.removeStart(appPath, "${nameNode}")));
     }
 
     private String getWorkflowAppPath() {
@@ -270,7 +274,8 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     public void testReplicationCoordsForFSStorageWithMultipleTargets() throws Exception {
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(fsReplFeed, Tag.REPLICATION);
 
-        List<Properties> alphaCoords = builder.buildCoords(alphaTrgCluster, new Path("/alpha/falcon/"));
+        List<Properties> alphaCoords = builder.buildCoords(alphaTrgCluster,
+                new Path("/alpha/falcon/"));
         final COORDINATORAPP alphaCoord = getCoordinator(trgMiniDFS,
             alphaCoords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
         Assert.assertEquals(alphaCoord.getStart(), "2012-10-01T12:05Z");
@@ -339,9 +344,11 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
     }
 
     public void assertWorkflowDefinition(Feed aFeed, WORKFLOWAPP workflow, boolean isTable) {
-        Assert.assertEquals(EntityUtil.getWorkflowName(Tag.REPLICATION, aFeed).toString(), workflow.getName());
+        Assert.assertEquals(EntityUtil.getWorkflowName(Tag.REPLICATION, aFeed).toString(),
+                workflow.getName());
 
-        boolean preProcess = RuntimeProperties.get().getProperty("feed.late.allowed", "true").equalsIgnoreCase("true");
+        boolean preProcess = RuntimeProperties.get().getProperty("feed.late.allowed", "true").equalsIgnoreCase(
+                "true");
         if (preProcess) {
             assertAction(workflow, "pre-processing", true);
         }
@@ -421,8 +428,10 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
 
         HashMap<String, String> props = getCoordProperties(coord);
 
-        final CatalogStorage srcStorage = (CatalogStorage) FeedHelper.createStorage(srcCluster, tableFeed);
-        final CatalogStorage trgStorage = (CatalogStorage) FeedHelper.createStorage(trgCluster, tableFeed);
+        final CatalogStorage srcStorage = (CatalogStorage) FeedHelper.createStorage(srcCluster,
+                tableFeed);
+        final CatalogStorage trgStorage = (CatalogStorage) FeedHelper.createStorage(trgCluster,
+                tableFeed);
 
         // verify the replication param that feed replicator depends on
         Assert.assertEquals(props.get("sourceRelativePaths"), "IGNORE");
@@ -516,18 +525,40 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get(prefix + "Partition"), "${coord:dataInPartitions('input', 'hive-export')}");
     }
 
-    @Test
-    public void testRetentionCoords() throws Exception {
-        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed, srcCluster.getName());
+    @DataProvider(name = "uMaskOptions")
+    private Object[][] createUMaskOptions() {
+        return new Object[][] {
+            {"000"}, // {FsAction.ALL, FsAction.ALL, FsAction.ALL},
+            {"077"}, // {FsAction.ALL, FsAction.NONE, FsAction.NONE}
+            {"027"}, // {FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE}
+            {"017"}, // {FsAction.ALL, FsAction.READ_WRITE, FsAction.NONE}
+            {"012"}, // {FsAction.ALL, FsAction.READ_WRITE, FsAction.READ_EXECUTE}
+            {"022"}, // {FsAction.ALL, FsAction.READ_EXECUTE, FsAction.READ_EXECUTE}
+        };
+    }
+
+    @Test(dataProvider = "uMaskOptions")
+    public void testRetentionCoords(String umask) throws Exception {
+        FileSystem fs = srcMiniDFS.getFileSystem();
+        Configuration conf = fs.getConf();
+        conf.set("fs.permissions.umask-mode", umask);
+
+        // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
+        setUmaskInFsConf(srcCluster, umask);
+
+        org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(feed,
+                srcCluster.getName());
         final Calendar instance = Calendar.getInstance();
         instance.roll(Calendar.YEAR, 1);
         cluster.getValidity().setEnd(instance.getTime());
 
         OozieCoordinatorBuilder builder = OozieCoordinatorBuilder.get(feed, Tag.RETENTION);
-        List<Properties> coords = builder.buildCoords(srcCluster, new Path("/projects/falcon/"));
+        List<Properties> coords = builder.buildCoords(
+                srcCluster, new Path("/projects/falcon/" + umask));
         COORDINATORAPP coord = getCoordinator(srcMiniDFS, coords.get(0).getProperty(OozieEntityBuilder.ENTITY_PATH));
 
-        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(), "${nameNode}/projects/falcon/RETENTION");
+        Assert.assertEquals(coord.getAction().getWorkflow().getAppPath(),
+                "${nameNode}/projects/falcon/" + umask + "/RETENTION");
         Assert.assertEquals(coord.getName(), "FALCON_FEED_RETENTION_" + feed.getName());
         Assert.assertEquals(coord.getFrequency(), "${coord:hours(6)}");
 
@@ -553,15 +584,29 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("feedNames"), feed.getName());
         Assert.assertEquals(props.get("feedInstancePaths"), "IGNORE");
 
-        assertWorkflowRetries(coord);
-        verifyEntityProperties(feed, srcCluster,
-                WorkflowExecutionContext.EntityOperations.DELETE, props);
-        verifyBrokerProperties(srcCluster, props);
+        assertWorkflowRetries(getWorkflowapp(srcMiniDFS.getFileSystem(), coord));
+
+        try {
+            verifyClusterLocationsUMask(srcCluster, fs);
+            verifyWorkflowUMask(fs, coord, umask);
+        } finally {
+            cleanupWorkflowState(fs, coord);
+            FileSystem.closeAll();
+        }
     }
 
     @Test (dataProvider = "secureOptions")
     public void testRetentionCoordsForTable(String secureOption) throws Exception {
         StartupProperties.get().setProperty(SecurityUtil.AUTHENTICATION_TYPE, secureOption);
+
+        final String umask = "000";
+
+        FileSystem fs = trgMiniDFS.getFileSystem();
+        Configuration conf = fs.getConf();
+        conf.set("fs.permissions.umask-mode", umask);
+
+        // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
+        setUmaskInFsConf(trgCluster, umask);
 
         org.apache.falcon.entity.v0.feed.Cluster cluster = FeedHelper.getCluster(tableFeed, trgCluster.getName());
         final Calendar instance = Calendar.getInstance();
@@ -604,9 +649,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 WorkflowExecutionContext.EntityOperations.DELETE, props);
 
         Assert.assertTrue(Storage.TYPE.TABLE == FeedHelper.getStorageType(tableFeed, trgCluster));
-        assertHCatCredentials(
-            getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
-            new Path(coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "")).toString());
+        assertHCatCredentials(getWorkflowapp(trgMiniDFS.getFileSystem(), coord),
+                coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", ""));
+
+        try {
+            verifyClusterLocationsUMask(trgCluster, fs);
+            verifyWorkflowUMask(fs, coord, umask);
+        } finally {
+            cleanupWorkflowState(fs, coord);
+            FileSystem.closeAll();
+        }
     }
 
     private void assertHCatCredentials(WORKFLOWAPP wf, String wfPath) throws IOException {
@@ -635,5 +687,54 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
                 }
             }
         }
+    }
+
+    private void verifyClusterLocationsUMask(Cluster aCluster, FileSystem fs) throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(aCluster, "staging");
+        Path stagingPath = new Path(stagingLocation);
+        if (fs.exists(stagingPath)) {
+            FileStatus fileStatus = fs.getFileStatus(stagingPath);
+            Assert.assertEquals(fileStatus.getPermission().toShort(), 511);
+        }
+
+        String workingLocation = ClusterHelper.getLocation(aCluster, "working");
+        Path workingPath = new Path(workingLocation);
+        if (fs.exists(workingPath)) {
+            FileStatus fileStatus = fs.getFileStatus(workingPath);
+            Assert.assertEquals(fileStatus.getPermission().toShort(), 493);
+        }
+    }
+
+    private void verifyWorkflowUMask(FileSystem fs, COORDINATORAPP coord,
+                                     String defaultUMask) throws IOException {
+        Assert.assertEquals(fs.getConf().get("fs.permissions.umask-mode"), defaultUMask);
+
+        String appPath = coord.getAction().getWorkflow().getAppPath().replace("${nameNode}", "");
+        Path wfPath = new Path(appPath);
+        FileStatus[] fileStatuses = fs.listStatus(wfPath);
+        for (FileStatus fileStatus : fileStatuses) {
+            Assert.assertEquals(fileStatus.getOwner(), CurrentUser.getProxyUGI().getShortUserName());
+
+            final FsPermission permission = fileStatus.getPermission();
+            if (!fileStatus.isDirectory()) {
+                Assert.assertEquals(permission.toString(),
+                        HadoopClientFactory.getFileDefaultPermission(fs.getConf()).toString());
+            }
+        }
+    }
+
+    private void cleanupWorkflowState(FileSystem fs, COORDINATORAPP coord) throws Exception {
+        String appPath = coord.getAction().getWorkflow().getAppPath();
+        Path wfPath = new Path(appPath.replace("${nameNode}", ""));
+        fs.delete(wfPath, true);
+    }
+
+    private static void setUmaskInFsConf(Cluster cluster, String umask) {
+        // ClusterHelper constructs new fs Conf. Add it to cluster properties so that it gets added to FS conf
+        org.apache.falcon.entity.v0.cluster.Property property =
+                new org.apache.falcon.entity.v0.cluster.Property();
+        property.setName("fs.permissions.umask-mode");
+        property.setValue(umask);
+        cluster.getProperties().getProperties().add(property);
     }
 }

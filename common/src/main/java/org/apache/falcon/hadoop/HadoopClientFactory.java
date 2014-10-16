@@ -26,6 +26,9 @@ import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -44,6 +47,11 @@ public final class HadoopClientFactory {
     public static final String MR_JT_ADDRESS_KEY = "mapreduce.jobtracker.address";
     public static final String YARN_RM_ADDRESS_KEY = "yarn.resourcemanager.address";
 
+    public static final FsPermission READ_EXECUTE_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);
+    public static final FsPermission ALL_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
+
     private static final HadoopClientFactory INSTANCE = new HadoopClientFactory();
 
     private HadoopClientFactory() {
@@ -61,7 +69,7 @@ public final class HadoopClientFactory {
      * @throws org.apache.falcon.FalconException
      *          if the filesystem could not be created.
      */
-    public FileSystem createFileSystem(final URI uri) throws FalconException {
+    public FileSystem createFalconFileSystem(final URI uri) throws FalconException {
         Validate.notNull(uri, "uri cannot be null");
 
         try {
@@ -76,7 +84,7 @@ public final class HadoopClientFactory {
         }
     }
 
-    public FileSystem createFileSystem(final Configuration conf)
+    public FileSystem createFalconFileSystem(final Configuration conf)
         throws FalconException {
         Validate.notNull(conf, "configuration cannot be null");
 
@@ -87,17 +95,6 @@ public final class HadoopClientFactory {
             throw new FalconException("Exception while getting FileSystem for: " + nameNode, e);
         } catch (IOException e) {
             throw new FalconException("Exception while getting FileSystem for: " + nameNode, e);
-        }
-    }
-
-    public FileSystem createFileSystem(final URI uri, final Configuration conf)
-        throws FalconException {
-        Validate.notNull(uri, "uri cannot be null");
-
-        try {
-            return createFileSystem(UserGroupInformation.getLoginUser(), uri, conf);
-        } catch (IOException e) {
-            throw new FalconException("Exception while getting FileSystem for: " + uri, e);
         }
     }
 
@@ -115,7 +112,7 @@ public final class HadoopClientFactory {
 
         String nameNode = conf.get(FS_DEFAULT_NAME_KEY);
         try {
-            return createFileSystem(CurrentUser.getProxyUgi(), new URI(nameNode), conf);
+            return createFileSystem(getProxyUGI(), new URI(nameNode), conf);
         } catch (URISyntaxException e) {
             throw new FalconException("Exception while getting FileSystem for proxy: "
                     + CurrentUser.getUser(), e);
@@ -123,6 +120,32 @@ public final class HadoopClientFactory {
             throw new FalconException("Exception while getting FileSystem for proxy: "
                     + CurrentUser.getUser(), e);
         }
+    }
+
+    public FileSystem createProxiedFileSystem(final URI uri) throws FalconException {
+        return createProxiedFileSystem(uri, new Configuration());
+    }
+
+    public FileSystem createProxiedFileSystem(final URI uri,
+                                              final Configuration conf) throws FalconException {
+        Validate.notNull(uri, "uri cannot be null");
+
+        try {
+            return createFileSystem(getProxyUGI(), uri, conf);
+        } catch (IOException e) {
+            throw new FalconException("Exception while getting FileSystem for proxy: "
+                    + CurrentUser.getUser(), e);
+        }
+    }
+
+    private UserGroupInformation getProxyUGI() throws IOException {
+        try { // get the authenticated user
+            return CurrentUser.getProxyUGI();
+        } catch (Exception ignore) {
+            // ignore since the user authentication might have failed or in oozie
+        }
+
+        return UserGroupInformation.getCurrentUser();
     }
 
     /**
@@ -136,8 +159,8 @@ public final class HadoopClientFactory {
      *          if the filesystem could not be created.
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public FileSystem createFileSystem(UserGroupInformation ugi, final URI uri, final Configuration conf)
-        throws FalconException {
+    public FileSystem createFileSystem(UserGroupInformation ugi, final URI uri,
+                                       final Configuration conf) throws FalconException {
         Validate.notNull(ugi, "ugi cannot be null");
         Validate.notNull(conf, "configuration cannot be null");
 
@@ -172,7 +195,7 @@ public final class HadoopClientFactory {
      * @param executeUrl jt url or RM url
      * @throws IOException
      */
-    public static void validateJobClient(String executeUrl) throws IOException {
+    public void validateJobClient(String executeUrl) throws IOException {
         final JobConf jobConf = new JobConf();
         jobConf.set(MR_JT_ADDRESS_KEY, executeUrl);
         jobConf.set(YARN_RM_ADDRESS_KEY, executeUrl);
@@ -188,6 +211,25 @@ public final class HadoopClientFactory {
             jobClient.getClusterStatus().getMapTasks();
         } catch (InterruptedException e) {
             throw new IOException("Exception creating job client:" + e.getMessage(), e);
+        }
+    }
+
+    public static FsPermission getDirDefaultPermission(Configuration conf) {
+        return FsPermission.getDirDefault().applyUMask(FsPermission.getUMask(conf));
+    }
+
+    public static FsPermission getFileDefaultPermission(Configuration conf) {
+        return FsPermission.getFileDefault().applyUMask(FsPermission.getUMask(conf));
+    }
+
+    public static void mkdirsWithDefaultPerms(FileSystem fs, Path path) throws IOException {
+        mkdirs(fs, path, getDirDefaultPermission(fs.getConf()));
+    }
+
+    public static void mkdirs(FileSystem fs, Path path,
+                              FsPermission permission) throws IOException {
+        if (!FileSystem.mkdirs(fs, path, permission)) {
+            throw new IOException("mkdir failed for " + path);
         }
     }
 }

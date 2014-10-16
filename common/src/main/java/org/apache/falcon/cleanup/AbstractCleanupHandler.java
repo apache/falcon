@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.store.ConfigurationStore;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -29,6 +30,7 @@ import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
@@ -72,9 +74,8 @@ public abstract class AbstractCleanupHandler {
                 "log.cleanup.frequency." + timeunit + ".retention", "days(1)");
     }
 
-    protected FileStatus[] getAllLogs(org.apache.falcon.entity.v0.cluster.Cluster cluster,
+    protected FileStatus[] getAllLogs(FileSystem fs, Cluster cluster,
                                       Entity entity) throws FalconException {
-        FileSystem fs = getFileSystem(cluster);
         FileStatus[] paths;
         try {
             Path logPath = getLogPath(cluster, entity);
@@ -91,27 +92,42 @@ public abstract class AbstractCleanupHandler {
         return new Path(EntityUtil.getLogPath(cluster, entity), getRelativeLogPath());
     }
 
-    protected FileSystem getFileSystem(org.apache.falcon.entity.v0.cluster.Cluster cluster)
-        throws FalconException {
+    private FileSystem getFileSystemAsEntityOwner(Cluster cluster,
+                                                  Entity entity) throws FalconException {
+        try {
+            final AccessControlList acl = EntityUtil.getACL(entity);
+            if (acl == null) {
+                throw new FalconException("ACL for entity " + entity.getName() + " is empty");
+            }
 
-        return HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
+            final String proxyUser = acl.getOwner();
+            // user for proxying
+            CurrentUser.authenticate(proxyUser);
+            return HadoopClientFactory.get().createProxiedFileSystem(
+                    ClusterHelper.getConfiguration(cluster));
+        } catch (Exception e) {
+            throw new FalconException(e);
+        }
     }
 
     protected void delete(String clusterName, Entity entity, long retention) throws FalconException {
         Cluster currentCluster = STORE.get(EntityType.CLUSTER, clusterName);
-        if (isClusterInCurrentColo(currentCluster.getColo())) {
-            LOG.info("Cleaning up logs for {}: {} in cluster: {} with retention: {}",
-                    entity.getEntityType(), entity.getName(), clusterName, retention);
-            FileStatus[] logs = getAllLogs(currentCluster, entity);
-            deleteInternal(currentCluster, entity, retention, logs);
-        } else {
+        if (!isClusterInCurrentColo(currentCluster.getColo())) {
             LOG.info("Ignoring cleanup for {}: {} in cluster: {} as this does not belong to current colo",
                     entity.getEntityType(), entity.getName(), clusterName);
+            return;
         }
+
+        LOG.info("Cleaning up logs for {}: {} in cluster: {} with retention: {}",
+                entity.getEntityType(), entity.getName(), clusterName, retention);
+
+        FileSystem fs = getFileSystemAsEntityOwner(currentCluster, entity);
+        FileStatus[] logs = getAllLogs(fs, currentCluster, entity);
+        deleteInternal(fs, currentCluster, entity, retention, logs);
     }
 
-    protected void deleteInternal(Cluster cluster, Entity entity,
-                                  long retention, FileStatus[] logs) throws FalconException {
+    private void deleteInternal(FileSystem fs, Cluster cluster, Entity entity,
+                                long retention, FileStatus[] logs) throws FalconException {
         if (logs == null || logs.length == 0) {
             LOG.info("Nothing to delete for cluster: {}, entity: {}", cluster.getName(),
                     entity.getName());
@@ -123,13 +139,10 @@ public abstract class AbstractCleanupHandler {
         for (FileStatus log : logs) {
             if (now - log.getModificationTime() > retention) {
                 try {
-                    boolean isDeleted = getFileSystem(cluster).delete(log.getPath(), true);
-                    if (!isDeleted) {
-                        LOG.error("Unable to delete path: {}", log.getPath());
-                    } else {
-                        LOG.info("Deleted path: {}", log.getPath());
-                    }
-                    deleteParentIfEmpty(getFileSystem(cluster), log.getPath().getParent());
+                    boolean isDeleted = fs.delete(log.getPath(), true);
+                    LOG.error(isDeleted ? "Deleted path: {}" : "Unable to delete path: {}",
+                            log.getPath());
+                    deleteParentIfEmpty(fs, log.getPath().getParent());
                 } catch (IOException e) {
                     throw new FalconException(" Unable to delete log file : "
                             + log.getPath() + " for entity " + entity.getName()

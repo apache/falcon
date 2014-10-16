@@ -142,6 +142,11 @@ public class JailedFileSystem extends FileSystem {
     }
 
     @Override
+    public void setPermission(Path p, FsPermission permission) throws IOException {
+        localFS.setPermission(toLocalPath(p), permission);
+    }
+
+    @Override
     public FileChecksum getFileChecksum(Path f) throws IOException {
         final byte[] md5 = DigestUtils.md5(FileUtils.readFileToByteArray(new File(toLocalPath(f).toString())));
         return new FileChecksum() {

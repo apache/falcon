@@ -127,7 +127,7 @@ public class EmbeddedCluster {
         locs.getLocations().add(location);
         location = new Location();
         location.setName("working");
-        location.setPath("/project/falcon/working");
+        location.setPath("/projects/falcon/working");
         locs.getLocations().add(location);
         clusterEntity.setLocations(locs);
     }

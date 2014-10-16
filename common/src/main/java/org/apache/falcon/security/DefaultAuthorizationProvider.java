@@ -25,7 +25,6 @@ import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
-import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.util.StartupProperties;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
@@ -284,7 +283,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         if (entityName != null) { // lifecycle actions
             Entity entity = getEntity(entityName, entityType);
             authorizeEntity(entity.getName(), entity.getEntityType().name(),
-                    getACL(entity), action, proxyUgi);
+                    EntityUtil.getACL(entity), action, proxyUgi);
         } else {
             // non lifecycle actions, lifecycle actions with null entity will validate later
             LOG.info("Authorization for action={} will be done in the API", action);
@@ -298,24 +297,6 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         } catch (FalconException e) {
             throw new AuthorizationException(e);
         }
-    }
-
-    protected AccessControlList getACL(Entity entity) throws AuthorizationException {
-        switch (entity.getEntityType()) {
-        case CLUSTER:
-            return ((Cluster) entity).getACL();
-
-        case FEED:
-            return ((org.apache.falcon.entity.v0.feed.Feed) entity).getACL();
-
-        case PROCESS:
-            return ((org.apache.falcon.entity.v0.process.Process) entity).getACL();
-
-        default:
-            break;
-        }
-
-        throw new AuthorizationException("Cannot get owner for entity: " + entity.getName());
     }
 
     protected void authorizeLineageResource(String authenticatedUser, String action) {

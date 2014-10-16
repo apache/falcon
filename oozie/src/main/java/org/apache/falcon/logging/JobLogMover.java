@@ -20,6 +20,7 @@ package org.apache.falcon.logging;
 
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.process.EngineType;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -71,7 +72,7 @@ public class JobLogMover {
 
             Path path = new Path(context.getLogDir() + "/"
                     + String.format("%03d", context.getWorkflowRunId()));
-            FileSystem fs = path.getFileSystem(getConf());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(path.toUri());
 
             if (EntityType.FEED.name().equalsIgnoreCase(context.getEntityType())
                     || notUserWorkflowEngineIsOozie(context.getUserWorkflowEngine())) {

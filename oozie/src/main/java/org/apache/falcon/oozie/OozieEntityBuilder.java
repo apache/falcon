@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.CatalogStorage;
 import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.ProcessHelper;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.cluster.Cluster;
@@ -127,8 +126,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         throw new IllegalArgumentException("Unhandled type: " + entity.getEntityType());
     }
 
-    protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement, JAXBContext jaxbContext, Path outPath)
-        throws FalconException {
+    protected Path marshal(Cluster cluster, JAXBElement<?> jaxbElement,
+                           JAXBContext jaxbContext, Path outPath) throws FalconException {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -140,8 +139,8 @@ public abstract class OozieEntityBuilder<T extends Entity> {
                 LOG.debug(writer.getBuffer().toString());
             }
 
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(
-                outPath.toUri(), ClusterHelper.getConfiguration(cluster));
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    outPath.toUri(), ClusterHelper.getConfiguration(cluster));
             OutputStream out = fs.create(outPath);
             try {
                 marshaller.marshal(jaxbElement, out);
@@ -261,8 +260,11 @@ public abstract class OozieEntityBuilder<T extends Entity> {
 
     protected void copySharedLibs(Cluster cluster, Path libPath) throws FalconException {
         try {
-            SharedLibraryHostingService.pushLibsToHDFS(StartupProperties.get().getProperty("system.lib.location"),
-                libPath, cluster, FALCON_JAR_FILTER);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    libPath.toUri(), ClusterHelper.getConfiguration(cluster));
+            SharedLibraryHostingService.pushLibsToHDFS(
+                    fs, StartupProperties.get().getProperty("system.lib.location"),
+                    libPath, FALCON_JAR_FILTER);
         } catch (IOException e) {
             throw new FalconException("Failed to copy shared libs on cluster " + cluster.getName(), e);
         }
@@ -279,16 +281,11 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         return prop;
     }
 
-    protected String getLogDirectory(Cluster cluster) {
-        return getStoragePath(new Path(EntityUtil.getBaseStagingPath(cluster, entity), "logs"));
-    }
-
     protected <T> T unmarshal(String template, JAXBContext context, Class<T> cls) throws FalconException {
         InputStream resourceAsStream = null;
         try {
             resourceAsStream = OozieEntityBuilder.class.getResourceAsStream(template);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            @SuppressWarnings("unchecked")
             JAXBElement<T> jaxbElement = unmarshaller.unmarshal(new StreamSource(resourceAsStream), cls);
             return jaxbElement.getValue();
         } catch (JAXBException e) {
@@ -310,5 +307,4 @@ public abstract class OozieEntityBuilder<T extends Entity> {
         }
         throw new IllegalArgumentException("Unhandled type " + entity.getEntityType());
     }
-
 }

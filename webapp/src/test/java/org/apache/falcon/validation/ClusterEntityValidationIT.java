@@ -20,12 +20,19 @@ package org.apache.falcon.validation;
 
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.falcon.entity.ClusterHelper;
+import org.apache.falcon.entity.parser.ClusterEntityParser;
+import org.apache.falcon.entity.parser.EntityParserFactory;
+import org.apache.falcon.entity.parser.ValidationException;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.cluster.ACL;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interface;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.resource.TestContext;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -33,6 +40,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -41,13 +49,31 @@ import java.util.Map;
  * interface endpoints are valid.
  */
 public class ClusterEntityValidationIT {
+    private static final FsPermission OWNER_ONLY_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+
     private final TestContext context = new TestContext();
     private Map<String, String> overlay;
+
+    private final ClusterEntityParser parser =
+            (ClusterEntityParser) EntityParserFactory.getParser(EntityType.CLUSTER);
+    private Cluster cluster;
+    private FileSystem fs;
 
 
     @BeforeClass
     public void setup() throws Exception {
         TestContext.prepare();
+
+        overlay = context.getUniqueOverlay();
+        String filePath = TestContext.overlayParametersOverTemplate(
+                TestContext.CLUSTER_TEMPLATE, overlay);
+        context.setCluster(filePath);
+        InputStream stream = new FileInputStream(filePath);
+        cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
+        Assert.assertNotNull(cluster);
+
+        fs = FileSystem.get(ClusterHelper.getConfiguration(cluster));
     }
 
     /**
@@ -89,15 +115,15 @@ public class ClusterEntityValidationIT {
         overlay = context.getUniqueOverlay();
         String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         InputStream stream = new FileInputStream(filePath);
-        Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
-        Assert.assertNotNull(cluster);
-        cluster.setColo("default");  // validations will be ignored if not default & tests fail
+        Cluster clusterEntity = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
+        Assert.assertNotNull(clusterEntity);
+        clusterEntity.setColo("default");  // validations will be ignored if not default & tests fail
 
-        Interface anInterface = ClusterHelper.getInterface(cluster, interfacetype);
+        Interface anInterface = ClusterHelper.getInterface(clusterEntity, interfacetype);
         anInterface.setEndpoint(endpoint);
 
         File tmpFile = TestContext.getTempFile();
-        EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
+        EntityType.CLUSTER.getMarshaller().marshal(clusterEntity, tmpFile);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertFailure(response);
     }
@@ -107,20 +133,55 @@ public class ClusterEntityValidationIT {
         overlay = context.getUniqueOverlay();
         String filePath = TestContext.overlayParametersOverTemplate(TestContext.CLUSTER_TEMPLATE, overlay);
         InputStream stream = new FileInputStream(filePath);
-        Cluster cluster = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
-        Assert.assertNotNull(cluster);
+        Cluster clusterEntity = (Cluster) EntityType.CLUSTER.getUnmarshaller().unmarshal(stream);
+        Assert.assertNotNull(clusterEntity);
 
         // Adding ACL with authorization disabled must not hurt
         ACL clusterACL = new ACL();
         clusterACL.setOwner(TestContext.REMOTE_USER);
         clusterACL.setGroup(TestContext.REMOTE_USER);
-        cluster.setACL(clusterACL);
+        clusterEntity.setACL(clusterACL);
 
-        cluster.setColo("default");  // validations will be ignored if not default & tests fail
+        clusterEntity.setColo("default");  // validations will be ignored if not default & tests fail
 
         File tmpFile = TestContext.getTempFile();
-        EntityType.CLUSTER.getMarshaller().marshal(cluster, tmpFile);
+        EntityType.CLUSTER.getMarshaller().marshal(clusterEntity, tmpFile);
         ClientResponse response = context.submitFileToFalcon(EntityType.CLUSTER, tmpFile.getAbsolutePath());
         context.assertSuccessful(response);
+    }
+
+    @Test
+    public void testValidateClusterLocations() throws Exception {
+        TestContext.createClusterLocations(cluster, fs);
+        parser.validate(cluster);
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateClusterLocationsThatDontExist() throws Exception {
+        TestContext.deleteClusterLocations(cluster, fs);
+        parser.validate(cluster);
+        Assert.fail("Should have thrown a validation exception");
+    }
+
+    @Test (expectedExceptions = ValidationException.class)
+    public void testValidateClusterLocationsThatExistWithBadOwner() throws Exception {
+        TestContext.deleteClusterLocations(cluster, fs);
+        createClusterLocationsBadPermissions(cluster);
+        parser.validate(cluster);
+        Assert.fail("Should have thrown a validation exception");
+    }
+
+    private void createClusterLocationsBadPermissions(Cluster clusterEntity) throws IOException {
+        String stagingLocation = ClusterHelper.getLocation(clusterEntity, "staging");
+        Path stagingPath = new Path(stagingLocation);
+        if (!fs.exists(stagingPath)) {
+            FileSystem.mkdirs(fs, stagingPath, OWNER_ONLY_PERMISSION);
+        }
+
+        String workingLocation = ClusterHelper.getLocation(clusterEntity, "working");
+        Path workingPath = new Path(workingLocation);
+        if (!fs.exists(workingPath)) {
+            FileSystem.mkdirs(fs, stagingPath, OWNER_ONLY_PERMISSION);
+        }
     }
 }

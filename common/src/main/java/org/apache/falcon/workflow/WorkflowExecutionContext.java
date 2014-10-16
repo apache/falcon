@@ -30,8 +30,6 @@ import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.json.simple.JSONValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -285,13 +283,8 @@ public class WorkflowExecutionContext {
         OutputStream out = null;
         Path file = new Path(contextFile);
         try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(file.toUri());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(file.toUri());
             out = fs.create(file);
-
-            // making sure falcon can read this file
-            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-            fs.setPermission(file, permission);
-
             out.write(JSONValue.toJSONString(context).getBytes());
         } catch (IOException e) {
             throw new FalconException("Error serializing context to: " + contextFile,  e);
@@ -315,7 +308,8 @@ public class WorkflowExecutionContext {
     public static WorkflowExecutionContext deSerialize(String contextFile) throws FalconException {
         try {
             Path lineageDataPath = new Path(contextFile); // file has 777 permissions
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(lineageDataPath.toUri());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                    lineageDataPath.toUri());
 
             BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(lineageDataPath)));
             return new WorkflowExecutionContext((Map<WorkflowExecutionArgs, String>) JSONValue.parse(in));

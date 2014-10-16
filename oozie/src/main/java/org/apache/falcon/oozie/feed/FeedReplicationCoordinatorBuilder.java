@@ -281,7 +281,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,
                                         Path buildPath) throws FalconException {
         Configuration conf = ClusterHelper.getConfiguration(trgCluster);
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
         try {
             // copy import export scripts to stagingDir
@@ -298,7 +298,8 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
         }
     }
 
-    private void copyHiveScript(FileSystem fs, Path scriptPath, String resource) throws IOException {
+    private void copyHiveScript(FileSystem fs, Path scriptPath,
+                                String resource) throws IOException {
         OutputStream out = null;
         InputStream in = null;
         try {
@@ -312,7 +313,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     }
 
     protected void persistHiveConfiguration(FileSystem fs, Path confPath,
-        Cluster cluster, String prefix) throws IOException {
+                                            Cluster cluster, String prefix) throws IOException {
         Configuration hiveConf = getHiveCredentialsAsConf(cluster);
         OutputStream out = null;
         try {

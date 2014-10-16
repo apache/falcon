@@ -3,6 +3,8 @@ Apache Falcon (incubating) Change log
 Trunk (Unreleased)
 
   INCOMPATIBLE CHANGES
+   FALCON-753 Change the ownership for staging dir to user submitting the feed
+   (Venkatesh Seetharam)
 
   NEW FEATURES
    FALCON-687 Add hooks for extensions in Audit (Venkatesh Seetharam)

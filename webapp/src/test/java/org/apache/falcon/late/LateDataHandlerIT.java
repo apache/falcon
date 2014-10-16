@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
 import org.apache.falcon.latedata.LateDataHandler;
 import org.apache.falcon.resource.TestContext;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.FSUtils;
 import org.apache.falcon.util.HiveTestUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -65,6 +66,7 @@ public class LateDataHandlerIT {
 
     @BeforeClass
     public void prepare() throws Exception {
+        CurrentUser.authenticate(TestContext.REMOTE_USER);
         TestContext.cleanupStore();
 
         String filePath = TestContext.overlayParametersOverTemplate(

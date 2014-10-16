@@ -37,7 +37,6 @@ import org.apache.falcon.rerun.event.LaterunEvent;
 import org.apache.falcon.rerun.policy.AbstractRerunPolicy;
 import org.apache.falcon.rerun.policy.RerunPolicyFactory;
 import org.apache.falcon.rerun.queue.DelayedQueue;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.conf.Configuration;
@@ -66,7 +65,6 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
             if (wait == -1) {
                 LOG.info("Late rerun expired for entity: {} ({})", entityType, entityName);
 
-                CurrentUser.authenticate(workflowUser);
                 java.util.Properties properties =
                         this.getWfEngine().getWorkflowProperties(cluster, wfId);
                 String logDir = properties.getProperty("logDir");
@@ -77,7 +75,7 @@ public class LateRerunHandler<M extends DelayedQueue<LaterunEvent>> extends
                 LOG.info("Going to delete path: {}", lateLogPath);
                 final String storageEndpoint = properties.getProperty(AbstractWorkflowEngine.NAME_NODE);
                 Configuration conf = getConfiguration(storageEndpoint);
-                FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+                FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
                 if (fs.exists(lateLogPath)) {
                     boolean deleted = fs.delete(lateLogPath, true);
                     if (deleted) {

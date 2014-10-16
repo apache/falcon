@@ -34,7 +34,7 @@
     <locations>
         <location name="staging" path="/projects/falcon/staging"/>
         <location name="temp" path="/tmp"/>
-        <location name="working" path="/project/falcon/working"/>
+        <location name="working" path="/projects/falcon/working"/>
     </locations>
     <properties>
     </properties>

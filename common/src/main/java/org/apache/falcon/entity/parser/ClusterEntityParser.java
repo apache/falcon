@@ -38,7 +38,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ import java.io.IOException;
  */
 public class ClusterEntityParser extends EntityParser<Cluster> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProcessEntityParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterEntityParser.class);
 
     public ClusterEntityParser() {
         super(EntityType.CLUSTER);
@@ -122,9 +122,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
                 conf.set(SecurityUtil.NN_PRINCIPAL, nameNodePrincipal);
             }
 
-            // todo: ideally check if the end user has access using createProxiedFileSystem
-            // hftp won't work and bug is logged at HADOOP-10215
-            HadoopClientFactory.get().createFileSystem(conf);
+            HadoopClientFactory.get().createProxiedFileSystem(conf);
         } catch (FalconException e) {
             throw new ValidationException("Invalid storage server or port: " + storageUrl, e);
         }
@@ -135,7 +133,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         LOG.info("Validating execute interface: {}", executeUrl);
 
         try {
-            HadoopClientFactory.validateJobClient(executeUrl);
+            HadoopClientFactory.get().validateJobClient(executeUrl);
         } catch (IOException e) {
             throw new ValidationException("Invalid Execute server or port: " + executeUrl, e);
         }
@@ -231,55 +229,69 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
     }
 
     /**
-     * Validate the locations on the cluster is owned by falcon.
+     * Validate the locations on the cluster exists with appropriate permissions
+     * for the user to write to this directory.
      *
      * @param cluster cluster entity
      * @throws ValidationException
      */
     private void validateLocations(Cluster cluster) throws ValidationException {
+        Configuration conf = ClusterHelper.getConfiguration(cluster);
+        FileSystem fs;
         try {
-            Configuration conf = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
-            for (Location location : cluster.getLocations().getLocations()) {
-                if (location.getName().equals("temp")) {
-                    continue;
-                }
-
-                try {
-                    Path locationPath = new Path(location.getPath());
-                    if (fs.exists(locationPath)) {
-                        FileStatus fileStatus = fs.getFileStatus(locationPath);
-                        checkPathPermissions(locationPath, fileStatus);
-                        checkPathOwner(locationPath, fileStatus);
-                    }
-                } catch (IOException e) {
-                    throw new ValidationException("Unable to validate the location " + location
-                            + "for cluster.", e);
-                }
-            }
+            fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
         } catch (FalconException e) {
-            throw new ValidationException("Unable to validate the locations for cluster.", e);
+            throw new ValidationException(
+                    "Unable to get file system handle for cluster " + cluster.getName(), e);
+        }
+
+        for (Location location : cluster.getLocations().getLocations()) {
+            final String locationName = location.getName();
+            if (locationName.equals("temp")) {
+                continue;
+            }
+
+            try {
+                checkPathOwnerAndPermission(cluster.getName(), location.getPath(), fs,
+                        "staging".equals(locationName)
+                                ? HadoopClientFactory.ALL_PERMISSION
+                                : HadoopClientFactory.READ_EXECUTE_PERMISSION);
+            } catch (IOException e) {
+                throw new ValidationException("Unable to validate the location " + location
+                        + " for cluster " + cluster.getName(), e);
+            }
         }
     }
 
-    private void checkPathPermissions(Path locationPath,
-                                      FileStatus fileStatus) throws ValidationException {
-        if (fileStatus.getPermission().getUserAction() != FsAction.ALL) {
-            LOG.error("Path {} doesn't have rwx permissions {}",
-                    locationPath, fileStatus.getPermission());
-            throw new ValidationException("Path " + locationPath
-                    + " doesn't have rwx permissions: " + fileStatus.getPermission());
-        }
-    }
+    private void checkPathOwnerAndPermission(String clusterName, String location, FileSystem fs,
+                                             FsPermission expectedPermission)
+        throws IOException, ValidationException {
 
-    private void checkPathOwner(Path locationPath,
-                                FileStatus fileStatus) throws IOException, ValidationException {
-        final String owner = UserGroupInformation.getLoginUser().getShortUserName();
-        if (!fileStatus.getOwner().equals(owner)) {
-            LOG.error("Path {} with owner {} doesn't match the actual path owner {}",
-                    locationPath, owner, fileStatus.getOwner());
-            throw new ValidationException("Path [" + locationPath + "] with owner [" + owner
-                    + "] doesn't match the actual path  owner " + fileStatus.getOwner());
+        Path locationPath = new Path(location);
+        FileStatus fileStatus = fs.getFileStatus(locationPath);
+        if (!fs.exists(locationPath)) {
+            throw new ValidationException("Location " + location
+                    + " for cluster " + clusterName + " must exist.");
         }
+
+        // falcon owns this path on each cluster
+        final String loginUser = UserGroupInformation.getLoginUser().getShortUserName();
+        final String locationOwner = fileStatus.getOwner();
+        if (!locationOwner.equals(loginUser)) {
+            LOG.error("Location {} has owner {}, should be the process user {}",
+                    locationPath, locationOwner, loginUser);
+            throw new ValidationException("Path [" + locationPath + "] has owner [" + locationOwner
+                    + "], should be the process user " + loginUser);
+        }
+
+        if (fileStatus.getPermission().toShort() != expectedPermission.toShort()) {
+            LOG.error("Location {} has permissions {}, should be {}",
+                    locationPath, fileStatus.getPermission(), expectedPermission);
+            throw new ValidationException("Path " + locationPath + " has permissions: "
+                    + fileStatus.getPermission() + ", should be " + expectedPermission);
+        }
+
+        // try to list to see if the user is able to write to this folder
+        fs.listStatus(locationPath);
     }
 }

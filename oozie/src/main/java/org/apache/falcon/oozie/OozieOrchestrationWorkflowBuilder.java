@@ -210,7 +210,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag) throws FalconException {
         String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(ClusterHelper.getConfiguration(cluster));
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster));
         try {
             addExtensionJars(fs, new Path(libext), wf);
             addExtensionJars(fs, new Path(libext, entity.getEntityType().name()), wf);
@@ -261,12 +262,13 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     }
 
     // creates hive-site.xml configuration in conf dir for the given cluster on the same cluster.
-    protected void createHiveConfiguration(Cluster cluster, Path workflowPath, String prefix) throws FalconException {
+    protected void createHiveConfiguration(Cluster cluster, Path workflowPath,
+                                           String prefix) throws FalconException {
         Configuration hiveConf = getHiveCredentialsAsConf(cluster);
 
         try {
             Configuration conf = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(conf);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
             // create hive conf to stagingDir
             Path confPath = new Path(workflowPath + "/conf");
@@ -277,8 +279,8 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
         }
     }
 
-    private void persistHiveConfiguration(FileSystem fs, Path confPath, Configuration hiveConf, String prefix)
-        throws IOException {
+    private void persistHiveConfiguration(FileSystem fs, Path confPath, Configuration hiveConf,
+                                          String prefix) throws IOException {
         OutputStream out = null;
         try {
             out = fs.create(new Path(confPath, prefix + "hive-site.xml"));

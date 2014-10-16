@@ -91,6 +91,9 @@ public class AbstractTestBase {
     }
 
     protected void storeEntity(EntityType type, String name) throws Exception {
+        final String proxyUser = CurrentUser.getUser();
+        final String defaultGroupName = CurrentUser.getPrimaryGroupName();
+
         Unmarshaller unmarshaller = type.getUnmarshaller();
         store = ConfigurationStore.get();
         store.remove(type, name);
@@ -100,12 +103,16 @@ public class AbstractTestBase {
             cluster.setName(name);
             ClusterHelper.getInterface(cluster, Interfacetype.WRITE)
                     .setEndpoint(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
+            decorateACL(proxyUser, defaultGroupName, cluster);
+
             store.publish(type, cluster);
             break;
 
         case FEED:
             Feed feed = (Feed) unmarshaller.unmarshal(this.getClass().getResource(FEED_XML));
             feed.setName(name);
+            decorateACL(proxyUser, defaultGroupName, feed);
+
             store.publish(type, feed);
             break;
 
@@ -117,10 +124,50 @@ public class AbstractTestBase {
             if (!fs.exists(new Path(process.getWorkflow() + "/lib"))) {
                 fs.mkdirs(new Path(process.getWorkflow() + "/lib"));
             }
+
+            decorateACL(proxyUser, defaultGroupName, process);
+
             store.publish(type, process);
             break;
         default:
         }
+    }
+
+    private void decorateACL(String proxyUser, String defaultGroupName, Cluster cluster) {
+        if (cluster.getACL() != null) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.cluster.ACL clusterACL =
+                new org.apache.falcon.entity.v0.cluster.ACL();
+        clusterACL.setOwner(proxyUser);
+        clusterACL.setGroup(defaultGroupName);
+        cluster.setACL(clusterACL);
+    }
+
+    private void decorateACL(String proxyUser, String defaultGroupName, Feed feed) {
+        if (feed.getACL() != null) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.feed.ACL feedACL =
+                new org.apache.falcon.entity.v0.feed.ACL();
+        feedACL.setOwner(proxyUser);
+        feedACL.setGroup(defaultGroupName);
+        feed.setACL(feedACL);
+    }
+
+    private void decorateACL(String proxyUser, String defaultGroupName,
+                             Process process) {
+        if (process.getACL() != null) {
+            return;
+        }
+
+        org.apache.falcon.entity.v0.process.ACL processACL =
+                new org.apache.falcon.entity.v0.process.ACL();
+        processACL.setOwner(proxyUser);
+        processACL.setGroup(defaultGroupName);
+        process.setACL(processACL);
     }
 
     public void setup() throws Exception {
@@ -147,7 +194,7 @@ public class AbstractTestBase {
 
     // assumes there will always be at least one group for a logged in user
     protected String getGroupName() throws IOException {
-        String[] groupNames = CurrentUser.getProxyUgi().getGroupNames();
+        String[] groupNames = CurrentUser.getProxyUGI().getGroupNames();
         System.out.println("groupNames = " + Arrays.asList(groupNames));
         return groupNames[0];
     }

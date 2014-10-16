@@ -35,6 +35,7 @@ import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.common.FeedDataPath.VARS;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.expression.ExpressionHelper;
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -127,7 +128,8 @@ public class FeedEvictor extends Configured implements Tool {
 
         Path path = new Path(logFile);
         EvictedInstanceSerDe.serializeEvictedInstancePaths(
-                path.getFileSystem(getConf()), path, instancePaths);
+                HadoopClientFactory.get().createProxiedFileSystem(
+                        path.toUri(), getConf()), path, instancePaths);
 
         int len = buffer.length();
         if (len > 0) {
@@ -157,11 +159,10 @@ public class FeedEvictor extends Configured implements Tool {
         }
     }
 
-    private void fileSystemEvictor(String feedPath, String retentionLimit, String timeZone)
-        throws IOException, ELException {
-
+    private void fileSystemEvictor(String feedPath, String retentionLimit,
+                                   String timeZone) throws IOException, ELException, FalconException {
         Path normalizedPath = new Path(feedPath);
-        FileSystem fs = normalizedPath.getFileSystem(getConf());
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(normalizedPath.toUri());
         feedPath = normalizedPath.toUri().getPath();
         LOG.info("Normalized path: {}", feedPath);
 
@@ -526,7 +527,8 @@ public class FeedEvictor extends Configured implements Tool {
             if (isTableExternal) { // nuke the dirs if an external table
                 final String location = partitionToDrop.getLocation();
                 final Path path = new Path(location);
-                deleted = path.getFileSystem(new Configuration()).delete(path, true);
+                deleted = HadoopClientFactory.get()
+                        .createProxiedFileSystem(path.toUri()) .delete(path, true);
             }
             if (!isTableExternal || deleted) {
                 // replace ',' with ';' since message producer splits instancePaths string by ','

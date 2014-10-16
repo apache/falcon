@@ -25,6 +25,7 @@ import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.testng.Assert;
@@ -69,7 +70,7 @@ public class LogCleanupServiceTest extends AbstractTestBase {
     @Override
     @BeforeClass
     public void setup() throws Exception {
-        this.dfsCluster = EmbeddedCluster.newCluster("testCluster");
+        this.dfsCluster = EmbeddedCluster.newCluster("testCluster", CurrentUser.getUser());
         conf = dfsCluster.getConf();
         fs = dfsCluster.getFileSystem();
         fs.delete(new Path("/"), true);

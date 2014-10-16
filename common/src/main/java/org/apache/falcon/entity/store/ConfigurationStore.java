@@ -58,21 +58,15 @@ public final class ConfigurationStore implements FalconService {
     private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
     private static final String UTF_8 = CharEncoding.UTF_8;
 
-    private static final ConfigurationStore STORE = new ConfigurationStore();
+    private static final FsPermission STORE_PERMISSION =
+            new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
 
     private Set<ConfigurationChangeListener> listeners = new LinkedHashSet<ConfigurationChangeListener>();
 
     private ThreadLocal<Entity> updatesInProgress = new ThreadLocal<Entity>();
 
-    public static ConfigurationStore get() {
-        return STORE;
-    }
-
     private final Map<EntityType, ConcurrentHashMap<String, Entity>> dictionary
         = new HashMap<EntityType, ConcurrentHashMap<String, Entity>>();
-
-    private final FileSystem fs;
-    private final Path storePath;
 
     private static final Entity NULL = new Entity() {
         @Override
@@ -80,6 +74,15 @@ public final class ConfigurationStore implements FalconService {
             return "NULL";
         }
     };
+
+    private static final ConfigurationStore STORE = new ConfigurationStore();
+
+    public static ConfigurationStore get() {
+        return STORE;
+    }
+
+    private final FileSystem fs;
+    private final Path storePath;
 
     private ConfigurationStore() {
         for (EntityType type : EntityType.values()) {
@@ -98,13 +101,12 @@ public final class ConfigurationStore implements FalconService {
      */
     private FileSystem initializeFileSystem() {
         try {
-            FileSystem fileSystem = HadoopClientFactory.get().createFileSystem(storePath.toUri());
+            FileSystem fileSystem =
+                    HadoopClientFactory.get().createFalconFileSystem(storePath.toUri());
             if (!fileSystem.exists(storePath)) {
                 LOG.info("Creating configuration store directory: {}", storePath);
-                fileSystem.mkdirs(storePath);
                 // set permissions so config store dir is owned by falcon alone
-                FsPermission permission = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
-                fileSystem.setPermission(storePath, permission);
+                HadoopClientFactory.mkdirs(fileSystem, storePath, STORE_PERMISSION);
             }
 
             return fileSystem;
@@ -331,7 +333,7 @@ public final class ConfigurationStore implements FalconService {
      */
     private void archive(EntityType type, String name) throws IOException {
         Path archivePath = new Path(storePath, "archive" + Path.SEPARATOR + type);
-        fs.mkdirs(archivePath);
+        HadoopClientFactory.mkdirs(fs, archivePath, STORE_PERMISSION);
         fs.rename(new Path(storePath, type + Path.SEPARATOR + URLEncoder.encode(name, UTF_8) + ".xml"),
                 new Path(archivePath, URLEncoder.encode(name, UTF_8) + "." + System.currentTimeMillis()));
         LOG.info("Archived configuration {}/{}", type, name);

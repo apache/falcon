@@ -16,6 +16,10 @@
 ---+++ Sample Pipeline
 ---++++ Cluster   
 Cluster definition that contains end points for name node, job tracker, oozie and jms server:
+The cluster locations MUST be created prior to submitting a cluster entity to Falcon.
+*staging* must have 777 permissions and the parent dirs must have execute permissions
+*working* must have 755 permissions and the parent dirs must have execute permissions
+
 <verbatim>
 <?xml version="1.0"?>
 <!--

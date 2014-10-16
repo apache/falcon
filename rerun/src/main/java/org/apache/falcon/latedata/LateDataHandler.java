@@ -32,8 +32,6 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -130,15 +128,12 @@ public class LateDataHandler extends Configured implements Tool {
         return computedMetrics;
     }
 
-    private void persistMetrics(Map<String, Long> metrics, Path file) throws IOException, FalconException {
+    private void persistMetrics(Map<String, Long> metrics,
+                                Path file) throws IOException, FalconException {
         OutputStream out = null;
-        try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(file.toUri(), getConf());
+        try {  // created in a map job
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(file.toUri());
             out = fs.create(file);
-
-            // making sure falcon can read this file
-            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-            fs.setPermission(file, permission);
 
             for (Map.Entry<String, Long> entry : metrics.entrySet()) {
                 out.write((entry.getKey() + "=" + entry.getValue() + "\n").getBytes());
@@ -212,7 +207,7 @@ public class LateDataHandler extends Configured implements Tool {
     }
 
     private long usage(Path inPath, Configuration conf) throws IOException, FalconException {
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(inPath.toUri(), conf);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(inPath.toUri(), conf);
         FileStatus[] fileStatuses = fs.globStatus(inPath);
         if (fileStatuses == null || fileStatuses.length == 0) {
             return 0;
@@ -261,7 +256,7 @@ public class LateDataHandler extends Configured implements Tool {
         throws Exception {
 
         StringBuilder buffer = new StringBuilder();
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(file.toUri(), conf);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(file.toUri(), conf);
         BufferedReader in = new BufferedReader(new InputStreamReader(fs.open(file)));
         String line;
         try {

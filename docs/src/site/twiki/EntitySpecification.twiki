@@ -69,6 +69,11 @@ Location has the name and the path, name is the type of locations like staging, 
 and path is the hdfs path for each location.
 Falcon would use the location to do intermediate processing of entities in hdfs and hence Falcon
 should have read/write/execute permission on these locations.
+These locations MUST be created prior to submitting a cluster entity to Falcon.
+*staging* must have 777 permissions and the parent dirs must have execute permissions so multiple
+users can write to this location
+*working* must have 755 permissions and the parent dirs must have execute permissions so multiple
+users can read from this location
 
 ---+++ ACL
 

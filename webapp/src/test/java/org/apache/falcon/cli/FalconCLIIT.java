@@ -1014,6 +1014,7 @@ public class FalconCLIIT {
         OutputStream out = new FileOutputStream(file);
         props.setProperty("falcon.recipe.processName", context.getProcessName());
         props.setProperty("falcon.recipe.src.cluster.name", context.getClusterName());
+        props.setProperty("falcon.recipe.processEndDate", context.getProcessEndTime());
         props.setProperty("falcon.recipe.inputFeedName", context.getInputFeedName());
         props.setProperty("falcon.recipe.outputFeedName", context.getOutputFeedName());
         props.setProperty("falcon.recipe.workflow.path", TestContext.class.getResource("/fs-workflow.xml").getPath());

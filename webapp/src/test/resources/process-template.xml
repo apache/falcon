@@ -22,7 +22,7 @@
     <pipelines>testPipeline,dataReplicationPipeline</pipelines>
     <clusters>
         <cluster name="##src.cluster.name##">
-            <validity end="2012-04-21T00:00Z" start="2012-04-20T00:00Z"/>
+            <validity end="##processEndDate##" start="2012-04-20T00:00Z"/>
         </cluster>
     </clusters>
 

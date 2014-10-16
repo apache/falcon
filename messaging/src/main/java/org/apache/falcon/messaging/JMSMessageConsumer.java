@@ -21,6 +21,7 @@ package org.apache.falcon.messaging;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
 import org.apache.falcon.workflow.WorkflowJobEndNotificationService;
@@ -98,6 +99,9 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
         try {
             WorkflowExecutionContext context = createContext(mapMessage);
             LOG.info("Created context from JMS message {}", context);
+
+            // Login the user so listeners can access FS and WfEngine as this user
+            CurrentUser.authenticate(context.getWorkflowUser());
 
             if (context.hasWorkflowFailed()) {
                 onFailure(context);

@@ -66,6 +66,7 @@ public abstract class AbstractRerunConsumer<T extends RerunEvent, M extends Abst
                     continue;
                 }
 
+                // Login the user to access WfEngine as this user
                 CurrentUser.authenticate(message.getWorkflowUser());
                 String jobStatus = handler.getWfEngine().getWorkflowStatus(
                         message.getClusterName(), message.getWfId());

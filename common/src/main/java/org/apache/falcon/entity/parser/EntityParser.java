@@ -119,7 +119,7 @@ public abstract class EntityParser<T extends Entity> {
                              AccessControlList acl) throws AuthorizationException {
         try {
             SecurityUtil.getAuthorizationProvider().authorizeEntity(entityName,
-                    getEntityType().name(), acl, "validate", CurrentUser.getProxyUgi());
+                    getEntityType().name(), acl, "validate", CurrentUser.getProxyUGI());
         } catch (FalconException e) {
             throw new AuthorizationException(e);
         } catch (IOException e) {

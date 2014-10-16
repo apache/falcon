@@ -232,13 +232,15 @@ public abstract class AbstractEntityManager {
 
     // Parallel update can get very clumsy if two feeds are updated which
     // are referred by a single process. Sequencing them.
-    public synchronized APIResult update(HttpServletRequest request, String type, String entityName, String colo,
-                                         String effectiveTimeStr) {
+    public synchronized APIResult update(HttpServletRequest request, String type, String entityName,
+                                         String colo, String effectiveTimeStr) {
         checkColo(colo);
         try {
             EntityType entityType = EntityType.valueOf(type.toUpperCase());
             Entity oldEntity = EntityUtil.getEntity(type, entityName);
             Entity newEntity = deserializeEntity(request, entityType);
+            // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
+            decorateEntityWithACL(newEntity);
             validate(newEntity);
 
             validateUpdate(oldEntity, newEntity);
@@ -326,6 +328,8 @@ public abstract class AbstractEntityManager {
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Entity entity = deserializeEntity(request, entityType);
+        // KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass
+        decorateEntityWithACL(entity);
 
         Entity existingEntity = configStore.get(entityType, entity.getName());
         if (existingEntity != null) {
@@ -342,6 +346,50 @@ public abstract class AbstractEntityManager {
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
         return entity;
+    }
+
+    /**
+     * KLUDGE - Until ACL is mandated entity passed should be decorated for equals check to pass.
+     * existingEntity in config store will have teh decoration and equals check fails
+     * if entity passed is not decorated for checking if entity already exists.
+     *
+     * @param entity entity
+     */
+    private void decorateEntityWithACL(Entity entity) {
+        if (SecurityUtil.isAuthorizationEnabled() || EntityUtil.getACL(entity) != null) {
+            return; // not necessary to decorate
+        }
+
+        final String proxyUser = CurrentUser.getUser();
+        final String defaultGroupName = CurrentUser.getPrimaryGroupName();
+        switch (entity.getEntityType()) {
+        case CLUSTER:
+            org.apache.falcon.entity.v0.cluster.ACL clusterACL =
+                    new org.apache.falcon.entity.v0.cluster.ACL();
+            clusterACL.setOwner(proxyUser);
+            clusterACL.setGroup(defaultGroupName);
+            ((org.apache.falcon.entity.v0.cluster.Cluster) entity).setACL(clusterACL);
+            break;
+
+        case FEED:
+            org.apache.falcon.entity.v0.feed.ACL feedACL =
+                    new org.apache.falcon.entity.v0.feed.ACL();
+            feedACL.setOwner(proxyUser);
+            feedACL.setGroup(defaultGroupName);
+            ((org.apache.falcon.entity.v0.feed.Feed) entity).setACL(feedACL);
+            break;
+
+        case PROCESS:
+            org.apache.falcon.entity.v0.process.ACL processACL =
+                    new org.apache.falcon.entity.v0.process.ACL();
+            processACL.setOwner(proxyUser);
+            processACL.setGroup(defaultGroupName);
+            ((org.apache.falcon.entity.v0.process.Process) entity).setACL(processACL);
+            break;
+
+        default:
+            break;
+        }
     }
 
     protected Entity deserializeEntity(HttpServletRequest request, EntityType entityType)
@@ -612,7 +660,7 @@ public abstract class AbstractEntityManager {
     protected boolean isEntityAuthorized(Entity entity) {
         try {
             SecurityUtil.getAuthorizationProvider().authorizeResource("entities", "list",
-                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUgi());
+                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUGI());
         } catch (Exception e) {
             LOG.error("Authorization failed for entity=" + entity.getName()
                     + " for user=" + CurrentUser.getUser(), e);

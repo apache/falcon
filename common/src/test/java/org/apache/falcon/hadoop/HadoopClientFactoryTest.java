@@ -64,7 +64,7 @@ public class HadoopClientFactoryTest {
             Configuration conf = embeddedCluster.getConf();
             URI uri = new URI(conf.get(HadoopClientFactory.FS_DEFAULT_NAME_KEY));
             Assert.assertNotNull(uri);
-            HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUgi(), uri, conf);
+            HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUGI(), uri, conf);
             Assert.fail("Impersonation should have failed.");
         } catch (Exception e) {
             Assert.assertEquals(e.getCause().getClass(), RemoteException.class);
@@ -99,7 +99,7 @@ public class HadoopClientFactoryTest {
         Assert.assertNotNull(uri);
 
         CurrentUser.authenticate(System.getProperty("user.name"));
-        FileSystem fs = HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUgi(), uri, conf);
+        FileSystem fs = HadoopClientFactory.get().createFileSystem(CurrentUser.getProxyUGI(), uri, conf);
         Assert.assertNotNull(fs);
     }
 }

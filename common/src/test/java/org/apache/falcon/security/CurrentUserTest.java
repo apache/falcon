@@ -37,7 +37,7 @@ public class CurrentUserTest {
     @Test
     public void testGetProxyUser() throws Exception {
         CurrentUser.authenticate("proxy");
-        UserGroupInformation proxyUgi = CurrentUser.getProxyUgi();
+        UserGroupInformation proxyUgi = CurrentUser.getProxyUGI();
         Assert.assertNotNull(proxyUgi);
         Assert.assertEquals(proxyUgi.getUserName(), "proxy");
     }

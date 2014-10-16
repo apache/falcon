@@ -301,11 +301,17 @@ Falcon should be configured to communicate with Prism over TLS in secure mode. I
 
 ---++ Changes to ownership and permissions of directories managed by Falcon
 
-| *Directory*             | *Location*                                                        | *Owner* | *Permissions* |
-| Configuration Store     | ${config.store.uri}                                               | falcon  | 750           |
-| Oozie coord/bundle XMLs | ${cluster.staging-location}/workflows/{entity}/{entity-name}      | falcon  | 644           |
-| Shared libs             | {cluster.working}/{lib,libext}                                    | falcon  | 755           |
-| App logs                | ${cluster.staging-location}/workflows/{entity}/{entity-name}/logs | falcon  | 777           |
+| *Directory*              | *Location*                                                        | *Owner* | *Permissions* |
+| Configuration Store      | ${config.store.uri}                                               | falcon  | 700           |
+| Cluster Staging Location | ${cluster.staging-location}                                       | falcon  | 777           |
+| Cluster Working Location | ${cluster.working-location}                                       | falcon  | 755           |
+| Shared libs              | {cluster.working}/{lib,libext}                                    | falcon  | 755           |
+| Oozie coord/bundle XMLs  | ${cluster.staging-location}/workflows/{entity}/{entity-name}      | $user   | cluster umask |
+| App logs                 | ${cluster.staging-location}/workflows/{entity}/{entity-name}/logs | $user   | cluster umask |
+
+*Note:* Please note that the cluster staging and working locations MUST be created prior to
+submitting a cluster entity to Falcon. Also, note that the the parent dirs must have execute
+permissions.
 
 
 ---++ Backwards compatibility

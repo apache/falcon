@@ -18,7 +18,6 @@
 
 package org.apache.falcon.oozie;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
@@ -34,8 +33,6 @@ import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.workflow.engine.AbstractWorkflowEngine;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.oozie.client.OozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +42,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -76,8 +72,6 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         BUNDLEAPP bundle = new BUNDLEAPP();
         bundle.setName(EntityUtil.getWorkflowName(entity).toString());
         // all the properties are set prior to bundle and coordinators creation
-
-        createLogsDir(cluster, buildPath); //create logs dir
 
         for (Properties coordProps : coords) {
             // add the coordinator to the bundle
@@ -133,23 +127,6 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         return properties;
     }
 
-    private void createLogsDir(Cluster cluster, Path buildPath) throws FalconException {
-        try {
-            FileSystem fs = HadoopClientFactory.get().createFileSystem(buildPath.toUri(),
-                ClusterHelper.getConfiguration(cluster));
-            Path logsDir = new Path(buildPath.getParent(), "logs");
-            if (!fs.mkdirs(logsDir)) {
-                throw new FalconException("Failed to create " + logsDir);
-            }
-
-            // logs are copied with in oozie as the user in Post Processing and hence 777 permissions
-            FsPermission permission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL);
-            fs.setPermission(logsDir, permission);
-        } catch (IOException e) {
-            throw new FalconException(e);
-        }
-    }
-
     protected Path marshal(Cluster cluster, BUNDLEAPP bundle, Path outPath) throws FalconException {
         return marshal(cluster, new org.apache.falcon.oozie.bundle.ObjectFactory().createBundleApp(bundle),
             OozieUtils.BUNDLE_JAXB_CONTEXT, new Path(outPath, "bundle.xml"));
@@ -160,20 +137,17 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
     protected abstract List<Properties> buildCoords(Cluster cluster, Path bundlePath) throws FalconException;
 
     public static BUNDLEAPP unmarshal(Cluster cluster, Path path) throws FalconException {
-        InputStream resourceAsStream = null;
         try {
-            FileSystem fs =
-                HadoopClientFactory.get().createFileSystem(path.toUri(), ClusterHelper.getConfiguration(cluster));
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                        path.toUri(), ClusterHelper.getConfiguration(cluster));
             Unmarshaller unmarshaller = OozieUtils.BUNDLE_JAXB_CONTEXT.createUnmarshaller();
-            @SuppressWarnings("unchecked") JAXBElement<BUNDLEAPP> jaxbElement = (JAXBElement<BUNDLEAPP>)
-                unmarshaller.unmarshal(new StreamSource(fs.open(path)), BUNDLEAPP.class);
+            @SuppressWarnings("unchecked") JAXBElement<BUNDLEAPP> jaxbElement =
+                    unmarshaller.unmarshal(new StreamSource(fs.open(path)), BUNDLEAPP.class);
             return jaxbElement.getValue();
         } catch (JAXBException e) {
             throw new FalconException(e);
         } catch (IOException e) {
             throw new FalconException(e);
-        } finally {
-            IOUtils.closeQuietly(resourceAsStream);
         }
     }
 }

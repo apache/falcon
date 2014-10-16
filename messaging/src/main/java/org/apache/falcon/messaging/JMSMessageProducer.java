@@ -18,10 +18,10 @@
 
 package org.apache.falcon.messaging;
 
+import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -35,7 +35,6 @@ import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.Topic;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -184,7 +183,7 @@ public class JMSMessageProducer {
         String[] feedPaths;
         try {
             feedPaths = getFeedPaths();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Error getting instance paths: ", e);
             throw new RuntimeException(e);
         }
@@ -248,7 +247,7 @@ public class JMSMessageProducer {
         message.put(key.getName(), value);
     }
 
-    private String[] getFeedPaths() throws IOException {
+    private String[] getFeedPaths() throws Exception {
         WorkflowExecutionContext.EntityOperations operation = context.getOperation();
         if (operation == WorkflowExecutionContext.EntityOperations.GENERATE
                 || operation == WorkflowExecutionContext.EntityOperations.REPLICATE) {
@@ -258,7 +257,7 @@ public class JMSMessageProducer {
 
         // else case of feed retention
         Path logFile = new Path(context.getLogFile());
-        FileSystem fs = FileSystem.get(logFile.toUri(), new Configuration());
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(logFile.toUri());
 
         if (!fs.exists(logFile)) {
             // Evictor Failed without deleting a single path

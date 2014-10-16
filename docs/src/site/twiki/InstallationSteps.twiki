@@ -261,6 +261,9 @@ src/bin/package.sh <<hadoop-version>> <<oozie-version>>
 bin/falcon-start
 </verbatim>
 Make sure the hadoop and oozie endpoints are according to your setup in examples/entity/filesystem/standalone-cluster.xml
+The cluster locations,staging and working dirs, MUST be created prior to submitting a cluster entity to Falcon.
+*staging* must have 777 permissions and the parent dirs must have execute permissions
+*working* must have 755 permissions and the parent dirs must have execute permissions
 <verbatim>
 bin/falcon entity -submit -type cluster -file examples/entity/filesystem/standalone-cluster.xml
 </verbatim>

@@ -49,7 +49,7 @@ public final class CurrentUser {
 
     private final ThreadLocal<Subject> currentSubject = new ThreadLocal<Subject>();
 
-    public static void authenticate(String user) {
+    public static void authenticate(final String user) {
         if (user == null || user.isEmpty()) {
             throw new IllegalStateException("Bad user name sent for authentication");
         }
@@ -59,6 +59,13 @@ public final class CurrentUser {
 
         Subject subject = new Subject();
         subject.getPrincipals().add(new FalconPrincipal(user));
+
+        try {  // initialize proxy user
+            createProxyUGI(user);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create a proxy user");
+        }
+
         LOG.info("Logging in {}", user);
         INSTANCE.currentSubject.set(subject);
     }
@@ -93,19 +100,38 @@ public final class CurrentUser {
             new ConcurrentHashMap<String, UserGroupInformation>();
 
     /**
+     * Create a proxy UGI object for the current authenticated user.
+     *
+     * @param proxyUser logged in user
+     * @return UGI object
+     * @throws IOException
+     */
+    public static UserGroupInformation createProxyUGI(String proxyUser) throws IOException {
+        UserGroupInformation proxyUgi = userUgiMap.get(proxyUser);
+        if (proxyUgi == null) {
+            // taking care of a race condition, the latest UGI will be discarded
+            proxyUgi = UserGroupInformation.createProxyUser(
+                    proxyUser, UserGroupInformation.getLoginUser());
+            userUgiMap.putIfAbsent(proxyUser, proxyUgi);
+        }
+
+        return proxyUgi;
+    }
+
+    /**
      * Dole out a proxy UGI object for the current authenticated user.
      *
      * @return UGI object
      * @throws java.io.IOException
      */
-    public static UserGroupInformation getProxyUgi() throws IOException {
+    public static UserGroupInformation getProxyUGI() throws IOException {
         String proxyUser = getUser();
 
         UserGroupInformation proxyUgi = userUgiMap.get(proxyUser);
         if (proxyUgi == null) {
             // taking care of a race condition, the latest UGI will be discarded
-            proxyUgi = UserGroupInformation
-                    .createProxyUser(proxyUser, UserGroupInformation.getLoginUser());
+            proxyUgi = UserGroupInformation.createProxyUser(
+                    proxyUser, UserGroupInformation.getLoginUser());
             userUgiMap.putIfAbsent(proxyUser, proxyUgi);
         }
 
@@ -113,7 +139,17 @@ public final class CurrentUser {
     }
 
     public static Set<String> getGroupNames() throws IOException {
-        HashSet<String> s = new HashSet<String>(Arrays.asList(getProxyUgi().getGroupNames()));
+        HashSet<String> s = new HashSet<String>(Arrays.asList(getProxyUGI().getGroupNames()));
         return Collections.unmodifiableSet(s);
+    }
+
+    public static String getPrimaryGroupName() {
+        try {
+            return getProxyUGI().getPrimaryGroupName();
+        } catch (IOException ignore) {
+            // ignored
+        }
+
+        return "unknown"; // this can only happen in tests
     }
 }
