@@ -117,6 +117,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-482 Concurrent requests made using Proxy Oozie client fail
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-764 Falcon retry of failed process/feed instances broken during restart
    (Shaik Idris via Suhas Vasu)
 
