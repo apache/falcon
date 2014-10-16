@@ -17,8 +17,6 @@
 (function(exports) {
   "use strict";
 
-  var USER_ID = 'falcon-dashboard';
-
   function onError(msg) {
     $('#alert-panel-body').html(msg);
     $('#alert-panel').alert();
@@ -31,8 +29,19 @@
   }
 
   function add_user(url) {
-    var paramSeparator = (url.indexOf('?') != -1) ? '&' : '?';
-    return url + paramSeparator + 'user.name=' + USER_ID;
+     var paramSeparator = (url.indexOf('?') != -1) ? '&' : '?';
+     var user_id = getQuery_params()['user.name'];
+     return (user_id == undefined) ? url : (url + paramSeparator + 'user.name=' + user_id);
+  }
+
+  function getQuery_params() {
+    var query = location.search.substr(1);
+    var result = {};
+    query.split("&").forEach(function(part) {
+      var item = part.split("=");
+      result[item[0]] = decodeURIComponent(item[1]);
+    });
+    return result;
   }
 
   function getJson_impl(url, success) {

@@ -171,7 +171,7 @@ public class FalconAuthenticationFilter
                     final String user = Servlets.getUserFromRequest(httpRequest);
                     if (StringUtils.isEmpty(user)) {
                         ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                                "User can't be empty");
+                                "Param user.name can't be empty");
                     } else if (blackListedUsers.contains(user)) {
                         ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                                 "User can't be a superuser:" + BLACK_LISTED_USERS_KEY);

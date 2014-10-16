@@ -117,6 +117,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-799 Falcon Dashboard unusable when server is started with umask 077
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-678 Falcon's default port has changed to 15443 (Balu Vellanki via
    Venkatesh Seetharam)
 

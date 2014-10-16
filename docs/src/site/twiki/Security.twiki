@@ -85,26 +85,25 @@ implementation that enforces the following authorization policy.
 
 ---++++ Entity and Instance Management Operations Policy
 
-* All Entity and Instance operations are authorized for users who created them, Owners and users
-with group memberships
-* Reference to entities with in a feed or process is allowed with out enforcing permissions
-Any Feed or Process can refer to a Cluster entity not owned by the Feed or Process owner
-Any Process can refer to a Feed entity not owned by the Process owner
+   * All Entity and Instance operations are authorized for users who created them, Owners and users with group memberships
+   * Reference to entities with in a feed or process is allowed with out enforcing permissions
+
+Any Feed or Process can refer to a Cluster entity not owned by the Feed or Process owner. Any Process can refer to a Feed entity not owned by the Process owner
 
 The authorization is enforced in the following way:
 
-if admin resource,
-     if authenticated user name matches the admin users configuration
-     Else if groups of the authenticated user matches the admin groups configuration
-     Else authorization exception is thrown
-Else if entities or instance resource
-     if the authenticated user matches the owner in ACL for the entity
-     Else if the groups of the authenticated user matches the group in ACL for the entity
-     Else authorization exception is thrown
-Else if lineage resource
-     All have read-only permissions, reason being folks should be able to examine the dependency
-     and allow reuse
+   * if admin resource,
+      * If authenticated user name matches the admin users configuration
+      * Else if groups of the authenticated user matches the admin groups configuration
+      * Else authorization exception is thrown
+   * Else if entities or instance resource
+      * If the authenticated user matches the owner in ACL for the entity
+      * Else if the groups of the authenticated user matches the group in ACL for the entity
+      * Else authorization exception is thrown
+   * Else if lineage resource
+      * All have read-only permissions, reason being folks should be able to examine the dependency and allow reuse
 
+To authenticate user for REST api calls, user should append "user.name=<username>" to the query.
 
 *operations on Entity Resource*
 
@@ -333,12 +332,11 @@ configured specifically in the file.
 
 ---+++ Falcon Dashboard
 
-The dashboard assumes an anonymous user in Pseudo/Simple method and hence anonymous users must be enabled for it to
-work.
-<verbatim>
-# Indicates if anonymous requests are allowed when using 'simple' authentication.
-*.falcon.http.authentication.simple.anonymous.allowed=true
-</verbatim>
+To initialize the current user for dashboard, user should append query param "user.name=<username>" to the REST api call.
+
+If dashboard user wishes to change the current user, they should do the following.
+   * delete the hadoop.auth cookie from browser cache.
+   * append query param "user.name=<new_user>" to the next REST API call.
 
 In Kerberos method, the browser must support HTTP Kerberos SPNEGO.
 
