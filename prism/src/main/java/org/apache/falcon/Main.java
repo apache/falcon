@@ -24,6 +24,7 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.EmbeddedServer;
 import org.slf4j.Logger;
@@ -63,16 +64,45 @@ public final class Main {
         CommandLine cmd = parseArgs(args);
         String projectVersion = BuildProperties.get().getProperty("project.version");
         String appPath = "webapp/target/falcon-webapp-" + projectVersion;
-        int appPort = 15443;
 
         if (cmd.hasOption(APP_PATH)) {
             appPath = cmd.getOptionValue(APP_PATH);
         }
 
+        final String enableTLSFlag = StartupProperties.get().getProperty("falcon.enableTLS");
+        final int appPort = getApplicationPort(cmd, enableTLSFlag);
+        final boolean enableTLS = isTLSEnabled(enableTLSFlag, appPort);
+        StartupProperties.get().setProperty("falcon.enableTLS", String.valueOf(enableTLS));
+
+        startEmbeddedMQIfEnabled();
+
+        LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        LOG.info("Server starting with TLS ? {} on port {}", enableTLS, appPort);
+        LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
+        server.start();
+    }
+
+    private static int getApplicationPort(CommandLine cmd, String enableTLSFlag) {
+        final int appPort;
         if (cmd.hasOption(APP_PORT)) {
             appPort = Integer.valueOf(cmd.getOptionValue(APP_PORT));
+        } else {
+            // default : falcon.enableTLS is true
+            appPort = StringUtils.isEmpty(enableTLSFlag)
+                    || enableTLSFlag.equals("true") ? 15443 : 15000;
         }
 
+        return appPort;
+    }
+
+    private static boolean isTLSEnabled(String enableTLSFlag, int appPort) {
+        return Boolean.valueOf(StringUtils.isEmpty(enableTLSFlag)
+                ? System.getProperty("falcon.enableTLS", (appPort % 1000) == 443 ? "true" : "false")
+                : enableTLSFlag);
+    }
+
+    private static void startEmbeddedMQIfEnabled() throws Exception {
         boolean startActiveMq = Boolean.valueOf(System.getProperty("falcon.embeddedmq", "true"));
         if (startActiveMq) {
             String dataDir = System.getProperty("falcon.embeddedmq.data", "target/");
@@ -87,14 +117,5 @@ public final class Main {
             broker.setSchedulerSupport(true);
             broker.start();
         }
-
-        boolean enableTLS = Boolean.valueOf(StartupProperties.get().getProperty("falcon.enableTLS",
-                System.getProperty("falcon.enableTLS", (appPort % 1000) == 443 ? "true" : "false")));
-        LOG.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        LOG.info("Server started with TLS ?" + enableTLS);
-        LOG.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        StartupProperties.get().setProperty("falcon.enableTLS", String.valueOf(enableTLS));
-        EmbeddedServer server = EmbeddedServer.newServer(appPort, appPath, enableTLS);
-        server.start();
     }
 }

@@ -117,6 +117,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-678 Falcon's default port has changed to 15443 (Balu Vellanki via
+   Venkatesh Seetharam)
+
    FALCON-482 Concurrent requests made using Proxy Oozie client fail
    (Sowmya Ramesh via Venkatesh Seetharam)
 

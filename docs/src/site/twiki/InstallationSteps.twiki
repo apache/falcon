@@ -176,9 +176,11 @@ export FALCON_SERVER_OPTS="-Djava.awt.headless=true -Djava.security.krb5.realm= 
 bin/falcon-start [-port <port>]
 </verbatim>
 
-By default, 
-* falcon server starts at port 15443 (https) by default . To change the port, use -port option
-   * falcon.enableTLS can be set to true or false explicitly to enable SSL, if not port that end with 443 will automatically put falcon on https://
+By default,
+* If falcon.enableTLS is set to true explicitly or not set at all, falcon starts at port 15443 on https:// by default.
+* If falcon.enableTLS is set to false explicitly, falcon starts at port 15000 on http://.
+* To change the port, use -port option.
+   * If falcon.enableTLS is not set explicitly, port that ends with 443 will automatically put falcon on https://. Any other port will put falcon on http://.
 * falcon server starts embedded active mq. To control this behaviour, set the following system properties using -D option in environment variable FALCON_OPTS:
    * falcon.embeddedmq=<true/false> - Should server start embedded active mq, default true
    * falcon.embeddedmq.port=<port> - Port for embedded active mq, default 61616
