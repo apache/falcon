@@ -45,7 +45,7 @@
   }
 
   function loadInstance(start, end) {
-    falcon.getJson(url('instance/status') + '?start=' + start + '&end=' + end, function (data) {
+    falcon.getJson(url('instance/status') + '?orderBy=startTime&start=' + start + '&end=' + end, function (data) {
       if (data.instances == null)
         return;
 
