@@ -117,6 +117,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-804 Remove Oozie 3.* patch files from Falcon (Peeyush Bishnoi via
+   Venkatesh Seetharam)
+
    FALCON-803 Instances displayed on Dashboard entity page should be sorted
    by startTime (Balu Vellanki via Venkatesh Seetharam)
 
