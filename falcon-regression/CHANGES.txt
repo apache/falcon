@@ -14,6 +14,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-812 all the entities must have acl (Raghav Kumar Gautam)
+
    FALCON-801 Increasing time to wait for instance (Paul Isaychuk)
 
    FALCON-809 Add message from response if assertSucceeded fails (Ruslan Ostafiychuk)

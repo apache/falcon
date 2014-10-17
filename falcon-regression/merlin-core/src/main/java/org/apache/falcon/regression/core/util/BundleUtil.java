@@ -20,7 +20,11 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.falcon.regression.Entities.ClusterMerlin;
+import org.apache.falcon.regression.Entities.FeedMerlin;
+import org.apache.falcon.regression.Entities.ProcessMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
+import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -97,17 +101,26 @@ public final class BundleUtil {
 
             if (data.contains("uri:ivory:cluster:0.1") || data.contains("uri:falcon:cluster:0.1")) {
                 LOGGER.info("data been added to cluster");
-                clusterData = data;
+                ClusterMerlin clusterMerlin = new ClusterMerlin(data);
+                clusterMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
+                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                clusterData = clusterMerlin.toString();
             } else if (data.contains("uri:ivory:feed:0.1")
                     ||
                 data.contains("uri:falcon:feed:0.1")) {
                 LOGGER.info("data been added to feed");
-                dataSets.add(InstanceUtil.setFeedACL(data));
+                FeedMerlin feedMerlin = new FeedMerlin(data);
+                feedMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
+                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                dataSets.add(feedMerlin.toString());
             } else if (data.contains("uri:ivory:process:0.1")
                     ||
                 data.contains("uri:falcon:process:0.1")) {
                 LOGGER.info("data been added to process");
-                processData = data;
+                ProcessMerlin processMerlin = new ProcessMerlin(data);
+                processMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
+                        MerlinConstants.CURRENT_USER_GROUP, "*");
+                processData = processMerlin.toString();
             }
         }
         Assert.assertNotNull(clusterData, "expecting cluster data to be non-empty");
