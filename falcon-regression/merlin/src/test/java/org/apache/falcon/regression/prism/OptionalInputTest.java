@@ -278,7 +278,7 @@ public class OptionalInputTest extends BaseTestClass {
         //from now on ... it should wait of input0 also
         InstanceUtil.waitTillInstancesAreCreated(cluster, process, 0);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,
-                2, CoordinatorAction.Status.WAITING, EntityType.PROCESS);
+                2, CoordinatorAction.Status.WAITING, EntityType.PROCESS, 10);
         HadoopUtil.flattenAndPutDataInFolder(clusterFS, OSUtil.SINGLE_FILE,
             inputPath + "/input0/", dataDates);
         InstanceUtil.waitTillInstanceReachState(oozieClient, processName,

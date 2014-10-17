@@ -14,6 +14,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-801 Increasing time to wait for instance (Paul Isaychuk)
+
    FALCON-809 Add message from response if assertSucceeded fails (Ruslan Ostafiychuk)
 
    FALCON-802 Authorization test disabled (Paul Isaychuk)
