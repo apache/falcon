@@ -196,7 +196,7 @@ public class LateDataHandlerIT {
     }
 
     private void reinstatePartition() throws Exception {
-        final HCatClient client = HiveCatalogService.get(metastoreUrl);
+        final HCatClient client = HiveCatalogService.getHCatClient(metastoreUrl);
 
         Map<String, String> partitionSpec = new HashMap<String, String>();
         partitionSpec.put("ds", PARTITION_VALUE);

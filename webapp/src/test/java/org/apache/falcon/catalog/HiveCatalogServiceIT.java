@@ -62,7 +62,7 @@ public class HiveCatalogServiceIT {
         CurrentUser.authenticate(TestContext.REMOTE_USER);
 
         hiveCatalogService = new HiveCatalogService();
-        client = HiveCatalogService.get(METASTORE_URL);
+        client = HiveCatalogService.getHCatClient(METASTORE_URL);
 
         createDatabase();
         createTable();
@@ -169,7 +169,7 @@ public class HiveCatalogServiceIT {
 
     @Test
     public void testGet() throws Exception {
-        Assert.assertNotNull(HiveCatalogService.get(METASTORE_URL));
+        Assert.assertNotNull(HiveCatalogService.getHCatClient(METASTORE_URL));
     }
 
     @Test

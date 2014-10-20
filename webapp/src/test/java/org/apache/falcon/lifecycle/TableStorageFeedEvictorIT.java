@@ -87,7 +87,7 @@ public class TableStorageFeedEvictorIT {
     public void setUp() throws Exception {
         FeedEvictor.OUT.set(stream);
 
-        client = HiveCatalogService.get(METASTORE_URL);
+        client = HiveCatalogService.getHCatClient(METASTORE_URL);
 
         HiveTestUtils.createDatabase(METASTORE_URL, DATABASE_NAME);
         final List<String> partitionKeys = Arrays.asList("ds", "region");

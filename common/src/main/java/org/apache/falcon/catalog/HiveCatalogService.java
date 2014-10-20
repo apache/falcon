@@ -19,11 +19,12 @@
 package org.apache.falcon.catalog;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.ClusterHelper;
-import org.apache.falcon.entity.v0.cluster.Cluster;
-import org.apache.falcon.entity.v0.cluster.Interfacetype;
+import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.thrift.DelegationTokenIdentifier;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.io.Text;
 import org.apache.hcatalog.api.HCatClient;
 import org.apache.hcatalog.api.HCatDatabase;
 import org.apache.hcatalog.api.HCatPartition;
@@ -39,7 +40,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An implementation of CatalogService that uses Hive Meta Store (HCatalog)
@@ -49,27 +49,7 @@ public class HiveCatalogService extends AbstractCatalogService {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveCatalogService.class);
 
-    private static final ConcurrentHashMap<String, HCatClient> CACHE = new ConcurrentHashMap<String, HCatClient>();
-
-    public static HCatClient get(Cluster cluster) throws FalconException {
-        assert cluster != null : "Cluster cant be null";
-
-        String metastoreUrl = ClusterHelper.getInterface(cluster, Interfacetype.REGISTRY).getEndpoint();
-        return get(metastoreUrl);
-    }
-
-    public static synchronized HCatClient get(String metastoreUrl) throws FalconException {
-
-        if (!CACHE.containsKey(metastoreUrl)) {
-            HCatClient hCatClient = getHCatClient(metastoreUrl);
-            LOG.info("Caching HCatalog client object for {}", metastoreUrl);
-            CACHE.putIfAbsent(metastoreUrl, hCatClient);
-        }
-
-        return CACHE.get(metastoreUrl);
-    }
-
-    private static HCatClient getHCatClient(String metastoreUrl) throws FalconException {
+    public static HCatClient getHCatClient(String metastoreUrl) throws FalconException {
         try {
             HiveConf hcatConf = createHiveConf(metastoreUrl);
             return HCatClient.create(hcatConf);
@@ -93,31 +73,49 @@ public class HiveCatalogService extends AbstractCatalogService {
     }
 
     public static synchronized HCatClient getProxiedClient(String catalogUrl,
-                                                           String metaStorePrincipal) throws FalconException {
-        if (!CACHE.containsKey(catalogUrl)) {
-            try {
-                final HiveConf hcatConf = createHiveConf(catalogUrl);
-                if (UserGroupInformation.isSecurityEnabled()) {
-                    hcatConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname, metaStorePrincipal);
-                    hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
-                }
+                                                           String metaStoreServicePrincipal)
+        throws FalconException {
 
-                LOG.info("Creating and caching HCatalog client object for {}", catalogUrl);
-                UserGroupInformation currentUser = UserGroupInformation.getLoginUser();
-                HCatClient hcatClient = currentUser.doAs(new PrivilegedExceptionAction<HCatClient>() {
-                    public HCatClient run() throws Exception {
-                        return HCatClient.create(hcatConf);
-                    }
-                });
-                CACHE.putIfAbsent(catalogUrl, hcatClient);
-            } catch (IOException e) {
-                throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(), e);
-            } catch (InterruptedException e) {
-                throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(), e);
+        try {
+            final HiveConf hcatConf = createHiveConf(catalogUrl);
+            UserGroupInformation proxyUGI = CurrentUser.getProxyUGI();
+            if (UserGroupInformation.isSecurityEnabled()) {
+                hcatConf.set(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL.varname,
+                        metaStoreServicePrincipal);
+                hcatConf.set(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL.varname, "true");
+
+                Token<DelegationTokenIdentifier> delegationTokenId = getDelegationToken(
+                        hcatConf, metaStoreServicePrincipal);
+                proxyUGI.addToken(delegationTokenId);
             }
-        }
 
-        return CACHE.get(catalogUrl);
+            LOG.info("Creating and caching HCatalog client object for {}", catalogUrl);
+            return proxyUGI.doAs(new PrivilegedExceptionAction<HCatClient>() {
+                public HCatClient run() throws Exception {
+                    return HCatClient.create(hcatConf);
+                }
+            });
+        } catch (IOException e) {
+            throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            throw new FalconException("Exception creating Proxied HCatClient: " + e.getMessage(),
+                    e);
+        }
+    }
+
+    private static Token<DelegationTokenIdentifier> getDelegationToken(HiveConf hcatConf,
+                                                                       String metaStoreServicePrincipal)
+        throws IOException {
+
+        HCatClient hcatClient = HCatClient.create(hcatConf);
+        String delegationToken = hcatClient.getDelegationToken(
+                CurrentUser.getUser(), metaStoreServicePrincipal);
+        hcatConf.set("hive.metastore.token.signature", "FalconService");
+
+        Token<DelegationTokenIdentifier> delegationTokenId = new Token<DelegationTokenIdentifier>();
+        delegationTokenId.decodeFromUrlString(delegationToken);
+        delegationTokenId.setService(new Text("FalconService"));
+        return delegationTokenId;
     }
 
     @Override
@@ -154,7 +152,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         LOG.info("Checking if the table is external: {}", tableName);
 
         try {
-            HCatClient client = get(catalogUrl);
+            HCatClient client = getHCatClient(catalogUrl);
             HCatTable table = client.getTable(database, tableName);
             return !table.getTabletype().equals("MANAGED_TABLE");
         } catch (HCatException e) {
@@ -171,7 +169,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         try {
             List<CatalogPartition> catalogPartitionList = new ArrayList<CatalogPartition>();
 
-            HCatClient client = get(catalogUrl);
+            HCatClient client = getHCatClient(catalogUrl);
             List<HCatPartition> hCatPartitions = client.listPartitionsByFilter(database, tableName, filter);
             for (HCatPartition hCatPartition : hCatPartitions) {
                 LOG.info("Partition: " + hCatPartition.getValues());
@@ -213,7 +211,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         LOG.info("Dropping partitions for: {}, partitions: {}", tableName, partitions);
 
         try {
-            HCatClient client = get(catalogUrl);
+            HCatClient client = getHCatClient(catalogUrl);
             client.dropPartitions(database, tableName, partitions, true);
         } catch (HCatException e) {
             throw new FalconException("Exception dropping partitions:" + e.getMessage(), e);
@@ -228,7 +226,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         LOG.info("Fetch partition for: {}, partition spec: {}", tableName, partitionSpec);
 
         try {
-            HCatClient client = get(catalogUrl);
+            HCatClient client = getHCatClient(catalogUrl);
             HCatPartition hCatPartition = client.getPartition(database, tableName, partitionSpec);
             return createCatalogPartition(hCatPartition);
         } catch (HCatException e) {
@@ -242,7 +240,7 @@ public class HiveCatalogService extends AbstractCatalogService {
         LOG.info("Fetching partition columns of table: " + tableName);
 
         try {
-            HCatClient client = get(catalogUrl);
+            HCatClient client = getHCatClient(catalogUrl);
             HCatTable table = client.getTable(database, tableName);
             List<HCatFieldSchema> partSchema = table.getPartCols();
             List<String> partCols = new ArrayList<String>();

@@ -119,6 +119,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-819 Submission of cluster with registry interface fails on secure
+   setup (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-804 Remove Oozie 3.* patch files from Falcon (Peeyush Bishnoi via
    Venkatesh Seetharam)
 

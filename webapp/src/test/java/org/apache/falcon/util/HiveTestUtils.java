@@ -44,20 +44,20 @@ public final class HiveTestUtils {
 
     public static void createDatabase(String metaStoreUrl,
                                       String databaseName) throws Exception {
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         HCatCreateDBDesc dbDesc = HCatCreateDBDesc.create(databaseName)
                 .ifNotExists(true).build();
         client.createDatabase(dbDesc);
     }
 
     public static  void dropDatabase(String metaStoreUrl, String databaseName) throws Exception {
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         client.dropDatabase(databaseName, true, HCatClient.DropDBMode.CASCADE);
     }
 
     public static void createTable(String metaStoreUrl, String databaseName,
                                    String tableName) throws Exception {
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
         cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
         cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
@@ -72,7 +72,7 @@ public final class HiveTestUtils {
 
     public static void createTable(String metaStoreUrl, String databaseName, String tableName,
                                    List<String> partitionKeys) throws Exception {
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         ArrayList<HCatFieldSchema> cols = new ArrayList<HCatFieldSchema>();
         cols.add(new HCatFieldSchema("id", HCatFieldSchema.Type.INT, "id comment"));
         cols.add(new HCatFieldSchema("value", HCatFieldSchema.Type.STRING, "value comment"));
@@ -112,7 +112,7 @@ public final class HiveTestUtils {
                 .location(externalLocation)
                 .build();
 
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         client.createTable(tableDesc);
     }
 
@@ -147,7 +147,7 @@ public final class HiveTestUtils {
 
     public static void dropTable(String metaStoreUrl, String databaseName,
                                  String tableName) throws Exception {
-        HCatClient client = HiveCatalogService.get(metaStoreUrl);
+        HCatClient client = HiveCatalogService.getHCatClient(metaStoreUrl);
         client.dropTable(databaseName, tableName, true);
     }
 
@@ -182,6 +182,6 @@ public final class HiveTestUtils {
         Map<String, String> partitionSpec = new HashMap<String, String>();
         partitionSpec.put(partitionKey, partitionValue);
 
-        return HiveCatalogService.get(metastoreUrl).getPartition(databaseName, tableName, partitionSpec);
+        return HiveCatalogService.getHCatClient(metastoreUrl).getPartition(databaseName, tableName, partitionSpec);
     }
 }
