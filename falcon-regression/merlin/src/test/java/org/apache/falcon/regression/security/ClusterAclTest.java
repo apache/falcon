@@ -95,7 +95,7 @@ public class ClusterAclTest extends BaseTestClass {
     @DataProvider(name = "generateUserReadOpsPermissions")
     public Object[][] generateUserReadOpsPermissions() {
         final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.ADMIN_USER_NAME, MerlinConstants.ADMIN2_USER_NAME,
+            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
                 MerlinConstants.USER2_NAME},
             new EntityOp[]{EntityOp.dependency, EntityOp.listing, EntityOp.definition},
             new Boolean[]{true}
@@ -132,8 +132,8 @@ public class ClusterAclTest extends BaseTestClass {
     public Object[][] generateUserAndDeletePermission() {
         return new Object[][] {
             //first element is username, second element indicates if deletion is allowed
-            {MerlinConstants.ADMIN_USER_NAME, true},
-            {MerlinConstants.ADMIN2_USER_NAME, true},
+            {MerlinConstants.FALCON_SUPER_USER_NAME, true},
+            {MerlinConstants.FALCON_SUPER_USER2_NAME, true},
             {MerlinConstants.USER2_NAME, true},
             {"root", false},
         };

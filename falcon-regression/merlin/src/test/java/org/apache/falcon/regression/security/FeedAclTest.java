@@ -97,7 +97,7 @@ public class FeedAclTest extends BaseTestClass {
         final EntityOp[] falconReadOps = {EntityOp.status, EntityOp.dependency,
             EntityOp.listing, EntityOp.definition};
         final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.ADMIN_USER_NAME, MerlinConstants.ADMIN2_USER_NAME,
+            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
                 MerlinConstants.USER2_NAME},
             falconReadOps,
             new Boolean[]{true}
@@ -139,7 +139,7 @@ public class FeedAclTest extends BaseTestClass {
             EntityOp.schedule, EntityOp.submitAndSchedule};
 
         final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.ADMIN_USER_NAME, MerlinConstants.ADMIN2_USER_NAME,
+            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
                 MerlinConstants.USER2_NAME},
             falconEditOps,
             new Boolean[]{true}
@@ -182,7 +182,7 @@ public class FeedAclTest extends BaseTestClass {
     public Object[][] generateUserScheduledEditOpsPermission() {
 
         final Object[][] allowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.ADMIN_USER_NAME, MerlinConstants.ADMIN2_USER_NAME,
+            new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
                 MerlinConstants.USER2_NAME},
             new EntityOp[]{EntityOp.delete, EntityOp.update, EntityOp.suspend, EntityOp.resume},
             new Boolean[]{true}

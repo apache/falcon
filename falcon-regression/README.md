@@ -51,7 +51,7 @@ Populate it with prism related properties:
     prism.service_user = falcon
     prism.hadoop_url = node-1.example.com:8020
     prism.hadoop_location = /usr/lib/hadoop/bin/hadoop
-    prism.ivory_hostname = http://node-1.example.com:15443
+    prism.ivory_hostname = http://node-1.example.com:15000
     prism.storeLocation = hdfs://node-1.example.com:8020/apps/falcon
 
 Specify the clusters that you would be using for testing:
@@ -68,7 +68,7 @@ For each cluster specify properties:
     cluster1.password = rgautam
     cluster1.hadoop_url = node-1.example.com:8020
     cluster1.hadoop_location = /usr/lib/hadoop/bin/hadoop
-    cluster1.ivory_hostname = http://node-1.example.com:15443
+    cluster1.ivory_hostname = http://node-1.example.com:15000
     cluster1.cluster_readonly = webhdfs://node-1.example.com:50070
     cluster1.cluster_execute = node-1.example.com:8032
     cluster1.cluster_write = hdfs://node-1.example.com:8020
@@ -103,8 +103,8 @@ Security Tests:
 ACL tests require multiple user account setup:
 
     other.user.name=root
-    admin.user.name=falcon
-    admin2.user.name=falcon2
+    falcon.super.user.name=falcon
+    falcon.super2.user.name=falcon2
 
 ACL tests also require group name of the current user:
 
@@ -113,8 +113,8 @@ ACL tests also require group name of the current user:
 For testing with kerberos set keytabs properties for different users:
 
     current_user_keytab=/home/qa/hadoopqa/keytabs/qa.headless.keytab
-    admin.user.keytab=/home/qa/hadoopqa/keytabs/falcon.headless.keytab
-    admin2.user.keytab=/home/qa/hadoopqa/keytabs/falcon2.headless.keytab
+    falcon.super.user.keytab=/home/qa/hadoopqa/keytabs/falcon.headless.keytab
+    falcon.super2.user.keytab=/home/qa/hadoopqa/keytabs/falcon2.headless.keytab
     other.user.keytab=/home/qa/hadoopqa/keytabs/root.headless.keytab
 
 Automatic capture of oozie logs

@@ -14,6 +14,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-811 falcon superuser should be used instead of admin (Raghav Kumar Gautam via Ruslan
+   Ostafiychuk)
+
    FALCON-812 all the entities must have acl (Raghav Kumar Gautam)
 
    FALCON-801 Increasing time to wait for instance (Paul Isaychuk)

@@ -48,11 +48,13 @@ public final class MerlinConstants {
     /** a user that does not belong to the group of current user. */
     public static final String DIFFERENT_USER = Config.getProperty("other.user.name", "root");
 
-    /** falcon admin user: the user that started falcon prism/server processes. */
-    public static final String ADMIN_USER_NAME = Config.getProperty("admin.user.name", "falcon");
+    /** falcon super user. */
+    public static final String FALCON_SUPER_USER_NAME =
+            Config.getProperty("falcon.super.user.name", "falcon");
 
-    /** a user that belongs to falcon admin group but is not same as falcon admin user. */
-    public static final String ADMIN2_USER_NAME = Config.getProperty("admin2.user.name", "falcon2");
+    /** a user that belongs to falcon super user group but is not FALCON_SUPER_USER_NAME. */
+    public static final String FALCON_SUPER_USER2_NAME =
+            Config.getProperty("falcon.super.user2.name", "falcon2");
     private static final String USER_2_NAME_STR = "user2_name";
     private static final String USER_2_KEYTAB_STR = "user2_keytab";
     public static final String USER2_NAME;
@@ -77,8 +79,8 @@ public final class MerlinConstants {
         keyTabMap = new HashMap<String, String>();
         keyTabMap.put(CURRENT_USER_NAME, currentUserKeytab);
         keyTabMap.put(user2Name, user2Keytab);
-        keyTabMap.put(ADMIN_USER_NAME, Config.getProperty("admin.user.keytab"));
-        keyTabMap.put(ADMIN2_USER_NAME, Config.getProperty("admin2.user.keytab"));
+        keyTabMap.put(FALCON_SUPER_USER_NAME, Config.getProperty("falcon.super.user.keytab"));
+        keyTabMap.put(FALCON_SUPER_USER2_NAME, Config.getProperty("falcon.super.user2.keytab"));
         keyTabMap.put(DIFFERENT_USER, Config.getProperty("other.user.keytab"));
     }
 
