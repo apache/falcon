@@ -14,6 +14,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-826 unify staging and working dir requirements (Raghav Kumar Gautam via Ruslan
+   Ostafiychuk)
+
    FALCON-811 falcon superuser should be used instead of admin (Raghav Kumar Gautam via Ruslan
    Ostafiychuk)
 

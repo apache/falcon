@@ -81,6 +81,15 @@ For each cluster specify properties:
     cluster1.service_stop_cmd = /usr/lib/falcon/bin/falcon-stop
     cluster1.service_start_cmd = /usr/lib/falcon/bin/falcon-start
 
+Setting up HDFS Dirs
+--------------------
+On all cluster as user that started falcon server do:
+
+    hdfs dfs -mkdir -p  /tmp/falcon-regression-staging
+    hdfs dfs -chmod 777 /tmp/falcon-regression-staging
+    hdfs dfs -mkdir -p  /tmp/falcon-regression-working
+    hdfs dfs -chmod 755 /tmp/falcon-regression-working
+
 Running Tests
 -------------
 After creating Merlin.properties file. You can run the following commands to run the tests.

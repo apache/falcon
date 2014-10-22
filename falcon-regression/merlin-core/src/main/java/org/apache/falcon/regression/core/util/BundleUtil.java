@@ -20,6 +20,7 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.falcon.entity.v0.cluster.Location;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
@@ -102,8 +103,21 @@ public final class BundleUtil {
             if (data.contains("uri:ivory:cluster:0.1") || data.contains("uri:falcon:cluster:0.1")) {
                 LOGGER.info("data been added to cluster");
                 ClusterMerlin clusterMerlin = new ClusterMerlin(data);
+                //set ACL
                 clusterMerlin.setACL(MerlinConstants.CURRENT_USER_NAME,
                         MerlinConstants.CURRENT_USER_GROUP, "*");
+                //set staging and working locations
+                clusterMerlin.getLocations().getLocations().clear();
+                final Location staging = new Location();
+                staging.setName("staging");
+                staging.setPath(Config.getProperty("merlin.staging.location",
+                        "/tmp/falcon-regression-staging"));
+                clusterMerlin.getLocations().getLocations().add(staging);
+                final Location working = new Location();
+                working.setName("working");
+                working.setPath(Config.getProperty("merlin.working.location",
+                        "/tmp/falcon-regression-working"));
+                clusterMerlin.getLocations().getLocations().add(working);
                 clusterData = clusterMerlin.toString();
             } else if (data.contains("uri:ivory:feed:0.1")
                     ||
