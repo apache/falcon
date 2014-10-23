@@ -63,9 +63,9 @@ public final class GraphAssert {
             Assert.assertNotNull(vertex.getName(),
                 "name of the vertex should be non-null: " + vertex);
             Assert.assertNotNull(vertex.getType(),
-                "id of the vertex should be non-null: " + vertex);
+                "type of the vertex should be non-null: " + vertex);
             Assert.assertNotNull(vertex.getTimestamp(),
-                "id of the vertex should be non-null: " + vertex);
+                "timestamp of the vertex should be non-null: " + vertex);
         }
     }
 

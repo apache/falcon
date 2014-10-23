@@ -35,6 +35,15 @@ public class Edge extends GraphEntity {
         @SerializedName("collocated")CLUSTER_COLO,
         @SerializedName("owned-by")OWNED_BY,
         @SerializedName("grouped-as")GROUPS,
+
+        @SerializedName("pipeline")PIPELINES,
+
+        // replication labels
+        @SerializedName("replicated-to")FEED_CLUSTER_REPLICATED_EDGE,
+
+        // eviction labels
+        @SerializedName("evicted-from")FEED_CLUSTER_EVICTED_EDGE,
+
         //custom labels for test tags
         @SerializedName("test")TEST,
         @SerializedName("testname")TESTNAME,

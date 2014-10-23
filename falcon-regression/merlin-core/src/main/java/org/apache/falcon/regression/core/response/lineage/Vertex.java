@@ -42,7 +42,8 @@ public class Vertex extends GraphEntity {
         @SerializedName("user")USER("user"),
         @SerializedName("data-center")COLO("data-center"),
         @SerializedName("classification")TAGS("classification"),
-        @SerializedName("group")GROUPS("group");
+        @SerializedName("group")GROUPS("group"),
+        @SerializedName("pipelines")PIPELINES("pipelines");
 
         private final String value;
         VERTEX_TYPE(String value) {
