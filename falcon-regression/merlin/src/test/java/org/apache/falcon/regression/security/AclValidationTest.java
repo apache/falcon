@@ -47,7 +47,7 @@ import java.lang.reflect.Method;
 /**
  * Tests if ACL info is consistent with user submitting the entity
  */
-@Test(groups = "embedded")
+@Test(groups = "authorization")
 public class AclValidationTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(AclValidationTest.class);
 

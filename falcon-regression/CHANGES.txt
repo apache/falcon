@@ -14,6 +14,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-835 Tag authorization tests (Raghav Kumar Gautam)
+
    FALCON-826 unify staging and working dir requirements (Raghav Kumar Gautam via Ruslan
    Ostafiychuk)
 

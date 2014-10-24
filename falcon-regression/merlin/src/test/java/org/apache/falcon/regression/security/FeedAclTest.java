@@ -43,7 +43,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-@Test(groups = "embedded")
+@Test(groups = "authorization")
 public class FeedAclTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(FeedAclTest.class);
 

@@ -44,7 +44,7 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-@Test(groups = "embedded")
+@Test(groups = "authorization")
 public class ClusterAclTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ClusterAclTest.class);
 
