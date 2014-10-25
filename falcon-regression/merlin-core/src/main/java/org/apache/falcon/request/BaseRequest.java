@@ -18,6 +18,7 @@
 
 package org.apache.falcon.request;
 
+import org.apache.commons.net.util.TrustManagerUtils;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
 import org.apache.falcon.security.FalconAuthorizationToken;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
@@ -29,19 +30,28 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +67,25 @@ public class BaseRequest {
     private String user;
     private URI uri;
     private HttpHost target;
+    private static final SSLSocketFactory SSL_SOCKET_FACTORY;
+
+    static {
+        try {
+            SSLContext ssl = getSslContext();
+            SSL_SOCKET_FACTORY = new SSLSocketFactory(ssl, new AllowAllHostnameVerifier());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static SSLContext getSslContext() throws Exception {
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(
+                null,
+                new TrustManager[]{TrustManagerUtils.getValidateServerCertificateTrustManager()},
+                new SecureRandom());
+        return sslContext;
+    }
 
     public BaseRequest(String url, String method, String user) throws URISyntaxException {
         this(url, method, user, null);
@@ -121,7 +150,16 @@ public class BaseRequest {
                     uri.getHost(), uri.getPort());
             request.addHeader(RequestKeys.COOKIE, RequestKeys.AUTH_COOKIE_EQ + token);
         }
-        DefaultHttpClient client = new DefaultHttpClient();
+
+        HttpClient client;
+        if (uri.toString().startsWith("https")) {
+            SchemeRegistry schemeRegistry = new SchemeRegistry();
+            schemeRegistry.register(new Scheme("https", uri.getPort(), SSL_SOCKET_FACTORY));
+            BasicClientConnectionManager cm = new BasicClientConnectionManager(schemeRegistry);
+                client = new DefaultHttpClient(cm);
+        } else {
+            client = new DefaultHttpClient();
+        }
         LOGGER.info("Request Url: " + request.getRequestLine().getUri());
         LOGGER.info("Request Method: " + request.getRequestLine().getMethod());
 

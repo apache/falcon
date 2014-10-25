@@ -18,12 +18,16 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.request.BaseRequest;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +46,14 @@ public final class FalconAuthorizationToken {
     private FalconAuthorizationToken() {
     }
 
-    public static void authenticate(String user, String protocol, String host,
+    public static final HostnameVerifier ALL_TRUSTING_HOSTNAME_VERIFIER = new HostnameVerifier() {
+        @Override
+        public boolean verify(String hostname, SSLSession sslSession) {
+            return true;
+        }
+    };
+
+    private static void authenticate(String user, String protocol, String host,
                                     int port)
         throws IOException, AuthenticationException {
         URL url = new URL(String.format("%s://%s:%d/%s", protocol, host, port,
@@ -52,6 +63,13 @@ public final class FalconAuthorizationToken {
 
         /*using KerberosAuthenticator which falls back to PsuedoAuthenticator
         instead of passing authentication type from the command line - bad factory*/
+        try {
+            HttpsURLConnection.setDefaultSSLSocketFactory(BaseRequest.getSslContext()
+                    .getSocketFactory());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        HttpsURLConnection.setDefaultHostnameVerifier(ALL_TRUSTING_HOSTNAME_VERIFIER);
         new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
         String key = getKey(user, protocol, host, port);
 
