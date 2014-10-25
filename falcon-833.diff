@@ -1,0 +1,44 @@
+From bcedcd91b763c68e887acc97db94a0f1a980435c Mon Sep 17 00:00:00 2001
+From: pisaychuk <pisaychuk@hortonworks.com>
+Date: Thu, 23 Oct 2014 16:30:41 +0300
+Subject: [PATCH] separate availability flag file added
+
+---
+ .../test/java/org/apache/falcon/regression/FeedReplicationTest.java  | 5 +++--
+ falcon-regression/merlin/src/test/resources/availabilityFlag.txt     | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+ create mode 100644 falcon-regression/merlin/src/test/resources/availabilityFlag.txt
+
+diff --git a/falcon-regression/merlin/src/test/java/org/apache/falcon/regression/FeedReplicationTest.java b/falcon-regression/merlin/src/test/java/org/apache/falcon/regression/FeedReplicationTest.java
+index 3526e46..6cbb9ab 100644
+--- a/falcon-regression/merlin/src/test/java/org/apache/falcon/regression/FeedReplicationTest.java
++++ b/falcon-regression/merlin/src/test/java/org/apache/falcon/regression/FeedReplicationTest.java
+@@ -274,7 +274,7 @@ public class FeedReplicationTest extends BaseTestClass {
+         LOGGER.info("Time range between : " + startTime + " and " + endTime);
+ 
+         //configure feed
+-        String availabilityFlagName = "README.md";
++        String availabilityFlagName = "availabilityFlag.txt";
+         String feedName = Util.readEntityName(bundles[0].getDataSets().get(0));
+         FeedMerlin feedElement = bundles[0].getFeedElement(feedName);
+         feedElement.setAvailabilityFlag(availabilityFlagName);
+@@ -332,7 +332,8 @@ public class FeedReplicationTest extends BaseTestClass {
+         LOGGER.info("Replication didn't start.");
+ 
+         //create availability flag on source
+-        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, availabilityFlagName);
++        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
++            OSUtil.RESOURCES + availabilityFlagName);
+ 
+         //check if instance become running
+         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
+diff --git a/falcon-regression/merlin/src/test/resources/availabilityFlag.txt b/falcon-regression/merlin/src/test/resources/availabilityFlag.txt
+new file mode 100644
+index 0000000..8b13789
+--- /dev/null
++++ b/falcon-regression/merlin/src/test/resources/availabilityFlag.txt
+@@ -0,0 +1 @@
++
+-- 
+1.9.1
+

@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-833 FeedReplicationTest.availabilityFlagTest fix (Paul Isaychuk
+   via Raghav Kumar Gautam)
+
    FALCON-838 Add support for https in merlin (Raghav Kumar Gautam and
    Ruslan Ostafiychuk via Raghav Kumar Gautam)
 

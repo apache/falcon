@@ -274,7 +274,7 @@ public class FeedReplicationTest extends BaseTestClass {
         LOGGER.info("Time range between : " + startTime + " and " + endTime);
 
         //configure feed
-        String availabilityFlagName = "README.md";
+        String availabilityFlagName = "availabilityFlag.txt";
         String feedName = Util.readEntityName(bundles[0].getDataSets().get(0));
         FeedMerlin feedElement = bundles[0].getFeedElement(feedName);
         feedElement.setAvailabilityFlag(availabilityFlagName);
@@ -332,7 +332,8 @@ public class FeedReplicationTest extends BaseTestClass {
         LOGGER.info("Replication didn't start.");
 
         //create availability flag on source
-        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation, availabilityFlagName);
+        HadoopUtil.copyDataToFolder(cluster1FS, sourceLocation,
+            OSUtil.RESOURCES + availabilityFlagName);
 
         //check if instance become running
         InstanceUtil.waitTillInstanceReachState(cluster2OC, Util.readEntityName(feed), 1,
