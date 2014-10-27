@@ -23,6 +23,7 @@ import org.apache.falcon.util.BuildProperties;
 import org.apache.falcon.util.DeploymentProperties;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
+import org.apache.hadoop.util.VersionInfo;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -83,9 +84,15 @@ public class AdminResource {
             property.value = DeploymentProperties.get().getProperty("deploy.mode");
             props.add(property);
 
+            property = new Property();
+            property.key = "Hadoop";
+            property.value = VersionInfo.getVersion() + "-r" + VersionInfo.getRevision();
+            props.add(property);
+
             version = new PropertyList();
             version.properties = props;
         }
+
         return version;
     }
 
