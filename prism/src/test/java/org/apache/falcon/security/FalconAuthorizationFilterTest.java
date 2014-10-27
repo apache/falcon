@@ -152,6 +152,29 @@ public class FalconAuthorizationFilterTest {
         }
     }
 
+    @Test (expectedExceptions = Exception.class)
+    public void testDoFilterForEntityWithInvalidEntity() throws Exception {
+        CurrentUser.authenticate("falcon");
+        Filter filter = new FalconAuthorizationFilter();
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        try {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+
+            String uri = "/entities/suspend/process/bad-entity";
+            StringBuffer requestUrl = new StringBuffer("http://localhost" + uri);
+            Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+            Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
+            Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
+
+            filter.doFilter(mockRequest, mockResponse, mockChain);
+        } finally {
+            filter.destroy();
+        }
+    }
+
     public void addClusterEntity() throws Exception {
         clusterEntity = EntityBuilderTestUtil.buildCluster(CLUSTER_ENTITY_NAME);
         configStore.publish(EntityType.CLUSTER, clusterEntity);

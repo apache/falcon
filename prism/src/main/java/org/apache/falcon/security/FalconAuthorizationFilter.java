@@ -19,6 +19,8 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.FalconWebException;
+import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -65,9 +68,13 @@ public class FalconAuthorizationFilter implements Filter {
 
         if (isAuthorizationEnabled) {
             LOG.info("Authorizing user={} against request={}", CurrentUser.getUser(), requestParts);
-            authorizationProvider.authorizeResource(requestParts.getResource(),
-                    requestParts.getAction(), requestParts.getEntityType(),
-                    requestParts.getEntityName(), CurrentUser.getProxyUGI());
+            try {
+                authorizationProvider.authorizeResource(requestParts.getResource(),
+                        requestParts.getAction(), requestParts.getEntityType(),
+                        requestParts.getEntityName(), CurrentUser.getProxyUGI());
+            } catch (AuthorizationException e) {
+                throw FalconWebException.newException(e.getMessage(), Response.Status.UNAUTHORIZED);
+            }
         }
 
         filterChain.doFilter(request, response);

@@ -122,6 +122,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-831 Operation on non existing entity throws internal server error
+   (Venkatesh Seetharam)
+
    FALCON-710 start/end is optional for lifecycle operations (Balu Vellanki
    via Venkatesh Seetharam)
 
