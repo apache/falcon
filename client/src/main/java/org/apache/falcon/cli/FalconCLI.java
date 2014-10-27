@@ -269,12 +269,20 @@ public class FalconCLI {
         } else if (optionsList.contains(SUMMARY_OPT)) {
             result = client.getSummaryOfInstances(type, entity, start, end, colo, lifeCycles);
         } else if (optionsList.contains(KILL_OPT)) {
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(end, END_OPT);
             result = client.killInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(SUSPEND_OPT)) {
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(end, END_OPT);
             result = client.suspendInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RESUME_OPT)) {
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(end, END_OPT);
             result = client.resumeInstances(type, entity, start, end, colo, clusters, sourceClusters, lifeCycles);
         } else if (optionsList.contains(RERUN_OPT)) {
+            validateNotEmpty(start, START_OPT);
+            validateNotEmpty(end, END_OPT);
             result = client.rerunInstances(type, entity, start, end, filePath, colo, clusters, sourceClusters,
                     lifeCycles);
         } else if (optionsList.contains(CONTINUE_OPT)) {
@@ -313,17 +321,9 @@ public class FalconCLI {
                                           String entity, String type,
                                           String colo) throws FalconCLIException {
 
-        if (StringUtils.isEmpty(entity)) {
-            throw new FalconCLIException("Missing argument: name");
-        }
-
-        if (StringUtils.isEmpty(type)) {
-            throw new FalconCLIException("Missing argument: type");
-        }
-
-        if (StringUtils.isEmpty(colo)) {
-            throw new FalconCLIException("Missing argument: colo");
-        }
+        validateNotEmpty(entity, ENTITY_NAME_OPT);
+        validateNotEmpty(type, ENTITY_TYPE_OPT);
+        validateNotEmpty(colo, COLO_OPT);
 
         if (optionsList.contains(CLUSTERS_OPT)) {
             if (optionsList.contains(RUNNING_OPT)
@@ -369,55 +369,55 @@ public class FalconCLI {
         Integer numResults = parseIntegerInput(commandLine.getOptionValue(NUM_RESULTS_OPT),
                 FalconClient.DEFAULT_NUM_RESULTS, "numResults");
         Integer numInstances = parseIntegerInput(commandLine.getOptionValue(NUM_INSTANCES_OPT), 7, "numInstances");
-        validateEntityType(entityType);
+        validateNotEmpty(entityType, ENTITY_TYPE_OPT);
         validateSortOrder(sortOrder);
         String entityAction = "entity";
 
         if (optionsList.contains(SUBMIT_OPT)) {
-            validateFilePath(filePath, "file");
+            validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submit(entityType, filePath);
         } else if (optionsList.contains(UPDATE_OPT)) {
-            validateFilePath(filePath, "file");
+            validateNotEmpty(filePath, "file");
             validateColo(optionsList);
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             Date effectiveTime = parseDateString(time);
             result = client.update(entityType, entityName, filePath, effectiveTime);
         } else if (optionsList.contains(SUBMIT_AND_SCHEDULE_OPT)) {
-            validateFilePath(filePath, "file");
+            validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.submitAndSchedule(entityType, filePath);
         } else if (optionsList.contains(VALIDATE_OPT)) {
-            validateFilePath(filePath, "file");
+            validateNotEmpty(filePath, "file");
             validateColo(optionsList);
             result = client.validate(entityType, filePath);
         } else if (optionsList.contains(SCHEDULE_OPT)) {
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.schedule(entityType, entityName, colo);
         } else if (optionsList.contains(SUSPEND_OPT)) {
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.suspend(entityType, entityName, colo);
         } else if (optionsList.contains(RESUME_OPT)) {
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.resume(entityType, entityName, colo);
         } else if (optionsList.contains(DELETE_OPT)) {
             validateColo(optionsList);
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             result = client.delete(entityType, entityName);
         } else if (optionsList.contains(STATUS_OPT)) {
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             colo = getColo(colo);
             result = client.getStatus(entityType, entityName, colo);
         } else if (optionsList.contains(DEFINITION_OPT)) {
             validateColo(optionsList);
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             result = client.getDefinition(entityType, entityName);
         } else if (optionsList.contains(DEPENDENCY_OPT)) {
             validateColo(optionsList);
-            validateEntityName(entityName);
+            validateNotEmpty(entityName, ENTITY_NAME_OPT);
             result = client.getDependency(entityType, entityName).toString();
         } else if (optionsList.contains(LIST_OPT)) {
             validateColo(optionsList);
@@ -428,7 +428,7 @@ public class FalconCLI {
                     filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {
-            validateCluster(cluster);
+            validateNotEmpty(cluster, CLUSTER_OPT);
             validateEntityFields(fields);
             validateFilterBy(filterBy, entityAction);
             validateOrderBy(orderBy, entityAction);
@@ -442,6 +442,12 @@ public class FalconCLI {
         OUT.get().println(result);
     }
 
+    private void validateNotEmpty(String paramVal, String paramName) throws FalconCLIException {
+        if (StringUtils.isEmpty(paramVal)) {
+            throw new FalconCLIException("Missing argument : " + paramName);
+        }
+    }
+
     private void validateSortOrder(String sortOrder) throws FalconCLIException {
         if (!StringUtils.isEmpty(sortOrder)) {
             if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
@@ -451,26 +457,12 @@ public class FalconCLI {
         }
     }
 
-    private void validateCluster(String cluster) throws FalconCLIException {
-        if (StringUtils.isEmpty(cluster)) {
-            throw new FalconCLIException("Missing argument: cluster");
-        }
-    }
-
     private String getColo(String colo) throws FalconCLIException, IOException {
         if (colo == null) {
             Properties prop = getClientProperties();
             colo = prop.getProperty(CURRENT_COLO, "*");
         }
         return colo;
-    }
-
-    private void validateFilePath(String filePath, String argument)
-        throws FalconCLIException {
-
-        if (StringUtils.isEmpty(filePath)) {
-            throw new FalconCLIException("Missing argument: " + argument);
-        }
     }
 
     private void validateColo(Set<String> optionsList)
@@ -544,22 +536,6 @@ public class FalconCLI {
         }
         return null;
     }
-
-    private void validateEntityName(String entityName)
-        throws FalconCLIException {
-        if (StringUtils.isEmpty(entityName)) {
-            throw new FalconCLIException("Missing argument: name");
-        }
-    }
-
-    private void validateEntityType(String entityType)
-        throws FalconCLIException {
-
-        if (StringUtils.isEmpty(entityType)) {
-            throw new FalconCLIException("Missing argument: type");
-        }
-    }
-
 
     private Options createAdminOptions() {
         Options adminOptions = new Options();
@@ -1007,7 +983,7 @@ public class FalconCLI {
         String recipeName = commandLine.getOptionValue(RECIPE_NAME);
         String recipeToolClass = commandLine.getOptionValue(RECIPE_TOOL_CLASS_NAME);
 
-        validateFilePath(recipeName, RECIPE_NAME);
+        validateNotEmpty(recipeName, RECIPE_NAME);
 
         String result = client.submitRecipe(recipeName, recipeToolClass);
         OUT.get().println(result);

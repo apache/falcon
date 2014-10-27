@@ -5,12 +5,13 @@
    * <a href="#Examples">Examples</a>
 
 ---++ Description
-Kill a currently running instance.
+Kill currently running instance(s) of an entity.
 
 ---++ Parameters
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
-   * start start time of the entity.
+   * start is the start time of the instance(s) that you want to refer to
+   * end is the end time of the instance(s) that you want to refer to
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
 
 ---++ Results
@@ -19,7 +20,7 @@ Result of the kill operation.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/instance/kill/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+POST http://localhost:15000/api/instance/kill/process/SampleProcess?colo=*&start=2012-04-03T07:00Z&end=2014-04-03T07:00Z
 </verbatim>
 ---+++ Result
 <verbatim>

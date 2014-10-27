@@ -5,12 +5,13 @@
    * <a href="#Examples">Examples</a>
 
 ---++ Description
-Rerun a specific instance of an entity.
+Rerun instances of an entity.
 
 ---++ Parameters
    * :entity-type can either be a feed or a process.
    * :entity-name is name of the entity.
    * start is the start time of the instance that you want to refer to
+   * end is the end time of the instance that you want to refer to
    * lifecycle <optional param> can be Eviction/Replication(default) for feed and Execution(default) for process.
 
 ---++ Results
@@ -19,7 +20,7 @@ Results of the rerun command.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+POST http://localhost:15000/api/instance/rerun/process/SampleProcess?colo=*&start=2013-04-03T07:00Z&end=2014-04-03T07:00Z
 </verbatim>
 ---+++ Result
 <verbatim>

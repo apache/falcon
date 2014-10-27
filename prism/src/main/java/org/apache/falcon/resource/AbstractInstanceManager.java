@@ -367,7 +367,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
+                    entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
@@ -389,7 +390,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
+                    entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
@@ -411,7 +413,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
+                    entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
@@ -432,7 +435,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
             Entity entityObject = EntityUtil.getEntity(type, entity);
-            Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
+            Pair<Date, Date> startAndEndDate = getStartAndEndDateForLifecycleOperations(
+                    entityObject, startStr, endStr);
 
             Properties props = getProperties(request);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
@@ -454,6 +458,17 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             props.load(xmlStream);
         }
         return props;
+    }
+
+    private Pair<Date, Date> getStartAndEndDateForLifecycleOperations(Entity entityObject,
+                                                                      String startStr, String endStr)
+        throws FalconException {
+
+        if (StringUtils.isEmpty(startStr) || StringUtils.isEmpty(endStr)) {
+            throw new FalconException("Start and End dates cannot be empty for Instance POST apis");
+        }
+
+        return getStartAndEndDate(entityObject, startStr, endStr);
     }
 
     private Pair<Date, Date> getStartAndEndDate(Entity entityObject, String startStr, String endStr)

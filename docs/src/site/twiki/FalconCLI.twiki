@@ -110,9 +110,7 @@ $FALCON_HOME/bin/falcon entity -type [cluster|feed|process] -name <<name>> -defi
 Kill sub-command is used to kill all the instances of the specified process whose nominal time is between the given start time and end time.
 
 Note: 
-1. For all the instance management sub-commands, if end time is not specified, Falcon will perform the actions on all the instances whose instance time falls after the start time.
-
-2. The start time and end time needs to be specified in TZ format. 
+1. The start time and end time needs to be specified in TZ format.
 Example:   01 Jan 2012 01:00  => 2012-01-01T01:00Z
 
 3. Process name is compulsory parameter for each instance management command.

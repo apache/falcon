@@ -573,7 +573,8 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
-        Assert.assertEquals(0,
+        // No end date, should fail.
+        Assert.assertEquals(-1,
                 executeWithURL("instance -suspend -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
@@ -586,7 +587,8 @@ public class FalconCLIIT {
         Assert.assertEquals(0,
                 executeWithURL("instance -resume -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date())));
     }
 
     private static final String START_INSTANCE = "2012-04-20T00:00Z";
@@ -611,22 +613,23 @@ public class FalconCLIIT {
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
 
-        Assert.assertEquals(0,
+        // Fail due to no end date
+        Assert.assertEquals(-1,
                 executeWithURL("instance -kill -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
 
-        Assert.assertEquals(
-                0,
+        Assert.assertEquals(0,
                 executeWithURL("instance -rerun -type process -name "
                         + overlay.get("processName")
-                        + " -start " + START_INSTANCE + " -file "
-                        + createTempJobPropertiesFile()));
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE
+                        + " -file " + createTempJobPropertiesFile()));
 
         Assert.assertEquals(0,
                 executeWithURL("instance -rerun -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -end "+ SchemaHelper.getDateFormat().format(new Date())
                         + " -file "+ createTempJobPropertiesFile()));
     }
 
@@ -820,18 +823,24 @@ public class FalconCLIIT {
         Assert.assertEquals(0,
                 executeWithURL("instance -kill -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -end " +  SchemaHelper.getDateFormat().format(new Date())));
 
-        Assert.assertEquals(
-                0,
+        Assert.assertEquals(-1,
                 executeWithURL("instance -continue -type process -name "
                         + overlay.get("processName")
                         + " -start " + START_INSTANCE));
 
         Assert.assertEquals(0,
+                executeWithURL("instance -continue -type process -name "
+                        + overlay.get("processName")
+                        + " -start " + START_INSTANCE + " -end " + START_INSTANCE));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -continue -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())));
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        + " -end " + SchemaHelper.getDateFormat().format(new Date())));
     }
 
     public void testInvalidCLIInstanceCommands() throws Exception {
