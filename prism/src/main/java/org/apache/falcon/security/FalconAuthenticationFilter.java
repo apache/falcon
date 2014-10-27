@@ -42,7 +42,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * This enforces authentication as part of the filter before processing the request.
@@ -177,16 +176,13 @@ public class FalconAuthenticationFilter
                                 "User can't be a superuser:" + BLACK_LISTED_USERS_KEY);
                     } else {
                         try {
-                            String requestId = UUID.randomUUID().toString();
                             NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
-                            NDC.push(requestId);
                             CurrentUser.authenticate(user);
                             LOG.info("Request from user: {}, URL={}", user,
                                     Servlets.getRequestURI(httpRequest));
 
                             filterChain.doFilter(servletRequest, servletResponse);
                         } finally {
-                            NDC.pop();
                             NDC.pop();
                         }
                     }

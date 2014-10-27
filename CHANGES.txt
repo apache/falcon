@@ -37,6 +37,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-834 Propagate request id in the response to help trace and debug
+   failures in merlin (Venkatesh Seetharam)
+
    FALCON-828 Add hadoop version info as part of falcon admin version API
    (Venkatesh Seetharam)
 

@@ -21,6 +21,7 @@ package org.apache.falcon.security;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.util.Servlets;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +32,20 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.UUID;
 
 /**
- * This records audit information as part of the filter after processing the request.
+ * This records audit information as part of the filter after processing the request
+ * and also introduces a UUID into request and response for tracing requests in logs.
  */
 public class FalconAuditFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconAuditFilter.class);
+
+    public static final String REQUEST_ID = "requestId";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -51,11 +57,18 @@ public class FalconAuditFilter implements Filter {
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
         final String requestTimeISO9601 = SchemaHelper.formatDateUTC(new Date());
+        // generate a unique id and shove it into NDC
+        final String requestId = UUID.randomUUID().toString();
+        NDC.push(requestId);
 
         try {
             filterChain.doFilter(request, response);
         } finally {
             recordAudit((HttpServletRequest) request, requestTimeISO9601);
+
+            // put the request id into the response so users can trace logs for this request
+            ((HttpServletResponse) response).setHeader(REQUEST_ID, requestId);
+            NDC.pop();
         }
     }
 
