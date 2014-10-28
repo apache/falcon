@@ -110,17 +110,40 @@ public class EntityManagerTest extends AbstractEntityManager {
     }
 
     @Test
-    public void testGetEntityList() throws Exception {
+    public void testGetEntityListBadUser() throws Exception {
+        CurrentUser.authenticate("fakeUser");
+        try {
+            Entity process1 = buildProcess("processFakeUser", "fakeUser", "", "");
+            configStore.publish(EntityType.PROCESS, process1);
+            Assert.fail();
+        } catch (Throwable ignore) {
+            // do nothing
+        }
 
-        Entity process1 = buildProcess("processFakeUser", "fakeUser", "", "");
-        configStore.publish(EntityType.PROCESS, process1);
+        /*
+         * Only one entity should be returned when the auth is enabled.
+         */
+        try {
+            getEntityList("process", "", "", "", "", "", 0, 10);
+            Assert.fail();
+        } catch (Throwable ignore) {
+            // do nothing
+        }
+
+        // reset values
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
+        CurrentUser.authenticate(System.getProperty("user.name"));
+    }
+
+    @Test
+    public void testGetEntityList() throws Exception {
 
         Entity process2 = buildProcess("processAuthUser", System.getProperty("user.name"), "", "");
         configStore.publish(EntityType.PROCESS, process2);
 
         EntityList entityList = this.getEntityList("process", "", "", "", "", "asc", 0, 10);
         Assert.assertNotNull(entityList.getElements());
-        Assert.assertEquals(entityList.getElements().length, 2);
+        Assert.assertEquals(entityList.getElements().length, 1);
 
         /*
          * Both entities should be returned when the user is SuperUser.
@@ -128,14 +151,6 @@ public class EntityManagerTest extends AbstractEntityManager {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         CurrentUser.authenticate(System.getProperty("user.name"));
         entityList = this.getEntityList("process", "", "", "", "", "desc", 0, 10);
-        Assert.assertNotNull(entityList.getElements());
-        Assert.assertEquals(entityList.getElements().length, 2);
-
-        /*
-         * Only one entity should be returned when the auth is enabled.
-         */
-        CurrentUser.authenticate("fakeUser");
-        entityList = this.getEntityList("process", "", "", "", "", "", 0, 10);
         Assert.assertNotNull(entityList.getElements());
         Assert.assertEquals(entityList.getElements().length, 1);
 

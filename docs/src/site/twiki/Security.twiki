@@ -68,6 +68,8 @@ personal workstation, conveniently becomes that installation's super-user withou
 Falcon also allows users to configure a super user group and allows users belonging to this
 group to be a super user.
 
+ACL owner and group must be valid even if the authenticated user is a super-user.
+
 ---+++ Group Memberships
 
 Once a user has been authenticated and a username has been determined, the list of groups is
@@ -77,6 +79,8 @@ will shell out to the Unix bash -c groups command to resolve a list of groups fo
 
 Note that Falcon stores the user and group of an Entity as strings; there is no
 conversion from user and group identity numbers as is conventional in Unix.
+
+The only limitation is that a user cannot add a group in ACL that he does not belong to.
 
 ---+++ Authorization Provider
 
@@ -146,6 +150,7 @@ determined by a static configuration parameter.
 ---++++ Lineage Resource Policy
 
 Lineage is read-only and hence all users can look at lineage for their respective entities.
+*Note:* This gap will be fixed in a later release.
 
 
 ---++ Authentication Configuration

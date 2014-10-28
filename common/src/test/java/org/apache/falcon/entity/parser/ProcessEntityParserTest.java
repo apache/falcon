@@ -387,7 +387,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test (expectedExceptions = ValidationException.class)
     public void testValidateACLAuthorizationEnabledValidOwnerBadGroup() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         Assert.assertTrue(Boolean.valueOf(
@@ -432,7 +432,7 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             Assert.assertNotNull(process.getACL().getPermission());
 
             process.getACL().setOwner(USER);
-            process.getACL().setGroup(getGroupName());
+            process.getACL().setGroup(getPrimaryGroupName());
 
             processEntityParser.validate(process);
         } finally {

@@ -567,18 +567,21 @@ public class FeedEntityParserTest extends AbstractTestBase {
         Assert.assertTrue(Boolean.valueOf(
                 StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
 
+        CurrentUser.authenticate(USER);
         try {
             InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
 
             // need a new parser since it caches authorization enabled flag
             FeedEntityParser feedEntityParser =
                     (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
-            Feed feed = feedEntityParser.parseAndValidate(stream);
+            Feed feed = feedEntityParser.parse(stream);
+
             Assert.assertNotNull(feed);
             Assert.assertNotNull(feed.getACL());
-            Assert.assertNotNull(feed.getACL().getOwner());
-            Assert.assertNotNull(feed.getACL().getGroup());
-            Assert.assertNotNull(feed.getACL().getPermission());
+            feed.getACL().setOwner(USER);
+            feed.getACL().setGroup(getPrimaryGroupName());
+
+            feedEntityParser.validate(feed);
         } finally {
             StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
@@ -702,7 +705,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test (expectedExceptions = ValidationException.class)
     public void testValidateACLAndStorageForValidOwnerBadGroup() throws Exception {
         CurrentUser.authenticate(USER);
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
@@ -735,7 +738,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test (expectedExceptions = ValidationException.class)
     public void testValidateACLValidGroupBadOwner() throws Exception {
         CurrentUser.authenticate(USER);
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
@@ -755,7 +758,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
             Assert.assertNotNull(feed.getACL().getGroup());
             Assert.assertNotNull(feed.getACL().getPermission());
 
-            feed.getACL().setGroup(getGroupName());
+            feed.getACL().setGroup(getPrimaryGroupName());
 
             feedEntityParser.validate(feed);
         } finally {
@@ -794,7 +797,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
         }
     }
 
-    @Test
+    @Test (expectedExceptions = ValidationException.class)
     public void testValidateACLAndStorageForValidGroupBadOwner() throws Exception {
         CurrentUser.authenticate(USER);
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
@@ -815,7 +818,7 @@ public class FeedEntityParserTest extends AbstractTestBase {
             Assert.assertNotNull(feed.getACL().getGroup());
             Assert.assertNotNull(feed.getACL().getPermission());
 
-            feed.getACL().setGroup(getGroupName());
+            feed.getACL().setGroup(getPrimaryGroupName());
 
             // create locations
             createLocations(feed);

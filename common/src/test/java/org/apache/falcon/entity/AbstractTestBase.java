@@ -43,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -193,9 +192,7 @@ public class AbstractTestBase {
     }
 
     // assumes there will always be at least one group for a logged in user
-    protected String getGroupName() throws IOException {
-        String[] groupNames = CurrentUser.getProxyUGI().getGroupNames();
-        System.out.println("groupNames = " + Arrays.asList(groupNames));
-        return groupNames[0];
+    protected String getPrimaryGroupName() throws IOException {
+        return CurrentUser.getProxyUGI().getPrimaryGroupName();
     }
 }

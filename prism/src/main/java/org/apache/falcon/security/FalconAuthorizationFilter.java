@@ -73,7 +73,7 @@ public class FalconAuthorizationFilter implements Filter {
                         requestParts.getAction(), requestParts.getEntityType(),
                         requestParts.getEntityName(), CurrentUser.getProxyUGI());
             } catch (AuthorizationException e) {
-                throw FalconWebException.newException(e.getMessage(), Response.Status.UNAUTHORIZED);
+                throw FalconWebException.newException(e.getMessage(), Response.Status.FORBIDDEN);
             }
         }
 
