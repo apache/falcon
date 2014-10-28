@@ -603,6 +603,7 @@ public final class Util {
         RESUME_URL("/api/entities/resume"),
         UPDATE("/api/entities/update"),
         STATUS_URL("/api/entities/status"),
+        ENTITY_SUMMARY("/api/entities/summary"),
         SUBMIT_AND_SCHEDULE_URL("/api/entities/submitAndSchedule"),
         INSTANCE_RUNNING("/api/instance/running"),
         INSTANCE_STATUS("/api/instance/status"),

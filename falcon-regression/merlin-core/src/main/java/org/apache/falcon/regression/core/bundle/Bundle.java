@@ -1053,4 +1053,13 @@ public class Bundle {
         processMerlin.setACL(owner, group, permission);
         setProcessData(processMerlin.toString());
     }
+
+    /**
+     * Set custom tags for a process. Key-value pairs are valid.
+     */
+    public void setProcessTags(String value) {
+        ProcessMerlin processMerlin = getProcessObject();
+        processMerlin.setTags(value);
+        setProcessData(processMerlin.toString());
+    }
 }

@@ -526,4 +526,20 @@ public abstract class IEntityManagerHelper {
         url += "?filterBy=PIPELINES:" + pipeline;
         return Util.sendRequest(url, "get", null, null);
     }
+
+    /**
+     * Retrieves entities summary.
+     * @param clusterName compulsory parameter for request
+     * @param params list of optional parameters
+     * @return entity summary along with its instances.
+     */
+    public ServiceResponse getEntitySummary(String clusterName, String params)
+        throws AuthenticationException, IOException, URISyntaxException {
+        String url = createUrl(this.hostname + URLS.ENTITY_SUMMARY.getValue(),
+            getEntityType(), clusterName);
+        if (!StringUtils.isEmpty(params)){
+            url += "?" + params;
+        }
+        return Util.sendRequest(url, "get", null, null);
+    }
 }

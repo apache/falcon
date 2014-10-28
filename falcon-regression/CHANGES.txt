@@ -5,6 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-814 Tests for entities summary API (Paul Isaychuk via Ruslan Ostafiychuk)
+
    FALCON-833 FeedReplicationTest.availabilityFlagTest fix (Paul Isaychuk
    via Raghav Kumar Gautam)
 
