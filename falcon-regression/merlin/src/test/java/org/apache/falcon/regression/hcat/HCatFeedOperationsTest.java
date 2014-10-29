@@ -25,7 +25,7 @@ import org.apache.falcon.entity.v0.feed.ActionType;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.regression.core.enumsAndConstants.FeedType;
+import org.apache.falcon.regression.core.enumsAndConstants.FreqType;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
 import org.apache.falcon.regression.core.util.AssertUtil;
@@ -129,7 +129,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         Bundle.submitCluster(bundles[1]);
         feed = bundles[1].getInputFeedFromBundle();
         FeedMerlin feedObj = new FeedMerlin(feed);
-        feedObj.setTableValue(dbName, randomTblName, FeedType.YEARLY.getHcatPathValue());
+        feedObj.setTableValue(dbName, randomTblName, FreqType.YEARLY.getHcatPathValue());
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
         AssertUtil.assertFailed(response);
     }
@@ -145,7 +145,7 @@ public class HCatFeedOperationsTest extends BaseTestClass {
         Bundle.submitCluster(bundles[0]);
         feed = bundles[0].getInputFeedFromBundle();
         FeedMerlin feedObj = new FeedMerlin(feed);
-        feedObj.setTableValue(dbName, tableName, FeedType.YEARLY.getHcatPathValue());
+        feedObj.setTableValue(dbName, tableName, FreqType.YEARLY.getHcatPathValue());
         ServiceResponse response = prism.getFeedHelper().submitEntity(feedObj.toString());
         AssertUtil.assertSucceeded(response);
 

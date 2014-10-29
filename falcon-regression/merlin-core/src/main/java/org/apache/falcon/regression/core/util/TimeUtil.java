@@ -18,7 +18,7 @@
 
 package org.apache.falcon.regression.core.util;
 
-import org.apache.falcon.regression.core.enumsAndConstants.FeedType;
+import org.apache.falcon.regression.core.enumsAndConstants.FreqType;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -130,36 +130,36 @@ public final class TimeUtil {
 
     /**
      * Get all possible dates between start and end date gap between subsequent dates be one unit.
-     * of feedType
+     * of freqType
      *
      * @param startDate start date
      * @param endDate   end date
-     * @param feedType  type of the feed
+     * @param freqType  type of the feed
      * @return list of dates
      */
     public static List<DateTime> getDatesOnEitherSide(DateTime startDate, DateTime endDate,
-                                                      FeedType feedType) {
-        return getDatesOnEitherSide(startDate, endDate, 1, feedType);
+                                                      FreqType freqType) {
+        return getDatesOnEitherSide(startDate, endDate, 1, freqType);
     }
 
     /**
      * Get all possible dates between start and end date gap between subsequent dates be one unit.
-     * of feedType
+     * of freqType
      *
      * @param startDate start date
      * @param endDate   end date
      * @param skip      amount of skipping
-     * @param feedType  type of the feed
+     * @param freqType  type of the feed
      * @return list of dates
      */
     public static List<DateTime> getDatesOnEitherSide(DateTime startDate, DateTime endDate,
-                                                      int skip, FeedType feedType) {
+                                                      int skip, FreqType freqType) {
         final List<DateTime> dates = new ArrayList<DateTime>();
         if (!startDate.isAfter(endDate)) {
             dates.add(startDate);
         }
         for (int counter = 0; !startDate.isAfter(endDate) && counter < 1000; ++counter) {
-            startDate = feedType.addTime(startDate, skip);
+            startDate = freqType.addTime(startDate, skip);
             dates.add(startDate);
         }
         return dates;

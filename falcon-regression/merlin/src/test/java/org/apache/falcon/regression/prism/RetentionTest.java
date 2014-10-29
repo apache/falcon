@@ -22,7 +22,7 @@ package org.apache.falcon.regression.prism;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.core.bundle.Bundle;
-import org.apache.falcon.regression.core.enumsAndConstants.FeedType;
+import org.apache.falcon.regression.core.enumsAndConstants.FreqType;
 import org.apache.falcon.regression.core.enumsAndConstants.RetentionUnit;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.response.ServiceResponse;
@@ -91,7 +91,7 @@ public class RetentionTest extends BaseTestClass {
      */
     @Test
     public void testRetentionWithEmptyDirectories() throws Exception {
-        testRetention(24, RetentionUnit.HOURS, true, FeedType.DAILY, false);
+        testRetention(24, RetentionUnit.HOURS, true, FreqType.DAILY, false);
     }
 
     /**
@@ -101,14 +101,14 @@ public class RetentionTest extends BaseTestClass {
      * @param retentionPeriod period for which data should be retained
      * @param retentionUnit type of retention limit attribute
      * @param gaps defines gaps within list of data folders
-     * @param feedType feed type
+     * @param freqType feed type
      * @param withData should folders be filled with data or not
      * @throws Exception
      */
     @Test(groups = {"0.1", "0.2", "prism"}, dataProvider = "betterDP", priority = -1)
     public void testRetention(final int retentionPeriod, final RetentionUnit retentionUnit,
-        final boolean gaps, final FeedType feedType, final boolean withData) throws Exception {
-        bundles[0].setInputFeedDataPath(testHDFSDir + feedType.getPathValue());
+        final boolean gaps, final FreqType freqType, final boolean withData) throws Exception {
+        bundles[0].setInputFeedDataPath(testHDFSDir + freqType.getPathValue());
         final FeedMerlin feedObject = new FeedMerlin(bundles[0].getInputFeedFromBundle());
         feedObject.setRetentionValue(retentionUnit.getValue() + "(" + retentionPeriod + ")");
 
@@ -116,9 +116,9 @@ public class RetentionTest extends BaseTestClass {
         if (retentionPeriod > 0) {
             AssertUtil.assertSucceeded(response);
 
-            replenishData(feedType, gaps, withData);
+            replenishData(freqType, gaps, withData);
 
-            commonDataRetentionWorkflow(feedObject.toString(), feedType, retentionUnit,
+            commonDataRetentionWorkflow(feedObject.toString(), freqType, retentionUnit,
                 retentionPeriod);
         } else {
             AssertUtil.assertFailed(response);
@@ -128,20 +128,20 @@ public class RetentionTest extends BaseTestClass {
     /**
      * Generates folders based on proposed periodicity and then fills them with data if required.
      *
-     * @param feedType feed retention limit type
+     * @param freqType feed retention limit type
      * @param gap defines what amount of units should be skipped
      * @param withData should folders be filled with data or not
      * @throws Exception
      */
-    private void replenishData(FeedType feedType, boolean gap, boolean withData) throws Exception {
+    private void replenishData(FreqType freqType, boolean gap, boolean withData) throws Exception {
         int skip = 1;
         if (gap) {
             skip = gaps[new Random().nextInt(gaps.length)];
         }
         final DateTime today = new DateTime(DateTimeZone.UTC);
         final List<DateTime> times = TimeUtil.getDatesOnEitherSide(
-            feedType.addTime(today, -36), feedType.addTime(today, 36), skip, feedType);
-        final List<String> dataDates = TimeUtil.convertDatesToString(times, feedType.getFormatter());
+            freqType.addTime(today, -36), freqType.addTime(today, 36), skip, freqType);
+        final List<String> dataDates = TimeUtil.convertDatesToString(times, freqType.getFormatter());
         logger.info("dataDates = " + dataDates);
         dataDates.add(HadoopUtil.SOMETHING_RANDOM);
         if (withData) {
@@ -157,7 +157,7 @@ public class RetentionTest extends BaseTestClass {
      * and which was retained.
      *
      * @param feed analyzed retention feed
-     * @param feedType feed type
+     * @param freqType feed type
      * @param retentionUnit type of retention limit attribute
      * @param retentionPeriod period for which data should be retained
      * @throws OozieClientException
@@ -166,7 +166,7 @@ public class RetentionTest extends BaseTestClass {
      * @throws AuthenticationException
      * @throws JMSException
      */
-    private void commonDataRetentionWorkflow(String feed, FeedType feedType,
+    private void commonDataRetentionWorkflow(String feed, FreqType freqType,
         RetentionUnit retentionUnit, int retentionPeriod) throws OozieClientException,
         IOException, URISyntaxException, AuthenticationException, JMSException {
         //get Data created in the cluster
@@ -192,7 +192,7 @@ public class RetentionTest extends BaseTestClass {
 
         //now see if retention value was matched to as expected
         List<String> expectedOutput = filterDataOnRetention(initialData, currentTime, retentionUnit,
-            retentionPeriod, feedType);
+            retentionPeriod, freqType);
         logger.info("initialData = " + initialData);
         logger.info("finalData = " + finalData);
         logger.info("expectedOutput = " + expectedOutput);
@@ -252,14 +252,14 @@ public class RetentionTest extends BaseTestClass {
      * @param currentTime current date
      * @param retentionUnit type of retention limit attribute
      * @param retentionPeriod period for which data should be retained
-     * @param feedType feed type
+     * @param freqType feed type
      * @return list of data folders which are expected to be present on cluster
      */
     private List<String> filterDataOnRetention(List<String> inputData, DateTime currentTime,
-        RetentionUnit retentionUnit, int retentionPeriod, FeedType feedType) {
+        RetentionUnit retentionUnit, int retentionPeriod, FreqType freqType) {
         final List<String> finalData = new ArrayList<String>();
         //end date is today's date
-        final String startLimit = feedType.getFormatter().print(
+        final String startLimit = freqType.getFormatter().print(
                 retentionUnit.minusTime(currentTime, retentionPeriod));
 
         //now to actually check!
@@ -284,10 +284,10 @@ public class RetentionTest extends BaseTestClass {
         RetentionUnit[] retentionUnits = new RetentionUnit[]{RetentionUnit.HOURS,
             RetentionUnit.DAYS};// "minutes","hours", "days",
         Boolean[] gaps = new Boolean[]{false, true};
-        FeedType[] feedTypes = new FeedType[]{FeedType.DAILY, FeedType.YEARLY, FeedType.MONTHLY};
+        FreqType[] freqTypes = new FreqType[]{FreqType.DAILY, FreqType.YEARLY, FreqType.MONTHLY};
         final Boolean[] withData = new Boolean[]{true};
 
-        return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, feedTypes, withData);
+        return MathUtil.crossProduct(retentionPeriods, retentionUnits, gaps, freqTypes, withData);
     }
 
     @AfterClass(alwaysRun = true)
