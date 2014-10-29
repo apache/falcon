@@ -111,7 +111,7 @@ enum EntityOp {
     definition() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.getEntityDefinition(data, user);
@@ -133,7 +133,7 @@ enum EntityOp {
     delete() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.delete(data, user);
@@ -155,7 +155,7 @@ enum EntityOp {
     update() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.update(data, data, user);
@@ -177,7 +177,7 @@ enum EntityOp {
     schedule() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.schedule(data, user);
@@ -199,7 +199,7 @@ enum EntityOp {
     submit() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.submitEntity(data, user);
@@ -221,7 +221,7 @@ enum EntityOp {
     submitAndSchedule() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.submitAndSchedule(data, user);
@@ -243,7 +243,7 @@ enum EntityOp {
     suspend() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.suspend(data, user);
@@ -265,7 +265,7 @@ enum EntityOp {
     resume() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(MerlinConstants.getKeytabForUser(user));
+            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.resume(data, user);
