@@ -18,23 +18,31 @@
 
 package org.apache.falcon.regression.core.response;
 
+import org.apache.commons.lang.StringUtils;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /** Class for api result of one entity. */
 @XmlRootElement(name = "entity")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EntityResult {
-    @XmlElement(name = "type")
-    String type;
-    @XmlElement(name = "name")
-    String name;
-
-    public String getType() {
-        return type;
-    }
+    //SUSPEND CHECKSTYLE CHECK VisibilityModifierCheck
+    @XmlElement
+    public String type;
+    @XmlElement
+    public String name;
+    @XmlElement
+    public String status;
+    @XmlElementWrapper(name = "list")
+    public List<String> tag;
+    @XmlElementWrapper(name = "list")
+    public List<String> pipelines;
+    //RESUME CHECKSTYLE CHECK VisibilityModifierCheck
 
     public String getName() {
         return name;
@@ -42,7 +50,19 @@ public class EntityResult {
 
     @Override
     public String toString() {
-        return String.format("EntityResult{type='%s', name='%s'}", type, name);
-    }
+        String outString = "(" + type + ") " + name;
+        if (StringUtils.isNotEmpty(status)) {
+            outString += "(" + status + ")";
+        }
 
+        if (tag != null && !tag.isEmpty()) {
+            outString += " - " + tag.toString();
+        }
+
+        if (pipelines != null && !pipelines.isEmpty()) {
+            outString += " - " + pipelines.toString();
+        }
+        outString += "\n";
+        return outString;
+    }
 }

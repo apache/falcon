@@ -255,14 +255,24 @@ public abstract class IEntityManagerHelper {
 
     public ServiceResponse listEntities()
         throws IOException, URISyntaxException, AuthenticationException {
-        return listEntities(null);
+        return listEntities(null, null);
     }
 
-    public ServiceResponse listEntities(String user)
+    public ServiceResponse listEntities(String params, String user)
         throws IOException, URISyntaxException, AuthenticationException {
         LOGGER.info("fetching " + getEntityType() + " list");
-        return Util.sendRequest(createUrl(this.hostname + URLS.LIST_URL.getValue(),
-            getEntityType() + colo), "get", null, user);
+        String url = createUrl(this.hostname + URLS.LIST_URL.getValue(),
+            getEntityType() + colo);
+        if (StringUtils.isNotEmpty(params)){
+            url += colo.isEmpty() ? "?" + params : "&" + params;
+        }
+        return Util.sendRequest(createUrl(url), "get", null, user);
+    }
+
+    public ServiceResponse listAllEntities(String params, String user)
+        throws AuthenticationException, IOException, URISyntaxException {
+        return listEntities((params == null ? "" : params + '&')
+            + "numResults=" + Integer.MAX_VALUE, user);
     }
 
     public ServiceResponse submitEntity(String data)

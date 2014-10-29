@@ -74,7 +74,7 @@ public final class CleanupUtil {
     private static EntitiesResult getEntitiesResultOfOneType(
         IEntityManagerHelper iEntityManagerHelper, String user)
         throws IOException, URISyntaxException, AuthenticationException, JAXBException {
-        final ServiceResponse clusterResponse = iEntityManagerHelper.listEntities(user);
+        final ServiceResponse clusterResponse = iEntityManagerHelper.listAllEntities(null, user);
         JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
         Unmarshaller u = jc.createUnmarshaller();
         return (EntitiesResult) u.unmarshal(
