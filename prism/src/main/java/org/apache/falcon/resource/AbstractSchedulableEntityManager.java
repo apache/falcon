@@ -176,6 +176,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
                                                 Integer resultsPerPage, Integer numInstances) {
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
+        validateEntityFilterByClause(filterBy);
 
         List<Entity> entities;
         String colo;

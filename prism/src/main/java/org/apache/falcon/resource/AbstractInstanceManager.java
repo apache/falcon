@@ -95,6 +95,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateNotEmpty("entityName", entity);
+            validateInstanceFilterByClause(filterBy);
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
             Entity entityObject = EntityUtil.getEntity(type, entity);
             return getInstanceResultSubset(wfEngine.getRunningInstances(entityObject, lifeCycles),
@@ -102,6 +103,25 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         } catch (Throwable e) {
             LOG.error("Failed to get running instances", e);
             throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
+        }
+    }
+
+    protected void validateInstanceFilterByClause(String entityFilterByClause) {
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+        for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
+            try {
+                InstancesResult.InstanceFilterFields filterKey =
+                        InstancesResult.InstanceFilterFields .valueOf(entry.getKey());
+                if (filterKey == InstancesResult.InstanceFilterFields.STARTEDAFTER) {
+                    EntityUtil.parseDateUTC(entry.getValue());
+                }
+            } catch (IllegalArgumentException e) {
+                throw FalconWebException.newInstanceException(
+                        "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+            } catch (FalconException e) {
+                throw FalconWebException.newInstanceException(
+                        "Invalid date value for key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+            }
         }
     }
 
@@ -123,6 +143,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         try {
             lifeCycles = checkAndUpdateLifeCycle(lifeCycles, type);
             validateParams(type, entity);
+            validateInstanceFilterByClause(filterBy);
             Entity entityObject = EntityUtil.getEntity(type, entity);
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
@@ -149,7 +170,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             Pair<Date, Date> startAndEndDate = getStartAndEndDate(entityObject, startStr, endStr);
 
             AbstractWorkflowEngine wfEngine = getWorkflowEngine();
-            return wfEngine.getSummary(entityObject, startAndEndDate.first, startAndEndDate.second, lifeCycles);
+            return wfEngine.getSummary(entityObject, startAndEndDate.first, startAndEndDate.second,
+                    lifeCycles);
         } catch (Throwable e) {
             LOG.error("Failed to get instances status", e);
             throw FalconWebException.newInstanceSummaryException(e, Response.Status.BAD_REQUEST);
@@ -179,10 +201,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     private InstancesResult getInstanceResultSubset(InstancesResult resultSet, String filterBy,
-                                                    String orderBy, String sortOrder,
-                                                    Integer offset, Integer numResults) {
-
-        ArrayList<Instance> instanceSet = new ArrayList<Instance>();
+                                                    String orderBy, String sortOrder, Integer offset,
+                                                    Integer numResults) throws FalconException {
         if (resultSet.getInstances() == null) {
             // return the empty resultSet
             resultSet.setInstances(new Instance[0]);
@@ -190,7 +210,8 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
 
         // Filter instances
-        instanceSet = filteredInstanceSet(resultSet, instanceSet, getFilterByFieldsValues(filterBy));
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        List<Instance> instanceSet = getFilteredInstanceSet(resultSet, filterByFieldsValues);
 
         int pageCount = super.getRequiredNumberOfResults(instanceSet.size(), offset, numResults);
         InstancesResult result = new InstancesResult(resultSet.getStatus(), resultSet.getMessage());
@@ -201,69 +222,65 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         }
         // Sort the ArrayList using orderBy
         instanceSet = sortInstances(instanceSet, orderBy, sortOrder);
-        result.setCollection(instanceSet.subList(offset, (offset+pageCount)).toArray(new Instance[pageCount]));
+        result.setCollection(instanceSet.subList(
+                offset, (offset+pageCount)).toArray(new Instance[pageCount]));
         return result;
     }
 
-    private ArrayList<Instance> filteredInstanceSet(InstancesResult resultSet, ArrayList<Instance> instanceSet,
-                                                  HashMap<String, String> filterByFieldsValues) {
+    private List<Instance> getFilteredInstanceSet(InstancesResult resultSet,
+                                                  Map<String, String> filterByFieldsValues)
+        throws FalconException {
+        // If filterBy is empty, return all instances. Else return instances with matching filter.
+        if (filterByFieldsValues.size() == 0) {
+            return Arrays.asList(resultSet.getInstances());
+        }
 
-        for (Instance instance : resultSet.getInstances()) {
-            boolean addInstance = true;
-            // If filterBy is empty, return all instances. Else return instances with matching filter.
-            if (filterByFieldsValues.size() > 0) {
-                String filterValue;
-                for (Map.Entry<String, String> pair : filterByFieldsValues.entrySet()) {
-                    filterValue = pair.getValue();
-                    if (filterValue.equals("")) {
-                        continue;
-                    }
-                    try {
-                        switch (InstancesResult.InstanceFilterFields.valueOf(pair.getKey().toUpperCase())) {
-                        case STATUS:
-                            String status = "";
-                            if (instance.getStatus() != null) {
-                                status = instance.getStatus().toString();
-                            }
-                            if (!status.equalsIgnoreCase(filterValue)) {
-                                addInstance = false;
-                            }
-                            break;
-                        case CLUSTER:
-                            if (!instance.getCluster().equalsIgnoreCase(filterValue)) {
-                                addInstance = false;
-                            }
-                            break;
-                        case SOURCECLUSTER:
-                            if (!instance.getSourceCluster().equalsIgnoreCase(filterValue)) {
-                                addInstance = false;
-                            }
-                            break;
-                        case STARTEDAFTER:
-                            if (instance.getStartTime().before(EntityUtil.parseDateUTC(filterValue))) {
-                                addInstance = false;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                    } catch (Exception e) {
-                        LOG.error("Invalid entry for filterBy field", e);
-                        throw FalconWebException.newInstanceException(e, Response.Status.BAD_REQUEST);
-                    }
-                    if (!addInstance) {
-                        break;
-                    }
+        List<Instance> instanceSet = new ArrayList<Instance>();
+        for (Instance instance : resultSet.getInstances()) {   // for each instance
+            boolean isInstanceFiltered = false;
+
+            // for each filter
+            for (Map.Entry<String, String> pair : filterByFieldsValues.entrySet()) {
+                if (isInstanceFiltered(instance, pair)) { // wait until all filters are applied
+                    isInstanceFiltered = true;
+                    break;  // no use to continue other filters as the current one filtered this
                 }
             }
-            if (addInstance) {
+
+            if (!isInstanceFiltered) {  // survived all filters
                 instanceSet.add(instance);
             }
         }
+
         return instanceSet;
     }
 
-    private ArrayList<Instance> sortInstances(ArrayList<Instance> instanceSet,
+    private boolean isInstanceFiltered(Instance instance,
+                                       Map.Entry<String, String> pair) throws FalconException {
+        final String filterValue = pair.getValue();
+        switch (InstancesResult.InstanceFilterFields.valueOf(pair.getKey().toUpperCase())) {
+        case STATUS:
+            return instance.getStatus() == null
+                    || !instance.getStatus().toString().equalsIgnoreCase(filterValue);
+
+        case CLUSTER:
+            return instance.getCluster() == null
+                    || !instance.getCluster().equalsIgnoreCase(filterValue);
+
+        case SOURCECLUSTER:
+            return instance.getSourceCluster() == null
+                    || !instance.getSourceCluster().equalsIgnoreCase(filterValue);
+
+        case STARTEDAFTER:
+            return instance.getStartTime() == null
+                    || instance.getStartTime().before(EntityUtil.parseDateUTC(filterValue));
+
+        default:
+            return true;
+        }
+    }
+
+    private List<Instance> sortInstances(List<Instance> instanceSet,
                                               String orderBy, String sortOrder) {
         final String order = getValidSortOrder(sortOrder, orderBy);
         if (orderBy.equals("status")) {

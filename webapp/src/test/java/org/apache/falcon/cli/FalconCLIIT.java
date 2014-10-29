@@ -29,10 +29,10 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -483,10 +483,23 @@ public class FalconCLIIT {
                         + " -filterBy STATUS:SUCCEEDED,STARTEDAFTER:"+START_INSTANCE
                         + " -orderBy startTime -sortOrder desc -offset 0 -numResults 1"));
         Assert.assertEquals(0,
+                executeWithURL("instance -status -type process -name "
+                        + overlay.get("processName")
+                        + " -start "+ START_INSTANCE
+                        + " -filterBy SOURCECLUSTER:"+ overlay.get("cluster")
+                        + " -orderBy startTime -sortOrder desc -offset 0 -numResults 1"));
+
+        Assert.assertEquals(0,
                 executeWithURL("instance -list -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
                         +" -filterBy STATUS:SUCCEEDED -orderBy startTime -offset 0 -numResults 1"));
+        Assert.assertEquals(0,
+                executeWithURL("instance -list -type feed -lifecycle eviction -name "
+                        + overlay.get("outputFeedName")
+                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
+                        +" -filterBy SOURCECLUSTER:" + overlay.get("src.cluster.name")
+                        + " -orderBy startTime -offset 0 -numResults 1"));
         Assert.assertEquals(-1,
                 executeWithURL("instance -status -type feed -lifecycle eviction -name "
                         + overlay.get("outputFeedName")
@@ -502,11 +515,6 @@ public class FalconCLIIT {
                         + overlay.get("outputFeedName")
                         + " -start "+ SchemaHelper.getDateFormat().format(new Date())
                         +" -filterBy STATUS:SUCCEEDED -orderBy startTime -offset 1 -numResults 1"));
-        Assert.assertEquals(0,
-                executeWithURL("instance -list -type feed -lifecycle eviction -name "
-                        + overlay.get("outputFeedName")
-                        + " -start "+ SchemaHelper.getDateFormat().format(new Date())
-                        +" -filterBy STATUS:SUCCEEDED -offset 0 -numResults 1"));
         // When you get a cluster for which there are no feed entities,
         Assert.assertEquals(0,
                 executeWithURL("entity -summary -type feed -cluster " + overlay.get("cluster") + " -fields status,tags"

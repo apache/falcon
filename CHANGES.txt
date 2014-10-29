@@ -125,6 +125,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-840 Possible NPE in filteredInstanceSet method of
+   AbstractInstanceManager (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-839 Authorization succeeds with invalid acl owner based on group
    membership (Venkatesh Seetharam)
 

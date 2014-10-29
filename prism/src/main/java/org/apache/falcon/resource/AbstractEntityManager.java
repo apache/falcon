@@ -513,6 +513,7 @@ public abstract class AbstractEntityManager {
                                     String orderBy, String sortOrder, Integer offset, Integer resultsPerPage) {
 
         HashSet<String> fields = new HashSet<String>(Arrays.asList(fieldStr.toLowerCase().split(",")));
+        validateEntityFilterByClause(filterBy);
         List<Entity> entities;
         try {
             entities = getEntities(type, "", "", "", filterBy, filterTags, orderBy, sortOrder, offset, resultsPerPage);
@@ -526,11 +527,23 @@ public abstract class AbstractEntityManager {
                 : new EntityList(buildEntityElements(fields, entities));
     }
 
+    protected void validateEntityFilterByClause(String entityFilterByClause) {
+        Map<String, String> filterByFieldsValues = getFilterByFieldsValues(entityFilterByClause);
+        for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
+            try {
+                EntityList.EntityFilterByFields.valueOf(entry.getKey().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw FalconWebException.newInstanceException(
+                        "Invalid filter key: " + entry.getKey(), Response.Status.BAD_REQUEST);
+            }
+        }
+    }
+
     protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
                                        String filterBy, String filterTags, String orderBy, String sortOrder,
                                        int offset, int resultsPerPage) throws FalconException {
-        final HashMap<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
-        final ArrayList<String> filterByTags = getFilterByTags(filterTags);
+        final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
+        final List<String> filterByTags = getFilterByTags(filterTags);
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Collection<String> entityNames = configStore.getEntities(entityType);
@@ -538,7 +551,7 @@ public abstract class AbstractEntityManager {
             return Collections.emptyList();
         }
 
-        ArrayList<Entity> entities = new ArrayList<Entity>();
+        List<Entity> entities = new ArrayList<Entity>();
         for (String entityName : entityNames) {
             Entity entity;
             try {
@@ -603,25 +616,24 @@ public abstract class AbstractEntityManager {
         return false;
     }
 
-    protected static HashMap<String, String> getFilterByFieldsValues(String filterBy) {
-        //Filter the results by specific field:value
-        HashMap<String, String> filterByFieldValues = new HashMap<String, String>();
+    protected static Map<String, String> getFilterByFieldsValues(String filterBy) {
+        // Filter the results by specific field:value, eliminate empty values
+        Map<String, String> filterByFieldValues = new HashMap<String, String>();
         if (!StringUtils.isEmpty(filterBy)) {
             String[] fieldValueArray = filterBy.split(",");
             for (String fieldValue : fieldValueArray) {
                 String[] splits = fieldValue.split(":", 2);
                 String filterByField = splits[0];
-                if (splits.length == 2) {
+                if (splits.length == 2 && !splits[1].equals("")) {
                     filterByFieldValues.put(filterByField, splits[1]);
-                } else {
-                    filterByFieldValues.put(filterByField, "");
                 }
             }
         }
+
         return filterByFieldValues;
     }
 
-    private static ArrayList<String> getFilterByTags(String filterTags) {
+    private static List<String> getFilterByTags(String filterTags) {
         ArrayList<String> filterTagsList = new ArrayList<String>();
         if (!StringUtils.isEmpty(filterTags)) {
             String[] splits = filterTags.split(",");
@@ -644,7 +656,7 @@ public abstract class AbstractEntityManager {
     }
 
     private boolean filterEntity(Entity entity, String entityStatus,
-                                 HashMap<String, String> filterByFieldsValues, ArrayList<String> filterByTags,
+                                 Map<String, String> filterByFieldsValues, List<String> filterByTags,
                                  List<String> tags, List<String> pipelines) {
         if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)) {
             // the user who requested list query has no permission to access this entity. Skip this entity
@@ -670,7 +682,7 @@ public abstract class AbstractEntityManager {
         return true;
     }
 
-    private boolean filterEntityByTags(ArrayList<String> filterTagsList, List<String> tags) {
+    private boolean filterEntityByTags(List<String> filterTagsList, List<String> tags) {
         boolean filterEntity = false;
         for (String tag : filterTagsList) {
             if (!tags.contains(tag)) {
@@ -682,64 +694,40 @@ public abstract class AbstractEntityManager {
         return filterEntity;
     }
 
-    private boolean filterEntityByFields(Entity entity, HashMap<String, String> filterKeyVals,
+    private boolean filterEntityByFields(Entity entity, Map<String, String> filterKeyVals,
                                          String status, List<String> pipelines) {
-        boolean filterEntity = false;
+        for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
+            String filterValue = pair.getValue();
+            if (StringUtils.isEmpty(filterValue)) {
+                continue; // nothing to filter
+            }
+            EntityList.EntityFilterByFields filter =
+                    EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
+            switch (filter) {
 
-        if (filterKeyVals.size() != 0) {
-            String filterValue;
-            for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
-                filterValue = pair.getValue();
-                if (StringUtils.isEmpty(filterValue)) {
-                    continue; // nothing to filter
-                }
-                EntityList.EntityFilterByFields filter =
-                        EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
-                switch (filter) {
+            case TYPE:
+                return !entity.getEntityType().toString().equalsIgnoreCase(filterValue);
 
-                case TYPE:
-                    if (!entity.getEntityType().toString().equalsIgnoreCase(filterValue)) {
-                        filterEntity = true;
-                    }
-                    break;
+            case NAME:
+                return !entity.getName().equalsIgnoreCase(filterValue);
 
-                case NAME:
-                    if (!entity.getName().equalsIgnoreCase(filterValue)) {
-                        filterEntity = true;
-                    }
-                    break;
+            case STATUS:
+                return  !status.equalsIgnoreCase(filterValue);
 
-                case STATUS:
-                    if (!status.equalsIgnoreCase(filterValue)) {
-                        filterEntity = true;
-                    }
-                    break;
+            case PIPELINES:
+                return  entity.getEntityType().equals(EntityType.PROCESS) && !pipelines.contains(filterValue);
 
-                case PIPELINES:
-                    if (entity.getEntityType().equals(EntityType.PROCESS)
-                            && !pipelines.contains(filterValue)) {
-                        filterEntity = true;
-                    }
-                    break;
+            case CLUSTER:
+                return  !EntityUtil.getClustersDefined(entity).contains(filterValue);
 
-                case CLUSTER:
-                    Set<String> clusters = EntityUtil.getClustersDefined(entity);
-                    if (!clusters.contains(filterValue)) {
-                        filterEntity = true;
-                    }
-
-                default:
-                    break;
-                }
-                if (filterEntity) {
-                    break;
-                }
+            default:
+                break;
             }
         }
-        return filterEntity;
+        return false;
     }
 
-    private ArrayList<Entity> sortEntities(ArrayList<Entity> entities, String orderBy, String sortOrder) {
+    private List<Entity> sortEntities(List<Entity> entities, String orderBy, String sortOrder) {
         // Sort the ArrayList using orderBy param
         if (!StringUtils.isEmpty(orderBy)) {
             EntityList.EntityFieldList orderByField = EntityList.EntityFieldList.valueOf(orderBy.toUpperCase());
