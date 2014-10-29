@@ -5,7 +5,8 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
-   FALCON-836 Add tests for entities list API (Ruslan Ostafiychuk)
+   FALCON-841 Test falcon process with different frequencies
+   (Raghav Kumar Gautam)
 
    FALCON-814 Tests for entities summary API (Paul Isaychuk via Ruslan Ostafiychuk)
 

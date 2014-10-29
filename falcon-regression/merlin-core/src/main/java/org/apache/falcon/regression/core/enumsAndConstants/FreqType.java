@@ -19,6 +19,7 @@
 package org.apache.falcon.regression.core.enumsAndConstants;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.falcon.entity.v0.Frequency;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -26,11 +27,16 @@ import org.joda.time.format.DateTimeFormatter;
 /**
  * Enum to represent different feed periodicity.
  */
-public enum FeedType {
+public enum FreqType {
     MINUTELY("minutely", "yyyy/MM/dd/HH/mm", "${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}",
             "year=${YEAR};month=${MONTH};day=${DAY};hour=${HOUR};minute=${MINUTE}") {
         public DateTime addTime(DateTime dateTime, int amount) {
             return dateTime.plusMinutes(amount);
+        }
+
+        @Override
+        public Frequency.TimeUnit getFalconTimeUnit() {
+            return Frequency.TimeUnit.minutes;
         }
     },
     HOURLY("hourly", "yyyy/MM/dd/HH", "${YEAR}/${MONTH}/${DAY}/${HOUR}",
@@ -39,12 +45,22 @@ public enum FeedType {
         public DateTime addTime(DateTime dateTime, int amount) {
             return dateTime.plusHours(amount);
         }
+
+        @Override
+        public Frequency.TimeUnit getFalconTimeUnit() {
+            return Frequency.TimeUnit.hours;
+        }
     },
     DAILY("daily", "yyyy/MM/dd", "${YEAR}/${MONTH}/${DAY}",
             "year=${YEAR};month=${MONTH};day=${DAY}") {
         @Override
         public DateTime addTime(DateTime dateTime, int amount) {
             return dateTime.plusDays(amount);
+        }
+
+        @Override
+        public Frequency.TimeUnit getFalconTimeUnit() {
+            return Frequency.TimeUnit.days;
         }
     },
     MONTHLY("monthly", "yyyy/MM", "${YEAR}/${MONTH}",
@@ -53,12 +69,22 @@ public enum FeedType {
         public DateTime addTime(DateTime dateTime, int amount) {
             return dateTime.plusMonths(amount);
         }
+
+        @Override
+        public Frequency.TimeUnit getFalconTimeUnit() {
+            return Frequency.TimeUnit.months;
+        }
     },
     YEARLY("yearly", "yyyy", "${YEAR}",
             "year=${YEAR}") {
         @Override
         public DateTime addTime(DateTime dateTime, int amount) {
             return dateTime.plusYears(amount);
+        }
+
+        @Override
+        public Frequency.TimeUnit getFalconTimeUnit() {
+            throw new UnsupportedOperationException();
         }
     };
 
@@ -67,7 +93,7 @@ public enum FeedType {
     private final String hcatPathValue;
     private final DateTimeFormatter formatter;
 
-    private FeedType(String value, String format, String pathValue, String hcatPathValue) {
+    private FreqType(String value, String format, String pathValue, String hcatPathValue) {
         this.value = value;
         formatter = DateTimeFormat.forPattern(format);
         this.pathValue = pathValue;
@@ -95,4 +121,6 @@ public enum FeedType {
     }
 
     public abstract DateTime addTime(DateTime dateTime, int amount);
+
+    public abstract Frequency.TimeUnit getFalconTimeUnit();
 }
