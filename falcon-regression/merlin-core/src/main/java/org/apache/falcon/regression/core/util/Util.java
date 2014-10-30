@@ -612,7 +612,8 @@ public final class Util {
         INSTANCE_SUSPEND("/api/instance/suspend"),
         INSTANCE_RERUN("/api/instance/rerun"),
         INSTANCE_SUMMARY("/api/instance/summary"),
-        INSTANCE_PARAMS("/api/instance/params");
+        INSTANCE_PARAMS("/api/instance/params"),
+        INSTANCE_LIST("/api/instance/list");
         private final String url;
 
         URLS(String url) {

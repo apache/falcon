@@ -40,9 +40,22 @@ public final class HadoopUtil {
 
     public static final String SOMETHING_RANDOM = "somethingRandom";
     private static final Logger LOGGER = Logger.getLogger(HadoopUtil.class);
+    private static Pattern protocol = Pattern.compile(":[\\d]+/");
 
     private HadoopUtil() {
         throw new AssertionError("Instantiating utility class...");
+    }
+
+    /*
+     * Removes 'hdfs(hftp)://server:port'
+     */
+    private static String cutProtocol(String path) {
+        if (StringUtils.isNotEmpty(path)) {
+            if (protocol.matcher(path).find()) {
+                return '/' + protocol.split(path)[1];
+            }
+        }
+        return path;
     }
 
     /**
@@ -299,13 +312,10 @@ public final class HadoopUtil {
         if (!remotePathPrefix.endsWith("/") && !remoteLocations.get(0).startsWith("/")) {
             remotePathPrefix += "/";
         }
-        Pattern pattern = Pattern.compile(":[\\d]+/"); // remove 'hdfs(hftp)://server:port'
         List<String> locations = new ArrayList<String>();
         for (String remoteDir : remoteLocations) {
             String remoteLocation = remotePathPrefix + remoteDir;
-            if (pattern.matcher(remoteLocation).find()) {
-                remoteLocation = remoteLocation.split(":[\\d]+")[1];
-            }
+            remoteLocation = cutProtocol(remoteLocation);
             locations.add(remoteLocation);
             LOGGER.info(String.format("copying to: %s files: %s",
                 fs.getUri() + remoteLocation, Arrays.toString(files)));
@@ -381,7 +391,7 @@ public final class HadoopUtil {
     public static void createFolders(FileSystem fs, final String folderPrefix,
                                              List<String> folderList) throws IOException {
         for (final String folder : folderList) {
-            fs.mkdirs(new Path(folderPrefix + folder));
+            fs.mkdirs(new Path(cutProtocol(folderPrefix + folder)));
         }
     }
 

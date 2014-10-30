@@ -547,9 +547,26 @@ public abstract class IEntityManagerHelper {
         throws AuthenticationException, IOException, URISyntaxException {
         String url = createUrl(this.hostname + URLS.ENTITY_SUMMARY.getValue(),
             getEntityType(), clusterName);
-        if (!StringUtils.isEmpty(params)){
+        if (StringUtils.isNotEmpty(params)) {
             url += "?" + params;
         }
         return Util.sendRequest(url, "get", null, null);
+    }
+
+    /**
+     * Get list of all instances of a given entity.
+     * @param entityName entity name
+     * @param params list of optional parameters
+     * @param user user name
+     * @return response
+     */
+    public InstancesResult listInstances(String entityName, String params, String user)
+        throws AuthenticationException, IOException, URISyntaxException {
+        String url = createUrl(this.hostname + URLS.INSTANCE_LIST.getValue(), getEntityType(),
+            entityName + colo);
+        if (StringUtils.isNotEmpty(params)) {
+            url += colo.isEmpty() ? "?" + params : "&" + params;
+        }
+        return (InstancesResult) InstanceUtil.sendRequestProcessInstance(url, user);
     }
 }
