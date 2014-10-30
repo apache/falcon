@@ -129,6 +129,8 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-848 ListEntitiesTest tagged and checkstyle bugs fixed (Ruslan Ostafiychuk)
+
    FALCON-832 more edge labels and node type for lineage (Raghav Kumar Gautam via Ruslan
    Ostafiychuk)
 

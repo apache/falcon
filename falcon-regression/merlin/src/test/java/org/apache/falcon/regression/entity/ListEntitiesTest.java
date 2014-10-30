@@ -50,9 +50,9 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Testing the list entities API
+ * Testing the list entities API.
  */
-
+@Test(groups = "embedded")
 public class ListEntitiesTest extends BaseTestClass {
     private static final Logger LOGGER = Logger.getLogger(ListEntitiesTest.class);
     private String testDir = "/ListEntitiesTest";
@@ -135,8 +135,8 @@ public class ListEntitiesTest extends BaseTestClass {
     @Test(dataProvider = "getHelpers")
     public void listEntitiesWithFilterByStatus(IEntityManagerHelper helper)
         throws AuthenticationException, IOException, URISyntaxException {
-        String[] statuses = helper.getEntityType().equalsIgnoreCase("cluster") ?
-            new String[]{"SUBMITTED"} : new String[]{"SUBMITTED", "RUNNING"};
+        String[] statuses = helper.getEntityType().equalsIgnoreCase("cluster")
+            ? new String[]{"SUBMITTED"} : new String[]{"SUBMITTED", "RUNNING"};
 
         List<EntityResult> allEntities =
             helper.listAllEntities("fields=status", null).getEntitiesResult().getEntities();
@@ -179,7 +179,7 @@ public class ListEntitiesTest extends BaseTestClass {
             List<EntityResult> entities =
                 helper.listEntities("offset=" + i, null).getEntitiesResult().getEntities();
             LOGGER.info(String.format("%s entities with offset %d: %s",
-                helper.getEntityType(), i,entities));
+                helper.getEntityType(), i, entities));
 
             Assert.assertEquals(entities.size(),
                 allEntitiesCount - i < 10 ? allEntitiesCount - i : 10,
@@ -229,7 +229,7 @@ public class ListEntitiesTest extends BaseTestClass {
         for (EntityResult entity : allEntities) {
             for (int i = 0; i < tags.length; i++) {
                 if (entity.tag != null && entity.tag.contains(tags[i])) {
-                   counters[i]++;
+                    counters[i]++;
                 }
             }
         }
@@ -261,10 +261,10 @@ public class ListEntitiesTest extends BaseTestClass {
             null).getEntitiesResult().getEntities();
         SoftAssert softAssert = new SoftAssert();
         for (EntityResult entity : entities) {
-                softAssert.assertEquals(entity.status, "SUBMITTED",
-                    "Entities should have status 'SUBMITTED'");
-                softAssert.assertTrue(entity.tag.contains(tags[2]), "There is entity without tag="
-                    + tags[2] + " Entity: " + entity);
+            softAssert.assertEquals(entity.status, "SUBMITTED",
+                "Entities should have status 'SUBMITTED'");
+            softAssert.assertTrue(entity.tag.contains(tags[2]), "There is entity without tag="
+                + tags[2] + " Entity: " + entity);
         }
         softAssert.assertTrue(entities.size() <= 3, "Number of results should be 3 or less");
         softAssert.assertTrue(Ordering.from(NAME_COMPARATOR).isOrdered(entities),
@@ -278,7 +278,7 @@ public class ListEntitiesTest extends BaseTestClass {
         return new Object[][]{
             {prism.getProcessHelper()},
             {prism.getClusterHelper()},
-            {prism.getFeedHelper()}
+            {prism.getFeedHelper()},
         };
     }
 
