@@ -198,7 +198,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         InstancesResult.WorkflowStatus previousStatus = InstancesResult.WorkflowStatus.WAITING;
         for (InstancesResult.Instance instance : instances) {
             InstancesResult.WorkflowStatus current = instance.getStatus();
-            softAssert.assertTrue(current.compareTo(previousStatus) <= 0,
+            softAssert.assertTrue(current.toString().compareTo(previousStatus.toString()) <= 0,
                 "Wrong order. Compared " + current + " and " + previousStatus + " statuses.");
             previousStatus = current;
         }
