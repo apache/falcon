@@ -85,7 +85,7 @@
   }
 
   function load() {
-    var isCluster = entityType === 'cluster';
+    var isCluster = entityType.toLowerCase() === 'cluster';
 
     falcon.getText(url('entities/definition'), function (data) {
       $('#entity-def-textarea')

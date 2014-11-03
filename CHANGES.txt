@@ -125,6 +125,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-850 Cluster summary UI page results in 400 Bad Request
+   (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-851 Super user authorization is broken (Venkatesh Seetharam)
 
    FALCON-840 Possible NPE in filteredInstanceSet method of
