@@ -125,6 +125,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-858 entity/instance Rest API - make keys for filterBy param case
+   insensitive (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-857 Authorization failure results in internal server error
    (Venkatesh Seetharam)
 

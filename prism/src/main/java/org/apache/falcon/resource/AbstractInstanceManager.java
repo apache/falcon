@@ -111,7 +111,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
         for (Map.Entry<String, String> entry : filterByFieldsValues.entrySet()) {
             try {
                 InstancesResult.InstanceFilterFields filterKey =
-                        InstancesResult.InstanceFilterFields .valueOf(entry.getKey());
+                        InstancesResult.InstanceFilterFields .valueOf(entry.getKey().toUpperCase());
                 if (filterKey == InstancesResult.InstanceFilterFields.STARTEDAFTER) {
                     EntityUtil.parseDateUTC(entry.getValue());
                 }
