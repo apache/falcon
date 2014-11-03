@@ -19,7 +19,6 @@
 package org.apache.falcon.security;
 
 import org.apache.falcon.FalconException;
-import org.apache.falcon.FalconWebException;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -62,6 +61,10 @@ public class FalconAuthorizationFilter implements Filter {
     public void doFilter(ServletRequest request,
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
+        int errorCode = HttpServletResponse.SC_FORBIDDEN;
+        String errorMessage = null;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+
         if (isAuthorizationEnabled) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             RequestParts requestParts = getUserRequest(httpRequest);
@@ -72,11 +75,20 @@ public class FalconAuthorizationFilter implements Filter {
                         requestParts.getAction(), requestParts.getEntityType(),
                         requestParts.getEntityName(), CurrentUser.getProxyUGI());
             } catch (AuthorizationException e) {
-                throw FalconWebException.newException(e.getMessage(), Response.Status.FORBIDDEN);
+                errorMessage = e.getMessage();
+            } catch (IllegalArgumentException e) {
+                errorMessage = e.getMessage();
+                errorCode = HttpServletResponse.SC_BAD_REQUEST;
             }
         }
 
-        filterChain.doFilter(request, response);
+        if (errorMessage == null) {  // continue processing if there was no exception
+            filterChain.doFilter(request, response);
+        } else {
+            if (!httpResponse.isCommitted()) {
+                httpResponse.sendError(errorCode, errorMessage);
+            }
+        }
     }
 
     @Override

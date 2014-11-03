@@ -89,31 +89,70 @@ public class FalconAuthorizationFilterTest {
             {"/metadata/lineage/vertices/all"},
             {"/metadata/lineage/vertices/_1"},
             {"/metadata/lineage/vertices/properties/_1"},
+            {"metadata/discovery/process_entity/sample-process/relations"},
+            {"metadata/discovery/process_entity/list?cluster=primary-cluster"},
         };
     }
 
     @Test (dataProvider = "resourceWithNoEntity")
     public void testDoFilter(String resource) throws Exception {
-        Filter filter = new FalconAuthorizationFilter();
-        synchronized (StartupProperties.get()) {
-            filter.init(mockConfig);
-        }
+        boolean[] enabledFlags = {false, true};
+        for (boolean enabled : enabledFlags) {
+            StartupProperties.get().setProperty(
+                "falcon.security.authorization.enabled", String.valueOf(enabled));
 
-        try {
-            boolean[] enabledFlags = {false, true};
-            for (boolean enabled : enabledFlags) {
-                StartupProperties.get().setProperty(
-                        "falcon.security.authorization.enabled", String.valueOf(enabled));
-
-                StringBuffer requestUrl = new StringBuffer("http://localhost" + resource);
-                Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
-                Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + resource);
-                Mockito.when(mockRequest.getPathInfo()).thenReturn(resource);
-
-                filter.doFilter(mockRequest, mockResponse, mockChain);
+            Filter filter = new FalconAuthorizationFilter();
+            synchronized (StartupProperties.get()) {
+                filter.init(mockConfig);
             }
-        } finally {
-            filter.destroy();
+
+            StringBuffer requestUrl = new StringBuffer("http://localhost" + resource);
+            Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+            Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + resource);
+            Mockito.when(mockRequest.getPathInfo()).thenReturn(resource);
+
+            try {
+                filter.doFilter(mockRequest, mockResponse, mockChain);
+            } finally {
+                filter.destroy();
+            }
+        }
+    }
+
+    @DataProvider(name = "invalidResource")
+    private Object[][] createBadOptions() {
+        return new Object[][] {
+            {"/admin1/version"},
+            {"/entities1/list/feed"},
+            {"/metadata1/lineage/vertices/all"},
+            {"/foo/bar"},
+        };
+    }
+
+    @Test (dataProvider = "invalidResource")
+    public void testDoFilterBadResource(String resource) throws Exception {
+        boolean[] enabledFlags = {false, true};
+        for (boolean enabled : enabledFlags) {
+            StartupProperties.get().setProperty(
+                "falcon.security.authorization.enabled", String.valueOf(enabled));
+
+            Filter filter = new FalconAuthorizationFilter();
+            synchronized (StartupProperties.get()) {
+                filter.init(mockConfig);
+            }
+
+            StringBuffer requestUrl = new StringBuffer("http://localhost" + resource);
+            Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+            Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + resource);
+            Mockito.when(mockRequest.getPathInfo()).thenReturn(resource);
+
+            try {
+                filter.doFilter(mockRequest, mockResponse, mockChain);
+
+                // todo: verify the response error code to 400
+            } finally {
+                filter.destroy();
+            }
         }
     }
 
@@ -128,48 +167,51 @@ public class FalconAuthorizationFilterTest {
 
     @Test (dataProvider = "resourceWithEntity")
     public void testDoFilterForEntity(String resource) throws Exception {
-        Filter filter = new FalconAuthorizationFilter();
-        synchronized (StartupProperties.get()) {
-            filter.init(mockConfig);
-        }
+        boolean[] enabledFlags = {false, true};
+        for (boolean enabled : enabledFlags) {
+            StartupProperties.get().setProperty(
+                "falcon.security.authorization.enabled", String.valueOf(enabled));
 
-        try {
-            boolean[] enabledFlags = {false, true};
-            for (boolean enabled : enabledFlags) {
-                StartupProperties.get().setProperty(
-                        "falcon.security.authorization.enabled", String.valueOf(enabled));
-
-                String uri = resource + processEntity.getName();
-                StringBuffer requestUrl = new StringBuffer("http://localhost" + uri);
-                Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
-                Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
-                Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
-
-                filter.doFilter(mockRequest, mockResponse, mockChain);
+            Filter filter = new FalconAuthorizationFilter();
+            synchronized (StartupProperties.get()) {
+                filter.init(mockConfig);
             }
-        } finally {
-            filter.destroy();
-        }
-    }
 
-    @Test (expectedExceptions = Exception.class)
-    public void testDoFilterForEntityWithInvalidEntity() throws Exception {
-        CurrentUser.authenticate("falcon");
-        Filter filter = new FalconAuthorizationFilter();
-        synchronized (StartupProperties.get()) {
-            filter.init(mockConfig);
-        }
-
-        try {
-            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
-
-            String uri = "/entities/suspend/process/bad-entity";
+            String uri = resource + processEntity.getName();
             StringBuffer requestUrl = new StringBuffer("http://localhost" + uri);
             Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
             Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
             Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
 
+            try {
+                filter.doFilter(mockRequest, mockResponse, mockChain);
+            } finally {
+                filter.destroy();
+            }
+        }
+    }
+
+    @Test
+    public void testDoFilterForEntityWithInvalidEntity() throws Exception {
+        CurrentUser.authenticate("falcon");
+
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+
+        Filter filter = new FalconAuthorizationFilter();
+        synchronized (StartupProperties.get()) {
+            filter.init(mockConfig);
+        }
+
+        String uri = "/entities/suspend/process/bad-entity";
+        StringBuffer requestUrl = new StringBuffer("http://localhost" + uri);
+        Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+        Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + uri);
+        Mockito.when(mockRequest.getPathInfo()).thenReturn(uri);
+
+        try {
             filter.doFilter(mockRequest, mockResponse, mockChain);
+
+            // todo: verify the response error code to 403
         } finally {
             filter.destroy();
         }

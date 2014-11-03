@@ -125,6 +125,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-857 Authorization failure results in internal server error
+   (Venkatesh Seetharam)
+
    FALCON-850 Cluster summary UI page results in 400 Bad Request
    (Balu Vellanki via Venkatesh Seetharam)
 
