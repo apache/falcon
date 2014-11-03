@@ -26,6 +26,7 @@ import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,9 @@ import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Generic Abstract Entity Parser, the concrete FEED, PROCESS and CLUSTER should extend this parser
@@ -107,6 +111,32 @@ public abstract class EntityParser<T extends Entity> {
     }
 
     public abstract void validate(T entity) throws FalconException;
+
+    /**
+     * Checks if the acl owner is a valid user by fetching the groups for the owner.
+     * Also checks if the acl group is one of the fetched groups for membership.
+     * The only limitation is that a user cannot add a group in ACL that he does not belong to.
+     *
+     * @param acl  entity ACL
+     * @throws org.apache.falcon.entity.parser.ValidationException
+     */
+    protected void validateACLOwnerAndGroup(AccessControlList acl) throws ValidationException {
+        String aclOwner = acl.getOwner();
+        String aclGroup = acl.getGroup();
+
+        try {
+            UserGroupInformation proxyACLUser = UserGroupInformation.createProxyUser(
+                    aclOwner, UserGroupInformation.getLoginUser());
+            Set<String> groups = new HashSet<String>(Arrays.asList(proxyACLUser.getGroupNames()));
+            if (!groups.contains(aclGroup)) {
+                throw new AuthorizationException("Invalid group: " + aclGroup
+                        + " for user: " + aclOwner);
+            }
+        } catch (IOException e) {
+            throw new ValidationException("Invalid acl owner " + aclOwner
+                    + ", does not exist or does not belong to group: " + aclGroup);
+        }
+    }
 
     /**
      * Validate if the entity owner is the logged-in authenticated user.

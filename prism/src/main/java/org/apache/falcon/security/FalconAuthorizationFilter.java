@@ -63,11 +63,11 @@ public class FalconAuthorizationFilter implements Filter {
     public void doFilter(ServletRequest request,
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        RequestParts requestParts = getUserRequest(httpRequest);
-
         if (isAuthorizationEnabled) {
+            HttpServletRequest httpRequest = (HttpServletRequest) request;
+            RequestParts requestParts = getUserRequest(httpRequest);
             LOG.info("Authorizing user={} against request={}", CurrentUser.getUser(), requestParts);
+
             try {
                 authorizationProvider.authorizeResource(requestParts.getResource(),
                         requestParts.getAction(), requestParts.getEntityType(),

@@ -28,6 +28,14 @@ import org.apache.hadoop.security.authorize.AuthorizationException;
 public interface AuthorizationProvider {
 
     /**
+     * Check if the authenticated user is a super user.
+     *
+     * @param proxyUgi   proxy ugi for the authenticated user
+     * @return true if sure user, else false
+     */
+    boolean isSuperUser(UserGroupInformation proxyUgi);
+
+    /**
      * Determines if the authenticated user is authorized to execute the action on the resource,
      * which is typically a REST resource path.
      * Throws an exception if not authorized.

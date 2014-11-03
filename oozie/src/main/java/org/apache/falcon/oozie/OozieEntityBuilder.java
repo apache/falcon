@@ -140,7 +140,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
             }
 
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                    outPath.toUri(), ClusterHelper.getConfiguration(cluster));
+                    outPath.toUri(), ClusterHelper.getConfiguration(cluster), entity.getACL());
             OutputStream out = fs.create(outPath);
             try {
                 marshaller.marshal(jaxbElement, out);
@@ -261,7 +261,7 @@ public abstract class OozieEntityBuilder<T extends Entity> {
     protected void copySharedLibs(Cluster cluster, Path libPath) throws FalconException {
         try {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                    libPath.toUri(), ClusterHelper.getConfiguration(cluster));
+                    libPath.toUri(), ClusterHelper.getConfiguration(cluster), entity.getACL());
             SharedLibraryHostingService.pushLibsToHDFS(
                     fs, StartupProperties.get().getProperty("system.lib.location"),
                     libPath, FALCON_JAR_FILTER);

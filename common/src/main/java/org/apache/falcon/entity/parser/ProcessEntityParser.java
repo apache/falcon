@@ -122,7 +122,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
         String nameNode = getNameNode(cluster);
         try {
             Configuration configuration = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(configuration);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                configuration, process.getACL());
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException(
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);
@@ -242,6 +243,8 @@ public class ProcessEntityParser extends EntityParser<Process> {
         if (processACL == null) {
             throw new ValidationException("Process ACL cannot be empty for:  " + process.getName());
         }
+
+        validateACLOwnerAndGroup(processACL);
 
         try {
             authorize(process.getName(), processACL);

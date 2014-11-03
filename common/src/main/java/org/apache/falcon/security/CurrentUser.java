@@ -70,6 +70,10 @@ public final class CurrentUser {
         INSTANCE.currentSubject.set(subject);
     }
 
+    public static boolean isAuthenticated() {
+        return getSubject() != null;
+    }
+
     public static Subject getSubject() {
         return INSTANCE.currentSubject.get();
     }

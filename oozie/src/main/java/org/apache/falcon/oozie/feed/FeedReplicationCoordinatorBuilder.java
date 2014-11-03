@@ -281,7 +281,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     private void setupHiveConfiguration(Cluster srcCluster, Cluster trgCluster,
                                         Path buildPath) throws FalconException {
         Configuration conf = ClusterHelper.getConfiguration(trgCluster);
-        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf, entity.getACL());
 
         try {
             // copy import export scripts to stagingDir

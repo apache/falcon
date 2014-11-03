@@ -30,7 +30,6 @@ import org.apache.falcon.entity.v0.Frequency.TimeUnit;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
-import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.DeploymentUtil;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.falcon.util.StartupProperties;
@@ -95,16 +94,13 @@ public abstract class AbstractCleanupHandler {
     private FileSystem getFileSystemAsEntityOwner(Cluster cluster,
                                                   Entity entity) throws FalconException {
         try {
-            final AccessControlList acl = EntityUtil.getACL(entity);
+            final AccessControlList acl = entity.getACL();
             if (acl == null) {
                 throw new FalconException("ACL for entity " + entity.getName() + " is empty");
             }
 
-            final String proxyUser = acl.getOwner();
-            // user for proxying
-            CurrentUser.authenticate(proxyUser);
             return HadoopClientFactory.get().createProxiedFileSystem(
-                    ClusterHelper.getConfiguration(cluster));
+                    ClusterHelper.getConfiguration(cluster), acl);
         } catch (Exception e) {
             throw new FalconException(e);
         }

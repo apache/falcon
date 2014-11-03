@@ -31,7 +31,6 @@ import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -82,7 +81,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     private static final String SUPER_USER_GROUP_KEY = FALCON_PREFIX + "superusergroup";
 
     /**
-     * Super ser group.
+     * Super user group.
      */
     private String superUserGroup;
     private Set<String> adminUsers;
@@ -148,9 +147,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
      * @param authenticatedUGI UGI
      * @return true if super user else false.
      */
-    protected boolean isSuperUser(UserGroupInformation authenticatedUGI) {
-        final String authenticatedUser = authenticatedUGI.getShortUserName();
-        return SUPER_USER.equals(authenticatedUser)
+    public boolean isSuperUser(UserGroupInformation authenticatedUGI) {
+        return SUPER_USER.equals(authenticatedUGI.getShortUserName())
                 || (!StringUtils.isEmpty(superUserGroup)
                     && isUserInGroup(superUserGroup, authenticatedUGI));
     }
@@ -180,36 +178,10 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                 authenticatedUser, action, entityName, entityType);
 
         if (isSuperUser(proxyUgi)) {
-            validateACLOwnerAndGroup(acl.getOwner(), acl.getGroup());
             return;
         }
 
         checkUser(entityName, acl.getOwner(), acl.getGroup(), action, authenticatedUser, proxyUgi);
-    }
-
-    /**
-     * Checks if the acl owner is a valid user by fetching the groups for the owner.
-     * Also checks if the acl group is one of the fetched groups for membership.
-     * The only limitation is that a user cannot add a group in ACL that he does not belong to.
-     *
-     * @param aclOwner ACL owner
-     * @param aclGroup ACL group
-     * @throws AuthorizationException
-     */
-    protected void validateACLOwnerAndGroup(String aclOwner,
-                                            String aclGroup) throws AuthorizationException {
-        try {
-            UserGroupInformation proxyACLUser = UserGroupInformation.createProxyUser(
-                    aclOwner, UserGroupInformation.getLoginUser());
-            Set<String> groups = new HashSet<String>(Arrays.asList(proxyACLUser.getGroupNames()));
-            if (!isUserInGroup(aclGroup, groups)) {
-                throw new AuthorizationException("Invalid group: " + aclGroup
-                        + " for user: " + aclOwner);
-            }
-        } catch (IOException e) {
-            throw new AuthorizationException("Invalid acl owner " + aclOwner
-                    + ", does not exist or does not belong to group: " + aclGroup);
-        }
     }
 
     /**
@@ -227,7 +199,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
                              String action, String authenticatedUser,
                              UserGroupInformation proxyUgi) throws AuthorizationException {
         if (isUserACLOwner(authenticatedUser, aclOwner)
-                && isUserInGroup(aclGroup, proxyUgi)) {
+                || isUserInGroup(aclGroup, proxyUgi)) {
             return;
         }
 
@@ -262,17 +234,6 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
      */
     protected boolean isUserInGroup(String group, UserGroupInformation proxyUgi) {
         Set<String> groups = getGroupNames(proxyUgi);
-        return isUserInGroup(group, groups);
-    }
-
-    /**
-     * Checks if the user's group matches the entity ACL group.
-     *
-     * @param group    Entity ACL group.
-     * @param groups   set of groups for the authenticated user.
-     * @return true if user groups contains entity acl group.
-     */
-    protected boolean isUserInGroup(String group, Set<String> groups) {
         return groups.contains(group);
     }
 
@@ -321,7 +282,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         if (entityName != null) { // lifecycle actions
             Entity entity = getEntity(entityName, entityType);
             authorizeEntity(entity.getName(), entity.getEntityType().name(),
-                    EntityUtil.getACL(entity), action, proxyUgi);
+                    entity.getACL(), action, proxyUgi);
         } else {
             // non lifecycle actions, lifecycle actions with null entity will validate later
             LOG.info("Authorization for action={} will be done in the API", action);

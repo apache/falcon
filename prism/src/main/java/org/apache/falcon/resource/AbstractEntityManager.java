@@ -356,7 +356,7 @@ public abstract class AbstractEntityManager {
      * @param entity entity
      */
     private void decorateEntityWithACL(Entity entity) {
-        if (SecurityUtil.isAuthorizationEnabled() || EntityUtil.getACL(entity) != null) {
+        if (SecurityUtil.isAuthorizationEnabled() || entity.getACL() != null) {
             return; // not necessary to decorate
         }
 

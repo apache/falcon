@@ -27,7 +27,6 @@ import org.apache.falcon.Pair;
 import org.apache.falcon.Tag;
 import org.apache.falcon.entity.WorkflowNameBuilder.WorkflowName;
 import org.apache.falcon.entity.store.ConfigurationStore;
-import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.Frequency;
@@ -584,7 +583,7 @@ public final class EntityUtil {
         throws FalconException {
         Path basePath = getBaseStagingPath(cluster, entity);
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster));
+                ClusterHelper.getConfiguration(cluster), entity.getACL());
         try {
             return fs.listStatus(basePath, new PathFilter() {
                 @Override
@@ -751,24 +750,5 @@ public final class EntityUtil {
             }
         }
         return new Pair<Date, Date>(clusterMinStartDate.first, clusterMaxEndDate.first);
-    }
-
-    public static AccessControlList getACL(Entity entity) {
-        switch (entity.getEntityType()) {
-        case CLUSTER:
-            return ((org.apache.falcon.entity.v0.cluster.Cluster) entity).getACL();
-
-        case FEED:
-            return ((org.apache.falcon.entity.v0.feed.Feed) entity).getACL();
-
-        case PROCESS:
-            return ((org.apache.falcon.entity.v0.process.Process) entity).getACL();
-
-        default:
-            break;
-        }
-
-        throw new IllegalArgumentException("Unknown entity type: " + entity.getEntityType()
-                + " for: " + entity.getName());
     }
 }

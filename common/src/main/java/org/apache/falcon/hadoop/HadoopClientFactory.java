@@ -20,6 +20,7 @@ package org.apache.falcon.hadoop;
 
 import org.apache.commons.lang.Validate;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -84,11 +85,19 @@ public final class HadoopClientFactory {
         }
     }
 
+    /**
+     * This method is only used by Falcon internally to talk to the config store on HDFS.
+     *
+     * @param conf configuration.
+     * @return FileSystem created with the provided proxyUser/group.
+     * @throws org.apache.falcon.FalconException
+     *          if the filesystem could not be created.
+     */
     public FileSystem createFalconFileSystem(final Configuration conf)
         throws FalconException {
         Validate.notNull(conf, "configuration cannot be null");
 
-        String nameNode = conf.get(FS_DEFAULT_NAME_KEY);
+        String nameNode = getNameNode(conf);
         try {
             return createFileSystem(UserGroupInformation.getLoginUser(), new URI(nameNode), conf);
         } catch (URISyntaxException e) {
@@ -110,18 +119,20 @@ public final class HadoopClientFactory {
         throws FalconException {
         Validate.notNull(conf, "configuration cannot be null");
 
-        String nameNode = conf.get(FS_DEFAULT_NAME_KEY);
-        try {
-            return createFileSystem(getProxyUGI(), new URI(nameNode), conf);
-        } catch (URISyntaxException e) {
-            throw new FalconException("Exception while getting FileSystem for proxy: "
-                    + CurrentUser.getUser(), e);
-        } catch (IOException e) {
-            throw new FalconException("Exception while getting FileSystem for proxy: "
-                    + CurrentUser.getUser(), e);
-        }
+        return createProxiedFileSystem(conf, null);
     }
 
+    private String getNameNode(Configuration conf) {
+        return conf.get(FS_DEFAULT_NAME_KEY);
+    }
+
+    /**
+     * This method is called from with in a workflow execution context.
+     *
+     * @param uri uri
+     * @return file system handle
+     * @throws FalconException
+     */
     public FileSystem createProxiedFileSystem(final URI uri) throws FalconException {
         return createProxiedFileSystem(uri, new Configuration());
     }
@@ -130,22 +141,45 @@ public final class HadoopClientFactory {
                                               final Configuration conf) throws FalconException {
         Validate.notNull(uri, "uri cannot be null");
 
+        return createProxiedFileSystem(uri, conf, null);
+    }
+
+    public FileSystem createProxiedFileSystem(final Configuration conf,
+                                              final AccessControlList acl) throws FalconException {
+        Validate.notNull(conf, "configuration cannot be null");
+
         try {
-            return createFileSystem(getProxyUGI(), uri, conf);
-        } catch (IOException e) {
+            return createProxiedFileSystem(new URI(getNameNode(conf)), conf, acl);
+        } catch (URISyntaxException e) {
             throw new FalconException("Exception while getting FileSystem for proxy: "
                     + CurrentUser.getUser(), e);
         }
     }
 
-    private UserGroupInformation getProxyUGI() throws IOException {
-        try { // get the authenticated user
-            return CurrentUser.getProxyUGI();
-        } catch (Exception ignore) {
-            // ignore since the user authentication might have failed or in oozie
-        }
+    // getFileSystemAsEntityOwner
+    public FileSystem createProxiedFileSystem(final URI uri,
+                                              final Configuration conf,
+                                              final AccessControlList acl) throws FalconException {
+        Validate.notNull(uri, "uri cannot be null");
 
-        return UserGroupInformation.getCurrentUser();
+        try {
+            UserGroupInformation proxyUGI = getProxyUGI(acl);
+
+            return createFileSystem(proxyUGI, uri, conf);
+        } catch (IOException e) {
+            throw new FalconException("Exception while getting FileSystem for proxy: "
+                + CurrentUser.getUser(), e);
+        }
+    }
+
+    private UserGroupInformation getProxyUGI(AccessControlList acl)
+        throws FalconException, IOException {
+
+        return CurrentUser.isAuthenticated()
+            ? acl != null
+                && SecurityUtil.getAuthorizationProvider().isSuperUser(CurrentUser.getProxyUGI())
+                ? CurrentUser.createProxyUGI(acl.getOwner()) : CurrentUser.getProxyUGI()
+            : UserGroupInformation.getCurrentUser();
     }
 
     /**
@@ -166,7 +200,7 @@ public final class HadoopClientFactory {
 
         String nameNode = uri.getAuthority();
         if (nameNode == null) {
-            nameNode = conf.get(FS_DEFAULT_NAME_KEY);
+            nameNode = getNameNode(conf);
             if (nameNode != null) {
                 try {
                     new URI(nameNode).getAuthority();
@@ -177,6 +211,11 @@ public final class HadoopClientFactory {
         }
 
         try {
+            // prevent falcon impersonating falcon, no need to use doas
+            if (ugi.equals(UserGroupInformation.getLoginUser())) {
+                return FileSystem.get(uri, conf);
+            }
+
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);

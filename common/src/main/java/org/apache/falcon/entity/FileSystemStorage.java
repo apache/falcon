@@ -300,7 +300,8 @@ public class FileSystemStorage implements Storage {
                 getLocations(FeedHelper.getCluster(feed, clusterName), feed);
         Location location = getLocation(clusterSpecificLocation, locationType);
         try {
-            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
+            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(
+                getConf(), feed.getACL());
             Cluster cluster = ClusterHelper.getCluster(clusterName);
             Properties baseProperties = FeedHelper.getClusterProperties(cluster);
             baseProperties.putAll(FeedHelper.getFeedProperties(feed));

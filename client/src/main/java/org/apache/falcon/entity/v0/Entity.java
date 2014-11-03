@@ -29,6 +29,8 @@ import java.io.StringWriter;
 public abstract class Entity {
     public abstract String getName();
 
+    public abstract AccessControlList getACL();
+
     public EntityType getEntityType() {
         for (EntityType type : EntityType.values()) {
             if (type.getEntityClass().equals(getClass())) {

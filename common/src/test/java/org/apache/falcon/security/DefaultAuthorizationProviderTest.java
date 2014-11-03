@@ -357,7 +357,7 @@ public class DefaultAuthorizationProviderTest {
         Assert.fail("Bad entity");
     }
 
-    @Test (expectedExceptions = AuthorizationException.class)
+    @Test
     public void testAuthorizeValidatePOSTOperationsGroupBadUser() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
         StartupProperties.get().setProperty("falcon.security.authorization.admin.users", "admin");

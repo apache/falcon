@@ -410,6 +410,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         }
 
         final ACL feedACL = feed.getACL();
+        validateACLOwnerAndGroup(feedACL);
         try {
             authorize(feed.getName(), feedACL);
         } catch (AuthorizationException e) {

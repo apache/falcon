@@ -108,22 +108,24 @@ public final class UpdateHelper {
     }
 
     //Checks if the user workflow or lib is updated
-    public static boolean isWorkflowUpdated(String cluster, Entity entity, Path bundleAppPath) throws FalconException {
+    public static boolean isWorkflowUpdated(String cluster, Entity entity,
+                                            Path bundleAppPath) throws FalconException {
         if (entity.getEntityType() != EntityType.PROCESS) {
             return false;
         }
 
-        try {
-            if (bundleAppPath == null) {
-                return true;
-            }
+        if (bundleAppPath == null) {
+            return true;
+        }
 
+        try {
             Process process = (Process) entity;
             org.apache.falcon.entity.v0.cluster.Cluster clusterEntity =
                 ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
             Path checksum = new Path(bundleAppPath, EntityUtil.PROCESS_CHECKSUM_FILE);
             Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                conf, process.getACL());
             if (!fs.exists(checksum)) {
                 //Update if there is no checksum file(for backward compatibility)
                 return true;

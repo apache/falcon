@@ -49,6 +49,7 @@ import org.apache.falcon.util.OozieUtils;
 import org.apache.falcon.util.RuntimeProperties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.CoordinatorAction;
@@ -176,12 +177,10 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Path logPath = EntityUtil.getLogPath(cluster, entity);
 
         try {
-            HadoopClientFactory.mkdirsWithDefaultPerms(
-                    HadoopClientFactory.get().createProxiedFileSystem(
-                            ClusterHelper.getConfiguration(cluster)), stagingPath);
-            HadoopClientFactory.mkdirsWithDefaultPerms(
-                    HadoopClientFactory.get().createProxiedFileSystem(
-                            ClusterHelper.getConfiguration(cluster)), logPath);
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster), entity.getACL());
+            HadoopClientFactory.mkdirsWithDefaultPerms(fs, stagingPath);
+            HadoopClientFactory.mkdirsWithDefaultPerms(fs, logPath);
         } catch (IOException e) {
             throw new FalconException("Error preparing base staging dirs: " + stagingPath, e);
         }

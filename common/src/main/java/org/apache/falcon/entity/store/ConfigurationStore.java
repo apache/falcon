@@ -20,6 +20,7 @@ package org.apache.falcon.entity.store;
 
 import org.apache.commons.codec.CharEncoding;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.hadoop.HadoopClientFactory;
@@ -72,6 +73,11 @@ public final class ConfigurationStore implements FalconService {
         @Override
         public String getName() {
             return "NULL";
+        }
+
+        @Override
+        public AccessControlList getACL() {
+            return null;
         }
     };
 

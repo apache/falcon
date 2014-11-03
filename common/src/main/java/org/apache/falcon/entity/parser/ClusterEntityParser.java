@@ -221,6 +221,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             throw new ValidationException("Cluster ACL cannot be empty for:  " + cluster.getName());
         }
 
+        validateACLOwnerAndGroup(clusterACL);
+
         try {
             authorize(cluster.getName(), clusterACL);
         } catch (AuthorizationException e) {
@@ -239,7 +241,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         FileSystem fs;
         try {
-            fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
+            fs = HadoopClientFactory.get().createProxiedFileSystem(conf, cluster.getACL());
         } catch (FalconException e) {
             throw new ValidationException(
                     "Unable to get file system handle for cluster " + cluster.getName(), e);

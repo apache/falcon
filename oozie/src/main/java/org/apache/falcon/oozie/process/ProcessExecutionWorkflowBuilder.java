@@ -223,7 +223,7 @@ public abstract class ProcessExecutionWorkflowBuilder extends OozieOrchestration
 
         try {
             final FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                    ClusterHelper.getConfiguration(cluster));
+                ClusterHelper.getConfiguration(cluster), entity.getACL());
             if (fs.isFile(libPath)) {  // File, not a Dir
                 archiveList.add(libPath.toString());
                 return;

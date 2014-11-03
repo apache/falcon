@@ -86,7 +86,8 @@ public final class ProcessHelper {
     public static Path getUserWorkflowPath(Process process, org.apache.falcon.entity.v0.cluster.Cluster cluster,
         Path buildPath) throws FalconException {
         try {
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster), process.getACL());
             Path wfPath = new Path(process.getWorkflow().getPath());
             if (fs.isFile(wfPath)) {
                 return new Path(buildPath.getParent(), EntityUtil.PROCESS_USER_DIR + "/" + wfPath.getName());
@@ -107,7 +108,8 @@ public final class ProcessHelper {
             }
             Path libPath = new Path(userLibPath);
 
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(ClusterHelper.getConfiguration(cluster));
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
+                ClusterHelper.getConfiguration(cluster), process.getACL());
             if (fs.isFile(libPath)) {
                 return new Path(buildPath, EntityUtil.PROCESS_USERLIB_DIR + "/" + libPath.getName());
             } else {
