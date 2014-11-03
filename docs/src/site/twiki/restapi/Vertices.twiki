@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/vertices?key=:key&value=:value
+---++  GET api/metadata/lineage/vertices?key=:key&value=:value
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -17,7 +17,7 @@ All vertices matching given property key and a value.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices?key=name&value=sampleIngestProcess
+GET http://localhost:15000/api/metadata/lineage/vertices?key=name&value=sampleIngestProcess
 </verbatim>
 ---+++ Result
 <verbatim>

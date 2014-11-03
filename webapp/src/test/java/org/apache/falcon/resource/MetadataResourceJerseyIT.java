@@ -64,7 +64,7 @@ public class MetadataResourceJerseyIT {
     public void testMetadataDiscoveryResourceList() throws Exception {
 
         ClientResponse response = context.service
-                .path("api/metadata/cluster_entity/list")
+                .path("api/metadata/discovery/cluster_entity/list")
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
@@ -74,7 +74,7 @@ public class MetadataResourceJerseyIT {
         Assert.assertTrue(dimensions.contains(context.clusterName));
 
         response = context.service
-                .path("api/metadata/process_entity/list")
+                .path("api/metadata/discovery/process_entity/list")
                 .queryParam("cluster", context.clusterName)
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
@@ -85,7 +85,7 @@ public class MetadataResourceJerseyIT {
         Assert.assertTrue(dimensions.contains(context.processName));
 
         response = context.service
-                .path("api/metadata/process_entity/list")
+                .path("api/metadata/discovery/process_entity/list")
                 .queryParam("cluster", "random")
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ public class MetadataResourceJerseyIT {
     @Test
     public void testMetadataDiscoveryResourceRelations() throws Exception {
         ClientResponse response = context.service
-                .path("api/metadata/process_entity/" + context.processName + "/relations")
+                .path("api/metadata/discovery/process_entity/" + context.processName + "/relations")
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
@@ -107,7 +107,7 @@ public class MetadataResourceJerseyIT {
         Assert.assertEquals(results.get("name"), context.processName);
 
         response = context.service
-                .path("api/metadata/colo/" + DeploymentUtil.getCurrentColo() + "/relations")
+                .path("api/metadata/discovery/colo/" + DeploymentUtil.getCurrentColo() + "/relations")
                 .header("Cookie", context.getAuthenticationToken())
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);

@@ -396,6 +396,6 @@ public class DefaultAuthorizationProviderTest {
                 "admin", realUser, new String[]{"admin", });
 
         DefaultAuthorizationProvider provider = new DefaultAuthorizationProvider();
-        provider.authorizeResource("lineage", "vertices", null, null, proxyUgi);
+        provider.authorizeResource("metadata", "lineage", null, null, proxyUgi);
     }
 }

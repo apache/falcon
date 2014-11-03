@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/vertices/:id
+---++  GET api/metadata/lineage/vertices/:id
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -16,7 +16,7 @@ Vertex with the specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices/4
+GET http://localhost:15000/api/metadata/lineage/vertices/4
 </verbatim>
 ---+++ Result
 <verbatim>

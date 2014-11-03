@@ -253,48 +253,71 @@ Usage:
 $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -params -start "yyyy-MM-dd'T'HH:mm'Z'"
 
 
----++ Graphs Options
+---++ Metadata Lineage Options
 
 ---+++ Vertex
 
 Get the vertex with the specified id.
 
 Usage:
-$FALCON_HOME/bin/falcon graph -vertex -id <<id>>
+$FALCON_HOME/bin/falcon metadata -vertex -id <<id>>
 
 Example:
-$FALCON_HOME/bin/falcon graph -vertex -id 4
+$FALCON_HOME/bin/falcon metadata -vertex -id 4
 
 ---+++ Vertices
 
 Get all vertices for a key index given the specified value.
 
 Usage:
-$FALCON_HOME/bin/falcon graph -vertices -key <<key>> -value <<value>>
+$FALCON_HOME/bin/falcon metadata -vertices -key <<key>> -value <<value>>
 
 Example:
-$FALCON_HOME/bin/falcon graph -vertices -key type -value feed-instance
+$FALCON_HOME/bin/falcon metadata -vertices -key type -value feed-instance
 
 ---+++ Vertex Edges
 
 Get the adjacent vertices or edges of the vertex with the specified direction.
 
 Usage:
-$FALCON_HOME/bin/falcon graph -edges -id <<vertex-id>> -direction <<direction>>
+$FALCON_HOME/bin/falcon metadata -edges -id <<vertex-id>> -direction <<direction>>
 
 Example:
-$FALCON_HOME/bin/falcon graph -edges -id 4 -direction both
-$FALCON_HOME/bin/falcon graph -edges -id 4 -direction inE
+$FALCON_HOME/bin/falcon metadata -edges -id 4 -direction both
+$FALCON_HOME/bin/falcon metadata -edges -id 4 -direction inE
 
 ---+++ Edge
 
 Get the edge with the specified id.
 
 Usage:
-$FALCON_HOME/bin/falcon graph -edge -id <<id>>
+$FALCON_HOME/bin/falcon metadata -edge -id <<id>>
 
 Example:
-$FALCON_HOME/bin/falcon graph -edge -id Q9n-Q-5g
+$FALCON_HOME/bin/falcon metadata -edge -id Q9n-Q-5g
+
+---++ Metadata Discovery Options
+
+---+++ List
+
+Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
+Usage:
+$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
+
+Optional Args : -cluster <<cluster name>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
+$FALCON_HOME/bin/falcon metadata -list -type tags
+
+---+++ Relations
+
+List all dimensions related to specified Dimension identified by dimension-type and dimension-name.
+Usage:
+$FALCON_HOME/bin/falcon metadata -relations -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines] -name <<Dimension Name>>
+
+Example:
+$FALCON_HOME/bin/falcon metadata -relations -type process_entity -name sample-process
 
 
 ---++Admin Options
@@ -316,28 +339,6 @@ Status returns the current state of Falcon (running or stopped).
 Usage:
 $FALCON_HOME/bin/falcon admin -status
 
----++ Metadata Options
-
----+++ List
-
-Lists of all dimensions of given type. If the user provides optional param cluster, only the dimensions related to the cluster are listed.
-Usage:
-$FALCON_HOME/bin/falcon metadata -list -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines]
-
-Optional Args : -cluster <<cluster name>>
-
-Example:
-$FALCON_HOME/bin/falcon metadata -list -type process_entity -cluster primary-cluster
-$FALCON_HOME/bin/falcon metadata -list -type tags
-
----+++ Relations
-
-List all dimensions related to specified Dimension identified by dimension-type and dimension-name.
-Usage:
-$FALCON_HOME/bin/falcon metadata  -relations -type [cluster_entity|feed_entity|process_entity|user|colo|tags|groups|pipelines] -name <<Dimension Name>>
-
-Example:
-$FALCON_HOME/bin/falcon metadata -relations -type process_entity -name sample-process
 
 ---++ Recipe Options
 

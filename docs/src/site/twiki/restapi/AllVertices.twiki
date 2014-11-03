@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/vertices/all
+---++  GET api/metadata/lineage/vertices/all
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -16,7 +16,7 @@ All vertices in lineage graph.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices/all
+GET http://localhost:15000/api/metadata/lineage/vertices/all
 </verbatim>
 ---+++ Result
 <verbatim>

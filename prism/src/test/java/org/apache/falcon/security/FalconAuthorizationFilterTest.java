@@ -86,9 +86,9 @@ public class FalconAuthorizationFilterTest {
             {"/entities/list/feed"},
             {"/entities/list/process"},
             {"/entities/list/cluster"},
-            {"/graphs/lineage/vertices/all"},
-            {"/graphs/lineage/vertices/_1"},
-            {"/graphs/lineage/vertices/properties/_1"},
+            {"/metadata/lineage/vertices/all"},
+            {"/metadata/lineage/vertices/_1"},
+            {"/metadata/lineage/vertices/properties/_1"},
         };
     }
 

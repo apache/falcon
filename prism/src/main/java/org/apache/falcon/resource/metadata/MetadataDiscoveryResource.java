@@ -46,13 +46,13 @@ import java.util.Iterator;
 /**
  * Jersey Resource for metadata operations.
  */
-@Path("metadata")
+@Path("metadata/discovery")
 public class MetadataDiscoveryResource extends AbstractMetadataResource {
 
     /**
      * Get list of dimensions for the given dimension-type.
      * <p/>
-     * GET http://host/metadata/dimension-type/list
+     * GET http://host/metadata/discovery/dimension-type/list
      */
     @GET
     @Path("/{type}/list")
@@ -89,7 +89,7 @@ public class MetadataDiscoveryResource extends AbstractMetadataResource {
     /**
      * Get relations of a dimension identified by type and name.
      *
-     * GET http://host/metadata/dimension-type/dimension-name/relations
+     * GET http://host/metadata/discovery/dimension-type/dimension-name/relations
      */
     @GET
     @Path("/{type}/{name}/relations")

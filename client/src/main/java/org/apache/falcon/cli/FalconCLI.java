@@ -110,19 +110,6 @@ public class FalconCLI {
     public static final String PARARMS_OPT = "params";
     public static final String LISTING_OPT = "listing";
 
-    // Graph Commands
-    public static final String GRAPH_CMD = "graph";
-    public static final String VERTEX_CMD = "vertex";
-    public static final String VERTICES_CMD = "vertices";
-    public static final String VERTEX_EDGES_CMD = "edges";
-
-    // Graph Command Options
-    public static final String EDGE_CMD = "edge";
-    public static final String ID_OPT = "id";
-    public static final String KEY_OPT = "key";
-    public static final String VALUE_OPT = "value";
-    public static final String DIRECTION_OPT = "direction";
-
     // Recipe Command
     public static final String RECIPE_CMD = "recipe";
     public static final String RECIPE_NAME = "name";
@@ -175,7 +162,6 @@ public class FalconCLI {
         parser.addCommand(INSTANCE_CMD, "",
                 "Process instances operations like running, status, kill, suspend, resume, rerun, logs",
                 instanceOptions(), false);
-        parser.addCommand(GRAPH_CMD, "", "graph operations", createGraphOptions(), true);
         parser.addCommand(METADATA_CMD, "", "Metadata operations like list, relations",
                 metadataCLI.createMetadataOptions(), true);
         parser.addCommand(RECIPE_CMD, "", "recipe operations", createRecipeOptions(), true);
@@ -196,8 +182,6 @@ public class FalconCLI {
                     entityCommand(commandLine, client);
                 } else if (command.getName().equals(INSTANCE_CMD)) {
                     instanceCommand(commandLine, client);
-                } else if (command.getName().equals(GRAPH_CMD)) {
-                    graphCommand(commandLine, client);
                 } else if (command.getName().equals(METADATA_CMD)) {
                     metadataCLI.metadataCommand(commandLine, client);
                 } else if (command.getName().equals(RECIPE_CMD)) {
@@ -790,38 +774,6 @@ public class FalconCLI {
         return instanceOptions;
     }
 
-    private Options createGraphOptions() {
-        Options graphOptions = new Options();
-        Option url = new Option(URL_OPTION, true, "Falcon URL");
-        graphOptions.addOption(url);
-
-        Option vertex = new Option(VERTEX_CMD, false, "show the vertices");
-        Option vertices = new Option(VERTICES_CMD, false, "show the vertices");
-        Option vertexEdges = new Option(VERTEX_EDGES_CMD, false, "show the edges for a given vertex");
-        Option edges = new Option(EDGE_CMD, false, "show the edges");
-
-        OptionGroup group = new OptionGroup();
-        group.addOption(vertex);
-        group.addOption(vertices);
-        group.addOption(vertexEdges);
-        group.addOption(edges);
-        graphOptions.addOptionGroup(group);
-
-        Option id = new Option(ID_OPT, true, "vertex or edge id");
-        graphOptions.addOption(id);
-
-        Option key = new Option(KEY_OPT, true, "key property");
-        graphOptions.addOption(key);
-
-        Option value = new Option(VALUE_OPT, true, "value property");
-        graphOptions.addOption(value);
-
-        Option direction = new Option(DIRECTION_OPT, true, "edge direction property");
-        graphOptions.addOption(direction);
-
-        return graphOptions;
-    }
-
     private Options createRecipeOptions() {
         Options recipeOptions = new Options();
         Option url = new Option(URL_OPTION, true, "Falcon URL");
@@ -834,64 +786,6 @@ public class FalconCLI {
         recipeOptions.addOption(recipeToolClassName);
 
         return recipeOptions;
-    }
-
-    private void graphCommand(CommandLine commandLine,
-                              FalconClient client) throws FalconCLIException {
-        Set<String> optionsList = new HashSet<String>();
-        for (Option option : commandLine.getOptions()) {
-            optionsList.add(option.getOpt());
-        }
-
-        String result;
-        String id = commandLine.getOptionValue(ID_OPT);
-        String key = commandLine.getOptionValue(KEY_OPT);
-        String value = commandLine.getOptionValue(VALUE_OPT);
-        String direction = commandLine.getOptionValue(DIRECTION_OPT);
-
-        if (optionsList.contains(VERTEX_CMD)) {
-            validateId(id);
-            result = client.getVertex(id);
-        } else if (optionsList.contains(VERTICES_CMD)) {
-            validateVerticesCommand(key, value);
-            result = client.getVertices(key, value);
-        } else if (optionsList.contains(VERTEX_EDGES_CMD)) {
-            validateVertexEdgesCommand(id, direction);
-            result = client.getVertexEdges(id, direction);
-        } else if (optionsList.contains(EDGE_CMD)) {
-            validateId(id);
-            result = client.getEdge(id);
-        } else {
-            throw new FalconCLIException("Invalid command");
-        }
-
-        OUT.get().println(result);
-    }
-
-    private void validateId(String id) throws FalconCLIException {
-        if (id == null || id.length() == 0) {
-            throw new FalconCLIException("Missing argument: id");
-        }
-    }
-
-    private void validateVerticesCommand(String key, String value) throws FalconCLIException {
-        if (key == null || key.length() == 0) {
-            throw new FalconCLIException("Missing argument: key");
-        }
-
-        if (value == null || value.length() == 0) {
-            throw new FalconCLIException("Missing argument: value");
-        }
-    }
-
-    private void validateVertexEdgesCommand(String id, String direction) throws FalconCLIException {
-        if (id == null || id.length() == 0) {
-            throw new FalconCLIException("Missing argument: id");
-        }
-
-        if (direction == null || direction.length() == 0) {
-            throw new FalconCLIException("Missing argument: direction");
-        }
     }
 
     protected String getFalconEndpoint(CommandLine commandLine) throws FalconCLIException, IOException {

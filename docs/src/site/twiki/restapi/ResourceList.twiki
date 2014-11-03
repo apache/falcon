@@ -66,20 +66,20 @@ See also: [[../Security.twiki][Security in Falcon]]
 | GET         | [[InstanceLogs][api/instance/logs/:entity-type/:entity-name]]               | Get logs of a given instance |
 | GET         | [[InstanceSummary][api/instance/summary/:entity-type/:entity-name]]         | Return summary of instances for an entity |
 
----++ REST Call on Lineage Graph
+---++ REST Call on Metadata Lineage Resource
 
-| *Call Type* | *Resource*                                                                           | *Description*                                                                 |
-| GET         | [[Graph][api/graphs/lineage/serialize]]                                              | dump the graph                                                                |
-| GET         | [[AllVertices][api/graphs/lineage/vertices/all]]                                     | get all vertices                                                              |
-| GET         | [[Vertices][api/graphs/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                                              |
-| GET         | [[Vertex][api/graphs/lineage/vertices/:id]]                                          | get the vertex with the specified id                                          |
-| GET         | [[VertexProperties][api/graphs/lineage/vertices/properties/:id?relationships=:true]] | get the properties of the vertex with the specified id                        |
-| GET         | [[AdjacentVertices][api/graphs/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges of the vertex with the specified direction |
-| GET         | [[AllEdges][api/graphs/lineage//edges/all]]                                          | get all edges                                                                 |
-| GET         | [[Edge][api/graphs/lineage/edges/:id]]                                               | get the edge with the specified id                                            |
+| *Call Type* | *Resource*                                                                             | *Description*                                                                 |
+| GET         | [[Graph][api/metadata/lineage/serialize]]                                              | dump the graph                                                                |
+| GET         | [[AllVertices][api/metadata/lineage/vertices/all]]                                     | get all vertices                                                              |
+| GET         | [[Vertices][api/metadata/lineage/vertices?key=:key&value=:value]]                      | get all vertices for a key index                                              |
+| GET         | [[Vertex][api/metadata/lineage/vertices/:id]]                                          | get the vertex with the specified id                                          |
+| GET         | [[VertexProperties][api/metadata/lineage/vertices/properties/:id?relationships=:true]] | get the properties of the vertex with the specified id                        |
+| GET         | [[AdjacentVertices][api/metadata/lineage/vertices/:id/:direction]]                     | get the adjacent vertices or edges of the vertex with the specified direction |
+| GET         | [[AllEdges][api/metadata/lineage/edges/all]]                                           | get all edges                                                                 |
+| GET         | [[Edge][api/metadata/lineage/edges/:id]]                                               | get the edge with the specified id                                            |
 
----++ REST Call on Metadata Resource
+---++ REST Call on Metadata Discovery Resource
 
-| *Call Type* | *Resource*                                                                           | *Description*                                                                 |
-| GET         | [[MetadataList][api/metadata/:dimension-type/list]]                                  | list of dimensions  |
-| GET         | [MetadataRelations][api/metadata/:dimension-type/:dimension-name/relations]]         | Return all relations of a dimension |
+| *Call Type* | *Resource*                                                                                     | *Description*                                                                 |
+| GET         | [[MetadataList][api/metadata/discovery/:dimension-type/list]]                                  | list of dimensions  |
+| GET         | [MetadataRelations][api/metadata/discovery/:dimension-type/:dimension-name/relations]]         | Return all relations of a dimension |

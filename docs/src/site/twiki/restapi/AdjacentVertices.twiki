@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/vertices/:id/:direction
+---++  GET api/metadata/lineage/vertices/:id/:direction
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -31,7 +31,7 @@ Adjacent vertices of the vertex for the specified direction.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices/4/out
+GET http://localhost:15000/api/metadata/lineage/vertices/4/out
 </verbatim>
 ---+++ Result
 <verbatim>
@@ -51,7 +51,7 @@ GET http://localhost:15000/api/graphs/lineage/vertices/4/out
 
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices/4/bothE
+GET http://localhost:15000/api/metadata/lineage/vertices/4/bothE
 </verbatim>
 ---+++ Result
 <verbatim>

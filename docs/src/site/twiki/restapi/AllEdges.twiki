@@ -1,4 +1,4 @@
----++  GET pi/graphs/lineage//edges/all
+---++  GET pi/metadata/lineage//edges/all
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -16,7 +16,7 @@ All edges in lineage graph.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/edges/all
+GET http://localhost:15000/api/metadata/lineage/edges/all
 </verbatim>
 ---+++ Result
 <verbatim>

@@ -1,4 +1,4 @@
----++  GET api/metadata/:dimension-type/:dimension-name/relations
+---++  GET api/metadata/discovery/:dimension-type/:dimension-name/relations
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -17,7 +17,7 @@ Get all relations of a specific dimension.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/metadata/process_entity/sample-process/relations
+GET http://localhost:15000/api/metadata/discovery/process_entity/sample-process/relations
 </verbatim>
 ---+++ Result
 <verbatim>

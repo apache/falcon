@@ -55,7 +55,7 @@ import java.util.Map;
  * Implements most of the GET operations of Rexster API with out the indexes.
  * https://github.com/tinkerpop/rexster/wiki/Basic-REST-API
  */
-@Path("graphs/lineage")
+@Path("metadata/lineage")
 public class LineageMetadataResource extends AbstractMetadataResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(LineageMetadataResource.class);
@@ -63,7 +63,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Dump the graph.
      *
-     * GET http://host/graphs/lineage/serialize
+     * GET http://host/metadata/lineage/serialize
      * graph.getVertices();
      */
     @GET
@@ -84,7 +84,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get all vertices.
      *
-     * GET http://host/graphs/lineage/vertices/all
+     * GET http://host/metadata/lineage/vertices/all
      * graph.getVertices();
      */
     @GET
@@ -103,7 +103,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a single vertex with a unique id.
      *
-     * GET http://host/graphs/lineage/vertices/id
+     * GET http://host/metadata/lineage/vertices/id
      * graph.getVertex(id);
      */
     @GET
@@ -140,7 +140,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
      * Get properties for a single vertex with a unique id.
      * This is NOT a rexster API.
      * <p/>
-     * GET http://host/graphs/lineage/vertices/properties/id
+     * GET http://host/metadata/lineage/vertices/properties/id
      */
     @GET
     @Path("/vertices/properties/{id}")
@@ -238,7 +238,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a list of vertices matching a property key and a value.
      * <p/>
-     * GET http://host/graphs/lineage/vertices?key=<key>&value=<value>
+     * GET http://host/metadata/lineage/vertices?key=<key>&value=<value>
      * graph.getVertices(key, value);
      */
     @GET
@@ -260,7 +260,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a list of adjacent edges with a direction.
      *
-     * GET http://host/graphs/lineage/vertices/id/direction
+     * GET http://host/metadata/lineage/vertices/id/direction
      * graph.getVertex(id).get{Direction}Edges();
      * direction: {(?!outE)(?!bothE)(?!inE)(?!out)(?!both)(?!in)(?!query).+}
      */
@@ -329,7 +329,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get all edges.
      *
-     * GET http://host/graphs/lineage/edges/all
+     * GET http://host/metadata/lineage/edges/all
      * graph.getEdges();
      */
     @GET
@@ -349,7 +349,7 @@ public class LineageMetadataResource extends AbstractMetadataResource {
     /**
      * Get a single edge with a unique id.
      *
-     * GET http://host/graphs/lineage/edges/id
+     * GET http://host/metadata/lineage/edges/id
      * graph.getEdge(id);
      */
     @GET

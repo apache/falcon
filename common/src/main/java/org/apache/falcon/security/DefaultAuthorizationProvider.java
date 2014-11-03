@@ -56,7 +56,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultAuthorizationProvider.class);
 
     private static final Set<String> RESOURCES = new HashSet<String>(
-            Arrays.asList(new String[]{"admin", "entities", "instance", "lineage", }));
+            Arrays.asList(new String[]{"admin", "entities", "instance", "metadata", }));
 
     /**
      * Constant for the configuration property that indicates the prefix.
@@ -135,8 +135,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
             }
         } else if ("entities".equals(resource) || "instance".equals(resource)) {
             authorizeEntityResource(proxyUgi, entityName, entityType, action);
-        } else if ("lineage".equals(resource)) {
-            authorizeLineageResource(proxyUgi.getShortUserName(), action);
+        } else if ("metadata".equals(resource)) {
+            authorizeMetadataResource(proxyUgi.getShortUserName(), action);
         }
     }
 
@@ -298,8 +298,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         }
     }
 
-    protected void authorizeLineageResource(String authenticatedUser, String action) {
+    protected void authorizeMetadataResource(String authenticatedUser, String action) {
         LOG.debug("User {} authorized for action {} ", authenticatedUser, action);
-        // todo - do nothing for now, read-only for all
+        // todo - read-only for all metadata but needs to be implemented
     }
 }

@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/vertices/properties/:id?relationships=:true
+---++  GET api/metadata/lineage/vertices/properties/:id?relationships=:true
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -17,7 +17,7 @@ Gets the properties of the vertex with specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/vertices/properties/40004?relationships=true
+GET http://localhost:15000/api/metadata/lineage/vertices/properties/40004?relationships=true
 </verbatim>
 ---+++ Result
 <verbatim>

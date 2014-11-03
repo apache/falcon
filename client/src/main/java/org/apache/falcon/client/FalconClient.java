@@ -205,12 +205,14 @@ public class FalconClient {
     }
 
     /**
-     * Methods allowed on Metadata Resources.
+     * Methods allowed on Metadata Discovery Resources.
      */
     protected static enum MetadataOperations {
 
-        LIST("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        RELATIONS("api/metadata/", HttpMethod.GET, MediaType.APPLICATION_JSON);
+        LIST("api/metadata/discovery/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        RELATIONS("api/metadata/discovery/", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        VERTICES("api/metadata/lineage/vertices", HttpMethod.GET, MediaType.APPLICATION_JSON),
+        EDGES("api/metadata/lineage/edges", HttpMethod.GET, MediaType.APPLICATION_JSON);
 
         private String path;
         private String method;
@@ -513,11 +515,11 @@ public class FalconClient {
     }
 
     public String getDimensionList(String dimensionType, String cluster) throws FalconCLIException {
-        return sendMetadataRequest(MetadataOperations.LIST, dimensionType, null, cluster);
+        return sendMetadataDiscoveryRequest(MetadataOperations.LIST, dimensionType, null, cluster);
     }
 
     public String getDimensionRelations(String dimensionType, String dimensionName) throws FalconCLIException {
-        return sendMetadataRequest(MetadataOperations.RELATIONS, dimensionType, dimensionName, null);
+        return sendMetadataDiscoveryRequest(MetadataOperations.RELATIONS, dimensionType, dimensionName, null);
     }
 
     /**
@@ -803,10 +805,10 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendMetadataRequest(final MetadataOperations operation,
-                                       final String dimensionType,
-                                       final String dimensionName,
-                                       final String cluster) throws FalconCLIException {
+    private String sendMetadataDiscoveryRequest(final MetadataOperations operation,
+                                                final String dimensionType,
+                                                final String dimensionName,
+                                                final String cluster) throws FalconCLIException {
         WebResource resource;
         switch (operation) {
         case LIST:
@@ -1055,36 +1057,20 @@ public class FalconClient {
         return sb.toString();
     }
 
-    protected static enum GraphOperations {
-
-        VERTICES("api/graphs/lineage/vertices", HttpMethod.GET, MediaType.APPLICATION_JSON),
-        EDGES("api/graphs/lineage/edges", HttpMethod.GET, MediaType.APPLICATION_JSON);
-
-        private String path;
-        private String method;
-        private String mimeType;
-
-        GraphOperations(String path, String method, String mimeType) {
-            this.path = path;
-            this.method = method;
-            this.mimeType = mimeType;
-        }
-    }
-
     public String getVertex(String id) throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.VERTICES, id);
+        return sendMetadataLineageRequest(MetadataOperations.VERTICES, id);
     }
 
     public String getVertices(String key, String value) throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.VERTICES, key, value);
+        return sendMetadataLineageRequest(MetadataOperations.VERTICES, key, value);
     }
 
     public String getVertexEdges(String id, String direction) throws FalconCLIException {
-        return sendGraphRequestForEdges(GraphOperations.VERTICES, id, direction);
+        return sendMetadataLineageRequestForEdges(MetadataOperations.VERTICES, id, direction);
     }
 
     public String getEdge(String id) throws FalconCLIException {
-        return sendGraphRequest(GraphOperations.EDGES, id);
+        return sendMetadataLineageRequest(MetadataOperations.EDGES, id);
     }
 
     public String submitRecipe(String recipeName,
@@ -1140,7 +1126,7 @@ public class FalconClient {
         }
     }
 
-    private String sendGraphRequest(GraphOperations job, String id) throws FalconCLIException {
+    private String sendMetadataLineageRequest(MetadataOperations job, String id) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .path(id)
                 .header("Cookie", AUTH_COOKIE_EQ + authenticationToken)
@@ -1150,8 +1136,8 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendGraphRequest(GraphOperations job, String key,
-                                    String value) throws FalconCLIException {
+    private String sendMetadataLineageRequest(MetadataOperations job, String key,
+                                              String value) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .queryParam("key", key)
                 .queryParam("value", value)
@@ -1162,8 +1148,8 @@ public class FalconClient {
         return parseStringResult(clientResponse);
     }
 
-    private String sendGraphRequestForEdges(GraphOperations job, String id,
-                                            String direction) throws FalconCLIException {
+    private String sendMetadataLineageRequestForEdges(MetadataOperations job, String id,
+                                                      String direction) throws FalconCLIException {
         ClientResponse clientResponse = service.path(job.path)
                 .path(id)
                 .path(direction)

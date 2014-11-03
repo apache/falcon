@@ -33,7 +33,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This enforces authorization as part of the filter before processing the request.
@@ -94,27 +93,13 @@ public class FalconAuthorizationFilter implements Filter {
     private static RequestParts getUserRequest(HttpServletRequest httpRequest) {
         String pathInfo = httpRequest.getPathInfo();
         final String[] pathSplits = pathInfo.substring(1).split("/");
+
         final String resource = pathSplits[0];
+        final String action = pathSplits[1];
+        final String entityType = pathSplits.length > 2 ? pathSplits[2] : null;
+        final String entityName = pathSplits.length > 3 ? pathSplits[3] : null;
 
-        ArrayList<String> splits = new ArrayList<String>();
-        if (resource.equals("graphs")) {
-            splits.add(pathSplits[1]);  // resource
-            splits.add(pathSplits[2]);  // action
-        } else {
-            splits.add(pathSplits[0]);  // resource
-            splits.add(pathSplits[1]);  // action
-            if (pathSplits.length > 2) {  // entity type
-                splits.add(pathSplits[2]);
-            }
-            if (pathSplits.length > 3) {  // entity name
-                splits.add(pathSplits[3]);
-            }
-        }
-
-        final String entityType = splits.size() > 2 ? splits.get(2) : null;
-        final String entityName = splits.size() > 3 ? splits.get(3) : null;
-
-        return new RequestParts(splits.get(0), splits.get(1), entityName, entityType);
+        return new RequestParts(resource, action, entityName, entityType);
     }
 
     private static class RequestParts {

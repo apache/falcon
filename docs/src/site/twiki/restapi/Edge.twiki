@@ -1,4 +1,4 @@
----++  GET api/graphs/lineage/edges/:id
+---++  GET api/metadata/lineage/edges/:id
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -16,7 +16,7 @@ Edge with the specified id.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/graphs/lineage/edges/Q6t-c-5g
+GET http://localhost:15000/api/metadata/lineage/edges/Q6t-c-5g
 </verbatim>
 ---+++ Result
 <verbatim>
