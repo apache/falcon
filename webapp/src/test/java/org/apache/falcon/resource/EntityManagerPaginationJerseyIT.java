@@ -105,7 +105,8 @@ public class EntityManagerPaginationJerseyIT {
         OozieTestUtils.waitForProcessWFtoStart(context);
 
         ClientResponse response = context.service
-                .path("api/entities/summary/process/" + overlay.get("cluster"))
+                .path("api/entities/summary/process")
+                .queryParam("cluster", overlay.get("cluster"))
                 .queryParam("fields", "status,pipelines")
                 .queryParam("numInstances", "1")
                 .queryParam("orderBy", "name")

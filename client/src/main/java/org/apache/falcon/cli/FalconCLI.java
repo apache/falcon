@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.LifeCycle;
 import org.apache.falcon.client.FalconCLIException;
 import org.apache.falcon.client.FalconClient;
+import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.resource.EntityList;
 import org.apache.falcon.resource.InstancesResult;
@@ -36,13 +37,13 @@ import org.apache.falcon.resource.InstancesResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -412,6 +413,7 @@ public class FalconCLI {
                     filterTags, orderBy, sortOrder, offset, numResults);
             result = entityList != null ? entityList.toString() : "No entity of type (" + entityType + ") found.";
         }  else if (optionsList.contains(SUMMARY_OPT)) {
+            validateEntityTypeForSummary(entityType);
             validateNotEmpty(cluster, CLUSTER_OPT);
             validateEntityFields(fields);
             validateFilterBy(filterBy, entityAction);
@@ -424,6 +426,14 @@ public class FalconCLI {
             throw new FalconCLIException("Invalid command");
         }
         OUT.get().println(result);
+    }
+
+    private void validateEntityTypeForSummary(String type) throws FalconCLIException {
+        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        if (!entityType.isSchedulable()) {
+            throw new FalconCLIException("Invalid entity type " + entityType
+                    + " for EntitySummary API. Valid options are feed or process");
+        }
     }
 
     private void validateNotEmpty(String paramVal, String paramName) throws FalconCLIException {

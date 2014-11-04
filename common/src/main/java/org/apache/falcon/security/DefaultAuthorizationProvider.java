@@ -122,9 +122,6 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         Validate.isTrue(RESOURCES.contains(resource), "Illegal resource: " + resource);
         Validate.notEmpty(action, "Action cannot be empty or null");
 
-        LOG.info("Authorizing authenticatedUser={}, against resource={}, action={}, entity name={}, "
-                + "entity type={}", proxyUgi.getShortUserName(), resource, action, entityName, entityType);
-
         if (isSuperUser(proxyUgi)) {
             return;
         }

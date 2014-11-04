@@ -108,10 +108,13 @@ public class FalconAuthorizationFilter implements Filter {
 
         final String resource = pathSplits[0];
         final String action = pathSplits[1];
-        final String entityType = pathSplits.length > 2 ? pathSplits[2] : null;
-        final String entityName = pathSplits.length > 3 ? pathSplits[3] : null;
-
-        return new RequestParts(resource, action, entityName, entityType);
+        if (resource.equalsIgnoreCase("entities") || resource.equalsIgnoreCase("instance")) {
+            final String entityType = pathSplits.length > 2 ? pathSplits[2] : null;
+            final String entityName = pathSplits.length > 3 ? pathSplits[3] : null;
+            return new RequestParts(resource, action, entityName, entityType);
+        } else {
+            return new RequestParts(resource, action, null, null);
+        }
     }
 
     private static class RequestParts {
@@ -146,12 +149,18 @@ public class FalconAuthorizationFilter implements Filter {
 
         @Override
         public String toString() {
-            return "RequestParts{"
-                    + "resource='" + resource + '\''
-                    + ", action='" + action + '\''
-                    + ", entityName='" + entityName + '\''
-                    + ", entityType='" + entityType + '\''
-                    + '}';
+            StringBuilder sb = new StringBuilder();
+            sb.append("RequestParts{")
+                    .append("resource='").append(resource).append("'")
+                    .append(", action='").append(action).append("'");
+            if (entityName != null) {
+                sb.append(", entityName='").append(entityName).append("'");
+            }
+            if (entityType != null) {
+                sb.append(", entityType='").append(entityType).append("'");
+            }
+            sb.append("}");
+            return sb.toString();
         }
     }
 }

@@ -72,13 +72,13 @@ public class SchedulableEntityManager extends AbstractSchedulableEntityManager {
     }
 
     @GET
-    @Path("summary/{type}/{cluster}")
+    @Path("summary/{type}")
     @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     @Monitored(event = "summary")
     @Override
     public EntitySummaryResult getEntitySummary(
             @Dimension("type") @PathParam("type") String type,
-            @Dimension("cluster") @PathParam("cluster") String cluster,
+            @Dimension("cluster") @QueryParam("cluster") String cluster,
             @DefaultValue("") @QueryParam("start") String startStr,
             @DefaultValue("") @QueryParam("end") String endStr,
             @DefaultValue("") @QueryParam("fields") String fields,

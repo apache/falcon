@@ -1,4 +1,4 @@
----++  GET /api/entities/summary/:entity-type/:cluster
+---++  GET /api/entities/summary/:entity-type
    * <a href="#Description">Description</a>
    * <a href="#Parameters">Parameters</a>
    * <a href="#Results">Results</a>
@@ -8,8 +8,8 @@
 Given an EntityType and cluster, get list of entities along with summary of N recent instances of each entity
 
 ---++ Parameters
-   * :entity-type Valid options are cluster, feed or process.
-   * :cluster Show entities that belong to this cluster.
+   * :entity-type Valid options are feed or process.
+   * cluster Show entities that belong to this cluster.
    * start <optional param> Show entity summaries from this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
       * By default, it is set to (end - 2 days).
    * end <optional param> Show entity summary up to this date. Date format is yyyy-MM-dd'T'HH:mm'Z'.
@@ -34,7 +34,7 @@ Show entities along with summary of N instances for each entity.
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/entities/summary/feed/primary-cluster?filterBy=STATUS:RUNNING&fields=status&tags=consumer=consumer@xyz.com&orderBy=name&offset=0&numResults=1&numInstances=2
+GET http://localhost:15000/api/entities/summary/feed?cluster=primary-cluster&filterBy=STATUS:RUNNING&fields=status&tags=consumer=consumer@xyz.com&orderBy=name&offset=0&numResults=1&numInstances=2
 </verbatim>
 ---+++ Result
 <verbatim>

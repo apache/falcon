@@ -177,6 +177,7 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         HashSet<String> fieldSet = new HashSet<String>(Arrays.asList(fields.toLowerCase().split(",")));
         Pair<Date, Date> startAndEndDates = getStartEndDatesForSummary(startDate, endDate);
         validateEntityFilterByClause(filterBy);
+        validateTypeForEntitySummary(type);
 
         List<Entity> entities;
         String colo;
@@ -221,6 +222,15 @@ public abstract class AbstractSchedulableEntityManager extends AbstractInstanceM
         }
         return new EntitySummaryResult("Entity Summary Result",
                 entitySummaries.toArray(new EntitySummaryResult.EntitySummary[entitySummaries.size()]));
+    }
+
+    private void validateTypeForEntitySummary(String type) {
+        EntityType entityType = EntityType.valueOf(type.toUpperCase());
+        if (!entityType.isSchedulable()) {
+            throw FalconWebException.newException("Invalid entity type " + type
+                + " for EntitySummary API. Valid options are feed or process",
+                Response.Status.BAD_REQUEST);
+        }
     }
     //RESUME CHECKSTYLE CHECK ParameterNumberCheck
 

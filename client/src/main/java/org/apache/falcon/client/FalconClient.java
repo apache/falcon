@@ -632,11 +632,9 @@ public class FalconClient {
                                             String fields, String filterBy, String filterTags,
                                             String orderBy, String sortOrder, Integer offset, Integer numResults,
                                             Integer numInstances) throws FalconCLIException {
-        WebResource resource;
-        if (StringUtils.isEmpty(cluster)) {
-            resource = service.path(entities.path).path(entityType);
-        } else {
-            resource = service.path(entities.path).path(entityType).path(cluster);
+        WebResource resource = service.path(entities.path).path(entityType);
+        if (!StringUtils.isEmpty(cluster)) {
+            resource = resource.queryParam("cluster", cluster);
         }
 
         resource = addParamsToResource(resource, start, end, null, null,
