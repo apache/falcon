@@ -47,6 +47,10 @@ public class Edge extends GraphEntity {
         //custom labels for test tags
         @SerializedName("test")TEST,
         @SerializedName("testname")TESTNAME,
+        @SerializedName("first")FIRST,
+        @SerializedName("second")SECOND,
+        @SerializedName("third")THIRD,
+        @SerializedName("value")VALUE,
     }
 
     private String _id;

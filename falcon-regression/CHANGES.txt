@@ -129,6 +129,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-860 Add label-types for labels added as part of EntitySummaryTest (Raghav Kumar Gautam
+   via Ruslan Ostafiychuk)
+
    FALCON-852 Merlin function testProcessOrderBy() needs to use string ordering instead of enum
    ordering (Raghav Kumar Gautam via Ruslan Ostafiychuk)
 
