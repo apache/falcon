@@ -112,9 +112,8 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
     }
 
     /**
-     * Schedule process. Check that in case when -start and -end parameters are equal -kill
-     * action results in the same way as in case with only -start parameter is used. Only one
-     * instance should be killed. This test will fail because of https://issues.apache.org/jira/browse/FALCON-704
+     * Schedule process. Check that in case when -start and -end parameters are equal zero
+     * instances are killed.
      *
      * @throws Exception
      */
@@ -132,7 +131,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
                 CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper()
                 .getProcessInstanceKill(processName, "?start=2010-01-02T00:03Z&end=2010-01-02T00:03Z");
-        InstanceUtil.validateResponse(r, 1, 0, 0, 0, 1);
+        Assert.assertNull(r.getInstances(), "There should be zero instances killed");
     }
 
     /**
