@@ -22,7 +22,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -174,14 +174,17 @@ public final class InstanceUtil {
             r.setStatusCode(400);
             return r;
         }
-        r = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
+        try {
+            r = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
                 @Override
-                public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c)
-                    throws JsonParseException {
+                public Date deserialize(JsonElement json, Type t, JsonDeserializationContext c) {
                     return new DateTime(json.getAsString()).toDate();
                 }
             }).create().fromJson(jsonString,
-            url.contains("/summary/") ? InstancesSummaryResult.class : InstancesResult.class);
+                    url.contains("/summary/") ? InstancesSummaryResult.class : InstancesResult.class);
+        } catch (JsonSyntaxException e) {
+            Assert.fail("Not a valid json:\n" + jsonString);
+        }
         LOGGER.info("r.getMessage(): " + r.getMessage());
         LOGGER.info("r.getStatusCode(): " + r.getStatusCode());
         LOGGER.info("r.getStatus() " + r.getStatus());

@@ -27,6 +27,8 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-856 Handle JsonSyntaxException in hitUrl (Ruslan Ostafiychuk)
+
    FALCON-847 Issue with login from keytab in merlin (Raghav Kumar Gautam)
 
    FALCON-835 Tag authorization tests (Raghav Kumar Gautam)
