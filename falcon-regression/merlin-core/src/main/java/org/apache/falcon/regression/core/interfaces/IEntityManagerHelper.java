@@ -579,9 +579,9 @@ public abstract class IEntityManagerHelper {
     public ServiceResponse getEntitySummary(String clusterName, String params)
         throws AuthenticationException, IOException, URISyntaxException {
         String url = createUrl(this.hostname + URLS.ENTITY_SUMMARY.getValue(),
-            getEntityType(), clusterName);
+            getEntityType()) +"?cluster=" + clusterName;
         if (StringUtils.isNotEmpty(params)) {
-            url += "?" + params;
+            url += "&" + params;
         }
         return Util.sendRequest(url, "get", null, null);
     }
