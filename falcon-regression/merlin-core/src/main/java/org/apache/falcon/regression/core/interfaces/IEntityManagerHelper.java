@@ -19,12 +19,15 @@
 package org.apache.falcon.regression.core.interfaces;
 
 import com.jcraft.jsch.JSchException;
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.falcon.regression.core.response.InstancesSummaryResult;
 import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.falcon.regression.core.util.Config;
 import org.apache.falcon.regression.core.util.ExecUtil;
+import org.apache.falcon.regression.core.util.FileUtil;
 import org.apache.falcon.regression.core.util.HCatUtil;
 import org.apache.falcon.regression.core.util.InstanceUtil;
 import org.apache.falcon.regression.core.util.OSUtil;
@@ -536,6 +539,36 @@ public abstract class IEntityManagerHelper {
         url += "?filterBy=PIPELINES:" + pipeline;
         return Util.sendRequest(url, "get", null, null);
     }
+
+    /**
+     * Submit an entity through falcon client.
+     * @param entityStr string of the entity to be submitted
+     * @return
+     * @throws IOException
+     */
+    public ExecResult clientSubmit(final String entityStr) throws IOException {
+        LOGGER.info("Submitting " + getEntityType() + " through falcon client: \n"
+            + Util.prettyPrintXml(entityStr));
+        final String fileName = FileUtil.writeEntityToFile(entityStr);
+        final CommandLine commandLine = FalconClientBuilder.getBuilder()
+                .getSubmitCommand(getEntityType(), fileName).build();
+        return ExecUtil.executeCommand(commandLine);
+    }
+
+    /**
+     * Delete an entity through falcon client.
+     * @param entityStr string of the entity to be submitted
+     * @return
+     * @throws IOException
+     */
+    public ExecResult clientDelete(final String entityStr, String user) throws IOException {
+        final String entityName = getEntityName(entityStr);
+        LOGGER.info("Deleting " + getEntityType() + ": " + entityName);
+        final CommandLine commandLine = FalconClientBuilder.getBuilder(user)
+                .getDeleteCommand(getEntityType(), entityName).build();
+        return ExecUtil.executeCommand(commandLine);
+    }
+
 
     /**
      * Retrieves entities summary.

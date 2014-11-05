@@ -24,6 +24,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.response.APIResult;
 import org.apache.falcon.regression.core.response.InstancesResult;
 import org.apache.falcon.regression.core.response.ServiceResponse;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -204,6 +205,18 @@ public final class AssertUtil {
     public static void assertFailed(final ServiceResponse response, final String message)
         throws JAXBException {
         assertFailedWithStatus(response, 400, message);
+    }
+
+    /**
+     * Assert that command executed unsuccessfully
+     *
+     * @param execResult ExecResult of the command execution
+     */
+    public static void assertFailed(ExecResult execResult, String expectedMessage) {
+        Assert.assertFalse(execResult.hasSuceeded(),
+                "Unexpectedly succeeded execResult: " + execResult);
+        Assert.assertTrue(execResult.getError().contains(expectedMessage),
+                "Expected error: " + expectedMessage +  " in execResult: " + execResult);
     }
 
     /**

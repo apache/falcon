@@ -24,6 +24,7 @@ import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
 import org.apache.falcon.regression.core.interfaces.IEntityManagerHelper;
+import org.apache.falcon.regression.core.util.AssertUtil;
 import org.apache.falcon.regression.core.util.BundleUtil;
 import org.apache.falcon.regression.core.util.HadoopUtil;
 import org.apache.falcon.regression.core.util.KerberosHelper;
@@ -104,7 +105,7 @@ public class FeedAclTest extends BaseTestClass {
         );
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.DIFFERENT_USER},
+            new String[]{MerlinConstants.DIFFERENT_USER_NAME},
             falconReadOps,
             new Boolean[]{false}
         );
@@ -146,7 +147,7 @@ public class FeedAclTest extends BaseTestClass {
         );
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.DIFFERENT_USER},
+            new String[]{MerlinConstants.DIFFERENT_USER_NAME},
             falconEditOps,
             new Boolean[]{false}
         );
@@ -189,13 +190,49 @@ public class FeedAclTest extends BaseTestClass {
         );
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.DIFFERENT_USER},
+            new String[]{MerlinConstants.DIFFERENT_USER_NAME},
             new EntityOp[]{EntityOp.delete, EntityOp.update, EntityOp.schedule,
                 EntityOp.submitAndSchedule, EntityOp.suspend, EntityOp.resume},
             new Boolean[]{false}
         );
 
         return MathUtil.append(allowedCombinations, notAllowedCombinations);
+    }
+
+    /**
+     * Test feed acl modification.
+     * @throws Exception
+     */
+    @Test
+    public void feedAclUpdate() throws Exception {
+        bundles[0].submitClusters(prism);
+        final String oldFeed = bundles[0].getInputFeedFromBundle();
+        AssertUtil.assertSucceeded(feedHelper.submitAndSchedule(oldFeed));
+        final FeedMerlin feedMerlin = new FeedMerlin(oldFeed);
+        feedMerlin.setACL(MerlinConstants.DIFFERENT_USER_NAME,
+                MerlinConstants.DIFFERENT_USER_GROUP, "*");
+        final String newFeed = feedMerlin.toString();
+        AssertUtil.assertSucceeded(feedHelper.update(oldFeed, newFeed));
+        //check that current user can't access the feed
+        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
+                EntityOp.definition}) {
+            final boolean executeRes =
+                    op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, feedHelper, newFeed);
+            Assert.assertFalse(executeRes, "Unexpected result: user "
+                    + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+        }
+        //check that different user can access the feed
+        KerberosHelper.loginFromKeytab(MerlinConstants.DIFFERENT_USER_NAME);
+        for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
+                EntityOp.definition}) {
+            final boolean executeRes =
+                    op.executeAs(MerlinConstants.DIFFERENT_USER_NAME, feedHelper, newFeed);
+            Assert.assertTrue(executeRes, "Unexpected result: user "
+                    + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
+        }
+        //check modification permissions
+        AssertUtil.assertSucceeded(feedHelper.update(newFeed, oldFeed,
+                MerlinConstants.DIFFERENT_USER_NAME));
     }
 
     @AfterMethod(alwaysRun = true)

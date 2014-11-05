@@ -130,7 +130,7 @@ public class AclValidationTest extends BaseTestClass {
     public Object[][] generateUserAndGroup() {
         return new Object[][] {
             {MerlinConstants.USER2_NAME, MerlinConstants.CURRENT_USER_GROUP},
-            {MerlinConstants.CURRENT_USER_NAME, MerlinConstants.DIFFERENT_USER},
+            {MerlinConstants.CURRENT_USER_NAME, MerlinConstants.DIFFERENT_USER_NAME},
             {MerlinConstants.CURRENT_USER_NAME, "nonexistinggroup"},
             {"nonexistinguser", MerlinConstants.CURRENT_USER_GROUP},
         };

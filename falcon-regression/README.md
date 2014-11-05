@@ -126,6 +126,13 @@ For testing with kerberos set keytabs properties for different users:
     falcon.super2.user.keytab=/home/qa/hadoopqa/keytabs/falcon2.headless.keytab
     other.user.keytab=/home/qa/hadoopqa/keytabs/root.headless.keytab
 
+Testing on Windows
+------------------
+Some tests switch user to run commands as a different user. Location of binary to switch user is
+configurable:
+
+    windows.su.binary=ExecuteAs.exe
+
 Automatic capture of oozie logs
 -------------------------------
 For full falcon regression runs. It might be desirable to pull all oozie job

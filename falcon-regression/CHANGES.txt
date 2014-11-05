@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-861 Add ACL tests for falcon client and ACL update
+   (Raghav Kumar Gautam)
+
    FALCON-844 List instances tests (Paul Isaychuk via Ruslan Ostafiychuk)
 
    FALCON-841 Test falcon process with different frequencies

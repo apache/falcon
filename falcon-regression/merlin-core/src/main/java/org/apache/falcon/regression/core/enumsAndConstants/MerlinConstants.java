@@ -46,7 +46,10 @@ public final class MerlinConstants {
         Config.getProperty("current_user.group.name", "users");
 
     /** a user that does not belong to the group of current user. */
-    public static final String DIFFERENT_USER = Config.getProperty("other.user.name", "root");
+    public static final String DIFFERENT_USER_NAME = Config.getProperty("other.user.name", "root");
+
+    /** a user that does not belong to the group of current user. */
+    public static final String DIFFERENT_USER_GROUP = Config.getProperty("other.user.name", "root");
 
     /** falcon super user. */
     public static final String FALCON_SUPER_USER_NAME =
@@ -59,6 +62,7 @@ public final class MerlinConstants {
     private static final String USER_2_KEYTAB_STR = "user2_keytab";
     public static final String USER2_NAME;
     private static HashMap<String, String> keyTabMap;
+    private static HashMap<String, String> passwordMap;
     public static final String ACL_OWNER = Config.getProperty("ACL.OWNER", RequestKeys.CURRENT_USER);
     public static final String ACL_GROUP = Config.getProperty("ACL.GROUP", "default");
     public static final String USER_REALM = Config.getProperty("USER.REALM", "");
@@ -81,11 +85,18 @@ public final class MerlinConstants {
         keyTabMap.put(user2Name, user2Keytab);
         keyTabMap.put(FALCON_SUPER_USER_NAME, Config.getProperty("falcon.super.user.keytab"));
         keyTabMap.put(FALCON_SUPER_USER2_NAME, Config.getProperty("falcon.super.user2.keytab"));
-        keyTabMap.put(DIFFERENT_USER, Config.getProperty("other.user.keytab"));
+        keyTabMap.put(DIFFERENT_USER_NAME, Config.getProperty("other.user.keytab"));
+        passwordMap = new HashMap<String, String>();
+        passwordMap.put(DIFFERENT_USER_NAME, Config.getProperty("other.user.password"));
     }
 
     public static String getKeytabForUser(String user) {
         Assert.assertTrue(keyTabMap.containsKey(user), "Unknown user: " + user);
         return keyTabMap.get(user);
+    }
+
+    public static String getPasswordForUser(String user) {
+        Assert.assertTrue(passwordMap.containsKey(user), "Unknown user: " + user);
+        return passwordMap.get(user);
     }
 }

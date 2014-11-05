@@ -29,6 +29,9 @@ public final class OSUtil {
     }
 
     public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().startsWith("windows");
+    public static final String WIN_SU_BINARY =
+            Config.getProperty("windows.su.binary", "ExecuteAs.exe");
+
     public static final String SEPARATOR = System.getProperty("file.separator", "/");
     public static final String RESOURCES =
         String.format("src%stest%sresources%s", SEPARATOR, SEPARATOR, SEPARATOR);

@@ -220,6 +220,11 @@
                 <artifactId>selenium-support</artifactId>
                 <version>2.41.0</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-exec</artifactId>
+                <version>1.2</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

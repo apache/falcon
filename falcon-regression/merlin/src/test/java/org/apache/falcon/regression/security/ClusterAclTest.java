@@ -102,7 +102,7 @@ public class ClusterAclTest extends BaseTestClass {
         );
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
-            new String[]{MerlinConstants.DIFFERENT_USER},
+            new String[]{MerlinConstants.DIFFERENT_USER_NAME},
             new EntityOp[]{EntityOp.dependency, EntityOp.listing, EntityOp.definition},
             new Boolean[]{false}
         );

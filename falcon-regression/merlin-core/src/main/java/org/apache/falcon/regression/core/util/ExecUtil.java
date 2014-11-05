@@ -23,11 +23,16 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.falcon.regression.core.supportClasses.ExecResult;
 import org.apache.log4j.Logger;
 import org.testng.Assert;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -132,37 +137,29 @@ public final class ExecUtil {
     }
 
     public static ExecResult executeCommand(String command) {
-        LOGGER.info("Command to be executed: " + command);
-        StringBuilder errors = new StringBuilder();
-        StringBuilder output = new StringBuilder();
+        return executeCommand(CommandLine.parse(command));
+    }
 
+    public static ExecResult executeCommand(CommandLine commandLine) {
+        LOGGER.info("Command to be executed: " + commandLine);
+        DefaultExecutor executor = new DefaultExecutor();
+        executor.setWatchdog(new ExecuteWatchdog(5 * 1000)); //timeout of 5 seconds
+        final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        final ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+        executor.setStreamHandler(new PumpStreamHandler(outStream, errStream));
+        int exitVal = 1;
         try {
-            Process process = Runtime.getRuntime().exec(command);
-
-            BufferedReader errorReader =
-                new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            BufferedReader consoleReader =
-                new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = errorReader.readLine()) != null) {
-                errors.append(line).append("\n");
-            }
-
-            while ((line = consoleReader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-            final int exitVal = process.waitFor();
-            LOGGER.info("exitVal: " + exitVal);
-            LOGGER.info("output: " + output);
-            LOGGER.info("errors: " + errors);
-            return new ExecResult(exitVal, output.toString().trim(), errors.toString().trim());
-        } catch (InterruptedException e) {
-            Assert.fail("Process execution failed:" + ExceptionUtils.getStackTrace(e));
+            exitVal = executor.execute(commandLine);
         } catch (IOException e) {
-            Assert.fail("Process execution failed:" + ExceptionUtils.getStackTrace(e));
+            LOGGER.warn("Caught exception: " + e);
         }
-        return null;
+        final String output = outStream.toString();
+        final String errors = errStream.toString();
+
+        LOGGER.info("exitVal: " + exitVal);
+        LOGGER.info("output: " + output);
+        LOGGER.info("errors: " + errors);
+        return new ExecResult(commandLine, exitVal, output.trim(), errors.trim());
     }
 
     public static int executeCommandGetExitCode(String command) {
@@ -206,28 +203,4 @@ public final class ExecUtil {
         }
     }
 
-    private static final class ExecResult {
-
-        private final int exitVal;
-        private final String output;
-        private final String error;
-
-        private ExecResult(final int exitVal, final String output, final String error) {
-            this.exitVal = exitVal;
-            this.output = output;
-            this.error = error;
-        }
-
-        public int getExitVal() {
-            return exitVal;
-        }
-
-        public String getOutput() {
-            return output;
-        }
-
-        public String getError() {
-            return error;
-        }
-    }
 }

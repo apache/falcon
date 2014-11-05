@@ -18,20 +18,29 @@
 
 package org.apache.falcon.regression.core.supportClasses;
 
+import org.apache.commons.exec.CommandLine;
+
 public final class ExecResult {
 
     private final int exitVal;
     private final String output;
     private final String error;
+    private final CommandLine commandLine;
 
-    public ExecResult(final int exitVal, final String output, final String error) {
+    public ExecResult(CommandLine commandLine, final int exitVal, final String output,
+                      final String error) {
         this.exitVal = exitVal;
         this.output = output;
         this.error = error;
+        this.commandLine = commandLine;
     }
 
     public int getExitVal() {
         return exitVal;
+    }
+
+    public boolean hasSuceeded() {
+        return exitVal == 0;
     }
 
     public String getOutput() {
@@ -40,5 +49,19 @@ public final class ExecResult {
 
     public String getError() {
         return error;
+    }
+
+    public CommandLine getCommandLine() {
+        return commandLine;
+    }
+
+    @Override
+    public String toString() {
+        return "ExecResult{" +
+                "exitVal=" + exitVal +
+                ", output='" + output + '\'' +
+                ", error='" + error + '\'' +
+                ", commandLine=" + commandLine +
+                '}';
     }
 }
