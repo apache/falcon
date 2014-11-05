@@ -106,8 +106,9 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
+        TimeUtil.sleepSeconds(30);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
-                "?start=2010-01-02T01:00Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:01Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.KILLED);
     }
 
@@ -248,7 +249,8 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 5,
                 CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 10);
-        prism.getProcessHelper().getProcessInstanceKill(processName, "?start=2010-01-02T01:20Z");
+        prism.getProcessHelper().getProcessInstanceKill(processName,
+                "?start=2010-01-02T01:20Z&end=2010-01-02T01:21Z");
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
                 "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(r, 5, 4, 0, 0, 1);
@@ -267,9 +269,11 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster, bundles[0].getProcessData(), 0);
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
-        prism.getProcessHelper().getProcessInstanceSuspend(processName, "?start=2010-01-02T01:00Z");
+        TimeUtil.sleepSeconds(30);
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:04Z");
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
-                "?start=2010-01-02T01:00Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:04Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.KILLED);
     }
 
@@ -289,7 +293,7 @@ public class ProcessInstanceKillsTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(serverOC.get(0), processName, 1,
                 CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceKill(processName,
-                "?start=2010-01-02T01:00Z");
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:04Z");
         InstanceUtil.validateSuccess(r, bundles[0], WorkflowStatus.SUCCEEDED);
     }
 

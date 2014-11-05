@@ -132,7 +132,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         InstanceUtil.waitTillInstanceReachState(clusterOC, Util.getProcessName(bundles[0]
             .getProcessData()), 1, CoordinatorAction.Status.SUCCEEDED, EntityType.PROCESS);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
-            "?start=2010-01-02T01:00Z");
+            "?start=2010-01-02T01:00Z&end=2010-01-02T01:01Z");
         InstanceUtil.validateSuccessWithStatusCode(r, 0);
     }
 
@@ -233,7 +233,7 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceSuspend(processName,
             "?start=2010-01-02T01:00Z");
-        InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
+        InstanceUtil.validateSuccessWithStatusCode(r, 2);
     }
 
     /**
@@ -255,7 +255,8 @@ public class ProcessInstanceSuspendTest extends BaseTestClass {
         InstancesResult result = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 5, 0, 0, 0);
-        prism.getProcessHelper().getProcessInstanceSuspend(processName, "?start=2010-01-02T01:20Z");
+        prism.getProcessHelper().getProcessInstanceSuspend(processName,
+                "?start=2010-01-02T01:20Z&end=2010-01-02T01:23Z");
         result = prism.getProcessHelper().getProcessInstanceStatus(processName,
             "?start=2010-01-02T01:00Z&end=2010-01-02T01:21Z");
         InstanceUtil.validateResponse(result, 5, 4, 1, 0, 0);

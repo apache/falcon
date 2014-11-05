@@ -186,9 +186,11 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
-        prism.getProcessHelper().getProcessInstanceKill(processName, start);
+        prism.getProcessHelper().getProcessInstanceKill(processName,
+                start + "&end=2010-01-02T01:01Z");
         String wfID = InstanceUtil.getWorkflows(cluster, processName, Status.KILLED).get(0);
-        prism.getProcessHelper().getProcessInstanceRerun(processName, start);
+        prism.getProcessHelper().getProcessInstanceRerun(processName,
+                start + "&end=2010-01-02T01:01Z");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 
@@ -211,7 +213,8 @@ public class ProcessInstanceRerunTest extends BaseTestClass {
             Status.SUCCEEDED).get(0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 0, CoordinatorAction
             .Status.SUCCEEDED, EntityType.PROCESS);
-        prism.getProcessHelper().getProcessInstanceRerun(processName, start);
+        prism.getProcessHelper().getProcessInstanceRerun(processName,
+                start + "&end=2010-01-02T01:01Z");
         Assert.assertTrue(InstanceUtil.isWorkflowRunning(clusterOC, wfID));
     }
 

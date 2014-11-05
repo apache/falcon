@@ -110,7 +110,8 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             wholeRange);
         InstanceUtil.validateResponse(r, 6, 2, 4, 0, 0);
-        r = prism.getProcessHelper().getProcessInstanceResume(processName, "?end=2010-01-02T01:15Z");
+        r = prism.getProcessHelper().getProcessInstanceResume(processName,
+                "?start=2010-01-02T01:00Z&end=2010-01-02T01:15Z");
         InstanceUtil.validateResponse(r, 3, 3, 0, 0, 0);
     }
 
@@ -175,10 +176,10 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 1,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 2);
-        String start = "?start=2010-01-02T01:00Z";
-        prism.getProcessHelper().getProcessInstanceSuspend(processName, start);
-        prism.getProcessHelper().getProcessInstanceResume(processName, start);
-        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, start);
+        String param = "?start=2010-01-02T01:00Z&end=2010-01-02T01:26Z";
+        prism.getProcessHelper().getProcessInstanceSuspend(processName, param);
+        prism.getProcessHelper().getProcessInstanceResume(processName, param);
+        InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, param);
         InstanceUtil.validateResponse(r, 6, 1, 0, 5, 0);
     }
 
@@ -206,7 +207,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
     public void testProcessInstanceResumeNoParams() throws Exception {
         bundles[0].submitFeedsScheduleProcess(prism);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceResume(processName, null);
-        InstanceUtil.validateSuccessWithStatusCode(r, 0);
+        InstanceUtil.validateSuccessWithStatusCode(r, 2);
     }
 
     /**
@@ -236,7 +237,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 6,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
-        String start = "?start=2010-01-02T01:05Z";
+        String start = "?start=2010-01-02T01:05Z&end=2010-01-02T01:26Z";
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName, start);
         InstanceUtil.validateResponse(r, 5, 5, 0, 0, 0);
         r = prism.getProcessHelper().getProcessInstanceResume(processName, start);
@@ -257,7 +258,7 @@ public class ProcessInstanceResumeTest extends BaseTestClass {
         OozieUtil.createMissingDependencies(cluster, EntityType.PROCESS, processName, 0);
         InstanceUtil.waitTillInstanceReachState(clusterOC, processName, 6,
             CoordinatorAction.Status.RUNNING, EntityType.PROCESS, 5);
-        String last = "?start=2010-01-02T01:25Z";
+        String last = "?start=2010-01-02T01:25Z&end=2010-01-02T01:26Z";
         prism.getProcessHelper().getProcessInstanceSuspend(processName, last);
         InstancesResult r = prism.getProcessHelper().getProcessInstanceStatus(processName,
             wholeRange);

@@ -160,7 +160,7 @@ public final class InstanceUtil {
         if (jsonString.contains("(PROCESS) not found")) {
             r.setStatusCode(ResponseKeys.PROCESS_NOT_FOUND);
             return r;
-        } else if (jsonString.contains("Parameter start is empty")
+        } else if (jsonString.contains("Start and End dates cannot be empty for Instance POST apis")
                 || jsonString.contains("Unparseable date:")) {
             r.setStatusCode(ResponseKeys.UNPARSEABLE_DATE);
             return r;

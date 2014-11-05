@@ -30,6 +30,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-863 Fix tests to have start as well as end time for kill, rerun etc
+   requests (Raghav Kumar Gautam)
+
    FALCON-856 Handle JsonSyntaxException in hitUrl (Ruslan Ostafiychuk)
 
    FALCON-847 Issue with login from keytab in merlin (Raghav Kumar Gautam)
