@@ -27,12 +27,12 @@ Get status of a specific instance of an entity.
 
    
 ---++ Results
-Status of the specified instance.
+Status of the specified instance along with job urls for all actions of user workflow and non-succeeded actions of the main-workflow.
 
 ---++ Examples
 ---+++ Rest Call
 <verbatim>
-GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&start=2012-04-03T07:00Z
+GET https://localhost:15443/api/instance/status/process/WordCount?start=2014-11-04T16:00Z&colo=*
 </verbatim>
 ---+++ Result
 <verbatim>
@@ -40,15 +40,22 @@ GET http://localhost:15000/api/instance/status/process/SampleProcess?colo=*&star
     "instances": [
         {
             "details": "",
-            "endTime": "2013-10-21T14:40:26-07:00",
-            "startTime": "2013-10-21T14:39:56-07:00",
-            "cluster": "primary-cluster",
-            "logFile": "http:\/\/localhost:11000\/oozie?job=0000070-131021115933395-oozie-rgau-W",
+            "endTime": "2014-11-05T16:08:10+05:30",
+            "startTime": "2014-11-05T16:07:29+05:30",
+            "cluster": "local",
+            "logFile": "http:\/\/localhost:11000\/oozie?job=0000011-141105155430303-oozie-oozi-W",
             "status": "SUCCEEDED",
-            "instance": "2012-04-03T07:00Z"
+            "instance": "2014-11-04T16:00Z",
+            "actions": [
+                {
+                    "action": "wordcount-mr",
+                    "status": "SUCCEEDED",
+                    "logFile": "http:\/\/localhost:50030\/jobdetails.jsp?jobid=job_201411051553_0005"
+                }
+            ]
         }
     ],
-    "requestId": "default\/e15bb378-d09f-4911-9df2-5334a45153d2\n",
+    "requestId": "default\/b9fc3cba-1b46-4d1f-8196-52c795ea3580\n",
     "message": "default\/STATUS\n",
     "status": "SUCCEEDED"
 }

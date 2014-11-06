@@ -149,7 +149,8 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -resume -
 ---+++Status
 
 Status option via CLI can be used to get the status of a single or multiple instances.  If the instance is not yet materialized but is within the process validity range, WAITING is returned as the state. Along with the status of the instance time is also returned. Log location gives the oozie workflow url
-If the instance is in WAITING state, missing dependencies are listed
+If the instance is in WAITING state, missing dependencies are listed.
+The job urls are populated for all actions of user workflow and non-succeeded actions of the main-workflow. The user then need not go to the underlying scheduler to get the job urls when needed to debug an issue in the job.
 
 Example : Suppose a process has 3 instance, one has succeeded,one is in running state and other one is waiting, the expected output is:
 

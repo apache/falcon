@@ -37,6 +37,7 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-813 Expose job id for running jobs in Falcon (Suhas Vasu)
    FALCON-834 Propagate request id in the response to help trace and debug
    failures in merlin (Venkatesh Seetharam)
 

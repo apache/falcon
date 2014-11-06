@@ -51,16 +51,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.oozie.client.BundleJob;
-import org.apache.oozie.client.CoordinatorAction;
-import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.*;
 import org.apache.oozie.client.CoordinatorJob.Timeunit;
-import org.apache.oozie.client.Job;
 import org.apache.oozie.client.Job.Status;
-import org.apache.oozie.client.OozieClient;
-import org.apache.oozie.client.OozieClientException;
-import org.apache.oozie.client.ProxyOozieClient;
-import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.rest.RestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,6 +106,13 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         Arrays.asList(Job.Status.SUSPENDED, Job.Status.PREPSUSPENDED);
     private static final String FALCON_INSTANCE_ACTION_CLUSTERS = "falcon.instance.action.clusters";
     private static final String FALCON_INSTANCE_SOURCE_CLUSTERS = "falcon.instance.source.clusters";
+
+    private static final List<String> PARENT_WF_ACTION_NAMES = Arrays.asList(
+            "pre-processing",
+            "should-record",
+            "succeeded-post-processing",
+            "failed-post-processing"
+    );
 
     private static final String[] BUNDLE_UPDATEABLE_PROPS =
         new String[]{"parallel", "clusters.clusters[\\d+].validity.end", };
@@ -591,6 +591,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                     if (action == JobAction.PARAMS) {
                         instance.wfParams = getWFParams(jobInfo);
                     }
+                    if (action == JobAction.STATUS) {
+                        populateInstanceActions(cluster, jobInfo, instance);
+                    }
                 }
                 instance.details = coordinatorAction.getMissingDependencies();
                 instances.add(instance);
@@ -677,6 +680,41 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             new InstancesSummaryResult(APIResult.Status.SUCCEEDED, JobAction.SUMMARY.name());
         instancesSummaryResult.setInstancesSummary(instances.toArray(new InstanceSummary[instances.size()]));
         return instancesSummaryResult;
+    }
+
+    private void populateInstanceActions(String cluster, WorkflowJob wfJob, Instance instance)
+        throws FalconException {
+
+        List<InstancesResult.InstanceAction> instanceActions = new ArrayList<InstancesResult.InstanceAction>();
+
+        List<WorkflowAction> wfActions = wfJob.getActions();
+        for (WorkflowAction action : wfActions) {
+            if (action.getType().equalsIgnoreCase("sub-workflow") && StringUtils.isNotEmpty(action.getExternalId())) {
+                List<WorkflowAction> subWorkFlowActions = getWorkflowInfo(cluster, action.getExternalId()).getActions();
+                for (WorkflowAction subWfAction : subWorkFlowActions) {
+                    if (!subWfAction.getType().startsWith(":")) {
+                        InstancesResult.InstanceAction instanceAction =
+                                new InstancesResult.InstanceAction(subWfAction.getName(),
+                                        subWfAction.getExternalStatus(), subWfAction.getConsoleUrl());
+                        instanceActions.add(instanceAction);
+                    }
+                }
+            } else if (!action.getType().startsWith(":")) {
+                if (PARENT_WF_ACTION_NAMES.contains(action.getName())
+                        && !Status.SUCCEEDED.toString().equals(action.getExternalStatus())) {
+                    InstancesResult.InstanceAction instanceAction =
+                            new InstancesResult.InstanceAction(action.getName(), action.getExternalStatus(),
+                                    action.getConsoleUrl());
+                    instanceActions.add(instanceAction);
+                } else if (!PARENT_WF_ACTION_NAMES.contains(action.getName())) {
+                    InstancesResult.InstanceAction instanceAction =
+                            new InstancesResult.InstanceAction(action.getName(), action.getExternalStatus(),
+                                    action.getConsoleUrl());
+                    instanceActions.add(instanceAction);
+                }
+            }
+        }
+        instance.actions = instanceActions.toArray(new InstancesResult.InstanceAction[instanceActions.size()]);
     }
 
     private Map<String, String> getWFParams(WorkflowJob jobInfo) {
