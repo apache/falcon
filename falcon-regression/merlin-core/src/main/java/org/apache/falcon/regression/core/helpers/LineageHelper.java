@@ -55,12 +55,12 @@ public class LineageHelper {
      * Lineage related REST endpoints.
      */
     public enum URL {
-        SERIALIZE("/api/graphs/lineage/serialize"),
-        VERTICES("/api/graphs/lineage/vertices"),
-        VERTICES_ALL("/api/graphs/lineage/vertices/all"),
-        VERTICES_PROPERTIES("/api/graphs/lineage/vertices/properties"),
-        EDGES("/api/graphs/lineage/edges"),
-        EDGES_ALL("/api/graphs/lineage/edges/all");
+        SERIALIZE("/api/metadata/lineage/serialize"),
+        VERTICES("/api/metadata/lineage/vertices"),
+        VERTICES_ALL("/api/metadata/lineage/vertices/all"),
+        VERTICES_PROPERTIES("/api/metadata/lineage/vertices/properties"),
+        EDGES("/api/metadata/lineage/edges"),
+        EDGES_ALL("/api/metadata/lineage/edges/all");
 
         private final String url;
 

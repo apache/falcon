@@ -137,6 +137,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-866 Lineage endpoints need to be changed for merlin
+   (Raghav Kumar Gautam)
+
    FALCON-855 Fix validation in ProcessInstanceKillsTest#testProcessInstanceKillStartAndEndSame
    (Ruslan Ostafiychuk)
 
