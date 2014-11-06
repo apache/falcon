@@ -33,6 +33,8 @@ import org.apache.falcon.regression.core.util.OSUtil;
 import org.apache.falcon.regression.testHelper.BaseTestClass;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -43,6 +45,7 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Date;
 
 @Test(groups = "authorization")
 public class ProcessAclTest extends BaseTestClass {
@@ -71,7 +74,11 @@ public class ProcessAclTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setProcessACL(MerlinConstants.CURRENT_USER_NAME,
             MerlinConstants.CURRENT_USER_GROUP, "*");
-        processString = bundles[0].getProcessData();
+        final ProcessMerlin processMerlin = bundles[0].getProcessObject();
+        //setting end date of the process to 10 minutes in future
+        final Date tenMinInFuture = new DateTime(DateTimeZone.UTC).plusMinutes(10).toDate();
+        processMerlin.getClusters().getClusters().get(0).getValidity().setEnd(tenMinInFuture);
+        processString = processMerlin.toString();
 
         KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
     }

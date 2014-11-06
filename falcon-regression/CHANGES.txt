@@ -137,6 +137,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-867 In process ACL tests process validity needs to be in future
+   (Raghav Kumar Gautam)
+
    FALCON-866 Lineage endpoints need to be changed for merlin
    (Raghav Kumar Gautam)
 
