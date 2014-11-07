@@ -137,6 +137,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-871 Merlin clusters should have hadoop.rpc.protection property
+   (Raghav Kumar Gautam)
+
    FALCON-865 Rest end-point entities/summary has changed (Ruslan Ostafiychuk)
 
    FALCON-867 In process ACL tests process validity needs to be in future

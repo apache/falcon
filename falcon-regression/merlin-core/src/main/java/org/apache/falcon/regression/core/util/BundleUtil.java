@@ -20,7 +20,9 @@ package org.apache.falcon.regression.core.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.entity.v0.cluster.Location;
+import org.apache.falcon.entity.v0.cluster.Property;
 import org.apache.falcon.regression.Entities.ClusterMerlin;
 import org.apache.falcon.regression.Entities.FeedMerlin;
 import org.apache.falcon.regression.Entities.ProcessMerlin;
@@ -118,6 +120,13 @@ public final class BundleUtil {
                 working.setPath(Config.getProperty("merlin.working.location",
                         "/tmp/falcon-regression-working"));
                 clusterMerlin.getLocations().getLocations().add(working);
+                final String protectionPropName = "hadoop.rpc.protection";
+                final String protectionPropValue = Config.getProperty(protectionPropName).trim();
+                if (StringUtils.isNotEmpty(protectionPropValue)) {
+                    final Property property = Util.getFalconClusterPropertyObject(
+                            protectionPropName, protectionPropValue);
+                    clusterMerlin.getProperties().getProperties().add(property);
+                }
                 clusterData = clusterMerlin.toString();
             } else if (data.contains("uri:ivory:feed:0.1")
                     ||
