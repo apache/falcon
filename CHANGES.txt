@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-862 Falcon entity Rest API - filter by tags also returns entities
+   that do not have tags (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-795 Maven Enforcer plugin is throwing error while building Falcon
    (Peeyush Bishnoi via Venkatesh Seetharam)
 

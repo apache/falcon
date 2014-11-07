@@ -83,6 +83,37 @@ public class EntityManagerPaginationJerseyIT {
     }
 
     @Test
+    public void testFilterTags() {
+        ClientResponse response = context.service
+                .path("api/entities/list/process/")
+                .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
+                .queryParam("orderBy", "name").queryParam("sortOrder", "desc").queryParam("offset", "2")
+                .queryParam("numResults", "2").queryParam("fields", "status,tags")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        EntityList result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getElements().length, 2);
+
+        response = context.service
+                .path("api/entities/list/feed/")
+                .queryParam("tags", "owner=producer@xyz.com, department=forecasting")
+                .queryParam("fields", "status,tags")
+                .header("Cookie", context.getAuthenticationToken())
+                .type(MediaType.TEXT_XML)
+                .accept(MediaType.TEXT_XML)
+                .get(ClientResponse.class);
+        Assert.assertEquals(response.getStatus(), 200);
+        result = response.getEntity(EntityList.class);
+        Assert.assertNotNull(result);
+        Assert.assertNull(result.getElements());
+
+    }
+
+    @Test
     public void testPaginationHugeOffset() throws Exception {
         ClientResponse response = context.service
                 .path("api/entities/list/process/")

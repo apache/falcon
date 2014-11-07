@@ -663,8 +663,8 @@ public abstract class AbstractEntityManager {
             return true;
         }
 
-        return !((filterByTags.size() == 0 || tags.size() == 0 || !filterEntityByTags(filterByTags, tags))
-                && (filterByFieldsValues.size() == 0
+        return !((filterByTags.isEmpty() || !filterEntityByTags(filterByTags, tags))
+                && (filterByFieldsValues.isEmpty()
                 || !filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines)));
 
     }
@@ -684,6 +684,9 @@ public abstract class AbstractEntityManager {
 
     private boolean filterEntityByTags(List<String> filterTagsList, List<String> tags) {
         boolean filterEntity = false;
+        if (!filterTagsList.isEmpty() && tags.isEmpty()) {
+            return true;
+        }
         for (String tag : filterTagsList) {
             if (!tags.contains(tag)) {
                 filterEntity = true;
