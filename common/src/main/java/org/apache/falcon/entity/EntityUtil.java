@@ -579,11 +579,10 @@ public final class EntityUtil {
 
     //Returns all staging paths for the entity
     public static FileStatus[] getAllStagingPaths(org.apache.falcon.entity.v0.cluster.Cluster cluster,
-        Entity entity)
-        throws FalconException {
+                                                  Entity entity) throws FalconException {
         Path basePath = getBaseStagingPath(cluster, entity);
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster), entity.getACL());
+                ClusterHelper.getConfiguration(cluster));
         try {
             return fs.listStatus(basePath, new PathFilter() {
                 @Override

@@ -124,8 +124,7 @@ public final class UpdateHelper {
                 ConfigurationStore.get().get(EntityType.CLUSTER, cluster);
             Path checksum = new Path(bundleAppPath, EntityUtil.PROCESS_CHECKSUM_FILE);
             Configuration conf = ClusterHelper.getConfiguration(clusterEntity);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                conf, process.getACL());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
             if (!fs.exists(checksum)) {
                 //Update if there is no checksum file(for backward compatibility)
                 return true;

@@ -178,7 +178,7 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
         try {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster), entity.getACL());
+                ClusterHelper.getConfiguration(cluster));
             HadoopClientFactory.mkdirsWithDefaultPerms(fs, stagingPath);
             HadoopClientFactory.mkdirsWithDefaultPerms(fs, logPath);
         } catch (IOException e) {

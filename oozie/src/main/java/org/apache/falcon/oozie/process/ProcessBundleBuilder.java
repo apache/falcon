@@ -121,7 +121,7 @@ public class ProcessBundleBuilder extends OozieBundleBuilder<Process> {
     private void copyUserWorkflow(Cluster cluster, Path buildPath) throws FalconException {
         try {
             FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                ClusterHelper.getConfiguration(cluster), entity.getACL());
+                ClusterHelper.getConfiguration(cluster));
 
             //Copy user workflow and lib to staging dir
             Map<String, String> checksums = UpdateHelper.checksumAndCopy(fs, new Path(entity.getWorkflow().getPath()),

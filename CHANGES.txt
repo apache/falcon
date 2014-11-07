@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-864 Falcon superuser is unable to delete scheduled feed
+   (Venkatesh Seetharam)
+
    FALCON-862 Falcon entity Rest API - filter by tags also returns entities
    that do not have tags (Balu Vellanki via Venkatesh Seetharam)
 

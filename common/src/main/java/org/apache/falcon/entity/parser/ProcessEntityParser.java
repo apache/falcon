@@ -64,6 +64,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
             process.setTimezone(TimeZone.getTimeZone("UTC"));
         }
 
+        validateACL(process);
         // check if dependent entities exists
         Set<String> clusters = new HashSet<String>();
         for (org.apache.falcon.entity.v0.process.Cluster cluster : process.getClusters().getClusters()) {
@@ -99,7 +100,6 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
         validateLateInputs(process);
-        validateACL(process);
     }
 
     /**
@@ -122,8 +122,7 @@ public class ProcessEntityParser extends EntityParser<Process> {
         String nameNode = getNameNode(cluster);
         try {
             Configuration configuration = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-                configuration, process.getACL());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(configuration);
             if (!fs.exists(new Path(workflowPath))) {
                 throw new ValidationException(
                         "Workflow path: " + workflowPath + " does not exists in HDFS: " + nameNode);

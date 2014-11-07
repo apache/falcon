@@ -20,7 +20,6 @@ package org.apache.falcon.hadoop;
 
 import org.apache.commons.lang.Validate;
 import org.apache.falcon.FalconException;
-import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.security.SecurityUtil;
 import org.apache.falcon.util.StartupProperties;
@@ -33,6 +32,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -43,6 +44,8 @@ import java.security.PrivilegedExceptionAction;
  * A factory implementation to dole out FileSystem handles based on the logged in user.
  */
 public final class HadoopClientFactory {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HadoopClientFactory.class);
 
     public static final String FS_DEFAULT_NAME_KEY = CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY;
     public static final String MR_JT_ADDRESS_KEY = "mapreduce.jobtracker.address";
@@ -119,10 +122,15 @@ public final class HadoopClientFactory {
         throws FalconException {
         Validate.notNull(conf, "configuration cannot be null");
 
-        return createProxiedFileSystem(conf, null);
+        String nameNode = getNameNode(conf);
+        try {
+            return createProxiedFileSystem(new URI(nameNode), conf);
+        } catch (URISyntaxException e) {
+            throw new FalconException("Exception while getting FileSystem for: " + nameNode, e);
+        }
     }
 
-    private String getNameNode(Configuration conf) {
+    private static String getNameNode(Configuration conf) {
         return conf.get(FS_DEFAULT_NAME_KEY);
     }
 
@@ -141,45 +149,12 @@ public final class HadoopClientFactory {
                                               final Configuration conf) throws FalconException {
         Validate.notNull(uri, "uri cannot be null");
 
-        return createProxiedFileSystem(uri, conf, null);
-    }
-
-    public FileSystem createProxiedFileSystem(final Configuration conf,
-                                              final AccessControlList acl) throws FalconException {
-        Validate.notNull(conf, "configuration cannot be null");
-
         try {
-            return createProxiedFileSystem(new URI(getNameNode(conf)), conf, acl);
-        } catch (URISyntaxException e) {
-            throw new FalconException("Exception while getting FileSystem for proxy: "
-                    + CurrentUser.getUser(), e);
-        }
-    }
-
-    // getFileSystemAsEntityOwner
-    public FileSystem createProxiedFileSystem(final URI uri,
-                                              final Configuration conf,
-                                              final AccessControlList acl) throws FalconException {
-        Validate.notNull(uri, "uri cannot be null");
-
-        try {
-            UserGroupInformation proxyUGI = getProxyUGI(acl);
-
-            return createFileSystem(proxyUGI, uri, conf);
+            return createFileSystem(CurrentUser.getProxyUGI(), uri, conf);
         } catch (IOException e) {
             throw new FalconException("Exception while getting FileSystem for proxy: "
                 + CurrentUser.getUser(), e);
         }
-    }
-
-    private UserGroupInformation getProxyUGI(AccessControlList acl)
-        throws FalconException, IOException {
-
-        return CurrentUser.isAuthenticated()
-            ? acl != null
-                && SecurityUtil.getAuthorizationProvider().isSuperUser(CurrentUser.getProxyUGI())
-                ? CurrentUser.createProxyUGI(acl.getOwner()) : CurrentUser.getProxyUGI()
-            : UserGroupInformation.getCurrentUser();
     }
 
     /**
@@ -212,10 +187,14 @@ public final class HadoopClientFactory {
 
         try {
             // prevent falcon impersonating falcon, no need to use doas
-            if (ugi.equals(UserGroupInformation.getLoginUser())) {
+            final String proxyUserName = ugi.getShortUserName();
+            if (proxyUserName.equals(UserGroupInformation.getLoginUser().getShortUserName())) {
+                LOG.info("Creating FS for the login user {}, impersonation not required",
+                    proxyUserName);
                 return FileSystem.get(uri, conf);
             }
 
+            LOG.info("Creating FS impersonating user {}", proxyUserName);
             return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
                 public FileSystem run() throws Exception {
                     return FileSystem.get(uri, conf);

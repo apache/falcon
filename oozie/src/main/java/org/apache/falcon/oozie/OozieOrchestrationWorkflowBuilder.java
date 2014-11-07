@@ -211,7 +211,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
     protected void addLibExtensionsToWorkflow(Cluster cluster, WORKFLOWAPP wf, Tag tag) throws FalconException {
         String libext = ClusterHelper.getLocation(cluster, "working") + "/libext";
         FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(
-            ClusterHelper.getConfiguration(cluster), entity.getACL());
+            ClusterHelper.getConfiguration(cluster));
         try {
             addExtensionJars(fs, new Path(libext), wf);
             addExtensionJars(fs, new Path(libext, entity.getEntityType().name()), wf);
@@ -268,8 +268,7 @@ public abstract class OozieOrchestrationWorkflowBuilder<T extends Entity> extend
 
         try {
             Configuration conf = ClusterHelper.getConfiguration(cluster);
-            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf,
-                entity.getACL());
+            FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
 
             // create hive conf to stagingDir
             Path confPath = new Path(workflowPath + "/conf");

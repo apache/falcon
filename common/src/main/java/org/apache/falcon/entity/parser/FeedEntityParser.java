@@ -72,6 +72,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
             throw new ValidationException("Feed should have at least one cluster");
         }
 
+        validateACL(feed);
         for (Cluster cluster : feed.getClusters().getClusters()) {
             validateEntityExists(EntityType.CLUSTER, cluster.getName());
             validateClusterValidity(cluster.getValidity().getStart(), cluster.getValidity().getEnd(),
@@ -487,7 +488,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
 
             if (dataLocation == null) {
                 throw new ValidationException(feed.getName() + " is a FileSystem based feed "
-                        + "but it doesn't contain location type - data in cluster " + cluster.getName().toString());
+                    + "but it doesn't contain location type - data in cluster " + cluster.getName());
             }
 
         }

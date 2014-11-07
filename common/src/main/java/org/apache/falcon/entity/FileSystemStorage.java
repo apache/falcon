@@ -216,7 +216,7 @@ public class FileSystemStorage implements Storage {
     }
 
     public Path getWorkingDir() {
-        return new Path(CurrentUser.getSubject() == null ? "/" : "/user/" + CurrentUser.getUser());
+        return new Path(CurrentUser.isAuthenticated() ? "/user/" + CurrentUser.getUser() : "/");
     }
 
     @Override
@@ -300,8 +300,7 @@ public class FileSystemStorage implements Storage {
                 getLocations(FeedHelper.getCluster(feed, clusterName), feed);
         Location location = getLocation(clusterSpecificLocation, locationType);
         try {
-            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(
-                getConf(), feed.getACL());
+            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
             Cluster cluster = ClusterHelper.getCluster(clusterName);
             Properties baseProperties = FeedHelper.getClusterProperties(cluster);
             baseProperties.putAll(FeedHelper.getFeedProperties(feed));

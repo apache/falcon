@@ -35,8 +35,10 @@ import org.testng.annotations.Test;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Test for FalconAuthorizationFilter using mock objects.
@@ -89,8 +91,8 @@ public class FalconAuthorizationFilterTest {
             {"/metadata/lineage/vertices/all"},
             {"/metadata/lineage/vertices/_1"},
             {"/metadata/lineage/vertices/properties/_1"},
-            {"metadata/discovery/process_entity/sample-process/relations"},
-            {"metadata/discovery/process_entity/list?cluster=primary-cluster"},
+            {"/metadata/discovery/process_entity/sample-process/relations"},
+            {"/metadata/discovery/process_entity/list?cluster=primary-cluster"},
         };
     }
 
@@ -145,6 +147,14 @@ public class FalconAuthorizationFilterTest {
             Mockito.when(mockRequest.getRequestURL()).thenReturn(requestUrl);
             Mockito.when(mockRequest.getRequestURI()).thenReturn("/api" + resource);
             Mockito.when(mockRequest.getPathInfo()).thenReturn(resource);
+
+            Mockito.when(mockResponse.getOutputStream()).thenReturn(
+                new ServletOutputStream() {
+                    @Override
+                    public void write(int b) throws IOException {
+                        System.out.print(b);
+                    }
+                });
 
             try {
                 filter.doFilter(mockRequest, mockResponse, mockChain);

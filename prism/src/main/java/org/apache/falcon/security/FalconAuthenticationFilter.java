@@ -178,7 +178,7 @@ public class FalconAuthenticationFilter
                         try {
                             NDC.push(user + ":" + httpRequest.getMethod() + "/" + httpRequest.getPathInfo());
                             CurrentUser.authenticate(user);
-                            LOG.info("Request from user: {}, URL={}", user,
+                            LOG.info("Request from authenticated user: {}, URL={}", user,
                                     Servlets.getRequestURI(httpRequest));
 
                             filterChain.doFilter(servletRequest, servletResponse);

@@ -73,9 +73,10 @@ public class ProxyOozieClient extends AuthOozieClient {
         final URL decoratedUrl = decorateUrlWithUser(url);
         LOG.debug("ProxyOozieClient.createConnection: u={}, m={}", url, method);
 
-        UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
+        // Login User "falcon" has the kerberos credentials
+        UserGroupInformation loginUserUGI = UserGroupInformation.getLoginUser();
         try {
-            return currentUser.doAs(new PrivilegedExceptionAction<HttpURLConnection>() {
+            return loginUserUGI.doAs(new PrivilegedExceptionAction<HttpURLConnection>() {
                 public HttpURLConnection run() throws Exception {
                     HttpURLConnection conn = ProxyOozieClient.super.createConnection(decoratedUrl, method);
 

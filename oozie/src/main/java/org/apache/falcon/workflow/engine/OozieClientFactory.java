@@ -27,8 +27,6 @@ import org.apache.oozie.client.ProxyOozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * Factory for providing appropriate oozie client.
  */
@@ -37,8 +35,6 @@ public final class OozieClientFactory {
     private static final Logger LOG = LoggerFactory.getLogger(OozieClientFactory.class);
     private static final String LOCAL_OOZIE = "local";
 
-    private static final ConcurrentHashMap<String, ProxyOozieClient> CACHE =
-            new ConcurrentHashMap<String, ProxyOozieClient>();
     private static volatile boolean localInitialized = false;
 
     private OozieClientFactory() {}
@@ -48,13 +44,8 @@ public final class OozieClientFactory {
 
         assert cluster != null : "Cluster cant be null";
         String oozieUrl = ClusterHelper.getOozieUrl(cluster);
-        if (!CACHE.containsKey(oozieUrl)) {
-            ProxyOozieClient ref = getClientRef(oozieUrl);
-            LOG.info("Caching Oozie client object for {}", oozieUrl);
-            CACHE.putIfAbsent(oozieUrl, ref);
-        }
-
-        return CACHE.get(oozieUrl);
+        LOG.info("Creating Oozie client object for {}", oozieUrl);
+        return getClientRef(oozieUrl);
     }
 
     public static ProxyOozieClient get(String clusterName) throws FalconException {

@@ -20,6 +20,7 @@ package org.apache.falcon.security;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.cluster.util.EntityBuilderTestUtil;
+import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
@@ -344,7 +345,7 @@ public class DefaultAuthorizationProviderTest {
                 processEntity.getACL(), "submit", proxyUgi);
     }
 
-    @Test (expectedExceptions = AuthorizationException.class)
+    @Test (expectedExceptions = EntityNotRegisteredException.class)
     public void testAuthorizeResourceOperationsBadEntity() throws Exception {
         StartupProperties.get().setProperty("falcon.security.authorization.admin.users", "admin");
         StartupProperties.get().setProperty("falcon.security.authorization.admin.groups", "admin");

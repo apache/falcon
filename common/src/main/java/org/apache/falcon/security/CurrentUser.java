@@ -18,11 +18,11 @@
 
 package org.apache.falcon.security;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.Subject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,71 +32,114 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Current authenticated user via REST.
- * Also doles out proxied UserGroupInformation. Caches proxied users.
+ * Current authenticated user via REST. Also captures the proxy user from authorized entity
+ * and doles out proxied UserGroupInformation. Caches proxied users.
  */
 public final class CurrentUser {
 
     private static final Logger LOG = LoggerFactory.getLogger(CurrentUser.class);
+    private static final Logger AUDIT = LoggerFactory.getLogger("AUDIT");
 
-    private static final CurrentUser INSTANCE = new CurrentUser();
+    private final String authenticatedUser;
+    private String proxyUser;
 
-    private CurrentUser() {}
-
-    public static CurrentUser get() {
-        return INSTANCE;
+    private CurrentUser(String authenticatedUser) {
+        this.authenticatedUser = authenticatedUser;
+        this.proxyUser = authenticatedUser;
     }
 
-    private final ThreadLocal<Subject> currentSubject = new ThreadLocal<Subject>();
+    private static final ThreadLocal<CurrentUser> CURRENT_USER = new ThreadLocal<CurrentUser>();
 
+    /**
+     * Captures the authenticated user.
+     *
+     * @param user   authenticated user
+     */
     public static void authenticate(final String user) {
-        if (user == null || user.isEmpty()) {
+        if (StringUtils.isEmpty(user)) {
             throw new IllegalStateException("Bad user name sent for authentication");
-        }
-        if (user.equals(getUserInternal())) {
-            return;
-        }
-
-        Subject subject = new Subject();
-        subject.getPrincipals().add(new FalconPrincipal(user));
-
-        try {  // initialize proxy user
-            createProxyUGI(user);
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to create a proxy user");
         }
 
         LOG.info("Logging in {}", user);
-        INSTANCE.currentSubject.set(subject);
+        CurrentUser currentUser = new CurrentUser(user);
+        CURRENT_USER.set(currentUser);
     }
 
+    /**
+     * Captures the entity owner if authenticated user is a super user.
+     *
+     * @param aclOwner entity acl owner
+     * @param aclGroup entity acl group
+     * @throws IOException
+     */
+    public static void proxy(final String aclOwner,
+                             final String aclGroup) throws IOException {
+        if (!isAuthenticated() || StringUtils.isEmpty(aclOwner)) {
+            throw new IllegalStateException("Authentication not done or Bad user name");
+        }
+
+        CurrentUser user = CURRENT_USER.get();
+        LOG.info("Authenticated user {} is proxying entity owner {}/{}",
+            user.authenticatedUser, aclOwner, aclGroup);
+        AUDIT.info("Authenticated user {} is proxying entity owner {}/{}",
+            user.authenticatedUser, aclOwner, aclGroup);
+        user.proxyUser = aclOwner;
+    }
+
+    /**
+     * Clears the context.
+     */
+    public static void clear() {
+        CURRENT_USER.remove();
+    }
+
+    /**
+     * Checks if the authenticate method is already called.
+     *
+     * @return true if authenticated user is set else false
+     */
     public static boolean isAuthenticated() {
-        return getSubject() != null;
+        CurrentUser user = CURRENT_USER.get();
+        return user != null && user.authenticatedUser != null;
     }
 
-    public static Subject getSubject() {
-        return INSTANCE.currentSubject.get();
-    }
-
-    public static String getUser() {
-        String user = getUserInternal();
-        if (user == null) {
+    /**
+     * Returns authenticated user.
+     *
+     * @return logged in authenticated user.
+     */
+    public static String getAuthenticatedUser() {
+        CurrentUser user = CURRENT_USER.get();
+        if (user == null || user.authenticatedUser == null) {
             throw new IllegalStateException("No user logged into the system");
         } else {
-            return user;
+            return user.authenticatedUser;
         }
     }
 
-    private static String getUserInternal() {
-        Subject subject = getSubject();
-        if (subject == null) {
-            return null;
+    /**
+     * Dole out a UGI object for the current authenticated user if authenticated
+     * else return current user.
+     *
+     * @return UGI object
+     * @throws java.io.IOException
+     */
+    public static UserGroupInformation getAuthenticatedUGI() throws IOException {
+        return CurrentUser.isAuthenticated()
+            ? createProxyUGI(getAuthenticatedUser()) : UserGroupInformation.getCurrentUser();
+    }
+
+    /**
+     * Returns the proxy user.
+     *
+     * @return proxy user
+     */
+    public static String getUser() {
+        CurrentUser user = CURRENT_USER.get();
+        if (user == null || user.proxyUser == null) {
+            throw new IllegalStateException("No user logged into the system");
         } else {
-            for (FalconPrincipal principal : subject.
-                    getPrincipals(FalconPrincipal.class)) {
-                return principal.getName();
-            }
-            return null;
+            return user.proxyUser;
         }
     }
 
@@ -104,7 +147,7 @@ public final class CurrentUser {
             new ConcurrentHashMap<String, UserGroupInformation>();
 
     /**
-     * Create a proxy UGI object for the current authenticated user.
+     * Create a proxy UGI object for the proxy user.
      *
      * @param proxyUser logged in user
      * @return UGI object
@@ -123,33 +166,39 @@ public final class CurrentUser {
     }
 
     /**
-     * Dole out a proxy UGI object for the current authenticated user.
+     * Dole out a proxy UGI object for the current authenticated user if authenticated
+     * else return current user.
      *
      * @return UGI object
      * @throws java.io.IOException
      */
     public static UserGroupInformation getProxyUGI() throws IOException {
-        String proxyUser = getUser();
-
-        UserGroupInformation proxyUgi = userUgiMap.get(proxyUser);
-        if (proxyUgi == null) {
-            // taking care of a race condition, the latest UGI will be discarded
-            proxyUgi = UserGroupInformation.createProxyUser(
-                    proxyUser, UserGroupInformation.getLoginUser());
-            userUgiMap.putIfAbsent(proxyUser, proxyUgi);
-        }
-
-        return proxyUgi;
+        return CurrentUser.isAuthenticated()
+            ? createProxyUGI(getUser()) : UserGroupInformation.getCurrentUser();
     }
 
+    /**
+     * Gets a collection of group names the proxy user belongs to.
+     *
+     * @return group names
+     * @throws IOException
+     */
     public static Set<String> getGroupNames() throws IOException {
         HashSet<String> s = new HashSet<String>(Arrays.asList(getProxyUGI().getGroupNames()));
         return Collections.unmodifiableSet(s);
     }
 
+    /**
+     * Returns the primary group name for the proxy user.
+     *
+     * @return primary group name for the proxy user
+     */
     public static String getPrimaryGroupName() {
         try {
-            return getProxyUGI().getPrimaryGroupName();
+            String[] groups = getProxyUGI().getGroupNames();
+            if (groups.length > 0) {
+                return groups[0];
+            }
         } catch (IOException ignore) {
             // ignored
         }

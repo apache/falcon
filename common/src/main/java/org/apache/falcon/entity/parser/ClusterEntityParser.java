@@ -70,6 +70,8 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
             validateScheme(cluster, Interfacetype.REGISTRY);
         }
 
+        validateACL(cluster);
+
         if (!EntityUtil.responsibleFor(cluster.getColo())) {
             return;
         }
@@ -81,7 +83,6 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         validateMessagingInterface(cluster);
         validateRegistryInterface(cluster);
 
-        validateACL(cluster);
         validateLocations(cluster);
     }
 
@@ -241,7 +242,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         Configuration conf = ClusterHelper.getConfiguration(cluster);
         FileSystem fs;
         try {
-            fs = HadoopClientFactory.get().createProxiedFileSystem(conf, cluster.getACL());
+            fs = HadoopClientFactory.get().createProxiedFileSystem(conf);
         } catch (FalconException e) {
             throw new ValidationException(
                     "Unable to get file system handle for cluster " + cluster.getName(), e);

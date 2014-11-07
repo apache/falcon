@@ -69,6 +69,7 @@ public class FalconAuditFilter implements Filter {
             // put the request id into the response so users can trace logs for this request
             ((HttpServletResponse) response).setHeader(REQUEST_ID, requestId);
             NDC.pop();
+            CurrentUser.clear();
         }
     }
 
@@ -85,16 +86,13 @@ public class FalconAuditFilter implements Filter {
     }
 
     private String getUserFromRequest(HttpServletRequest httpRequest) {
-        try {
-            // get the authenticated user
-            return CurrentUser.getUser();
-        } catch (IllegalStateException ignore) {
-            // ignore since the user authentication might have failed
+        if (CurrentUser.isAuthenticated()) {
+            return CurrentUser.getAuthenticatedUser();
+        } else {
+            // look for the user in the request
+            final String userFromRequest = Servlets.getUserFromRequest(httpRequest);
+            return userFromRequest == null ? "UNKNOWN" : userFromRequest;
         }
-
-        // look for the user in the request
-        final String userFromRequest = Servlets.getUserFromRequest(httpRequest);
-        return userFromRequest == null ? "UNKNOWN" : userFromRequest;
     }
 
     @Override

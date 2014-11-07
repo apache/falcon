@@ -342,10 +342,21 @@ public abstract class AbstractEntityManager {
                             + "Can't be submitted again. Try removing before submitting.");
         }
 
+        tryProxy(entity); // proxy before validating since FS/Oozie needs to be proxied
         validate(entity);
         configStore.publish(entityType, entity);
         LOG.info("Submit successful: ({}): {}", type, entity.getName());
         return entity;
+    }
+
+    private void tryProxy(Entity entity) throws IOException, FalconException {
+        final String aclOwner = entity.getACL().getOwner();
+        final String aclGroup = entity.getACL().getGroup();
+        if (SecurityUtil.isAuthorizationEnabled()
+                && SecurityUtil.getAuthorizationProvider().shouldProxy(
+                    CurrentUser.getAuthenticatedUGI(), aclOwner, aclGroup)) {
+            CurrentUser.proxy(aclOwner, aclGroup);
+        }
     }
 
     /**
@@ -541,13 +552,13 @@ public abstract class AbstractEntityManager {
 
     protected List<Entity> getEntities(String type, String startDate, String endDate, String cluster,
                                        String filterBy, String filterTags, String orderBy, String sortOrder,
-                                       int offset, int resultsPerPage) throws FalconException {
+                                       int offset, int resultsPerPage) throws FalconException, IOException {
         final Map<String, String> filterByFieldsValues = getFilterByFieldsValues(filterBy);
         final List<String> filterByTags = getFilterByTags(filterTags);
 
         EntityType entityType = EntityType.valueOf(type.toUpperCase());
         Collection<String> entityNames = configStore.getEntities(entityType);
-        if (entityNames == null || entityNames.isEmpty()) {
+        if (entityNames.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -564,9 +575,12 @@ public abstract class AbstractEntityManager {
                 throw FalconWebException.newException(e1, Response.Status.BAD_REQUEST);
             }
 
-            if (filterEntityByDatesAndCluster(entity, startDate, endDate, cluster)) {
+            if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)
+                || filterEntityByDatesAndCluster(entity, startDate, endDate, cluster)) {
+                // the user who requested list query has no permission to access this entity. Skip this entity
                 continue;
             }
+            tryProxy(entity);
 
             List<String> tags = EntityUtil.getTags(entity);
             List<String> pipelines = EntityUtil.getPipelines(entity);
@@ -658,11 +672,6 @@ public abstract class AbstractEntityManager {
     private boolean filterEntity(Entity entity, String entityStatus,
                                  Map<String, String> filterByFieldsValues, List<String> filterByTags,
                                  List<String> tags, List<String> pipelines) {
-        if (SecurityUtil.isAuthorizationEnabled() && !isEntityAuthorized(entity)) {
-            // the user who requested list query has no permission to access this entity. Skip this entity
-            return true;
-        }
-
         return !((filterByTags.isEmpty() || !filterEntityByTags(filterByTags, tags))
                 && (filterByFieldsValues.isEmpty()
                 || !filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines)));
@@ -671,11 +680,12 @@ public abstract class AbstractEntityManager {
 
     protected boolean isEntityAuthorized(Entity entity) {
         try {
-            SecurityUtil.getAuthorizationProvider().authorizeResource("entities", "list",
-                    entity.getEntityType().toString(), entity.getName(), CurrentUser.getProxyUGI());
+            SecurityUtil.getAuthorizationProvider().authorizeEntity(entity.getName(),
+                    entity.getEntityType().toString(), entity.getACL(),
+                    "list", CurrentUser.getAuthenticatedUGI());
         } catch (Exception e) {
-            LOG.error("Authorization failed for entity=" + entity.getName()
-                    + " for user=" + CurrentUser.getUser(), e);
+            LOG.info("Authorization failed for entity=" + entity.getName()
+                + " for user=" + CurrentUser.getUser(), e);
             return false;
         }
 
