@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-868 Rerun command incorrect in falcon CLI documentation
+   (Karishma Gulati via Venkatesh Seetharam)
+
    FALCON-864 Falcon superuser is unable to delete scheduled feed
    (Venkatesh Seetharam)
 

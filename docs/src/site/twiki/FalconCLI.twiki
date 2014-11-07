@@ -127,17 +127,17 @@ $FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -suspend 
 
 ---+++Continue
 
-Continue option is used to continue the failed workflow instance. This option is valid only for process instances in terminal state, i.e. SUCCEDDED, KILLED or FAILED.
+Continue option is used to continue the failed workflow instance. This option is valid only for process instances in terminal state, i.e. KILLED or FAILED.
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -re-run -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -continue -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'"
 
 ---+++Rerun
 
 Rerun option is used to rerun instances of a given process. This option is valid only for process instances in terminal state, i.e. SUCCEDDED, KILLED or FAILED. Optionally, you can specify the properties to override.
 
 Usage:
-$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -re-run -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-file <<properties file>>]
+$FALCON_HOME/bin/falcon instance -type <<feed/process>> -name <<name>> -rerun -start "yyyy-MM-dd'T'HH:mm'Z'" -end "yyyy-MM-dd'T'HH:mm'Z'" [-file <<properties file>>]
 
 ---+++Resume
 
