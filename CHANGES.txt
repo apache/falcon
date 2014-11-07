@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-795 Maven Enforcer plugin is throwing error while building Falcon
+   (Peeyush Bishnoi via Venkatesh Seetharam)
+
    FALCON-859 EntitySummary RestAPI : Change pathParam "cluster" to queryParam
    (Balu Vellanki via Venkatesh Seetharam)
 
