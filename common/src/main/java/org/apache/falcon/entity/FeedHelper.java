@@ -32,6 +32,7 @@ import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.Location;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.resource.APIResult;
 import org.apache.falcon.resource.FeedInstanceResult;
@@ -220,6 +221,16 @@ public final class FeedHelper {
 
         final Locations feedLocations = feed.getLocations();
         return feedLocations == null ? null : feedLocations.getLocations();
+    }
+
+    public static Sla getSLAs(Cluster cluster, Feed feed) {
+        final Sla clusterSla = cluster.getSla();
+        if (clusterSla != null) {
+            return clusterSla;
+        }
+
+        final Sla feedSla = feed.getSla();
+        return feedSla == null ? null : feedSla;
     }
 
     protected static CatalogTable getTable(Cluster cluster, Feed feed) {

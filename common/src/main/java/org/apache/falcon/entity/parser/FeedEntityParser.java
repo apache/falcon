@@ -26,12 +26,14 @@ import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityGraph;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.feed.ACL;
 import org.apache.falcon.entity.v0.feed.Cluster;
 import org.apache.falcon.entity.v0.feed.ClusterType;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.Sla;
 import org.apache.falcon.entity.v0.process.Input;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Process;
@@ -82,6 +84,7 @@ public class FeedEntityParser extends EntityParser<Feed> {
         validateFeedPath(feed);
         validateFeedPartitionExpression(feed);
         validateFeedGroups(feed);
+        validateFeedSLA(feed);
         validateACL(feed);
 
         // Seems like a good enough entity object for a new one
@@ -113,6 +116,40 @@ public class FeedEntityParser extends EntityParser<Feed> {
             }
         }
         return processes;
+    }
+
+    private void validateFeedSLA(Feed feed) throws FalconException {
+        for (Cluster cluster : feed.getClusters().getClusters()) {
+            Sla clusterSla = FeedHelper.getSLAs(cluster, feed);
+            if (clusterSla != null) {
+                Frequency slaLowExpression = clusterSla.getSlaLow();
+                ExpressionHelper evaluator = ExpressionHelper.get();
+                ExpressionHelper.setReferenceDate(new Date());
+                Date slaLow = new Date(evaluator.evaluate(slaLowExpression.toString(), Long.class));
+
+                Frequency slaHighExpression = clusterSla.getSlaHigh();
+                Date slaHigh = new Date(evaluator.evaluate(slaHighExpression.toString(), Long.class));
+
+                if (slaLow.after(slaHigh)) {
+                    throw new ValidationException("slaLow of Feed: " + slaLowExpression
+                            + "is greater than slaHigh: " + slaHighExpression
+                            + " for cluster: " + cluster.getName()
+                    );
+                }
+
+                // test that slaHigh is less than retention
+                Frequency retentionExpression = cluster.getRetention().getLimit();
+                Date retention = new Date(evaluator.evaluate(retentionExpression.toString(), Long.class));
+                if (slaHigh.after(retention)) {
+                    throw new ValidationException("slaHigh of Feed: " + slaHighExpression
+                            + " is greater than retention of the feed: " + retentionExpression
+                            + " for cluster: " + cluster.getName()
+                    );
+                }
+
+
+            }
+        }
     }
 
     private void validateFeedGroups(Feed feed) throws FalconException {

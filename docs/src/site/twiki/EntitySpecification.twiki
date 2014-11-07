@@ -99,8 +99,7 @@ should be defined here.
 
 ---++ Feed Specification
 The Feed XSD specification is available here.
-a Feed defines various attributes of feed like feed location, frequency, late-arrival handling
-and retention policies.
+A Feed defines various attributes of feed like feed location, frequency, late-arrival handling and retention policies.
 A feed can be scheduled on a cluster, once a feed is scheduled its retention and replication process are triggered in a given cluster.
 <verbatim>
 <feed description="clicks log" name="clicks" xmlns="uri:falcon:feed:0.1"
@@ -128,6 +127,7 @@ Feed should contain one of the two storage options. Locations on File System or 
         <cluster name="test-cluster">
             <validity start="2012-07-20T03:00Z" end="2099-07-16T00:00Z"/>
             <retention limit="days(10)" action="delete"/>
+            <sla slaLow="hours(3)" slaHigh="hours(4)"/>
             <locations>
                 <location type="data" path="/hdfsDataLocation/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}"/>
                 <location type="stats" path="/projects/falcon/clicksStats" />
@@ -142,8 +142,11 @@ Validity of a feed on cluster specifies duration for which this feed is valid on
 Retention specifies how long the feed is retained on this cluster and the action to be taken on the feed after the expiry of retention period.
 The retention limit is specified by expression frequency(times), ex: if feed should be retained for at least 6 hours then retention's limit="hours(6)".
 The field partitionExp contains partition tags. Number of partition tags has to be equal to number of partitions specified in feed schema. A partition tag can be a wildcard(*), a static string or an expression. Atleast one of the strings has to be an expression.
+sla specifies sla for the feed on this cluster. This is an optional parameter and sla can be same or different from the
+global sla tag (mentioned outside the clusters tag ). This tag provides the user to flexibility to have
+different sla for different clusters e.g. in case of replication. If this attribute is missing then the default global
+sla is picked from the feed definition.
 Location specifies where the feed is available on this cluster. This is an optional parameter and path can be same or different from the global locations tag value ( it is mentioned outside the clusters tag ) . This tag provides the user to flexibility to have feed at different locations on different clusters. If this attribute is missing then the default global location is picked from the feed definition. Also the individual location tags data, stats, meta are optional.
-
 <verbatim>
  <location type="data" path="/projects/falcon/clicks" />
  <location type="stats" path="/projects/falcon/clicksStats" />
@@ -229,6 +232,17 @@ data directory as feed availability.
 A feed has a frequency which specifies the frequency by which this feed is generated. 
 ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
 valid frequency type for a feed are minutes, hours, days, months. The values can be negative, zero or positive.
+
+---+++ SLA
+<verbatim>
+    <sla slaLow="hours(40)" slaHigh="hours(44)" />
+</verbatim>
+
+A feed can have SLA and each SLA has two properties - slaLow and slaHigh. Both slaLow and slaHigh are written using
+expressions like frequency. slaLow is intended to serve for alerting for feed instances which are in danger of missing their
+availability SLAs. slaHigh is intended to serve for reporting the feeds which missed their SLAs. SLAs are relative to
+feed instance time.
+
 
 ---+++ Late Arrival
 

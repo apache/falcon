@@ -27,6 +27,7 @@
     <availabilityFlag>_SUCCESS</availabilityFlag>
 
     <frequency>hours(1)</frequency>
+    <sla slaLow="hours(2)" slaHigh="hours(3)"/>
     <timezone>UTC</timezone>
 
     <late-arrival cut-off="hours(6)"/>
@@ -36,6 +37,7 @@
             <validity start="2011-11-01T00:00Z" end="2011-12-31T00:00Z"/>
             <retention limit="hours(48)" action="delete"/>
             <!-- Limit can be in Time or Instances 100, Action ENUM DELETE,ARCHIVE -->
+            <sla slaLow="hours(3)" slaHigh="hours(4)"/>
             <locations>
                 <location type="data" path="/projects/falcon/clicks"/>
                 <location type="stats" path="/projects/falcon/clicksStats"/>

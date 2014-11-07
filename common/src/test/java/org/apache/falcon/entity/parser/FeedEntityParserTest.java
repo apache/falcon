@@ -98,10 +98,15 @@ public class FeedEntityParserTest extends AbstractTestBase {
         assertEquals(feed.getName(), "clicks");
         assertEquals(feed.getDescription(), "clicks log");
         assertEquals(feed.getFrequency().toString(), "hours(1)");
+        assertEquals(feed.getSla().getSlaHigh().toString(), "hours(3)");
+        assertEquals(feed.getSla().getSlaLow().toString(), "hours(2)");
         assertEquals(feed.getGroups(), "online,bi");
 
         assertEquals(feed.getClusters().getClusters().get(0).getName(),
                 "testCluster");
+        assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaLow().toString(), "hours(3)");
+        assertEquals(feed.getClusters().getClusters().get(0).getSla().getSlaHigh().toString(), "hours(4)");
+
         assertEquals(feed.getClusters().getClusters().get(0).getType(),
                 ClusterType.SOURCE);
         assertEquals(SchemaHelper.formatDateUTC(feed.getClusters().getClusters().get(0).getValidity()
@@ -255,6 +260,27 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 .setStart(SchemaHelper.parseDateUTC("2012-11-01T00:00Z"));
         parser.validate(feed);
     }
+
+    @Test(expectedExceptions = ValidationException.class, expectedExceptionsMessageRegExp = "slaLow of Feed:.*")
+    public void testInvalidSlaLow() throws Exception {
+        Feed feed = parser.parseAndValidate((FeedEntityParserTest.class
+                .getResourceAsStream(FEED_XML)));
+        feed.getSla().setSlaLow(new Frequency("hours(4)"));
+        feed.getSla().setSlaHigh(new Frequency("hours(2)"));
+        parser.validate(feed);
+    }
+
+
+    @Test(expectedExceptions = ValidationException.class, expectedExceptionsMessageRegExp = "slaHigh of Feed:.*")
+    public void testInvalidSlaHigh() throws Exception {
+        Feed feed = parser.parseAndValidate((FeedEntityParserTest.class
+                .getResourceAsStream(FEED_XML)));
+        feed.getSla().setSlaLow(new Frequency("hours(2)"));
+        feed.getSla().setSlaHigh(new Frequency("hours(10)"));
+        feed.getClusters().getClusters().get(0).getRetention().setLimit(new Frequency("hours(9)"));
+        parser.validate(feed);
+    }
+
 
     @Test
     public void testValidFeedGroup() throws FalconException, JAXBException {

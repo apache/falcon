@@ -75,6 +75,10 @@
                 frequency and a periodicity which specifies the frequency by which
                 this feed is generated. ex: it can be generated every hour, every 5 minutes, daily, weekly etc.
                 valid frequency type for a feed are minutes, hours, days, months.
+                sla: A feed can have SLA and each SLA has two properties - slaLow and slaHigh. Both slaLow and slaHigh
+                are written using expressions like frequency. slaLow is intended to serve for alerting for feeds which
+                are in danger of missing their availability SLAs. slaHigh is intended to serve for reporting the feeds
+                which missed their SLAs. SLAs are relative to feed instance time.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
@@ -92,6 +96,7 @@
             <xs:element type="group-type" name="groups" minOccurs="0"/>
             <xs:element type="xs:string" name="availabilityFlag" minOccurs="0"/>
             <xs:element type="frequency-type" name="frequency"/>
+            <xs:element type="sla" name="sla" minOccurs="0"/>
             <xs:element name="timezone" minOccurs="0" default="UTC">
                 <xs:simpleType>
                     <xs:annotation>
@@ -142,6 +147,7 @@
         <xs:sequence>
             <xs:element type="validity" name="validity"/>
             <xs:element type="retention" name="retention"/>
+            <xs:element type="sla" name="sla" minOccurs="0" maxOccurs="1"/>
             <xs:choice minOccurs="0" maxOccurs="1">
                 <xs:element type="locations" name="locations" minOccurs="0"/>
                 <xs:element type="catalog-table" name="table"/>
@@ -151,6 +157,7 @@
         <xs:attribute type="cluster-type" name="type" use="optional"/>
         <xs:attribute type="xs:string" name="partition" use="optional"/>
         <xs:attribute type="frequency-type" name="delay" use="optional" /> 
+
     </xs:complexType>
     <xs:complexType name="partitions">
         <xs:annotation>
@@ -196,6 +203,18 @@
         </xs:annotation>
         <xs:attribute type="date-time-type" name="start" use="required"/>
         <xs:attribute type="date-time-type" name="end" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="sla">
+        <xs:annotation>
+            <xs:documentation>
+                sla has two properties - slaLow and slaHigh. Both slaLow and slaHigh
+                are written using expressions like frequency. slaLow is intended to serve for alerting for feeds which
+                are in danger of missing their availability SLAs. slaHigh is intended to serve for reporting the feeds
+                which missed their SLAs. SLAs are relative to feed instance time.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="frequency-type" name="slaLow" use="required"/>
+        <xs:attribute type="frequency-type" name="slaHigh" use="required"/>
     </xs:complexType>
     <xs:complexType name="locations">
         <xs:annotation>
