@@ -121,10 +121,10 @@ public final class BundleUtil {
                         "/tmp/falcon-regression-working"));
                 clusterMerlin.getLocations().getLocations().add(working);
                 final String protectionPropName = "hadoop.rpc.protection";
-                final String protectionPropValue = Config.getProperty(protectionPropName).trim();
+                final String protectionPropValue = Config.getProperty(protectionPropName);
                 if (StringUtils.isNotEmpty(protectionPropValue)) {
                     final Property property = Util.getFalconClusterPropertyObject(
-                            protectionPropName, protectionPropValue);
+                            protectionPropName, protectionPropValue.trim());
                     clusterMerlin.getProperties().getProperties().add(property);
                 }
                 clusterData = clusterMerlin.toString();

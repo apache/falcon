@@ -137,6 +137,10 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+
+   FALCON-873 BeforeClass fails in falcon-regression if "hadoop.rpc.protection"
+    is not set(Samarth Gupta)
+
    FALCON-871 Merlin clusters should have hadoop.rpc.protection property
    (Raghav Kumar Gautam)
 
