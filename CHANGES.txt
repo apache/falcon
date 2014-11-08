@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-875 Enitiy Summary endpoint filterBy does not filter entities
+   without pipelines (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-874 Rest API - Instance and Entity orderBy param values should be
    case insensitive (Balu Vellanki via Venkatesh Seetharam)
 

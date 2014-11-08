@@ -17,6 +17,7 @@
  */
 package org.apache.falcon.resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconWebException;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
@@ -173,19 +174,19 @@ public class EntityManagerTest extends AbstractEntityManager {
                 "testPipeline,dataReplicationPipeline");
         configStore.publish(EntityType.PROCESS, process2);
 
-        Entity process3 = buildProcess("process3", user, "consumer=consumer@xyz.com", "testPipeline");
+        Entity process3 = buildProcess("process3", user, "", "testPipeline");
         configStore.publish(EntityType.PROCESS, process3);
 
-        Entity process4 = buildProcess("process4", user, "owner=producer@xyz.com", "dataReplicationPipeline");
+        Entity process4 = buildProcess("process4", user, "owner=producer@xyz.com", "");
         configStore.publish(EntityType.PROCESS, process4);
 
         EntityList entityList = this.getEntityList("process", "tags", "PIPELINES:dataReplicationPipeline",
-                "", "name", "desc", 1, 2);
+                "", "name", "desc", 1, 1);
         Assert.assertNotNull(entityList.getElements());
-        Assert.assertEquals(entityList.getElements().length, 2);
-        Assert.assertEquals(entityList.getElements()[1].name, "process1");
-        Assert.assertEquals(entityList.getElements()[1].tag.size(), 2);
-        Assert.assertEquals(entityList.getElements()[1].tag.get(0), "consumer=consumer@xyz.com");
+        Assert.assertEquals(entityList.getElements().length, 1);
+        Assert.assertEquals(entityList.getElements()[0].name, "process1");
+        Assert.assertEquals(entityList.getElements()[0].tag.size(), 2);
+        Assert.assertEquals(entityList.getElements()[0].tag.get(0), "consumer=consumer@xyz.com");
         Assert.assertEquals(entityList.getElements()[0].status, null);
 
 
@@ -201,6 +202,10 @@ public class EntityManagerTest extends AbstractEntityManager {
         entityList = this.getEntityList("process", "pipelines", "",
                 "consumer=consumer@xyz.com, owner=producer@xyz.com", "name", "", 10, 2);
         Assert.assertEquals(entityList.getElements().length, 0);
+
+        entityList = this.getEntityList("process", "pipelines", "",
+                "owner=producer@xyz.com", "name", "", 1, 2);
+        Assert.assertEquals(entityList.getElements().length, 2);
 
         // Test negative value for numResults, should throw an exception.
         try {
@@ -230,8 +235,12 @@ public class EntityManagerTest extends AbstractEntityManager {
         Process process = new Process();
         process.setName(name);
         process.setACL(acl);
-        process.setPipelines(pipelines);
-        process.setTags(tags);
+        if (!StringUtils.isEmpty(pipelines)) {
+            process.setPipelines(pipelines);
+        }
+        if (!StringUtils.isEmpty(tags)) {
+            process.setTags(tags);
+        }
         process.setClusters(buildClusters("cluster" + name));
         return process;
     }

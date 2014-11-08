@@ -672,10 +672,8 @@ public abstract class AbstractEntityManager {
     private boolean filterEntity(Entity entity, String entityStatus,
                                  Map<String, String> filterByFieldsValues, List<String> filterByTags,
                                  List<String> tags, List<String> pipelines) {
-        return !((filterByTags.isEmpty() || !filterEntityByTags(filterByTags, tags))
-                && (filterByFieldsValues.isEmpty()
-                || !filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines)));
-
+        return filterEntityByTags(filterByTags, tags)
+                || filterEntityByFields(entity, filterByFieldsValues, entityStatus, pipelines);
     }
 
     protected boolean isEntityAuthorized(Entity entity) {
@@ -693,51 +691,65 @@ public abstract class AbstractEntityManager {
     }
 
     private boolean filterEntityByTags(List<String> filterTagsList, List<String> tags) {
-        boolean filterEntity = false;
-        if (!filterTagsList.isEmpty() && tags.isEmpty()) {
+        if (filterTagsList.isEmpty()) {
+            return false;
+        } else if (tags.isEmpty()) {
             return true;
         }
+
         for (String tag : filterTagsList) {
             if (!tags.contains(tag)) {
-                filterEntity = true;
-                break;
+                return true;
             }
         }
 
-        return filterEntity;
+        return false;
     }
 
     private boolean filterEntityByFields(Entity entity, Map<String, String> filterKeyVals,
                                          String status, List<String> pipelines) {
+        if (filterKeyVals.isEmpty()) {
+            return false;
+        }
+
         for (Map.Entry<String, String> pair : filterKeyVals.entrySet()) {
-            String filterValue = pair.getValue();
-            if (StringUtils.isEmpty(filterValue)) {
-                continue; // nothing to filter
-            }
             EntityList.EntityFilterByFields filter =
                     EntityList.EntityFilterByFields.valueOf(pair.getKey().toUpperCase());
-            switch (filter) {
-
-            case TYPE:
-                return !entity.getEntityType().toString().equalsIgnoreCase(filterValue);
-
-            case NAME:
-                return !entity.getName().equalsIgnoreCase(filterValue);
-
-            case STATUS:
-                return  !status.equalsIgnoreCase(filterValue);
-
-            case PIPELINES:
-                return  entity.getEntityType().equals(EntityType.PROCESS) && !pipelines.contains(filterValue);
-
-            case CLUSTER:
-                return  !EntityUtil.getClustersDefined(entity).contains(filterValue);
-
-            default:
-                break;
+            if (isEntityFiltered(entity, filter, pair, status, pipelines)) {
+                return true;
             }
         }
+
         return false;
+    }
+
+    private boolean isEntityFiltered(Entity entity, EntityList.EntityFilterByFields filter,
+                                     Map.Entry<String, String> pair,
+                                     String status, List<String> pipelines) {
+        switch (filter) {
+        case TYPE:
+            return !entity.getEntityType().toString().equalsIgnoreCase(pair.getValue());
+
+        case NAME:
+            return !entity.getName().equalsIgnoreCase(pair.getValue());
+
+        case STATUS:
+            return !status.equalsIgnoreCase(pair.getValue());
+
+        case PIPELINES:
+            if (!entity.getEntityType().equals(EntityType.PROCESS)) {
+                throw FalconWebException.newException(
+                        "Invalid filterBy key for non process entities " + pair.getKey(),
+                        Response.Status.BAD_REQUEST);
+            }
+            return !pipelines.contains(pair.getValue());
+
+        case CLUSTER:
+            return !EntityUtil.getClustersDefined(entity).contains(pair.getValue());
+
+        default:
+            return false;
+        }
     }
 
     private List<Entity> sortEntities(List<Entity> entities, String orderBy, String sortOrder) {
