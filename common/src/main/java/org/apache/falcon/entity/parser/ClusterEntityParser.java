@@ -271,7 +271,6 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
         throws IOException, ValidationException {
 
         Path locationPath = new Path(location);
-        FileStatus fileStatus = fs.getFileStatus(locationPath);
         if (!fs.exists(locationPath)) {
             throw new ValidationException("Location " + location
                     + " for cluster " + clusterName + " must exist.");
@@ -279,6 +278,7 @@ public class ClusterEntityParser extends EntityParser<Cluster> {
 
         // falcon owns this path on each cluster
         final String loginUser = UserGroupInformation.getLoginUser().getShortUserName();
+        FileStatus fileStatus = fs.getFileStatus(locationPath);
         final String locationOwner = fileStatus.getOwner();
         if (!locationOwner.equals(loginUser)) {
             LOG.error("Location {} has owner {}, should be the process user {}",

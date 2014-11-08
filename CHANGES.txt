@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-820 Fix minor nits with HadoopClientFactory
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-815 Rename mapBandwidthKB to mapBandwidth in DistCp
    (Sowmya Ramesh via Venkatesh Seetharam)
 
