@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-815 Rename mapBandwidthKB to mapBandwidth in DistCp
+   (Sowmya Ramesh via Venkatesh Seetharam)
+
    FALCON-595 Improvements to DefaultAuthorizationProvider code
    (Raghav Kumar Gautam via Venkatesh Seetharam)
 

@@ -89,8 +89,8 @@ public class FeedReplicator extends Configured implements Tool {
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("mapBandwidthKB", true,
-                "bandwidth per map (in KB) to use for this copy");
+        opt = new Option("mapBandwidth", true,
+                "bandwidth per map (in MB) to use for this copy");
         opt.setRequired(true);
         options.addOption(opt);
 
@@ -119,7 +119,7 @@ public class FeedReplicator extends Configured implements Tool {
         distcpOptions.setSyncFolder(true);
         distcpOptions.setBlocking(true);
         distcpOptions.setMaxMaps(Integer.valueOf(cmd.getOptionValue("maxMaps")));
-        distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidthKB")));
+        distcpOptions.setMapBandwidth(Integer.valueOf(cmd.getOptionValue("mapBandwidth")));
         return distcpOptions;
     }
 

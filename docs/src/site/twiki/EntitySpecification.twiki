@@ -278,13 +278,13 @@ permission indicates the permission.
         <property name="timeout" value="hours(1)"/>
         <property name="parallel" value="3"/>
         <property name="maxMaps" value="8"/>
-        <property name="mapBandwidthKB" value="1024"/>
+        <property name="mapBandwidth" value="1"/>
     </properties>
 </verbatim>
 A key-value pair, which are propagated to the workflow engine. "queueName" and "jobPriority" are special properties
 available to user to specify the Hadoop job queue and priority, the same value is used by Falcons launcher job.
 "timeout" and "parallel" are other special properties which decides replication instance's timeout value while
-waiting for the feed instance and parallel decides the concurrent replication instances that can run at any given time. "maxMaps" represents the maximum number of maps used during replication. "mapBandwidthKB" represents the bandwidth in KB/s used by each mapper during replication.
+waiting for the feed instance and parallel decides the concurrent replication instances that can run at any given time. "maxMaps" represents the maximum number of maps used during replication. "mapBandwidth" represents the bandwidth in MB/s used by each mapper during replication.
  
 ---++ Process Specification
 A process defines configuration for a workflow. A workflow is a directed acyclic graph(DAG) which defines the job for the workflow engine. A process definition defines  the configurations required to run the workflow job. For example, process defines the frequency at which the workflow should run, the clusters on which the workflow should run, the inputs and outputs for the workflow, how the workflow failures should be handled, how the late inputs should be handled and so on.  

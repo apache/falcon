@@ -73,7 +73,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     private static final String PARALLEL = "parallel";
     private static final String TIMEOUT = "timeout";
     private static final String MR_MAX_MAPS = "maxMaps";
-    private static final String MR_MAP_BANDWIDTH = "mapBandwidthKB";
+    private static final String MR_MAP_BANDWIDTH = "mapBandwidth";
 
     public FeedReplicationCoordinatorBuilder(Feed entity) {
         super(entity, LifeCycle.REPLICATION);
@@ -205,7 +205,7 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
     }
 
     private String getDefaultMapBandwidth() {
-        return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidthKB", "102400");
+        return RuntimeProperties.get().getProperty("falcon.replication.workflow.mapbandwidth", "100");
     }
 
     private String getPathsWithPartitions(Cluster srcCluster, Cluster trgCluster) throws FalconException {

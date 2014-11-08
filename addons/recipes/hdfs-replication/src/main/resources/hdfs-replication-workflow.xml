@@ -49,8 +49,8 @@
             <arg>-Dmapred.job.priority=${jobPriority}</arg>
             <arg>-maxMaps</arg>
             <arg>${maxMaps}</arg>
-            <arg>-mapBandwidthKB</arg>
-            <arg>${mapBandwidthKB}</arg>
+            <arg>-mapBandwidth</arg>
+            <arg>${mapBandwidth}</arg>
             <arg>-sourcePaths</arg>
             <arg>${nameNode}${drSourceDir}</arg>
             <arg>-targetPath</arg>

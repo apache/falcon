@@ -229,7 +229,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("queueName"), "default");
         Assert.assertEquals(props.get("jobPriority"), "NORMAL");
         Assert.assertEquals(props.get("maxMaps"), "5");
-        Assert.assertEquals(props.get("mapBandwidthKB"), "102400");
+        Assert.assertEquals(props.get("mapBandwidth"), "100");
 
         assertLibExtensions(coord, "replication");
         WORKFLOWAPP wf = getWorkflowapp(trgMiniDFS.getFileSystem(), coord);
@@ -336,7 +336,7 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("distcpTargetPaths"), "${coord:dataOut('output')}");
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.FILESYSTEM.name());
         Assert.assertEquals(props.get("maxMaps"), "33");
-        Assert.assertEquals(props.get("mapBandwidthKB"), "2048");
+        Assert.assertEquals(props.get("mapBandwidth"), "2");
 
         verifyEntityProperties(aFeed, aCluster, srcCluster,
                 WorkflowExecutionContext.EntityOperations.REPLICATE, props);
