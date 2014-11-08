@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-595 Improvements to DefaultAuthorizationProvider code
+   (Raghav Kumar Gautam via Venkatesh Seetharam)
+
    FALCON-868 Rerun command incorrect in falcon CLI documentation
    (Karishma Gulati via Venkatesh Seetharam)
 

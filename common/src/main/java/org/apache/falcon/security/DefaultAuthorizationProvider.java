@@ -85,9 +85,9 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     /**
      * Super user group.
      */
-    private String superUserGroup;
-    private Set<String> adminUsers;
-    private Set<String> adminGroups;
+    private final String superUserGroup;
+    private final Set<String> adminUsers;
+    private final Set<String> adminGroups;
 
     public DefaultAuthorizationProvider() {
         superUserGroup = StartupProperties.get().getProperty(SUPER_USER_GROUP_KEY);
@@ -95,14 +95,14 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
         adminGroups = getAdminNamesFromConfig(ADMIN_GROUPS_KEY);
     }
 
-    private HashSet<String> getAdminNamesFromConfig(String key) {
-        HashSet<String> adminNames = new HashSet<String>();
+    private Set<String> getAdminNamesFromConfig(String key) {
+        Set<String> adminNames = new HashSet<String>();
         String adminNamesConfig = StartupProperties.get().getProperty(key);
         if (!StringUtils.isEmpty(adminNamesConfig)) {
             adminNames.addAll(Arrays.asList(adminNamesConfig.split(",")));
         }
 
-        return adminNames;
+        return Collections.unmodifiableSet(adminNames);
     }
 
     /**
@@ -180,8 +180,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     }
 
     protected Set<String> getGroupNames(UserGroupInformation proxyUgi) {
-        HashSet<String> s = new HashSet<String>(Arrays.asList(proxyUgi.getGroupNames()));
-        return Collections.unmodifiableSet(s);
+        return new HashSet<String>(Arrays.asList(proxyUgi.getGroupNames()));
     }
 
     /**
@@ -288,16 +287,9 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider {
     }
 
     protected boolean isUserInAdminGroups(UserGroupInformation proxyUgi) {
-        Set<String> groups = getGroupNames(proxyUgi);
-        boolean isUserGroupInAdmin = false;
-        for (String group : groups) {
-            if (adminGroups.contains(group)) {
-                isUserGroupInAdmin = true;
-                break;
-            }
-        }
-
-        return isUserGroupInAdmin;
+        final Set<String> groups = getGroupNames(proxyUgi);
+        groups.retainAll(adminGroups);
+        return !groups.isEmpty();
     }
 
     protected void authorizeEntityResource(UserGroupInformation authenticatedUGI,
