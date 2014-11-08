@@ -138,6 +138,9 @@ Trunk (Unreleased)
 
   BUG FIXES
 
+   FALCON-876 Reducing fail time for HCatProcessTest and
+   PrismFeedReplicationUpdateTest (Raghav Kumar Gautam)
+
    FALCON-873 BeforeClass fails in falcon-regression if "hadoop.rpc.protection"
     is not set(Samarth Gupta)
 

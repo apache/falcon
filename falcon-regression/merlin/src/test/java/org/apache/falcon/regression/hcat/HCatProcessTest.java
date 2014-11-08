@@ -101,6 +101,8 @@ public class HCatProcessTest extends BaseTestClass {
     private static final String hcatDir = OSUtil.getPath("src", "test", "resources", "hcat");
     private static final String localHCatData = OSUtil.getPath(hcatDir, "data");
     private static final String hiveScript = OSUtil.getPath(hcatDir, "hivescript");
+    final String startDate = "2010-01-01T20:00Z";
+    final String endDate = "2010-01-01T21:10Z";
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
@@ -133,8 +135,6 @@ public class HCatProcessTest extends BaseTestClass {
     @Test(dataProvider = "generateSeparators")
     public void OneHCatInputOneHCatOutput(String separator) throws Exception {
         /* upload data and create partition */
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
         List<String> dataDates = getDatesList(startDate, endDate, datePattern, 60);
@@ -195,8 +195,6 @@ public class HCatProcessTest extends BaseTestClass {
     @Test(dataProvider = "generateSeparators")
     public void TwoHCatInputOneHCatOutput(String separator) throws Exception {
         /* upload data and create partition */
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
         List<String> dataDates = getDatesList(startDate, endDate, datePattern, 60);
@@ -291,8 +289,6 @@ public class HCatProcessTest extends BaseTestClass {
     @Test(dataProvider = "generateSeparators")
     public void OneHCatInputTwoHCatOutput(String separator) throws Exception {
         /* upload data and create partition */
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
         List<String> dataDates = getDatesList(startDate, endDate, datePattern, 60);
@@ -373,8 +369,6 @@ public class HCatProcessTest extends BaseTestClass {
     @Test(dataProvider = "generateSeparators")
     public void TwoHCatInputTwoHCatOutput(String separator) throws Exception {
         /* upload data and create partition */
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
         List<String> dataDates = getDatesList(startDate, endDate, datePattern, 60);
@@ -489,8 +483,6 @@ public class HCatProcessTest extends BaseTestClass {
 
     @Test(dataProvider = "generateSeparators")
     public void OneHCatInputOneNonHCatOutput(String separator) throws Exception {
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         /* upload data and create partition */
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
@@ -554,8 +546,6 @@ public class HCatProcessTest extends BaseTestClass {
     @Test(dataProvider = "generateSeparators")
     public void OneNonCatInputOneHCatOutput(String separator) throws Exception {
         /* upload data and create partition */
-        final String startDate = "2010-01-01T20:00Z";
-        final String endDate = "2010-01-02T04:00Z";
         final String datePattern =
             StringUtils.join(new String[]{"yyyy", "MM", "dd", "HH"}, separator);
         List<String> dataDates = getDatesList(startDate, endDate, datePattern, 60);

@@ -179,7 +179,7 @@ public class PrismFeedReplicationUpdateTest extends BaseTestClass {
      *
      * @throws Exception
      */
-    @Test(enabled = true, timeOut = 3600000)
+    @Test(enabled = true, timeOut = 1800000)
     public void updateFeed_dependentProcessTest() throws Exception {
         //set cluster colos
         bundles[0].setCLusterColo(cluster1Colo);
