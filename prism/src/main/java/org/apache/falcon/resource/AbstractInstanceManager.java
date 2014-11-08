@@ -221,7 +221,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
             return result;
         }
         // Sort the ArrayList using orderBy
-        instanceSet = sortInstances(instanceSet, orderBy, sortOrder);
+        instanceSet = sortInstances(instanceSet, orderBy.toLowerCase(), sortOrder);
         result.setCollection(instanceSet.subList(
                 offset, (offset+pageCount)).toArray(new Instance[pageCount]));
         return result;
@@ -281,7 +281,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
     }
 
     private List<Instance> sortInstances(List<Instance> instanceSet,
-                                              String orderBy, String sortOrder) {
+                                         String orderBy, String sortOrder) {
         final String order = getValidSortOrder(sortOrder, orderBy);
         if (orderBy.equals("status")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
@@ -305,7 +305,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                             : i2.getCluster().compareTo(i1.getCluster());
                 }
             });
-        } else if (orderBy.equals("startTime")){
+        } else if (orderBy.equals("starttime")){
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {
@@ -315,7 +315,7 @@ public abstract class AbstractInstanceManager extends AbstractEntityManager {
                             : start2.compareTo(start1);
                 }
             });
-        } else if (orderBy.equals("endTime")) {
+        } else if (orderBy.equals("endtime")) {
             Collections.sort(instanceSet, new Comparator<Instance>() {
                 @Override
                 public int compare(Instance i1, Instance i2) {

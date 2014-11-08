@@ -129,6 +129,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-874 Rest API - Instance and Entity orderBy param values should be
+   case insensitive (Balu Vellanki via Venkatesh Seetharam)
+
    FALCON-820 Fix minor nits with HadoopClientFactory
    (Sowmya Ramesh via Venkatesh Seetharam)
 
