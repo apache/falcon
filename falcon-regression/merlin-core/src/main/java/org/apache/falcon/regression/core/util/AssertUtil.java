@@ -263,6 +263,18 @@ public final class AssertUtil {
     }
 
     /**
+     * Checks that ServiceResponse status is status FAILED with status code 403.
+     *
+     * @param response ServiceResponse
+     * @throws JAXBException
+     */
+    public static void assertFailedWith403(ServiceResponse response) throws JAXBException {
+        Assert.assertNotEquals(response.getMessage(), "null", "response message should not be null");
+
+        Assert.assertEquals(Util.parseResponse(response).getStatus(), APIResult.Status.FAILED);
+        Assert.assertEquals(Util.parseResponse(response).getStatusCode(), 403);
+    }
+    /**
      * Checks that status of some entity job is equal to expected. Method can wait
      * 100 seconds for expected status.
      *

@@ -124,7 +124,7 @@ public class ClusterAclTest extends BaseTestClass {
         if(deleteAllowed) {
             AssertUtil.assertSucceeded(response);
         } else {
-            AssertUtil.assertFailed(response);
+            AssertUtil.assertFailedWith403(response);
         }
     }
 

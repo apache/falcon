@@ -138,6 +138,9 @@ Trunk (Unreleased)
 
   BUG FIXES
 
+   FALCON-879 Update ACL tests according to info provided in FALCON-864
+   (Raghav Kumar Gautam)
+
    FALCON-876 Reducing fail time for HCatProcessTest and
    PrismFeedReplicationUpdateTest (Raghav Kumar Gautam)
 
