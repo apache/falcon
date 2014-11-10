@@ -39,6 +39,7 @@ import org.apache.falcon.resource.FeedInstanceResult;
 import org.apache.falcon.util.BuildProperties;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -59,7 +60,7 @@ import java.util.regex.Matcher;
  */
 public final class FeedHelper {
 
-    private static final String FORMAT = "yyyyMMddHHmm";
+    public static final String FORMAT = "yyyyMMddHHmm";
 
     private FeedHelper() {}
 
@@ -412,6 +413,16 @@ public final class FeedHelper {
         } catch (ParseException e) {
             return null;
         }
+    }
+
+    public static Path getFeedBasePath(String feedPath) throws IOException {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedPath);
+        if (matcher.find()) {
+            return new Path(feedPath.substring(0, matcher.start()));
+        } else {
+            throw new IOException("Unable to resolve pattern for feedPath: " + feedPath);
+        }
+
     }
 
     public static FeedInstanceResult getFeedInstanceListing(Entity entityObject,

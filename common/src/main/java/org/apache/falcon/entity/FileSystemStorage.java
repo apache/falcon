@@ -20,6 +20,7 @@ package org.apache.falcon.entity;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Pair;
 import org.apache.falcon.entity.common.FeedDataPath;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.SchemaHelper;
@@ -30,6 +31,8 @@ import org.apache.falcon.entity.v0.feed.LocationType;
 import org.apache.falcon.entity.v0.feed.Locations;
 import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.retention.EvictedInstanceSerDe;
+import org.apache.falcon.retention.EvictionHelper;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
@@ -39,17 +42,22 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.jsp.el.ELException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A file system implementation of a feed storage.
@@ -57,6 +65,8 @@ import java.util.regex.Matcher;
 public class FileSystemStorage implements Storage {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileSystemStorage.class);
+    private final StringBuffer instancePaths = new StringBuffer();
+    private final StringBuilder instanceDates = new StringBuilder();
 
     public static final String FEED_PATH_SEP = "#";
     public static final String LOCATION_TYPE_SEP = "=";
@@ -287,6 +297,114 @@ public class FileSystemStorage implements Storage {
         } catch (IOException e) {
             LOG.error("Can't validate ACL on storage {}", getStorageUrl(), e);
             throw new RuntimeException("Can't validate storage ACL (URI " + getStorageUrl() + ")", e);
+        }
+    }
+
+    @Override
+    public StringBuilder evict(String retentionLimit, String timeZone, Path logFilePath) throws FalconException {
+        try{
+            for (Location location : getLocations()) {
+                fileSystemEvictor(getUriTemplate(location.getType()), retentionLimit, timeZone, logFilePath);
+            }
+            EvictedInstanceSerDe.serializeEvictedInstancePaths(
+                    HadoopClientFactory.get().createProxiedFileSystem(logFilePath.toUri(), getConf()),
+                    logFilePath, instancePaths);
+        }catch (IOException e){
+            throw new FalconException("Couldn't evict feed from fileSystem", e);
+        }catch (ELException e){
+            throw new FalconException("Couldn't evict feed from fileSystem", e);
+        }
+
+        return instanceDates;
+    }
+
+    private void fileSystemEvictor(String feedPath, String retentionLimit,
+                                   String timeZone, Path logFilePath) throws IOException, ELException, FalconException {
+        Path normalizedPath = new Path(feedPath);
+        FileSystem fs = HadoopClientFactory.get().createProxiedFileSystem(normalizedPath.toUri());
+        feedPath = normalizedPath.toUri().getPath();
+        LOG.info("Normalized path: {}", feedPath);
+
+        Pair<Date, Date> range = EvictionHelper.getDateRange(retentionLimit);
+        String dateMask = FeedHelper.getDateFormatInPath(feedPath);
+
+        List<Path> toBeDeleted = discoverInstanceToDelete(feedPath, timeZone, dateMask, range.first, fs);
+        if (toBeDeleted.isEmpty()) {
+            LOG.info("No instances to delete.");
+            return;
+        }
+
+        DateFormat dateFormat = new SimpleDateFormat(FeedHelper.FORMAT);
+        dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        Path feedBasePath = FeedHelper.getFeedBasePath(feedPath);
+        for (Path path : toBeDeleted) {
+            deleteInstance(fs, path, feedBasePath);
+            Date date = FeedHelper.getDate(new Path(path.toUri().getPath()), feedPath, dateMask, timeZone);
+            instanceDates.append(dateFormat.format(date)).append(',');
+            instancePaths.append(path).append(EvictedInstanceSerDe.INSTANCEPATH_SEPARATOR);
+        }
+    }
+
+    private List<Path> discoverInstanceToDelete(String inPath, String timeZone, String dateMask,
+                                                      Date start, FileSystem fs) throws IOException {
+
+        FileStatus[] files = findFilesForFeed(fs, inPath);
+        if (files == null || files.length == 0) {
+            return Collections.emptyList();
+        }
+
+        List<Path> toBeDeleted = new ArrayList<Path>();
+        for (FileStatus file : files) {
+            Date date = FeedHelper.getDate(new Path(file.getPath().toUri().getPath()),
+                    inPath, dateMask, timeZone);
+            LOG.debug("Considering {}", file.getPath().toUri().getPath());
+            LOG.debug("Date: {}", date);
+            if (date != null && !isDateInRange(date, start)) {
+                toBeDeleted.add(file.getPath());
+            }
+        }
+        return toBeDeleted;
+    }
+
+    private FileStatus[] findFilesForFeed(FileSystem fs, String feedBasePath) throws IOException {
+        Matcher matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
+        while (matcher.find()) {
+            String var = feedBasePath.substring(matcher.start(), matcher.end());
+            feedBasePath = feedBasePath.replaceAll(Pattern.quote(var), "*");
+            matcher = FeedDataPath.PATTERN.matcher(feedBasePath);
+        }
+        LOG.info("Searching for {}", feedBasePath);
+        return fs.globStatus(new Path(feedBasePath));
+    }
+
+    private boolean isDateInRange(Date date, Date start) {
+        //ignore end ( && date.compareTo(end) <= 0 )
+        return date.compareTo(start) >= 0;
+    }
+
+    private void deleteInstance(FileSystem fs, Path path, Path feedBasePath) throws IOException {
+        if (fs.delete(path, true)) {
+            LOG.info("Deleted instance: {}", path);
+        }else{
+            throw new IOException("Unable to delete instance: " + path);
+        }
+        deleteParentIfEmpty(fs, path.getParent(), feedBasePath);
+    }
+
+    private void deleteParentIfEmpty(FileSystem fs, Path parent, Path feedBasePath) throws IOException {
+        if (feedBasePath.equals(parent)) {
+            LOG.info("Not deleting feed base path: {}", parent);
+        } else {
+            FileStatus[] files = fs.listStatus(parent);
+            if (files != null && files.length == 0) {
+                LOG.info("Parent path: {} is empty, deleting path", parent);
+                if (fs.delete(parent, true)) {
+                    LOG.info("Deleted empty dir: {}", parent);
+                } else {
+                    throw new IOException("Unable to delete parent path:" + parent);
+                }
+                deleteParentIfEmpty(fs, parent.getParent(), feedBasePath);
+            }
         }
     }
 

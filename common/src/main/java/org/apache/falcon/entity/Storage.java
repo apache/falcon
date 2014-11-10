@@ -22,6 +22,7 @@ import org.apache.falcon.FalconException;
 import org.apache.falcon.entity.v0.AccessControlList;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.hadoop.fs.Path;
 
 import java.util.Date;
 import java.util.List;
@@ -91,4 +92,15 @@ public interface Storage {
      */
     List<FeedInstanceStatus> getListing(Feed feed, String cluster, LocationType locationType,
                                         Date start, Date end) throws FalconException;
+
+    /**
+     * Delete the instances of the feeds which are older than the retentionLimit specified.
+     *
+     * @param retentionLimit - retention limit of the feed e.g. hours(5).
+     * @param timeZone - timeZone for the feed definition.
+     * @param logFilePath - logFile to be used to record the deleted instances.
+     * @return - StringBuffer containing comma separated list of dates for the deleted instances.
+     * @throws FalconException
+     */
+    StringBuilder evict(String retentionLimit, String timeZone, Path logFilePath) throws FalconException;
 }
