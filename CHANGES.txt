@@ -7,6 +7,10 @@ Trunk (Unreleased)
    (Venkatesh Seetharam)
 
   NEW FEATURES
+   FALCON-722 Add SLA for processes (Ajay Yadav via Srikanth Sundarrajan)
+
+   FALCON-721 Add SLA for Feeds (Ajay Yadav via Suhas Vasu)
+
    FALCON-687 Add hooks for extensions in Audit (Venkatesh Seetharam)
 
    FALCON-636 Add a sample recipe for disaster recovery of hdfs dirs/files
@@ -39,8 +43,6 @@ Trunk (Unreleased)
   IMPROVEMENTS
    FALCON-145 Feed eviction be implemented in appropriate Storage 
    implementation. (Ajay Yadav via Srikanth Sundarrajan)
-
-   FALCON-721 Add SLA for Feeds (Ajay Yadav via Suhas Vasu)
 
    FALCON-813 Expose job id for running jobs in Falcon (Suhas Vasu)
 

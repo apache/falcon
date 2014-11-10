@@ -382,6 +382,15 @@ Syntax:
 </process>
 </verbatim>
 
+---+++ SLA
+<verbatim>
+    <sla shouldStartIn="hours(2)" shouldEndIn="hours(4)"/>
+</verbatim>
+A process can have SLA which is defined by 2 optional attributes - shouldStartIn and shouldEndIn. All the attributes
+are written using expressions like frequency. shouldStartIn is the time by which the process should have started.
+shouldEndIn is the time by which the process should have finished.
+
+
 ---+++ Validity
 Validity defines how long the workflow should run. It has 3 components - start time, end time and timezone. Start time and end time are timestamps defined in yyyy-MM-dd'T'HH:mm'Z' format and should always be in UTC. Timezone is used to compute the next instances starting from start time. The workflow will start at start time and end before end time specified on a given cluster. So, there will not be a workflow instance at end time.
 Syntax:

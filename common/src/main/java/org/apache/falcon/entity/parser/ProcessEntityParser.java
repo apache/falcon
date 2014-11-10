@@ -26,6 +26,7 @@ import org.apache.falcon.entity.FeedHelper;
 import org.apache.falcon.entity.Storage;
 import org.apache.falcon.entity.store.ConfigurationStore;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.entity.v0.process.ACL;
@@ -35,6 +36,7 @@ import org.apache.falcon.entity.v0.process.LateInput;
 import org.apache.falcon.entity.v0.process.Output;
 import org.apache.falcon.entity.v0.process.Outputs;
 import org.apache.falcon.entity.v0.process.Process;
+import org.apache.falcon.expression.ExpressionHelper;
 import org.apache.falcon.hadoop.HadoopClientFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -100,8 +102,40 @@ public class ProcessEntityParser extends EntityParser<Process> {
         }
         validateDatasetName(process.getInputs(), process.getOutputs());
         validateLateInputs(process);
+        validateProcessSLA(process);
     }
 
+
+    private void validateProcessSLA(Process process) throws FalconException {
+        if (process.getSla() != null) {
+            ExpressionHelper evaluator = ExpressionHelper.get();
+            ExpressionHelper.setReferenceDate(new Date());
+            Frequency shouldStartExpression = process.getSla().getShouldStartIn();
+            Frequency shouldEndExpression = process.getSla().getShouldEndIn();
+            Frequency timeoutExpression = process.getTimeout();
+
+            if (shouldStartExpression != null){
+                Date shouldStart = new Date(evaluator.evaluate(shouldStartExpression.toString(), Long.class));
+
+                if (shouldEndExpression != null) {
+                    Date shouldEnd = new Date(evaluator.evaluate(shouldEndExpression.toString(), Long.class));
+                    if (shouldStart.after(shouldEnd)) {
+                        throw new ValidationException("shouldStartIn of Process: " + shouldStartExpression
+                                + "is greater than shouldEndIn: "
+                                + shouldEndExpression);
+                    }
+                }
+
+                if (timeoutExpression != null) {
+                    Date timeout = new Date(evaluator.evaluate(timeoutExpression.toString(), Long.class));
+                    if (timeout.before(shouldStart)) {
+                        throw new ValidationException("shouldStartIn of Process: " + shouldStartExpression
+                                + " is greater than timeout: " + process.getTimeout());
+                    }
+                }
+            }
+        }
+    }
     /**
      * Validate if the user submitting this entity has access to the specific dirs on HDFS.
      *

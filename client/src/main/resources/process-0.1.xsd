@@ -109,6 +109,13 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element type="sla" name="sla" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Defines SLA(Service Level Agreement) for process.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="timezone" minOccurs="0" default="UTC">
                 <xs:simpleType>
                     <xs:annotation>
@@ -243,6 +250,18 @@
             <xs:pattern value="(minutes|hours|days|months)\([1-9]\d*\)"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:complexType name="sla">
+        <xs:annotation>
+            <xs:documentation>
+                sla has 2 optional attributes - shouldStartIn and shouldEndIn. All the attributes
+                are written using expressions like frequency. shouldStartIn is the time in which the process should have
+                started. shouldEndIn is the time in which the process should have finished.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="frequency-type" name="shouldStartIn"/>
+        <xs:attribute type="frequency-type" name="shouldEndIn" />
+    </xs:complexType>
 
     <xs:complexType name="inputs">
         <xs:sequence>

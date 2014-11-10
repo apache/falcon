@@ -27,6 +27,7 @@
     <parallel>1</parallel>
     <order>LIFO</order>
     <frequency>hours(1)</frequency>
+    <sla shouldStartIn="hours(2)" shouldEndIn="hours(4)"/>
 
     <!-- what -->
     <inputs>

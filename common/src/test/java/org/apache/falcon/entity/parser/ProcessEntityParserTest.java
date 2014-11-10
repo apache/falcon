@@ -118,6 +118,9 @@ public class ProcessEntityParserTest extends AbstractTestBase {
         Assert.assertEquals(SchemaHelper.formatDateUTC(processCluster.getValidity().getEnd()), "2091-12-30T00:00Z");
         Assert.assertEquals(process.getTimezone().getID(), "UTC");
 
+        Assert.assertEquals(process.getSla().getShouldStartIn().toString(), "hours(2)");
+        Assert.assertEquals(process.getSla().getShouldEndIn().toString(), "hours(4)");
+
         Assert.assertEquals(process.getWorkflow().getEngine().name().toLowerCase(), "oozie");
         Assert.assertEquals(process.getWorkflow().getPath(), "/falcon/test/workflow");
 
@@ -158,6 +161,28 @@ public class ProcessEntityParserTest extends AbstractTestBase {
             //ignore
         }
     }
+
+    @Test(expectedExceptions = FalconException.class, expectedExceptionsMessageRegExp = "shouldStartIn of Process:.*")
+    public void testInvalidShouldStart() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        process.getSla().setShouldStartIn(new Frequency("hours(4)"));
+        process.getSla().setShouldEndIn(new Frequency("hours(2)"));
+        parser.validate(process);
+    }
+
+
+    @Test(expectedExceptions = FalconException.class,
+            expectedExceptionsMessageRegExp = ".* greater than timeout.*")
+    public void testShouldStartGreaterThanTimeout() throws FalconException {
+        Process process = parser.parseAndValidate((ProcessEntityParserTest.class
+                .getResourceAsStream(PROCESS_XML)));
+        process.getSla().setShouldStartIn(new Frequency("hours(2)"));
+        process.setTimeout(new Frequency("hours(1)"));
+        parser.validate(process);
+    }
+
+
 
     @Test(expectedExceptions = FalconException.class)
     public void doParseInvalidXML() throws IOException, FalconException {
