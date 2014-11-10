@@ -41,6 +41,8 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-878 Move falcon html files to HTML5. (Ajay Yadav via Srikanth Sundarrajan)
+
    FALCON-145 Feed eviction be implemented in appropriate Storage 
    implementation. (Ajay Yadav via Srikanth Sundarrajan)
 
