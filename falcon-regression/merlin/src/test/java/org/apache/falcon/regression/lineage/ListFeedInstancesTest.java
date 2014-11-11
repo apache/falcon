@@ -448,7 +448,7 @@ public class ListFeedInstancesTest extends BaseTestClass {
         //missing the 1st, 11th, 12th instance, all instances which have progressed should be present:
         //5 killed + 1 suspended, but numResults=5, so expecting 1 suspended and 4 killed instances.
         params = "start=" + TimeUtil.addMinsToTime(startTime, 2) + "&filterBy=SOURCECLUSTER:"
-            + sourceCluster + "&offset=2&numResults=5";
+            + sourceCluster + "&offset=1&numResults=5";
         r = prism.getFeedHelper().listInstances(feedName, params, null);
         InstanceUtil.validateResponse(r, 5, 0, 1, 0, 4);
     }

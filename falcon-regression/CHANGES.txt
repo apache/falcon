@@ -137,6 +137,7 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
+   FALCON-883 Fixing testFeedCustomFilter() (Paul Isaychuk)
 
    FALCON-879 Update ACL tests according to info provided in FALCON-864
    (Raghav Kumar Gautam)
