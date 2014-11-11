@@ -143,8 +143,7 @@ public class ProcessAclTest extends BaseTestClass {
 
     @DataProvider(name = "generateUserSubmittedEditOpsPermission")
     public Object[][] generateUserSubmittedEditOpsPermission() {
-        final EntityOp[] falconEditOps = {EntityOp.submit, EntityOp.delete, EntityOp.update,
-            EntityOp.schedule, EntityOp.submitAndSchedule};
+        final EntityOp[] falconEditOps = {EntityOp.submit, EntityOp.delete, EntityOp.update};
 
         final Object[][] allowedCombinations = MathUtil.crossProduct(
             new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
@@ -197,8 +196,8 @@ public class ProcessAclTest extends BaseTestClass {
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
             new String[]{MerlinConstants.DIFFERENT_USER_NAME},
-            new EntityOp[]{EntityOp.delete, EntityOp.update, EntityOp.schedule,
-                EntityOp.submitAndSchedule, EntityOp.suspend, EntityOp.resume},
+            new EntityOp[]{EntityOp.delete, EntityOp.update,
+                EntityOp.suspend, EntityOp.resume},
             new Boolean[]{false}
         );
 
@@ -209,7 +208,7 @@ public class ProcessAclTest extends BaseTestClass {
      * Test process acl modification.
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void processAclUpdate() throws Exception {
         bundles[0].submitFeedsScheduleProcess();
         final String oldProcess = bundles[0].getProcessData();

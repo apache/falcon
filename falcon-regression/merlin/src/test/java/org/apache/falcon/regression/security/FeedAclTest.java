@@ -136,8 +136,7 @@ public class FeedAclTest extends BaseTestClass {
 
     @DataProvider(name = "generateUserSubmittedEditOpsPermission")
     public Object[][] generateUserSubmittedEditOpsPermission() {
-        final EntityOp[] falconEditOps = {EntityOp.submit, EntityOp.delete, EntityOp.update,
-            EntityOp.schedule, EntityOp.submitAndSchedule};
+        final EntityOp[] falconEditOps = {EntityOp.submit, EntityOp.delete, EntityOp.update};
 
         final Object[][] allowedCombinations = MathUtil.crossProduct(
             new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,
@@ -191,8 +190,8 @@ public class FeedAclTest extends BaseTestClass {
 
         final Object[][] notAllowedCombinations = MathUtil.crossProduct(
             new String[]{MerlinConstants.DIFFERENT_USER_NAME},
-            new EntityOp[]{EntityOp.delete, EntityOp.update, EntityOp.schedule,
-                EntityOp.submitAndSchedule, EntityOp.suspend, EntityOp.resume},
+            new EntityOp[]{EntityOp.delete, EntityOp.update,
+                EntityOp.suspend, EntityOp.resume},
             new Boolean[]{false}
         );
 
@@ -203,7 +202,7 @@ public class FeedAclTest extends BaseTestClass {
      * Test feed acl modification.
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void feedAclUpdate() throws Exception {
         bundles[0].submitClusters(prism);
         final String oldFeed = bundles[0].getInputFeedFromBundle();

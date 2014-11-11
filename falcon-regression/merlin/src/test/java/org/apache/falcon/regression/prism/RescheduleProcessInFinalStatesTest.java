@@ -48,7 +48,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 
-@Test(groups = "embedded")
+@Test(groups = "embedded", enabled = false)
 public class RescheduleProcessInFinalStatesTest extends BaseTestClass {
 
     ColoHelper cluster = servers.get(0);

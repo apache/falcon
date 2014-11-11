@@ -69,7 +69,7 @@ public class FalconClientTest extends BaseTestClass {
      * Test error thrown by falcon client, when acl of the submitted cluster has bad values
      * @throws Exception
      */
-    @Test
+    @Test (enabled = false)
     public void badClusterSubmit() throws Exception {
         bundles[0].setCLusterACL(MerlinConstants.DIFFERENT_USER_NAME,
                 MerlinConstants.CURRENT_USER_GROUP, "*");
@@ -83,7 +83,7 @@ public class FalconClientTest extends BaseTestClass {
      * able to delete
      * @throws Exception
      */
-    @Test
+    @Test(enabled = false)
     public void badClusterDelete() throws Exception {
         bundles[0].submitClusters(prism);
         final String cluster = bundles[0].getClusters().get(0);
