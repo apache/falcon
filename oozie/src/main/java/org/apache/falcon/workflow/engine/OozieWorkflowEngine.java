@@ -569,32 +569,20 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
                         continue;
                     }
                 }
-                String status;
                 instanceCount++;
+                String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
+
+                InstancesResult.Instance instance =
+                        new InstancesResult.Instance(cluster, nominalTimeStr, null);
+                instance.sourceCluster = sourceCluster;
                 try {
-                    status = performAction(cluster, action, coordinatorAction, props);
+                    performAction(cluster, action, coordinatorAction, props, instance);
                 } catch (FalconException e) {
                     LOG.warn("Unable to perform action {} on cluster", action, e);
-                    status = WorkflowStatus.ERROR.name();
+                    instance.status = WorkflowStatus.ERROR;
                     overallStatus = APIResult.Status.PARTIAL;
                 }
 
-                String nominalTimeStr = SchemaHelper.formatDateUTC(coordinatorAction.getNominalTime());
-                InstancesResult.Instance instance =
-                    new InstancesResult.Instance(cluster, nominalTimeStr, WorkflowStatus.valueOf(status));
-                if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
-                    WorkflowJob jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
-                    instance.startTime = jobInfo.getStartTime();
-                    instance.endTime = jobInfo.getEndTime();
-                    instance.logFile = jobInfo.getConsoleUrl();
-                    instance.sourceCluster = sourceCluster;
-                    if (action == JobAction.PARAMS) {
-                        instance.wfParams = getWFParams(jobInfo);
-                    }
-                    if (action == JobAction.STATUS) {
-                        populateInstanceActions(cluster, jobInfo, instance);
-                    }
-                }
                 instance.details = coordinatorAction.getMissingDependencies();
                 instances.add(instance);
             }
@@ -627,9 +615,9 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
             List<CoordinatorJob> applicableCoords = getApplicableCoords(client, start, end,
                     bundles, lifeCycles);
             long unscheduledInstances = 0;
-            boolean isLastCoord = false;
 
             for (int i = 0; i < applicableCoords.size(); i++) {
+                boolean isLastCoord = false;
                 CoordinatorJob coord = applicableCoords.get(i);
                 Frequency freq = createFrequency(String.valueOf(coord.getFrequency()), coord.getTimeUnit());
                 TimeZone tz = EntityUtil.getTimeZone(coord.getTimeZone());
@@ -740,14 +728,18 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
         }
     }
 
-    private String performAction(String cluster, JobAction action, CoordinatorAction coordinatorAction,
-        Properties props) throws FalconException {
+    private void performAction(String cluster, JobAction action, CoordinatorAction coordinatorAction,
+        Properties props, InstancesResult.Instance instance) throws FalconException {
         WorkflowJob jobInfo = null;
         String status = coordinatorAction.getStatus().name();
         if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
             jobInfo = getWorkflowInfo(cluster, coordinatorAction.getExternalId());
             status = jobInfo.getStatus().name();
+            instance.startTime = jobInfo.getStartTime();
+            instance.endTime = jobInfo.getEndTime();
+            instance.logFile = jobInfo.getConsoleUrl();
         }
+
         switch (action) {
         case KILL:
             if (jobInfo == null || !WF_KILL_PRECOND.contains(jobInfo.getStatus())) {
@@ -790,16 +782,22 @@ public class OozieWorkflowEngine extends AbstractWorkflowEngine {
 
 
         case STATUS:
+            if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
+                populateInstanceActions(cluster, jobInfo, instance);
+            }
             break;
 
         case PARAMS:
+            if (StringUtils.isNotEmpty(coordinatorAction.getExternalId())) {
+                instance.wfParams = getWFParams(jobInfo);
+            }
             break;
 
         default:
             throw new IllegalArgumentException("Unhandled action " + action);
         }
 
-        return mapActionStatus(status);
+        instance.status = WorkflowStatus.valueOf(mapActionStatus(status));
     }
 
     private void reRunCoordAction(String cluster, CoordinatorAction coordinatorAction) throws FalconException {
