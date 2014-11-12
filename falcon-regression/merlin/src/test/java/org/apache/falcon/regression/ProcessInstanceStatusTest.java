@@ -168,7 +168,8 @@ public class ProcessInstanceStatusTest extends BaseTestClass {
      */
     @Test(groups = {"singleCluster"})
     public void testProcessInstanceStatusDateEmpty()
-        throws JAXBException, AuthenticationException, IOException, URISyntaxException, OozieClientException {
+            throws JAXBException, AuthenticationException, IOException, URISyntaxException,
+            OozieClientException, InterruptedException {
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2010-01-02T01:30Z");
         bundles[0].setProcessConcurrency(5);
         bundles[0].submitFeedsScheduleProcess(prism);

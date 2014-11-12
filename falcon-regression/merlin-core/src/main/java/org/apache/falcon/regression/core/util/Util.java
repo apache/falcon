@@ -94,7 +94,7 @@ public final class Util {
      * Sends request without data and user.
      */
     public static ServiceResponse sendRequest(String url, String method)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return sendRequest(url, method, null, null);
     }
 
@@ -102,7 +102,7 @@ public final class Util {
      * Sends api request without data.
      */
     public static ServiceResponse sendRequest(String url, String method, String user)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return sendRequest(url, method, null, user);
     }
 
@@ -118,7 +118,7 @@ public final class Util {
      * @throws AuthenticationException
      */
     public static ServiceResponse sendRequest(String url, String method, String data, String user)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user, data);
         request.addHeader(RequestKeys.CONTENT_TYPE_HEADER, RequestKeys.XML_CONTENT_TYPE);
         HttpResponse response = request.run();
@@ -418,7 +418,8 @@ public final class Util {
      * @throws URISyntaxException
      */
     public static void startService(IEntityManagerHelper helper)
-        throws IOException, JSchException, AuthenticationException, URISyntaxException {
+            throws IOException, JSchException, AuthenticationException, URISyntaxException,
+            InterruptedException {
         ExecUtil.runRemoteScriptAsSudo(helper.getQaHost(), helper.getUsername(),
             helper.getPassword(), helper.getServiceStartCmd(), helper.getServiceUser(),
             helper.getIdentityFile());
@@ -446,7 +447,8 @@ public final class Util {
      * @throws URISyntaxException
      */
     public static void restartService(IEntityManagerHelper helper)
-        throws IOException, JSchException, AuthenticationException, URISyntaxException {
+            throws IOException, JSchException, AuthenticationException, URISyntaxException,
+            InterruptedException {
         LOGGER.info("restarting service for: " + helper.getQaHost());
         shutDownService(helper);
         startService(helper);
@@ -582,8 +584,8 @@ public final class Util {
      */
     public static boolean isDefinitionSame(ColoHelper server1, ColoHelper server2,
                                            String entity)
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-        SAXException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            SAXException, InterruptedException {
         return XmlUtil.isIdentical(getEntityDefinition(server1, entity, true),
             getEntityDefinition(server2, entity, true));
     }
@@ -743,8 +745,8 @@ public final class Util {
     public static String getEntityDefinition(ColoHelper cluster,
                                              String entity,
                                              boolean shouldReturn) throws
-        JAXBException,
-        IOException, URISyntaxException, AuthenticationException {
+            JAXBException,
+            IOException, URISyntaxException, AuthenticationException, InterruptedException {
         EntityType type = getEntityType(entity);
         IEntityManagerHelper helper;
         if (EntityType.PROCESS == type) {

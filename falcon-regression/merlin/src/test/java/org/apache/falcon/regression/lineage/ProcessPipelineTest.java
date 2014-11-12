@@ -82,7 +82,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void listPipeline()
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            InterruptedException {
         //match processes to pipelines
         HashMap<String, List<String>> map = new HashMap<String, List<String>>();
         //index for few different pipelines
@@ -126,8 +127,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test
     public void testProcessWithPipeline()
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-        SAXException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            SAXException, InterruptedException {
         String pipeline = "samplePipeline";
         bundles[0].setProcessPipeline(pipeline);
         bundles[0].submitProcess(true);
@@ -150,7 +151,8 @@ public class ProcessPipelineTest extends BaseTestClass{
      */
     @Test(dataProvider = "data")
     public void testPipelines(String pipeline, String action, boolean shouldSucceed)
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            InterruptedException {
         bundles[0].setProcessPipeline(pipeline);
         if (action.equals("list")){
             if (shouldSucceed){

@@ -104,8 +104,8 @@ public class FeedReplicationTest extends BaseTestClass {
      */
     @Test
     public void replicate1Source1Target()
-        throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-        OozieClientException {
+            throws AuthenticationException, IOException, URISyntaxException, JAXBException,
+            OozieClientException, InterruptedException {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);

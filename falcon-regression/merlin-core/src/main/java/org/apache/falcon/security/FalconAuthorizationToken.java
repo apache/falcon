@@ -18,7 +18,9 @@
 
 package org.apache.falcon.security;
 
+import org.apache.falcon.regression.core.util.KerberosHelper;
 import org.apache.falcon.request.BaseRequest;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.KerberosAuthenticator;
@@ -29,7 +31,9 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Class for obtaining authorization token. */
@@ -55,11 +59,12 @@ public final class FalconAuthorizationToken {
 
     private static void authenticate(String user, String protocol, String host,
                                     int port)
-        throws IOException, AuthenticationException {
-        URL url = new URL(String.format("%s://%s:%d/%s", protocol, host, port,
+            throws IOException, AuthenticationException, InterruptedException {
+        final URL url = new URL(String.format("%s://%s:%d/%s", protocol, host, port,
             AUTH_URL + "?" + PseudoAuthenticator.USER_NAME + "=" + user));
         LOGGER.info("Authorize using url: " + url.toString());
-        AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
+
+        final AuthenticatedURL.Token currentToken = new AuthenticatedURL.Token();
 
         /*using KerberosAuthenticator which falls back to PsuedoAuthenticator
         instead of passing authentication type from the command line - bad factory*/
@@ -70,7 +75,14 @@ public final class FalconAuthorizationToken {
             throw new RuntimeException(e);
         }
         HttpsURLConnection.setDefaultHostnameVerifier(ALL_TRUSTING_HOSTNAME_VERIFIER);
-        new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
+        UserGroupInformation callerUGI = KerberosHelper.getUGI(user);
+        callerUGI.doAs(new PrivilegedExceptionAction<Void>() {
+            @Override
+            public Void run() throws Exception {
+                new AuthenticatedURL(AUTHENTICATOR).openConnection(url, currentToken);
+                return null;
+            }
+        });
         String key = getKey(user, protocol, host, port);
 
         // initialize a hash map if its null.
@@ -80,7 +92,7 @@ public final class FalconAuthorizationToken {
 
     public static AuthenticatedURL.Token getToken(String user, String protocol, String host,
                                                   int port, boolean overWrite)
-        throws IOException, AuthenticationException {
+            throws IOException, AuthenticationException, InterruptedException {
         String key = getKey(user, protocol, host, port);
 
         /*if the tokens are null or if token is not found then we will go ahead and authenticate
@@ -93,7 +105,7 @@ public final class FalconAuthorizationToken {
 
     public static AuthenticatedURL.Token getToken(String user, String protocol, String host,
                                                   int port)
-        throws IOException, AuthenticationException {
+            throws IOException, AuthenticationException, InterruptedException {
         return getToken(user, protocol, host, port, false);
     }
 

@@ -96,7 +96,7 @@ public final class InstanceUtil {
 
     public static APIResult sendRequestProcessInstance(String
             url, String user)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         return hitUrl(url, Util.getMethodType(url), user);
     }
 
@@ -104,7 +104,7 @@ public final class InstanceUtil {
 
     public static APIResult hitUrl(String url,
             String method, String user) throws URISyntaxException,
-            IOException, AuthenticationException {
+            IOException, AuthenticationException, InterruptedException {
         BaseRequest request = new BaseRequest(url, method, user);
         HttpResponse response = request.run();
         BufferedReader reader = new BufferedReader(
@@ -748,7 +748,7 @@ public final class InstanceUtil {
      */
     public static APIResult createAndSendRequestProcessInstance(
             String url, String params, String colo, String user)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         if (params != null && !colo.equals("")) {
             url = url + params + "&" + colo.substring(1);
         } else if (params != null) {

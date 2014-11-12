@@ -115,7 +115,7 @@ public class LineageHelper {
      * @throws AuthenticationException
      */
     public HttpResponse runGetRequest(String url)
-        throws URISyntaxException, IOException, AuthenticationException {
+            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         final BaseRequest request = new BaseRequest(url, "get", null);
         return request.run();
     }
@@ -129,7 +129,7 @@ public class LineageHelper {
      * @throws AuthenticationException
      */
     public String runGetRequestSuccessfully(String url)
-        throws URISyntaxException, IOException, AuthenticationException {
+            throws URISyntaxException, IOException, AuthenticationException, InterruptedException {
         HttpResponse response = runGetRequest(url);
         String responseString = getResponseString(response);
         LOGGER.info(Util.prettyPrintXmlOrJson(responseString));
@@ -225,6 +225,8 @@ public class LineageHelper {
         } catch (IOException e) {
             AssertUtil.fail(e);
         } catch (AuthenticationException e) {
+            AssertUtil.fail(e);
+        } catch (InterruptedException e) {
             AssertUtil.fail(e);
         }
         return new GsonBuilder().create().fromJson(responseString, clazz);

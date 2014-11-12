@@ -77,8 +77,9 @@ public class ProcessUITest extends BaseUITestClass {
 
     @BeforeMethod
     public void setUp()
-        throws IOException, JAXBException, NoSuchMethodException, IllegalAccessException,
-        InvocationTargetException, URISyntaxException, AuthenticationException {
+            throws IOException, JAXBException, NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         CleanupUtil.cleanAllEntities(prism);
         uploadDirToClusters(aggregateWorkflowDir, OSUtil.RESOURCES_OOZIE);
         openBrowser();
@@ -169,8 +170,8 @@ public class ProcessUITest extends BaseUITestClass {
      */
     @Test
     public void testProcessUI()
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException,
-        OozieClientException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            OozieClientException, InterruptedException {
 
         //check Process statuses via UI
         EntitiesPage page = new EntitiesPage(DRIVER, cluster, EntityType.PROCESS);

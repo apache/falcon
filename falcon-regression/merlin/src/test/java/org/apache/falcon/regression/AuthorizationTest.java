@@ -94,7 +94,6 @@ public class AuthorizationTest extends BaseTestClass {
     @Test(enabled = false)
     public void u1SubmitU2DeleteCluster() throws Exception {
         bundles[0].submitClusters(prism);
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getClusterHelper().delete(
             bundles[0].getClusters().get(0), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -107,7 +106,6 @@ public class AuthorizationTest extends BaseTestClass {
     public void u1SubmitU2DeleteProcess() throws Exception {
         bundles[0].submitClusters(prism);
         bundles[0].submitProcess(true);
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper().delete(
             bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -120,7 +118,6 @@ public class AuthorizationTest extends BaseTestClass {
     public void u1SubmitU2DeleteFeed() throws Exception {
         bundles[0].submitClusters(prism);
         bundles[0].submitFeed();
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().delete(
             bundles[0].getDataSets().get(0), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -137,7 +134,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         //try to delete process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper()
             .delete(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -154,7 +150,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         //delete feed by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().delete(feed, MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
             "Feed scheduled by first user should not be deleted by second user");
@@ -172,7 +167,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.SUSPENDED);
         //try to delete process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper()
             .delete(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -190,7 +184,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.SUSPENDED);
         //delete feed by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper()
             .delete(feed, MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -210,7 +203,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().submitAndSchedule(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
         //try to suspend by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper()
             .suspend(feed, MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -225,7 +217,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.RUNNING);
         //try to suspend process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper()
             .suspend(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -246,7 +237,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.assertSucceeded(prism.getFeedHelper().suspend(feed));
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.SUSPENDED);
         //try to resume feed by User2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper()
             .resume(feed, MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -263,7 +253,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.PROCESS, bundles[0].getProcessData(),
             Job.Status.SUSPENDED);
         //try to resume process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper()
             .resume(bundles[0].getProcessData(), MerlinConstants.USER2_NAME);
         AssertUtil.assertFailedWithStatus(serviceResponse, HttpStatus.SC_BAD_REQUEST,
@@ -320,7 +309,6 @@ public class AuthorizationTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
 
         //try to resume suspended instances by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         r = prism.getProcessHelper().getProcessInstanceResume(Util.readEntityName(bundles[0]
                 .getProcessData()), "?start=" + startTime + "&end=" + midTime,
             MerlinConstants.USER2_NAME);
@@ -377,7 +365,6 @@ public class AuthorizationTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 5, 3, 0, 2, 0);
 
         //try to kill all instances by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         r = prism.getProcessHelper().getProcessInstanceKill(Util
                 .readEntityName(bundles[0].getProcessData()),
             "?start=" + startTime + "&end=" + endTime, MerlinConstants.USER2_NAME);
@@ -436,7 +423,6 @@ public class AuthorizationTest extends BaseTestClass {
         InstanceUtil.validateResponse(r, 3, 0, 3, 0, 0);
 
         //try to kill all instances by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         r = prism.getProcessHelper().getProcessInstanceKill(Util
                 .readEntityName(bundles[0].getProcessData()),
             "?start=" + startTime + "&end=" + endTime, MerlinConstants.USER2_NAME);
@@ -452,9 +438,10 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1KillSomeU2RerunAllProcessInstances()
-        throws IOException, JAXBException,
+            throws IOException, JAXBException,
 
-        AuthenticationException, URISyntaxException, OozieClientException {
+            AuthenticationException, URISyntaxException, OozieClientException,
+            InterruptedException {
         String startTime = TimeUtil
             .getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 5);
@@ -501,7 +488,6 @@ public class AuthorizationTest extends BaseTestClass {
         //generally 3 instances should be killed, 1 is running and 1 is waiting
 
         //try to rerun instances by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         r = prism.getProcessHelper().getProcessInstanceRerun(Util
             .readEntityName(bundles[0].getProcessData()), "?start=" + startTime + "&end="
                 +
@@ -518,7 +504,8 @@ public class AuthorizationTest extends BaseTestClass {
     // .org/jira/browse/FALCON-388
     @Test(enabled = false)
     public void u1SubmitU2UpdateFeed()
-        throws URISyntaxException, IOException, AuthenticationException, JAXBException {
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            InterruptedException {
         String feed = bundles[0].getInputFeedFromBundle();
         //submit feed
         bundles[0].submitClusters(prism);
@@ -531,7 +518,6 @@ public class AuthorizationTest extends BaseTestClass {
         String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
             MINUTE_DATE_PATTERN);
         //try to update feed by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
@@ -552,7 +538,6 @@ public class AuthorizationTest extends BaseTestClass {
         String newFeed = Util.setFeedPathValue(feed, baseHDFSDir + "/randomPath" +
             MINUTE_DATE_PATTERN);
         //try to update feed by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0),
             MerlinConstants.USER2_NAME);
@@ -576,7 +561,6 @@ public class AuthorizationTest extends BaseTestClass {
         //update process definition
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2020-01-02T01:04Z");
         //try to update process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper().update(bundles[0]
                 .getProcessData(), bundles[0].getProcessData(),
             TimeUtil.getTimeWrtSystemTime(0),
@@ -597,7 +581,6 @@ public class AuthorizationTest extends BaseTestClass {
         //update process definition
         bundles[0].setProcessValidity("2010-01-02T01:00Z", "2020-01-02T01:04Z");
         //try to update process by U2
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         final ServiceResponse serviceResponse = prism.getProcessHelper().update(bundles[0]
                 .getProcessData(), bundles[0].getProcessData(),
             TimeUtil.getTimeWrtSystemTime(0),
@@ -620,7 +603,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
 
         //by U2 schedule process dependant on scheduled feed by U1
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         ServiceResponse serviceResponse = prism.getProcessHelper()
             .submitAndSchedule(process, MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
@@ -642,7 +624,6 @@ public class AuthorizationTest extends BaseTestClass {
             MINUTE_DATE_PATTERN);
 
         //update feed by U1
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         serviceResponse = prism.getFeedHelper().update(feed, newFeed,
             TimeUtil.getTimeWrtSystemTime(0), MerlinConstants.CURRENT_USER_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
@@ -671,7 +652,6 @@ public class AuthorizationTest extends BaseTestClass {
         AssertUtil.checkStatus(clusterOC, EntityType.FEED, feed, Job.Status.RUNNING);
 
         //by U2 schedule process dependent on scheduled feed by U1
-        KerberosHelper.loginFromKeytab(MerlinConstants.USER2_NAME);
         ServiceResponse serviceResponse = prism.getProcessHelper().submitAndSchedule(process,
             MerlinConstants.USER2_NAME);
         AssertUtil.assertSucceeded(serviceResponse);
@@ -706,7 +686,6 @@ public class AuthorizationTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
     }
 

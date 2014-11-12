@@ -71,7 +71,6 @@ public class ClusterAclTest extends BaseTestClass {
         bundles[0].setProcessWorkflow(aggregateWorkflowDir);
         bundles[0].setCLusterACL(MerlinConstants.CURRENT_USER_NAME,
             MerlinConstants.CURRENT_USER_GROUP, "*");
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         clusterString = bundles[0].getClusters().get(0);
     }
 
@@ -141,7 +140,6 @@ public class ClusterAclTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
     }
 

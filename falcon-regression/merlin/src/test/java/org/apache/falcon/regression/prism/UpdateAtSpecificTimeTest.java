@@ -102,8 +102,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void invalidChar_Process()
-        throws JAXBException, IOException, URISyntaxException,
-        AuthenticationException, OozieClientException {
+            throws JAXBException, IOException, URISyntaxException,
+            AuthenticationException, OozieClientException, InterruptedException {
         processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(0),
             TimeUtil.getTimeWrtSystemTime(20));
         processBundle.submitFeedsScheduleProcess(prism);
@@ -120,8 +120,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void invalidChar_Feed()
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException,
-        OozieClientException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            OozieClientException, InterruptedException {
 
         String feed = submitAndScheduleFeed(processBundle);
         InstanceUtil.waitTillInstancesAreCreated(cluster1, feed, 0);
@@ -136,8 +136,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"singleCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void updateTimeInPast_Process()
-        throws JAXBException, IOException, URISyntaxException,
-        OozieClientException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException,
+            OozieClientException, AuthenticationException, InterruptedException {
 
         processBundle.setProcessValidity(TimeUtil.getTimeWrtSystemTime(0),
                 TimeUtil.getTimeWrtSystemTime(20));
@@ -168,8 +168,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"MultiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void updateTimeInPast_Feed()
-        throws JAXBException, IOException, OozieClientException,
-        URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, OozieClientException,
+            URISyntaxException, AuthenticationException, InterruptedException {
 
         String startTimeCluster_source = TimeUtil.getTimeWrtSystemTime(-10);
         String startTimeCluster_target = TimeUtil.getTimeWrtSystemTime(10);
@@ -208,8 +208,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = true)
     public void inNextFewMinutesUpdate_RollForward_Process()
-        throws JAXBException, IOException, URISyntaxException, JSchException,
-        OozieClientException, SAXException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, JSchException,
+            OozieClientException, SAXException, AuthenticationException, InterruptedException {
         /*
         submit process on 3 clusters. Schedule on 2 clusters. Bring down one of
         the scheduled cluster. Update with time 5 minutes from now. On running
@@ -308,8 +308,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"MultiCluster", "0.3.1", "distributed"}, timeOut = 1200000, enabled = true)
     public void inNextFewMinutesUpdate_RollForward_Feed()
-        throws JAXBException, IOException, URISyntaxException, JSchException, 
-        OozieClientException, SAXException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, JSchException,
+            OozieClientException, SAXException, AuthenticationException, InterruptedException {
         try {
             String startTimeCluster_source = TimeUtil.getTimeWrtSystemTime(-18);
             String feed = getMultiClusterFeed(startTimeCluster_source, startTimeCluster_source);
@@ -421,8 +421,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void updateTimeAfterEndTime_Feed()
-        throws JAXBException, IOException, OozieClientException,
-        URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, OozieClientException,
+            URISyntaxException, AuthenticationException, InterruptedException {
 
         /* submit and schedule feed with end time 60 mins in future and update with +60 in future*/
         String startTime = TimeUtil.getTimeWrtSystemTime(-15);
@@ -463,7 +463,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"multiCluster", "0.3.1", "embedded"}, timeOut = 1200000, enabled = true)
     public void updateTimeBeforeStartTime_Process() throws JAXBException, IOException,
-        URISyntaxException, OozieClientException, AuthenticationException {
+            URISyntaxException, OozieClientException, AuthenticationException,
+            InterruptedException {
 
         /* submit and schedule process with start time +10 mins from now. Update with start time
         -4 and update time +2 mins */
@@ -492,8 +493,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     @Test(groups = {"MultiCluster", "0.3.1"}, timeOut = 1200000, enabled = true)
     public void updateDiffClusterDiffValidity_Process()
-        throws JAXBException, IOException, URISyntaxException, OozieClientException,
-        AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, OozieClientException,
+            AuthenticationException, InterruptedException {
 
         //set start end process time for 3 clusters
         String startTime_cluster1 = TimeUtil.getTimeWrtSystemTime(-40);
@@ -571,7 +572,8 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
     }
 
     private String submitAndScheduleFeed(Bundle b)
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         String feed = b.getDataSets().get(0);
         feed = InstanceUtil.setFeedCluster(feed,
             XmlUtil.createValidity("2012-10-01T12:00Z", "2010-01-01T00:00Z"),
@@ -592,7 +594,7 @@ public class UpdateAtSpecificTimeTest extends BaseTestClass {
 
     private String getMultiClusterFeed(String startTimeCluster_source,
                                        String startTimeCluster_target)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
         String testDataDir = baseTestDir + "/replication";
 
         //create desired feed

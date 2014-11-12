@@ -46,16 +46,17 @@ enum EntityOp {
             try {
                 response = helper.getStatus(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught Exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -67,16 +68,17 @@ enum EntityOp {
             try {
                 response = helper.getEntityDependencies(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -84,25 +86,25 @@ enum EntityOp {
     listing() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final String entityName = Util.readEntityName(data);
             final List<String> entities;
             try {
                 entities = CleanupUtil.getAllEntitiesOfOneType(helper, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (JAXBException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             logger.info("Checking for presence of " + entityName + " in " + entities);
             return entities.contains(entityName);
@@ -111,21 +113,21 @@ enum EntityOp {
     definition() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.getEntityDefinition(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -133,21 +135,21 @@ enum EntityOp {
     delete() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.delete(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -155,21 +157,21 @@ enum EntityOp {
     update() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.update(data, data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -177,21 +179,21 @@ enum EntityOp {
     schedule() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.schedule(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -199,21 +201,21 @@ enum EntityOp {
     submit() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.submitEntity(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -221,21 +223,21 @@ enum EntityOp {
     submitAndSchedule() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.submitAndSchedule(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -243,21 +245,21 @@ enum EntityOp {
     suspend() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.suspend(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }
@@ -265,21 +267,21 @@ enum EntityOp {
     resume() {
         @Override
         public boolean executeAs(String user, IEntityManagerHelper helper, String data) {
-            KerberosHelper.loginFromKeytab(user);
             final ServiceResponse response;
             try {
                 response = helper.resume(data, user);
             } catch (IOException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (URISyntaxException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
             } catch (AuthenticationException e) {
-                logger.warn("Caught exception: " + e);
+                logger.error("Caught exception: " + e);
                 return false;
-            } finally {
-                KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
+            } catch (InterruptedException e) {
+                logger.error("Caught exception: " + e);
+                return false;
             }
             return AssertUtil.checkSucceeded(response);
         }

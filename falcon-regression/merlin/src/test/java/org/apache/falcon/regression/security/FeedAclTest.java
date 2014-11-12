@@ -72,8 +72,6 @@ public class FeedAclTest extends BaseTestClass {
         bundles[0].setInputFeedACL(MerlinConstants.CURRENT_USER_NAME,
             MerlinConstants.CURRENT_USER_GROUP, "*");
         feedString = bundles[0].getInputFeedFromBundle();
-
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
     }
 
     /**
@@ -221,7 +219,6 @@ public class FeedAclTest extends BaseTestClass {
                     + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
         }
         //check that different user can access the feed
-        KerberosHelper.loginFromKeytab(MerlinConstants.DIFFERENT_USER_NAME);
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
                 EntityOp.definition}) {
             final boolean executeRes =
@@ -236,7 +233,6 @@ public class FeedAclTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
     }
 

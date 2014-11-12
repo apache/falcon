@@ -168,7 +168,8 @@ public class RetentionTest extends BaseTestClass {
      */
     private void commonDataRetentionWorkflow(String feed, FreqType freqType,
         RetentionUnit retentionUnit, int retentionPeriod) throws OozieClientException,
-        IOException, URISyntaxException, AuthenticationException, JMSException {
+            IOException, URISyntaxException, AuthenticationException, JMSException,
+            InterruptedException {
         //get Data created in the cluster
         List<String> initialData = Util.getHadoopDataFromDir(clusterFS, feed, testHDFSDir);
 

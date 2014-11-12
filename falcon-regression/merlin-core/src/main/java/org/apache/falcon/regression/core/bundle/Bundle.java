@@ -76,7 +76,9 @@ public class Bundle {
     private List<String> dataSets;
     private String processData;
 
-    public void submitFeed() throws URISyntaxException, IOException, AuthenticationException, JAXBException {
+    public void submitFeed()
+            throws URISyntaxException, IOException, AuthenticationException, JAXBException,
+            InterruptedException {
         submitClusters(prismHelper);
 
         AssertUtil.assertSucceeded(prismHelper.getFeedHelper().submitEntity(dataSets.get(0)));
@@ -95,7 +97,8 @@ public class Bundle {
     }
 
     public void submitAndScheduleAllFeeds()
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         submitClusters(prismHelper);
 
         for (String feed : dataSets) {
@@ -104,7 +107,7 @@ public class Bundle {
     }
 
     public ServiceResponse submitProcess(boolean shouldSucceed) throws JAXBException,
-        IOException, URISyntaxException, AuthenticationException {
+            IOException, URISyntaxException, AuthenticationException, InterruptedException {
         submitClusters(prismHelper);
         submitFeeds(prismHelper);
         ServiceResponse r = prismHelper.getProcessHelper().submitEntity(processData);
@@ -255,7 +258,8 @@ public class Bundle {
     }
 
     public ServiceResponse submitBundle(ColoHelper helper)
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
 
         submitClusters(helper);
 
@@ -276,8 +280,8 @@ public class Bundle {
      * @throws AuthenticationException
      */
     public String submitFeedsScheduleProcess(ColoHelper helper)
-        throws IOException, JAXBException, URISyntaxException,
-        AuthenticationException {
+            throws IOException, JAXBException, URISyntaxException,
+            AuthenticationException, InterruptedException {
         ServiceResponse submitResponse = submitBundle(helper);
         if (submitResponse.getCode() == 400) {
             return submitResponse.getMessage();
@@ -679,19 +683,22 @@ public class Bundle {
 
 
     public void submitClusters(ColoHelper helper)
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         submitClusters(helper, null);
     }
 
     public void submitClusters(ColoHelper helper, String user)
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         for (String cluster : this.clusters) {
             AssertUtil.assertSucceeded(helper.getClusterHelper().submitEntity(cluster, user));
         }
     }
 
     public void submitFeeds(ColoHelper helper)
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         for (String feed : this.dataSets) {
             AssertUtil.assertSucceeded(helper.getFeedHelper().submitEntity(feed));
         }
@@ -791,7 +798,7 @@ public class Bundle {
     }
 
     public static void submitCluster(Bundle... bundles)
-        throws IOException, URISyntaxException, AuthenticationException {
+            throws IOException, URISyntaxException, AuthenticationException, InterruptedException {
 
         for (Bundle bundle : bundles) {
             ServiceResponse r =
@@ -855,10 +862,12 @@ public class Bundle {
     }
 
     public void submitAndScheduleBundle(ColoHelper helper, boolean checkSuccess)
-        throws IOException, JAXBException, URISyntaxException, AuthenticationException {
+            throws IOException, JAXBException, URISyntaxException, AuthenticationException,
+            InterruptedException {
 
         for (int i = 0; i < getClusters().size(); i++) {
-            ServiceResponse r = helper.getClusterHelper().submitEntity(getClusters().get(i));
+            ServiceResponse r;
+            r = helper.getClusterHelper().submitEntity(getClusters().get(i));
             if (checkSuccess) {
                 AssertUtil.assertSucceeded(r);
             }

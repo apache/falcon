@@ -30,6 +30,9 @@ Trunk (Unreleased)
    via Samarth Gupta)
 
   IMPROVEMENTS
+   FALCON-890 Merlin tests need to be updated in secure cluster to get the
+   token using the ugi object requests (Arpit Gupta)
+
    FALCON-863 Fix tests to have start as well as end time for kill, rerun etc
    requests (Raghav Kumar Gautam)
 

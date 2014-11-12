@@ -87,7 +87,7 @@ public class FeedLateRerunTest extends BaseTestClass {
     @Test(enabled = true)
     public void FeedLateRerunTestWithEmptyFolders ()
             throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException {
+            OozieClientException, InterruptedException {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 30);
@@ -179,7 +179,7 @@ public class FeedLateRerunTest extends BaseTestClass {
     @Test(enabled = true)
     public void FeedLateRerunTestWithData ()
             throws AuthenticationException, IOException, URISyntaxException, JAXBException,
-            OozieClientException {
+            OozieClientException, InterruptedException {
         Bundle.submitCluster(bundles[0], bundles[1]);
         String startTime = TimeUtil.getTimeWrtSystemTime(0);
         String endTime = TimeUtil.addMinsToTime(startTime, 30);

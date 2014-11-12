@@ -107,8 +107,8 @@ public class InstanceSummaryTest extends BaseTestClass {
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummarySingleClusterProcess()
-        throws URISyntaxException, JAXBException, IOException, ParseException,
-        OozieClientException, AuthenticationException {
+            throws URISyntaxException, JAXBException, IOException, ParseException,
+            OozieClientException, AuthenticationException, InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.submitFeedsScheduleProcess(prism);
         InstanceUtil.waitTillInstancesAreCreated(cluster3, processBundle.getProcessData(), 0);
@@ -182,7 +182,8 @@ public class InstanceSummaryTest extends BaseTestClass {
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterProcess() throws JAXBException,
-        ParseException, IOException, URISyntaxException, AuthenticationException {
+            ParseException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         processBundle.setProcessValidity(startTime, endTime);
         processBundle.addClusterToBundle(bundles[1].getClusters().get(0),
             ClusterType.SOURCE, null, null);
@@ -217,7 +218,8 @@ public class InstanceSummaryTest extends BaseTestClass {
      */
     @Test(enabled = true, timeOut = 1200000)
     public void testSummaryMultiClusterFeed() throws JAXBException, ParseException, IOException,
-        URISyntaxException, OozieClientException, AuthenticationException {
+            URISyntaxException, OozieClientException, AuthenticationException,
+            InterruptedException {
 
         //create desired feed
         String feed = bundles[0].getDataSets().get(0);

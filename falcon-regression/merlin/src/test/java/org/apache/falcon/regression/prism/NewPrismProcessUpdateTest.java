@@ -1450,7 +1450,7 @@ public class NewPrismProcessUpdateTest extends BaseTestClass {
     @Test(timeOut = 1200000)
     public void
     updateProcessWorkflowXml() throws URISyntaxException, JAXBException,
-            IOException, OozieClientException, AuthenticationException {
+            IOException, OozieClientException, AuthenticationException, InterruptedException {
         Bundle b = BundleUtil.readELBundle();
         HadoopFileEditor hadoopFileEditor = null;
         try {

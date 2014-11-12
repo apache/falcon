@@ -82,7 +82,8 @@ public class FeedSubmitAndScheduleTest extends BaseTestClass {
      * @throws AuthenticationException
      */
     private void submitFirstClusterScheduleFirstFeed()
-        throws JAXBException, IOException, URISyntaxException, AuthenticationException {
+            throws JAXBException, IOException, URISyntaxException, AuthenticationException,
+            InterruptedException {
         Assert.assertEquals(Util.parseResponse(prism.getClusterHelper()
             .submitEntity(bundles[0].getClusters().get(0))).getStatusCode(), 200);
         ServiceResponse response = prism.getFeedHelper().submitAndSchedule(feed);

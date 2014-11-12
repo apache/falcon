@@ -87,7 +87,6 @@ public class FalconClientTest extends BaseTestClass {
     public void badClusterDelete() throws Exception {
         bundles[0].submitClusters(prism);
         final String cluster = bundles[0].getClusters().get(0);
-        KerberosHelper.loginFromKeytab(MerlinConstants.DIFFERENT_USER_NAME);
         final ExecResult execResult =
                 prism.getClusterHelper().clientDelete(cluster, MerlinConstants.DIFFERENT_USER_NAME);
         AssertUtil.assertFailed(execResult, "cluster deletion failed");
@@ -95,7 +94,6 @@ public class FalconClientTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
     }
 

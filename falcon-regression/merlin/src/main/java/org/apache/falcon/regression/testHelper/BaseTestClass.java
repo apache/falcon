@@ -57,7 +57,6 @@ public class BaseTestClass {
 
     public BaseTestClass() {
         // loginFromKeytab as the current user
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         prism = new ColoHelper(PRISM_PREFIX);
         servers = getServers();
         serverFS = new ArrayList<FileSystem>();

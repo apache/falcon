@@ -79,8 +79,6 @@ public class ProcessAclTest extends BaseTestClass {
         final Date tenMinInFuture = new DateTime(DateTimeZone.UTC).plusMinutes(10).toDate();
         processMerlin.getClusters().getClusters().get(0).getValidity().setEnd(tenMinInFuture);
         processString = processMerlin.toString();
-
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
     }
 
     /**
@@ -227,7 +225,6 @@ public class ProcessAclTest extends BaseTestClass {
                     + MerlinConstants.DIFFERENT_USER_GROUP + " was not able to perform: " + op);
         }
         //check that different user can access the feed
-        KerberosHelper.loginFromKeytab(MerlinConstants.DIFFERENT_USER_NAME);
         for(EntityOp op : new EntityOp[]{EntityOp.status, EntityOp.dependency, EntityOp.listing,
                 EntityOp.definition}) {
             final boolean executeRes =
@@ -242,7 +239,6 @@ public class ProcessAclTest extends BaseTestClass {
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        KerberosHelper.loginFromKeytab(MerlinConstants.CURRENT_USER_NAME);
         removeBundles();
     }
 

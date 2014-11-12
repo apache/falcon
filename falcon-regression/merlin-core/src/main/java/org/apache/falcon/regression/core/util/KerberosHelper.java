@@ -19,8 +19,11 @@
 package org.apache.falcon.regression.core.util;
 
 import org.apache.falcon.regression.core.enumsAndConstants.MerlinConstants;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.testng.Assert;
 import org.apache.log4j.Logger;
+
+import java.io.IOException;
 
 /**
  * Util methods for Kerberos.
@@ -32,19 +35,22 @@ public final class KerberosHelper {
 
     private static final Logger LOGGER = Logger.getLogger(KerberosHelper.class);
 
-    public static void loginFromKeytab(String user) {
+    public static UserGroupInformation getUGI(String user) throws IOException {
+        // if unsecure cluster create a remote user object
         if (!MerlinConstants.IS_SECURE) {
-            LOGGER.info("Kerberos is disabled, hence no user switching.");
-            return;
+            return UserGroupInformation.createRemoteUser(user);
         }
-        if (user == null) {
-            user = MerlinConstants.CURRENT_USER_NAME;
-        }
-        final String keytab = MerlinConstants.getKeytabForUser(user);
-        String principal = MerlinConstants.USER_REALM.isEmpty() ? user : user + '@' + MerlinConstants.USER_REALM;
-        final String command = String.format("kinit -kt %s %s", keytab, principal);
-        final int exitVal = ExecUtil.executeCommandGetExitCode(command);
-        Assert.assertEquals(exitVal, 0, "Switching Kerberos credential did not succeed.");
+        // if secure create a ugi object from keytab
+        return UserGroupInformation.loginUserFromKeytabAndReturnUGI(getPrincipal(user), getKeyTab
+                (user));
     }
 
+    private static String getKeyTab(String user) {
+        return MerlinConstants.getKeytabForUser(user);
+    }
+
+    private static String getPrincipal(String user) {
+        return MerlinConstants.USER_REALM.isEmpty() ? user : user + '@' + MerlinConstants
+                .USER_REALM;
+    }
 }

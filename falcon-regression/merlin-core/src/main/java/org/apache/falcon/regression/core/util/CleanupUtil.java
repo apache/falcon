@@ -46,23 +46,27 @@ public final class CleanupUtil {
     private static final Logger LOGGER = Logger.getLogger(CleanupUtil.class);
 
     public static List<String> getAllProcesses(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException {
+            throws IOException, URISyntaxException, AuthenticationException, JAXBException,
+            InterruptedException {
         return getAllEntitiesOfOneType(prism.getProcessHelper(), null);
     }
 
     public static List<String> getAllFeeds(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException {
+            throws IOException, URISyntaxException, AuthenticationException, JAXBException,
+            InterruptedException {
         return getAllEntitiesOfOneType(prism.getFeedHelper(), null);
     }
 
     public static List<String> getAllClusters(ColoHelper prism)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException {
+            throws IOException, URISyntaxException, AuthenticationException, JAXBException,
+            InterruptedException {
         return getAllEntitiesOfOneType(prism.getClusterHelper(), null);
     }
 
     public static List<String> getAllEntitiesOfOneType(IEntityManagerHelper iEntityManagerHelper,
                                                        String user)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException {
+            throws IOException, URISyntaxException, AuthenticationException, JAXBException,
+            InterruptedException {
         final EntitiesResult entitiesResult = getEntitiesResultOfOneType(iEntityManagerHelper, user);
         List<String> clusters = new ArrayList<String>();
         for (EntityResult entity : entitiesResult.getEntities()) {
@@ -73,7 +77,8 @@ public final class CleanupUtil {
 
     private static EntitiesResult getEntitiesResultOfOneType(
         IEntityManagerHelper iEntityManagerHelper, String user)
-        throws IOException, URISyntaxException, AuthenticationException, JAXBException {
+            throws IOException, URISyntaxException, AuthenticationException, JAXBException,
+            InterruptedException {
         final ServiceResponse clusterResponse = iEntityManagerHelper.listAllEntities(null, user);
         JAXBContext jc = JAXBContext.newInstance(EntitiesResult.class);
         Unmarshaller u = jc.createUnmarshaller();

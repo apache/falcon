@@ -107,7 +107,8 @@ public class BaseRequest {
         headers.add(new BasicHeader(name, value));
     }
 
-    public HttpResponse run() throws URISyntaxException, IOException, AuthenticationException {
+    public HttpResponse run() throws URISyntaxException, IOException, AuthenticationException,
+            InterruptedException {
         URIBuilder uriBuilder = new URIBuilder(this.url);
 
         /*falcon now reads a user.name parameter in the request.
@@ -135,7 +136,7 @@ public class BaseRequest {
     }
 
     private HttpResponse execute(HttpRequest request)
-        throws IOException, AuthenticationException {
+            throws IOException, AuthenticationException, InterruptedException {
         // add headers to the request
         if (null != headers && headers.size() > 0) {
             for (Header header : headers) {
