@@ -141,7 +141,7 @@ public class ProcessAclTest extends BaseTestClass {
 
     @DataProvider(name = "generateUserSubmittedEditOpsPermission")
     public Object[][] generateUserSubmittedEditOpsPermission() {
-        final EntityOp[] falconEditOps = {EntityOp.submit, EntityOp.delete, EntityOp.update};
+        final EntityOp[] falconEditOps = {EntityOp.delete, EntityOp.update};
 
         final Object[][] allowedCombinations = MathUtil.crossProduct(
             new String[]{MerlinConstants.FALCON_SUPER_USER_NAME, MerlinConstants.FALCON_SUPER_USER2_NAME,

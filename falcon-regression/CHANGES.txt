@@ -140,7 +140,9 @@ Trunk (Unreleased)
    FALCON-681 delete duplicate feed retention test from falcon regression (SamarthG)
 
   BUG FIXES
-   FALCON-886 Disabling test for special chars in pipeline name and
+   FALCON-891 Removing some more invalid acl tests (Raghav Kumar Gautam)
+
+   FALCON-888 Disabling test for special chars in pipeline name and
    RescheduleProcessInFinalStatesTest (Paul Isaychuk)
 
    FALCON-886 Disable tests that are failing (Raghav Kumar Gautam)
