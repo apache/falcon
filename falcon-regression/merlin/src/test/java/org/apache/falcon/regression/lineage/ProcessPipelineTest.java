@@ -168,7 +168,7 @@ public class ProcessPipelineTest extends BaseTestClass{
         String specialName = "$pec!alN@me#1";
         String utf8Name = "UTF8Pipelin" + "\u20AC"; //euro symbol added to name
         String longName = "TestItWithPipelineNameWhichIsLongEnough";
-        return new Object[][]{{specialName, "list", false},
+        return new Object[][]{//{specialName, "list", false},
             //{utf8Name, "list", false},
             {"nonexistentPipeline", "list", true}, //expecting blank response
             {longName, "list", true}, //expecting blank response
