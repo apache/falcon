@@ -66,6 +66,9 @@ public final class MerlinConstants {
     public static final String ACL_OWNER = Config.getProperty("ACL.OWNER", RequestKeys.CURRENT_USER);
     public static final String ACL_GROUP = Config.getProperty("ACL.GROUP", "default");
     public static final String USER_REALM = Config.getProperty("USER.REALM", "");
+    public static final String WASB_CONTAINER = Config.getProperty("wasb.container", "");
+    public static final String WASB_SECRET = Config.getProperty("wasb.secret", "");
+    public static final String WASB_ACCOUNT  = Config.getProperty("wasb.account", "");
 
     public static final boolean CLEAN_TEST_DIR =
         Boolean.valueOf(Config.getProperty("clean_test_dir", "true"));

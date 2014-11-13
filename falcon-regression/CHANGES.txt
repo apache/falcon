@@ -5,6 +5,9 @@ Trunk (Unreleased)
   INCOMPATIBLE CHANGES
 
   NEW FEATURES
+   FALCON-893 Add tests for replication to wasb filesystem
+   (Raghav Kumar Gautam and Ruslan Ostafiychuk via Arpit Gupta)
+
    FALCON-861 Add ACL tests for falcon client and ACL update
    (Raghav Kumar Gautam)
 
