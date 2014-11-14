@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-889 Windows azure replication fails with "wasb" as the scheme to an
+   HDFS file system (Chris Nauroth via Venkatesh Seetharam)
+
    FALCON-885 RequestID is coming as null for all instance API calls
    (Venkatesh Seetharam)
 

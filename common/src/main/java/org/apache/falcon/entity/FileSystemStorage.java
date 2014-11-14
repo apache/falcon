@@ -273,10 +273,11 @@ public class FileSystemStorage extends Configured implements Storage {
     @Override
     public void validateACL(AccessControlList acl) throws FalconException {
         try {
-            FileSystem fileSystem = HadoopClientFactory.get().createProxiedFileSystem(getConf());
             for (Location location : getLocations()) {
                 String pathString = getRelativePath(location);
                 Path path = new Path(pathString);
+                FileSystem fileSystem =
+                    HadoopClientFactory.get().createProxiedFileSystem(path.toUri(), getConf());
                 if (fileSystem.exists(path)) {
                     FileStatus fileStatus = fileSystem.getFileStatus(path);
                     Set<String> groups = CurrentUser.getGroupNames();

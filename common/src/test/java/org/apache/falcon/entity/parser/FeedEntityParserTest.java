@@ -30,7 +30,15 @@ import org.apache.falcon.entity.v0.Frequency;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.cluster.Interfacetype;
-import org.apache.falcon.entity.v0.feed.*;
+import org.apache.falcon.entity.v0.feed.ActionType;
+import org.apache.falcon.entity.v0.feed.ClusterType;
+import org.apache.falcon.entity.v0.feed.Feed;
+import org.apache.falcon.entity.v0.feed.Location;
+import org.apache.falcon.entity.v0.feed.LocationType;
+import org.apache.falcon.entity.v0.feed.Locations;
+import org.apache.falcon.entity.v0.feed.Partition;
+import org.apache.falcon.entity.v0.feed.Partitions;
+import org.apache.falcon.entity.v0.feed.Validity;
 import org.apache.falcon.group.FeedGroupMapTest;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.util.StartupProperties;
@@ -872,6 +880,46 @@ public class FeedEntityParserTest extends AbstractTestBase {
                 dfsCluster.getFileSystem().delete(new Path(location.getPath()), true);
                 break;
             }
+        }
+    }
+
+    @Test
+    public void testValidateACLForArchiveReplication() throws Exception {
+        StartupProperties.get().setProperty("falcon.security.authorization.enabled", "true");
+        Assert.assertTrue(Boolean.valueOf(
+            StartupProperties.get().getProperty("falcon.security.authorization.enabled")));
+
+        CurrentUser.authenticate(USER);
+        try {
+            InputStream stream = this.getClass().getResourceAsStream(FEED_XML);
+
+            // need a new parser since it caches authorization enabled flag
+            FeedEntityParser feedEntityParser =
+                (FeedEntityParser) EntityParserFactory.getParser(EntityType.FEED);
+            Feed feed = feedEntityParser.parse(stream);
+
+            org.apache.falcon.entity.v0.feed.Cluster feedCluster =
+                FeedHelper.getCluster(feed, "backupCluster");
+            Location location = new Location();
+            location.setType(LocationType.DATA);
+            location.setPath(
+                "s3://falcontesting@hwxasvtesting.blob.core.windows.net/{YEAR}-${MONTH}-${DAY}-${HOUR}-${MINUTE}");
+            Locations locations = new Locations();
+            locations.getLocations().add(location);
+            feedCluster.setLocations(locations);
+
+            Assert.assertNotNull(feed);
+            Assert.assertNotNull(feed.getACL());
+            feed.getACL().setOwner(USER);
+            feed.getACL().setGroup(getPrimaryGroupName());
+
+            try {
+                feedEntityParser.validate(feed);
+            } catch (IllegalArgumentException e) {
+                // this is normal since AWS Secret Access Key is not specified as the password of a s3 URL
+            }
+        } finally {
+            StartupProperties.get().setProperty("falcon.security.authorization.enabled", "false");
         }
     }
 }
