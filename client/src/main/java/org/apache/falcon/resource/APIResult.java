@@ -18,8 +18,6 @@
 
 package org.apache.falcon.resource;
 
-import org.apache.log4j.NDC;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -27,7 +25,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.StringWriter;
-import java.util.UUID;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
@@ -65,12 +62,7 @@ public class APIResult {
         super();
         this.status = status;
         this.message = message;
-        requestId = NDC.peek();
-        try {
-            UUID.fromString(requestId);
-        } catch (IllegalArgumentException e) {
-            requestId = null;
-        }
+        requestId = Thread.currentThread().getName();
     }
 
     protected APIResult() {

@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public final class Servlets {
 
+    public static final String REQUEST_ID = "requestId";
+
     private Servlets() {
         /* singleton */
     }

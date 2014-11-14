@@ -21,7 +21,6 @@ package org.apache.falcon.security;
 import org.apache.falcon.aspect.GenericAlert;
 import org.apache.falcon.entity.v0.SchemaHelper;
 import org.apache.falcon.util.Servlets;
-import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +44,6 @@ public class FalconAuditFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(FalconAuditFilter.class);
 
-    public static final String REQUEST_ID = "requestId";
-
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         LOG.info("FalconAuditFilter initialization started");
@@ -57,20 +54,26 @@ public class FalconAuditFilter implements Filter {
                          ServletResponse response,
                          FilterChain filterChain) throws IOException, ServletException {
         final String requestTimeISO9601 = SchemaHelper.formatDateUTC(new Date());
-        // generate a unique id and shove it into NDC
+        final HttpServletRequest httpRequest = (HttpServletRequest) request;
         final String requestId = UUID.randomUUID().toString();
-        NDC.push(requestId);
+        final Thread currentThread = Thread.currentThread();
+        final String oldName = currentThread.getName();
 
         try {
+            currentThread.setName(formatName(oldName, requestId));
             filterChain.doFilter(request, response);
         } finally {
-            recordAudit((HttpServletRequest) request, requestTimeISO9601);
+            recordAudit(httpRequest, requestTimeISO9601);
 
             // put the request id into the response so users can trace logs for this request
-            ((HttpServletResponse) response).setHeader(REQUEST_ID, requestId);
-            NDC.pop();
+            ((HttpServletResponse) response).setHeader(Servlets.REQUEST_ID, requestId);
             CurrentUser.clear();
+            currentThread.setName(oldName);
         }
+    }
+
+    private String formatName(String oldName, String requestId) {
+        return oldName + " - " + requestId;
     }
 
     private void recordAudit(HttpServletRequest httpRequest, String whenISO9601) {

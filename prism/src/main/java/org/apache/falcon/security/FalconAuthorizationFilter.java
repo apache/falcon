@@ -23,6 +23,7 @@ import org.apache.falcon.entity.EntityNotRegisteredException;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
+import org.apache.falcon.util.Servlets;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.codehaus.jettison.json.JSONException;
@@ -165,6 +166,7 @@ public class FalconAuthorizationFilter implements Filter {
             JSONObject response = new JSONObject();
             response.put("errorCode", errorCode);
             response.put("errorMessage", errorMessage);
+            response.put(Servlets.REQUEST_ID, Thread.currentThread().getName());
             return response.toString();
         } catch (JSONException e) {
             throw new IOException(e);

@@ -144,6 +144,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-885 RequestID is coming as null for all instance API calls
+   (Venkatesh Seetharam)
+
    FALCON-880 Oozie Java actions for hive tables fail in secure mode
    (Venkatesh Seetharam)
 
