@@ -41,6 +41,9 @@ Trunk (Unreleased)
    FALCON-263 API to get workflow parameters. (pavan kumar kolamuri via Shwetha GS)
 
   IMPROVEMENTS
+   FALCON-744 Document existing falcon data archival to cloud store
+   (Venkatesh Seetharam)
+
    FALCON-869 Clean up required in the instance API calls. (Suhas Vasu)
 
    FALCON-878 Move falcon html files to HTML5. (Ajay Yadav via Srikanth Sundarrajan)
