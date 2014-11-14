@@ -20,10 +20,12 @@ package org.apache.falcon.oozie.feed;
 
 import org.apache.falcon.FalconException;
 import org.apache.falcon.Tag;
+import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.cluster.Cluster;
 import org.apache.falcon.entity.v0.feed.Feed;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 
 import java.util.Arrays;
@@ -126,6 +128,15 @@ public class HCatReplicationWorkflowBuilder extends FeedReplicationWorkflowBuild
             } else if (IMPORT_ACTION_NAME.equals(actionName)) {
                 if (isSecurityEnabled) { // add a reference to credential in the action
                     action.setCred(TARGET_HIVE_CREDENTIAL_NAME);
+                }
+            } else if (REPLICATION_ACTION_NAME.equals(actionName)) {
+                if (isSecurityEnabled) {
+                    // this is to ensure that the delegation tokens are checked out for both clusters
+                    CONFIGURATION.Property property = new CONFIGURATION.Property();
+                    property.setName("mapreduce.job.hdfs-servers");
+                    property.setValue(ClusterHelper.getReadOnlyStorageUrl(sourceCluster)
+                            + "," + ClusterHelper.getStorageUrl(targetCluster));
+                    action.getJava().getConfiguration().getProperty().add(property);
                 }
             }
         }

@@ -43,6 +43,7 @@ import org.apache.falcon.oozie.coordinator.COORDINATORAPP;
 import org.apache.falcon.oozie.coordinator.SYNCDATASET;
 import org.apache.falcon.oozie.process.AbstractTestBase;
 import org.apache.falcon.oozie.workflow.ACTION;
+import org.apache.falcon.oozie.workflow.CONFIGURATION;
 import org.apache.falcon.oozie.workflow.JAVA;
 import org.apache.falcon.oozie.workflow.WORKFLOWAPP;
 import org.apache.falcon.security.CurrentUser;
@@ -437,13 +438,26 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
         Assert.assertEquals(props.get("sourceRelativePaths"), "IGNORE");
 
         Assert.assertTrue(props.containsKey("distcpSourcePaths"));
-        Assert.assertEquals(props.get("distcpSourcePaths"),
-                FeedHelper.getStagingPath(srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+        final String distcpSourcePaths = props.get("distcpSourcePaths");
+        Assert.assertEquals(distcpSourcePaths,
+                FeedHelper.getStagingPath(true, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
                         "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
+        Assert.assertTrue(props.containsKey("falconSourceStagingDir"));
+
+        final String falconSourceStagingDir = props.get("falconSourceStagingDir");
+        Assert.assertEquals(falconSourceStagingDir,
+                FeedHelper.getStagingPath(false, srcCluster, tableFeed, srcStorage, Tag.REPLICATION,
+                        "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
+
+        String exportPath = falconSourceStagingDir.substring(
+                ClusterHelper.getStorageUrl(srcCluster).length(), falconSourceStagingDir.length());
+        String distCPPath = distcpSourcePaths.substring(
+                ClusterHelper.getReadOnlyStorageUrl(srcCluster).length(), distcpSourcePaths.length());
+        Assert.assertEquals(exportPath, distCPPath);
 
         Assert.assertTrue(props.containsKey("distcpTargetPaths"));
         Assert.assertEquals(props.get("distcpTargetPaths"),
-                FeedHelper.getStagingPath(trgCluster, tableFeed, trgStorage, Tag.REPLICATION,
+                FeedHelper.getStagingPath(false, trgCluster, tableFeed, trgStorage, Tag.REPLICATION,
                         "${coord:formatTime(coord:nominalTime(), 'yyyy-MM-dd-HH-mm')}" + "/" + trgCluster.getName()));
 
         Assert.assertEquals(props.get("falconFeedStorageType"), Storage.TYPE.TABLE.name());
@@ -510,6 +524,16 @@ public class OozieFeedWorkflowBuilderTest extends AbstractTestBase {
             } else if ("table-import".equals(actionName) && isSecurityEnabled) {
                 Assert.assertNotNull(action.getCred());
                 Assert.assertEquals(action.getCred(), "falconTargetHiveAuth");
+            } else if ("replication".equals(actionName)) {
+                List<CONFIGURATION.Property> properties =
+                        action.getJava().getConfiguration().getProperty();
+                for (CONFIGURATION.Property property : properties) {
+                    if (property.getName().equals("mapreduce.job.hdfs-servers")) {
+                        Assert.assertEquals(property.getValue(),
+                                ClusterHelper.getReadOnlyStorageUrl(srcCluster)
+                                        + "," + ClusterHelper.getStorageUrl(trgCluster));
+                    }
+                }
             }
         }
     }

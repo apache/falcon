@@ -246,15 +246,20 @@ public class FeedReplicationCoordinatorBuilder extends OozieCoordinatorBuilder<F
 
     private void propagateTableCopyProperties(Cluster srcCluster, CatalogStorage sourceStorage,
         Cluster trgCluster, CatalogStorage targetStorage, Properties props) {
-        // create staging dirs for export at source & set it as distcpSourcePaths
+        // create staging dirs for copy from source & set it as distcpSourcePaths - Read interface
         String sourceStagingPath =
-            FeedHelper.getStagingPath(srcCluster, entity, sourceStorage, Tag.REPLICATION,
+            FeedHelper.getStagingPath(true, srcCluster, entity, sourceStorage, Tag.REPLICATION,
                 NOMINAL_TIME_EL + "/" + trgCluster.getName());
         props.put("distcpSourcePaths", sourceStagingPath);
+        // create staging dirs for export at source which needs to be writable - hence write interface
+        String falconSourceStagingPath =
+            FeedHelper.getStagingPath(false, srcCluster, entity, sourceStorage, Tag.REPLICATION,
+                NOMINAL_TIME_EL + "/" + trgCluster.getName());
+        props.put("falconSourceStagingDir", falconSourceStagingPath);
 
         // create staging dirs for import at target & set it as distcpTargetPaths
         String targetStagingPath =
-            FeedHelper.getStagingPath(trgCluster, entity, targetStorage, Tag.REPLICATION,
+            FeedHelper.getStagingPath(false, trgCluster, entity, targetStorage, Tag.REPLICATION,
                 NOMINAL_TIME_EL + "/" + trgCluster.getName());
         props.put("distcpTargetPaths", targetStagingPath);
 

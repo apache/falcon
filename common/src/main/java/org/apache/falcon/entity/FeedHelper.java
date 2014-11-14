@@ -291,9 +291,10 @@ public final class FeedHelper {
         return expHelp.evaluateFullExpression(exp, String.class);
     }
 
-    public static String getStagingPath(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
-                                       Feed feed, CatalogStorage storage, Tag tag, String suffix) {
-        String stagingDirPath = getStagingDir(clusterEntity, feed, storage, tag);
+    public static String getStagingPath(boolean isSource,
+                                        org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+                                        Feed feed, CatalogStorage storage, Tag tag, String suffix) {
+        String stagingDirPath = getStagingDir(isSource, clusterEntity, feed, storage, tag);
 
         String datedPartitionKey = storage.getDatedPartitionKeys().get(0);
         String datedPartitionKeySuffix = datedPartitionKey + "=${coord:dataOutPartitionValue('output',"
@@ -304,13 +305,17 @@ public final class FeedHelper {
                 + "data";
     }
 
-    public static String getStagingDir(org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
+    public static String getStagingDir(boolean isSource,
+                                       org.apache.falcon.entity.v0.cluster.Cluster clusterEntity,
                                        Feed feed, CatalogStorage storage, Tag tag) {
         String workflowName = EntityUtil.getWorkflowName(
                 tag, Arrays.asList(clusterEntity.getName()), feed).toString();
 
-        // log path is created at scheduling wf and has 777 perms
-        return ClusterHelper.getStorageUrl(clusterEntity)
+        // log path is created at scheduling wf
+        final String storageUri = isSource
+                ? ClusterHelper.getReadOnlyStorageUrl(clusterEntity) // read interface
+                : ClusterHelper.getStorageUrl(clusterEntity);        // write interface
+        return storageUri
                 + EntityUtil.getLogPath(clusterEntity, feed) + "/"
                 + workflowName + "/"
                 + storage.getDatabase() + "/"

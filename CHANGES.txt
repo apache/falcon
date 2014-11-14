@@ -144,6 +144,8 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-892 HCatReplication fails in secure setup (Venkatesh Seetharam)
+
    FALCON-889 Windows azure replication fails with "wasb" as the scheme to an
    HDFS file system (Chris Nauroth via Venkatesh Seetharam)
 

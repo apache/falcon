@@ -19,6 +19,7 @@
 package org.apache.falcon.oozie;
 
 import org.apache.falcon.FalconException;
+import org.apache.falcon.Tag;
 import org.apache.falcon.entity.ClusterHelper;
 import org.apache.falcon.entity.EntityUtil;
 import org.apache.falcon.entity.v0.Entity;
@@ -77,9 +78,10 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
             // add the coordinator to the bundle
             COORDINATOR coord = new COORDINATOR();
             String coordPath = coordProps.getProperty(OozieEntityBuilder.ENTITY_PATH);
-            coord.setName(coordProps.getProperty(OozieEntityBuilder.ENTITY_NAME));
+            final String coordName = coordProps.getProperty(OozieEntityBuilder.ENTITY_NAME);
+            coord.setName(coordName);
             coord.setAppPath(getStoragePath(coordPath));
-            Properties appProps = createAppProperties(cluster, buildPath);
+            Properties appProps = createAppProperties(cluster, buildPath, coordName);
             appProps.putAll(coordProps);
             coord.setConfiguration(getConfig(appProps));
             bundle.getCoordinator().add(coord);
@@ -104,7 +106,8 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         return conf;
     }
 
-    protected Properties createAppProperties(Cluster cluster, Path buildPath) throws FalconException {
+    protected Properties createAppProperties(Cluster cluster, Path buildPath,
+                                             String coordName) throws FalconException {
         Properties properties = getEntityProperties(cluster);
         properties.setProperty(AbstractWorkflowEngine.NAME_NODE, ClusterHelper.getStorageUrl(cluster));
         properties.setProperty(AbstractWorkflowEngine.JOB_TRACKER, ClusterHelper.getMREndPoint(cluster));
@@ -115,7 +118,14 @@ public abstract class OozieBundleBuilder<T extends Entity> extends OozieEntityBu
         properties.setProperty("falcon.libpath", ClusterHelper.getLocation(cluster, "working") + "/lib");
 
         if (EntityUtil.isTableStorageType(cluster, entity)) {
-            properties.putAll(getHiveCredentials(cluster));
+            Tag tag = EntityUtil.getWorkflowNameTag(coordName, entity);
+            if (tag == Tag.REPLICATION) {
+                // todo: kludge send source hcat creds for coord dependency check to pass
+                String srcClusterName = EntityUtil.getWorkflowNameSuffix(coordName, entity);
+                properties.putAll(getHiveCredentials(ClusterHelper.getCluster(srcClusterName)));
+            } else {
+                properties.putAll(getHiveCredentials(cluster));
+            }
         }
 
         //Add libpath

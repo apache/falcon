@@ -20,6 +20,9 @@
     <hive xmlns="uri:oozie:hive-action:0.2">
         <job-tracker>${falconSourceJobTracker}</job-tracker>
         <name-node>${falconSourceNameNode}</name-node>
+        <!--
+            falconSourceStagingDir and distcpSourcePaths are same but falconSourceStagingDir is readonly
+        -->
         <prepare>
             <delete path="${distcpSourcePaths}"/>
         </prepare>
@@ -38,7 +41,7 @@
         <param>falconSourceDatabase=${falconSourceDatabase}</param>
         <param>falconSourceTable=${falconSourceTable}</param>
         <param>falconSourcePartition=${falconSourcePartition}</param>
-        <param>falconSourceStagingDir=${distcpSourcePaths}</param>
+        <param>falconSourceStagingDir=${falconSourceStagingDir}</param>
     </hive>
     <ok to="replication"/>
     <error to="failed-post-processing"/>
