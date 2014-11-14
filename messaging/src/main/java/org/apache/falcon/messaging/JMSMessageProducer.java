@@ -19,6 +19,7 @@
 package org.apache.falcon.messaging;
 
 import org.apache.falcon.hadoop.HadoopClientFactory;
+import org.apache.falcon.messaging.util.MessagingUtil;
 import org.apache.falcon.retention.EvictedInstanceSerDe;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -168,7 +169,7 @@ public class JMSMessageProducer {
                 sendMessage(connection, message);
             }
         } finally {
-            closeQuietly(connection);
+            MessagingUtil.closeQuietly(connection);
         }
 
         return 0;
@@ -295,15 +296,5 @@ public class JMSMessageProducer {
         connection.start();
 
         return connection;
-    }
-
-    private void closeQuietly(Connection connection) {
-        try {
-            if (connection != null) {
-                connection.close();
-            }
-        } catch (JMSException e) {
-            LOG.error("Error in closing connection:", e);
-        }
     }
 }

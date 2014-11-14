@@ -21,6 +21,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.falcon.FalconException;
+import org.apache.falcon.messaging.util.MessagingUtil;
 import org.apache.falcon.rerun.event.RerunEvent;
 import org.apache.falcon.rerun.event.RerunEventFactory;
 
@@ -71,8 +72,7 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
             init();
         }
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        return session;
+        return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     @Override
@@ -121,30 +121,16 @@ public class ActiveMQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     @Override
     public void reconnect() throws FalconException {
-        try {
-            LOG.info("Attempting to close producer");
-            producer.close();
-            LOG.info("Producer closed successfully");
-        } catch (Exception ignore) {
-            LOG.info("Producer could not be closed");
-        }
-
-        try {
-            LOG.info("Attempting to close consumer");
-            consumer.close();
-            LOG.info("Consumer closed successfully");
-        } catch (Exception ignore) {
-            LOG.info("Consumer could not be closed");
-        }
-
-        try {
-            LOG.info("Attempting to close connection");
-            connection.close();
-            LOG.info("Connection closed successfully");
-        } catch (Exception ignore) {
-            LOG.info("Connection could not be closed");
-        }
-
+        close();
         init();
+    }
+
+    public void close() {
+        LOG.info("Closing queue for broker={}, destination{}", brokerUrl, destinationName);
+        destination = null;
+
+        MessagingUtil.closeQuietly(producer);
+        MessagingUtil.closeQuietly(consumer);
+        MessagingUtil.closeQuietly(connection);
     }
 }

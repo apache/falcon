@@ -138,6 +138,9 @@ Trunk (Unreleased)
   OPTIMIZATIONS
 
   BUG FIXES
+   FALCON-717 Shutdown not clean for JMSMessageConsumer
+   (Shaik Idris Ali via Venkatesh Seetharam
+
    FALCON-875 Enitiy Summary endpoint filterBy does not filter entities
    without pipelines (Balu Vellanki via Venkatesh Seetharam)
 

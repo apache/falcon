@@ -40,4 +40,6 @@ public abstract class DelayedQueue<T extends RerunEvent> {
     public abstract void init();
 
     public abstract void reconnect() throws FalconException;
+
+    public abstract void close();
 }

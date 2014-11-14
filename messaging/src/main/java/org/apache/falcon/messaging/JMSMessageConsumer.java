@@ -21,6 +21,7 @@ package org.apache.falcon.messaging;
 import org.apache.commons.lang.StringUtils;
 import org.apache.falcon.FalconException;
 import org.apache.falcon.aspect.GenericAlert;
+import org.apache.falcon.messaging.util.MessagingUtil;
 import org.apache.falcon.security.CurrentUser;
 import org.apache.falcon.workflow.WorkflowExecutionArgs;
 import org.apache.falcon.workflow.WorkflowExecutionContext;
@@ -147,40 +148,9 @@ public class JMSMessageConsumer implements MessageListener, ExceptionListener {
     public void closeSubscriber() {
         LOG.info("Closing topicSubscriber on topic : " + this.topicName);
         // closing each quietly so client id can be unsubscribed
-        closeTopicSubscriberQuietly();
-        closeTopicSessionQuietly();
-        closeConnectionQuietly();
-    }
-
-    private void closeTopicSubscriberQuietly() {
-        if (topicSubscriber != null) {
-            try {
-                topicSubscriber.close();
-            } catch (JMSException ignore) {
-                LOG.error("Error closing JMS topic subscriber: " + topicSubscriber, ignore);
-            }
-        }
-    }
-
-    private void closeTopicSessionQuietly() {
-        if (topicSession != null) { // unsubscribe the durable topic topicSubscriber
-            try {
-                topicSession.unsubscribe(FALCON_CLIENT_ID);
-                topicSession.close();
-            } catch (JMSException ignore) {
-                LOG.error("Error closing JMS topic session: " + topicSession, ignore);
-            }
-        }
-    }
-
-    private void closeConnectionQuietly() {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (JMSException ignore) {
-                LOG.error("Error closing JMS connection: " + connection, ignore);
-            }
-        }
+        MessagingUtil.closeQuietly(topicSubscriber);
+        MessagingUtil.closeQuietly(topicSession, FALCON_CLIENT_ID);
+        MessagingUtil.closeQuietly(connection);
     }
 
     private static Connection createAndGetConnection(String implementation,

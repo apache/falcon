@@ -36,6 +36,7 @@ import java.util.concurrent.DelayQueue;
  * @param <T>
  */
 public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
+
     public static final Logger LOG = LoggerFactory.getLogger(DelayedQueue.class);
 
     protected DelayQueue<T> delayQueue = new DelayQueue<T>();
@@ -47,8 +48,8 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
 
     @Override
     public boolean offer(T event) {
-        boolean flag = delayQueue.offer(event);
         beforeRetry(event);
+        boolean flag = delayQueue.offer(event);
         LOG.debug("Enqueued Message: {}", event.toString());
         return flag;
     }
@@ -58,8 +59,8 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
         T event;
         try {
             event = delayQueue.take();
-            LOG.debug("Dequeued Message: {}", event.toString());
             afterRetry(event);
+            LOG.debug("Dequeued Message: {}", event.toString());
         } catch (InterruptedException e) {
             throw new FalconException(e);
         }
@@ -144,5 +145,10 @@ public class InMemoryQueue<T extends RerunEvent> extends DelayedQueue<T> {
             }
         }
         return rerunEvents;
+    }
+
+    @Override
+    public void close() {
+        //Do nothing
     }
 }
